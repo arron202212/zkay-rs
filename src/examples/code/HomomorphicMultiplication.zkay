@@ -1,0 +1,22 @@
+pragma zkay ^0.3.0;
+
+contract HomomorphicMultiplication {
+
+	final address owner;
+	uint32@owner<+> a;
+	uint32 b;
+	uint32@owner<+> productPosPos;
+	uint32@owner<+> productPosNeg;
+	uint32@owner<+> productNegPos;
+	uint32@owner<+> productNegNeg;
+
+	constructor(uint32@me _a, uint32 _b) public {
+		owner = me;
+		a = _a;
+		b = _b;
+	}
+
+	function f() public {
+		productPosPos = a * b;
+	}
+}

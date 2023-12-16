@@ -1,0 +1,21 @@
+pragma zkay ^0.3.0;
+
+contract HomomorphicAddition {
+
+	final address owner;
+	uint32@owner<+> a;
+	uint32@owner<+> b;
+	uint32@owner<+> sum;
+	uint32@owner<+> diff;
+
+	constructor(uint32@me<+> _a, uint32@me<+> _b) public {
+		owner = me;
+		a = _a;
+		b = _b;
+	}
+
+	function f() public {
+		sum = a + b;
+		diff = a - b;
+	}
+}

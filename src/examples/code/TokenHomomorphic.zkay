@@ -1,0 +1,29 @@
+pragma zkay ^0.3.0;
+
+// Description: Buy and transfer secret amount of tokens
+// Domain: Finance
+contract Token {
+
+	mapping(address!x => uint32@x<+>) balance;
+	mapping(address => bool) registered;
+
+	function register() public {
+		require(!registered[me]);
+		balance[me] = 0;
+		registered[me] = true;
+	}
+
+	function buy(uint32 amount) public payable {
+		require(registered[me]);
+		// amount should actually be computed based on the payed value
+		balance[me] += amount;
+	}
+
+	function send_tokens(uint32@me v, final address receiver) public {
+		require(registered[me] && registered[receiver]);
+		require(reveal(balance[me] > v, all));
+
+		balance[me] -= v;
+		balance[receiver] += reveal(v, receiver);
+	}
+}

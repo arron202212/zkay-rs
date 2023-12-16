@@ -1,0 +1,8 @@
+pragma zkay ^0.3.0;
+
+contract RepeatedAddhom {
+
+	function f(uint@me a) public {
+		uint@me<+> x = addhom(addhom(a));
+	}
+}

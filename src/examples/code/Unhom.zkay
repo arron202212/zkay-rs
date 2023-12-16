@@ -1,0 +1,9 @@
+pragma zkay ^0.3.0;
+
+contract Unhom {
+
+	function f() public{
+		uint32@me<+> x = 0;
+		uint32@me y = unhom(x);
+	}
+}

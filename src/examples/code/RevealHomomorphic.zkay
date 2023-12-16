@@ -1,0 +1,14 @@
+pragma zkay ^0.3.0;
+
+contract RevealHomomorphic {
+
+	final address other;
+
+	constructor() public {
+		other = me;
+	}
+
+	function f(uint32@me a) public {
+		uint32@other<+> x = reveal(addhom(a), other);
+	}
+}
