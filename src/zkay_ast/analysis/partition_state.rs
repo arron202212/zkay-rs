@@ -26,23 +26,23 @@ impl<
             + crate::zkay_ast::ast::Immutable,
     > PartitionState<T>
 {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             _partitions: BTreeMap::new(),
             _next_unused: 0,
         }
     }
 
-    fn insert(&mut self, x: T) {
+    pub fn insert(&mut self, x: T) {
         self._insert_partition(BTreeSet::from([x]));
     }
 
-    fn _insert_partition(&mut self, p: BTreeSet<T>) {
+    pub fn _insert_partition(&mut self, p: BTreeSet<T>) {
         self._partitions.insert(self._next_unused, p);
         self._next_unused += 1;
     }
 
-    fn get_index(&self, x: &T) -> Option<i32>
+    pub fn get_index(&self, x: &T) -> Option<i32>
 // """
         // Return index for element x.
 
@@ -58,11 +58,11 @@ impl<
         None
     }
 
-    fn has(&self, x: &T) -> bool {
+    pub fn has(&self, x: &T) -> bool {
         self.get_index(x).is_none()
     }
 
-    fn same_partition(&self, x: &T, y: &T) -> bool {
+    pub fn same_partition(&self, x: &T, y: &T) -> bool {
         if x == y {
             return true;
         }
@@ -81,7 +81,7 @@ impl<
         xp == yp
     }
 
-    fn merge(&mut self, x: &T, y: &T) {
+    pub fn merge(&mut self, x: &T, y: &T) {
         // locate
         let xp_key = self.get_index(x).unwrap();
         let yp_key = self.get_index(y).unwrap();
@@ -101,7 +101,7 @@ impl<
         });
     }
 
-    fn remove(&mut self, x: &T) {
+    pub fn remove(&mut self, x: &T) {
         // """
         // Removes x from its partition
 
@@ -130,7 +130,7 @@ impl<
     // :param x:
     // :param y:
     // """
-    fn move_to(&mut self, x: &T, y: &T) {
+    pub fn move_to(&mut self, x: &T, y: &T) {
         if self.same_partition(x, y)
         // no action necessary
         {
@@ -154,7 +154,7 @@ impl<
 
     // :param x:
     // """
-    fn move_to_separate(&mut self, x: &T) {
+    pub fn move_to_separate(&mut self, x: &T) {
         // remove
         self.remove(x);
 
@@ -162,7 +162,7 @@ impl<
         self.insert(x.clone());
     }
 
-    fn separate_all(&self) -> PartitionState<T> {
+    pub fn separate_all(&self) -> PartitionState<T> {
         let mut s = PartitionState::<T>::new();
         for p in self._partitions.values() {
             // Side effects do not affect the aliasing of final values
@@ -189,7 +189,7 @@ impl<
     // :param other: other state, must contain the same values as self (partitions can be different)
     // :return: joined state
     // """
-    fn join(&self, other: &PartitionState<T>) -> PartitionState<T> {
+    pub fn join(&self, other: &PartitionState<T>) -> PartitionState<T> {
         let mut s = PartitionState::<T>::new();
 
         // Collect all values
@@ -230,7 +230,7 @@ impl<
     // :param project: (iterator) if not None, only keep entries that are in project
     // :return:
     // """
-    fn copy(&self, project: Option<BTreeSet<T>>) -> PartitionState<T> {
+    pub fn copy(&self, project: Option<BTreeSet<T>>) -> PartitionState<T> {
         let mut c = PartitionState::<T>::new();
         c._next_unused = self._next_unused;
         for (k, p) in &self._partitions {

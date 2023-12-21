@@ -1,88 +1,136 @@
 // import json
 // import os
-// from contextlib import contextmanager
-// from typing import Dict, Any, ContextManager, List
+// use  contextlib::contextmanager;
+// use  typing::Dict, Any, ContextManager, List;
+// use  semantic_version::NpmSpec;
 
-// from semantic_version import NpmSpec
-
-// from zkay.compiler.privacy.proving_scheme.meta import provingschemeparams
-// from zkay.config_user import UserConfig
-// from zkay.config_version import Versions
-// from zkay.transaction.crypto.params import CryptoParams
-
-
-// def zk_print(*args, verbosity_level=1, **kwargs):
-//     if (verbosity_level <= cfg.verbosity) and not cfg.is_unit_test:
+use  crate::compiler::privacy::proving_scheme::meta::PROVINGSCHEMEPARAMS;
+// use  crate::config_user::UserConfig;
+use  crate::config_version::Versions;
+use  crate::transaction::crypto::params::CryptoParams;
+// use crate::zkay_ast::homomorphism::String;
+// use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
+use app_dirs2::*;
+use serde_json::{Result, Value,Map};
+use crate::lc_vec_s;
+use std::collections::HashMap;
+use crate::config_user::UserConfig;
+// fn zk_print(*args, verbosity_level=1, **kwargs){
+//     if (verbosity_level <= CFG.verbosity) and not CFG.is_unit_test:
 //         print(*args, **kwargs)
 
 
-// def zk_print_banner(title: str):
+// fn zk_print_banner(title: str){
 //     l = len(title) + 4
-//     zk_print(f'{"#"*l}\n# {title} #\n{"#"*l}\n')
-
-
-// class Config(UserConfig):
-//     def __init__(self):
+//     zk_print(f"{"#"*l}\n// {title} #\n{"#"*l}\n")
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+lazy_static!{
+    pub static ref CFG:Mutex<Config> = Mutex::new(Config::new());
+    pub static ref VERSIONS:Versions={
+        let mut versions_internal=Versions::new();
+        versions_internal.set_solc_version(String::from("latest"));
+        versions_internal
+    };
+}
+// Versions::set_solc_version("latest")
+pub struct Config {
+user_config:UserConfig,
+_options_with_effect_on_circuit_output:Vec<String>,
+_is_unit_test:bool,
+_concrete_solc_version:Option<String>,
+vals: HashMap<String,String>,
+attrs: HashMap<String,String>,
+}
+impl Config{//(UserConfig){
+//     fn __init__(&self){
 //         super().__init__()
+    pub fn new()->Self{
+        // Internal values
+       Self{user_config:UserConfig::new(),
+         _options_with_effect_on_circuit_output : lc_vec_s![
+            "proving_scheme", "snark_backend",
+            "main_crypto_backend", "addhom_crypto_backend",
+            "opt_solc_optimizer_runs", "opt_hash_threshold",
+            "opt_eval_constexpr_in_circuit", "opt_cache_circuit_inputs", "opt_cache_circuit_outputs"
+        ],
+        _is_unit_test:false,
+        _concrete_solc_version: None,
+            vals:HashMap::new(),
+            attrs:HashMap::new(),
+          }
+        }
 
-//         # Internal values
+    pub fn _load_cfg_file_if_exists(&mut self, filename:String){
+        if std::path::Path::new(&filename).exists(){
+            // with open(filename) as conf:
+            //     try:
+                let v: Value = serde_json::from_str(&std::fs::read_to_string(&filename).unwrap()).unwrap();
+                // self.override_defaults(v);
+                // except ValueError as e:
+                //     raise ValueError(f"{e} (in file "{filename}")")
+        }
+    }
 
-//         self._options_with_effect_on_circuit_output = [
-//             'proving_scheme', 'snark_backend',
-//             'main_crypto_backend', 'addhom_crypto_backend',
-//             'opt_solc_optimizer_runs', 'opt_hash_threshold',
-//             'opt_eval_constexpr_in_circuit', 'opt_cache_circuit_inputs', 'opt_cache_circuit_outputs',
-//         ]
+    pub fn load_configuration_from_disk(&mut self, local_cfg_file: String){
+        // Load global configuration file
+       let  global_config_dir =  get_app_dir(AppDataType::SharedConfig, &self.user_config._appdirs,"");
+       let  global_cfg_file = std::path::PathBuf::from(global_config_dir.expect("").to_str().expect(""))
+            .join("config.json");
+        self._load_cfg_file_if_exists(global_cfg_file.to_str().expect("").to_string());
 
-//         self._is_unit_test = False
-//         self._concrete_solc_version = None
+        // Load user configuration file
+        let user_config_dir = get_app_dir(AppDataType::UserConfig, &self.user_config._appdirs,"");
+        let user_cfg_file =std::path::PathBuf::from(&user_config_dir.expect("").to_str().expect(""))
+            .join("config.json");
+        self._load_cfg_file_if_exists(user_cfg_file.to_str().expect("").to_string());
 
-//     def _load_cfg_file_if_exists(self, filename):
-//         if os.path.exists(filename):
-//             with open(filename) as conf:
-//                 try:
-//                     self.override_defaults(json.load(conf))
-//                 except ValueError as e:
-//                     raise ValueError(f'{e} (in file "{filename}")')
+        // Load local configuration file
+        self._load_cfg_file_if_exists(local_cfg_file);
+    }
 
-//     def load_configuration_from_disk(self, local_cfg_file: str):
-//         # Load global configuration file
-//         global_config_dir = self._appdirs.site_config_dir
-//         global_cfg_file = os.path.join(global_config_dir, 'config.json')
-//         self._load_cfg_file_if_exists(global_cfg_file)
+    pub fn has_attr(&self,arg:&String)->bool{
+        self.attrs.get(arg).is_some()
+    }
+    pub fn get_attr(&self,arg:&String)->String{
+        self.attrs.get(arg).unwrap_or(&String::new()).clone()
+    }
+    pub fn set_attr(&mut self,arg:&String,val:&String){
+        self.attrs.insert(arg.clone(),val.clone());
+    }
+    pub fn override_defaults(&mut self, overrides: &HashMap<String,String>){
+        for (arg, val) in overrides{
+            if !self.has_attr(arg){
+                // raise ValueError(f"Tried to override non-existing config value {arg}")
+                return
+            }
+            // try:
+                self.set_attr( arg, val);
+            // except ValueError as e:
+            //     raise ValueError(f"{e} (for entry "{arg}")")
+            // }
+            }
+    }
 
-//         # Load user configuration file
-//         user_config_dir = self._appdirs.user_config_dir
-//         user_cfg_file = os.path.join(user_config_dir, 'config.json')
-//         self._load_cfg_file_if_exists(user_cfg_file)
+    pub fn export_compiler_settings(&self) -> HashMap<String,String>
+       {
+self._options_with_effect_on_circuit_output.iter().map(|k|  (k.clone(),self.get_attr(k))).collect()
+        }
 
-//         # Load local configuration file
-//         self._load_cfg_file_if_exists(local_cfg_file)
-
-//     def override_defaults(self, overrides: Dict[str, Any]):
-//         for arg, val in overrides.items():
-//             if not hasattr(self, arg):
-//                 raise ValueError(f'Tried to override non-existing config value {arg}')
-//             try:
-//                 setattr(self, arg, val)
-//             except ValueError as e:
-//                 raise ValueError(f'{e} (for entry "{arg}")')
-
-//     def export_compiler_settings(self) -> dict:
-//         out = {}
-//         for k in self._options_with_effect_on_circuit_output:
-//             out[k] = getattr(self, k)
-//         return out
-
-//     def import_compiler_settings(self, vals: dict):
-//         for k in vals:
-//             if k not in self._options_with_effect_on_circuit_output:
-//                 raise KeyError(f'vals contains unknown option "{k}"')
-//             setattr(self, k, vals[k])
+        pub fn import_compiler_settings(&mut self, vals: &HashMap<String,String>){
+            for (k,v) in vals{
+            if !self._options_with_effect_on_circuit_output.contains(k)
+                {
+                    // raise KeyError(f"vals contains unknown option "{k}"")
+                    return 
+                }
+                self.set_attr( k, v);
+            }
+        }
 
 //     @contextmanager
-//     def library_compilation_environment(self) -> ContextManager:
-//         """Use this fixed configuration compiling libraries to get reproducible output."""
+//     fn library_compilation_environment(&self) -> ContextManager:
+//        Use this fixed configuration compiling libraries to get reproducible output.
 //         old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
 //         self.override_solc(self.library_solc_version)
 //         self.opt_solc_optimizer_runs = 1000
@@ -90,147 +138,149 @@
 //         self.opt_solc_optimizer_runs = old_opt_runs
 //         self.override_solc(old_solc)
 
-//     @property
-//     def library_solc_version(self) -> str:
-//         # Note: Changing this version breaks compatibility with already deployed library contracts
-//         return Versions.ZKAY_LIBRARY_SOLC_VERSION
 
-//     @property
-//     def zkay_version(self) -> str:
-//         """zkay version number"""
-//         return Versions.ZKAY_VERSION
+        // Note: Changing this version breaks compatibility with already deployed library contracts
+    pub fn library_solc_version(&self) -> String{
+        Versions::ZKAY_LIBRARY_SOLC_VERSION.to_string()
+    }
 
-//     @property
-//     def zkay_solc_version_compatibility(self) -> NpmSpec:
-//         """Target solidity language level for the current zkay version"""
-//         return Versions.ZKAY_SOLC_VERSION_COMPATIBILITY
 
-//     @property
-//     def solc_version(self) -> str:
-//         version = Versions.SOLC_VERSION
-//         assert version is not None and version != 'latest'
-//         return version
+    pub fn zkay_version(&self) -> String{
+        // zkay version number
+         Versions::ZKAY_VERSION.to_string()
+    }
 
-//     @staticmethod
-//     def override_solc(new_version):
-//         Versions.set_solc_version(new_version)
 
-//     def is_symmetric_cipher(self, hom) -> bool:
-//         return self.get_crypto_params(hom).is_symmetric_cipher()
+    pub fn zkay_solc_version_compatibility(&self) -> semver_rs::Version{
+        // Target solidity language level for the current zkay version
+        VERSIONS.zkay_solc_version_compatibility.clone()
+    }
 
-//     @property
-//     def proof_len(self) -> int:
-//         return provingschemeparams[self.proving_scheme]['proof_len']
 
-//     @property
-//     def external_crypto_lib_names(self) -> List[str]:
-//         """Names of all solidity libraries in verify_libs.sol, which need to be linked against."""
-//         return provingschemeparams[self.proving_scheme]['external_sol_libs']
-
-//     def should_use_hash(self, circuit: 'CircuitHelper') -> bool:
-//         """
-//         This function determines whether input hashing is used for a particular circuit.
-
-//         :return: if true, all public circuit inputs are passed as private inputs into the circuit and only their combined hash-
-//                  value is passed as a public input. This makes verification constant-cost,
-//                  but increases offchain resource usage during key and proof generation.
-//         """
-
-//         pub_arg_size = circuit.trans_in_size + circuit.trans_out_size
-//         return pub_arg_size > self.opt_hash_threshold
-
-//     @property
-//     def reserved_name_prefix(self) -> str:
-//         """
-//         Identifiers in user code must not start with this prefix.
-
-//         This is to ensure that user code does not interfere with the additional code generated by the zkay compiler.
-//         """
-//         return 'zk__'
-
-//     @property
-//     def reserved_conflict_resolution_suffix(self) -> str:
-//         """
-//         Identifiers in user code must not end with this suffix.
-
-//         This is used for resolving conflicts with python globals in the generated offchain simulation code.
-//         """
-//         return '_zalt'
-
-//     def get_internal_name(self, fct) -> str:
-//         if fct.requires_verification_when_external:
-//             return f'_{self.reserved_name_prefix}{fct.name}'
-//         else:
-//             return fct.name
-
-//     def get_verification_contract_name(self, contract: str, fct: str):
-//         return f'{cfg.reserved_name_prefix}Verify_{contract}_{fct}'
-
-//     def get_circuit_output_dir_name(self, verifier_name: str) -> str:
-//         """Return the output directory for an individual circuit"""
-//         return f'{verifier_name}_out'
+    pub fn solc_version(&self) -> String{
+        let version = VERSIONS.solc_version.clone();
+        assert!(version.is_some() && version != Some(String::from("latest")));
+        version.unwrap().to_string()
+    }
 
 //     @staticmethod
-//     def get_contract_var_name(type_name: str) -> str:
-//         """
-//         Return an identifier referring to the address variable of verification contract of type 'type_name'
+    pub fn override_solc(new_version:String){
+        // Versions::set_solc_version(new_version);
+    }
 
-//         :param type_name: name of the unqualified verification contract type
-//         :return: new identifier
-//         """
-//         return f'{type_name}_inst'
-
-//     @property
-//     def pki_contract_name(self) -> str:
-//         return f'{self.reserved_name_prefix}PublicKeyInfrastructure'
-
-//     def get_pki_contract_name(self, params: CryptoParams) -> str:
-//         return f'{self.pki_contract_name}_{params.identifier_name}'
-
-//     @property
-//     def zk_out_name(self) -> str:
-//         return f'{self.reserved_name_prefix}out'
-
-//     @property
-//     def zk_in_name(self) -> str:
-//         return f'{self.reserved_name_prefix}in'
-
-//     @property
-//     def proof_param_name(self) -> str:
-//         return f'{self.reserved_name_prefix}proof'
-
-//     @property
-//     def return_var_name(self) -> str:
-//         return f'{self.reserved_name_prefix}ret'
-
-//     @property
-//     def field_prime_var_name(self) -> str:
-//         return f'{self.reserved_name_prefix}field_prime'
-
-//     @property
-//     def prover_key_hash_name(self) -> str:
-//         return f'{self.reserved_name_prefix}prover_key_hash'
-
-//     @property
-//     def zk_struct_prefix(self) -> str:
-//         return f'{self.reserved_name_prefix}data'
-
-//     @property
-//     def zk_data_var_name(self) -> str:
-//         return f'{self.zk_struct_prefix}'
-
-//     @property
-//     def jsnark_circuit_classname(self) -> str:
-//         return 'ZkayCircuit'
-
-//     @property
-//     def verification_function_name(self) -> str:
-//         return 'check_verify'
-
-//     @property
-//     def is_unit_test(self) -> bool:
-//         return self._is_unit_test
+    pub fn is_symmetric_cipher(&self, hom:String) -> bool{
+        self.user_config.get_crypto_params(&hom).is_symmetric_cipher()
+    }
 
 
-// cfg = Config()
-// Versions.set_solc_version('latest')
+    pub fn proof_len(&self) -> i32{
+        PROVINGSCHEMEPARAMS[&self.get_attr(&String::from("proving_scheme"))].proof_len
+    }
+
+
+        // Names of all solidity libraries in verify_libs.sol, which need to be linked against.
+    pub fn external_crypto_lib_names(&self) ->Vec<String>
+        {
+            PROVINGSCHEMEPARAMS[&self.get_attr(&String::from("proving_scheme"))].external_sol_libs.clone()
+        }
+
+        // This function determines whether input hashing is used for a particular circuit.
+        // :return: if true, all public circuit inputs are passed as private inputs into the circuit and only their combined hash-
+        //          value is passed as a public input. This makes verification constant-cost,
+        //          but increases offchain resource usage during key and proof generation.
+    pub fn should_use_hash(&self, pub_arg_size: i32) -> bool
+       { 
+        // let pub_arg_size = circuit.trans_in_size + circuit.trans_out_size;
+         pub_arg_size > self.get_attr(&String::from("opt_hash_threshold")).parse().unwrap()
+        }
+
+        // Identifiers in user code must not start with this prefix.
+        // This is to ensure that user code does not interfere with the additional code generated by the zkay compiler.
+    pub fn reserved_name_prefix(&self) -> String{
+        String::from("zk__")
+    }
+
+        // Identifiers in user code must not end with this suffix.
+        // This is used for resolving conflicts with python globals in the generated offchain simulation code.
+    pub fn reserved_conflict_resolution_suffix(&self) -> String{
+        String::from("_zalt")
+    }
+
+    pub fn get_internal_name(&self, fct:&impl crate::zkay_ast::ast::ConstructorOrFunctionDefinitionAttr) -> String{
+        if fct.get_requires_verification_when_external()
+           { format!("_{}{}",self.reserved_name_prefix(),fct.get_name())}
+        else
+            {fct.get_name()}
+        }
+
+    pub fn get_verification_contract_name(&self, contract: String, fct: String)->String{
+        format!{"{}Verify_{contract}_{fct}",CFG.lock().unwrap().reserved_name_prefix()}
+    }
+        // Return the output directory for an individual circuit
+    pub fn get_circuit_output_dir_name(&self, verifier_name: String) -> String
+        { 
+            format!("{verifier_name}_out")
+        }
+
+        // Return an identifier referring to the address variable of verification contract of type "type_name"
+        // :param type_name: name of the unqualified verification contract type
+        // :return: new identifier
+        pub fn get_contract_var_name(type_name: String) -> String{
+         format!("{type_name}_inst")
+}
+
+
+    pub fn pki_contract_name(&self) -> String{
+        format!("{}PublicKeyInfrastructure",self.reserved_name_prefix())
+    }
+
+    pub fn get_pki_contract_name(&self, params_identifier_name: String) -> String{
+        format!("{}_{}",self.pki_contract_name(),params_identifier_name)
+    }
+
+
+    pub fn zk_out_name(&self) -> String{
+        format!("{}out",self.reserved_name_prefix())}
+
+
+    pub fn zk_in_name(&self) -> String{
+        format!("{}in",self.reserved_name_prefix())}
+
+
+    pub fn proof_param_name(&self) -> String{
+        format!("{}proof",self.reserved_name_prefix())}
+
+
+    pub fn return_var_name(&self) -> String{
+        format!("{}ret",self.reserved_name_prefix())}
+
+
+    pub fn field_prime_var_name(&self) -> String{
+        format!("{}field_prime",self.reserved_name_prefix())}
+
+
+    pub fn prover_key_hash_name(&self) -> String{
+        format!("{}prover_key_hash",self.reserved_name_prefix())}
+
+
+    pub fn zk_struct_prefix(&self) -> String{
+        format!("{}data",self.reserved_name_prefix())}
+
+
+    pub fn zk_data_var_name(&self) -> String{
+        format!("{}",self.zk_struct_prefix())}
+
+
+    pub fn jsnark_circuit_classname(&self) -> String{
+        String::from("ZkayCircuit")}
+
+
+    pub fn verification_function_name(&self) -> String{
+        String::from("check_verify")}
+
+
+    pub fn is_unit_test(&self) -> bool
+            {self._is_unit_test}
+}
+
+

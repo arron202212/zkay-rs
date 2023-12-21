@@ -29,7 +29,7 @@
 use crate::utils::helpers::read_file; //, lines_of_code, without_extension;}
                                       // use crate::utils::progress_printer import print_step
                                       // use crate::utils::timer import time_measure
-                                      // use crate::zkay_ast::homomorphism import Homomorphism
+                                      // use crate::zkay_ast::homomorphism import String
 use crate::zkay_ast::process_ast::get_processed_ast; //, get_verification_contract_names
                                                      // use crate::zkay_ast::visitor::solidity_visitor import to_solidity
 
@@ -155,7 +155,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     // if not import_keys:
     //     with print_step("Writing manifest file"):
     //         // Set crypto backends for unused homomorphisms to None
-    //         for hom in Homomorphism:
+    //         for hom in String:
     //             if hom not in ast.used_homomorphisms:
     //                 cfg.set_crypto_backend(hom, None)
 

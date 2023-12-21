@@ -425,9 +425,9 @@ class TypeCheckVisitor(AstVisitor):
         assert(homomorphism is not None)
 
         # Prevent ReclassifyExpr to all with homomorphic type
-        if ast.privacy.is_all_expr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
-            # If the target privacy is all, we infer a target homomorphism of NON_HOMOMORPHIC
-            ast.homomorphism = homomorphism = Homomorphism.NON_HOMOMORPHIC
+        if ast.privacy.is_all_expr() and homomorphism != Homomorphism.NonHomomorphic:
+            # If the target privacy is all, we infer a target homomorphism of NonHomomorphic
+            ast.homomorphism = homomorphism = Homomorphism.NonHomomorphic
 
         # Make sure the first argument to reveal / rehom is public or private provably equal to @me
         is_expr_at_all = ast.expr.annotated_type.is_public()
@@ -437,7 +437,7 @@ class TypeCheckVisitor(AstVisitor):
                                 f'i.e. @all or provably equal to @me', ast)
 
         # Prevent unhom(public_value)
-        if is_expr_at_all and isinstance(ast, RehomExpr) and ast.homomorphism == Homomorphism.NON_HOMOMORPHIC:
+        if is_expr_at_all and isinstance(ast, RehomExpr) and ast.homomorphism == Homomorphism.NonHomomorphic:
             raise TypeException(f'Cannot use "{ast.homomorphism.rehom_expr_name}" on a public value', ast)
 
         # NB prevent any redundant reveal (not just for public)
@@ -580,7 +580,7 @@ class TypeCheckVisitor(AstVisitor):
         if ast.privacy_annotation != Expression.all_expr():
             if not ast.type_name.can_be_private():
                 raise TypeException(f'Currently, we do not support private {str(ast.type_name)}', ast)
-            if ast.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+            if ast.homomorphism != Homomorphism.NonHomomorphic:
                 # only support uint8, uint16, uint24, uint32 homomorphic data types
                 if not ast.type_name.is_numeric:
                     raise TypeException(f'Homomorphic type not supported for {str(ast.type_name)}: Only numeric types supported', ast)

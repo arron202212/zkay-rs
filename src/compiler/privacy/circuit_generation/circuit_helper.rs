@@ -69,10 +69,10 @@ class CircuitHelper:
         WARNING: Never assign to self._phi, always access it using the phi property and only mutate it
         """
 
-        self._secret_input_name_factory = NameFactory('secret', arg_type=HybridArgType.PRIV_CIRCUIT_VAL)
+        self._secret_input_name_factory = NameFactory('secret', arg_type=HybridArgType.PrivCircuitVal)
         """Name factory for private circuit inputs"""
 
-        self._circ_temp_name_factory = NameFactory('tmp', arg_type=HybridArgType.TMP_CIRCUIT_VAL)
+        self._circ_temp_name_factory = NameFactory('tmp', arg_type=HybridArgType.TmpCircuitVal)
         """Name factory for temporary internal circuit variables"""
 
         self._in_name_factory = NameFactory(cfg.zk_in_name, arg_type=HybridArgType.PUB_CIRCUIT_ARG)
@@ -640,7 +640,7 @@ class CircuitHelper:
         :return: HybridArgumentIdf which references the circuit output containing the result of expr
         """
         is_circ_val = isinstance(expr, IdentifierExpr) and isinstance(expr.idf, HybridArgumentIdf) and expr.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
-        is_hom_comp = isinstance(expr, FunctionCallExpr) and isinstance(expr.func, BuiltinFunction) and expr.func.homomorphism != Homomorphism.NON_HOMOMORPHIC
+        is_hom_comp = isinstance(expr, FunctionCallExpr) and isinstance(expr.func, BuiltinFunction) and expr.func.homomorphism != Homomorphism.NonHomomorphic
         if is_hom_comp:
             # Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
             expr.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type, homomorphism)
@@ -743,7 +743,7 @@ class CircuitHelper:
     def _require_secret_key(self, crypto_params: CryptoParams) -> HybridArgumentIdf:
         self._needed_secret_key[crypto_params] = None  # Add to _need_secret_key OrderedDict
         key_name = self.get_own_secret_key_name(crypto_params)
-        return HybridArgumentIdf(key_name, TypeName.key_type(crypto_params), HybridArgType.PRIV_CIRCUIT_VAL)
+        return HybridArgumentIdf(key_name, TypeName.key_type(crypto_params), HybridArgType.PrivCircuitVal)
 
     def _require_public_key_for_label_at(self, stmt: Optional[Statement], privacy: PrivacyLabelExpr,
                                          crypto_params: CryptoParams) -> HybridArgumentIdf:

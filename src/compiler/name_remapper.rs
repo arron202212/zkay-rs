@@ -154,7 +154,7 @@ class Remapper(Generic[K, V]):
             elif key not in false_state:
                 # If value was only read (remapping points to a circuit input) -> can just take as-is,
                 # otherwise have to use conditional assignment
-                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PRIV_CIRCUIT_VAL):
+                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PrivCircuitVal):
                     self.rmap[key] = val
                 else:
                     # key was only modified in true branch
@@ -174,7 +174,7 @@ class Remapper(Generic[K, V]):
                 continue
 
             if key not in true_state:
-                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PRIV_CIRCUIT_VAL):
+                if isinstance(val, HybridArgumentIdf) and (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG or val.arg_type == HybridArgType.PrivCircuitVal):
                     self.rmap[key] = val
                 else:
                     # key was only modified in false branch

@@ -57,7 +57,7 @@ class Value(tuple):
         elif crypto_backend is not None:
             return CryptoParams(crypto_backend)
         else:
-            return cfg.get_crypto_params(Homomorphism.NON_HOMOMORPHIC)
+            return cfg.get_crypto_params(Homomorphism.NonHomomorphic)
 
 
 class CipherValue(Value):

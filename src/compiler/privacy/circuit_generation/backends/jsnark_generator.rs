@@ -131,7 +131,7 @@ class JsnarkVisitor(AstVisitor):
             op = '-' if op == 'sign-' else op
 
             homomorphism = ast.func.homomorphism
-            if homomorphism == Homomorphism.NON_HOMOMORPHIC:
+            if homomorphism == Homomorphism.NonHomomorphic:
                 f_start = 'o_('
             else:
                 crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name

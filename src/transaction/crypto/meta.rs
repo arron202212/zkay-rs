@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 lazy_static! {
-       pub  static ref cryptoparams:HashMap<String,HashMap<&'static str,i32>>=
+       pub  static ref CRYPTOPARAMS:HashMap<String,HashMap<&'static str,i32>>=
     HashMap::from([
     (String::from("dummy"), HashMap::from([
         ("key_bits", 248),

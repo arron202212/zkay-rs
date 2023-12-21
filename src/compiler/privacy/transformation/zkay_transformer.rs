@@ -448,7 +448,7 @@ class ZkayCircuitTransformer(AstTransformerVisitor):
             return replace_expr(ast, NumberLiteralExpr(t.value))
 
         if isinstance(ast.func, BuiltinFunction):
-            if ast.func.homomorphism != Homomorphism.NON_HOMOMORPHIC:
+            if ast.func.homomorphism != Homomorphism.NonHomomorphic:
                 # To perform homomorphic operations, we require the recipient's public key
                 crypto_params = cfg.get_crypto_params(ast.func.homomorphism)
                 recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()

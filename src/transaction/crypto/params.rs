@@ -1,13 +1,13 @@
 // import math
 // import re
 
-use crate::transaction::crypto::meta::cryptoparams;
+use crate::transaction::crypto::meta::CRYPTOPARAMS;
 use serde::{Deserialize, Serialize};
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CryptoParams {
     crypto_name: String,
 }
-fn title(data: String) -> String {
+pub fn title(data: String) -> String {
     let mut result = String::new();
     let mut first = true;
     for value in data.chars() {
@@ -25,17 +25,17 @@ fn title(data: String) -> String {
 }
 // class CryptoParams:
 impl CryptoParams {
-    fn new(self, crypto_name: String) -> Self {
+    pub fn new(crypto_name: String) -> Self {
         Self { crypto_name }
     }
 
-    // fn __eq__(self, other)
+    // pub fn __eq__(self, other)
     //     return isinstance(other, CryptoParams) and self.crypto_name == other.crypto_name
 
-    // fn __hash__(&self)
+    // pub fn __hash__(&self)
     //     return self.crypto_name.__hash__()
 
-    fn identifier_name(&self) -> String {
+    pub fn identifier_name(&self) -> String {
         // re.sub("[^a-zA-Z0-9$_]", "_", self.crypto_name).title()
         use lazy_static::lazy_static;
         use regex::Regex;
@@ -50,15 +50,15 @@ impl CryptoParams {
         )
     }
 
-    fn key_bits(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"key_bits"]
+    pub fn key_bits(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"key_bits"]
     }
 
-    fn key_bytes(&self) -> i32 {
+    pub fn key_bytes(&self) -> i32 {
         ((self.key_bits() + 7) / 8) as _
     }
 
-    fn key_len(&self) -> i32 {
+    pub fn key_len(&self) -> i32 {
         if self.is_symmetric_cipher() {
             1
         } else {
@@ -66,15 +66,15 @@ impl CryptoParams {
         }
     }
 
-    fn rnd_bytes(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"rnd_bytes"]
+    pub fn rnd_bytes(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"rnd_bytes"]
     }
 
-    fn rnd_chunk_size(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"rnd_chunk_size"]
+    pub fn rnd_chunk_size(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"rnd_chunk_size"]
     }
 
-    fn randomness_len(&self) -> i32 {
+    pub fn randomness_len(&self) -> i32 {
         if self.is_symmetric_cipher() {
             0
         } else {
@@ -82,19 +82,19 @@ impl CryptoParams {
         }
     }
 
-    fn cipher_bytes_payload(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"cipher_payload_bytes"]
+    pub fn cipher_bytes_payload(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"cipher_payload_bytes"]
     }
 
-    fn is_symmetric_cipher(&self) -> bool {
-        cryptoparams[&self.crypto_name][&"symmetric"] != 0
+    pub fn is_symmetric_cipher(&self) -> bool {
+        CRYPTOPARAMS[&self.crypto_name][&"symmetric"] != 0
     }
 
-    fn cipher_payload_len(&self) -> i32 {
+    pub fn cipher_payload_len(&self) -> i32 {
         (self.cipher_bytes_payload() + self.cipher_chunk_size() - 1) / self.cipher_chunk_size()
     }
 
-    fn cipher_len(&self) -> i32 {
+    pub fn cipher_len(&self) -> i32 {
         self.cipher_payload_len()
             + if self.is_symmetric_cipher()
               { 1} //Additional uint to store sender address
@@ -102,11 +102,11 @@ impl CryptoParams {
             {0}
     }
 
-    fn cipher_chunk_size(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"cipher_chunk_size"]
+    pub fn cipher_chunk_size(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"cipher_chunk_size"]
     }
 
-    fn enc_signed_as_unsigned(&self) -> i32 {
-        cryptoparams[&self.crypto_name][&"enc_signed_as_unsigned"]
+    pub fn enc_signed_as_unsigned(&self) -> i32 {
+        CRYPTOPARAMS[&self.crypto_name][&"enc_signed_as_unsigned"]
     }
 }

@@ -209,7 +209,7 @@ class PythonCodeVisitor(CodeVisitor):
         if isinstance(ast.func, BuiltinFunction):
             args = [self.visit(a) for a in ast.args]
             homomorphism = ast.func.homomorphism
-            if homomorphism == Homomorphism.NON_HOMOMORPHIC:
+            if homomorphism == Homomorphism.NonHomomorphic:
                 fstr = ast.func.format_string()
                 if ast.func.op == '&&':
                     fstr = '{} and {}'

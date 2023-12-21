@@ -9,7 +9,7 @@
 // use  functools import cmp_to_key, reduce;
 // use  os import linesep;
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
-// use  crate::config import cfg, zk_print;
+use crate::config::CFG; //, zk_print;
 use crate::transaction::crypto::params::CryptoParams;
 // use  crate::utils::progress_printer import warn_print;
 use crate::zkay_ast::analysis::partition_state::PartitionState;
@@ -39,11 +39,25 @@ pub enum AST {
     Expression(Box<Expression>),
     Statement(Statement),
     TypeName(TypeName),
+ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
+ContractDefinition(ContractDefinition),
+    Block(Option<Block>),
     AnnotatedTypeName(AnnotatedTypeName),
     IdentifierDeclaration(IdentifierDeclaration),
+    StateVariableDeclaration(StateVariableDeclaration),
     NamespaceDefinition(NamespaceDefinition),
+EnumDefinition(EnumDefinition),
     EnumValue(EnumValue),
     SourceUnit(SourceUnit),
+  Parameters(Option<Vec<Parameter>>),
+        Modifiers(Option<Vec<String>>),
+        ReturnParameters(Option<Vec<Parameter>>),
+BooleanLiteralExpr(BooleanLiteralExpr),
+StringLiteralExpr(StringLiteralExpr),
+NumberLiteralExpr(NumberLiteralExpr),
+TupleExpr(TupleExpr),
+Modifier(String),
+Homomorphism(String),
 }
 
 // class AST:
@@ -102,18 +116,42 @@ pub enum AST {
 
 //     def __str__(self):
 //         return self.code()
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ASTStore {
-    pub parent: Option<Box<ASTStore>>,
+    pub parent: Option<Box<AST>>,
     pub namespace: Option<Vec<Identifier>>,
-    pub names: HashMap<String, Identifier>,
+    pub names: BTreeMap<String, Identifier>,
     pub line: i32,
     pub column: i32,
     pub modified_values: BTreeSet<InstanceTarget>,
-    pub read_values: HashSet<InstanceTarget>,
+    pub read_values: BTreeSet<InstanceTarget>,
 }
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 pub trait Immutable {
     fn is_immutable(&self) -> bool;
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Identifier {
+    pub parent: Option<Box<AST>>,
+    pub name: String,
+}
+impl Identifier {
+    fn new(name: String) -> Self {
+        Self { parent: None, name }
+    }
+}
+impl Immutable for Identifier {
+    fn is_immutable(&self) -> bool {
+        if let Some(v) = &self.parent {
+            if let AST::StateVariableDeclaration(svd) = &**v {
+                svd.is_final() || svd.is_constant()
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
 }
 // class Identifier(AST):
 
@@ -133,10 +171,6 @@ pub trait Immutable {
 //             t = AnnotatedTypeName(t)
 //         storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
 //         return VariableDeclarationStatement(VariableDeclaration([], t, self.clone(), storage_loc), expr)
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Identifier {
-    pub name: String,
-}
 
 // class Comment(AST):
 
@@ -320,7 +354,7 @@ pub enum LiteralType {
     #[default]
     Never,
 }
-fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
+pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
     match op {
         "+" => LiteralType::Number(args[0] + args[1]),
         "-" => LiteralType::Number(args[0] - args[1]),
@@ -350,7 +384,7 @@ fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
         _ => LiteralType::Bool(false),
     }
 }
-// builtin_functions = {
+// BUILTIN_FUNCTIONS = {
 //     'parenthesis': '({})',
 //     'ite': '{} ? {} : {}'
 // }
@@ -371,41 +405,41 @@ fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
 // // shift operations
 // shiftop = {op: f'{{}} {op} {{}}' for op in ['<<', '>>']}
 
-// builtin_functions.update(arithmetic)
-// builtin_functions.update(comp)
-// builtin_functions.update(eq)
-// builtin_functions.update(bop)
-// builtin_functions.update(bitop)
-// builtin_functions.update(shiftop)
+// BUILTIN_FUNCTIONS.update(arithmetic)
+// BUILTIN_FUNCTIONS.update(comp)
+// BUILTIN_FUNCTIONS.update(eq)
+// BUILTIN_FUNCTIONS.update(bop)
+// BUILTIN_FUNCTIONS.update(bitop)
+// BUILTIN_FUNCTIONS.update(shiftop)
 
-// assert builtin_op_fct.keys() == builtin_functions.keys()
-const binary_op: &'static str = "{{}} {op} {{}}";
+// assert builtin_op_fct.keys() == BUILTIN_FUNCTIONS.keys()
+const BINARY_OP: &'static str = "{{}} {op} {{}}";
 lazy_static! {
-    static ref builtin_functions: HashMap<String, String> = {
+    static ref BUILTIN_FUNCTIONS: HashMap<String, String> = {
         let m: HashMap<&'static str, &'static str> = HashMap::from([
-            ("**", binary_op),
-            ("*", binary_op),
-            ("/", binary_op),
-            ("%", binary_op),
-            ("+", binary_op),
-            ("-", binary_op),
+            ("**", BINARY_OP),
+            ("*", BINARY_OP),
+            ("/", BINARY_OP),
+            ("%", BINARY_OP),
+            ("+", BINARY_OP),
+            ("-", BINARY_OP),
             ("sign+", "+{}"),
             ("sign-", "-{}"),
-            ("<", binary_op),
-            (">", binary_op),
-            ("<=", binary_op),
-            (">=", binary_op),
-            ("==", binary_op),
-            ("!=", binary_op),
-            ("&&", binary_op),
-            ("||", binary_op),
+            ("<", BINARY_OP),
+            (">", BINARY_OP),
+            ("<=", BINARY_OP),
+            (">=", BINARY_OP),
+            ("==", BINARY_OP),
+            ("!=", BINARY_OP),
+            ("&&", BINARY_OP),
+            ("||", BINARY_OP),
             ("!", "!{}"),
-            ("|", binary_op),
-            ("&", binary_op),
-            ("^", binary_op),
+            ("|", BINARY_OP),
+            ("&", BINARY_OP),
+            ("^", BINARY_OP),
             ("~", "~{}"),
-            ("<<", binary_op),
-            (">>", binary_op),
+            ("<<", BINARY_OP),
+            (">>", BINARY_OP),
             ("parenthesis", "({})"),
             ("ite", "if {}  {{{}}} else {{{}}}"),
         ]);
@@ -429,11 +463,11 @@ lazy_static! {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HomomorphicBuiltin {
     pub op: String,
-    pub homomorphism: Homomorphism,
+    pub homomorphism: String,
     pub public_args: Vec<bool>,
 }
 impl HomomorphicBuiltin {
-    pub fn new(op: &str, homomorphism: Homomorphism, public_args: Vec<bool>) -> Self {
+    pub fn new(op: &str, homomorphism: String, public_args: Vec<bool>) -> Self {
         Self {
             op: op.to_string(),
             homomorphism,
@@ -441,7 +475,7 @@ impl HomomorphicBuiltin {
         }
     }
 }
-// homomorphic_builtin_functions = [
+// HOMOMORPHIC_BUILTIN_FUNCTIONS = [
 //     HomomorphicBuiltin('sign+', Homomorphism.ADDITIVE, [False]),
 //     HomomorphicBuiltin('sign-', Homomorphism.ADDITIVE, [False]),
 //     HomomorphicBuiltin('+', Homomorphism.ADDITIVE, [False, False]),
@@ -453,26 +487,26 @@ impl HomomorphicBuiltin {
 //     // HomomorphicBuiltin('*', Homomorphism.MULTIPLICATIVE, [False, False]),
 // ]
 
-// for __hom in homomorphic_builtin_functions:
-//     assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
-//     op_arity = builtin_functions[__hom.op].count('{}')
+// for __hom in HOMOMORPHIC_BUILTIN_FUNCTIONS:
+//     assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NonHomomorphic
+//     op_arity = BUILTIN_FUNCTIONS[__hom.op].count('{}')
 //     assert op_arity == len(__hom.public_args)
 lazy_static! {
-    static ref homomorphic_builtin_functions: Vec<HomomorphicBuiltin> = {
+    static ref HOMOMORPHIC_BUILTIN_FUNCTIONS: Vec<HomomorphicBuiltin> = {
         let homomorphic_builtin_functions_internal = vec![
-            HomomorphicBuiltin::new("sign+", Homomorphism::ADDITIVE, vec![false]),
-            HomomorphicBuiltin::new("sign-", Homomorphism::ADDITIVE, vec![false]),
-            HomomorphicBuiltin::new("+", Homomorphism::ADDITIVE, vec![false, false]),
-            HomomorphicBuiltin::new("-", Homomorphism::ADDITIVE, vec![false, false]),
-            HomomorphicBuiltin::new("*", Homomorphism::ADDITIVE, vec![true, false]),
-            HomomorphicBuiltin::new("*", Homomorphism::ADDITIVE, vec![false, true]),
+            HomomorphicBuiltin::new("sign+", String::from("ADDITIVE"), vec![false]),
+            HomomorphicBuiltin::new("sign-", String::from("ADDITIVE"), vec![false]),
+            HomomorphicBuiltin::new("+", String::from("ADDITIVE"), vec![false, false]),
+            HomomorphicBuiltin::new("-", String::from("ADDITIVE"), vec![false, false]),
+            HomomorphicBuiltin::new("*", String::from("ADDITIVE"), vec![true, false]),
+            HomomorphicBuiltin::new("*", String::from("ADDITIVE"), vec![false, true]),
         ];
         for __hom in &homomorphic_builtin_functions_internal {
             assert!(
-                builtin_functions.contains_key(&__hom.op)
-                    && __hom.homomorphism != Homomorphism::NON_HOMOMORPHIC
+                BUILTIN_FUNCTIONS.contains_key(&__hom.op)
+                    && __hom.homomorphism != String::from("NON_HOMOMORPHIC")
             );
-            let op_arity = builtin_functions[&__hom.op].matches("{}").count() as usize;
+            let op_arity = BUILTIN_FUNCTIONS[&__hom.op].matches("{}").count() as usize;
             assert!(op_arity == __hom.public_args.len());
         }
         homomorphic_builtin_functions_internal
@@ -482,7 +516,7 @@ lazy_static! {
 pub struct BuiltinFunction {
     pub op: String,
     pub is_private: bool,
-    pub homomorphism: Homomorphism,
+    pub homomorphism: String,
     pub rerand_using: Option<Box<IdentifierExpr>>,
 }
 // class BuiltinFunction(Expression):
@@ -493,17 +527,17 @@ pub struct BuiltinFunction {
 
 //         // set later by type checker
 //         self.is_private: bool = False
-//         self.homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC
+//         self.homomorphism: Homomorphism = Homomorphism.NonHomomorphic
 
 //         // set later by transformation
 //         self.rerand_using: Optional['IdentifierExpr'] = None
 
 //         // input validation
-//         if op not in builtin_functions:
+//         if op not in BUILTIN_FUNCTIONS:
 //             raise ValueError(f'{op} is not a known built-in function')
 
 //     def format_string(self):
-//         return builtin_functions[self.op]
+//         return BUILTIN_FUNCTIONS[self.op]
 
 //     @property
 //     def op_func(self):
@@ -613,7 +647,7 @@ pub struct BuiltinFunction {
 //         base_type = AnnotatedTypeName(elem_type, inaccessible_arg_types[0].privacy_annotation)
 //         public_args = list(map(AnnotatedTypeName.is_public, arg_types))
 
-//         for hom in homomorphic_builtin_functions:
+//         for hom in HOMOMORPHIC_BUILTIN_FUNCTIONS:
 //             // Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
 //             args_match = [(not h) or a for a, h in zip(public_args, hom.public_args)]
 //             if self.op == hom.op and all(args_match):
@@ -711,6 +745,12 @@ pub type LiteralExpr = Expression;
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralExpr {
     pub value: bool,
+    pub annotated_type: Option<Box<AnnotatedTypeName>>,
+}
+impl BooleanLiteralExpr{
+    pub fn new(value: bool)->Self{
+        Self{value,annotated_type:Some(Box::new(AnnotatedTypeName::new(TypeName::BooleanLiteralType(BooleanLiteralType::new(value)),None,String::from("NON_HOMOMORPHIC"))))}
+    }
 }
 // class BooleanLiteralExpr(LiteralExpr):
 
@@ -723,6 +763,12 @@ pub struct BooleanLiteralExpr {
 pub struct NumberLiteralExpr {
     pub value: i32,
     pub was_hex: bool,
+    pub annotated_type: Option<Box<AnnotatedTypeName>>,
+}
+impl NumberLiteralExpr{
+    pub fn new(value: i32,was_hex: bool)->Self{
+        Self{value,was_hex,annotated_type:Some(Box::new(AnnotatedTypeName::new(TypeName::NumberLiteralType(NumberLiteralType::new(NumberLiteralTypeKind::I32(value))),None,String::from("NON_HOMOMORPHIC"))))}
+    }
 }
 // class NumberLiteralExpr(LiteralExpr):
 
@@ -735,6 +781,11 @@ pub struct NumberLiteralExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StringLiteralExpr {
     pub value: String,
+}
+impl StringLiteralExpr{
+pub fn new(value:String)->Self{
+        Self{value}
+    }
 }
 // class StringLiteralExpr(LiteralExpr):
 
@@ -789,6 +840,10 @@ pub struct TupleOrLocationExpr {
 pub struct TupleExpr {
     elements: Vec<Expression>,
 }
+impl TupleExpr{
+pub fn new(elements: Vec<Expression>)->Self{
+    Self{elements}
+}}
 // class TupleExpr(TupleOrLocationExpr):
 //     def __init__(self, elements: List[Expression]):
 //         super().__init__()
@@ -923,6 +978,11 @@ pub struct SliceExpr {
 pub struct MeExpr {
     name: String,
 }
+impl Immutable for MeExpr {
+    fn is_immutable(&self) -> bool {
+        true
+    }
+}
 // class MeExpr(Expression):
 //     name = 'me'
 
@@ -941,6 +1001,16 @@ pub struct MeExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AllExpr {
     name: String,
+}
+impl AllExpr{
+    pub fn new()->Self{
+        Self{name:String::from("all")}
+    }
+}
+impl Immutable for AllExpr {
+    fn is_immutable(&self) -> bool {
+        true
+    }
 }
 // class AllExpr(Expression):
 //     name = 'all'
@@ -992,16 +1062,16 @@ pub type RehomExpr = ReclassifyExpr;
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum HybridArgType {
     #[default]
-    PRIV_CIRCUIT_VAL,
-    PUB_CIRCUIT_ARG,
-    PUB_CONTRACT_VAL,
-    TMP_CIRCUIT_VAL,
+    PrivCircuitVal,
+    PubCircuitArg,
+    PubContractVal,
+    TmpCircuitVal,
 }
 // class HybridArgType(IntEnum):
-//     PRIV_CIRCUIT_VAL = 0
-//     PUB_CIRCUIT_ARG = 1
-//     PUB_CONTRACT_VAL = 2
-//     TMP_CIRCUIT_VAL = 3
+//     PrivCircuitVal = 0
+//     PubCircuitArg = 1
+//     PubContractVal = 2
+//     TmpCircuitVal = 3
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HybridArgumentIdf {
@@ -1026,12 +1096,12 @@ pub struct HybridArgumentIdf {
 //         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
 //     def get_loc_expr(self, parent=None) -> Union[LocationExpr, NumberLiteralExpr, BooleanLiteralExpr]:
-//         if self.arg_type == HybridArgType.TMP_CIRCUIT_VAL and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
+//         if self.arg_type == HybridArgType.TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
 //             return BooleanLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
-//         elif self.arg_type == HybridArgType.TMP_CIRCUIT_VAL and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
+//         elif self.arg_type == HybridArgType.TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
 //             return NumberLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
 //         else:
-//             assert self.arg_type == HybridArgType.PUB_CIRCUIT_ARG
+//             assert self.arg_type == HybridArgType.PubCircuitArg
 //             ma = IdentifierExpr(cfg.zk_data_var_name).dot(self).as_type(self.t)
 //             return ma.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
 
@@ -1351,6 +1421,19 @@ pub struct IndentBlock {
 //     def __init__(self, statements: List[Statement]):
 //         super().__init__(statements)
 
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum TypeName {
+    FunctionTypeName(FunctionTypeName),
+    Mapping(Box<Mapping>),
+    UserDefinedTypeName(UserDefinedTypeName),
+    ElementaryTypeName(ElementaryTypeName),
+    NumberLiteralType(NumberLiteralType),
+    BooleanLiteralType(BooleanLiteralType),
+    String(String),
+    #[default]
+    Never,
+}
 // class TypeName(AST):
 //     __metaclass__ = abc.ABCMeta
 
@@ -1464,17 +1547,7 @@ pub struct IndentBlock {
 
 //     def __eq__(self, other):
 //         raise NotImplementedError()
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[serde(untagged)]
-pub enum TypeName {
-    FunctionTypeName(FunctionTypeName),
-    Mapping(Box<Mapping>),
-    UserDefinedTypeName(UserDefinedTypeName),
-    ElementaryTypeName(ElementaryTypeName),
-    String(String),
-    #[default]
-    Never,
-}
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ElementaryTypeName {
@@ -1512,7 +1585,14 @@ pub struct BoolTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralType {
-    name: bool,
+    name: String,
+}
+impl BooleanLiteralType{
+    pub fn new(name:bool)->Self{
+    let mut  name=name.to_string();
+        name.make_ascii_lowercase();
+    Self{name}
+    }
 }
 // class BooleanLiteralType(ElementaryTypeName):
 //     def __init__(self, name: bool):
@@ -1581,7 +1661,7 @@ pub struct NumberTypeName {
 
 //     def __eq__(self, other):
 //         return isinstance(other, NumberTypeName) and self.name == other.name
-enum NumberLiteralTypeKind {
+pub enum NumberLiteralTypeKind {
     String(String),
     I32(i32),
 }
@@ -1591,6 +1671,20 @@ pub struct NumberLiteralType {
     prefix: String,
     signed: bool,
     bitwidth: Option<i32>,
+}
+impl NumberLiteralType{
+pub fn new(name:NumberLiteralTypeKind)->Self{
+    let name=match name{NumberLiteralTypeKind::String(v)=>v.parse::<i32>().unwrap(),NumberLiteralTypeKind::I32(v)=>v};
+    let blen=(i32::BITS-name.leading_zeros()) as i32;
+    let (signed,mut bitwidth)=if name<0{
+        (true,if name!=-(1<<(blen-1)){blen+1}else{blen})
+    }else{(false,blen)};
+    bitwidth=8i32.max((bitwidth+7)/8*8);
+    assert!(bitwidth<=256);
+    let name=name.to_string();
+    let prefix=name.clone();
+    Self{name,prefix,signed,bitwidth:Some(bitwidth) }
+}
 }
 // class NumberLiteralType(NumberTypeName):
 //     def __init__(self, name: Union[str, int]):
@@ -2046,12 +2140,21 @@ pub struct AnnotatedTypeName {
     type_name: Box<TypeName>,
     had_privacy_annotation: bool,
     privacy_annotation: Option<Expression>,
-    homomorphism: Homomorphism,
+    homomorphism: String,
+}
+impl AnnotatedTypeName{
+    pub fn  new(type_name:TypeName, 
+    privacy_annotation: Option<Expression>,
+    homomorphism: String,
+    )->Self{
+
+        Self{type_name:Box::new(type_name),had_privacy_annotation:privacy_annotation.is_some(),privacy_annotation:if privacy_annotation.is_some(){privacy_annotation}else{Some(Expression::AllExpr(AllExpr::new()))},homomorphism}
+    }
 }
 // class AnnotatedTypeName(AST):
 
 //     def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None,
-//                  homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
+//                  homomorphism: Homomorphism = Homomorphism.NonHomomorphic):
 //         super().__init__()
 //         self.type_name = type_name
 //         self.had_privacy_annotation = privacy_annotation is not None
@@ -2060,7 +2163,7 @@ pub struct AnnotatedTypeName {
 //         else:
 //             self.privacy_annotation = AllExpr()
 //         self.homomorphism = homomorphism
-//         if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
+//         if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NonHomomorphic:
 //             raise ValueError(f'Public type name cannot be homomorphic (got {homomorphism.type_annotation})')
 
 //     def process_children(self, f: Callable[[T], T]):
@@ -2196,7 +2299,21 @@ pub struct IdentifierDeclaration {
 //         self.idf = f(self.idf)
 
 pub type VariableDeclaration = IdentifierDeclaration;
-
+impl VariableDeclaration {
+    fn new(
+        keywords: Vec<String>,
+        annotated_type: Box<AnnotatedTypeName>,
+        idf: Identifier,
+        storage_location: Option<String>,
+    ) -> Self {
+        Self {
+            keywords,
+            annotated_type,
+            idf,
+            storage_location,
+        }
+    }
+}
 // class VariableDeclaration(IdentifierDeclaration):
 
 //     def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
@@ -2258,11 +2375,12 @@ pub struct NamespaceDefinition {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
+    name:String,
     idf: Identifier,
     parameters: Vec<Parameter>,
     modifiers: Vec<String>,
-    return_parameters: Option<Vec<Parameter>>,
-    body: Block,
+    return_parameters: Vec<Parameter>,
+    body: Option<Block>,
     return_var_decls: Vec<VariableDeclaration>,
     parent: Option<ContractDefinition>,
     original_body: Option<Block>,
@@ -2275,6 +2393,65 @@ pub struct ConstructorOrFunctionDefinition {
     used_crypto_backends: Option<Vec<CryptoParams>>,
     requires_verification: bool,
     requires_verification_when_external: bool,
+}
+impl ConstructorOrFunctionDefinition {
+    pub fn new(
+        idf: Option<Identifier>,
+        parameters: Option<Vec<Parameter>>,
+        modifiers: Option<Vec<String>>,
+        return_parameters: Option<Vec<Parameter>>,
+        body: Option<Block>,
+    ) -> Self {
+        assert!(idf.is_some() && idf.as_ref().unwrap().name != String::from("constructor") || return_parameters.is_none());
+        let idf = if let Some(idf) = idf {
+            idf
+        } else {
+            Identifier {
+                parent: None,
+                name: String::from("constructor"),
+            }
+        };
+        let return_parameters = if let Some(return_parameters) = return_parameters {
+            return_parameters
+        } else {
+            vec![]
+        };
+        let return_var_decls: Vec<_> = return_parameters
+            .iter()
+            .enumerate()
+            .map(|(idx, rp)| {
+                VariableDeclaration::new(
+                    vec![],
+                    rp.annotated_type.clone(),
+                    Identifier::new(format!("{}_{idx}", CFG.lock().unwrap().return_var_name())),
+                    rp.storage_location.clone(),
+                )
+            })
+            .collect();
+        Self{idf,parameters:parameters.unwrap(),modifiers:modifiers.unwrap(),return_parameters,body,return_var_decls,name:String::new(),parent:None, 
+        original_body: None,
+    annotated_type: None,
+    called_functions: BTreeSet::new(),
+    is_recursive: false,
+    has_static_body: false,
+    can_be_private: false,
+    used_homomorphisms: None,
+    used_crypto_backends: None,
+    requires_verification: false,
+    requires_verification_when_external: false,
+    }
+    }
+}
+pub trait ConstructorOrFunctionDefinitionAttr{
+    fn  get_requires_verification_when_external(&self)->bool;
+    fn get_name(&self)->String;
+}
+impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition{
+    fn  get_requires_verification_when_external(&self)->bool{
+    self.requires_verification_when_external}
+    fn get_name(&self)->String{
+    self.name.clone()
+        }
 }
 // class ConstructorOrFunctionDefinition(NamespaceDefinition):
 
@@ -2370,7 +2547,20 @@ pub struct ConstructorOrFunctionDefinition {
 //         self._update_fct_type()
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
+    keywords: Vec<String>,
+    annotated_type: Box<AnnotatedTypeName>,
+    idf: Identifier,
+    storage_location: Option<String>,
     expr: Option<Expression>,
+}
+
+impl StateVariableDeclaration {
+    fn is_final(&self) -> bool {
+        self.keywords.contains(&String::from("final"))
+    }
+    fn is_constant(&self) -> bool {
+        self.keywords.contains(&String::from("constant"))
+    }
 }
 // class StateVariableDeclaration(IdentifierDeclaration):
 
@@ -2384,8 +2574,13 @@ pub struct StateVariableDeclaration {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
-    values: Vec<EnumValue>,
+    idf: Option<Identifier>,
     annotated_type: Option<AnnotatedTypeName>,
+}
+impl EnumValue{
+    pub fn new(idf: Option<Identifier>)->Self{
+        Self{idf,annotated_type:None}
+    }
 }
 // class EnumValue(AST):
 //     def __init__(self, idf: Identifier):
@@ -2398,8 +2593,14 @@ pub struct EnumValue {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
+    idf: Option<Identifier>,
     values: Vec<EnumValue>,
     annotated_type: Option<AnnotatedTypeName>,
+}
+impl EnumDefinition{
+    pub fn new(idf: Option<Identifier>,values: Vec<EnumValue>)->Self{
+        Self{idf,values,annotated_type:None}
+    }
 }
 // class EnumDefinition(NamespaceDefinition):
 //     def __init__(self, idf: Identifier, values: List[EnumValue]):
@@ -2427,13 +2628,13 @@ pub struct StructDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
-    pub idf: Identifier,
+    pub idf: Option<Identifier>,
     pub state_variable_declarations: Vec<StateVariableDeclaration>,
     pub constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub function_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub enum_definitions: Vec<EnumDefinition>,
     pub struct_definitions: Option<Vec<StructDefinition>>,
-    used_crypto_backends: Option<Vec<CryptoParams>>,
+    pub used_crypto_backends: Option<Vec<CryptoParams>>,
 }
 // class ContractDefinition(NamespaceDefinition):
 
@@ -2538,6 +2739,8 @@ pub enum InstanceTargetExprType {
     #[default]
     Never,
 }
+
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct InstanceTarget {
     target_key: (Option<TargetDefinition>, Option<AST>),
 }
