@@ -15,5 +15,5 @@
 // * :py:mod:`.circuit_generation`: Contains modules for compiling abstract proof circuits into backend specific representations.
 // * :py:mod:`.proving_scheme`: Contains modules for generating verification contracts for different proving schemes.
 // """
-pub mod proving_scheme;
 pub mod circuit_generation;
+pub mod proving_scheme;

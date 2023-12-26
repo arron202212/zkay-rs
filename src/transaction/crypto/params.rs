@@ -74,12 +74,12 @@ impl CryptoParams {
         CRYPTOPARAMS[&self.crypto_name][&"rnd_chunk_size"]
     }
 
-    pub fn randomness_len(&self) -> i32 {
-        if self.is_symmetric_cipher() {
+    pub fn randomness_len(&self) -> Option<i32> {
+        Some(if self.is_symmetric_cipher() {
             0
         } else {
             (self.rnd_bytes() + self.rnd_chunk_size() - 1) / self.rnd_chunk_size()
-        }
+        })
     }
 
     pub fn cipher_bytes_payload(&self) -> i32 {

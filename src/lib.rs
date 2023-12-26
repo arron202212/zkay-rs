@@ -9,11 +9,11 @@
 // * :py:mod:`.symbol_table`: Construct symbol table from AST and resolve identifier and user-defined-type targets.
 // """
 pub mod compiler;
+pub mod config;
+pub mod config_user;
+pub mod config_version;
 pub mod solidity_parser;
 pub mod transaction;
 pub mod utils;
 pub mod zkay_ast;
 pub mod zkay_frontend;
-pub mod config;
-pub mod config_user;
-pub mod config_version;

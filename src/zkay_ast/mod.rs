@@ -22,3 +22,4 @@ pub mod ast;
 pub mod build_ast;
 pub mod homomorphism;
 pub mod process_ast;
+pub mod visitor;

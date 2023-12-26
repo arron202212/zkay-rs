@@ -10,21 +10,30 @@ use semver_rs::Version;
 //     pub static ref zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
 //     pub static ref ZKAY_VERSION:&'static str=include_str!("./VERSION");
 // }
-pub struct Versions{
-pub solc_version:Option<String>,
-pub zkay_solc_version_compatibility:Version,
+pub struct Versions {
+    pub solc_version: Option<String>,
+    pub zkay_solc_version_compatibility: Version,
 }
 
-impl Versions{
+impl Versions {
     // pub const zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
-    pub const ZKAY_LIBRARY_SOLC_VERSION:&'static str="0.6.12";
-    pub const ZKAY_VERSION:&'static str=include_str!("./VERSION");
+    pub const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "0.6.12";
+    pub const ZKAY_VERSION: &'static str = include_str!("./VERSION");
     // pub const solc_version:Option<&'static str>=Some("0.6.12");
-    pub fn new()->Self{
-    Self{solc_version:None,zkay_solc_version_compatibility:Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility")}
+    pub fn new() -> Self {
+        Self {
+            solc_version: None,
+            zkay_solc_version_compatibility: Version::new("^0.6.0")
+                .parse()
+                .expect("zkay_solc_version_compatibility"),
+        }
     }
-    pub fn set_solc_version(&mut self,version:String){
-        self.solc_version=Some(if version.starts_with("v"){version[1..].to_string()}else{version});
+    pub fn set_solc_version(&mut self, version: String) {
+        self.solc_version = Some(if version.starts_with("v") {
+            version[1..].to_string()
+        } else {
+            version
+        });
     }
 }
 // class Versions:

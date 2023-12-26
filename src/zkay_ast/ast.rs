@@ -8,17 +8,36 @@
 // use  enum import IntEnum;
 // use  functools import cmp_to_key, reduce;
 // use  os import linesep;
+#[cfg(windows)]
+const LINE_ENDING: &'static str = "\r\n";
+#[cfg(not(windows))]
+const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
 use crate::config::CFG; //, zk_print;
 use crate::transaction::crypto::params::CryptoParams;
 // use  crate::utils::progress_printer import warn_print;
 use crate::zkay_ast::analysis::partition_state::PartitionState;
-use crate::zkay_ast::homomorphism::Homomorphism;
-// use  crate::zkay_ast::visitor::visitor import AstVisitor
+use crate::zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+
+// use crate::zkay_ast::visitor::visitor::AstVisitor;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 // T = TypeVar('T')
-
+struct ChildListBuilder {
+    children: Vec<AST>,
+}
+impl ChildListBuilder {
+    pub fn new() -> Self {
+        Self { children: vec![] }
+    }
+    pub fn add_child(&mut self, ast: AST) {
+        if let AST::None = ast {
+            return;
+        }
+        self.children.push(ast.clone());
+    }
+}
 // class ChildListBuilder:
 //     def __init__(self):
 //         self.children = []
@@ -27,39 +46,122 @@ use serde::{Deserialize, Serialize};
 //         if ast is not None:
 //             self.children.append(ast)
 //         return ast
+
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+pub trait Immutable {
+    fn is_immutable(&self) -> bool;
+}
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum AST {
     #[default]
-    Never,
-    Identifier(Identifier),
-    Pragma(String),
-    VersionPragma(String),
-    Comment(Comment),
+    None,
+    Identifier(IdentifierKind),
+    Comment(CommentKind),
     Expression(Box<Expression>),
     Statement(Statement),
     TypeName(TypeName),
-ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
-ContractDefinition(ContractDefinition),
-    Block(Option<Block>),
+    // ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
+    // ContractDefinition(ContractDefinition),
+    // Block(Block),
     AnnotatedTypeName(AnnotatedTypeName),
     IdentifierDeclaration(IdentifierDeclaration),
-    StateVariableDeclaration(StateVariableDeclaration),
+    // StateVariableDeclaration(StateVariableDeclaration),
     NamespaceDefinition(NamespaceDefinition),
-EnumDefinition(EnumDefinition),
+    // EnumDefinition(EnumDefinition),
     EnumValue(EnumValue),
     SourceUnit(SourceUnit),
-  Parameters(Option<Vec<Parameter>>),
-        Modifiers(Option<Vec<String>>),
-        ReturnParameters(Option<Vec<Parameter>>),
-BooleanLiteralExpr(BooleanLiteralExpr),
-StringLiteralExpr(StringLiteralExpr),
-NumberLiteralExpr(NumberLiteralExpr),
-TupleExpr(TupleExpr),
-Modifier(String),
-Homomorphism(String),
+    // Parameters(Option<Vec<Parameter>>),
+    // Modifiers(Option<Vec<String>>),
+    // ReturnParameters(Option<Vec<Parameter>>),
+    // BooleanLiteralExpr(BooleanLiteralExpr),
+    // StringLiteralExpr(StringLiteralExpr),
+    // NumberLiteralExpr(NumberLiteralExpr),
+    // TupleExpr(TupleExpr),
+    Pragma(String),
+    VersionPragma(String),
+    Modifier(String),
+    Homomorphism(String),
+    // AddressTypeName(AddressTypeName),
+    // AddressPayableTypeName(AddressPayableTypeName),
+    // BoolTypeName(BoolTypeName),
+    // IntTypeName(IntTypeName),
+    // UintTypeName(UintTypeName),
+    // IndexExpr(IndexExpr),
+    // LocationExpr(LocationExpr),
+    // FunctionCallExpr(FunctionCallExpr),
+    // IfStatement(IfStatement),
+    // WhileStatement(WhileStatement),
+    // DoWhileStatement(DoWhileStatement),
+    // ForStatement(ForStatement),
+    // SimpleStatement(SimpleStatement),
+    // AssignmentStatement(AssignmentStatement),
+    // RequireStatement(RequireStatement),
+}
+trait ASTChildren {
+    fn children(&mut self) -> Vec<AST> {
+        let mut cb = ChildListBuilder::new();
+        self.process_children(&mut cb);
+        cb.children.drain(..).collect()
+    }
+
+    fn process_children(&mut self, cb: &mut ChildListBuilder);
 }
 
+trait ASTCode {
+    fn code(&self) -> String {
+        let v = CodeVisitor::new(true);
+        v.visit(self)
+    }
+}
+
+impl AST {
+    pub fn parent(&self) -> Option<AST> {
+        None
+    }
+    pub fn code(&self) -> String {
+        let v = CodeVisitor::new(true);
+        v.visit(self)
+    }
+    pub fn is_parent_of(&self, child: &AST) -> bool {
+        let mut e = child;
+        while e != self && e.parent().is_some() {
+            e = &e.parent().unwrap();
+        }
+        e == self
+    }
+}
+
+use std::fmt;
+impl fmt::Display for AST {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", String::new())
+    }
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ASTBase {
+    pub parent: Option<Box<AST>>,
+    pub namespace: Option<Vec<Identifier>>,
+    pub names: BTreeMap<String, Identifier>,
+    pub line: i32,
+    pub column: i32,
+    pub modified_values: BTreeSet<InstanceTarget>,
+    pub read_values: BTreeSet<InstanceTarget>,
+}
+impl ASTBase {
+    pub fn new() -> Self {
+        Self {
+            parent: None,
+            namespace: None,
+            names: BTreeMap::new(),
+            line: -1,
+            column: -1,
+            modified_values: BTreeSet::new(),
+            read_values: BTreeSet::new(),
+        }
+    }
+}
 // class AST:
 //     def __init__(self):
 //         // set later by parent setter
@@ -116,20 +218,7 @@ Homomorphism(String),
 
 //     def __str__(self):
 //         return self.code()
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct ASTStore {
-    pub parent: Option<Box<AST>>,
-    pub namespace: Option<Vec<Identifier>>,
-    pub names: BTreeMap<String, Identifier>,
-    pub line: i32,
-    pub column: i32,
-    pub modified_values: BTreeSet<InstanceTarget>,
-    pub read_values: BTreeSet<InstanceTarget>,
-}
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-pub trait Immutable {
-    fn is_immutable(&self) -> bool;
-}
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Identifier {
     pub parent: Option<Box<AST>>,
@@ -143,7 +232,10 @@ impl Identifier {
 impl Immutable for Identifier {
     fn is_immutable(&self) -> bool {
         if let Some(v) = &self.parent {
-            if let AST::StateVariableDeclaration(svd) = &**v {
+            if let AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(
+                svd,
+            )) = &**v
+            {
                 svd.is_final() || svd.is_constant()
             } else {
                 false
@@ -151,6 +243,11 @@ impl Immutable for Identifier {
         } else {
             false
         }
+    }
+}
+impl fmt::Display for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name)
     }
 }
 // class Identifier(AST):
@@ -172,6 +269,23 @@ impl Immutable for Identifier {
 //         storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
 //         return VariableDeclarationStatement(VariableDeclaration([], t, self.clone(), storage_loc), expr)
 
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum CommentKind {
+    #[default]
+    None,
+    Comment(Comment),
+    BlankLine(BlankLine),
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Comment {
+    pub text: String,
+}
+impl Comment {
+    pub fn new(text: String) -> Self {
+        Self { text }
+    }
+}
 // class Comment(AST):
 
 //     def __init__(self, text: str = ''):
@@ -187,16 +301,58 @@ impl Immutable for Identifier {
 //         if not block:
 //             return block
 //         return [Comment(f'{text}'), Comment('{'), IndentBlock(block), Comment('}'), BlankLine()]
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Comment {
-    pub text: String,
-}
 
 // class BlankLine(Comment):
 //     def __init__(self):
 //         super().__init__()
-pub type BlankLine = Comment;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct BlankLine {
+    pub text: String,
+}
+impl BlankLine {
+    pub fn new() -> Self {
+        Self {
+            text: String::new(),
+        }
+    }
+}
 
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum Expression {
+    BuiltinFunction(Box<BuiltinFunction>),
+    FunctionCallExpr(Box<FunctionCallExpr>),
+    PrimitiveCastExpr(Box<PrimitiveCastExpr>),
+    LiteralExpr(Box<LiteralExpr>),
+    TupleOrLocationExpr(Box<TupleOrLocationExpr>),
+    MeExpr(MeExpr),
+    AllExpr(AllExpr),
+    ReclassifyExpr(Box<ReclassifyExprKind>),
+    #[serde(rename_all = "camelCase")]
+    #[default]
+    None,
+}
+impl Expression {
+    fn is_all_expr(&self) -> bool {
+        if let Expression::AllExpr(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+}
+
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct Expression {
+//     pub annotated_type: Option<AnnotatedTypeName>,
+//     pub statement: Option<Statement>,
+//     pub evaluate_privately: bool,
+// }
+// impl Expression{
+//     pub fn new()->Self{
+//         Self{annotated_type:None,statement:None,evaluate_privately:false}
+//     }
+// }
 // class Expression(AST):
 
 //     @staticmethod
@@ -313,28 +469,6 @@ pub type BlankLine = Comment;
 //         else:
 //             return self.statement.before_analysis
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[serde(untagged)]
-pub enum Expression {
-    BuiltinFunction(Box<BuiltinFunction>),
-    FunctionCallExpr(Box<FunctionCallExpr>),
-    PrimitiveCastExpr(Box<PrimitiveCastExpr>),
-    LiteralExpr(Box<LiteralExpr>),
-    TupleOrLocationExpr(Box<TupleOrLocationExpr>),
-    MeExpr(MeExpr),
-    AllExpr(AllExpr),
-    ReclassifyExpr(Box<ReclassifyExpr>),
-    #[serde(rename_all = "camelCase")]
-    #[default]
-    UnhandledExpression,
-}
-
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct ExpressionStore {
-    pub annotated_type: Option<AnnotatedTypeName>,
-    pub statement: Option<Statement>,
-    pub evaluate_privately: bool,
-}
 // builtin_op_fct = {
 //     '+': operator.add, '-': operator.sub,
 //     '**': operator.pow, '*': operator.mul, '/': operator.floordiv, '%': operator.mod,
@@ -352,7 +486,7 @@ pub enum LiteralType {
     Bool(bool),
     Number(i32),
     #[default]
-    Never,
+    None,
 }
 pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
     match op {
@@ -415,7 +549,7 @@ pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralType {
 // assert builtin_op_fct.keys() == BUILTIN_FUNCTIONS.keys()
 const BINARY_OP: &'static str = "{{}} {op} {{}}";
 lazy_static! {
-    static ref BUILTIN_FUNCTIONS: HashMap<String, String> = {
+    pub static ref BUILTIN_FUNCTIONS: HashMap<String, String> = {
         let m: HashMap<&'static str, &'static str> = HashMap::from([
             ("**", BINARY_OP),
             ("*", BINARY_OP),
@@ -488,7 +622,7 @@ impl HomomorphicBuiltin {
 // ]
 
 // for __hom in HOMOMORPHIC_BUILTIN_FUNCTIONS:
-//     assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NonHomomorphic
+//     assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
 //     op_arity = BUILTIN_FUNCTIONS[__hom.op].count('{}')
 //     assert op_arity == len(__hom.public_args)
 lazy_static! {
@@ -514,10 +648,48 @@ lazy_static! {
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BuiltinFunction {
+    pub line: i32,
+    pub column: i32,
     pub op: String,
     pub is_private: bool,
     pub homomorphism: String,
     pub rerand_using: Option<Box<IdentifierExpr>>,
+}
+impl BuiltinFunction {
+    pub fn new(op: &str) -> Self {
+        let op = op.to_string();
+        assert!(
+            BUILTIN_FUNCTIONS.get(&op).is_some(),
+            "{op} is not a known built-in function"
+        );
+        Self {
+            line: -1,
+            column: -1,
+            op,
+            is_private: false,
+            homomorphism: String::from("NON_HOMOMORPHIC"),
+            rerand_using: None,
+        }
+    }
+    pub fn format_string(&self, args: &Vec<String>) -> String {
+        let op = self.op.as_str();
+
+        match op {
+            "sign+" => format!("+{}", args[0]),
+            "sign-" => format!("-{}", args[0]),
+            "!" => format!("!{}", args[0]),
+            "~" => format!("~{}", args[0]),
+            "parenthesis" => format!("({})", args[0]),
+            "ite" => {
+                let (cond, then, else_then) = (args[0], args[1], args[2]);
+                format!("if {cond} {{{then}}} else {{{else_then}}}")
+            }
+            _ => format!("{} {op} {}", args[0], args[1]),
+        }
+    }
+    pub fn arity(&self) -> i32 {
+        BUILTIN_FUNCTIONS[&self.op].matches("{}").count() as i32
+    }
 }
 // class BuiltinFunction(Expression):
 
@@ -527,7 +699,7 @@ pub struct BuiltinFunction {
 
 //         // set later by type checker
 //         self.is_private: bool = False
-//         self.homomorphism: Homomorphism = Homomorphism.NonHomomorphic
+//         self.homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC
 
 //         // set later by transformation
 //         self.rerand_using: Optional['IdentifierExpr'] = None
@@ -689,9 +861,35 @@ pub struct HomomorphicBuiltinFunction {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionCallExpr {
+    pub line: i32,
+    pub column: i32,
     pub func: Box<Expression>,
     pub args: Vec<Expression>,
     pub sec_start_offset: Option<i32>,
+}
+impl FunctionCallExpr {
+    pub fn new(
+        func: Box<Expression>,
+        args: Vec<Expression>,
+        sec_start_offset: Option<i32>,
+    ) -> Self {
+        Self {
+            line: -1,
+            column: -1,
+            func,
+            args,
+            sec_start_offset,
+        }
+    }
+}
+
+impl ASTChildren for FunctionCallExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(self.func.clone()));
+        self.args.iter().for_each(|arg| {
+            cb.add_child(AST::Expression(Box::new(arg.clone())));
+        });
+    }
 }
 // class FunctionCallExpr(Expression):
 
@@ -709,8 +907,37 @@ pub struct FunctionCallExpr {
 //         self.func = f(self.func)
 //         self.args[:] = map(f, self.args)
 
-pub type NewExpr = FunctionCallExpr;
-
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct NewExpr {
+    pub line: i32,
+    pub column: i32,
+    pub func: Box<Expression>,
+    pub args: Vec<Expression>,
+    pub sec_start_offset: Option<i32>,
+}
+impl NewExpr {
+    pub fn new(
+        func: Box<Expression>,
+        args: Vec<Expression>,
+        sec_start_offset: Option<i32>,
+    ) -> Self {
+        Self {
+            line: -1,
+            column: -1,
+            func,
+            args,
+            sec_start_offset,
+        }
+    }
+}
+impl ASTChildren for NewExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(self.func.clone()));
+        self.args.iter().for_each(|arg| {
+            cb.add_child(AST::Expression(Box::new(arg.clone())));
+        });
+    }
+}
 // class NewExpr(FunctionCallExpr):
 //     def __init__(self, annotated_type: AnnotatedTypeName, args: List[Expression]):
 //         assert not isinstance(annotated_type, ElementaryTypeName)
@@ -727,6 +954,12 @@ pub struct PrimitiveCastExpr {
     pub expr: Box<Expression>,
     pub is_implicit: bool,
 }
+impl ASTChildren for PrimitiveCastExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::TypeName(self.elem_type.clone()));
+        cb.add_child(AST::Expression(self.expr.clone()));
+    }
+}
 // class PrimitiveCastExpr(Expression):
 //     def __init__(self, elem_type: TypeName, expr: Expression, is_implicit=False):
 //         super().__init__()
@@ -738,7 +971,29 @@ pub struct PrimitiveCastExpr {
 //         self.elem_type = f(self.elem_type)
 //         self.expr = f(self.expr)
 
-pub type LiteralExpr = Expression;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum LiteralExpr {
+    BooleanLiteralExpr(Box<BooleanLiteralExpr>),
+    NumberLiteralExpr(NumberLiteralExpr),
+    StringLiteralExpr(StringLiteralExpr),
+    ArrayLiteralExpr(ArrayLiteralExpr),
+    #[serde(rename_all = "camelCase")]
+    #[default]
+    None,
+}
+
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct LiteralExpr {
+//     pub annotated_type: Option<AnnotatedTypeName>,
+//     pub statement: Option<Statement>,
+//     pub evaluate_privately: bool,
+// }
+// impl LiteralExpr{
+//     pub fn new()->Self{
+//         Self{annotated_type:None,statement:None,evaluate_privately:false}
+//     }
+// }
 // class LiteralExpr(Expression):
 //     pass
 
@@ -747,9 +1002,18 @@ pub struct BooleanLiteralExpr {
     pub value: bool,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
-impl BooleanLiteralExpr{
-    pub fn new(value: bool)->Self{
-        Self{value,annotated_type:Some(Box::new(AnnotatedTypeName::new(TypeName::BooleanLiteralType(BooleanLiteralType::new(value)),None,String::from("NON_HOMOMORPHIC"))))}
+impl BooleanLiteralExpr {
+    pub fn new(value: bool) -> Self {
+        Self {
+            value,
+            annotated_type: Some(Box::new(AnnotatedTypeName::new(
+                TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(
+                    BooleanLiteralType::new(value),
+                )),
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ))),
+        }
     }
 }
 // class BooleanLiteralExpr(LiteralExpr):
@@ -761,15 +1025,32 @@ impl BooleanLiteralExpr{
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberLiteralExpr {
+    pub line: i32,
+    pub column: i32,
     pub value: i32,
     pub was_hex: bool,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
-impl NumberLiteralExpr{
-    pub fn new(value: i32,was_hex: bool)->Self{
-        Self{value,was_hex,annotated_type:Some(Box::new(AnnotatedTypeName::new(TypeName::NumberLiteralType(NumberLiteralType::new(NumberLiteralTypeKind::I32(value))),None,String::from("NON_HOMOMORPHIC"))))}
+impl NumberLiteralExpr {
+    pub fn new(value: i32, was_hex: bool) -> Self {
+        Self {
+            line: -1,
+            column: -1,
+            value,
+            was_hex,
+            annotated_type: Some(Box::new(AnnotatedTypeName::new(
+                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                    NumberTypeName::NumberLiteralType(NumberLiteralType::new(
+                        NumberLiteralTypeKind::I32(value),
+                    )),
+                )),
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ))),
+        }
     }
 }
+
 // class NumberLiteralExpr(LiteralExpr):
 
 //     def __init__(self, value: int, was_hex: bool = False):
@@ -782,9 +1063,9 @@ impl NumberLiteralExpr{
 pub struct StringLiteralExpr {
     pub value: String,
 }
-impl StringLiteralExpr{
-pub fn new(value:String)->Self{
-        Self{value}
+impl StringLiteralExpr {
+    pub fn new(value: String) -> Self {
+        Self { value }
     }
 }
 // class StringLiteralExpr(LiteralExpr):
@@ -796,6 +1077,13 @@ pub fn new(value:String)->Self{
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ArrayLiteralExpr {
     pub values: Vec<Expression>,
+}
+impl ASTChildren for ArrayLiteralExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.values.iter().for_each(|value| {
+            cb.add_child(AST::Expression(Box::new(value.clone())));
+        });
+    }
 }
 // class ArrayLiteralExpr(LiteralExpr):
 
@@ -818,9 +1106,17 @@ pub struct KeyLiteralExpr {
 //         self.crypto_params = crypto_params
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct TupleOrLocationExpr {
-    parent: Option<Box<AST>>,
+#[serde(untagged)]
+pub enum TupleOrLocationExpr {
+    TupleExpr(Box<TupleExpr>),
+    LocationExpr(Box<LocationExpr>),
+    #[default]
+    None,
 }
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct TupleOrLocationExpr {
+//     parent: Option<Box<AST>>,
+// }
 // class TupleOrLocationExpr(Expression):
 //     def is_lvalue(self) -> bool:
 //         if isinstance(self.parent, AssignmentStatement):
@@ -840,10 +1136,18 @@ pub struct TupleOrLocationExpr {
 pub struct TupleExpr {
     elements: Vec<Expression>,
 }
-impl TupleExpr{
-pub fn new(elements: Vec<Expression>)->Self{
-    Self{elements}
-}}
+impl TupleExpr {
+    pub fn new(elements: Vec<Expression>) -> Self {
+        Self { elements }
+    }
+}
+impl ASTChildren for TupleExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.elements.iter().for_each(|element| {
+            cb.add_child(AST::Expression(Box::new(element.clone())));
+        });
+    }
+}
 // class TupleExpr(TupleOrLocationExpr):
 //     def __init__(self, elements: List[Expression]):
 //         super().__init__()
@@ -855,10 +1159,15 @@ pub fn new(elements: Vec<Expression>)->Self{
 //     def assign(self, val: Expression) -> AssignmentStatement:
 //         return AssignmentStatement(self, val)
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct LocationExpr {
-    pub target: Option<TargetDefinition>,
-}
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct LocationExpr {
+//     pub target: Option<TargetDefinition>,
+// }
+// impl LocationExpr {
+//     pub fn new() -> Self {
+//         Self { target: None }
+//     }
+// }
 // class LocationExpr(TupleOrLocationExpr):
 //     def __init__(self):
 //         super().__init__()
@@ -885,26 +1194,33 @@ pub struct LocationExpr {
 //     def assign(self, val: Expression) -> AssignmentStatement:
 //         return AssignmentStatement(self, val)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum Location {
+pub enum LocationExpr {
     IdentifierExpr(IdentifierExpr),
-    MemberAccessExpr(MemberAccessExpr),
-    IndexExpr(IndexExpr),
-    SliceExpr(SliceExpr),
+    MemberAccessExpr(Box<MemberAccessExpr>),
+    IndexExpr(Box<IndexExpr>),
+    SliceExpr(Box<SliceExpr>),
     #[default]
-    Never,
+    None,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum IdentifierExprType {
     String(String),
     Identifier(Identifier),
     #[default]
-    Never,
+    None,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierExpr {
     pub target: Option<TargetDefinition>,
     pub idf: Identifier,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
+}
+impl ASTChildren for IdentifierExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Identifier(IdentifierKind::Identifier(
+            self.idf.clone(),
+        )));
+    }
 }
 // class IdentifierExpr(LocationExpr):
 
@@ -932,6 +1248,18 @@ pub struct MemberAccessExpr {
     pub expr: LocationExpr,
     pub member: Identifier,
 }
+impl ASTChildren for MemberAccessExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(
+                self.expr.clone(),
+            ))),
+        ))));
+        cb.add_child(AST::Identifier(IdentifierKind::Identifier(
+            self.member.clone(),
+        )));
+    }
+}
 // class MemberAccessExpr(LocationExpr):
 //     def __init__(self, expr: LocationExpr, member: Identifier):
 //         super().__init__()
@@ -947,6 +1275,21 @@ pub struct MemberAccessExpr {
 pub struct IndexExpr {
     pub arr: LocationExpr,
     pub key: Expression,
+}
+impl IndexExpr {
+    pub fn new(arr: LocationExpr, key: Expression) -> Self {
+        Self { arr, key }
+    }
+}
+impl ASTChildren for IndexExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(
+                self.arr.clone(),
+            ))),
+        ))));
+        cb.add_child(AST::Expression(Box::new(self.key.clone())));
+    }
 }
 // class IndexExpr(LocationExpr):
 //     def __init__(self, arr: LocationExpr, key: Expression):
@@ -983,6 +1326,13 @@ impl Immutable for MeExpr {
         true
     }
 }
+impl MeExpr {
+    pub fn new() -> Self {
+        Self {
+            name: String::from("me"),
+        }
+    }
+}
 // class MeExpr(Expression):
 //     name = 'me'
 
@@ -1002,9 +1352,11 @@ impl Immutable for MeExpr {
 pub struct AllExpr {
     name: String,
 }
-impl AllExpr{
-    pub fn new()->Self{
-        Self{name:String::from("all")}
+impl AllExpr {
+    pub fn new() -> Self {
+        Self {
+            name: String::from("all"),
+        }
     }
 }
 impl Immutable for AllExpr {
@@ -1029,10 +1381,36 @@ impl Immutable for AllExpr {
 //         return hash('all')
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum ReclassifyExprKind {
+    ReclassifyExpr(Box<ReclassifyExpr>),
+    RehomExpr(Box<RehomExpr>),
+    #[default]
+    None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReclassifyExpr {
     pub expr: Box<Expression>,
     pub privacy: Expression,
-    pub homomorphism: Option<Homomorphism>,
+    pub homomorphism: Option<String>,
+}
+impl ReclassifyExpr {
+    pub fn new(expr: Box<Expression>, privacy: Expression, homomorphism: Option<String>) -> Self {
+        Self {
+            expr,
+            privacy,
+            homomorphism,
+        }
+    }
+    pub fn func_name(&self) -> String {
+        String::from("reveal")
+    }
+}
+impl ASTChildren for ReclassifyExpr {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(self.expr.clone()));
+        cb.add_child(AST::Expression(Box::new(self.privacy.clone())));
+    }
 }
 // class ReclassifyExpr(Expression):
 
@@ -1049,8 +1427,30 @@ pub struct ReclassifyExpr {
 //     def func_name(self):
 //         return 'reveal'
 
-pub type RehomExpr = ReclassifyExpr;
-
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct RehomExpr {
+    pub expr: Box<Expression>,
+    pub privacy: Expression,
+    pub homomorphism: Option<String>,
+}
+impl RehomExpr {
+    pub fn new(expr: Box<Expression>, homomorphism: Option<String>) -> Self {
+        Self {
+            expr,
+            privacy: Expression::MeExpr(MeExpr::new()),
+            homomorphism,
+        }
+    }
+    pub fn func_name(&self) -> String {
+        HOMOMORPHISM_STORE
+            .lock()
+            .unwrap()
+            .get(&self.homomorphism.unwrap())
+            .unwrap()
+            .rehom_expr_name
+            .clone()
+    }
+}
 // class RehomExpr(ReclassifyExpr):
 
 //     def __init__(self, expr: Expression, homomorphism: Homomorphism):
@@ -1080,6 +1480,14 @@ pub struct HybridArgumentIdf {
     pub arg_type: HybridArgType,
     pub corresponding_priv_expression: Vec<Expression>,
     pub serialized_loc: SliceExpr,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum IdentifierKind {
+    #[default]
+    None,
+    Identifier(Identifier),
+    HybridArgumentIdf(HybridArgumentIdf),
 }
 // class HybridArgumentIdf(Identifier):
 //     def __init__(self, name: str, t: TypeName, arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
@@ -1157,7 +1565,7 @@ pub struct HybridArgumentIdf {
 pub struct EncryptionExpression {
     pub expr: Expression,
     pub privacy: PrivacyLabelExpr,
-    pub homomorphism: Option<Homomorphism>,
+    pub homomorphism: Option<String>,
     pub annotated_type: Option<AnnotatedTypeName>,
 }
 // class EncryptionExpression(ReclassifyExpr):
@@ -1166,14 +1574,33 @@ pub struct EncryptionExpression {
 //             privacy = IdentifierExpr(privacy)
 //         super().__init__(expr, privacy, homomorphism)
 //         self.annotated_type = AnnotatedTypeName.cipher_type(expr.annotated_type, homomorphism)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Statement {
-    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    function: Option<ConstructorOrFunctionDefinition>,
-    pre_statements: Vec<CircuitInputStatement>,
+pub enum Statement {
+    CircuitDirectiveStatement(Box<CircuitDirectiveStatement>),
+    IfStatement(Box<IfStatement>),
+    WhileStatement(Box<WhileStatement>),
+    DoWhileStatement(Box<DoWhileStatement>),
+    ForStatement(Box<ForStatement>),
+    BreakStatement(Box<BreakStatement>),
+    ContinueStatement(Box<ContinueStatement>),
+    ReturnStatement(Box<ReturnStatement>),
+    SimpleStatement(Box<SimpleStatement>),
+    StatementList(Box<StatementList>),
+    // Block(Box<Block>),
+    // ExpressionStatement(ExpressionStatement),
+    // RequireStatement(RequireStatement),
+    // AssignmentStatement(AssignmentStatement),
+    // CircuitInputStatement(CircuitInputStatement),
+    #[default]
+    None,
 }
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct StatementBase {
+//     before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+//     after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+//     function: Option<ConstructorOrFunctionDefinition>,
+//     pre_statements: Vec<CircuitInputStatement>,
+// }
 // class Statement(AST):
 
 //     def __init__(self):
@@ -1187,7 +1614,13 @@ pub struct Statement {
 //         // set by circuit helper
 //         self.pre_statements = []
 
-pub type CircuitDirectiveStatement = Statement;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum CircuitDirectiveStatement {
+    CircuitComputationStatement(Box<CircuitComputationStatement>),
+    EnterPrivateKeyStatement(Box<EnterPrivateKeyStatement>),
+    #[default]
+    None,
+}
 // class CircuitDirectiveStatement(Statement):
 //     """Invisible statement with instructions for offchain simulator"""
 //     pass
@@ -1216,6 +1649,26 @@ pub struct IfStatement {
     pub then_branch: Block,
     pub else_branch: Option<Block>,
 }
+impl IfStatement {
+    pub fn new(condition: Expression, then_branch: Block, else_branch: Option<Block>) -> Self {
+        Self {
+            condition,
+            then_branch,
+            else_branch,
+        }
+    }
+}
+impl ASTChildren for IfStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(self.condition.clone())));
+        cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+            StatementList::Block(Box::new(self.then_branch.clone())),
+        ))));
+        cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+            StatementList::Block(Box::new(self.then_branch.clone())),
+        ))));
+    }
+}
 // class IfStatement(Statement):
 
 //     def __init__(self, condition: Expression, then_branch: Block, else_branch: Optional[Block]):
@@ -1234,6 +1687,19 @@ pub struct WhileStatement {
     pub condition: Expression,
     pub body: Block,
 }
+impl WhileStatement {
+    pub fn new(condition: Expression, body: Block) -> Self {
+        Self { condition, body }
+    }
+}
+impl ASTChildren for WhileStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(self.condition.clone())));
+        cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+            StatementList::Block(Box::new(self.body.clone())),
+        ))));
+    }
+}
 // class WhileStatement(Statement):
 //     def __init__(self, condition: Expression, body: Block):
 //         super().__init__()
@@ -1248,6 +1714,19 @@ pub struct WhileStatement {
 pub struct DoWhileStatement {
     pub body: Block,
     pub condition: Expression,
+}
+impl DoWhileStatement {
+    pub fn new(body: Block, condition: Expression) -> Self {
+        Self { body, condition }
+    }
+}
+impl ASTChildren for DoWhileStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+            StatementList::Block(Box::new(self.body.clone())),
+        ))));
+        cb.add_child(AST::Expression(Box::new(self.condition.clone())));
+    }
 }
 // class DoWhileStatement(Statement):
 //     def __init__(self, body: Block, condition: Expression):
@@ -1265,6 +1744,40 @@ pub struct ForStatement {
     pub condition: Expression,
     pub update: Option<SimpleStatement>,
     pub body: Block,
+}
+impl ForStatement {
+    pub fn new(
+        init: Option<SimpleStatement>,
+        condition: Expression,
+        update: Option<SimpleStatement>,
+        body: Block,
+    ) -> Self {
+        Self {
+            init,
+            condition,
+            update,
+            body,
+        }
+    }
+}
+impl ASTChildren for ForStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        if let Some(init) = &self.init {
+            cb.add_child(AST::Statement(Statement::SimpleStatement(Box::new(
+                init.clone(),
+            ))));
+        }
+
+        cb.add_child(AST::Expression(Box::new(self.condition.clone())));
+        if let Some(update) = &self.update {
+            cb.add_child(AST::Statement(Statement::SimpleStatement(Box::new(
+                update.clone(),
+            ))));
+        }
+        cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+            StatementList::Block(Box::new(self.body.clone())),
+        ))));
+    }
 }
 // class ForStatement(Statement):
 //     def __init__(self, init: Optional[SimpleStatement], condition: Expression, update: Optional[SimpleStatement], body: Block):
@@ -1284,17 +1797,34 @@ pub struct ForStatement {
 //     def statements(self) -> List[Statement]:
 //         return [self.init, self.condition, self.body, self.update]
 
-pub type BreakStatement = Statement;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct BreakStatement {
+    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    function: Option<ConstructorOrFunctionDefinition>,
+    pre_statements: Vec<CircuitInputStatement>,
+}
 // class BreakStatement(Statement):
 //     pass
 
-pub type ContinueStatement = Statement;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ContinueStatement {
+    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    function: Option<ConstructorOrFunctionDefinition>,
+    pre_statements: Vec<CircuitInputStatement>,
+}
 // class ContinueStatement(Statement):
 //     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReturnStatement {
     pub expr: Expression,
+}
+impl ASTChildren for ReturnStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(self.expr.clone())));
+    }
 }
 // class ReturnStatement(Statement):
 
@@ -1305,13 +1835,31 @@ pub struct ReturnStatement {
 //     def process_children(self, f: Callable[[T], T]):
 //         self.expr = f(self.expr)
 
-pub type SimpleStatement = Statement;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum SimpleStatement {
+    ExpressionStatement(Box<ExpressionStatement>),
+    RequireStatement(Box<RequireStatement>),
+    AssignmentStatement(Box<AssignmentStatementKind>),
+    VariableDeclarationStatement(VariableDeclarationStatement),
+    #[default]
+    None,
+}
 // class SimpleStatement(Statement):
 //     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionStatement {
     pub expr: Expression,
+}
+impl ExpressionStatement {
+    pub fn new(expr: Expression) -> Self {
+        Self { expr }
+    }
+}
+impl ASTChildren for ExpressionStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(self.expr.clone())));
+    }
 }
 // class ExpressionStatement(SimpleStatement):
 
@@ -1325,7 +1873,24 @@ pub struct ExpressionStatement {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RequireStatement {
     pub condition: Expression,
-    pub unmodified_code: Option<String>,
+    pub unmodified_code: String,
+}
+impl RequireStatement {
+    pub fn new(condition: Expression, unmodified_code: Option<String>) -> Self {
+        Self {
+            condition,
+            unmodified_code: if let Some(unmodified_code) = unmodified_code {
+                unmodified_code
+            } else {
+                String::new() //self.code()
+            },
+        }
+    }
+}
+impl ASTChildren for RequireStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Expression(Box::new(self.condition.clone())));
+    }
 }
 // class RequireStatement(SimpleStatement):
 
@@ -1336,18 +1901,46 @@ pub struct RequireStatement {
 
 //     def process_children(self, f: Callable[[T], T]):
 //         self.condition = f(self.condition)
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum AssignmentStatementType {
-    TupleExpr(TupleExpr),
-    LocationExpr(LocationExpr),
+pub enum AssignmentStatementKind {
+    AssignmentStatement(AssignmentStatement),
+    CircuitInputStatement(CircuitInputStatement),
     #[default]
-    Never,
+    None,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AssignmentStatement {
-    pub lhs: AssignmentStatementType,
+    pub lhs: AssignmentStatementUnion,
     pub rhs: Expression,
-    pub op: Option<String>,
+    pub op: String,
+}
+impl AssignmentStatement {
+    pub fn new(lhs: AssignmentStatementUnion, rhs: Expression, op: Option<String>) -> Self {
+        Self {
+            lhs,
+            rhs,
+            op: if let Some(op) = op { op } else { String::new() },
+        }
+    }
+}
+impl ASTChildren for AssignmentStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        match &self.lhs {
+            AssignmentStatementUnion::TupleExpr(te) => {
+                cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                    Box::new(TupleOrLocationExpr::TupleExpr(Box::new(te.clone()))),
+                ))))
+            }
+            AssignmentStatementUnion::LocationExpr(le) => {
+                cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                    Box::new(TupleOrLocationExpr::LocationExpr(Box::new(le.clone()))),
+                ))))
+            }
+            _ => {}
+        };
+        cb.add_child(AST::Expression(Box::new(self.rhs.clone())));
+    }
 }
 // class AssignmentStatement(SimpleStatement):
 
@@ -1360,17 +1953,68 @@ pub struct AssignmentStatement {
 //     def process_children(self, f: Callable[[T], T]):
 //         self.lhs = f(self.lhs)
 //         self.rhs = f(self.rhs)
-
-pub type CircuitInputStatement = AssignmentStatement;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum AssignmentStatementUnion {
+    TupleExpr(TupleExpr),
+    LocationExpr(LocationExpr),
+    #[default]
+    None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct CircuitInputStatement {
+    pub lhs: AssignmentStatementUnion,
+    pub rhs: Expression,
+    pub op: String,
+}
+impl CircuitInputStatement {
+    pub fn new(lhs: AssignmentStatementUnion, rhs: Expression, op: Option<String>) -> Self {
+        Self {
+            lhs,
+            rhs,
+            op: if let Some(op) = op { op } else { String::new() },
+        }
+    }
+}
+impl ASTChildren for CircuitInputStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        match &self.lhs {
+            AssignmentStatementUnion::TupleExpr(te) => {
+                cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                    Box::new(TupleOrLocationExpr::TupleExpr(Box::new(te.clone()))),
+                ))))
+            }
+            AssignmentStatementUnion::LocationExpr(le) => {
+                cb.add_child(AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                    Box::new(TupleOrLocationExpr::LocationExpr(Box::new(le.clone()))),
+                ))))
+            }
+            _ => {}
+        };
+        cb.add_child(AST::Expression(Box::new(self.rhs.clone())));
+    }
+}
 // class CircuitInputStatement(AssignmentStatement):
 //     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct StatementList {
-    pub statements: Vec<Statement>,
-    pub excluded_from_simulation: bool,
+pub enum StatementList {
+    Block(Box<Block>),
+    IndentBlock(Box<IndentBlock>),
+    #[default]
+    None,
 }
-
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct StatementList {
+//     pub statements: Vec<Statement>,
+//     pub excluded_from_simulation: bool,
+// }
+// impl ASTChildren for StatementList {
+//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
+//         self.statements.iter().for_each(|statement| {
+//             cb.add_child(AST::Statement(statement.clone()));
+//         });
+//     }
+// }
 // class StatementList(Statement):
 //     def __init__(self, statements: List[Statement], excluded_from_simulation: bool = False):
 //         super().__init__()
@@ -1408,6 +2052,15 @@ pub struct Block {
     pub excluded_from_simulation: bool,
     pub was_single_statement: bool,
 }
+impl Block {
+    pub fn new(statements: Vec<Statement>, was_single_statement: bool) -> Self {
+        Self {
+            statements,
+            excluded_from_simulation: false,
+            was_single_statement,
+        }
+    }
+}
 // class Block(StatementList):
 //     def __init__(self, statements: List[Statement], was_single_statement=False):
 //         super().__init__(statements)
@@ -1424,15 +2077,75 @@ pub struct IndentBlock {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum TypeName {
-    FunctionTypeName(FunctionTypeName),
-    Mapping(Box<Mapping>),
-    UserDefinedTypeName(UserDefinedTypeName),
     ElementaryTypeName(ElementaryTypeName),
-    NumberLiteralType(NumberLiteralType),
-    BooleanLiteralType(BooleanLiteralType),
-    String(String),
+    UserDefinedTypeName(UserDefinedTypeName),
+    Mapping(Box<Mapping>),
+    Array(Array),
+    TupleType(TupleType),
+    FunctionTypeName(FunctionTypeName),
+    // NumberLiteralType(NumberLiteralType),
+    // BooleanLiteralType(BooleanLiteralType),
+    // String(String),
     #[default]
-    Never,
+    None,
+}
+impl TypeName {
+    pub fn bool_type() -> Self {
+        TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(BoolTypeName::new()))
+    }
+
+    pub fn uint_type() -> Self {
+        TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+            NumberTypeName::UintTypeName(UintTypeName::new(String::from("uint"))),
+        ))
+    }
+
+    pub fn number_type() -> Self {
+        TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(NumberTypeName::any()))
+    }
+
+    pub fn address_type() -> Self {
+        TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(AddressTypeName::new()))
+    }
+
+    pub fn address_payable_type() -> Self {
+        TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(
+            AddressPayableTypeName::new(),
+        ))
+    }
+
+    pub fn cipher_type(plain_type: AnnotatedTypeName, hom: String) -> Self {
+        let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(&hom);
+        let mut pt = plain_type.clone();
+        pt.homomorphism = hom; // Just for display purposes
+        TypeName::Array(Array::CipherText(CipherText::new(pt, crypto_params)))
+    }
+
+    pub fn rnd_type(crypto_params: CryptoParams) -> Self {
+        TypeName::Array(Array::Randomness(Randomness::new(crypto_params)))
+    }
+
+    pub fn key_type(crypto_params: CryptoParams) -> Self {
+        TypeName::Array(Array::Key(Box::new(Key::new(crypto_params))))
+    }
+
+    pub fn proof_type() -> Self {
+        TypeName::Array(Array::Proof(Proof::new()))
+    }
+
+    pub fn dyn_uint_array() -> Self {
+        TypeName::Array(Array::ArrayBase(ArrayBase::new(
+            AnnotatedTypeName::uint_all(),
+            ExprType::None,
+        )))
+    }
+    pub fn is_cipher(&self) -> bool {
+        // if let TypeName::Array(Array::CipherText(_)) = self.type_name {
+        //     true
+        // } else {
+        false
+        // }
+    }
 }
 // class TypeName(AST):
 //     __metaclass__ = abc.ABCMeta
@@ -1548,10 +2261,18 @@ pub enum TypeName {
 //     def __eq__(self, other):
 //         raise NotImplementedError()
 
-
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct ElementaryTypeName {
+//     pub name: String,
+// }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct ElementaryTypeName {
-    pub name: String,
+#[serde(untagged)]
+pub enum ElementaryTypeName {
+    NumberTypeName(NumberTypeName),
+    BoolTypeName(BoolTypeName),
+    BooleanLiteralType(BooleanLiteralType),
+    #[default]
+    None,
 }
 // class ElementaryTypeName(TypeName):
 
@@ -1568,6 +2289,13 @@ pub struct ElementaryTypeName {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BoolTypeName {
     name: String,
+}
+impl BoolTypeName {
+    pub fn new() -> Self {
+        Self {
+            name: String::from("bool"),
+        }
+    }
 }
 // class BoolTypeName(ElementaryTypeName):
 //     def __init__(self, name='bool'):
@@ -1587,11 +2315,11 @@ pub struct BoolTypeName {
 pub struct BooleanLiteralType {
     name: String,
 }
-impl BooleanLiteralType{
-    pub fn new(name:bool)->Self{
-    let mut  name=name.to_string();
+impl BooleanLiteralType {
+    pub fn new(name: bool) -> Self {
+        let mut name = name.to_string();
         name.make_ascii_lowercase();
-    Self{name}
+        Self { name }
     }
 }
 // class BooleanLiteralType(ElementaryTypeName):
@@ -1625,11 +2353,54 @@ impl BooleanLiteralType{
 //         return isinstance(other, BooleanLiteralType)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct NumberTypeName {
+#[serde(untagged)]
+pub enum NumberTypeName {
+    NumberLiteralType(NumberLiteralType),
+    IntTypeName(IntTypeName),
+    UintTypeName(UintTypeName),
+    AnyNumberTypeName(AnyNumberTypeName),
+    #[default]
+    None,
+}
+impl NumberTypeName {
+    pub fn any() -> Self {
+        NumberTypeName::AnyNumberTypeName(AnyNumberTypeName::new(
+            String::new(),
+            String::new(),
+            true,
+            Some(256),
+        ))
+    }
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct AnyNumberTypeName {
     name: String,
     prefix: String,
     signed: bool,
     bitwidth: Option<i32>,
+    _size_in_bits: i32,
+}
+impl AnyNumberTypeName {
+    pub fn new(name: String, prefix: String, signed: bool, bitwidth: Option<i32>) -> Self {
+        assert!(name.starts_with(&prefix));
+        let prefix_len = prefix.len();
+        let _size_in_bits = if let Some(bitwidth) = bitwidth {
+            bitwidth
+        } else {
+            if name.len() > prefix_len {
+                name[prefix_len..].parse::<i32>().unwrap()
+            } else {
+                0
+            }
+        };
+        Self {
+            name,
+            prefix,
+            signed,
+            bitwidth,
+            _size_in_bits,
+        }
+    }
 }
 // class NumberTypeName(ElementaryTypeName):
 //     def __init__(self, name: str, prefix: str, signed: bool, bitwidth=None):
@@ -1672,19 +2443,36 @@ pub struct NumberLiteralType {
     signed: bool,
     bitwidth: Option<i32>,
 }
-impl NumberLiteralType{
-pub fn new(name:NumberLiteralTypeKind)->Self{
-    let name=match name{NumberLiteralTypeKind::String(v)=>v.parse::<i32>().unwrap(),NumberLiteralTypeKind::I32(v)=>v};
-    let blen=(i32::BITS-name.leading_zeros()) as i32;
-    let (signed,mut bitwidth)=if name<0{
-        (true,if name!=-(1<<(blen-1)){blen+1}else{blen})
-    }else{(false,blen)};
-    bitwidth=8i32.max((bitwidth+7)/8*8);
-    assert!(bitwidth<=256);
-    let name=name.to_string();
-    let prefix=name.clone();
-    Self{name,prefix,signed,bitwidth:Some(bitwidth) }
-}
+impl NumberLiteralType {
+    pub fn new(name: NumberLiteralTypeKind) -> Self {
+        let name = match name {
+            NumberLiteralTypeKind::String(v) => v.parse::<i32>().unwrap(),
+            NumberLiteralTypeKind::I32(v) => v,
+        };
+        let blen = (i32::BITS - name.leading_zeros()) as i32;
+        let (signed, mut bitwidth) = if name < 0 {
+            (
+                true,
+                if name != -(1 << (blen - 1)) {
+                    blen + 1
+                } else {
+                    blen
+                },
+            )
+        } else {
+            (false, blen)
+        };
+        bitwidth = 8i32.max((bitwidth + 7) / 8 * 8);
+        assert!(bitwidth <= 256);
+        let name = name.to_string();
+        let prefix = name.clone();
+        Self {
+            name,
+            prefix,
+            signed,
+            bitwidth: Some(bitwidth),
+        }
+    }
 }
 // class NumberLiteralType(NumberTypeName):
 //     def __init__(self, name: Union[str, int]):
@@ -1740,6 +2528,16 @@ pub struct IntTypeName {
     signed: bool,
     bitwidth: Option<i32>,
 }
+impl IntTypeName {
+    pub fn new(name: String) -> Self {
+        Self {
+            name,
+            prefix: String::from("int"),
+            signed: true,
+            bitwidth: None,
+        }
+    }
+}
 // class IntTypeName(NumberTypeName):
 //     def __init__(self, name: str = 'int'):
 //         super().__init__(name, 'int', True)
@@ -1759,6 +2557,16 @@ pub struct UintTypeName {
     signed: bool,
     bitwidth: Option<i32>,
 }
+impl UintTypeName {
+    pub fn new(name: String) -> Self {
+        Self {
+            name,
+            prefix: String::from("uint"),
+            signed: false,
+            bitwidth: None,
+        }
+    }
+}
 // class UintTypeName(NumberTypeName):
 //     def __init__(self, name: str = 'uint'):
 //         super().__init__(name, 'uint', False)
@@ -1771,10 +2579,22 @@ pub struct UintTypeName {
 //     def clone(self) -> UintTypeName:
 //         return UintTypeName(self.name)
 
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct UserDefinedTypeName {
+//     pub names: Vec<Identifier>,
+//     pub target: Option<NamespaceDefinition>,
+// }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct UserDefinedTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+#[serde(untagged)]
+pub enum UserDefinedTypeName {
+    EnumTypeName(EnumTypeName),
+    EnumValueTypeName(EnumValueTypeName),
+    StructTypeName(Box<StructTypeName>),
+    ContractTypeName(ContractTypeName),
+    AddressTypeName(AddressTypeName),
+    AddressPayableTypeName(AddressPayableTypeName),
+    #[default]
+    None,
 }
 // class UserDefinedTypeName(TypeName):
 //     def __init__(self, names: List[Identifier], target: Optional[NamespaceDefinition] = None):
@@ -1788,7 +2608,11 @@ pub struct UserDefinedTypeName {
 //     def __eq__(self, other):
 //         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.target.qualified_name, other.target.qualified_name))
 
-pub type EnumTypeName = UserDefinedTypeName;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct EnumTypeName {
+    pub names: Vec<Identifier>,
+    pub target: Option<NamespaceDefinition>,
+}
 // class EnumTypeName(UserDefinedTypeName):
 //     def clone(self) -> EnumTypeName:
 //         return EnumTypeName(self.names.copy(), self.target)
@@ -1797,7 +2621,11 @@ pub type EnumTypeName = UserDefinedTypeName;
 //     def elem_bitwidth(self):
 //         return 256
 
-pub type EnumValueTypeName = UserDefinedTypeName;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct EnumValueTypeName {
+    pub names: Vec<Identifier>,
+    pub target: Option<NamespaceDefinition>,
+}
 // class EnumValueTypeName(UserDefinedTypeName):
 //     @property
 //     def elem_bitwidth(self):
@@ -1812,12 +2640,20 @@ pub type EnumValueTypeName = UserDefinedTypeName;
 //     def implicitly_convertible_to(self, expected: TypeName) -> bool:
 //         return super().implicitly_convertible_to(expected) or (isinstance(expected, EnumTypeName) and expected.names == self.names[:-1])
 
-pub type StructTypeName = UserDefinedTypeName;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct StructTypeName {
+    pub names: Vec<Identifier>,
+    pub target: Option<NamespaceDefinition>,
+}
 // class StructTypeName(UserDefinedTypeName):
 //     def clone(self) -> StructTypeName:
 //         return StructTypeName(self.names.copy(), self.target)
 
-pub type ContractTypeName = UserDefinedTypeName;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ContractTypeName {
+    pub names: Vec<Identifier>,
+    pub target: Option<NamespaceDefinition>,
+}
 // class ContractTypeName(UserDefinedTypeName):
 //     def clone(self) -> ContractTypeName:
 //         return ContractTypeName(self.names.copy(), self.target)
@@ -1826,6 +2662,14 @@ pub type ContractTypeName = UserDefinedTypeName;
 pub struct AddressTypeName {
     pub names: Vec<Identifier>,
     pub target: Option<NamespaceDefinition>,
+}
+impl AddressTypeName {
+    pub fn new() -> Self {
+        Self {
+            names: vec![Identifier::new(String::from("<address>"))],
+            target: None,
+        }
+    }
 }
 // class AddressTypeName(UserDefinedTypeName):
 //     def __init__(self):
@@ -1845,6 +2689,14 @@ pub struct AddressTypeName {
 pub struct AddressPayableTypeName {
     pub names: Vec<Identifier>,
     pub target: Option<NamespaceDefinition>,
+}
+impl AddressPayableTypeName {
+    pub fn new() -> Self {
+        Self {
+            names: vec![Identifier::new(String::from("<address_payable>"))],
+            target: None,
+        }
+    }
 }
 // class AddressPayableTypeName(UserDefinedTypeName):
 //     def __init__(self):
@@ -1868,14 +2720,28 @@ pub enum KeyLabelType {
     String(String),
     Identifier(Option<Identifier>),
     #[default]
-    Never,
+    None,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Mapping {
+    pub idf: Identifier,
     pub key_type: ElementaryTypeName,
     pub key_label: KeyLabelType,
     pub value_type: Box<AnnotatedTypeName>,
     pub instantiated_key: Option<Expression>,
+}
+impl ASTChildren for Mapping {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::TypeName(TypeName::ElementaryTypeName(
+            self.key_type.clone(),
+        )));
+        if let KeyLabelType::Identifier(Some(idf)) = &self.key_label {
+            cb.add_child(AST::Identifier(IdentifierKind::Identifier(
+                self.idf.clone(),
+            )));
+        }
+        cb.add_child(AST::AnnotatedTypeName(*self.value_type.clone()));
+    }
 }
 // class Mapping(TypeName):
 
@@ -1911,13 +2777,48 @@ pub enum ExprType {
     I32(i32),
     Expression(Expression),
     #[default]
-    Never,
+    None,
+}
+
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum Array {
+    CipherText(CipherText),
+    Randomness(Randomness),
+    Key(Box<Key>),
+    Proof(Proof),
+    ArrayBase(ArrayBase),
+    #[default]
+    None,
+}
+impl ASTChildren for ArrayBase {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::AnnotatedTypeName(self.value_type.clone()));
+        if let ExprType::Expression(expr) = &self.expr {
+            cb.add_child(AST::Expression(Box::new(expr.clone())));
+        }
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Array {
+pub struct ArrayBase {
     pub value_type: AnnotatedTypeName,
     pub expr: ExprType,
 }
+impl ArrayBase {
+    pub fn new(value_type: AnnotatedTypeName, expr: ExprType) -> Self {
+        Self {
+            value_type,
+            expr: if let ExprType::I32(expr) = expr {
+                ExprType::Expression(Expression::LiteralExpr(Box::new(
+                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(expr, false)),
+                )))
+            } else {
+                expr
+            },
+        }
+    }
+}
+
 // class Array(TypeName):
 
 //     def __init__(self, value_type: AnnotatedTypeName, expr: Union[int, Expression] = None):
@@ -1961,6 +2862,22 @@ pub struct CipherText {
     pub plain_type: AnnotatedTypeName,
     pub crypto_params: CryptoParams,
 }
+impl CipherText {
+    pub fn new(plain_type: AnnotatedTypeName, crypto_params: CryptoParams) -> Self {
+        assert!(!plain_type.type_name.is_cipher());
+        Self {
+            value_type: AnnotatedTypeName::uint_all(),
+            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
+                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                    crypto_params.cipher_len(),
+                    false,
+                )),
+            ))),
+            plain_type,
+            crypto_params,
+        }
+    }
+}
 // class CipherText(Array):
 //     def __init__(self, plain_type: AnnotatedTypeName, crypto_params: CryptoParams):
 //         assert not plain_type.type_name.is_cipher()
@@ -1986,6 +2903,21 @@ pub struct Randomness {
     pub expr: ExprType,
     pub crypto_params: CryptoParams,
 }
+impl Randomness {
+    pub fn new(crypto_params: CryptoParams) -> Self {
+        Self {
+            value_type: AnnotatedTypeName::uint_all(),
+            expr: if let Some(randomness_len) = crypto_params.randomness_len() {
+                ExprType::Expression(Expression::LiteralExpr(Box::new(
+                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(randomness_len, false)),
+                )))
+            } else {
+                ExprType::None
+            },
+            crypto_params,
+        }
+    }
+}
 // class Randomness(Array):
 //     def __init__(self, crypto_params: CryptoParams):
 //         if crypto_params.randomness_len is None:
@@ -2006,6 +2938,20 @@ pub struct Key {
     pub expr: ExprType,
     pub crypto_params: CryptoParams,
 }
+impl Key {
+    pub fn new(crypto_params: CryptoParams) -> Self {
+        Self {
+            value_type: AnnotatedTypeName::uint_all(),
+            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
+                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                    crypto_params.key_len(),
+                    false,
+                )),
+            ))),
+            crypto_params,
+        }
+    }
+}
 // class Key(Array):
 //     def __init__(self, crypto_params: CryptoParams):
 //         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(crypto_params.key_len))
@@ -2022,6 +2968,19 @@ pub struct Proof {
     pub value_type: AnnotatedTypeName,
     pub expr: ExprType,
 }
+impl Proof {
+    pub fn new() -> Self {
+        Self {
+            value_type: AnnotatedTypeName::uint_all(),
+            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
+                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                    CFG.lock().unwrap().proof_len(),
+                    false,
+                )),
+            ))),
+        }
+    }
+}
 // class Proof(Array):
 //     def __init__(self):
 //         super().__init__(AnnotatedTypeName.uint_all(), NumberLiteralExpr(cfg.proof_len))
@@ -2037,7 +2996,15 @@ pub struct DummyAnnotation;
 // class DummyAnnotation:
 //     pass
 
-pub type TupleType = TypeName;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct TupleType {
+    pub types: Vec<AnnotatedTypeName>,
+}
+impl TupleType {
+    pub fn new(types: Vec<AnnotatedTypeName>) -> Self {
+        Self { types }
+    }
+}
 // class TupleType(TypeName):
 //     """Does not appear in the syntax, but is necessary for type checking"""
 
@@ -2116,8 +3083,35 @@ pub struct FunctionTypeName {
     modifiers: Vec<String>,
     return_parameters: Vec<Parameter>,
 }
+impl FunctionTypeName {
+    pub fn new(
+        parameters: Vec<Parameter>,
+        modifiers: Vec<String>,
+        return_parameters: Vec<Parameter>,
+    ) -> Self {
+        Self {
+            parameters,
+            modifiers,
+            return_parameters,
+        }
+    }
+}
+impl ASTChildren for FunctionTypeName {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.parameters.iter().for_each(|parameter| {
+            cb.add_child(AST::IdentifierDeclaration(
+                IdentifierDeclaration::Parameter(parameter.clone()),
+            ));
+        });
+        self.return_parameters.iter().for_each(|parameter| {
+            cb.add_child(AST::IdentifierDeclaration(
+                IdentifierDeclaration::Parameter(parameter.clone()),
+            ));
+        });
+    }
+}
 // class FunctionTypeName(TypeName):
-//     def __init__(self, parameters: List[Parameter], modifiers: List[str], return_parameters: List[Parameter]):
+//     def __init__(self, parameters: List[Parameter], modifiers: Vec<String>, return_parameters: List[Parameter]):
 //         super().__init__()
 //         self.parameters = parameters
 //         self.modifiers = modifiers
@@ -2137,24 +3131,73 @@ pub struct FunctionTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
-    type_name: Box<TypeName>,
-    had_privacy_annotation: bool,
-    privacy_annotation: Option<Expression>,
-    homomorphism: String,
+    pub type_name: Box<TypeName>,
+    pub had_privacy_annotation: bool,
+    pub privacy_annotation: Option<Expression>,
+    pub homomorphism: String,
 }
-impl AnnotatedTypeName{
-    pub fn  new(type_name:TypeName, 
-    privacy_annotation: Option<Expression>,
-    homomorphism: String,
-    )->Self{
+impl AnnotatedTypeName {
+    pub fn new(
+        type_name: TypeName,
+        privacy_annotation: Option<Expression>,
+        homomorphism: String,
+    ) -> Self {
+        assert!(
+            !(privacy_annotation.is_none()
+                || if let Expression::AllExpr(_) = privacy_annotation.unwrap() {
+                    true
+                } else {
+                    false
+                })
+                || homomorphism == String::from("NON_HOMOMORPHIC"),
+            "Public type name cannot be homomorphic (got {:?})",
+            HOMOMORPHISM_STORE.lock().unwrap().get(&homomorphism)
+        );
+        Self {
+            type_name: Box::new(type_name),
+            had_privacy_annotation: privacy_annotation.is_some(),
+            privacy_annotation: if privacy_annotation.is_some() {
+                privacy_annotation
+            } else {
+                Some(Expression::AllExpr(AllExpr::new()))
+            },
+            homomorphism,
+        }
+    }
+    pub fn is_public(&self) -> bool {
+        if let Some(pa) = self.privacy_annotation {
+            pa.is_all_expr()
+        } else {
+            false
+        }
+    }
 
-        Self{type_name:Box::new(type_name),had_privacy_annotation:privacy_annotation.is_some(),privacy_annotation:if privacy_annotation.is_some(){privacy_annotation}else{Some(Expression::AllExpr(AllExpr::new()))},homomorphism}
+    pub fn is_private(&self) -> bool {
+        self.is_public()
+    }
+    pub fn uint_all() -> AnnotatedTypeName {
+        AnnotatedTypeName::new(TypeName::uint_type(), None, String::from("NON_HOMOMORPHIC"))
+    }
+    pub fn is_cipher(&self) -> bool {
+        if let TypeName::Array(Array::CipherText(_)) = *self.type_name {
+            true
+        } else {
+            false
+        }
+    }
+}
+impl ASTChildren for AnnotatedTypeName {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::TypeName(*self.type_name.clone()));
+        if let Some(privacy_annotation) = self.privacy_annotation {
+            cb.add_child(AST::Expression(Box::new(privacy_annotation.clone())));
+        }
     }
 }
 // class AnnotatedTypeName(AST):
 
 //     def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None,
-//                  homomorphism: Homomorphism = Homomorphism.NonHomomorphic):
+//                  homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
 //         super().__init__()
 //         self.type_name = type_name
 //         self.had_privacy_annotation = privacy_annotation is not None
@@ -2163,7 +3206,7 @@ impl AnnotatedTypeName{
 //         else:
 //             self.privacy_annotation = AllExpr()
 //         self.homomorphism = homomorphism
-//         if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NonHomomorphic:
+//         if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
 //             raise ValueError(f'Public type name cannot be homomorphic (got {homomorphism.type_annotation})')
 
 //     def process_children(self, f: Callable[[T], T]):
@@ -2271,15 +3314,46 @@ impl AnnotatedTypeName{
 //         return t
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct IdentifierDeclaration {
-    keywords: Vec<String>,
-    annotated_type: Box<AnnotatedTypeName>,
-    idf: Identifier,
-    storage_location: Option<String>,
+#[serde(untagged)]
+pub enum IdentifierDeclaration {
+    #[default]
+    None,
+    VariableDeclaration(VariableDeclaration),
+    Parameter(Parameter),
+    StateVariableDeclaration(StateVariableDeclaration),
 }
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct IdentifierDeclaration {
+//     keywords: Vec<String>,
+//     annotated_type: Box<AnnotatedTypeName>,
+//     idf: Identifier,
+//     storage_location: Option<String>,
+// }
+// impl IdentifierDeclaration {
+//     fn new(
+//         keywords: Vec<String>,
+//         annotated_type: Box<AnnotatedTypeName>,
+//         idf: Identifier,
+//         storage_location: Option<String>,
+//     ) -> Self {
+//         Self {
+//             keywords,
+//             annotated_type,
+//             idf,
+//             storage_location,
+//         }
+//     }
+// }
+// impl ASTChildren for IdentifierDeclaration {
+//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
+//         cb.add_child(AST::AnnotatedTypeName(self.annotated_type.clone()));
+//         cb.add_child(AST::Identifier(self.idf.clone()));
+//     }
+// }
+
 // class IdentifierDeclaration(AST):
 
-//     def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
+//     def __init__(self, keywords: Vec<String>, annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
 //         super().__init__()
 //         self.keywords = keywords
 //         self.annotated_type = annotated_type
@@ -2298,7 +3372,13 @@ pub struct IdentifierDeclaration {
 //         self.annotated_type = f(self.annotated_type)
 //         self.idf = f(self.idf)
 
-pub type VariableDeclaration = IdentifierDeclaration;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct VariableDeclaration {
+    keywords: Vec<String>,
+    annotated_type: Box<AnnotatedTypeName>,
+    idf: Identifier,
+    storage_location: Option<String>,
+}
 impl VariableDeclaration {
     fn new(
         keywords: Vec<String>,
@@ -2316,13 +3396,31 @@ impl VariableDeclaration {
 }
 // class VariableDeclaration(IdentifierDeclaration):
 
-//     def __init__(self, keywords: List[str], annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
+//     def __init__(self, keywords: Vec<String>, annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
 //         super().__init__(keywords, annotated_type, idf, storage_location)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclarationStatement {
     variable_declaration: VariableDeclaration,
     expr: Option<Expression>,
+}
+impl ASTChildren for VariableDeclarationStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::IdentifierDeclaration(
+            IdentifierDeclaration::VariableDeclaration(self.variable_declaration.clone()),
+        ));
+        if let Some(expr) = self.expr {
+            cb.add_child(AST::Expression(Box::new(expr.clone())));
+        }
+    }
+}
+impl VariableDeclarationStatement {
+    pub fn new(variable_declaration: VariableDeclaration, expr: Option<Expression>) -> Self {
+        Self {
+            variable_declaration,
+            expr,
+        }
+    }
 }
 // class VariableDeclarationStatement(SimpleStatement):
 
@@ -2340,12 +3438,40 @@ pub struct VariableDeclarationStatement {
 //         self.variable_declaration = f(self.variable_declaration)
 //         self.expr = f(self.expr)
 
-pub type Parameter = IdentifierDeclaration;
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct Parameter {
+    keywords: Vec<String>,
+    annotated_type: Box<AnnotatedTypeName>,
+    idf: Identifier,
+    storage_location: Option<String>,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum ParameterKind {
+    Parameter(Parameter),
+    String(String),
+    #[default]
+    None,
+}
+impl Parameter {
+    pub fn new(
+        keywords: Vec<String>,
+        annotated_type: Box<AnnotatedTypeName>,
+        idf: Identifier,
+        storage_location: Option<String>,
+    ) -> Self {
+        Self {
+            keywords,
+            annotated_type,
+            idf,
+            storage_location,
+        }
+    }
+}
 // class Parameter(IdentifierDeclaration):
 
 //     def __init__(
 //             self,
-//             keywords: List[str],
+//             keywords: Vec<String>,
 //             annotated_type: AnnotatedTypeName,
 //             idf: Identifier,
 //             storage_location: Optional[str] = None):
@@ -2358,11 +3484,30 @@ pub type Parameter = IdentifierDeclaration;
 //         if self.storage_location == match_storage:
 //             self.storage_location = new_storage
 //         return self
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct NamespaceDefinition {
-    idf: Identifier,
+#[serde(untagged)]
+pub enum NamespaceDefinition {
+    #[default]
+    None,
+    ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
+    EnumDefinition(EnumDefinition),
+    StructDefinition(StructDefinition),
+    ContractDefinition(ContractDefinition),
 }
+// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+// pub struct NamespaceDefinition {
+//     idf: Identifier,
+// }
+// impl NamespaceDefinition {
+//     pub fn new(idf: Identifier) -> Self {
+//         Self { idf }
+//     }
+// }
+// impl ASTChildren for NamespaceDefinition {
+//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
+//         cb.add_child(AST::Identifier(self.idf.clone()));
+//     }
+// }
 // class NamespaceDefinition(AST):
 //     def __init__(self, idf: Identifier):
 //         super().__init__()
@@ -2375,7 +3520,7 @@ pub struct NamespaceDefinition {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
-    name:String,
+    name: String,
     idf: Identifier,
     parameters: Vec<Parameter>,
     modifiers: Vec<String>,
@@ -2402,7 +3547,10 @@ impl ConstructorOrFunctionDefinition {
         return_parameters: Option<Vec<Parameter>>,
         body: Option<Block>,
     ) -> Self {
-        assert!(idf.is_some() && idf.as_ref().unwrap().name != String::from("constructor") || return_parameters.is_none());
+        assert!(
+            idf.is_some() && idf.as_ref().unwrap().name != String::from("constructor")
+                || return_parameters.is_none()
+        );
         let idf = if let Some(idf) = idf {
             idf
         } else {
@@ -2416,7 +3564,7 @@ impl ConstructorOrFunctionDefinition {
         } else {
             vec![]
         };
-        let return_var_decls: Vec<_> = return_parameters
+        let mut return_var_decls: Vec<_> = return_parameters
             .iter()
             .enumerate()
             .map(|(idx, rp)| {
@@ -2428,34 +3576,76 @@ impl ConstructorOrFunctionDefinition {
                 )
             })
             .collect();
-        Self{idf,parameters:parameters.unwrap(),modifiers:modifiers.unwrap(),return_parameters,body,return_var_decls,name:String::new(),parent:None, 
-        original_body: None,
-    annotated_type: None,
-    called_functions: BTreeSet::new(),
-    is_recursive: false,
-    has_static_body: false,
-    can_be_private: false,
-    used_homomorphisms: None,
-    used_crypto_backends: None,
-    requires_verification: false,
-    requires_verification_when_external: false,
-    }
-    }
-}
-pub trait ConstructorOrFunctionDefinitionAttr{
-    fn  get_requires_verification_when_external(&self)->bool;
-    fn get_name(&self)->String;
-}
-impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition{
-    fn  get_requires_verification_when_external(&self)->bool{
-    self.requires_verification_when_external}
-    fn get_name(&self)->String{
-    self.name.clone()
+        return_var_decls.iter_mut().for_each(|vd| {
+            vd.idf.parent = Some(Box::new(AST::IdentifierDeclaration(
+                IdentifierDeclaration::VariableDeclaration(vd.clone()),
+            )));
+        });
+        Self {
+            idf,
+            parameters: parameters.unwrap().clone(),
+            modifiers: modifiers.unwrap().clone(),
+            return_parameters: return_parameters.clone(),
+            body,
+            return_var_decls,
+            name: String::new(),
+            parent: None,
+            original_body: None,
+            annotated_type: Some(AnnotatedTypeName::new(
+                TypeName::FunctionTypeName(FunctionTypeName::new(
+                    parameters.unwrap(),
+                    modifiers.unwrap(),
+                    return_parameters,
+                )),
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            )),
+            called_functions: BTreeSet::new(),
+            is_recursive: false,
+            has_static_body: true,
+            can_be_private: true,
+            used_homomorphisms: None,
+            used_crypto_backends: None,
+            requires_verification: false,
+            requires_verification_when_external: false,
         }
+    }
+}
+pub trait ConstructorOrFunctionDefinitionAttr {
+    fn get_requires_verification_when_external(&self) -> bool;
+    fn get_name(&self) -> String;
+}
+impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition {
+    fn get_requires_verification_when_external(&self) -> bool {
+        self.requires_verification_when_external
+    }
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+}
+impl ASTChildren for ConstructorOrFunctionDefinition {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        // super().process_children(f)
+        self.parameters.iter().for_each(|parameter| {
+            cb.add_child(AST::IdentifierDeclaration(
+                IdentifierDeclaration::Parameter(parameter.clone()),
+            ));
+        });
+        self.return_parameters.iter().for_each(|parameter| {
+            cb.add_child(AST::IdentifierDeclaration(
+                IdentifierDeclaration::Parameter(parameter.clone()),
+            ));
+        });
+        if let Some(body) = self.body {
+            cb.add_child(AST::Statement(Statement::StatementList(Box::new(
+                StatementList::Block(Box::new(body.clone())),
+            ))));
+        }
+    }
 }
 // class ConstructorOrFunctionDefinition(NamespaceDefinition):
 
-//     def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: List[str], return_parameters: Optional[List[Parameter]], body: Block):
+//     def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: Vec<String>, return_parameters: Optional[List[Parameter]], body: Block):
 //         assert (idf is not None and idf.name != 'constructor') or not return_parameters
 //         if idf is None:
 //             idf = Identifier('constructor')
@@ -2547,24 +3737,46 @@ impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition{
 //         self._update_fct_type()
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
-    keywords: Vec<String>,
     annotated_type: Box<AnnotatedTypeName>,
+    keywords: Vec<String>,
     idf: Identifier,
     storage_location: Option<String>,
     expr: Option<Expression>,
 }
 
 impl StateVariableDeclaration {
-    fn is_final(&self) -> bool {
+    pub fn new(
+        annotated_type: Box<AnnotatedTypeName>,
+        keywords: Vec<String>,
+        idf: Identifier,
+        expr: Option<Expression>,
+    ) -> Self {
+        Self {
+            annotated_type,
+            keywords,
+            idf,
+            expr,
+            storage_location: None,
+        }
+    }
+    pub fn is_final(&self) -> bool {
         self.keywords.contains(&String::from("final"))
     }
-    fn is_constant(&self) -> bool {
+    pub fn is_constant(&self) -> bool {
         self.keywords.contains(&String::from("constant"))
+    }
+}
+impl ASTChildren for StateVariableDeclaration {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        // super().process_children(f)
+        if let Some(expr) = self.expr {
+            cb.add_child(AST::Expression(Box::new(expr.clone())));
+        }
     }
 }
 // class StateVariableDeclaration(IdentifierDeclaration):
 
-//     def __init__(self, annotated_type: AnnotatedTypeName, keywords: List[str], idf: Identifier, expr: Optional[Expression]):
+//     def __init__(self, annotated_type: AnnotatedTypeName, keywords: Vec<String>, idf: Identifier, expr: Optional[Expression]):
 //         super().__init__(keywords, annotated_type, idf)
 //         self.expr = expr
 
@@ -2577,9 +3789,19 @@ pub struct EnumValue {
     idf: Option<Identifier>,
     annotated_type: Option<AnnotatedTypeName>,
 }
-impl EnumValue{
-    pub fn new(idf: Option<Identifier>)->Self{
-        Self{idf,annotated_type:None}
+impl EnumValue {
+    pub fn new(idf: Option<Identifier>) -> Self {
+        Self {
+            idf,
+            annotated_type: None,
+        }
+    }
+}
+impl ASTChildren for EnumValue {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        if let Some(idf) = self.idf {
+            cb.add_child(AST::Identifier(IdentifierKind::Identifier(idf.clone())));
+        }
     }
 }
 // class EnumValue(AST):
@@ -2597,9 +3819,23 @@ pub struct EnumDefinition {
     values: Vec<EnumValue>,
     annotated_type: Option<AnnotatedTypeName>,
 }
-impl EnumDefinition{
-    pub fn new(idf: Option<Identifier>,values: Vec<EnumValue>)->Self{
-        Self{idf,values,annotated_type:None}
+impl EnumDefinition {
+    pub fn new(idf: Option<Identifier>, values: Vec<EnumValue>) -> Self {
+        Self {
+            idf,
+            values,
+            annotated_type: None,
+        }
+    }
+}
+
+impl ASTChildren for EnumDefinition {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        // super().process_children(f)
+        // cb.add_child(AST::Expression(Box::new(self.func.clone())));
+        self.values.iter().for_each(|value| {
+            cb.add_child(AST::EnumValue(value.clone()));
+        });
     }
 }
 // class EnumDefinition(NamespaceDefinition):
@@ -2617,6 +3853,23 @@ pub struct StructDefinition {
     idf: Identifier,
     members: Vec<VariableDeclaration>,
 }
+impl StructDefinition {
+    pub fn new(idf: Identifier, members: Vec<VariableDeclaration>) -> Self {
+        Self { idf, members }
+    }
+}
+impl ASTChildren for StructDefinition {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        // super().process_children(f)
+        // cb.add_child(AST::Expression(Box::new(self.func.clone()));
+        self.members.iter().for_each(|member| {
+            cb.add_child(AST::IdentifierDeclaration(
+                IdentifierDeclaration::VariableDeclaration(member.clone()),
+            ));
+        });
+    }
+}
+
 // class StructDefinition(NamespaceDefinition):
 //     def __init__(self, idf: Identifier, members: List[VariableDeclaration]):
 //         super().__init__(idf)
@@ -2633,8 +3886,78 @@ pub struct ContractDefinition {
     pub constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub function_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub enum_definitions: Vec<EnumDefinition>,
-    pub struct_definitions: Option<Vec<StructDefinition>>,
+    pub struct_definitions: Vec<StructDefinition>,
     pub used_crypto_backends: Option<Vec<CryptoParams>>,
+}
+impl ContractDefinition {
+    pub fn new(
+        idf: Option<Identifier>,
+        state_variable_declarations: Vec<StateVariableDeclaration>,
+        constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
+        function_definitions: Vec<ConstructorOrFunctionDefinition>,
+        enum_definitions: Vec<EnumDefinition>,
+        struct_definitions: Option<Vec<StructDefinition>>,
+        used_crypto_backends: Option<Vec<CryptoParams>>,
+    ) -> Self {
+        Self {
+            idf,
+            state_variable_declarations,
+            constructor_definitions,
+            function_definitions,
+            enum_definitions,
+            struct_definitions: if let Some(struct_definitions) = struct_definitions {
+                struct_definitions
+            } else {
+                vec![]
+            },
+            used_crypto_backends,
+        }
+    }
+}
+impl ASTChildren for ContractDefinition {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        // super().process_children(f)
+        // cb.add_child(AST::Expression(self.func.clone()));
+        self.enum_definitions.iter().for_each(|enum_definition| {
+            cb.add_child(AST::NamespaceDefinition(
+                NamespaceDefinition::EnumDefinition(enum_definition.clone()),
+            ));
+        });
+        self.struct_definitions
+            .iter()
+            .for_each(|struct_definition| {
+                cb.add_child(AST::NamespaceDefinition(
+                    NamespaceDefinition::StructDefinition(struct_definition.clone()),
+                ));
+            });
+        self.state_variable_declarations
+            .iter()
+            .for_each(|state_variable_declarations| {
+                cb.add_child(AST::IdentifierDeclaration(
+                    IdentifierDeclaration::StateVariableDeclaration(
+                        state_variable_declarations.clone(),
+                    ),
+                ));
+            });
+        self.constructor_definitions
+            .iter()
+            .for_each(|constructor_definition| {
+                cb.add_child(AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(
+                        constructor_definition.clone(),
+                    ),
+                ));
+            });
+        self.function_definitions
+            .iter()
+            .for_each(|function_definition| {
+                cb.add_child(AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(
+                        function_definition.clone(),
+                    ),
+                ));
+            });
+    }
 }
 // class ContractDefinition(NamespaceDefinition):
 
@@ -2685,10 +4008,40 @@ pub struct SourceUnit {
     used_contracts: Vec<String>,
     pub used_homomorphisms: Option<BTreeSet<Homomorphism>>,
     used_crypto_backends: Option<Vec<CryptoParams>>,
+    original_code: Vec<String>,
+}
+impl SourceUnit {
+    pub fn new(
+        pragma_directive: String,
+        contracts: Vec<ContractDefinition>,
+        used_contracts: Option<Vec<String>>,
+    ) -> Self {
+        Self {
+            pragma_directive,
+            contracts,
+            used_contracts: if let Some(used_contracts) = used_contracts {
+                used_contracts
+            } else {
+                vec![]
+            },
+            used_homomorphisms: None,
+            used_crypto_backends: None,
+            original_code: vec![],
+        }
+    }
+}
+impl ASTChildren for SourceUnit {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.contracts.iter().for_each(|contract| {
+            cb.add_child(AST::NamespaceDefinition(
+                NamespaceDefinition::ContractDefinition(contract.clone()),
+            ));
+        });
+    }
 }
 // class SourceUnit(AST):
 
-//     def __init__(self, pragma_directive: str, contracts: List[ContractDefinition], used_contracts: Optional[List[str]] = None):
+//     def __init__(self, pragma_directive: str, contracts: List[ContractDefinition], used_contracts: Optional[Vec<String>] = None):
 //         super().__init__()
 //         self.pragma_directive = pragma_directive
 //         self.contracts = contracts
@@ -2696,7 +4049,7 @@ pub struct SourceUnit {
 //         self.used_homomorphisms: Optional[Set[Homomorphism]] = None
 //         self.used_crypto_backends: Optional[List[CryptoParams]] = None
 
-//         self.original_code: List[str] = []
+//         self.original_code: Vec<String> = []
 
 //     def process_children(self, f: Callable[[T], T]):
 //         self.contracts[:] = map(f, self.contracts)
@@ -2713,7 +4066,7 @@ pub enum PrivacyLabelExpr {
     AllExpr(AllExpr),
     Identifier(Identifier),
     #[default]
-    Never,
+    None,
 }
 // PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
 // TargetDefinition = Union[IdentifierDeclaration, NamespaceDefinition]
@@ -2722,7 +4075,7 @@ pub enum TargetDefinition {
     IdentifierDeclaration(IdentifierDeclaration),
     NamespaceDefinition(NamespaceDefinition),
     #[default]
-    Never,
+    None,
 }
 
 // def get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
@@ -2735,9 +4088,9 @@ pub enum TargetDefinition {
 pub enum InstanceTargetExprType {
     Tuple((Option<TargetDefinition>, Option<AST>)),
     VariableDeclaration(VariableDeclaration),
-    LocationExpr(Location),
+    LocationExpr(LocationExpr),
     #[default]
-    Never,
+    None,
 }
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -2798,8 +4151,9 @@ pub struct InstanceTarget {
 
 // // UTIL FUNCTIONS
 
-// def indent(s: str):
-//     return textwrap.indent(s, cfg.indentation)
+fn indent(s: String) -> String {
+    format!("{}{}", CFG.lock().unwrap().user_config.indentation(), s)
+}
 
 // // EXCEPTIONS
 
@@ -2885,392 +4239,942 @@ pub struct InstanceTarget {
 //         super().__init__(get_ast_exception_msg(ast, msg))
 
 // // CODE GENERATION
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum ListKind {
+    AST(AST),
+    String(String),
+    #[default]
+    None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum SingleOrListKind {
+    Vec(Vec<ListKind>),
+    AST(AST),
+    String(String),
+    #[default]
+    None,
+}
+pub struct CodeVisitor {
+    display_final: bool,
+    traversal: &'static str,
+    log: bool,
+}
 
 // class CodeVisitor(AstVisitor):
 
 //     def __init__(self, display_final=True):
 //         super().__init__('node-or-children')
 //         self.display_final = display_final
-
-//     def visit_list(self, l: List[Union[AST, str]], sep=' '):
-//         if l is None:
-//             return 'None'
-
-//         def handle(e: Union[AST, str]):
-//             if isinstance(e, str):
-//                 return e
-//             else:
-//                 return self.visit(e)
-
-//         s = filter(None.__ne__, [handle(e) for e in l])
-//         s = sep.join(s)
-//         return s
-
-//     def visit_single_or_list(self, v: Union[List[AST], AST, str], sep=' '):
-//         if isinstance(v, List):
-//             return self.visit_list(v, sep)
-//         elif isinstance(v, str):
-//             return v
-//         else:
-//             return self.visit(v)
-
-//     def visitAST(self, ast: AST):
-//         // should never be called
-//         raise NotImplementedError("Did not implement code generation for " + repr(ast))
-
-//     def visitComment(self, ast: Comment):
-//         if ast.text == '':
-//             return ''
-//         elif ast.text.find(' ') != -1:
-//             return f'/* {ast.text} */'
-//         else:
-//             return f'// {ast.text}'
-
-//     def visitIdentifier(self, ast: Identifier):
-//         return ast.name
-
-//     def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-//         if isinstance(ast.func, BuiltinFunction):
-//             args = [self.visit(a) for a in ast.args]
-//             return ast.func.format_string().format(*args)
-//         else:
-//             f = self.visit(ast.func)
-//             a = self.visit_list(ast.args, ', ')
-//             return f'{f}({a})'
-
-//     def visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr):
-//         if ast.is_implicit:
-//             return self.visit(ast.expr)
-//         else:
-//             return f'{self.visit(ast.elem_type)}({self.visit(ast.expr)})'
-
-//     def visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr):
-//         return str(ast.value).lower()
-
-//     def visitNumberLiteralExpr(self, ast: NumberLiteralExpr):
-//         return hex(ast.value) if ast.was_hex else str(ast.value)
-
-//     def visitStringLiteralExpr(self, ast: StringLiteralExpr):
-//         return f'\'{ast.value}\''
-
-//     def visitArrayLiteralExpr(self, ast: ArrayLiteralExpr):
-//         return f'[{self.visit_list(ast.values, sep=", ")}]'
-
-//     def visitTupleExpr(self, ast: TupleExpr):
-//         return f'({self.visit_list(ast.elements, sep=", ")})'
-
-//     def visitIdentifierExpr(self, ast: IdentifierExpr):
-//         return self.visit(ast.idf)
-
-//     def visitMemberAccessExpr(self, ast: MemberAccessExpr):
-//         return f'{self.visit(ast.expr)}.{self.visit(ast.member)}'
-
-//     def visitIndexExpr(self, ast: IndexExpr):
-//         return f'{self.visit(ast.arr)}[{self.visit(ast.key)}]'
-
-//     def visitMeExpr(self, _: MeExpr):
-//         return 'me'
-
-//     def visitAllExpr(self, _: AllExpr):
-//         return 'all'
-
-//     def visitReclassifyExpr(self, ast: ReclassifyExpr):
-//         e = self.visit(ast.expr)
-//         p = self.visit(ast.privacy)
-//         h = ast.homomorphism or ''
-//         return f'reveal{h}({e}, {p})'
-
-//     def visitRehomExpr(self, ast: RehomExpr):
-//         e = self.visit(ast.expr)
-//         return f'{ast.func_name()}({e})'
-
-//     def visitIfStatement(self, ast: IfStatement):
-//         c = self.visit(ast.condition)
-//         t = self.visit_single_or_list(ast.then_branch)
-//         ret = f'if ({c}) {t}'
-//         if ast.else_branch:
-//             e = self.visit_single_or_list(ast.else_branch)
-//             ret += f'  else {e}'
-//         return ret
-
-//     def visitWhileStatement(self, ast: WhileStatement):
-//         c = self.visit(ast.condition)
-//         b = self.visit_single_or_list(ast.body)
-//         ret = f'while ({c}) {b}'
-//         return ret
-
-//     def visitDoWhileStatement(self, ast: DoWhileStatement):
-//         b = self.visit_single_or_list(ast.body)
-//         c = self.visit(ast.condition)
-//         ret = f'do {b} while ({c});'
-//         return ret
-
-//     def visitForStatement(self, ast: ForStatement):
-//         i = ';' if ast.init is None else f'{self.visit_single_or_list(ast.init)}'
-//         c = self.visit(ast.condition)
-//         u = '' if ast.update is None else f' {self.visit_single_or_list(ast.update).replace(";", "")}'
-//         b = self.visit_single_or_list(ast.body)
-//         ret = f'for ({i} {c};{u}) {b}'
-//         return ret
-
-//     def visitBreakStatement(self, _: BreakStatement):
-//         return 'break;'
-
-//     def visitContinueStatement(self, _: ContinueStatement):
-//         return 'continue;'
-
-//     def visitReturnStatement(self, ast: ReturnStatement):
-//         if ast.expr:
-//             e = self.visit(ast.expr)
-//             return f'return {e};'
-//         else:
-//             return 'return;'
-
-//     def visitExpressionStatement(self, ast: ExpressionStatement):
-//         return self.visit(ast.expr) + ';'
-
-//     def visitRequireStatement(self, ast: RequireStatement):
-//         c = self.visit(ast.condition)
-//         return f'require({c});'
-
-//     def visitAssignmentStatement(self, ast: AssignmentStatement):
-//         lhs = ast.lhs
-//         op = ast.op
-//         if ast.lhs.annotated_type is not None and ast.lhs.annotated_type.is_private():
-//             op = ''
-//         rhs = ast.rhs.args[1] if op else ast.rhs
-
-//         if op.startswith('pre'):
-//             op = op[3:]
-//             fstr = '{1}{0};'
-//         elif op.startswith('post'):
-//             op = op[4:]
-//             fstr = '{0}{1};'
-//         else:
-//             fstr = '{} {}= {};'
-
-//         if isinstance(lhs, SliceExpr) and isinstance(rhs, SliceExpr):
-//             assert lhs.size == rhs.size, "Slice ranges don't have same size"
-//             s = ''
-//             lexpr, rexpr = self.visit(lhs.arr), self.visit(rhs.arr)
-//             lbase = '' if lhs.base is None else f'{self.visit(lhs.base)} + '
-//             rbase = '' if rhs.base is None else f'{self.visit(rhs.base)} + '
-//             if lhs.size <= 3:
-//                 for i in range(lhs.size):
-//                     s += fstr.format(f'{lexpr}[{lbase}{lhs.start_offset + i}]', op,
-//                                      f'{rexpr}[{rbase}{rhs.start_offset + i}]') + ' '
-//             else:
-//                 i = cfg.reserved_name_prefix + 'i'
-//                 if lhs.start_offset != 0:
-//                     lbase += f'{lhs.start_offset} + '
-//                 if rhs.start_offset != 0:
-//                     rbase += f'{rhs.start_offset} + '
-//                 s += f'for (uint {i} = 0; {i} < {lhs.size}; ++{i}) {{ '
-//                 s += indent(fstr.format(f'{lexpr}[{lbase}{i}]', op, f'{rexpr}[{rbase}{i}]')) + ' '
-//                 s += '} '
-//             return s[:-1]
-//         else:
-//             lhs = self.visit(lhs)
-//             rhs = self.visit(rhs)
-//             return fstr.format(lhs, op, rhs)
-
-//     def visitCircuitDirectiveStatement(self, ast: CircuitDirectiveStatement):
-//         return None
-
-//     def handle_block(self, ast: StatementList):
-//         s = self.visit_list(ast.statements)
-//         s = indent(s)
-//         return s
-
-//     def visitStatementList(self, ast: StatementList):
-//         return self.visit_list(ast.statements)
-
-//     def visitBlock(self, ast: Block):
-//         b = self.handle_block(ast).rstrip()
-//         if ast.was_single_statement and len(ast.statements) == 1:
-//             return b
-//         else:
-//             return f'{{ {b} }}'
-
-//     def visitIndentBlock(self, ast: IndentBlock):
-//         return self.handle_block(ast)
-
-//     def visitElementaryTypeName(self, ast: ElementaryTypeName):
-//         return ast.name
-
-//     def visitUserDefinedTypeName(self, ast: UserDefinedTypeName):
-//         return self.visit_list(ast.names, '.')
-
-//     def visitAddressTypeName(self, ast: AddressTypeName):
-//         return 'address'
-
-//     def visitAddressPayableTypeName(self, ast: AddressPayableTypeName):
-//         return 'address payable'
-
-//     def visitAnnotatedTypeName(self, ast: AnnotatedTypeName):
-//         t = self.visit(ast.type_name)
-//         p = self.visit(ast.privacy_annotation)
-//         if ast.had_privacy_annotation:
-//             return f'{t}@{p}{ast.homomorphism}'
-//         return t
-
-//     def visitMapping(self, ast: Mapping):
-//         k = self.visit(ast.key_type)
-//         if isinstance(ast.key_label, Identifier):
-//             label = '!' + self.visit(ast.key_label)
-//         else:
-//             label = f'/*!{ast.key_label}*/' if ast.key_label is not None else ''
-//         v = self.visit(ast.value_type)
-//         return f"mapping({k}{label} => {v})"
-
-//     def visitArray(self, ast: Array):
-//         t = self.visit(ast.value_type)
-//         if ast.expr is not None:
-//             e = self.visit(ast.expr)
-//         else:
-//             e = ''
-//         return f'{t}[{e}]'
-
-//     def visitCipherText(self, ast: CipherText):
-//         e = self.visitArray(ast)
-//         return f'{e}/*{ast.plain_type.code()}*/'
-
-//     def visitTupleType(self, ast: TupleType):
-//         s = self.visit_list(ast.types, ', ')
-//         return f'({s})'
-
-//     def visitVariableDeclaration(self, ast: VariableDeclaration):
-//         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
-//         k = ' '.join(keywords)
-//         t = self.visit(ast.annotated_type)
-//         s = '' if ast.storage_location is None else f' {ast.storage_location}'
-//         i = self.visit(ast.idf)
-//         return f'{k} {t}{s} {i}'.strip()
-
-//     def visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement):
-//         s = self.visit(ast.variable_declaration)
-//         if ast.expr:
-//             s += ' = ' + self.visit(ast.expr)
-//         s += ';'
-//         return s
-
-//     def visitParameter(self, ast: Parameter):
-//         if not self.display_final:
-//             f = None
-//         else:
-//             f = 'final' if 'final' in ast.keywords else None
-//         t = self.visit(ast.annotated_type)
-//         if ast.idf is None:
-//             i = None
-//         else:
-//             i = self.visit(ast.idf)
-
-//         description = [f, t, ast.storage_location, i]
-//         description = [d for d in description if d is not None]
-//         s = ' '.join(description)
-//         return s
-
-//     def visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition):
-//         b = self.visit_single_or_list(ast.body)
-//         return self.function_definition_to_str(ast.idf, ast.parameters, ast.modifiers, ast.return_parameters, b)
-
-//     def function_definition_to_str(
-//             self,
-//             idf: Identifier,
-//             parameters: List[Union[Parameter, str]],
-//             modifiers: List[str],
-//             return_parameters: List[Parameter],
-//             body: str):
-//         if idf.name != 'constructor':
-//             i = self.visit(idf)
-//             definition = f'function {i}'
-//         else:
-//             definition = 'constructor'
-//         p = self.visit_list(parameters, ', ')
-//         m = ' '.join(modifiers)
-//         if m != '':
-//             m = f' {m}'
-//         r = self.visit_list(return_parameters, ', ')
-//         if r != '':
-//             r = f' returns ({r})'
-
-//         f = f"{definition}({p}){m}{r} {body}"
-//         return f
-
-//     def visitEnumValue(self, ast: EnumValue):
-//         return self.visit(ast.idf)
-
-//     def visitEnumDefinition(self, ast: EnumDefinition):
-//         values = self.visit_list(ast.values, sep=', ')
-//         return f'enum {self.visit(ast.idf)} {{ {indent(values)} }}'
-
-//     @staticmethod
-//     def __cmp_type_size(v1: VariableDeclaration, v2: VariableDeclaration):
-//         t1, t2 = v1.annotated_type.type_name, v2.annotated_type.type_name
-//         cmp = (t1.size_in_uints > t2.size_in_uints) - (t1.size_in_uints < t2.size_in_uints)
-//         if cmp == 0:
-//             cmp = (t1.elem_bitwidth > t2.elem_bitwidth) - (t1.elem_bitwidth < t2.elem_bitwidth)
-//         return cmp
-
-//     def visitStructDefinition(self, ast: StructDefinition):
-//         // Define struct with members in order of descending size (to get maximum space savings through packing)
-//         members_by_descending_size = sorted(ast.members, key=cmp_to_key(self.__cmp_type_size), reverse=True)
-
-//         body = ' '.join([f'{self.visit(member)};' for member in members_by_descending_size])
-//         return f'struct {self.visit(ast.idf)} {{ {indent(body)} }}'
-
-//     def visitStateVariableDeclaration(self, ast: StateVariableDeclaration):
-//         keywords = [k for k in ast.keywords if self.display_final or k != 'final']
-//         f = 'final ' if 'final' in keywords else ''
-//         t = self.visit(ast.annotated_type)
-//         k = ' '.join([k for k in keywords if k != 'final'])
-//         if k != '':
-//             k = f'{k} '
-//         i = self.visit(ast.idf)
-//         ret = f"{f}{t} {k}{i}".strip()
-//         if ast.expr:
-//             ret += ' = ' + self.visit(ast.expr)
-//         return ret + ';'
-
-//     @staticmethod
-//     def contract_definition_to_str(
-//             idf: Identifier,
-//             state_vars: List[str],
-//             constructors: List[str],
-//             functions: List[str],
-//             enums: List[str],
-//             structs: List[str]):
-
-//         i = str(idf)
-//         structs = '  '.join(structs)
-//         enums = '  '.join(enums)
-//         state_vars = ' '.join(state_vars)
-//         constructors = '  '.join(constructors)
-//         functions = '  '.join(functions)
-//         body = '  '.join(filter(''.__ne__, [structs, enums, state_vars, constructors, functions]))
-//         body = indent(body)
-//         return f"contract {i} {{ {body} }}"
-
-//     def visitContractDefinition(self, ast: ContractDefinition):
-//         state_vars = [self.visit(e) for e in ast.state_variable_declarations]
-//         constructors = [self.visit(e) for e in ast.constructor_definitions]
-//         functions = [self.visit(e) for e in ast.function_definitions]
-//         enums = [self.visit(e) for e in ast.enum_definitions]
-//         structs = [self.visit(e) for e in ast.struct_definitions]
-
-//         return self.contract_definition_to_str(
-//             ast.idf,
-//             state_vars,
-//             constructors,
-//             functions,
-//             enums,
-//             structs)
-
-//     def handle_pragma(self, pragma: str) -> str:
-//         return pragma
-
-//     def visitSourceUnit(self, ast: SourceUnit):
-//         p = self.handle_pragma(ast.pragma_directive)
-//         contracts = self.visit_list(ast.contracts)
-//         lfstr = 'import "{}";'
-//         return '  '.join(filter(''.__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))
+type CodeVisitorReturn = String;
+impl CodeVisitor {
+    pub fn new(display_final: bool) -> Self {
+        Self {
+            traversal: "node-or-children",
+            display_final,
+            log: false,
+        }
+    }
+    pub fn visit(&self, ast: &AST) -> CodeVisitorReturn {
+        String::new()
+    }
+    pub fn visit_list(&self, l: Vec<ListKind>, mut sep: &str) -> CodeVisitorReturn {
+        if sep.is_empty() {
+            sep = "\n";
+        }
+        if l.is_empty() {
+            return String::new();
+        }
+
+        fn handle(selfs: &CodeVisitor, e: &ListKind) -> Option<String> {
+            if let ListKind::String(e) = e {
+                Some(e.to_owned())
+            } else if let ListKind::AST(e) = e {
+                Some(selfs.visit(e))
+            } else {
+                None
+            }
+        }
+
+        let s: Vec<_> = l.iter().filter_map(|e| handle(self, e)).collect();
+        let s = s.concat();
+        s
+    }
+
+    pub fn visit_single_or_list(&self, v: SingleOrListKind, sep: &str) -> CodeVisitorReturn {
+        if sep.is_empty() {
+            sep = "\n";
+        }
+        match v {
+            SingleOrListKind::Vec(v) => self.visit_list(v, sep),
+            SingleOrListKind::String(v) => v,
+            SingleOrListKind::AST(v) => self.visit(&v),
+            _ => String::new(),
+        }
+    }
+
+    pub fn visit_AST(&self, ast: AST) -> CodeVisitorReturn {
+        // should never be called
+        // raise NotImplementedError("Did not implement code generation for " + repr(ast))
+        unimplemented!("Did not implement code generation for {:?} ", ast);
+        String::new()
+    }
+    pub fn visit_Comment(&self, ast: Comment) -> CodeVisitorReturn {
+        if ast.text == String::new() {
+            String::new()
+        } else if ast.text.contains(" ") {
+            format!("/* {} */", ast.text)
+        } else {
+            format!("// {}", ast.text)
+        }
+    }
+
+    pub fn visit_Identifier(&self, ast: Identifier) -> CodeVisitorReturn {
+        ast.name.clone()
+    }
+
+    pub fn visit_FunctionCallExpr(&self, ast: FunctionCallExpr) -> CodeVisitorReturn {
+        if let Expression::BuiltinFunction(func) = *ast.func {
+            let args: Vec<_> = ast
+                .args
+                .iter()
+                .map(|a| self.visit(&AST::Expression(Box::new(a.clone()))))
+                .collect();
+            func.format_string(&args)
+        } else {
+            let f = self.visit(&AST::Expression(ast.func));
+            let a = self.visit_list(
+                ast.args
+                    .iter()
+                    .map(|arg| ListKind::AST(AST::Expression(Box::new(arg.clone()))))
+                    .collect(),
+                ", ",
+            );
+            format!("{f}({a})")
+        }
+    }
+
+    pub fn visit_PrimitiveCastExpr(&self, ast: PrimitiveCastExpr) -> CodeVisitorReturn {
+        if ast.is_implicit {
+            self.visit(&AST::Expression(ast.expr.clone()))
+        } else {
+            format!(
+                "{}({})",
+                self.visit(&AST::TypeName(ast.elem_type)),
+                self.visit(&AST::Expression(ast.expr))
+            )
+        }
+    }
+
+    pub fn visit_BooleanLiteralExpr(&self, ast: BooleanLiteralExpr) -> CodeVisitorReturn {
+        ast.value.to_string().to_ascii_lowercase()
+    }
+
+    pub fn visit_NumberLiteralExpr(&self, ast: NumberLiteralExpr) -> CodeVisitorReturn {
+        if ast.was_hex {
+            format!("{:x}", ast.value)
+        } else {
+            ast.value.to_string()
+        }
+    }
+
+    pub fn visit_StringLiteralExpr(&self, ast: StringLiteralExpr) -> CodeVisitorReturn {
+        format!("\"{}\"", ast.value)
+    }
+
+    pub fn visit_ArrayLiteralExpr(&self, ast: ArrayLiteralExpr) -> CodeVisitorReturn {
+        format!(
+            "[{}]",
+            self.visit_list(
+                ast.values
+                    .iter()
+                    .map(|value| ListKind::AST(AST::Expression(Box::new(value.clone()))))
+                    .collect(),
+                ", "
+            )
+        )
+    }
+
+    pub fn visit_TupleExpr(&self, ast: TupleExpr) -> CodeVisitorReturn {
+        format!(
+            "({})",
+            self.visit_list(
+                ast.elements
+                    .iter()
+                    .map(|element| ListKind::AST(AST::Expression(Box::new(element.clone()))))
+                    .collect(),
+                ", "
+            )
+        )
+    }
+
+    pub fn visit_IdentifierExpr(&self, ast: IdentifierExpr) -> CodeVisitorReturn {
+        self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.idf)))
+    }
+
+    pub fn visit_MemberAccessExpr(&self, ast: MemberAccessExpr) -> CodeVisitorReturn {
+        format!(
+            "{}.{}",
+            self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                Box::new(TupleOrLocationExpr::LocationExpr(Box::new(ast.expr)))
+            )))),
+            self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.member)))
+        )
+    }
+
+    pub fn visit_IndexExpr(&self, ast: IndexExpr) -> CodeVisitorReturn {
+        format!(
+            "{}[{}]",
+            self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                Box::new(TupleOrLocationExpr::LocationExpr(Box::new(ast.arr)))
+            )))),
+            self.visit(&AST::Expression(Box::new(ast.key)))
+        )
+    }
+
+    pub fn visit_MeExpr(&self, _: MeExpr) -> CodeVisitorReturn {
+        String::from("me")
+    }
+
+    pub fn visit_AllExpr(&self, _: AllExpr) -> CodeVisitorReturn {
+        String::from("all")
+    }
+
+    pub fn visit_ReclassifyExpr(&self, ast: ReclassifyExpr) -> CodeVisitorReturn {
+        let e = self.visit(&AST::Expression(ast.expr));
+        let p = self.visit(&AST::Expression(Box::new(ast.privacy)));
+        let h = HOMOMORPHISM_STORE
+            .lock()
+            .unwrap()
+            .get(&ast.homomorphism.unwrap_or(String::from("NON_HOMOMORPHIC")))
+            .unwrap();
+        format!("reveal{h:?}({e}, {p})")
+    }
+
+    pub fn visit_RehomExpr(&self, ast: RehomExpr) -> CodeVisitorReturn {
+        let e = self.visit(&AST::Expression(ast.expr));
+        format!("{}({e})", ast.func_name())
+    }
+
+    pub fn visit_IfStatement(&self, ast: IfStatement) -> CodeVisitorReturn {
+        let c = self.visit(&AST::Expression(Box::new(ast.condition)));
+        let t = self.visit_single_or_list(
+            SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                StatementList::Block(Box::new(ast.then_branch)),
+            )))),
+            "",
+        );
+        let mut ret = format!("if ({c}) {t}");
+        if let Some(else_branch) = ast.else_branch {
+            let e = self.visit_single_or_list(
+                SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                    StatementList::Block(Box::new(else_branch)),
+                )))),
+                "",
+            );
+            ret += format!("\n else {e}").as_str();
+        }
+        ret
+    }
+
+    pub fn visit_WhileStatement(&self, ast: WhileStatement) -> CodeVisitorReturn {
+        let c = self.visit(&AST::Expression(Box::new(ast.condition)));
+        let b = self.visit_single_or_list(
+            SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                StatementList::Block(Box::new(ast.body)),
+            )))),
+            "",
+        );
+        format!("while ({c}) {b}")
+    }
+
+    pub fn visit_DoWhileStatement(&self, ast: DoWhileStatement) -> CodeVisitorReturn {
+        let b = self.visit_single_or_list(
+            SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                StatementList::Block(Box::new(ast.body)),
+            )))),
+            "",
+        );
+        let c = self.visit(&AST::Expression(Box::new(ast.condition)));
+        format!("do {b} while ({c});")
+    }
+
+    pub fn visit_ForStatement(&self, ast: ForStatement) -> CodeVisitorReturn {
+        let i = if let Some(init) = ast.init {
+            format!(
+                "{}",
+                self.visit_single_or_list(
+                    SingleOrListKind::AST(AST::Statement(Statement::SimpleStatement(Box::new(
+                        init
+                    )))),
+                    ""
+                )
+            )
+        } else {
+            String::from(";")
+        };
+        let c = self.visit(&AST::Expression(Box::new(ast.condition)));
+        let u = if let Some(update) = ast.update {
+            format!(
+                " {}",
+                self.visit_single_or_list(
+                    SingleOrListKind::AST(AST::Statement(Statement::SimpleStatement(Box::new(
+                        update
+                    )))),
+                    ""
+                )
+                .replace(";", "")
+            )
+        } else {
+            String::new()
+        };
+        let b = self.visit_single_or_list(
+            SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                StatementList::Block(Box::new(ast.body)),
+            )))),
+            "",
+        );
+        format!("for ({i} {c};{u}) {b}")
+    }
+
+    pub fn visit_BreakStatement(&self, _: BreakStatement) -> CodeVisitorReturn {
+        String::from("break;")
+    }
+
+    pub fn visit_ContinueStatement(&self, _: ContinueStatement) -> CodeVisitorReturn {
+        String::from("continue;")
+    }
+
+    pub fn visit_ReturnStatement(&self, ast: ReturnStatement) -> CodeVisitorReturn {
+        if let Expression::None = ast.expr {
+            String::from("return;")
+        } else {
+            let e = self.visit(&AST::Expression(Box::new(ast.expr)));
+            format!("return {e};")
+        }
+    }
+
+    pub fn visit_ExpressionStatement(&self, ast: ExpressionStatement) -> CodeVisitorReturn {
+        self.visit(&AST::Expression(Box::new(ast.expr))) + ";"
+    }
+
+    pub fn visit_RequireStatement(&self, ast: RequireStatement) -> CodeVisitorReturn {
+        let c = self.visit(&AST::Expression(Box::new(ast.condition)));
+        format!("require({c});")
+    }
+
+    pub fn visit_AssignmentStatement(&self, ast: AssignmentStatement) -> CodeVisitorReturn {
+        let lhs = ast.lhs.clone();
+        let mut op = ast.op.clone();
+        if ast.lhs.annotated_type.is_some() && ast.lhs.annotated_type.unwrap().is_private() {
+            op = String::new()
+        }
+        let rhs = if !op.is_empty() {
+            ast.rhs.args[1]
+        } else {
+            ast.rhs.clone()
+        };
+
+        let fstr = if op.starts_with("pre") {
+            op = op[3..].to_string();
+            "{1}{0};"
+        } else if op.starts_with("post") {
+            op = op[4..].to_string();
+            "{0}{1};"
+        } else {
+            "{} {}= {};"
+        };
+        let format_string = |ls, rs| match fstr {
+            "{1}{0};" => format!("{1}{0};", ls, rs),
+            "{0}{1};" => format!("{0}{1};", ls, rs),
+            _ => format!("{} {}= {};", ls, op, rs),
+        };
+        if let (Expression::TupleOrLocationExpr(lhs), Expression::TupleOrLocationExpr(rhs)) =
+            (lhs, rhs)
+        {
+            if let (
+                TupleOrLocationExpr::LocationExpr(lhs),
+                TupleOrLocationExpr::LocationExpr(rhs),
+            ) = (*lhs, *rhs)
+            {
+                if let (LocationExpr::SliceExpr(lhs), LocationExpr::SliceExpr(rhs)) = (*lhs, *rhs) {
+                    assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
+                    let mut s = String::new();
+                    let (lexpr, rexpr) = (
+                        self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(lhs.arr))),
+                        )))),
+                        self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(rhs.arr))),
+                        )))),
+                    );
+                    let lbase = if let Some(base) = lhs.base {
+                        format!("{} + ", self.visit(&AST::Expression(Box::new(base))))
+                    } else {
+                        String::new()
+                    };
+                    let rbase = if let Some(base) = rhs.base {
+                        format!("{} + ", self.visit(&AST::Expression(Box::new(base))))
+                    } else {
+                        String::new()
+                    };
+                    if lhs.size <= 3 {
+                        for i in 0..lhs.size {
+                            s += &format_string(
+                                format!("{lexpr}[{lbase}{}]", lhs.start_offset + i),
+                                format!("{rexpr}[{rbase}{}]", rhs.start_offset + i),
+                            );
+                            s += "\n";
+                        }
+                    } else {
+                        let i = CFG.lock().unwrap().reserved_name_prefix() + "i";
+                        if lhs.start_offset != 0 {
+                            lbase += &format!("{} + ", lhs.start_offset);
+                        }
+                        if rhs.start_offset != 0 {
+                            rbase += &format!("{} + ", rhs.start_offset);
+                        }
+                        s += format!("for (uint {i} = 0; {i} < {}; ++{i}) {{\n", lhs.size).as_str();
+                        s += &indent(format_string(
+                            format!("{lexpr}[{lbase}{i}]"),
+                            format!("{rexpr}[{rbase}{i}]"),
+                        ));
+                        s += "\n";
+                        s += "}\n";
+                    }
+                    s[..s.len() - 1].to_string()
+                } else {
+                    String::new()
+                }
+            } else {
+                String::new()
+            }
+        } else {
+            let to_ast = |hs| match hs {
+                AssignmentStatementUnion::TupleExpr(te) => {
+                    self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                        Box::new(TupleOrLocationExpr::TupleExpr(Box::new(te.clone()))),
+                    ))))
+                }
+                AssignmentStatementUnion::LocationExpr(le) => {
+                    self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
+                        Box::new(TupleOrLocationExpr::LocationExpr(Box::new(le.clone()))),
+                    ))))
+                }
+                _ => String::new(),
+            };
+            format_string(to_ast(lhs), to_ast(rhs))
+        }
+    }
+    pub fn visit_CircuitDirectiveStatement(
+        &self,
+        ast: CircuitDirectiveStatement,
+    ) -> CodeVisitorReturn {
+        String::new()
+    }
+
+    fn handle_block(&self, ast: StatementList) -> CodeVisitorReturn {
+        match ast {
+            StatementList::Block(block) => indent(
+                self.visit_list(
+                    block
+                        .statements
+                        .iter()
+                        .map(|statement| ListKind::AST(AST::Statement(statement.clone())))
+                        .collect(),
+                    "",
+                ),
+            ),
+            StatementList::IndentBlock(block) => indent(
+                self.visit_list(
+                    block
+                        .statements
+                        .iter()
+                        .map(|statement| ListKind::AST(AST::Statement(statement.clone())))
+                        .collect(),
+                    "",
+                ),
+            ),
+            _ => String::new(),
+        }
+    }
+
+    pub fn visit_StatementList(&self, ast: StatementList) -> CodeVisitorReturn {
+        match ast {
+            StatementList::Block(block) => indent(
+                self.visit_list(
+                    block
+                        .statements
+                        .iter()
+                        .map(|statement| ListKind::AST(AST::Statement(statement.clone())))
+                        .collect(),
+                    "",
+                ),
+            ),
+            StatementList::IndentBlock(block) => indent(
+                self.visit_list(
+                    block
+                        .statements
+                        .iter()
+                        .map(|statement| ListKind::AST(AST::Statement(statement.clone())))
+                        .collect(),
+                    "",
+                ),
+            ),
+            _ => String::new(),
+        }
+    }
+
+    pub fn visit_Block(&self, ast: Block) -> CodeVisitorReturn {
+        let b = self
+            .handle_block(StatementList::Block(Box::new(ast)))
+            .trim_end();
+        if ast.was_single_statement && ast.statements.len() == 1 {
+            b.to_string()
+        } else {
+            format!("{{ {b} }}")
+        }
+    }
+
+    pub fn visit_IndentBlock(&self, ast: IndentBlock) -> CodeVisitorReturn {
+        self.handle_block(StatementList::IndentBlock(Box::new(ast)))
+    }
+
+    pub fn visit_ElementaryTypeName(&self, ast: ElementaryTypeName) -> CodeVisitorReturn {
+        match ast {
+            ElementaryTypeName::NumberTypeName(ntn) => match ntn {
+                NumberTypeName::NumberLiteralType(nlt) => nlt.name.clone(),
+                NumberTypeName::IntTypeName(itn) => itn.name.clone(),
+                NumberTypeName::UintTypeName(utn) => utn.name.clone(),
+                NumberTypeName::AnyNumberTypeName(antn) => antn.name.clone(),
+                _ => String::new(),
+            },
+            ElementaryTypeName::BoolTypeName(btn) => btn.name.clone(),
+            ElementaryTypeName::BooleanLiteralType(blt) => blt.name.clone(),
+            _ => String::new(),
+        }
+    }
+
+    pub fn visit_UserDefinedTypeName(&self, ast: UserDefinedTypeName) -> CodeVisitorReturn {
+        self.visit_list(ast.names, ".")
+    }
+
+    pub fn visit_AddressTypeName(&self, ast: AddressTypeName) -> CodeVisitorReturn {
+        String::from("address")
+    }
+
+    pub fn visit_AddressPayableTypeName(&self, ast: AddressPayableTypeName) -> CodeVisitorReturn {
+        String::from("address payable")
+    }
+
+    pub fn visit_AnnotatedTypeName(&self, ast: AnnotatedTypeName) -> CodeVisitorReturn {
+        let t = self.visit(&AST::TypeName(*ast.type_name));
+        let p = if let Some(privacy_annotation) = ast.privacy_annotation {
+            self.visit(&AST::Expression(Box::new(privacy_annotation)))
+        } else {
+            String::new()
+        };
+
+        if ast.had_privacy_annotation {
+            format!(
+                "{t}@{p}{:?}",
+                HOMOMORPHISM_STORE
+                    .lock()
+                    .unwrap()
+                    .get(&ast.homomorphism)
+                    .unwrap()
+            )
+        } else {
+            t
+        }
+    }
+
+    pub fn visit_Mapping(&self, ast: Mapping) -> CodeVisitorReturn {
+        let k = self.visit(&AST::TypeName(TypeName::ElementaryTypeName(ast.key_type)));
+        let label = if let KeyLabelType::Identifier(idf) = ast.key_label {
+            if let Some(idf) = idf {
+                format!(
+                    "!{}",
+                    self.visit(&AST::Identifier(IdentifierKind::Identifier(idf)))
+                )
+            } else {
+                String::new()
+            }
+        } else {
+            if let KeyLabelType::String(key_label) = ast.key_label {
+                format!("/*!{}*/", key_label)
+            } else {
+                String::new()
+            }
+        };
+        let v = self.visit(&AST::AnnotatedTypeName(*ast.value_type));
+        format!("mapping({k}{label} => {v})")
+    }
+
+    pub fn visit_Array(&self, ast: Array) -> CodeVisitorReturn {
+        let t = self.visit(&AST::AnnotatedTypeName(ast.value_type));
+        let e = if let ExprType::Expression(expr) = &ast.expr {
+            self.visit(&AST::Expression(Box::new(expr)))
+        } else if let ExprType::I32(expr) = &ast.expr {
+            expr.to_string()
+        } else {
+            String::new()
+        };
+        format!("{t}[{e}]")
+    }
+
+    pub fn visit_CipherText(&self, ast: CipherText) -> CodeVisitorReturn {
+        let e = self.visit_Array(Array::CipherText(ast));
+        format!("{e}/*{}*/", ast.plain_type.code())
+    }
+
+    pub fn visit_TupleType(&self, ast: TupleType) -> CodeVisitorReturn {
+        let s = self.visit_list(
+            ast.types
+                .iter()
+                .map(|typ| ListKind::AST(AST::AnnotatedTypeName(typ.clone())))
+                .collect(),
+            ", ",
+        );
+        format!("({s})")
+    }
+
+    pub fn visit_VariableDeclaration(&self, ast: VariableDeclaration) -> CodeVisitorReturn {
+        let keywords: Vec<_> = ast
+            .keywords
+            .iter()
+            .filter_map(|k| {
+                if self.display_final || k != "final" {
+                    Some(k.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let k = keywords.join(" ");
+        let t = self.visit(&AST::AnnotatedTypeName(*ast.annotated_type));
+        let s = if let Some(storage_location) = ast.storage_location {
+            format!(" {storage_location}")
+        } else {
+            String::new()
+        };
+        let i = self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.idf)));
+        format!("{k} {t}{s} {i}").trim().to_string()
+    }
+
+    pub fn visit_VariableDeclarationStatement(
+        &self,
+        ast: VariableDeclarationStatement,
+    ) -> CodeVisitorReturn {
+        let mut s = self.visit(&AST::IdentifierDeclaration(
+            IdentifierDeclaration::VariableDeclaration(ast.variable_declaration),
+        ));
+        if let Some(expr) = ast.expr {
+            s += format!(" = {}", self.visit(&AST::Expression(Box::new(expr)))).as_str();
+        }
+        s += ";";
+        s
+    }
+
+    pub fn visit_Parameter(&self, ast: Parameter) -> CodeVisitorReturn {
+        let final_string = String::from("final");
+        let f = if !self.display_final {
+            None
+        } else {
+            if ast.keywords.contains(&final_string) {
+                Some(final_string)
+            } else {
+                None
+            }
+        };
+        let t = Some(self.visit(&AST::AnnotatedTypeName(*ast.annotated_type)));
+        let i = Some(self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.idf))));
+        let description: Vec<_> = [f, t, ast.storage_location, i]
+            .iter()
+            .filter_map(|d| d.clone())
+            .collect();
+        description.join(" ")
+    }
+
+    pub fn visit_ConstructorOrFunctionDefinition(
+        &self,
+        ast: ConstructorOrFunctionDefinition,
+    ) -> CodeVisitorReturn {
+        let b = if let Some(body) = ast.body {
+            self.visit_single_or_list(
+                SingleOrListKind::AST(AST::Statement(Statement::StatementList(Box::new(
+                    StatementList::Block(Box::new(body)),
+                )))),
+                "",
+            )
+        } else {
+            String::new()
+        };
+        self.function_definition_to_str(
+            ast.idf,
+            ast.parameters
+                .iter()
+                .map(|parameter| ParameterKind::Parameter(parameter.clone()))
+                .collect(),
+            ast.modifiers,
+            ast.return_parameters,
+            b,
+        )
+    }
+    fn function_definition_to_str(
+        &self,
+        idf: Identifier,
+        parameters: Vec<ParameterKind>,
+        modifiers: Vec<String>,
+        return_parameters: Vec<Parameter>,
+        body: String,
+    ) -> CodeVisitorReturn {
+        let definition = if idf.name != String::from("constructor") {
+            let i = self.visit(&AST::Identifier(IdentifierKind::Identifier(idf)));
+            format!("function {i}")
+        } else {
+            String::from("constructor")
+        };
+        let p = self.visit_list(
+            parameters
+                .iter()
+                .filter_map(|parameter| match parameter {
+                    ParameterKind::Parameter(p) => Some(ListKind::AST(AST::IdentifierDeclaration(
+                        IdentifierDeclaration::Parameter(p.clone()),
+                    ))),
+                    ParameterKind::String(s) => Some(ListKind::String(s.clone())),
+                    _ => None,
+                })
+                .collect(),
+            ", ",
+        );
+        let mut m = modifiers.join(" ");
+        if !m.is_empty() {
+            m = format!(" {m}");
+        }
+        let mut r = self.visit_list(
+            return_parameters
+                .iter()
+                .map(|p| {
+                    ListKind::AST(AST::IdentifierDeclaration(
+                        IdentifierDeclaration::Parameter(p.clone()),
+                    ))
+                })
+                .collect(),
+            ", ",
+        );
+        if !r.is_empty() {
+            r = format!(" returns ({r})");
+        }
+
+        format!("{definition}({p}){m}{r} {body}")
+    }
+
+    pub fn visit_EnumValue(&self, ast: EnumValue) -> CodeVisitorReturn {
+        if let Some(idf) = ast.idf {
+            self.visit(&AST::Identifier(IdentifierKind::Identifier(idf)))
+        } else {
+            String::new()
+        }
+    }
+
+    pub fn visit_EnumDefinition(&self, ast: EnumDefinition) -> CodeVisitorReturn {
+        let values = indent(
+            self.visit_list(
+                ast.values
+                    .iter()
+                    .map(|value| ListKind::AST(AST::EnumValue(value.clone())))
+                    .collect(),
+                ", ",
+            ),
+        );
+        format!(
+            "enum {} {{\n{values}\n}}",
+            if let Some(idf) = ast.idf {
+                self.visit(&AST::Identifier(IdentifierKind::Identifier(idf)))
+            } else {
+                String::new()
+            }
+        )
+    }
+
+    // @staticmethod
+    fn __cmp_type_size(v1: &VariableDeclaration, v2: &VariableDeclaration) -> Ordering {
+        let (t1, t2) = (v1.annotated_type.type_name, v2.annotated_type.type_name);
+        let mut cmp = if t1.size_in_uints > t2.size_in_uints {
+            1
+        } else {
+            0
+        } - if t1.size_in_uints < t2.size_in_uints {
+            1
+        } else {
+            0
+        };
+        if cmp == 0 {
+            cmp = if t1.elem_bitwidth > t2.elem_bitwidth {
+                1
+            } else {
+                0
+            } - if t1.elem_bitwidth < t2.elem_bitwidth {
+                1
+            } else {
+                0
+            };
+        }
+        if cmp != 0 {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
+
+    pub fn visit_StructDefinition(&self, ast: StructDefinition) -> CodeVisitorReturn {
+        // Define struct with members in order of descending size (to get maximum space savings through packing)
+        let mut members_by_descending_size = ast.members.clone();
+        members_by_descending_size.sort_by(|v1, v2| Self::__cmp_type_size(v1, v2).reverse());
+        let body = indent(
+            members_by_descending_size
+                .iter()
+                .map(|member| {
+                    self.visit(&AST::IdentifierDeclaration(
+                        IdentifierDeclaration::VariableDeclaration(member.clone()),
+                    ))
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+        format!(
+            "struct {} {{\n{body}\n}}",
+            self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.idf)))
+        )
+    }
+
+    pub fn visit_StateVariableDeclaration(
+        &self,
+        ast: StateVariableDeclaration,
+    ) -> CodeVisitorReturn {
+        let final_string = String::from("final");
+        let keywords: Vec<_> = ast
+            .keywords
+            .iter()
+            .filter_map(|k| {
+                if self.display_final || k != &final_string {
+                    Some(k)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let f = if keywords.contains(&&final_string) {
+            final_string.clone()
+        } else {
+            String::new()
+        };
+        let t = self.visit(&AST::AnnotatedTypeName(ast.annotated_type));
+        let mut k = ast
+            .keywords
+            .iter()
+            .filter_map(|k| {
+                if k != &final_string {
+                    Some(k.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        if !k.is_empty() {
+            k = format!("{k} ");
+        }
+        let i = self.visit(&AST::Identifier(IdentifierKind::Identifier(ast.idf)));
+        let mut ret = format!("{f}{t} {k}{i}").trim().to_string();
+        if let Some(expr) = ast.expr {
+            ret += &format!(" = {}", self.visit(&AST::Expression(Box::new(expr))));
+        }
+        ret + ";"
+    }
+
+    // @staticmethod
+    fn contract_definition_to_str(
+        idf: Identifier,
+        state_vars: Vec<String>,
+        constructors: Vec<String>,
+        functions: Vec<String>,
+        enums: Vec<String>,
+        structs: Vec<String>,
+    ) -> CodeVisitorReturn {
+        let i = idf.to_string();
+        let structs = structs.join("\n\n");
+        let enums = enums.join("\n\n");
+        let state_vars = state_vars.join("\n\n");
+        let constructors = constructors.join("\n\n");
+        let functions = functions.join("\n\n");
+        let mut body = [structs, enums, state_vars, constructors, functions]
+            .into_iter()
+            .filter_map(|s| if !s.is_empty() { Some(s) } else { None })
+            .collect::<Vec<_>>()
+            .join("\n\n");
+        body = indent(body);
+        format!("contract {i} {{\n{body}\n}}")
+    }
+
+    pub fn visit_ContractDefinition(&self, ast: ContractDefinition) -> CodeVisitorReturn {
+        let state_vars = ast
+            .state_variable_declarations
+            .iter()
+            .map(|e| self.visit(e))
+            .collect::<Vec<_>>(); //[ for e in ast.state_variable_declarations]
+        let constructors = ast
+            .constructor_definitions
+            .iter()
+            .map(|e| self.visit(e))
+            .collect::<Vec<_>>(); //[self.visit(e) for e in ast.constructor_definitions]
+        let functions = ast
+            .function_definitions
+            .iter()
+            .map(|e| self.visit(e))
+            .collect::<Vec<_>>(); //[self.visit(e) for e in ast.function_definitions]
+        let enums = ast
+            .enum_definitions
+            .iter()
+            .map(|e| self.visit(e))
+            .collect::<Vec<_>>(); //[self.visit(e) for e in ast.enum_definitions]
+        let structs = ast
+            .struct_definitions
+            .iter()
+            .map(|e| self.visit(e))
+            .collect::<Vec<_>>(); //[self.visit(e) for e in ast.struct_definitions]
+
+        Self::contract_definition_to_str(
+            ast.idf.unwrap(),
+            state_vars,
+            constructors,
+            functions,
+            enums,
+            structs,
+        )
+    }
+
+    fn handle_pragma(&self, pragma: String) -> String {
+        pragma
+    }
+
+    pub fn visit_SourceUnit(&self, ast: SourceUnit) -> CodeVisitorReturn {
+        let p = self.handle_pragma(ast.pragma_directive.clone());
+        let contracts = self.visit_list(ast.contracts, "");
+        let lfstr = |uc| format!("import \"{}\";", uc);
+        //  "\n\n".join(filter("".__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))
+        [
+            p,
+            ast.used_contracts
+                .iter()
+                .map(|uc| lfstr(uc))
+                .collect::<Vec<_>>()
+                .join(LINE_ENDING),
+            contracts,
+        ]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n")
+    }
+}
