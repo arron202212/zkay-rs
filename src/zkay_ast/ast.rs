@@ -110,9 +110,10 @@ trait ASTChildren {
 }
 
 trait ASTCode {
+    fn get_ast(&self) -> AST;
     fn code(&self) -> String {
         let v = CodeVisitor::new(true);
-        v.visit(self)
+        v.visit(&self.get_ast())
     }
 }
 
@@ -125,11 +126,12 @@ impl AST {
         v.visit(self)
     }
     pub fn is_parent_of(&self, child: &AST) -> bool {
-        let mut e = child;
-        while e != self && e.parent().is_some() {
-            e = &e.parent().unwrap();
+        let mut e = child.clone();
+        let selfs = self.clone();
+        while e != selfs && e.parent().is_some() {
+            e = e.parent().unwrap().clone();
         }
-        e == self
+        e == selfs
     }
 }
 
@@ -342,17 +344,21 @@ impl Expression {
     }
 }
 
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct Expression {
-//     pub annotated_type: Option<AnnotatedTypeName>,
-//     pub statement: Option<Statement>,
-//     pub evaluate_privately: bool,
-// }
-// impl Expression{
-//     pub fn new()->Self{
-//         Self{annotated_type:None,statement:None,evaluate_privately:false}
-//     }
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ExpressionBase {
+    pub annotated_type: Option<AnnotatedTypeName>,
+    pub statement: Option<Statement>,
+    pub evaluate_privately: bool,
+}
+impl ExpressionBase {
+    pub fn new() -> Self {
+        Self {
+            annotated_type: None,
+            statement: None,
+            evaluate_privately: false,
+        }
+    }
+}
 // class Expression(AST):
 
 //     @staticmethod
@@ -681,7 +687,7 @@ impl BuiltinFunction {
             "~" => format!("~{}", args[0]),
             "parenthesis" => format!("({})", args[0]),
             "ite" => {
-                let (cond, then, else_then) = (args[0], args[1], args[2]);
+                let (cond, then, else_then) = (args[0].clone(), args[1].clone(), args[2].clone());
                 format!("if {cond} {{{then}}} else {{{else_then}}}")
             }
             _ => format!("{} {op} {}", args[0], args[1]),
@@ -858,7 +864,13 @@ pub struct HomomorphicBuiltinFunction {
 
 //     def output_type(self):
 //         return self.target_type
-
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum FunctionCallExprKind {
+    FunctionCallExpr(FunctionCallExpr),
+    NewExpr(NewExpr),
+    #[default]
+    None,
+}
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionCallExpr {
     pub line: i32,
@@ -1113,10 +1125,20 @@ pub enum TupleOrLocationExpr {
     #[default]
     None,
 }
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct TupleOrLocationExpr {
-//     parent: Option<Box<AST>>,
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct TupleOrLocationExprBase {
+    pub expression_base: ExpressionBase,
+    pub parent: Option<Box<AST>>,
+}
+impl TupleOrLocationExprBase {
+    pub fn new() -> Self {
+        Self {
+            expression_base: ExpressionBase::new(),
+            parent: None,
+        }
+    }
+}
+
 // class TupleOrLocationExpr(Expression):
 //     def is_lvalue(self) -> bool:
 //         if isinstance(self.parent, AssignmentStatement):
@@ -1134,11 +1156,19 @@ pub enum TupleOrLocationExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleExpr {
+    pub annotated_type: Option<AnnotatedTypeName>,
+    pub statement: Option<Statement>,
+    pub evaluate_privately: bool,
     elements: Vec<Expression>,
 }
 impl TupleExpr {
     pub fn new(elements: Vec<Expression>) -> Self {
-        Self { elements }
+        Self {
+            annotated_type: None,
+            statement: None,
+            evaluate_privately: false,
+            elements,
+        }
     }
 }
 impl ASTChildren for TupleExpr {
@@ -1158,16 +1188,28 @@ impl ASTChildren for TupleExpr {
 
 //     def assign(self, val: Expression) -> AssignmentStatement:
 //         return AssignmentStatement(self, val)
-
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct LocationExpr {
-//     pub target: Option<TargetDefinition>,
-// }
-// impl LocationExpr {
-//     pub fn new() -> Self {
-//         Self { target: None }
-//     }
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum LocationExpr {
+    IdentifierExpr(IdentifierExpr),
+    MemberAccessExpr(Box<MemberAccessExpr>),
+    IndexExpr(Box<IndexExpr>),
+    SliceExpr(Box<SliceExpr>),
+    #[default]
+    None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct LocationExprBase {
+    pub tuple_or_location_expr_base: TupleOrLocationExprBase,
+    pub target: Option<TargetDefinition>,
+}
+impl LocationExprBase {
+    pub fn new() -> Self {
+        Self {
+            tuple_or_location_expr_base: TupleOrLocationExprBase::new(),
+            target: None,
+        }
+    }
+}
 // class LocationExpr(TupleOrLocationExpr):
 //     def __init__(self):
 //         super().__init__()
@@ -1193,17 +1235,9 @@ impl ASTChildren for TupleExpr {
 
 //     def assign(self, val: Expression) -> AssignmentStatement:
 //         return AssignmentStatement(self, val)
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum LocationExpr {
-    IdentifierExpr(IdentifierExpr),
-    MemberAccessExpr(Box<MemberAccessExpr>),
-    IndexExpr(Box<IndexExpr>),
-    SliceExpr(Box<SliceExpr>),
-    #[default]
-    None,
-}
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum IdentifierExprType {
+pub enum IdentifierExprUnion {
     String(String),
     Identifier(Identifier),
     #[default]
@@ -1211,9 +1245,22 @@ pub enum IdentifierExprType {
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierExpr {
-    pub target: Option<TargetDefinition>,
+    pub location_expr_base: LocationExprBase,
     pub idf: Identifier,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
+}
+impl IdentifierExpr {
+    pub fn new(idf: IdentifierExprUnion, annotated_type: Option<Box<AnnotatedTypeName>>) -> Self {
+        Self {
+            location_expr_base: LocationExprBase::new(),
+            idf: match idf {
+                IdentifierExprUnion::Identifier(idf) => idf,
+                IdentifierExprUnion::String(idf) => Identifier::new(idf),
+                _ => Identifier::new(String::new()),
+            },
+            annotated_type,
+        }
+    }
 }
 impl ASTChildren for IdentifierExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -1245,8 +1292,18 @@ impl ASTChildren for IdentifierExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MemberAccessExpr {
+    pub location_expr_base: LocationExprBase,
     pub expr: LocationExpr,
     pub member: Identifier,
+}
+impl MemberAccessExpr {
+    pub fn new(expr: LocationExpr, member: Identifier) -> Self {
+        Self {
+            location_expr_base: LocationExprBase::new(),
+            expr,
+            member,
+        }
+    }
 }
 impl ASTChildren for MemberAccessExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -1273,12 +1330,17 @@ impl ASTChildren for MemberAccessExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndexExpr {
+    pub location_expr_base: LocationExprBase,
     pub arr: LocationExpr,
     pub key: Expression,
 }
 impl IndexExpr {
     pub fn new(arr: LocationExpr, key: Expression) -> Self {
-        Self { arr, key }
+        Self {
+            location_expr_base: LocationExprBase::new(),
+            arr,
+            key,
+        }
     }
 }
 impl ASTChildren for IndexExpr {
@@ -1304,10 +1366,22 @@ impl ASTChildren for IndexExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SliceExpr {
+    pub location_expr_base: LocationExprBase,
     pub arr: LocationExpr,
     pub base: Option<Expression>,
     pub start_offset: i32,
     pub size: i32,
+}
+impl SliceExpr {
+    pub fn new(arr: LocationExpr, base: Option<Expression>, start_offset: i32, size: i32) -> Self {
+        Self {
+            location_expr_base: LocationExprBase::new(),
+            arr,
+            base,
+            start_offset,
+            size,
+        }
+    }
 }
 // class SliceExpr(LocationExpr):
 //     def __init__(self, arr: LocationExpr, base: Optional[Expression], start_offset: int, size: int):
@@ -1445,7 +1519,7 @@ impl RehomExpr {
         HOMOMORPHISM_STORE
             .lock()
             .unwrap()
-            .get(&self.homomorphism.unwrap())
+            .get(self.homomorphism.as_ref().unwrap())
             .unwrap()
             .rehom_expr_name
             .clone()
@@ -2145,6 +2219,18 @@ impl TypeName {
         // } else {
         false
         // }
+    }
+
+    pub fn size_in_uints(&self) -> i32
+// """How many uints this type occupies when serialized."""
+    {
+        1
+    }
+
+    pub fn elem_bitwidth(&self) -> i32 {
+        // Bitwidth, only defined for primitive types
+        // raise NotImplementedError()
+        1
     }
 }
 // class TypeName(AST):
@@ -3144,7 +3230,7 @@ impl AnnotatedTypeName {
     ) -> Self {
         assert!(
             !(privacy_annotation.is_none()
-                || if let Expression::AllExpr(_) = privacy_annotation.unwrap() {
+                || if let Some(Expression::AllExpr(_)) = &privacy_annotation {
                     true
                 } else {
                     false
@@ -3155,7 +3241,7 @@ impl AnnotatedTypeName {
         );
         Self {
             type_name: Box::new(type_name),
-            had_privacy_annotation: privacy_annotation.is_some(),
+            had_privacy_annotation: privacy_annotation.as_ref().is_some(),
             privacy_annotation: if privacy_annotation.is_some() {
                 privacy_annotation
             } else {
@@ -3165,7 +3251,7 @@ impl AnnotatedTypeName {
         }
     }
     pub fn is_public(&self) -> bool {
-        if let Some(pa) = self.privacy_annotation {
+        if let Some(pa) = &self.privacy_annotation {
             pa.is_all_expr()
         } else {
             false
@@ -3189,9 +3275,14 @@ impl AnnotatedTypeName {
 impl ASTChildren for AnnotatedTypeName {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::TypeName(*self.type_name.clone()));
-        if let Some(privacy_annotation) = self.privacy_annotation {
+        if let Some(privacy_annotation) = &self.privacy_annotation {
             cb.add_child(AST::Expression(Box::new(privacy_annotation.clone())));
         }
+    }
+}
+impl ASTCode for AnnotatedTypeName {
+    fn get_ast(&self) -> AST {
+        AST::AnnotatedTypeName(self.clone())
     }
 }
 // class AnnotatedTypeName(AST):
@@ -3409,7 +3500,7 @@ impl ASTChildren for VariableDeclarationStatement {
         cb.add_child(AST::IdentifierDeclaration(
             IdentifierDeclaration::VariableDeclaration(self.variable_declaration.clone()),
         ));
-        if let Some(expr) = self.expr {
+        if let Some(expr) = &self.expr {
             cb.add_child(AST::Expression(Box::new(expr.clone())));
         }
     }
@@ -3583,8 +3674,8 @@ impl ConstructorOrFunctionDefinition {
         });
         Self {
             idf,
-            parameters: parameters.unwrap().clone(),
-            modifiers: modifiers.unwrap().clone(),
+            parameters: parameters.as_ref().unwrap().clone(),
+            modifiers: modifiers.as_ref().unwrap().clone(),
             return_parameters: return_parameters.clone(),
             body,
             return_var_decls,
@@ -3636,7 +3727,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
                 IdentifierDeclaration::Parameter(parameter.clone()),
             ));
         });
-        if let Some(body) = self.body {
+        if let Some(body) = &self.body {
             cb.add_child(AST::Statement(Statement::StatementList(Box::new(
                 StatementList::Block(Box::new(body.clone())),
             ))));
@@ -3769,7 +3860,7 @@ impl StateVariableDeclaration {
 impl ASTChildren for StateVariableDeclaration {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         // super().process_children(f)
-        if let Some(expr) = self.expr {
+        if let Some(expr) = &self.expr {
             cb.add_child(AST::Expression(Box::new(expr.clone())));
         }
     }
@@ -3799,7 +3890,7 @@ impl EnumValue {
 }
 impl ASTChildren for EnumValue {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(idf) = self.idf {
+        if let Some(idf) = &self.idf {
             cb.add_child(AST::Identifier(IdentifierKind::Identifier(idf.clone())));
         }
     }
@@ -4300,7 +4391,7 @@ impl CodeVisitor {
         s
     }
 
-    pub fn visit_single_or_list(&self, v: SingleOrListKind, sep: &str) -> CodeVisitorReturn {
+    pub fn visit_single_or_list(&self, v: SingleOrListKind, mut sep: &str) -> CodeVisitorReturn {
         if sep.is_empty() {
             sep = "\n";
         }
@@ -4446,12 +4537,13 @@ impl CodeVisitor {
             .lock()
             .unwrap()
             .get(&ast.homomorphism.unwrap_or(String::from("NON_HOMOMORPHIC")))
-            .unwrap();
+            .unwrap()
+            .clone();
         format!("reveal{h:?}({e}, {p})")
     }
 
     pub fn visit_RehomExpr(&self, ast: RehomExpr) -> CodeVisitorReturn {
-        let e = self.visit(&AST::Expression(ast.expr));
+        let e = self.visit(&AST::Expression(ast.expr.clone()));
         format!("{}({e})", ast.func_name())
     }
 
@@ -4565,11 +4657,57 @@ impl CodeVisitor {
     pub fn visit_AssignmentStatement(&self, ast: AssignmentStatement) -> CodeVisitorReturn {
         let lhs = ast.lhs.clone();
         let mut op = ast.op.clone();
-        if ast.lhs.annotated_type.is_some() && ast.lhs.annotated_type.unwrap().is_private() {
-            op = String::new()
+        match ast.lhs {
+            AssignmentStatementUnion::TupleExpr(asu) => {
+                if let Some(at) = asu.annotated_type {
+                    if at.is_private() {
+                        op = String::new();
+                    }
+                }
+            }
+            AssignmentStatementUnion::LocationExpr(le) => {
+                let annotated_type = match le {
+                    LocationExpr::IdentifierExpr(ie) => {
+                        if let Some(at) = ie.annotated_type {
+                            Some(*at)
+                        } else {
+                            None
+                        }
+                    }
+                    LocationExpr::MemberAccessExpr(ie) => {
+                        ie.location_expr_base
+                            .tuple_or_location_expr_base
+                            .expression_base
+                            .annotated_type
+                    }
+                    LocationExpr::IndexExpr(ie) => {
+                        ie.location_expr_base
+                            .tuple_or_location_expr_base
+                            .expression_base
+                            .annotated_type
+                    }
+                    LocationExpr::SliceExpr(ie) => {
+                        ie.location_expr_base
+                            .tuple_or_location_expr_base
+                            .expression_base
+                            .annotated_type
+                    }
+                    _ => None,
+                };
+                if let Some(at) = annotated_type {
+                    if at.is_private() {
+                        op = String::new();
+                    }
+                }
+            }
+            _ => {}
         }
         let rhs = if !op.is_empty() {
-            ast.rhs.args[1]
+            if let Expression::FunctionCallExpr(fce) = ast.rhs {
+                fce.args[1].clone()
+            } else {
+                Expression::default()
+            }
         } else {
             ast.rhs.clone()
         };
@@ -4588,31 +4726,32 @@ impl CodeVisitor {
             "{0}{1};" => format!("{0}{1};", ls, rs),
             _ => format!("{} {}= {};", ls, op, rs),
         };
-        if let (Expression::TupleOrLocationExpr(lhs), Expression::TupleOrLocationExpr(rhs)) =
-            (lhs, rhs)
-        {
+        if let (lhs, Expression::TupleOrLocationExpr(rhs)) = (&lhs, &rhs) {
             if let (
-                TupleOrLocationExpr::LocationExpr(lhs),
+                AssignmentStatementUnion::LocationExpr(lhs),
                 TupleOrLocationExpr::LocationExpr(rhs),
-            ) = (*lhs, *rhs)
+            ) = (lhs, *rhs.clone())
             {
-                if let (LocationExpr::SliceExpr(lhs), LocationExpr::SliceExpr(rhs)) = (*lhs, *rhs) {
+                if let (LocationExpr::SliceExpr(lhs), LocationExpr::SliceExpr(rhs)) = (lhs, *rhs) {
                     assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
                     let mut s = String::new();
                     let (lexpr, rexpr) = (
                         self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
-                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(lhs.arr))),
+                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(lhs.arr.clone()))),
                         )))),
                         self.visit(&AST::Expression(Box::new(Expression::TupleOrLocationExpr(
-                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(rhs.arr))),
+                            Box::new(TupleOrLocationExpr::LocationExpr(Box::new(rhs.arr.clone()))),
                         )))),
                     );
-                    let lbase = if let Some(base) = lhs.base {
-                        format!("{} + ", self.visit(&AST::Expression(Box::new(base))))
+                    let mut lbase = if let Some(base) = &lhs.base {
+                        format!(
+                            "{} + ",
+                            self.visit(&AST::Expression(Box::new(base.clone())))
+                        )
                     } else {
                         String::new()
                     };
-                    let rbase = if let Some(base) = rhs.base {
+                    let mut rbase = if let Some(base) = rhs.base {
                         format!("{} + ", self.visit(&AST::Expression(Box::new(base))))
                     } else {
                         String::new()
@@ -4662,7 +4801,7 @@ impl CodeVisitor {
                 }
                 _ => String::new(),
             };
-            format_string(to_ast(lhs), to_ast(rhs))
+            format_string(to_ast(lhs), self.visit(&AST::Expression(Box::new(rhs))))
         }
     }
     pub fn visit_CircuitDirectiveStatement(
@@ -4726,10 +4865,11 @@ impl CodeVisitor {
 
     pub fn visit_Block(&self, ast: Block) -> CodeVisitorReturn {
         let b = self
-            .handle_block(StatementList::Block(Box::new(ast)))
-            .trim_end();
+            .handle_block(StatementList::Block(Box::new(ast.clone())))
+            .trim_end()
+            .to_string();
         if ast.was_single_statement && ast.statements.len() == 1 {
-            b.to_string()
+            b
         } else {
             format!("{{ {b} }}")
         }
@@ -4755,7 +4895,19 @@ impl CodeVisitor {
     }
 
     pub fn visit_UserDefinedTypeName(&self, ast: UserDefinedTypeName) -> CodeVisitorReturn {
-        self.visit_list(ast.names, ".")
+        let names: Vec<_> = (match ast {
+            UserDefinedTypeName::EnumTypeName(ast) => ast.names,
+            UserDefinedTypeName::EnumValueTypeName(ast) => ast.names,
+            UserDefinedTypeName::StructTypeName(ast) => ast.names,
+            UserDefinedTypeName::ContractTypeName(ast) => ast.names,
+            UserDefinedTypeName::AddressTypeName(ast) => ast.names,
+            UserDefinedTypeName::AddressPayableTypeName(ast) => ast.names,
+            _ => vec![],
+        })
+        .iter()
+        .map(|name| ListKind::AST(AST::Identifier(IdentifierKind::Identifier(name.clone()))))
+        .collect();
+        self.visit_list(names, ".")
     }
 
     pub fn visit_AddressTypeName(&self, ast: AddressTypeName) -> CodeVisitorReturn {
@@ -4811,10 +4963,28 @@ impl CodeVisitor {
     }
 
     pub fn visit_Array(&self, ast: Array) -> CodeVisitorReturn {
-        let t = self.visit(&AST::AnnotatedTypeName(ast.value_type));
-        let e = if let ExprType::Expression(expr) = &ast.expr {
-            self.visit(&AST::Expression(Box::new(expr)))
-        } else if let ExprType::I32(expr) = &ast.expr {
+        let dat = AnnotatedTypeName::default();
+        let value_type = match &ast {
+            Array::CipherText(ast) => &ast.value_type,
+            Array::Randomness(ast) => &ast.value_type,
+            Array::Key(ast) => &ast.value_type,
+            Array::Proof(ast) => &ast.value_type,
+            Array::ArrayBase(ast) => &ast.value_type,
+            _ => &dat,
+        };
+        let et = ExprType::default();
+        let expr = match &ast {
+            Array::CipherText(ast) => &ast.expr,
+            Array::Randomness(ast) => &ast.expr,
+            Array::Key(ast) => &ast.expr,
+            Array::Proof(ast) => &ast.expr,
+            Array::ArrayBase(ast) => &ast.expr,
+            _ => &et,
+        };
+        let t = self.visit(&AST::AnnotatedTypeName(value_type.clone()));
+        let e = if let ExprType::Expression(expr) = &expr {
+            self.visit(&AST::Expression(Box::new(expr.clone())))
+        } else if let ExprType::I32(expr) = &expr {
             expr.to_string()
         } else {
             String::new()
@@ -4823,7 +4993,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_CipherText(&self, ast: CipherText) -> CodeVisitorReturn {
-        let e = self.visit_Array(Array::CipherText(ast));
+        let e = self.visit_Array(Array::CipherText(ast.clone()));
         format!("{e}/*{}*/", ast.plain_type.code())
     }
 
@@ -4999,22 +5169,22 @@ impl CodeVisitor {
 
     // @staticmethod
     fn __cmp_type_size(v1: &VariableDeclaration, v2: &VariableDeclaration) -> Ordering {
-        let (t1, t2) = (v1.annotated_type.type_name, v2.annotated_type.type_name);
-        let mut cmp = if t1.size_in_uints > t2.size_in_uints {
+        let (t1, t2) = (&v1.annotated_type.type_name, &v2.annotated_type.type_name);
+        let mut cmp = if t1.size_in_uints() > t2.size_in_uints() {
             1
         } else {
             0
-        } - if t1.size_in_uints < t2.size_in_uints {
+        } - if t1.size_in_uints() < t2.size_in_uints() {
             1
         } else {
             0
         };
         if cmp == 0 {
-            cmp = if t1.elem_bitwidth > t2.elem_bitwidth {
+            cmp = if t1.elem_bitwidth() > t2.elem_bitwidth() {
                 1
             } else {
                 0
-            } - if t1.elem_bitwidth < t2.elem_bitwidth {
+            } - if t1.elem_bitwidth() < t2.elem_bitwidth() {
                 1
             } else {
                 0
@@ -5069,7 +5239,7 @@ impl CodeVisitor {
         } else {
             String::new()
         };
-        let t = self.visit(&AST::AnnotatedTypeName(ast.annotated_type));
+        let t = self.visit(&AST::AnnotatedTypeName(*ast.annotated_type));
         let mut k = ast
             .keywords
             .iter()
@@ -5121,27 +5291,47 @@ impl CodeVisitor {
         let state_vars = ast
             .state_variable_declarations
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| {
+                self.visit(&AST::IdentifierDeclaration(
+                    IdentifierDeclaration::StateVariableDeclaration(e.clone()),
+                ))
+            })
             .collect::<Vec<_>>(); //[ for e in ast.state_variable_declarations]
         let constructors = ast
             .constructor_definitions
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| {
+                self.visit(&AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(e.clone()),
+                ))
+            })
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.constructor_definitions]
         let functions = ast
             .function_definitions
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| {
+                self.visit(&AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(e.clone()),
+                ))
+            })
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.function_definitions]
         let enums = ast
             .enum_definitions
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| {
+                self.visit(&AST::NamespaceDefinition(
+                    NamespaceDefinition::EnumDefinition(e.clone()),
+                ))
+            })
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.enum_definitions]
         let structs = ast
             .struct_definitions
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| {
+                self.visit(&AST::NamespaceDefinition(
+                    NamespaceDefinition::StructDefinition(e.clone()),
+                ))
+            })
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.struct_definitions]
 
         Self::contract_definition_to_str(
@@ -5160,7 +5350,17 @@ impl CodeVisitor {
 
     pub fn visit_SourceUnit(&self, ast: SourceUnit) -> CodeVisitorReturn {
         let p = self.handle_pragma(ast.pragma_directive.clone());
-        let contracts = self.visit_list(ast.contracts, "");
+        let contracts = self.visit_list(
+            ast.contracts
+                .iter()
+                .map(|contract| {
+                    ListKind::AST(AST::NamespaceDefinition(
+                        NamespaceDefinition::ContractDefinition(contract.clone()),
+                    ))
+                })
+                .collect(),
+            "",
+        );
         let lfstr = |uc| format!("import \"{}\";", uc);
         //  "\n\n".join(filter("".__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))
         [

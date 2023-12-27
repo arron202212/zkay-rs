@@ -408,7 +408,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        let return_parameters = if let Some(rp) = &ctx.return_parameters {
+        let return_parameters = Some(if let Some(rp) = &ctx.return_parameters {
             if let Some(rp) = &rp.return_parameters {
                 rp.params
                     .iter()
@@ -425,12 +425,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     })
                     .collect()
             } else {
-                None
+                vec![]
             }
         } else {
-            None
-        };
-        let parameters = if let Some(p) = &ctx.parameters {
+            vec![]
+        });
+        let parameters = Some(if let Some(p) = &ctx.parameters {
             p.params
                 .iter()
                 .map(|param| {
@@ -445,12 +445,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 })
                 .collect()
         } else {
-            None
-        };
-        let modifiers = if let Some(p) = &ctx.modifiers {
+            vec![]
+        });
+        let modifiers = Some(if let Some(p) = &ctx.modifiers {
             p.modifiers
                 .iter()
-                .map(|modifier| {
+                .filter_map(|modifier| {
                     modifier.accept(self);
                     if let ast::AST::Modifier(a) = self.temp_result().clone() {
                         Some(a)
@@ -460,8 +460,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 })
                 .collect()
         } else {
-            None
-        };
+            vec![]
+        });
         let body = if let Some(p) = &ctx.body {
             p.accept(self);
             if let ast::AST::Statement(Statement::StatementList(block)) = self.temp_result().clone()
@@ -1115,7 +1115,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             vec![]
         };
         func = if let Expression::TupleOrLocationExpr(func) = &func {
-            if let TupleOrLocationExpr::LocationExpr(func) = **func {
+            if let TupleOrLocationExpr::LocationExpr(func) = *func.clone() {
                 if let LocationExpr::IdentifierExpr(func) = *func {
                     if func.idf.name == String::from("reveal") {
                         assert!(
@@ -1132,25 +1132,29 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                                 None,
                             )),
                         )))
+                    } else if let Some(homomorphism) =
+                        REHOM_EXPRESSIONS.lock().unwrap().get(&func.idf.name)
+                    {
+                        assert!(
+                            args.len() == 1,
+                            "Invalid number of arguments for {:?}: {args:?},{:?},{:?}",
+                            func,
+                            ctx.args,
+                            self.code
+                        );
+                        // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
+                        Expression::ReclassifyExpr(Box::new(ReclassifyExprKind::RehomExpr(
+                            Box::new(RehomExpr::new(
+                                Box::new(args[0].clone()),
+                                Some(homomorphism.value.clone()),
+                            )),
+                        )))
                     } else {
-                        Expression::default()
+                        Expression::None
                     }
                 } else {
                     Expression::default()
                 }
-            } else if let Some(homomorphism) = REHOM_EXPRESSIONS.lock().unwrap().get(&func.idf.name)
-            {
-                assert!(
-                    args.len() == 1,
-                    "Invalid number of arguments for {}: {args:?},{:?},{:?}",
-                    func.idf.name,
-                    ctx.args,
-                    self.code
-                );
-                // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
-                Expression::ReclassifyExpr(Box::new(ReclassifyExprKind::RehomExpr(Box::new(
-                    RehomExpr::new(Box::new(args[0].clone()), Some(homomorphism.value.clone())),
-                ))))
             } else {
                 Expression::None
             }
