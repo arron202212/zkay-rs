@@ -81,6 +81,12 @@ impl Homomorphism {
     pub fn code(&self) -> String {
         self.to_string()
     }
+    pub fn non_homomorphic() -> String {
+        String::from("NON_HOMOMORPHIC")
+    }
+    pub fn additive() -> String {
+        String::from("ADDITIVE")
+    }
 }
 use std::collections::BTreeMap;
 use std::fmt;
