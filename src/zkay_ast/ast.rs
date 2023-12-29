@@ -55,8 +55,6 @@ pub trait Immutable {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum AST {
-    #[default]
-    None,
     Identifier(IdentifierKind),
     Comment(CommentKind),
     Expression(Box<Expression>),
@@ -71,6 +69,8 @@ pub enum AST {
     VersionPragma(String),
     Modifier(String),
     Homomorphism(String),
+    #[default]
+    None,
 }
 trait ASTChildren {
     fn children(&mut self) -> Vec<AST> {
@@ -215,20 +215,23 @@ impl ASTBase {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Identifier {
-    pub parent: Option<Box<AST>>,
+    pub ast_base: ASTBase,
     pub name: String,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum IdentifierUnion {
-    #[default]
-    None,
     TypeName(TypeName),
     AnnotatedTypeName(AnnotatedTypeName),
+    #[default]
+    None,
 }
 impl Identifier {
     pub fn new(name: String) -> Self {
-        Self { parent: None, name }
+        Self {
+            ast_base: ASTBase::new(),
+            name,
+        }
     }
 
     pub fn decl_var(
@@ -1487,6 +1490,15 @@ pub struct PrimitiveCastExpr {
     pub expr: Box<Expression>,
     pub is_implicit: bool,
 }
+impl PrimitiveCastExpr {
+    pub fn new(elem_type: TypeName, expr: Box<Expression>, is_implicit: bool) -> Self {
+        Self {
+            elem_type,
+            expr,
+            is_implicit,
+        }
+    }
+}
 impl ASTChildren for PrimitiveCastExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::TypeName(self.elem_type.clone()));
@@ -1516,17 +1528,17 @@ pub enum LiteralExpr {
     None,
 }
 
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct LiteralExpr {
-//     pub annotated_type: Option<AnnotatedTypeName>,
-//     pub statement: Option<Statement>,
-//     pub evaluate_privately: bool,
-// }
-// impl LiteralExpr{
-//     pub fn new()->Self{
-//         Self{annotated_type:None,statement:None,evaluate_privately:false}
-//     }
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct LiteralExprBase {
+    pub expression_base: ExpressionBase,
+}
+impl LiteralExprBase {
+    pub fn new() -> Self {
+        Self {
+            expression_base: ExpressionBase::new(),
+        }
+    }
+}
 // class LiteralExpr(Expression):
 //     pass
 
@@ -1608,8 +1620,23 @@ impl StringLiteralExpr {
 //         self.value = value
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[serde(untagged)]
+pub enum ArrayLiteralExprKind {
+    ArrayLiteralExpr(ArrayLiteralExpr),
+    KeyLiteralExpr(KeyLiteralExpr),
+    #[serde(rename_all = "camelCase")]
+    #[default]
+    None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ArrayLiteralExpr {
     pub values: Vec<Expression>,
+}
+
+impl ArrayLiteralExpr {
+    pub fn new(values: Vec<Expression>) -> Self {
+        Self { values }
+    }
 }
 impl ASTChildren for ArrayLiteralExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -1629,8 +1656,16 @@ impl ASTChildren for ArrayLiteralExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct KeyLiteralExpr {
-    pub values: Vec<Expression>,
+    pub array_literal_expr_base: ArrayLiteralExpr,
     pub crypto_params: CryptoParams,
+}
+impl KeyLiteralExpr {
+    pub fn new(values: Vec<Expression>, crypto_params: CryptoParams) -> Self {
+        Self {
+            array_literal_expr_base: ArrayLiteralExprnew(values),
+            crypto_params,
+        }
+    }
 }
 // class KeyLiteralExpr(ArrayLiteralExpr):
 
@@ -1645,6 +1680,59 @@ pub enum TupleOrLocationExpr {
     LocationExpr(Box<LocationExpr>),
     #[default]
     None,
+}
+
+impl TupleOrLocationExpr {
+    pub fn is_lvalue(&self) -> bool {
+        let parent = match self {
+            TupleOrLocationExpr::TupleExpr(te) => te.tuple_or_location_expr_base.parent.clone(),
+            TupleOrLocationExpr::LocationExpr(te) => te.parent(),
+            _ => None,
+        };
+        if let Some(parent) = parent {
+            if let AST::Statement(Statement::SimpleStatement(
+                SimpleStatement::AssignmentStatement(a),
+            )) = parent
+            {
+                return self == a.lhs;
+            }
+            if let AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(ie)),
+            )) = &parent
+            {
+                if self == ie.arr {
+                    return parent.is_lvalue();
+                }
+            }
+            if let AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(LocationExpr::MemberAccessExpr(ie)),
+            )) = &parent
+            {
+                if self == ie.expr {
+                    return parent.is_lvalue();
+                }
+            }
+            if let AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::TupleExpr(ie),
+            )) = &parent
+            {
+                return parent.is_lvalue();
+            }
+        }
+        // if isinstance(self.parent, AssignmentStatement)
+        //     return self == self.parent.lhs
+        // if isinstance(self.parent, IndexExpr) and self == self.parent.arr:
+        //     return self.parent.is_lvalue()
+        // if isinstance(self.parent, MemberAccessExpr) and self == self.parent.expr:
+        //     return self.parent.is_lvalue()
+        // if isinstance(self.parent, TupleExpr):
+        //     return self.parent.is_lvalue()
+        false
+    }
+
+    pub fn is_rvalue(&self) -> bool {
+        !self.is_lvalue()
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleOrLocationExprBase {
@@ -1677,19 +1765,18 @@ impl TupleOrLocationExprBase {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleExpr {
-    pub annotated_type: Option<AnnotatedTypeName>,
-    pub statement: Option<Statement>,
-    pub evaluate_privately: bool,
+    pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     elements: Vec<Expression>,
 }
 impl TupleExpr {
     pub fn new(elements: Vec<Expression>) -> Self {
         Self {
-            annotated_type: None,
-            statement: None,
-            evaluate_privately: false,
+            tuple_or_location_expr_base: TupleOrLocationExprBase::new(),
             elements,
         }
+    }
+    pub fn assign(&self, val: Expression) -> AssignmentStatement {
+        AssignmentStatement::new(AssignmentStatementUnion::TupleExpr(self.clone()), val, None)
     }
 }
 impl ASTChildren for TupleExpr {
@@ -1717,6 +1804,78 @@ pub enum LocationExpr {
     SliceExpr(Box<SliceExpr>),
     #[default]
     None,
+}
+impl LocationExpr {
+    pub fn parent(&self) -> Option<Box<AST>> {
+        if let LocationExpr::IdentifierExpr(ie)
+        | LocationExpr::MemberAccessExpr(ie)
+        | LocationExpr::IndexExpr(ie)
+        | LocationExpr::SliceExpr(ie) = self
+        {
+            ie.location_expr_base
+                .tuple_or_location_expr_base
+                .parent
+                .clone()
+        } else {
+            None
+        }
+    }
+    pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
+        match member {
+            IdentifierExprUnion::Identifier(member) => {
+                FunctionCallExpr::new(MemberAccessExpr::new(self.clone(), member), args)
+            }
+            IdentifierExprUnion::String(member) => FunctionCallExpr::new(
+                MemberAccessExpr::new(self.clone(), Identifier::new(member)),
+                args,
+            ),
+            _ => FunctionCallExpr::new(self.clone(), args),
+        }
+    }
+
+    pub fn dot(&self, member: IdentifierExprUnion) -> MemberAccessExpr {
+        match member {
+            IdentifierExprUnion::Identifier(member) => MemberAccessExpr::new(self.clone(), member),
+            IdentifierExprUnion::String(member) => {
+                MemberAccessExpr::new(self.clone(), Identifier::new(member))
+            }
+            _ => MemberAccessExpr::default(),
+        }
+    }
+
+    pub fn index(&self, item: ExprType) -> IndexExpr {
+        let type_name = if let LocationExpr::IdentifierExpr(ie)
+        | LocationExpr::MemberAccessExpr(ie)
+        | LocationExpr::IndexExpr(ie)
+        | LocationExpr::SliceExpr(ie) = self
+        {
+            if let Some(annotated_type) = &ie.annotated_type {
+                Some(annotated_type.type_name.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let value_type = if let Some(TypeName::Array(a)) | Some(TypeName::Mapping(a)) = type_name {
+            AsTypeUnion::AnnotatedTypeName(type_name.value_type.clone())
+        } else {
+            AsTypeUnion::None
+        };
+        assert!(value_type != AsTypeUnion::None);
+        let item = match item {
+            ExprType::I32(item) => Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
+                NumberLiteralExpr::new(item),
+            )),
+            ExprType::Expression(item) => item,
+            _ => Expression::None,
+        };
+
+        Expression::as_type(IndexExpr::new(self.clone(), item), value_type)
+    }
+    pub fn assign(&self, val: Expression) -> AssignmentStatement {
+        AssignmentStatement::new(self.clone(), val, None)
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LocationExprBase {
@@ -1781,6 +1940,13 @@ impl IdentifierExpr {
             },
             annotated_type,
         }
+    }
+    pub fn get_annotated_type(&self) -> AnnotatedTypeName {
+        self.target.annotated_type
+    }
+
+    pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
+        SliceExpr::new(self.clone(), base, offset, size)
     }
 }
 impl ASTChildren for IdentifierExpr {
@@ -1917,17 +2083,18 @@ pub struct MeExpr {
     pub expression_base: ExpressionBase,
     name: String,
 }
-impl Immutable for MeExpr {
-    fn is_immutable(&self) -> bool {
-        true
-    }
-}
+
 impl MeExpr {
     pub fn new() -> Self {
         Self {
             expression_base: ExpressionBase::new(),
             name: String::from("me"),
         }
+    }
+}
+impl Immutable for MeExpr {
+    fn is_immutable(&self) -> bool {
+        true
     }
 }
 // class MeExpr(Expression):
@@ -1982,6 +2149,7 @@ impl Immutable for AllExpr {
 pub enum ReclassifyExprKind {
     ReclassifyExpr(Box<ReclassifyExpr>),
     RehomExpr(Box<RehomExpr>),
+    EncryptionExpression(EncryptionExpression),
     #[default]
     None,
 }
@@ -2026,16 +2194,16 @@ impl ASTChildren for ReclassifyExpr {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RehomExpr {
-    pub expr: Box<Expression>,
-    pub privacy: Expression,
-    pub homomorphism: Option<String>,
+    pub reclassify_expr_base: ReclassifyExpr,
 }
 impl RehomExpr {
     pub fn new(expr: Box<Expression>, homomorphism: Option<String>) -> Self {
         Self {
-            expr,
-            privacy: Expression::MeExpr(MeExpr::new()),
-            homomorphism,
+            reclassify_expr_base: ReclassifyExpr::new(
+                expr,
+                Expression::MeExpr(MeExpr::new()),
+                homomorphism,
+            ),
         }
     }
     pub fn func_name(&self) -> String {
@@ -2071,12 +2239,197 @@ pub enum HybridArgType {
 //     TmpCircuitVal = 3
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum LocationExprUnion {
+    LocationExpr(LocationExpr),
+    NumberLiteralExpr(NumberLiteralExpr),
+    BooleanLiteralExpr(BooleanLiteralExpr),
+    #[default]
+    None,
+}
+
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HybridArgumentIdf {
-    pub name: String,
+    pub identifier_base: Identifier,
     pub t: TypeName,
     pub arg_type: HybridArgType,
-    pub corresponding_priv_expression: Vec<Expression>,
+    pub corresponding_priv_expression: Option<Expression>,
     pub serialized_loc: SliceExpr,
+}
+impl HybridArgumentIdf {
+    pub fn new(
+        name: String,
+        mut t: TypeName,
+        arg_type: HybridArgType,
+        corresponding_priv_expression: Option<Expression>,
+    ) -> Self {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) = &t {
+            t = TypeName::bool_type();
+        } else if let TypeName::NumberTypeName(NumberTypeName::NumberLiteralType(tt)) = &t {
+            t = tt.to_abstract_type();
+        } else if let TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumValueTypeName(tt)) = &t
+        {
+            t = tt.to_abstract_type();
+        }
+
+        Self {
+            identifier_base: Identifier::new(name),
+            t,
+            arg_type,
+            corresponding_priv_expression,
+            serialized_loc: SliceExpr::new(IdentifierExpr::new(String::new()), None, -1, -1),
+        }
+    }
+
+    pub fn get_loc_expr(&self, parent: Option<AST>) -> LocationExprUnion {
+        if self.arg_type == HybridArgType::TmpCircuitVal
+            && self.corresponding_priv_expression.is_some()
+            && if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) =
+                &self
+                    .corresponding_priv_expression
+                    .as_ref()
+                    .unwrap()
+                    .annotated_type
+                    .type_name
+            {
+                true
+            } else {
+                false
+            }
+        {
+            LocationExprUnion::BooleanLiteralExpr(BooleanLiteralExpr::new(
+                self.corresponding_priv_expression
+                    .annotated_type
+                    .type_name
+                    .value,
+            ))
+        } else if self.arg_type == HybridArgType::TmpCircuitVal
+            && self.corresponding_priv_expression.is_some()
+            && if let TypeName::NumberTypeName(NumberTypeName::NumberLiteralType(_)) = &self
+                .corresponding_priv_expression
+                .as_ref()
+                .unwrap()
+                .annotated_type
+                .type_name
+            {
+                true
+            } else {
+                false
+            }
+        {
+            LocationExprUnion::NumberLiteralExpr(NumberLiteralExpr::new(
+                self.corresponding_priv_expression
+                    .annotated_type
+                    .type_name
+                    .value,
+            ))
+        } else {
+            assert!(self.arg_type == HybridArgType::PubCircuitArg);
+            let mut ma = Expression::as_type(
+                IdentifierExpr::new(CFG.lock().unwrap().zk_data_var_name()).dot(self),
+                self.t,
+            );
+            ma.parent = parent;
+            ma.statement = if let Some(AST::Expression(e)) = &parent {
+                e.statement.clone()
+            } else {
+                parent
+            };
+            ma
+        }
+    }
+    pub fn get_idf_expr(&self, parent: Option<AST>) -> IdentifierExpr {
+        let mut ie = Expression::as_type(IdentifierExpr::new(self.clone()), self.t);
+        ie.parent = parent;
+        ie.statement = if let Some(AST::Expression(e)) = &parent {
+            e.statement.clone()
+        } else {
+            parent
+        };
+        ie
+    }
+
+    pub fn _set_serialized_loc(
+        &mut self,
+        idf: String,
+        base: Option<Expression>,
+        start_offset: i32,
+    ) {
+        assert!(self.serialized_loc.start_offset == -1);
+        self.serialized_loc.arr = LocationExpr::IdentifierExpr(IdentifierExpr::new(
+            IdentifierExprUnion::String(idf),
+            None,
+        ));
+        self.serialized_loc.base = base;
+        self.serialized_loc.start_offset = start_offset;
+        self.serialized_loc.size = self.t.size_in_uints();
+    }
+
+    pub fn deserialize(
+        &mut self,
+        source_idf: String,
+        base: Option<Expression>,
+        start_offset: i32,
+    ) -> AssignmentStatement {
+        self._set_serialized_loc(source_idf, base, start_offset);
+
+        let src = Expression::as_type(
+            IdentifierExpr::new(source_idf),
+            Array::ArrayBase(ArrayBase::new(AnnotatedTypeName.uint_all())),
+        );
+        if let TypeName::Array(a) = &self.t {
+            SliceExpr::new(self.get_loc_expr(), None, 0, self.t.size_in_uints)
+                .assign(self.serialized_loc)
+        } else if let Some(base) = base {
+            self.get_loc_expr().assign(
+                src.index(base.binop(String::from("+"), NumberLiteralExpr::new(start_offset)))
+                    .explicitly_converted(self.t),
+            )
+        } else {
+            self.get_loc_expr()
+                .assign(src.index(start_offset).explicitly_converted(self.t))
+        }
+    }
+
+    pub fn serialize(
+        self,
+        target_idf: String,
+        base: Option<Expression>,
+        start_offset: i32,
+    ) -> AssignmentStatement {
+        self._set_serialized_loc(target_idf, base, start_offset);
+
+        let tgt = Expression::as_type(
+            IdentifierExpr::new(target_idf),
+            Array::ArrayBase(ArrayBase(AnnotatedTypeName.uint_all())),
+        );
+        if let TypeName::Array(t) = &self.t {
+            self.serialized_loc.assign(SliceExpr(
+                self.get_loc_expr(),
+                None,
+                0,
+                self.t.size_in_uints,
+            ))
+        } else {
+            let mut expr = self.get_loc_expr();
+            expr = if self.t.is_signed_numeric() {
+                // Cast to same size uint to prevent sign extension
+                expr.explicitly_converted(UintTypeName(format!("uint{}", self.t.elem_bitwidth)))
+            } else if self.t.is_numeric && self.t.elem_bitwidth == 256 {
+                expr.binop("%", IdentifierExpr(cfg.field_prime_var_name))
+                    .as_type(self.t)
+            } else {
+                expr.explicitly_converted(TypeName.uint_type())
+            };
+
+            if let Some(base) = base {
+                tgt.clone()
+                    .index(base.binop(String::from("+"), NumberLiteralExpr(start_offset)))
+                    .assign(expr)
+            } else {
+                tgt.clone().index(start_offset).assign(expr)
+            }
+        }
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -2160,10 +2513,30 @@ pub enum IdentifierKind {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EncryptionExpression {
-    pub expr: Expression,
-    pub privacy: PrivacyLabelExpr,
-    pub homomorphism: Option<String>,
+    pub reclassify_expr_base: ReclassifyExpr,
     pub annotated_type: Option<AnnotatedTypeName>,
+}
+impl EncryptionExpression {
+    pub fn new(
+        expr: Box<Expression>,
+        privacy: PrivacyLabelExpr,
+        homomorphism: Option<String>,
+    ) -> Self {
+        let privacy = match privacy {
+            PrivacyLabelExpr::Identifier(idf) => {
+                Expression::LocationExpr(LocationExpr::IdentifierExpr(IdentifierExpr::new(idf)))
+            }
+            PrivacyLabelExpr::MeExpr(idf) => Expression::MeExpr(idf),
+            PrivacyLabelExpr::AllExpr(idf) => Expression::AllExpr(idf),
+            _ => Expression::None,
+        };
+        let annotated_type =
+            AnnotatedTypeName::cipher_type(expr.annotated_type.clone(), homomorphism.clone());
+        Self {
+            reclassify_expr_base: ReclassifyExpr::new(expr, privacy, homomorphism),
+            annotated_type,
+        }
+    }
 }
 // class EncryptionExpression(ReclassifyExpr):
 //     def __init__(self, expr: Expression, privacy: PrivacyLabelExpr, homomorphism: Homomorphism):
@@ -2183,21 +2556,26 @@ pub enum Statement {
     ReturnStatement(Box<ReturnStatement>),
     SimpleStatement(Box<SimpleStatement>),
     StatementList(Box<StatementList>),
-    // Block(Box<Block>),
-    // ExpressionStatement(ExpressionStatement),
-    // RequireStatement(RequireStatement),
-    // AssignmentStatement(AssignmentStatement),
-    // CircuitInputStatement(CircuitInputStatement),
     #[default]
     None,
 }
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct StatementBase {
-//     before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-//     after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-//     function: Option<ConstructorOrFunctionDefinition>,
-//     pre_statements: Vec<CircuitInputStatement>,
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct StatementBase {
+    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    function: Option<ConstructorOrFunctionDefinition>,
+    pre_statements: Vec<CircuitInputStatement>,
+}
+impl StatementBase {
+    pub fn new() -> Self {
+        Self {
+            before_analysis: None,
+            after_analysis: None,
+            function: None,
+            pre_statements: vec![],
+        }
+    }
+}
 // class Statement(AST):
 
 //     def __init__(self):
@@ -2211,6 +2589,7 @@ pub enum Statement {
 //         // set by circuit helper
 //         self.pre_statements = []
 
+//     Invisible statement with instructions for offchain simulator
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CircuitDirectiveStatement {
     CircuitComputationStatement(Box<CircuitComputationStatement>),
@@ -2218,6 +2597,7 @@ pub enum CircuitDirectiveStatement {
     #[default]
     None,
 }
+
 // class CircuitDirectiveStatement(Statement):
 //     """Invisible statement with instructions for offchain simulator"""
 //     pass
@@ -2225,6 +2605,12 @@ pub enum CircuitDirectiveStatement {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitComputationStatement {
     pub idf: HybridArgumentIdf,
+}
+
+impl CircuitComputationStatement {
+    pub fn new(idf: HybridArgumentIdf) -> Self {
+        Self { idf }
+    }
 }
 // class CircuitComputationStatement(CircuitDirectiveStatement):
 //     def __init__(self, var: HybridArgumentIdf):
@@ -2234,6 +2620,11 @@ pub struct CircuitComputationStatement {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnterPrivateKeyStatement {
     pub crypto_params: CryptoParams,
+}
+impl EnterPrivateKeyStatement {
+    pub fn new(crypto_params: CryptoParams) -> Self {
+        Self { crypto_params }
+    }
 }
 // class EnterPrivateKeyStatement(CircuitDirectiveStatement):
 //     def __init__(self, crypto_params: CryptoParams):
@@ -2356,6 +2747,24 @@ impl ForStatement {
             body,
         }
     }
+    pub fn statements(&self) -> Vec<Statement> {
+        vec![
+            if let Some(init) = &self.init {
+                Statement::SimpleStatement(init.clone())
+            } else {
+                Statement::None
+            },
+            Statement::SimpleStatement(SimpleStatement::ExpressionStatement(
+                self.condition.clone(),
+            )),
+            if let Some(update) = &self.update {
+                Statement::SimpleStatement(update.clone())
+            } else {
+                Statement::None
+            },
+            Statement::StatementList(StatementList::Block(self.body.clone())),
+        ]
+    }
 }
 impl ASTChildren for ForStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -2396,27 +2805,44 @@ impl ASTChildren for ForStatement {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BreakStatement {
-    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    function: Option<ConstructorOrFunctionDefinition>,
-    pre_statements: Vec<CircuitInputStatement>,
+    pub statement_base: StatementBase,
+}
+impl BreakStatement {
+    pub fn new() -> Self {
+        Self {
+            statement_base: StatementBase::new(),
+        }
+    }
 }
 // class BreakStatement(Statement):
 //     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContinueStatement {
-    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    function: Option<ConstructorOrFunctionDefinition>,
-    pre_statements: Vec<CircuitInputStatement>,
+    pub statement_base: StatementBase,
+}
+impl ContinueStatement {
+    pub fn new() -> Self {
+        Self {
+            statement_base: StatementBase::new(),
+        }
+    }
 }
 // class ContinueStatement(Statement):
 //     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReturnStatement {
+    pub statement_base: StatementBase,
     pub expr: Expression,
+}
+impl ReturnStatement {
+    pub fn new(expr: Expression) -> Self {
+        Self {
+            statement_base: StatementBase::new(),
+            expr,
+        }
+    }
 }
 impl ASTChildren for ReturnStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -2600,18 +3026,53 @@ pub enum StatementList {
     #[default]
     None,
 }
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct StatementList {
-//     pub statements: Vec<Statement>,
-//     pub excluded_from_simulation: bool,
-// }
-// impl ASTChildren for StatementList {
-//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-//         self.statements.iter().for_each(|statement| {
-//             cb.add_child(AST::Statement(statement.clone()));
-//         });
-//     }
-// }
+impl StatementList {
+    pub fn get_item(&self, key: i32) -> Statement {
+        if let StatementList::Block(sl) | StatementList::IndentBlock(sl) = &self {
+            assert!(self.statements.len() > key as usize);
+            self.statements[key as usize]
+        } else {
+            Statement::None
+        }
+    }
+
+    pub fn contains(&self, stmt: &Statement) -> bool {
+        if self.statements.contains(stmt) {
+            return true;
+        }
+        for s in self.statements {
+            if let Statement::StatementList(StatementList::Block(sl))
+            | Statement::StatementList(StatementList::IndentBlock(sl)) = s
+            {
+                if sl.statements.contains(stmt) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+}
+
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct StatementListBase {
+    pub statements: Vec<Statement>,
+    pub excluded_from_simulation: bool,
+}
+impl StatementListBase {
+    pub fn new(statements: Vec<Statement>, excluded_from_simulation: bool) -> Self {
+        Self {
+            statements,
+            excluded_from_simulation,
+        }
+    }
+}
+impl ASTChildren for StatementListBase {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.statements.iter().for_each(|statement| {
+            cb.add_child(AST::Statement(statement.clone()));
+        });
+    }
+}
 // class StatementList(Statement):
 //     def __init__(self, statements: List[Statement], excluded_from_simulation: bool = False):
 //         super().__init__()
@@ -2645,15 +3106,13 @@ pub enum StatementList {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Block {
-    pub statements: Vec<Statement>,
-    pub excluded_from_simulation: bool,
+    pub statement_list_base: StatementListBase,
     pub was_single_statement: bool,
 }
 impl Block {
     pub fn new(statements: Vec<Statement>, was_single_statement: bool) -> Self {
         Self {
-            statements,
-            excluded_from_simulation: false,
+            statement_list_base: StatementListBase::new(statements, false),
             was_single_statement,
         }
     }
@@ -2665,11 +3124,13 @@ impl Block {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndentBlock {
-    pub statements: Vec<Statement>,
+    pub statement_list_base: StatementListBase,
 }
 impl IndentBlock {
     pub fn new(statements: Vec<Statement>) -> Self {
-        Self { statements }
+        Self {
+            statement_list_base: StatementListBase::new(statements, false),
+        }
     }
 }
 // class IndentBlock(StatementList):
@@ -2685,9 +3146,7 @@ pub enum TypeName {
     Array(Array),
     TupleType(TupleType),
     FunctionTypeName(FunctionTypeName),
-    // NumberLiteralType(NumberLiteralType),
-    // BooleanLiteralType(BooleanLiteralType),
-    // String(String),
+    Literal(&'static str),
     #[default]
     None,
 }
@@ -2741,13 +3200,6 @@ impl TypeName {
             ExprType::None,
         )))
     }
-    pub fn is_cipher(&self) -> bool {
-        // if let TypeName::Array(Array::CipherText(_)) = self.type_name {
-        //     true
-        // } else {
-        false
-        // }
-    }
 
     pub fn size_in_uints(&self) -> i32
 // """How many uints this type occupies when serialized."""
@@ -2759,6 +3211,29 @@ impl TypeName {
         // Bitwidth, only defined for primitive types
         // raise NotImplementedError()
         1
+    }
+    pub fn is_literal(&self) -> bool
+// return isinstance(&self, (NumberLiteralType, BooleanLiteralType, EnumValueTypeName))
+    {
+        if let TypeName::NumberTypeName(NumberTypeName::NumberLiteralType(_))
+        | TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_))
+        | TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumValueTypeName(_)) = self
+        {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_address(&self) -> bool
+// return isinstance(&self, (AddressTypeName, AddressPayableTypeName))
+    {
+        if let TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(_))
+        | TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(_)) = self
+        {
+            true
+        } else {
+            false
+        }
     }
     pub fn is_primitive_type(&self) -> bool {
         if let TypeName::ElementaryTypeName(_)
@@ -2772,6 +3247,27 @@ impl TypeName {
             false
         }
     }
+    pub fn is_cipher(&self) -> bool {
+        if let TypeName::Array(Array::CipherText(_)) = &self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_key(&self) -> bool {
+        if let TypeName::Array(Array::Key(_)) = &self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_randomness(&self) -> bool {
+        if let TypeName::Array(Array::Randomness(_)) = &self {
+            true
+        } else {
+            false
+        }
+    }
     pub fn is_numeric(&self) -> bool {
         if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)) = self {
             true
@@ -2779,8 +3275,30 @@ impl TypeName {
             false
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: TypeName) -> bool {
-        expected == self
+    pub fn is_boolean(&self) -> bool {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_))
+        | TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(_)) = &self
+        {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_signed_numeric(&self) -> bool {
+        self.is_numeric() && self.signed()
+    }
+
+    pub fn can_be_private(&self) -> bool {
+        self.is_primitive_type() && !(self.is_signed_numeric() && self.elem_bitwidth == 256)
+    }
+
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        &expected == &self
+    }
+    pub fn compatible_with(self, other_type: &TypeName) -> bool {
+        assert!(other_type == &TypeName::None);
+        self.implicitly_convertible_to(&other_type) || other_type.implicitly_convertible_to(&self)
     }
     pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> Self {
         if other_type.implicitly_convertible_to(self) {
@@ -2790,6 +3308,9 @@ impl TypeName {
         } else {
             None
         }
+    }
+    pub fn annotate(&self, privacy_annotation: Option<Expression>) -> AnnotatedTypeName {
+        AnnotatedTypeName::new(self.clone(), privacy_annotation)
     }
 }
 // class TypeName(AST):
@@ -2919,6 +3440,15 @@ pub enum ElementaryTypeName {
     #[default]
     None,
 }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ElementaryTypeNameBase {
+    name: String,
+}
+impl ElementaryTypeNameBase {
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
+}
 // class ElementaryTypeName(TypeName):
 
 //     def __init__(self, name: str):
@@ -2933,13 +3463,18 @@ pub enum ElementaryTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BoolTypeName {
-    name: String,
+    pub elementary_type_name_base: ElementaryTypeNameBase,
 }
 impl BoolTypeName {
     pub fn new() -> Self {
         Self {
-            name: String::from("bool"),
+            elementary_type_name_base: ElementaryTypeNameBase::new(String::from("bool")),
         }
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        // Bitwidth, only defined for primitive types
+        // raise NotImplementedError()
+        1
     }
 }
 // class BoolTypeName(ElementaryTypeName):
@@ -2958,13 +3493,47 @@ impl BoolTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralType {
-    name: String,
+    pub elementary_type_name_base: ElementaryTypeNameBase,
 }
 impl BooleanLiteralType {
     pub fn new(name: bool) -> Self {
         let mut name = name.to_string();
         name.make_ascii_lowercase();
-        Self { name }
+        Self {
+            elementary_type_name_base: ElementaryTypeNameBase::new(name),
+        }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        elementary_type_name_base.implicitly_convertible_to(expected)
+            || if let TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(_)) = &expected
+            {
+                true
+            } else {
+                false
+            }
+    }
+    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) = &other_type
+        {
+            if convert_literals {
+                TypeName::bool_type()
+            } else {
+                TypeName::Literal("lit")
+            }
+        } else {
+            elementary_type_name_base.combined_type(other_type, convert_literals)
+        }
+    }
+    pub fn value(&self) -> bool {
+        &self.name == "true"
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        // Bitwidth, only defined for primitive types
+        // raise NotImplementedError()
+        1
+    }
+    pub fn to_abstract_type(&self) -> TypeName {
+        TypeName::bool_type()
     }
 }
 // class BooleanLiteralType(ElementaryTypeName):
@@ -3003,13 +3572,13 @@ pub enum NumberTypeName {
     NumberLiteralType(NumberLiteralType),
     IntTypeName(IntTypeName),
     UintTypeName(UintTypeName),
-    AnyNumberTypeName(AnyNumberTypeName),
+    NumberTypeNameBase(NumberTypeNameBase),
     #[default]
     None,
 }
 impl NumberTypeName {
     pub fn any() -> Self {
-        NumberTypeName::AnyNumberTypeName(AnyNumberTypeName::new(
+        NumberTypeName::NumberTypeNameBase(NumberTypeNameBase::new(
             String::new(),
             String::new(),
             true,
@@ -3018,14 +3587,14 @@ impl NumberTypeName {
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct AnyNumberTypeName {
-    name: String,
+pub struct NumberTypeNameBase {
+    pub elementary_type_name_base: ElementaryTypeNameBase,
     prefix: String,
     signed: bool,
     bitwidth: Option<i32>,
     _size_in_bits: i32,
 }
-impl AnyNumberTypeName {
+impl NumberTypeNameBase {
     pub fn new(name: String, prefix: String, signed: bool, bitwidth: Option<i32>) -> Self {
         assert!(name.starts_with(&prefix));
         let prefix_len = prefix.len();
@@ -3039,12 +3608,48 @@ impl AnyNumberTypeName {
             }
         };
         Self {
-            name,
+            elementary_type_name_base: ElementaryTypeNameBase::new(name),
             prefix,
             signed,
             bitwidth,
             _size_in_bits,
         }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        elementary_type_name_base.implicitly_convertible_to(expected)
+            || if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)) =
+                &expected
+            {
+                true
+            } else {
+                false
+            }
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        // Bitwidth, only defined for primitive types
+        // raise NotImplementedError()
+        if self._size_in_bits == 0 {
+            256
+        } else {
+            self._size_in_bits
+        }
+    }
+
+    pub fn can_represent(&self, value: int) -> bool
+// """Return true if value can be represented by this type"""
+    {
+        let elem_bitwidth = self.elem_bitwidth as usize;
+        let lo = if self.signed {
+            -(1 << elem_bitwidth - 1)
+        } else {
+            0
+        };
+        let hi = if self.signed {
+            (1 << elem_bitwidth - 1)
+        } else {
+            (1 << elem_bitwidth)
+        };
+        lo <= value && value < hi
     }
 }
 // class NumberTypeName(ElementaryTypeName):
@@ -3083,10 +3688,7 @@ pub enum NumberLiteralTypeKind {
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberLiteralType {
-    name: String,
-    prefix: String,
-    signed: bool,
-    bitwidth: Option<i32>,
+    pub number_type_name_base: NumberTypeNameBase,
 }
 impl NumberLiteralType {
     pub fn new(name: NumberLiteralTypeKind) -> Self {
@@ -3112,11 +3714,55 @@ impl NumberLiteralType {
         let name = name.to_string();
         let prefix = name.clone();
         Self {
-            name,
-            prefix,
-            signed,
-            bitwidth: Some(bitwidth),
+            number_type_name_base: NumberTypeNameBase::new(name, prefix, signed, Some(bitwidth)),
         }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        if expected.is_numeric() && !expected.is_literal()
+        // Allow implicit conversion only if it fits
+        {
+            expected.can_represent(self.value)
+        } else if expected.is_address() && self.elem_bitwidth == 160 && !self.signed
+        // Address literal case (fake solidity check will catch the cases where this is too permissive)
+        {
+            true
+        }
+        number_type_name_base.implicitly_convertible_to(expected)
+    }
+    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberLiteralType(_)) = &other_type
+        {
+            if convert_literals {
+                self.to_abstract_type()
+                    .combined_type(other_type.to_abstract_type(), convert_literals)
+            } else {
+                TypeName::Literal("lit")
+            }
+        } else {
+            number_type_name_base.combined_type(other_type, convert_literals)
+        }
+    }
+
+    pub fn to_abstract_type(&self) -> TypeName {
+        if self.value < 0 {
+            TypeName::NumberTypeName(NumberTypeName::IntTypeName(IntTypeName::new(format!(
+                "int{}",
+                self.elem_bitwidth
+            ))))
+        } else {
+            TypeName::NumberTypeName(NumberTypeName::UintTypeName(UintTypeName::new(format!(
+                "uint{}",
+                self.elem_bitwidth
+            ))))
+        }
+    }
+    pub fn value(&self) -> i32 {
+        &self
+            .number_type_name_base
+            .elementary_type_name_base
+            .name
+            .parse::<i32>()
+            .unwrap()
     }
 }
 // class NumberLiteralType(NumberTypeName):
@@ -3168,19 +3814,25 @@ impl NumberLiteralType {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IntTypeName {
-    name: String,
-    prefix: String,
-    signed: bool,
-    bitwidth: Option<i32>,
+    pub number_type_name_base: NumberTypeNameBase,
 }
 impl IntTypeName {
     pub fn new(name: String) -> Self {
         Self {
-            name,
-            prefix: String::from("int"),
-            signed: true,
-            bitwidth: None,
+            number_type_name_base: NumberTypeNameBase::new(name, String::from("int"), true, None),
         }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        // Implicitly convert smaller int types to larger int types
+        number_type_name_base.implicitly_convertible_to(expected)
+            || (if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::IntTypeName(_),
+            )) = &expected
+            {
+                true
+            } else {
+                false
+            } && expected.elem_bitwidth >= self.elem_bitwidth)
     }
 }
 // class IntTypeName(NumberTypeName):
@@ -3197,19 +3849,25 @@ impl IntTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UintTypeName {
-    name: String,
-    prefix: String,
-    signed: bool,
-    bitwidth: Option<i32>,
+    pub number_type_name_base: NumberTypeNameBase,
 }
 impl UintTypeName {
     pub fn new(name: String) -> Self {
         Self {
-            name,
-            prefix: String::from("uint"),
-            signed: false,
-            bitwidth: None,
+            number_type_name_base: NumberTypeNameBase::new(name, String::from("uint"), false, None),
         }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        // Implicitly convert smaller int types to larger int types
+        number_type_name_base.implicitly_convertible_to(expected)
+            || (if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::UintTypeName(_),
+            )) = &expected
+            {
+                true
+            } else {
+                false
+            } && expected.elem_bitwidth >= self.elem_bitwidth)
     }
 }
 // class UintTypeName(NumberTypeName):
@@ -3224,11 +3882,6 @@ impl UintTypeName {
 //     def clone(self) -> UintTypeName:
 //         return UintTypeName(self.name)
 
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct UserDefinedTypeName {
-//     pub names: Vec<Identifier>,
-//     pub target: Option<NamespaceDefinition>,
-// }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum UserDefinedTypeName {
@@ -3240,6 +3893,16 @@ pub enum UserDefinedTypeName {
     AddressPayableTypeName(AddressPayableTypeName),
     #[default]
     None,
+}
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct UserDefinedTypeNameBase {
+    pub names: Vec<Identifier>,
+    pub target: Option<NamespaceDefinition>,
+}
+impl UserDefinedTypeNameBase {
+    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+        Self { names, target }
+    }
 }
 // class UserDefinedTypeName(TypeName):
 //     def __init__(self, names: List[Identifier], target: Optional[NamespaceDefinition] = None):
@@ -3255,8 +3918,17 @@ pub enum UserDefinedTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
+}
+impl EnumTypeName {
+    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+        Self {
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(names, target),
+        }
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        256
+    }
 }
 // class EnumTypeName(UserDefinedTypeName):
 //     def clone(self) -> EnumTypeName:
@@ -3268,8 +3940,36 @@ pub struct EnumTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValueTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
+}
+impl EnumValueTypeName {
+    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+        Self {
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(names, target),
+        }
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        256
+    }
+    pub fn to_abstract_type(self) -> TypeName {
+        let mut names = self.user_defined_type_name_base.names.clone();
+        names.pop();
+        TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(EnumTypeName::new(
+            names,
+            self.user_defined_type_name_base.target.parent.clone(),
+        )))
+    }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        // Implicitly convert smaller int types to larger int types
+        user_defined_type_name_base.implicitly_convertible_to(expected)
+            || (if let TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(_)) =
+                &expected
+            {
+                true
+            } else {
+                false
+            } && expected.names >= self.names[..self.names.len() - 1].to_vec())
+    }
 }
 // class EnumValueTypeName(UserDefinedTypeName):
 //     @property
@@ -3287,8 +3987,14 @@ pub struct EnumValueTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
+}
+impl StructTypeName {
+    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+        Self {
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(names, target),
+        }
+    }
 }
 // class StructTypeName(UserDefinedTypeName):
 //     def clone(self) -> StructTypeName:
@@ -3296,8 +4002,14 @@ pub struct StructTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContractTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
+}
+impl ContractTypeName {
+    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+        Self {
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(names, target),
+        }
+    }
 }
 // class ContractTypeName(UserDefinedTypeName):
 //     def clone(self) -> ContractTypeName:
@@ -3305,17 +4017,22 @@ pub struct ContractTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
 impl AddressTypeName {
     pub fn new() -> Self {
         Self {
-            names: vec![Identifier::new(String::from("<address>"))],
-            target: None,
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(
+                vec![Identifier::new(String::from("<address>"))],
+                None,
+            ),
         }
     }
+    pub fn elem_bitwidth(&self) -> i32 {
+        160
+    }
 }
+
 // class AddressTypeName(UserDefinedTypeName):
 //     def __init__(self):
 //         super().__init__([Identifier('<address>')], None)
@@ -3332,15 +4049,25 @@ impl AddressTypeName {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressPayableTypeName {
-    pub names: Vec<Identifier>,
-    pub target: Option<NamespaceDefinition>,
+    pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
 impl AddressPayableTypeName {
     pub fn new() -> Self {
         Self {
-            names: vec![Identifier::new(String::from("<address_payable>"))],
-            target: None,
+            user_defined_type_name_base: UserDefinedTypeNameBase::new(
+                vec![Identifier::new(String::from("<address_payable>"))],
+                None,
+            ),
         }
+    }
+
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        // Implicitly convert smaller int types to larger int types
+        user_defined_type_name_base.implicitly_convertible_to(expected)
+            || expected == &TypeName.address_type()
+    }
+    pub fn elem_bitwidth(&self) -> i32 {
+        160
     }
 }
 // class AddressPayableTypeName(UserDefinedTypeName):
@@ -3369,21 +4096,35 @@ pub enum KeyLabelUnion {
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Mapping {
-    pub idf: Identifier,
     pub key_type: ElementaryTypeName,
-    pub key_label: KeyLabelUnion,
+    pub key_label: Option<Identifier>,
     pub value_type: Box<AnnotatedTypeName>,
     pub instantiated_key: Option<Expression>,
+}
+impl Mapping {
+    pub fn new(
+        key_type: ElementaryTypeName,
+        key_label: Option<Identifier>,
+        value_type: Box<AnnotatedTypeName>,
+    ) -> Self {
+        Self {
+            key_type,
+            key_label,
+            value_type,
+            instantiated_key: None,
+        }
+    }
+    pub fn has_key_label(&self) -> bool {
+        self.key_label.is_some()
+    }
 }
 impl ASTChildren for Mapping {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::TypeName(TypeName::ElementaryTypeName(
             self.key_type.clone(),
         )));
-        if let KeyLabelUnion::Identifier(Some(idf)) = &self.key_label {
-            cb.add_child(AST::Identifier(IdentifierKind::Identifier(
-                self.idf.clone(),
-            )));
+        if let Some(idf) = &self.key_label {
+            cb.add_child(AST::Identifier(IdentifierKind::Identifier(idf.clone())));
         }
         cb.add_child(AST::AnnotatedTypeName(*self.value_type.clone()));
     }
@@ -3462,6 +4203,18 @@ impl ArrayBase {
             },
         }
     }
+    pub fn size_in_uints(&self) -> i32 {
+        if let ExprType::Expression(Expression::LiteralExpr(le)) = &self.expr {
+            if let LiteralExpr::NumberLiteralExpr(expr) = *le {
+                return expr.value;
+            }
+        }
+        -1
+    }
+
+    pub fn elem_bitwidth(&self) -> i32 {
+        self.value_type.type_name.elem_bitwidth
+    }
 }
 
 // class Array(TypeName):
@@ -3502,8 +4255,7 @@ impl ArrayBase {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CipherText {
-    pub value_type: AnnotatedTypeName,
-    pub expr: ExprType,
+    pub array_base: ArrayBase,
     pub plain_type: AnnotatedTypeName,
     pub crypto_params: CryptoParams,
 }
@@ -3511,16 +4263,21 @@ impl CipherText {
     pub fn new(plain_type: AnnotatedTypeName, crypto_params: CryptoParams) -> Self {
         assert!(!plain_type.type_name.is_cipher());
         Self {
-            value_type: AnnotatedTypeName::uint_all(),
-            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
-                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
-                    crypto_params.cipher_len(),
-                    false,
-                )),
-            ))),
+            array_base: ArrayBase::new(
+                AnnotatedTypeName::uint_all(),
+                ExprType::Expression(Expression::LiteralExpr(Box::new(
+                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                        crypto_params.cipher_len(),
+                        false,
+                    )),
+                ))),
+            ),
             plain_type,
             crypto_params,
         }
+    }
+    pub fn size_in_uints(&self) -> i32 {
+        self.crypto_params.cipher_payload_len
     }
 }
 // class CipherText(Array):
@@ -3544,21 +4301,25 @@ impl CipherText {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Randomness {
-    pub value_type: AnnotatedTypeName,
-    pub expr: ExprType,
+    pub array_base: ArrayBase,
     pub crypto_params: CryptoParams,
 }
 impl Randomness {
     pub fn new(crypto_params: CryptoParams) -> Self {
         Self {
-            value_type: AnnotatedTypeName::uint_all(),
-            expr: if let Some(randomness_len) = crypto_params.randomness_len() {
-                ExprType::Expression(Expression::LiteralExpr(Box::new(
-                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(randomness_len, false)),
-                )))
-            } else {
-                ExprType::None
-            },
+            array_base: ArrayBase::new(
+                AnnotatedTypeName::uint_all(),
+                if let Some(randomness_len) = crypto_params.randomness_len() {
+                    ExprType::Expression(Expression::LiteralExpr(Box::new(
+                        LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                            randomness_len,
+                            false,
+                        )),
+                    )))
+                } else {
+                    ExprType::None
+                },
+            ),
             crypto_params,
         }
     }
@@ -3579,20 +4340,21 @@ impl Randomness {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Key {
-    pub value_type: AnnotatedTypeName,
-    pub expr: ExprType,
+    pub array_base: ArrayBase,
     pub crypto_params: CryptoParams,
 }
 impl Key {
     pub fn new(crypto_params: CryptoParams) -> Self {
         Self {
-            value_type: AnnotatedTypeName::uint_all(),
-            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
-                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
-                    crypto_params.key_len(),
-                    false,
-                )),
-            ))),
+            array_base: ArrayBase::new(
+                AnnotatedTypeName::uint_all(),
+                ExprType::Expression(Expression::LiteralExpr(Box::new(
+                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                        crypto_params.key_len(),
+                        false,
+                    )),
+                ))),
+            ),
             crypto_params,
         }
     }
@@ -3610,19 +4372,20 @@ impl Key {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Proof {
-    pub value_type: AnnotatedTypeName,
-    pub expr: ExprType,
+    pub array_base: ArrayBase,
 }
 impl Proof {
     pub fn new() -> Self {
         Self {
-            value_type: AnnotatedTypeName::uint_all(),
-            expr: ExprType::Expression(Expression::LiteralExpr(Box::new(
-                LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
-                    CFG.lock().unwrap().proof_len(),
-                    false,
-                )),
-            ))),
+            array_base: ArrayBase::new(
+                AnnotatedTypeName::uint_all(),
+                ExprType::Expression(Expression::LiteralExpr(Box::new(
+                    LiteralExpr::NumberLiteralExpr(NumberLiteralExpr::new(
+                        CFG.lock().unwrap().proof_len(),
+                        false,
+                    )),
+                ))),
+            ),
         }
     }
 }
@@ -3650,6 +4413,7 @@ pub enum CombinedPrivacyUnion {
     None,
 }
 
+//     """Does not appear in the syntax, but is necessary for type checking"""
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleType {
     pub types: Vec<AnnotatedTypeName>,
@@ -3657,6 +4421,112 @@ pub struct TupleType {
 impl TupleType {
     pub fn new(types: Vec<AnnotatedTypeName>) -> Self {
         Self { types }
+    }
+    pub fn ensure_tuple(t: Option<AnnotatedTypeName>) -> TupleType {
+        if let Some(t) = t {
+            if let TupleType(t) = t.type_name {
+                t.clone()
+            } else {
+                TupleType::new(vec![t.clone()])
+            }
+        } else {
+            TupleType::empty()
+        }
+    }
+
+    pub fn len(&self) -> i32 {
+        self.types.len() as i32
+    }
+
+    pub fn get_item(&self, i: i32) -> AnnotatedTypeName {
+        self.types[i as usize].clone()
+    }
+
+    pub fn check_component_wise(
+        &self,
+        other: &Self,
+        f: impl FnOnce(AnnotatedTypeName, AnnotatedTypeName) -> bool,
+    ) -> bool {
+        if let TupleType(other) = other {
+            if self.len() != other.len() {
+                false
+            } else {
+                for i in range(len(&self)) {
+                    if !f(&self.get_item(i), other.get_item[i]) {
+                        return false;
+                    }
+                }
+                true
+            }
+        } else {
+            false
+        }
+    }
+
+    pub fn implicitly_convertible_to(&self, expected: TypeName) -> bool {
+        self.check_component_wise(expected, |x, y| {
+            x.type_name.implicitly_convertible_to(y.type_name)
+        })
+    }
+
+    pub fn compatible_with(&self, other_type: TypeName) -> bool {
+        self.check_component_wise(other_type, |x, y| x.type_name.compatible_with(y.type_name))
+    }
+
+    pub fn combined_type(
+        &self,
+        other_type: TupleType,
+        convert_literals: bool,
+    ) -> Option<TupleType> {
+        if self.types.len() != other_type.typeslen() {
+            None
+        } else {
+            TupleType::new(
+                self.types
+                    .iter()
+                    .zip(&other_type.types)
+                    .map(|e1, e2| {
+                        AnnotatedTypeName::new(
+                            e1.type_name.combined_type(e2.type_name, convert_literals),
+                            DummyAnnotation {},
+                        )
+                    })
+                    .collect(),
+            )
+        }
+    }
+    pub fn annotate(&self, privacy_annotation: Expression) {
+        if isinstance(privacy_annotation, Expression) {
+            AnnotatedTypeName::new(TupleType::new(
+                self.types
+                    .iter()
+                    .map(|t| t.type_name.annotate(privacy_annotation))
+                    .collect(),
+            ))
+        } else {
+            assert!(self.types.len() == privacy_annotation.len());
+            AnnotatedTypeName::new(
+                TupleType::new(
+                    self.types
+                        .iter()
+                        .zip(privacy_annotation)
+                        .map(|(t, a)| t.type_name.annotate(a))
+                        .collect(),
+                )
+                .collect(),
+            )
+        }
+    }
+    pub fn perfect_privacy_match(&self, other: AnnotatedTypeName) -> bool {
+        fn privacy_match(selfs: AnnotatedTypeName, other: AnnotatedTypeName) -> bool {
+            selfs.privacy_annotation == other.privacy_annotation
+        }
+
+        self.check_component_wise(other, privacy_match)
+    }
+
+    pub fn empty() -> TupleType {
+        TupleType::new(vec![])
     }
 }
 // class TupleType(TypeName):
@@ -4098,34 +4968,40 @@ pub enum IdentifierDeclaration {
     #[default]
     None,
 }
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct IdentifierDeclaration {
-//     keywords: Vec<String>,
-//     annotated_type: Box<AnnotatedTypeName>,
-//     idf: Identifier,
-//     storage_location: Option<String>,
-// }
-// impl IdentifierDeclaration {
-//     fn new(
-//         keywords: Vec<String>,
-//         annotated_type: Box<AnnotatedTypeName>,
-//         idf: Identifier,
-//         storage_location: Option<String>,
-//     ) -> Self {
-//         Self {
-//             keywords,
-//             annotated_type,
-//             idf,
-//             storage_location,
-//         }
-//     }
-// }
-// impl ASTChildren for IdentifierDeclaration {
-//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-//         cb.add_child(AST::AnnotatedTypeName(self.annotated_type.clone()));
-//         cb.add_child(AST::Identifier(self.idf.clone()));
-//     }
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct IdentifierDeclarationBase {
+    keywords: Vec<String>,
+    annotated_type: Box<AnnotatedTypeName>,
+    idf: Identifier,
+    storage_location: Option<String>,
+}
+impl IdentifierDeclarationBase {
+    fn new(
+        keywords: Vec<String>,
+        annotated_type: Box<AnnotatedTypeName>,
+        idf: Identifier,
+        storage_location: Option<String>,
+    ) -> Self {
+        Self {
+            keywords,
+            annotated_type,
+            idf,
+            storage_location,
+        }
+    }
+    pub fn is_final(&self) -> bool {
+        self.keywords.contains(&String::from("final"))
+    }
+    pub fn is_constant(&self) -> bool {
+        self.keywords.contains(&String::from("constant"))
+    }
+}
+impl ASTChildren for IdentifierDeclarationBase {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::AnnotatedTypeName(self.annotated_type.clone()));
+        cb.add_child(AST::Identifier(self.idf.clone()));
+    }
+}
 
 // class IdentifierDeclaration(AST):
 
@@ -4150,10 +5026,7 @@ pub enum IdentifierDeclaration {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclaration {
-    keywords: Vec<String>,
-    annotated_type: Box<AnnotatedTypeName>,
-    idf: Identifier,
-    storage_location: Option<String>,
+    pub identifier_declaration_base: IdentifierDeclarationBase,
 }
 impl VariableDeclaration {
     fn new(
@@ -4163,10 +5036,12 @@ impl VariableDeclaration {
         storage_location: Option<String>,
     ) -> Self {
         Self {
-            keywords,
-            annotated_type,
-            idf,
-            storage_location,
+            identifier_declaration_base: IdentifierDeclarationBase::new(
+                keywords,
+                annotated_type,
+                idf,
+                storage_location,
+            ),
         }
     }
 }
@@ -4180,6 +5055,14 @@ pub struct VariableDeclarationStatement {
     variable_declaration: VariableDeclaration,
     expr: Option<Expression>,
 }
+impl VariableDeclarationStatement {
+    pub fn new(variable_declaration: VariableDeclaration, expr: Option<Expression>) -> Self {
+        Self {
+            variable_declaration,
+            expr,
+        }
+    }
+}
 impl ASTChildren for VariableDeclarationStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::IdentifierDeclaration(
@@ -4190,14 +5073,7 @@ impl ASTChildren for VariableDeclarationStatement {
         }
     }
 }
-impl VariableDeclarationStatement {
-    pub fn new(variable_declaration: VariableDeclaration, expr: Option<Expression>) -> Self {
-        Self {
-            variable_declaration,
-            expr,
-        }
-    }
-}
+
 // class VariableDeclarationStatement(SimpleStatement):
 
 //     def __init__(self, variable_declaration: VariableDeclaration, expr: Optional[Expression] = None):
@@ -4216,10 +5092,7 @@ impl VariableDeclarationStatement {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Parameter {
-    keywords: Vec<String>,
-    annotated_type: Box<AnnotatedTypeName>,
-    idf: Identifier,
-    storage_location: Option<String>,
+    pub identifier_declaration_base: IdentifierDeclarationBase,
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ParameterKind {
@@ -4236,11 +5109,19 @@ impl Parameter {
         storage_location: Option<String>,
     ) -> Self {
         Self {
-            keywords,
-            annotated_type,
-            idf,
-            storage_location,
+            identifier_declaration_base: IdentifierDeclarationBase::new(
+                keywords,
+                annotated_type,
+                idf,
+                storage_location,
+            ),
         }
+    }
+    pub fn with_changed_storage(&self, match_storage: String, new_storage: String) -> Self {
+        if self.storage_location == Some(match_storage) {
+            self.storage_location = Some(new_storage);
+        }
+        self
     }
 }
 // class Parameter(IdentifierDeclaration):
@@ -4270,20 +5151,20 @@ pub enum NamespaceDefinition {
     #[default]
     None,
 }
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct NamespaceDefinition {
-//     idf: Identifier,
-// }
-// impl NamespaceDefinition {
-//     pub fn new(idf: Identifier) -> Self {
-//         Self { idf }
-//     }
-// }
-// impl ASTChildren for NamespaceDefinition {
-//     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-//         cb.add_child(AST::Identifier(self.idf.clone()));
-//     }
-// }
+#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct NamespaceDefinitionBase {
+    idf: Identifier,
+}
+impl NamespaceDefinitionBase {
+    pub fn new(idf: Identifier) -> Self {
+        Self { idf }
+    }
+}
+impl ASTChildren for NamespaceDefinitionBase {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        cb.add_child(AST::Identifier(self.idf.clone()));
+    }
+}
 // class NamespaceDefinition(AST):
 //     def __init__(self, idf: Identifier):
 //         super().__init__()
@@ -4296,8 +5177,7 @@ pub enum NamespaceDefinition {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
-    name: String,
-    idf: Identifier,
+    pub namespace_definition_base: NamespaceDefinitionBase,
     parameters: Vec<Parameter>,
     modifiers: Vec<String>,
     return_parameters: Vec<Parameter>,
@@ -4358,7 +5238,7 @@ impl ConstructorOrFunctionDefinition {
             )));
         });
         Self {
-            idf,
+            namespace_definition_base: NamespaceDefinitionBase::new(idf),
             parameters: parameters.as_ref().unwrap().clone(),
             modifiers: modifiers.as_ref().unwrap().clone(),
             return_parameters: return_parameters.clone(),
@@ -4385,6 +5265,120 @@ impl ConstructorOrFunctionDefinition {
             requires_verification: false,
             requires_verification_when_external: false,
         }
+    }
+    pub fn has_side_effects(&self) -> bool {
+        //  not ("pure" in self.modifiers or "view" in self.modifiers)
+        !(if let Some(modifiers) = &self.modifiers {
+            modifiers.contains(&String::from("pure")) || modifiers.contains(&String::from("view"))
+        } else {
+            false
+        })
+    }
+
+    pub fn can_be_external(&self) -> bool
+// return not ("private" in self.modifiers or "internal" in self.modifiers)
+    {
+        !(if let Some(modifiers) = &self.modifiers {
+            modifiers.contains(&String::from("private"))
+                || modifiers.contains(&String::from("internal"))
+        } else {
+            false
+        })
+    }
+
+    pub fn is_external(&self) -> bool
+// return "external" in self.modifiers
+    {
+        if let Some(modifiers) = &self.modifiers {
+            modifiers.contains(&String::from("external"))
+        } else {
+            false
+        }
+    }
+
+    pub fn is_payable(&self) -> bool
+// return "payable" in self.modifiers
+    {
+        if let Some(modifiers) = &self.modifiers {
+            modifiers.contains(&String::from("payable"))
+        } else {
+            false
+        }
+    }
+
+    pub fn name(&self) -> String {
+        self.idf.name.clone()
+    }
+
+    pub fn return_type(&self) -> TupleType {
+        TupleType::new(
+            self.return_parameters
+                .iter()
+                .map(|p| p.annotated_type.clone())
+                .collect(),
+        )
+    }
+
+    pub fn parameter_types(&self) -> TupleType
+// return TupleType([p.annotated_type for p in self.parameters])
+    {
+        TupleType::new(
+            self.parameters
+                .iter()
+                .map(|p| p.annotated_type.clone())
+                .collect(),
+        )
+    }
+
+    pub fn is_constructor(&self) -> bool {
+        &self.idf.name == "constructor"
+    }
+
+    pub fn is_function(&self) -> bool {
+        !self.is_constructor()
+    }
+
+    pub fn _update_fct_type(&mut self) {
+        self.annotated_type = Some(AnnotatedTypeName::new(
+            TypeName::FunctionTypeName(FunctionTypeName::new(
+                self.parameters.clone(),
+                self.modifiers.clone(),
+                self.return_parameters.clone(),
+            )),
+            None,
+            String::from("NON_HOMOMORPHIC"),
+        ));
+        // AnnotatedTypeName(FunctionTypeName(&self.parameters, self.modifiers, self.return_parameters));
+    }
+    pub fn add_param(
+        &mut self,
+        t: IdentifierUnion,
+        idf: IdentifierExprUnion,
+        ref_storage_loc: String,
+    ) {
+        //str = "memory"
+        let t = if let IdentifierUnion::AnnotatedTypeName(t) = t {
+            t
+        } else if let IdentifierUnion::TypeName(t) = t {
+            AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHIC"))
+        } else {
+            AnnotatedTypeName::default()
+        };
+        let idf = if let IdentifierExprUnion::String(idf) = idf {
+            Identifier::new(idf)
+        } else if let IdentifierExprUnion::Identifier(idf) = idf {
+            idf.clone()
+        } else {
+            Identifier::default()
+        };
+        let storage_loc = if t.type_name.is_primitive_type() {
+            String::new()
+        } else {
+            ref_storage_loc
+        };
+        self.parameters
+            .push(Parameter::new(vec![], t, idf, storage_loc));
+        self._update_fct_type();
     }
 }
 pub trait ConstructorOrFunctionDefinitionAttr {
@@ -4513,10 +5507,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
 //         self._update_fct_type()
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
-    annotated_type: Box<AnnotatedTypeName>,
-    keywords: Vec<String>,
-    idf: Identifier,
-    storage_location: Option<String>,
+    pub identifier_declaration_base: IdentifierDeclarationBase,
     expr: Option<Expression>,
 }
 
@@ -4528,11 +5519,13 @@ impl StateVariableDeclaration {
         expr: Option<Expression>,
     ) -> Self {
         Self {
-            annotated_type,
-            keywords,
-            idf,
+            identifier_declaration_base: IdentifierDeclarationBase::new(
+                keywords,
+                annotated_type,
+                idf,
+                None,
+            ),
             expr,
-            storage_location: None,
         }
     }
     pub fn is_final(&self) -> bool {
@@ -4544,7 +5537,7 @@ impl StateVariableDeclaration {
 }
 impl ASTChildren for StateVariableDeclaration {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        // super().process_children(f)
+        identifier_declaration_base.process_children(cb);
         if let Some(expr) = &self.expr {
             cb.add_child(AST::Expression(Box::new(expr.clone())));
         }
@@ -4591,14 +5584,16 @@ impl ASTChildren for EnumValue {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
-    idf: Option<Identifier>,
+    pub namespace_definition_base: NamespaceDefinitionBase,
     values: Vec<EnumValue>,
     annotated_type: Option<AnnotatedTypeName>,
 }
 impl EnumDefinition {
     pub fn new(idf: Option<Identifier>, values: Vec<EnumValue>) -> Self {
         Self {
-            idf,
+            namespace_definition_base: NamespaceDefinitionBase::new(
+                idf.unwrap_or(Identifier::new(String::new())),
+            ),
             values,
             annotated_type: None,
         }
@@ -4607,8 +5602,7 @@ impl EnumDefinition {
 
 impl ASTChildren for EnumDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        // super().process_children(f)
-        // cb.add_child(AST::Expression(Box::new(self.func.clone())));
+        namespace_definition_base.process_children(cb);
         self.values.iter().for_each(|value| {
             cb.add_child(AST::EnumValue(value.clone()));
         });
@@ -4626,18 +5620,20 @@ impl ASTChildren for EnumDefinition {
 //         self.values[:] = map(f, self.values)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructDefinition {
-    idf: Identifier,
+    pub namespace_definition_base: NamespaceDefinitionBase,
     members: Vec<VariableDeclaration>,
 }
 impl StructDefinition {
     pub fn new(idf: Identifier, members: Vec<VariableDeclaration>) -> Self {
-        Self { idf, members }
+        Self {
+            namespace_definition_base: NamespaceDefinitionBase::new(idf),
+            members,
+        }
     }
 }
 impl ASTChildren for StructDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        // super().process_children(f)
-        // cb.add_child(AST::Expression(Box::new(self.func.clone()));
+        namespace_definition_base.process_children(cb);
         self.members.iter().for_each(|member| {
             cb.add_child(AST::IdentifierDeclaration(
                 IdentifierDeclaration::VariableDeclaration(member.clone()),
@@ -4657,7 +5653,7 @@ impl ASTChildren for StructDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
-    pub idf: Option<Identifier>,
+    pub namespace_definition_base: NamespaceDefinitionBase,
     pub state_variable_declarations: Vec<StateVariableDeclaration>,
     pub constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub function_definitions: Vec<ConstructorOrFunctionDefinition>,
@@ -4676,7 +5672,9 @@ impl ContractDefinition {
         used_crypto_backends: Option<Vec<CryptoParams>>,
     ) -> Self {
         Self {
-            idf,
+            namespace_definition_base: NamespaceDefinitionBase::new(
+                idf.unwrap_or(Identifier::new(String::new())),
+            ),
             state_variable_declarations,
             constructor_definitions,
             function_definitions,
@@ -4692,8 +5690,7 @@ impl ContractDefinition {
 }
 impl ASTChildren for ContractDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        // super().process_children(f)
-        // cb.add_child(AST::Expression(self.func.clone()));
+        namespace_definition_base.process_children(cb);
         self.enum_definitions.iter().for_each(|enum_definition| {
             cb.add_child(AST::NamespaceDefinition(
                 NamespaceDefinition::EnumDefinition(enum_definition.clone()),
@@ -4779,6 +5776,7 @@ impl ASTChildren for ContractDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
+    pub ast_base: ASTBase,
     pragma_directive: String,
     contracts: Vec<ContractDefinition>,
     used_contracts: Vec<String>,
@@ -4793,6 +5791,7 @@ impl SourceUnit {
         used_contracts: Option<Vec<String>>,
     ) -> Self {
         Self {
+            ast_base: ASTBase::new(),
             pragma_directive,
             contracts,
             used_contracts: if let Some(used_contracts) = used_contracts {
@@ -4803,6 +5802,18 @@ impl SourceUnit {
             used_homomorphisms: None,
             used_crypto_backends: None,
             original_code: vec![],
+        }
+    }
+    pub fn get_item(self, key: &String) -> Option<ContractDefinition> {
+        if let Some(c_identifier) = self.names.get(key) {
+            let c = &c_identifier.ast_base.parent;
+            if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) = c {
+                Some(c.clone())
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 }
@@ -4854,12 +5865,22 @@ pub enum TargetDefinition {
     None,
 }
 
-// def get_privacy_expr_from_label(plabel: PrivacyLabelExpr):
-//     """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
-//     if isinstance(plabel, Identifier):
-//         return IdentifierExpr(plabel.clone(), AnnotatedTypeName.address_all()).override(target=plabel.parent)
-//     else:
-//         return plabel.clone()
+pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
+// """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
+{
+    match plabel {
+        PrivacyLabelExpr::Identifier(plabel) => {
+            let mut ie = IdentifierExpr::new(plabel.clone(), AnnotatedTypeName.address_all());
+            ie.target = plabel.parent.clone();
+            Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
+                LocationExpr::IdentifierExpr(ie),
+            ))
+        }
+        PrivacyLabelExpr::MeExpr(plabel) => Expression::MeExpr(plabel.clone()),
+        PrivacyLabelExpr::AllExpr(plabel) => Expression::AllExpr(plabel.clone()),
+        _ => Expression::None,
+    }
+}
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum InstanceTargetExprType {
     Tuple((Option<TargetDefinition>, Option<AST>)),
@@ -5570,7 +6591,7 @@ impl CodeVisitor {
                 NumberTypeName::NumberLiteralType(nlt) => nlt.name.clone(),
                 NumberTypeName::IntTypeName(itn) => itn.name.clone(),
                 NumberTypeName::UintTypeName(utn) => utn.name.clone(),
-                NumberTypeName::AnyNumberTypeName(antn) => antn.name.clone(),
+                NumberTypeName::NumberTypeNameBase(antn) => antn.name.clone(),
                 _ => String::new(),
             },
             ElementaryTypeName::BoolTypeName(btn) => btn.name.clone(),
