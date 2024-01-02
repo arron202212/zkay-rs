@@ -11,3 +11,4 @@
 // * :py:mod:`.timer`: Context manager for measuring elapsed (wall clock) time
 // """
 pub mod helpers;
+pub mod progress_printer;

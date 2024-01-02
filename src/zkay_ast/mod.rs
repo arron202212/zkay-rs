@@ -20,6 +20,8 @@
 pub mod analysis;
 pub mod ast;
 pub mod build_ast;
+pub mod global_defs;
 pub mod homomorphism;
+pub mod pointers;
 pub mod process_ast;
 pub mod visitor;

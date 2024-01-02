@@ -15,13 +15,29 @@ use crate::lc_vec_s;
 use app_dirs2::*;
 use serde_json::{Map, Result, Value};
 use std::collections::HashMap;
+#[macro_export]
+macro_rules! zk_print {
+    (verbosity_level: $verbosity_level:expr, $fmt:expr $(, $($arg:tt)*)?) => {
+        if ($verbosity_level) <= CFG.lock().unwrap().user_config.verbosity() && !CFG.lock().unwrap().is_unit_test(){
+            println!(concat!("zk: ", $fmt),$($($arg)*)?);
+        }
+
+    };
+    ($fmt:expr $(, $($arg:tt)*)?) => {
+    if 1 <= CFG.lock().unwrap().user_config.verbosity() && !CFG.lock().unwrap().is_unit_test(){
+        println!($fmt, $($($arg)*)?);
+    }
+    };
+}
+
 // fn zk_print(*args, verbosity_level=1, **kwargs){
 //     if (verbosity_level <= CFG.verbosity) and not CFG.is_unit_test:
 //         print(*args, **kwargs)
 
-// fn zk_print_banner(title: str){
-//     l = len(title) + 4
-//     zk_print(f"{"#"*l}\n// {title} #\n{"#"*l}\n")
+pub fn zk_print_banner(title: String) {
+    let l = "#".repeat(title.len() + 4);
+    zk_print!("{}\n// {title} #\n{}\n", l, l);
+}
 use lazy_static::lazy_static;
 use std::sync::Mutex;
 lazy_static! {
