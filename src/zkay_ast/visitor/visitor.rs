@@ -3,17 +3,18 @@
 //     def __init__(self, traversal='post', log=False):
 //         self.traversal = traversal
 //         self.log = log
-use crate::zkay_ast::ast::AST;
+use crate::zkay_ast::ast::{ASTChildren, AST};
 pub trait AstVisitor {
     type Return;
-    fn visit(&self, ast: AST) -> Self::Return {
+    fn visit(&self, ast: AST) -> Option<Self::Return> {
         self._visit_internal(ast)
     }
     fn log(&self) -> bool;
     fn traversal(&self) -> &'static str;
     fn has_attr(&self, name: &String) -> bool;
     fn get_attr(&self, name: &String) -> Option<String>;
-    fn _visit_internal(&self, ast: AST) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return>;
+    fn _visit_internal(&self, ast: AST) -> Option<Self::Return> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
@@ -21,47 +22,48 @@ pub trait AstVisitor {
         let mut ret = None;
         let mut ret_children = None;
 
-        if self.traversal == "post" {
-            ret_children = self.visit_children(ast);
+        if self.traversal() == "post" {
+            ret_children = self.visit_children(&ast);
         }
-        let f = self.get_visit_function(ast);
+        let f = self.get_visit_function("SourceUnit");
         if f.is_some() {
-            ret = f(ast);
+            // ret = f(ast);
         } else if self.traversal() == "node-or-children" {
-            ret_children = self.visit_children(ast);
+            ret_children = self.visit_children(&ast);
         }
         if self.traversal() == "pre" {
-            ret_children = self.visit_children(ast);
+            ret_children = self.visit_children(&ast);
         }
         if ret.is_some() {
-            ret
+            // Some(ret)
+            None
         } else if ret_children.is_some() {
             ret_children
         } else {
             None
         }
     }
-    fn get_visit_function(&self, c: &AST) -> Option<String>
+    fn get_visit_function(&self, c: &str) -> Option<String>
 // std::any::type_name::<Option<String>>(),
     {
-        let visitor_function = c.name(); // String::from("visit") +
-        if self.has_attr(visitor_function) {
-            self.get_attr(visitor_function)
+        let visitor_function = c.to_owned(); // String::from("visit") +
+        if self.has_attr(&visitor_function) {
+            return self.get_attr(&visitor_function);
         } else {
-            for base in c.bases() {
-                let f = self.get_visit_function(base);
-                if f.is_some() {
-                    return f;
-                }
+            let f = self.get_visit_function(AST::bases(c));
+            if f.is_some() {
+                return f;
             }
         }
         None
     }
 
-    fn visit_children(&self, ast: &AST) -> Self::Return {
+    fn visit_children(&self, ast: &AST) -> Option<Self::Return> {
+        let mut ast = ast.clone();
         for c in ast.children() {
             self.visit(c);
         }
+        self.temper_result()
     }
 }
 

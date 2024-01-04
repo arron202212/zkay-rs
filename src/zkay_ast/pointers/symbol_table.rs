@@ -104,7 +104,24 @@ use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::HashMap;
 pub struct SymbolTableLinker;
 // class SymbolTableLinker(AstVisitor)
-
+impl AstVisitor for SymbolTableLinker {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+}
 impl SymbolTableLinker {
     pub fn _find_next_decl(ast: AST, name: String) -> (AST, TargetDefinition) {
         let mut ancestor = ast.parent();
@@ -247,12 +264,12 @@ impl SymbolTableLinker {
             let t = ast.expr.target.annotated_type.type_name;
             if let AST::TypeName(TypeName::Array(_)) = t {
                 assert!(ast.member.name == "length");
-                ast.target = array_length_member;
+                ast.location_expr_base.target = array_length_member;
             } else if let AST::TypeName(TypeName::UserDefinedTypeName(t)) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = &t.target {
                     if let Some(idf) = target.names.get(&ast.member.name) {
-                        ast.target = idf.parent;
+                        ast.location_expr_base.target = idf.parent;
                     }
                 } else {
                     t = t.clone();
@@ -268,19 +285,29 @@ impl SymbolTableLinker {
 
     pub fn visitIndexExpr(&self, ast: IndexExpr) -> IndexExpr {
         assert!(
-            if let AST::Expression(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(_),
-            )) = &ast.arr
-            {
-                true
+            if let AST::Expression(expr) = &ast.arr {
+                if let Expression::TupleOrLocationExpr(tole) = *expr {
+                    if let TupleOrLocationExpr::LocationExpr(_) = *tole {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
             } else {
                 false
             },
             "Function call return value indexing not yet supported"
         );
         let source_t = ast.arr.target.annotated_type.type_name;
-        ast.target =
-            VariableDeclaration::new(vec![], source_t.value_type, Identifier::new(String::new()));
+        ast.location_expr_base.target =
+            TargetDefinition::VariableDeclaration(VariableDeclaration::new(
+                vec![],
+                source_t.value_type,
+                Identifier::new(String::new()),
+                None,
+            ));
         ast
     }
 }
