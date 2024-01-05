@@ -328,6 +328,9 @@ impl ASTBase {
             read_values: BTreeSet::new(),
         }
     }
+ pub fn implicitly_convertible_to(&self, expected: &Self) -> bool {
+        &expected == &self
+    }
 }
 // class AST:
 //     def __init__(self):
@@ -672,26 +675,26 @@ impl Expression {
         Expression::MeExpr(me_expr)
     }
     pub fn explicitly_converted(
-        selfs: Expression,
+        &self,
         expected: TypeName,
     ) -> ExplicitlyConvertedUnion<Expression> {
-        let mut ret = FunctionCallExpr::default();
-        if expected == TypeName::bool_type() && !selfs.instanceof_data_type(TypeName::bool_type()) {
-            ret = FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+        let mut ret = FunctionCallExprBase::default();
+        if expected == TypeName::bool_type() && !self.instanceof_data_type(TypeName::bool_type()) {
+            ret = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("!=")),
                 vec![
-                    selfs,
+                    self.clone(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(0, false),
                     )),
                 ],
                 None,
-            ));
-        } else if expected.is_numeric() && selfs.instanceof_data_type(TypeName::bool_type()) {
-            ret = FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+            );
+        } else if expected.is_numeric() && self.instanceof_data_type(TypeName::bool_type()) {
+            ret = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("ite")),
                 vec![
-                    selfs,
+                    self.clone(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(1, false),
                     )),
@@ -700,12 +703,12 @@ impl Expression {
                     )),
                 ],
                 None,
-            ));
+            );
         } else {
-            let t = selfs.annotated_type().type_name;
+            let t = self.annotated_type().type_name;
 
             if *t == expected {
-                return ExplicitlyConvertedUnion::Type(selfs);
+                return ExplicitlyConvertedUnion::Type(self.clone());
             }
 
             // Explicit casts
@@ -744,20 +747,22 @@ impl Expression {
                 false
             };
             assert!(cast);
-            return Expression::as_type(
-                ExplicitlyConvertedUnion::Type(Expression::PrimitiveCastExpr(
-                    PrimitiveCastExpr::new(expected, selfs, false),
-                )),
-                AsTypeUnion::TypeName(expected),
+            return ExplicitlyConvertedUnion::Type(
+                Expression::PrimitiveCastExpr(PrimitiveCastExpr::new(expected, self.clone(), false))
+                    .as_type(AsTypeUnion::TypeName(expected)),
             );
         }
 
         ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             expected.clone(),
-            selfs.annotated_type().privacy_annotation.clone(),
-            selfs.annotated_type().homomorphism,
+            if let Some(privacy_annotation) = self.annotated_type().privacy_annotation {
+                Some(*privacy_annotation)
+            } else {
+                None
+            },
+            self.annotated_type().homomorphism,
         ));
-        ExplicitlyConvertedUnion::FunctionCallExpr(ret)
+        ExplicitlyConvertedUnion::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(ret))
     }
 
     pub fn is_all_expr(&self) -> bool {
@@ -778,7 +783,7 @@ impl Expression {
         let get_target = |target: &Option<Box<TargetDefinition>>| {
             if let Some(t) = target {
                 if let TargetDefinition::IdentifierDeclaration(id) = *t.clone() {
-                    return id
+                    return id;
                 }
             }
             IdentifierDeclaration::None
@@ -793,12 +798,10 @@ impl Expression {
                             *id.identifier_declaration_base.annotated_type.type_name
                         {
                             if let Some(ik) = m.instantiated_key {
-                                return ik.privacy_annotation_label()
+                                return ik.privacy_annotation_label();
                             }
                         } else {
-                            return Some(AST::Identifier(
-                                *id.identifier_declaration_base.idf,
-                            ))
+                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
                         }
                     }
 
@@ -809,12 +812,10 @@ impl Expression {
                             *id.identifier_declaration_base.annotated_type.type_name
                         {
                             if let Some(ik) = m.instantiated_key {
-                                return ik.privacy_annotation_label()
+                                return ik.privacy_annotation_label();
                             }
                         } else {
-                            return Some(AST::Identifier(
-                                *id.identifier_declaration_base.idf,
-                            ))
+                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
                         }
                     }
                     if let IdentifierDeclaration::StateVariableDeclaration(id) =
@@ -824,12 +825,10 @@ impl Expression {
                             *id.identifier_declaration_base.annotated_type.type_name
                         {
                             if let Some(ik) = m.instantiated_key {
-                                return ik.privacy_annotation_label()
+                                return ik.privacy_annotation_label();
                             }
                         } else {
-                            return Some(AST::Identifier(
-                                *id.identifier_declaration_base.idf,
-                            ))
+                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
                         }
                     }
                 }
@@ -895,7 +894,7 @@ impl Expression {
                     } else {
                         false
                     } && if let Expression::TupleOrLocationExpr(tole) = &self {
-                        if let TupleOrLocationExpr::TupleExpr(_) = tole{
+                        if let TupleOrLocationExpr::TupleExpr(_) = tole {
                             false
                         } else {
                             true
@@ -908,10 +907,11 @@ impl Expression {
                     == self
                         .annotated_type()
                         .type_name
-                        .types
+                        .types()
+                        .unwrap_or_default()
                         .iter()
-                        .map(|t| CombinedPrivacyUnion::Expression(t.privacy_annotation.clone()))
-                        .collect())
+                        .map(|t| CombinedPrivacyUnion::Expression(if let Some(privacy_annotation)=t.privacy_annotation{Some(*privacy_annotation)}else{None}))
+                        .collect::<Vec<_>>())
                 .to_string()
             } else if combined_label.expression().privacy_annotation_label()
                 == actual
@@ -928,20 +928,24 @@ impl Expression {
         }
     }
 
-    pub fn as_type<T>(mut selfs: T, t: AsTypeUnion) -> T {
-        if let AsTypeUnion::AnnotatedTypeName(at) = t {
-            selfs.annotated_type = at;
-        } else if let AsTypeUnion::TypeName(tn) = t {
-            selfs.annotated_type =
-                AnnotatedTypeName::new(tn, None, String::from("NON_HOMOMORPHIC"));
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            Expression::BuiltinFunction(ast) => Expression::BuiltinFunction(ast.as_type(t)),
+            Expression::FunctionCallExpr(ast) => Expression::FunctionCallExpr(ast.as_type(t)),
+            Expression::PrimitiveCastExpr(ast) => Expression::PrimitiveCastExpr(ast.as_type(t)),
+            Expression::LiteralExpr(ast) => Expression::LiteralExpr(ast.as_type(t)),
+            Expression::TupleOrLocationExpr(ast) => Expression::TupleOrLocationExpr(ast.as_type(t)),
+            Expression::MeExpr(ast) => Expression::MeExpr(ast.as_type(t)),
+            Expression::AllExpr(ast) => Expression::AllExpr(ast.as_type(t)),
+            Expression::ReclassifyExpr(ast) => Expression::ReclassifyExpr(ast.as_type(t)),
+            Expression::DummyAnnotation(ast) => Self::default(),
+            _ => Self::default(),
         }
-
-        selfs
     }
 
     pub fn analysis(self) -> Option<PartitionState<PrivacyLabelExpr>> {
-        if let Some(statement) = self.statement {
-            statement.before_analysis.clone()
+        if let Some(statement) = self.statement() {
+            statement.before_analysis().clone()
         } else {
             None
         }
@@ -949,6 +953,10 @@ impl Expression {
     pub fn annotated_type(&self) -> AnnotatedTypeName {
         AnnotatedTypeName::default()
     }
+    pub fn statement(&self)->Option<Box<Statement>>{
+         None    
+    }
+   
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum AsTypeUnion {
@@ -1476,7 +1484,7 @@ impl BuiltinFunction {
             .unwrap();
         let base_type = AnnotatedTypeName::new(
             elem_type,
-            inaccessible_arg_types[0].privacy_annotation,
+            inaccessible_arg_types[0].privacy_annotation.map(|pr|*pr),
             String::from("NON_HOMOMORPHIC"),
         );
         let public_args: Vec<_> = arg_types.iter().map(|a| a.is_public()).collect();
@@ -1520,6 +1528,20 @@ impl BuiltinFunction {
         } else {
             None
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 // class BuiltinFunction(Expression):
@@ -1723,6 +1745,17 @@ pub enum FunctionCallExpr {
     None,
 }
 
+impl FunctionCallExpr {
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            FunctionCallExpr::FunctionCallExpr(ast) => {
+                FunctionCallExpr::FunctionCallExpr(ast.as_type(t))
+            }
+            FunctionCallExpr::NewExpr(ast) => FunctionCallExpr::NewExpr(ast.as_type(t)),
+            _ => Self::default(),
+        }
+    }
+}
 impl ASTCode for FunctionCallExpr {
     fn get_ast(&self) -> AST {
         match self {
@@ -1748,7 +1781,9 @@ pub struct FunctionCallExprBase {
 }
 impl ASTCode for FunctionCallExprBase {
     fn get_ast(&self) -> AST {
-        AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(self.clone())))
+        AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(self.clone()),
+        ))
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::FunctionCallExpr
@@ -1775,19 +1810,34 @@ impl FunctionCallExprBase {
                     LocationExpr::SliceExpr(ie) => &ie.location_expr_base.target,
                     _ => &none,
                 };
-                if let Some(target)=target{
-                if let TargetDefinition::NamespaceDefinition(
-                    NamespaceDefinition::ContractDefinition(_),
-                )
-                | TargetDefinition::NamespaceDefinition(
-                    NamespaceDefinition::EnumDefinition(_),
-                ) = *target.clone()
-                {
-                    return true;
-                }}
+                if let Some(target) = target {
+                    if let TargetDefinition::NamespaceDefinition(
+                        NamespaceDefinition::ContractDefinition(_),
+                    )
+                    | TargetDefinition::NamespaceDefinition(
+                        NamespaceDefinition::EnumDefinition(_),
+                    ) = *target.clone()
+                    {
+                        return true;
+                    }
+                }
             }
         }
         false
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 
@@ -1847,6 +1897,20 @@ impl NewExpr {
             annotated_type,
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.function_call_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.function_call_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 impl ASTChildren for NewExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -1890,6 +1954,20 @@ impl PrimitiveCastExpr {
             is_implicit,
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 impl ASTChildren for PrimitiveCastExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -1919,7 +1997,17 @@ pub enum LiteralExpr {
     #[default]
     None,
 }
-
+impl LiteralExpr {
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            LiteralExpr::BooleanLiteralExpr(ast) => LiteralExpr::BooleanLiteralExpr(ast.as_type(t)),
+            LiteralExpr::NumberLiteralExpr(ast) => LiteralExpr::NumberLiteralExpr(ast.as_type(t)),
+            LiteralExpr::StringLiteralExpr(ast) => LiteralExpr::StringLiteralExpr(ast.as_type(t)),
+            LiteralExpr::ArrayLiteralExpr(ast) => LiteralExpr::ArrayLiteralExpr(ast.as_type(t)),
+            _ => Self::default(),
+        }
+    }
+}
 impl ASTCode for LiteralExpr {
     fn get_ast(&self) -> AST {
         match self {
@@ -1984,6 +2072,20 @@ impl BooleanLiteralExpr {
             ))),
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 // class BooleanLiteralExpr(LiteralExpr):
 
@@ -2026,6 +2128,20 @@ impl NumberLiteralExpr {
             ))),
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 
 // class NumberLiteralExpr(LiteralExpr):
@@ -2058,6 +2174,20 @@ impl StringLiteralExpr {
             value,
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 // class StringLiteralExpr(LiteralExpr):
 
@@ -2074,7 +2204,19 @@ pub enum ArrayLiteralExpr {
     #[default]
     None,
 }
-
+impl ArrayLiteralExpr {
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            ArrayLiteralExpr::ArrayLiteralExpr(ast) => {
+                ArrayLiteralExpr::ArrayLiteralExpr(ast.as_type(t))
+            }
+            ArrayLiteralExpr::KeyLiteralExpr(ast) => {
+                ArrayLiteralExpr::KeyLiteralExpr(ast.as_type(t))
+            }
+            _ => Self::default(),
+        }
+    }
+}
 impl ASTCode for ArrayLiteralExpr {
     fn get_ast(&self) -> AST {
         match self {
@@ -2112,6 +2254,20 @@ impl ArrayLiteralExprBase {
             literal_expr_base: Box::new(LiteralExprBase::new()),
             values,
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for ArrayLiteralExprBase {
@@ -2151,6 +2307,20 @@ impl KeyLiteralExpr {
             array_literal_expr_base: ArrayLiteralExprBase::new(values),
             crypto_params,
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.array_literal_expr_base.literal_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.array_literal_expr_base.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 // class KeyLiteralExpr(ArrayLiteralExpr):
@@ -2211,7 +2381,7 @@ impl TupleOrLocationExpr {
             }
             if let AST::Expression(ie) = *parent {
                 if let Expression::TupleOrLocationExpr(parent) = ie {
-                    if let TupleOrLocationExpr::LocationExpr(le) =parent {
+                    if let TupleOrLocationExpr::LocationExpr(le) = parent {
                         if let LocationExpr::IndexExpr(ie) = le {
                             if self == &TupleOrLocationExpr::LocationExpr(*ie.arr) {
                                 return parent.is_lvalue();
@@ -2252,6 +2422,15 @@ impl TupleOrLocationExpr {
 
     pub fn is_rvalue(&self) -> bool {
         !self.is_lvalue()
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            TupleOrLocationExpr::TupleExpr(ast) => TupleOrLocationExpr::TupleExpr(ast.as_type(t)),
+            TupleOrLocationExpr::LocationExpr(ast) => {
+                TupleOrLocationExpr::LocationExpr(ast.as_type(t))
+            }
+            _ => Self::default(),
+        }
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -2304,7 +2483,31 @@ impl TupleExpr {
         }
     }
     pub fn assign(&self, val: Expression) -> AssignmentStatement {
-        AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(AssignmentStatementUnion::TupleExpr(self.clone()), val, None))
+        AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
+            AssignmentStatementUnion::TupleExpr(self.clone()),
+            val,
+            None,
+        ))
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for TupleExpr {
@@ -2389,7 +2592,7 @@ impl LocationExpr {
         }
     }
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
-       FunctionCallExpr::FunctionCallExpr( match member {
+        FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
                 Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
                     LocationExpr::MemberAccessExpr(MemberAccessExpr::new(self.clone(), member)),
@@ -2475,7 +2678,7 @@ impl LocationExpr {
         };
         let value_type = if let Some(type_name) = type_name {
             match *type_name {
-                TypeName::Array(a) => AsTypeUnion::AnnotatedTypeName(*a.value_type),
+                TypeName::Array(a) => AsTypeUnion::AnnotatedTypeName(a.value_type()),
                 TypeName::Mapping(a) => AsTypeUnion::AnnotatedTypeName(*a.value_type),
                 _ => AsTypeUnion::None,
             }
@@ -2491,7 +2694,7 @@ impl LocationExpr {
             _ => Expression::None,
         };
 
-        Expression::as_type(IndexExpr::new(self.clone(), item), value_type)
+        IndexExpr::new(self.clone(), item).as_type(value_type)
     }
     pub fn assign(&self, val: Expression) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
@@ -2499,6 +2702,15 @@ impl LocationExpr {
             val,
             None,
         ))
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            LocationExpr::IdentifierExpr(ast) => LocationExpr::IdentifierExpr(ast.as_type(t)),
+            LocationExpr::MemberAccessExpr(ast) => LocationExpr::MemberAccessExpr(ast.as_type(t)),
+            LocationExpr::IndexExpr(ast) => LocationExpr::IndexExpr(ast.as_type(t)),
+            LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
+            _ => Self::default(),
+        }
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -2556,9 +2768,9 @@ pub struct IdentifierExpr {
 }
 impl ASTCode for IdentifierExpr {
     fn get_ast(&self) -> AST {
-        AST::Expression(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
-            self.clone(),
-        ))))
+        AST::Expression(Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(self.clone())),
+        ))
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::IdentifierExpr
@@ -2579,7 +2791,7 @@ impl IdentifierExpr {
         }
     }
     pub fn get_annotated_type(&self) -> AnnotatedTypeName {
-        self.location_expr_base.target.annotated_type()
+        self.location_expr_base.target.map_or(AnnotatedTypeName::default(),|t|t.annotated_type())
     }
 
     pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
@@ -2589,6 +2801,20 @@ impl IdentifierExpr {
             offset,
             size,
         )
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.annotated_type = Some(Box::new(at));
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.annotated_type = Some(Box::new(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            )));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for IdentifierExpr {
@@ -2625,9 +2851,9 @@ pub struct MemberAccessExpr {
 }
 impl ASTCode for MemberAccessExpr {
     fn get_ast(&self) -> AST {
-        AST::Expression(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::MemberAccessExpr(
-            self.clone(),
-        ))))
+        AST::Expression(Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::MemberAccessExpr(self.clone())),
+        ))
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::MemberAccessExpr
@@ -2640,6 +2866,28 @@ impl MemberAccessExpr {
             expr: Box::new(expr),
             member: Box::new(member),
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for MemberAccessExpr {
@@ -2669,9 +2917,9 @@ pub struct IndexExpr {
 }
 impl ASTCode for IndexExpr {
     fn get_ast(&self) -> AST {
-        AST::Expression(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(
-            self.clone(),
-        ))))
+        AST::Expression(Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(self.clone())),
+        ))
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::IndexExpr
@@ -2684,6 +2932,28 @@ impl IndexExpr {
             arr: Box::new(arr),
             key: Box::new(key),
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for IndexExpr {
@@ -2715,9 +2985,9 @@ pub struct SliceExpr {
 }
 impl ASTCode for SliceExpr {
     fn get_ast(&self) -> AST {
-        AST::Expression(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(
-            self.clone(),
-        ))))
+        AST::Expression(Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(self.clone())),
+        ))
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::SliceExpr
@@ -2736,6 +3006,28 @@ impl SliceExpr {
             start_offset,
             size,
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs
+                .location_expr_base
+                .tuple_or_location_expr_base
+                .expression_base
+                .annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 // class SliceExpr(LocationExpr):
@@ -2765,6 +3057,20 @@ impl MeExpr {
             expression_base: ExpressionBase::new(),
             name: String::from("me"),
         }
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl Immutable for MeExpr {
@@ -2807,6 +3113,20 @@ impl AllExpr {
             name: String::from("all"),
         }
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 impl Immutable for AllExpr {
     fn is_immutable(&self) -> bool {
@@ -2839,6 +3159,16 @@ pub enum ReclassifyExpr {
     None,
 }
 
+impl ReclassifyExpr {
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        match self {
+            ReclassifyExpr::ReclassifyExpr(ast) => ReclassifyExpr::ReclassifyExpr(ast.as_type(t)),
+            ReclassifyExpr::RehomExpr(ast) => ReclassifyExpr::RehomExpr(ast.as_type(t)),
+            ReclassifyExpr::EncryptionExpression(ast) => ReclassifyExpr::EncryptionExpression(ast.as_type(t)),
+            _ => Self::default(),
+        }
+    }
+}
 impl ASTCode for ReclassifyExpr {
     fn get_ast(&self) -> AST {
         match self {
@@ -2885,6 +3215,20 @@ impl ReclassifyExprBase {
     }
     pub fn func_name(&self) -> String {
         String::from("reveal")
+    }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 impl ASTChildren for ReclassifyExprBase {
@@ -2941,6 +3285,20 @@ impl RehomExpr {
             .rehom_expr_name
             .clone()
     }
+    pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.reclassify_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
+    }
 }
 // class RehomExpr(ReclassifyExpr):
 
@@ -2973,6 +3331,31 @@ pub enum LocationExprUnion {
     None,
 }
 
+impl From<LocationExprUnion> for Expression {
+	fn from(v: LocationExprUnion) -> Self {
+		match v {
+			LocationExprUnion::LocationExpr(le) => Self::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(le)),
+			LocationExprUnion::NumberLiteralExpr(nle) => Self::LiteralExpr(LiteralExpr::NumberLiteralExpr(nle)),
+			LocationExprUnion::BooleanLiteralExpr(ble) => Self::LiteralExpr(LiteralExpr::BooleanLiteralExpr(ble)),
+            _=>Self::None,
+		}
+	}
+}
+
+impl LocationExprUnion{
+  pub fn assign(&self, val: Expression) -> AssignmentStatement {
+        match self{
+            LocationExprUnion::LocationExpr(le)=>{
+            AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
+            AssignmentStatementUnion::LocationExpr(le.clone()),
+            val,
+            None,
+        ))}
+_=>AssignmentStatement::default(),
+        }
+       
+    }
+}
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HybridArgumentIdf {
     pub identifier_base: IdentifierBase,
@@ -3010,7 +3393,7 @@ impl HybridArgumentIdf {
 
         Self {
             identifier_base: IdentifierBase::new(name),
-            t:Box::new(t),
+            t: Box::new(t),
             arg_type,
             corresponding_priv_expression,
             serialized_loc: SliceExpr::new(
@@ -3047,7 +3430,7 @@ impl HybridArgumentIdf {
                     .unwrap()
                     .annotated_type()
                     .type_name
-                    .value,
+                    .bool_value(),
             ))
         } else if self.arg_type == HybridArgType::TmpCircuitVal
             && self.corresponding_priv_expression.is_some()
@@ -3071,52 +3454,56 @@ impl HybridArgumentIdf {
                     .unwrap()
                     .annotated_type()
                     .type_name
-                    .value,
+                    .value(),
                 false,
             ))
         } else {
             assert!(self.arg_type == HybridArgType::PubCircuitArg);
-            let mut ma = Expression::as_type(
-                IdentifierExpr::new(
+            let mut ma = 
+                LocationExpr::IdentifierExpr(IdentifierExpr::new(
                     IdentifierExprUnion::String(CFG.lock().unwrap().zk_data_var_name()),
                     None,
-                )
-                .dot(self),
-                AsTypeUnion::TypeName(*self.t),
+                ))
+                .dot(IdentifierExprUnion::Identifier(Identifier::HybridArgumentIdf(self.clone()))).as_type(AsTypeUnion::TypeName(*self.t),
             );
-            ma.parent = parent;
-            ma.statement = if let Some(AST::Expression(e)) = &parent {
-                e.statement.clone()
+ ma.location_expr_base.tuple_or_location_expr_base.expression_base.ast_base.parent = parent.map(|p|Box::new(p));
+            ma.location_expr_base.tuple_or_location_expr_base.expression_base.statement = if let Some(AST::Expression(e)) = &parent {
+                e.statement().clone()
             } else {
-                parent
+                parent.map(|p| Box::new(if let AST::Statement(s)=p{s}else{Statement::default()}))
             };
-            ma
+            LocationExprUnion::LocationExpr(LocationExpr::MemberAccessExpr(ma))
+            
+           
         }
     }
     pub fn get_idf_expr(&self, parent: Option<Box<AST>>) -> IdentifierExpr {
-        let mut ie = Expression::as_type(
+        let mut ie = 
             IdentifierExpr::new(
                 IdentifierExprUnion::Identifier(Identifier::HybridArgumentIdf(self.clone())),
                 None,
-            ),
-            AsTypeUnion::TypeName(*self.t),
+            ).as_type(AsTypeUnion::TypeName(*self.t),
         );
-        ie.idf.ast_base.parent = parent;
+        if let Identifier::Identifier(mut idf)=*ie.idf{
+                idf.ast_base.parent = parent;
+                ie.idf=Box::new(Identifier::Identifier(idf));
+        }
+       
         ie.location_expr_base
             .tuple_or_location_expr_base
             .expression_base
             .statement = if let Some(parent) = &parent {
             if let AST::Expression(e) = *parent.clone() {
-                e.statement.clone()
+                e.statement().clone()
             } else {
-                if let AST::Statement(parent) = *parent {
-                    parent
+                if let AST::Statement(parent) = *parent.clone() {
+                    Some(Box::new(parent))
                 } else {
-                    IdentifierExpr::default()
+                    None
                 }
             }
         } else {
-            IdentifierExpr::default()
+            None
         };
         ie
     }
@@ -3132,7 +3519,11 @@ impl HybridArgumentIdf {
             IdentifierExprUnion::String(idf),
             None,
         )));
-        self.serialized_loc.base = if let Some(base)=base{Some(Box::new(base))}else{None};
+        self.serialized_loc.base = if let Some(base) = base {
+            Some(Box::new(base))
+        } else {
+            None
+        };
         self.serialized_loc.start_offset = start_offset;
         self.serialized_loc.size = self.t.size_in_uints();
     }
@@ -3145,8 +3536,8 @@ impl HybridArgumentIdf {
     ) -> AssignmentStatement {
         self._set_serialized_loc(source_idf, base, start_offset);
 
-        let src = Expression::as_type(
-            IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None),
+        let src = 
+            IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None).as_type(
             AsTypeUnion::TypeName(TypeName::Array(Array::ArrayBase(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
@@ -3169,17 +3560,19 @@ impl HybridArgumentIdf {
             ))
         } else if let Some(base) = base {
             self.get_loc_expr(None).assign(
-                src.index(base.binop(
+              if let ExplicitlyConvertedUnion::Type(expr)=  Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(src).index(ExprUnion::Expression(Expression::FunctionCallExpr(base.binop(
                     String::from("+"),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(start_offset, false),
                     )),
-                ))
-                .explicitly_converted(self.t),
+                )))))))
+                .explicitly_converted(*self.t){expr}else{Expression::default()},
             )
         } else {
             self.get_loc_expr(None)
-                .assign(src.index(start_offset).explicitly_converted(self.t))
+                .assign(if let ExplicitlyConvertedUnion::Type(expr)=Expression::TupleOrLocationExpr(
+            TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(src).index(ExprUnion::I32(start_offset))))).explicitly_converted(*self.t){expr}else{Expression::default()})
         }
     }
 
@@ -3191,8 +3584,8 @@ impl HybridArgumentIdf {
     ) -> AssignmentStatement {
         self._set_serialized_loc(target_idf, base, start_offset);
 
-        let tgt = Expression::as_type(
-            IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None),
+        let tgt = 
+            IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None).as_type(
             AsTypeUnion::TypeName(TypeName::Array(Array::ArrayBase(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
@@ -3214,37 +3607,38 @@ impl HybridArgumentIdf {
                     ))),
                 ))
         } else {
-            let mut expr = self.get_loc_expr(None);
-            expr = if self.t.is_signed_numeric() {
+            let  expr = self.get_loc_expr(None);
+           let  expr = if self.t.is_signed_numeric() {
                 // Cast to same size uint to prevent sign extension
-                expr.explicitly_converted(UintTypeName::new(format!(
+                <LocationExprUnion as Into<Expression>>::into(expr).explicitly_converted(TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(NumberTypeName::UintTypeName(UintTypeName::new(format!(
                     "uint{}",
                     self.t.elem_bitwidth()
-                )))
+                ))))))
             } else if self.t.is_numeric() && self.t.elem_bitwidth() == 256 {
-                expr.binop(
-                    "%",
-                    IdentifierExpr::new(
+                ExplicitlyConvertedUnion::FunctionCallExpr( <LocationExprUnion as Into<Expression>>::into(expr).binop(
+                    String::from("%"),
+                    Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(IdentifierExpr::new(
                         IdentifierExprUnion::String(CFG.lock().unwrap().field_prime_var_name()),
                         None,
-                    ),
+                    )))),
                 )
-                .as_type(self.t)
+                .as_type(AsTypeUnion::TypeName(*self.t)))
             } else {
-                expr.explicitly_converted(TypeName::uint_type())
+                <LocationExprUnion as Into<Expression>>::into(expr).explicitly_converted(TypeName::uint_type())
+//if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
             };
 
             if let Some(base) = base {
-                tgt.clone()
-                    .index(base.binop(
+                LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(tgt.clone())
+                    .index(ExprUnion::Expression(Expression::FunctionCallExpr(base.binop(
                         String::from("+"),
                         Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                             NumberLiteralExpr::new(start_offset, false),
                         )),
-                    ))
-                    .assign(expr)
+                    )))))
+                    .assign( if let ExplicitlyConvertedUnion::Type(expr)=expr{expr}else{Expression::default()})
             } else {
-                tgt.clone().index(start_offset).assign(expr)
+                LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(tgt.clone()).index(ExprUnion::I32(start_offset))).assign( if let ExplicitlyConvertedUnion::Type(expr)=expr{expr}else{Expression::default()})
             }
         }
     }
@@ -3364,14 +3758,11 @@ impl ASTCode for EncryptionExpression {
 impl EncryptionExpression {
     pub fn new(expr: Expression, privacy: PrivacyLabelExpr, homomorphism: Option<String>) -> Self {
         let privacy = match privacy {
-            PrivacyLabelExpr::Identifier(idf) => {
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                    LocationExpr::IdentifierExpr(IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(idf),
-                        None,
-                    )),
-                ))
-            }
+            PrivacyLabelExpr::Identifier(idf) => Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
+                    IdentifierExpr::new(IdentifierExprUnion::Identifier(idf), None),
+                )),
+            ),
             PrivacyLabelExpr::MeExpr(idf) => Expression::MeExpr(idf),
             PrivacyLabelExpr::AllExpr(idf) => Expression::AllExpr(idf),
             _ => Expression::None,
@@ -3384,6 +3775,20 @@ impl EncryptionExpression {
             reclassify_expr_base: ReclassifyExprBase::new(expr, privacy, homomorphism),
             annotated_type,
         }
+    }
+pub fn as_type(&self, t: AsTypeUnion) -> Self {
+        let mut selfs = self.clone();
+        if let AsTypeUnion::AnnotatedTypeName(at) = t {
+            selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
+        } else if let AsTypeUnion::TypeName(tn) = t {
+            selfs.reclassify_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+                tn,
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ));
+        }
+
+        selfs
     }
 }
 // class EncryptionExpression(ReclassifyExpr):
@@ -3407,7 +3812,11 @@ pub enum Statement {
     #[default]
     None,
 }
-
+impl Statement{
+ pub fn before_analysis(&self)->  Option<PartitionState<PrivacyLabelExpr>>{
+    None
+    }
+}
 impl ASTCode for Statement {
     fn get_ast(&self) -> AST {
         match self {
@@ -4021,7 +4430,9 @@ pub struct AssignmentStatementBase {
 impl ASTCode for AssignmentStatementBase {
     fn get_ast(&self) -> AST {
         AST::Statement(Statement::SimpleStatement(
-            SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(self.clone())),
+            SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
+                self.clone(),
+            )),
         ))
     }
     fn get_ast_type(&self) -> ASTType {
@@ -4135,33 +4546,34 @@ impl ASTCode for StatementList {
     }
 }
 impl StatementList {
+    pub fn statements(&self)-> Vec<Statement>{
+        vec![]
+    }
     pub fn get_item(&self, key: i32) -> Statement {
         match self {
             StatementList::Block(sl) => {
-                assert!(self.statements.len() > key as usize);
-                self.statements[key as usize]
+                assert!(self.statements().len() > key as usize);
+                self.statements()[key as usize]
             }
             StatementList::IndentBlock(sl) => {
-                assert!(self.statements.len() > key as usize);
-                self.statements[key as usize]
+                assert!(self.statements().len() > key as usize);
+                self.statements()[key as usize]
             }
             _ => Statement::None,
         }
     }
 
     pub fn contains(&self, stmt: &Statement) -> bool {
-        if self.statements.contains(stmt) {
+        if self.statements().contains(stmt) {
             return true;
         }
-        for s in self.statements {
-            if let Statement::StatementList(StatementList::Block(sl))= s
-            {
+        for s in self.statements() {
+            if let Statement::StatementList(StatementList::Block(sl)) = s {
                 if sl.statement_list_base.statements.contains(stmt) {
                     return true;
                 }
             }
-            if let  Statement::StatementList(StatementList::IndentBlock(sl)) = s
-            {
+            if let Statement::StatementList(StatementList::IndentBlock(sl)) = s {
                 if sl.statement_list_base.statements.contains(stmt) {
                     return true;
                 }
@@ -4298,7 +4710,7 @@ impl ASTCode for TypeName {
             TypeName::Array(ast) => ast.get_ast(),
             TypeName::TupleType(ast) => ast.get_ast(),
             TypeName::FunctionTypeName(ast) => ast.get_ast(),
-            TypeName::Literal(ast) => self.clone(),
+            TypeName::Literal(ast) => AST::TypeName(self.clone()),
             _ => AST::None,
         }
     }
@@ -4310,12 +4722,52 @@ impl ASTCode for TypeName {
             TypeName::Array(ast) => ast.get_ast_type(),
             TypeName::TupleType(ast) => ast.get_ast_type(),
             TypeName::FunctionTypeName(ast) => ast.get_ast_type(),
-            TypeName::Literal(ast) => ast.get_ast_type(),
+            TypeName::Literal(ast) => ASTType::Literal,
             _ => ASTType::None,
         }
     }
 }
 impl TypeName {
+pub fn can_represent(&self, value: i32) -> bool
+// """Return true if value can be represented by this type"""
+    {
+        // let elem_bitwidth = self.elem_bitwidth() as usize;
+        // let lo = if self.signed {
+        //     -(1 << elem_bitwidth - 1)
+        // } else {
+        //     0
+        // };
+        // let hi = if self.signed {
+        //     1 << elem_bitwidth - 1
+        // } else {
+        //     1 << elem_bitwidth
+        // };
+        // lo <= value && value < hi
+        true
+    }
+ pub fn to_abstract_type(&self) -> TypeName {
+        if self.value() < 0 {
+            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::IntTypeName(IntTypeName::new(format!("i32{}", self.elem_bitwidth()))),
+            ))
+        } else {
+            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::UintTypeName(UintTypeName::new(format!(
+                    "uint{}",
+                    self.elem_bitwidth()
+                ))),
+            ))
+        }
+    }
+    pub fn value(&self)->i32{
+    0
+    }
+pub fn bool_value(&self)->bool{
+    false
+    }
+    pub fn types(&self) -> Option<Vec<AnnotatedTypeName>> {
+        None
+    }
     pub fn bool_type() -> Self {
         TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(BoolTypeName::new()))
     }
@@ -4481,7 +4933,11 @@ impl TypeName {
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> AnnotatedTypeName {
         AnnotatedTypeName::new(
             self.clone(),
-            if let CombinedPrivacyUnion::Expression(expr)=privacy_annotation{expr}else{None},
+            if let CombinedPrivacyUnion::Expression(expr) = privacy_annotation {
+                expr
+            } else {
+                None
+            },
             String::from("NON_HOMOMORPHIC"),
         )
     }
@@ -4495,6 +4951,9 @@ impl TypeNameBase {
         Self {
             ast_base: ASTBase::new(),
         }
+    }
+    pub fn implicitly_convertible_to(&self, expected: &Self) -> bool {
+        &expected == &self
     }
 }
 // class TypeName(AST):
@@ -4655,6 +5114,18 @@ impl ElementaryTypeNameBase {
             name,
         }
     }
+    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+        true
+    }
+    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
+        if other_type.implicitly_convertible_to(&TypeName::None) {
+            TypeName::None
+        } else if self.implicitly_convertible_to(&other_type) {
+            other_type
+        } else {
+            TypeName::None
+        }
+    }
 }
 // class ElementaryTypeName(TypeName):
 
@@ -4754,7 +5225,7 @@ impl BooleanLiteralType {
         }
     }
     pub fn value(&self) -> bool {
-        &self.name == "true"
+        &self.elementary_type_name_base.name == "true"
     }
     pub fn elem_bitwidth(&self) -> i32 {
         // Bitwidth, only defined for primitive types
@@ -4835,6 +5306,23 @@ impl NumberTypeName {
             Some(256),
         ))
     }
+    pub fn can_represent(&self, value: i32) -> bool
+// """Return true if value can be represented by this type"""
+    {
+        // let elem_bitwidth = self.elem_bitwidth() as usize;
+        // let lo = if self.signed {
+        //     -(1 << elem_bitwidth - 1)
+        // } else {
+        //     0
+        // };
+        // let hi = if self.signed {
+        //     1 << elem_bitwidth - 1
+        // } else {
+        //     1 << elem_bitwidth
+        // };
+        // lo <= value && value < hi
+        true
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberTypeNameBase {
@@ -4899,7 +5387,7 @@ impl NumberTypeNameBase {
     pub fn can_represent(&self, value: i32) -> bool
 // """Return true if value can be represented by this type"""
     {
-        let elem_bitwidth = self.elem_bitwidth as usize;
+        let elem_bitwidth = self.elem_bitwidth() as usize;
         let lo = if self.signed {
             -(1 << elem_bitwidth - 1)
         } else {
@@ -4955,8 +5443,8 @@ pub struct NumberLiteralType {
 impl ASTCode for NumberLiteralType {
     fn get_ast(&self) -> AST {
         AST::TypeName(TypeName::ElementaryTypeName(
-            ElementaryTypeName::NumberTypeName(NumberTypeName::BooleanLiteralType(self.clone())),
-        ))
+            ElementaryTypeName::NumberTypeName(NumberTypeName::NumberLiteralType(self.clone()))),
+        )
     }
     fn get_ast_type(&self) -> ASTType {
         ASTType::NumberLiteralType
@@ -4993,17 +5481,20 @@ impl NumberLiteralType {
         if expected.is_numeric() && !expected.is_literal()
         // Allow implicit conversion only if it fits
         {
-             expected.can_represent(self.value)
-        } else if expected.is_address() && self.elem_bitwidth == 160 && !self.signed
+            expected.can_represent(self.value())
+        } else if expected.is_address() && self.number_type_name_base.elem_bitwidth() == 160 && !self.number_type_name_base.signed
         // Address literal case (fake solidity check will catch the cases where this is too permissive)
         {
-             true
-        }else{
-        self.number_type_name_base
-            .implicitly_convertible_to(expected)}
+            true
+        } else {
+            self.number_type_name_base
+                .implicitly_convertible_to(expected)
+        }
     }
     pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
-        if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(NumberTypeName::NumberLiteralType(_))) = &other_type
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+            NumberTypeName::NumberLiteralType(_),
+        )) = &other_type
         {
             if convert_literals {
                 self.to_abstract_type()
@@ -5012,27 +5503,28 @@ impl NumberLiteralType {
                 TypeName::Literal("lit")
             }
         } else {
-            self.number_type_name_base
+            self.number_type_name_base.elementary_type_name_base
                 .combined_type(other_type, convert_literals)
         }
     }
-
+    pub fn value(&self)->i32{
+    0}
     pub fn to_abstract_type(&self) -> TypeName {
-        if self.value < 0 {
-            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(NumberTypeName::IntTypeName(IntTypeName::new(format!(
-                "i32{}",
-                self.elem_bitwidth
-            )))))
+        if self.value() < 0 {
+            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::IntTypeName(IntTypeName::new(format!("i32{}", self.elem_bitwidth))),
+            ))
         } else {
-            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(NumberTypeName::UintTypeName(UintTypeName::new(format!(
-                "uint{}",
-                self.elem_bitwidth
-            )))))
+            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::UintTypeName(UintTypeName::new(format!(
+                    "uint{}",
+                    self.elem_bitwidth
+                ))),
+            ))
         }
     }
     pub fn value(&self) -> i32 {
-        self
-            .number_type_name_base
+        self.number_type_name_base
             .elementary_type_name_base
             .name
             .parse::<i32>()
@@ -5226,7 +5718,11 @@ impl UserDefinedTypeNameBase {
         Self {
             type_name_base: TypeNameBase::new(),
             names,
-            target:if let Some(target)=target{Some(Box::new(target))}else{None},
+            target: if let Some(target) = target {
+                Some(Box::new(target))
+            } else {
+                None
+            },
         }
     }
 }
@@ -5442,7 +5938,9 @@ impl AddressPayableTypeName {
     pub fn new() -> Self {
         Self {
             user_defined_type_name_base: UserDefinedTypeNameBase::new(
-                vec![Identifier::Identifier(IdentifierBase::new(String::from("<address_payable>")))],
+                vec![Identifier::Identifier(IdentifierBase::new(String::from(
+                    "<address_payable>",
+                )))],
                 None,
             ),
         }
@@ -5575,7 +6073,11 @@ pub enum Array {
     #[default]
     None,
 }
-
+impl Array{
+pub fn value_type(&self)->AnnotatedTypeName{
+AnnotatedTypeName::default()
+}
+}
 impl ASTCode for Array {
     fn get_ast(&self) -> AST {
         match self {
@@ -5863,9 +6365,7 @@ impl ASTCode for DummyAnnotation {
 }
 impl DummyAnnotation {
     pub fn new() -> Self {
-        Self {
-           
-        }
+        Self {}
     }
 }
 // class DummyAnnotation:
@@ -5971,8 +6471,11 @@ impl TupleType {
                     .zip(&other_type.types)
                     .map(|(e1, e2)| {
                         AnnotatedTypeName::new(
-                            TypeName::TupleType(e1.type_name.combined_type(*e2.type_name, convert_literals)),
-                            Some(Expression::DummyAnnotation(DummyAnnotation::new())),String::from("NON_HOMOMORPHIC")
+                            TypeName::TupleType(
+                                e1.type_name.combined_type(*e2.type_name, convert_literals),
+                            ),
+                            Some(Expression::DummyAnnotation(DummyAnnotation::new())),
+                            String::from("NON_HOMOMORPHIC"),
                         )
                     })
                     .collect(),
@@ -5989,15 +6492,13 @@ impl TupleType {
             ))
         } else if let CombinedPrivacyUnion::Vec(privacy_annotation) = &privacy_annotation {
             assert!(self.types.len() == privacy_annotation.len());
-            AnnotatedTypeName::new(
-                TupleType::new(
-                    self.types
-                        .iter()
-                        .zip(privacy_annotation)
-                        .map(|(t, a)| t.type_name.annotate(a))
-                        .collect(),
-                )
-            )
+            AnnotatedTypeName::new(TupleType::new(
+                self.types
+                    .iter()
+                    .zip(privacy_annotation)
+                    .map(|(t, a)| t.type_name.annotate(a))
+                    .collect(),
+            ))
         } else {
             CombinedPrivacyUnion::None
         }
@@ -6185,11 +6686,13 @@ impl AnnotatedTypeName {
             ast_base: ASTBase::new(),
             type_name: Box::new(type_name),
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
-            privacy_annotation: Some(Box::new(if let Some(privacy_annotation)=privacy_annotation{
-               privacy_annotation
-            } else {
-                Expression::AllExpr(AllExpr::new())
-            }),
+            privacy_annotation: Some(Box::new(
+                if let Some(privacy_annotation) = privacy_annotation {
+                    privacy_annotation
+                } else {
+                    Expression::AllExpr(AllExpr::new())
+                },
+            )),
             homomorphism,
         }
     }
@@ -6325,12 +6828,18 @@ impl AnnotatedTypeName {
         )
     }
     pub fn all(type_name: TypeName) -> Self {
-        AnnotatedTypeName::new(type_name, Expression::all_expr(),
-            String::from("NON_HOMOMORPHIC"))
+        AnnotatedTypeName::new(
+            type_name,
+            Expression::all_expr(),
+            String::from("NON_HOMOMORPHIC"),
+        )
     }
     pub fn me(type_name: TypeName) -> Self {
-        AnnotatedTypeName::new(type_name, Expression::me_expr(),
-            String::from("NON_HOMOMORPHIC"))
+        AnnotatedTypeName::new(
+            type_name,
+            Expression::me_expr(),
+            String::from("NON_HOMOMORPHIC"),
+        )
     }
     pub fn array_all(value_type: AnnotatedTypeName, length: Vec<i32>) -> Self {
         let mut t = value_type;
@@ -6517,8 +7026,8 @@ impl IdentifierDeclarationBase {
         Self {
             ast_base: ASTBase::new(),
             keywords,
-            annotated_type:Box::new(annotated_type),
-            idf:Box::new(idf),
+            annotated_type: Box::new(annotated_type),
+            idf: Box::new(idf),
             storage_location,
         }
     }
@@ -6820,7 +7329,10 @@ impl ConstructorOrFunctionDefinition {
                 VariableDeclaration::new(
                     vec![],
                     rp.annotated_type.clone(),
-                    Identifier::Identifier(IdentifierBase::new(format!("{}_{idx}", CFG.lock().unwrap().return_var_name()))),
+                    Identifier::Identifier(IdentifierBase::new(format!(
+                        "{}_{idx}",
+                        CFG.lock().unwrap().return_var_name()
+                    ))),
                     rp.storage_location.clone(),
                 )
             })
@@ -6861,32 +7373,27 @@ impl ConstructorOrFunctionDefinition {
     }
     pub fn has_side_effects(&self) -> bool {
         //  not ("pure" in self.modifiers or "view" in self.modifiers)
-        !( self.modifiers.contains(&String::from("pure")) || self.modifiers.contains(&String::from("view")))
-       
+        !(self.modifiers.contains(&String::from("pure"))
+            || self.modifiers.contains(&String::from("view")))
     }
 
     pub fn can_be_external(&self) -> bool
 // return not ("private" in self.modifiers or "internal" in self.modifiers)
     {
-        !(
-            modifiers.contains(&String::from("private"))
-                || modifiers.contains(&String::from("internal"))
-        )
+        !(self.modifiers.contains(&String::from("private"))
+            || self.modifiers.contains(&String::from("internal")))
     }
 
     pub fn is_external(&self) -> bool
 // return "external" in self.modifiers
     {
-      
-            self.modifiers.contains(&String::from("external"))
-       
+        self.modifiers.contains(&String::from("external"))
     }
 
     pub fn is_payable(&self) -> bool
 // return "payable" in self.modifiers
     {
-            self.modifiers.contains(&String::from("payable"))
-   
+        self.modifiers.contains(&String::from("payable"))
     }
 
     pub fn name(&self) -> String {
@@ -7201,9 +7708,7 @@ impl ASTCode for EnumDefinition {
 impl EnumDefinition {
     pub fn new(idf: Option<Identifier>, values: Vec<EnumValue>) -> Self {
         Self {
-            namespace_definition_base: NamespaceDefinitionBase::new(
-                idf.unwrap_or_default(),
-            ),
+            namespace_definition_base: NamespaceDefinitionBase::new(idf.unwrap_or_default()),
             values,
             annotated_type: None,
         }
@@ -7498,7 +8003,11 @@ pub enum TargetDefinition {
     #[default]
     None,
 }
-
+impl TargetDefinition{
+    pub fn annotated_type(&self)->AnnotatedTypeName{
+AnnotatedTypeName::default()
+    }
+}
 pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
 {
@@ -7702,7 +8211,7 @@ fn get_code_error_msg(
             error_msg += &format!("{orig_line} ");
         }
 
-        let affected_line = &code[line  as i32- 1];
+        let affected_line = &code[line as i32 - 1];
         let loc_string: String = affected_line[..column - 1]
             .chars()
             .map(|c| (if c == "\t" { "----" } else { "-" }).to_string())
@@ -7750,7 +8259,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
 
     // Get source root
     let root = if let Some(ctr) = ctr { ctr } else { ast };
-    while root!=AST::None
+    while root != AST::None
         && !(if let AST::SourceUnit(_) = &root {
             true
         } else {
@@ -7760,7 +8269,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
         root = root.parent;
     }
 
-    let error_msg = if root!=AST::None {
+    let error_msg = if root != AST::None {
         String::from("error")
     } else {
         get_code_error_msg(ast.line, ast.column, root.original_code, ctr, fct, stmt)
@@ -8218,7 +8727,7 @@ impl CodeVisitor {
                             TupleOrLocationExpr::LocationExpr(*lhs.arr),
                         ))),
                         self.visit(&AST::Expression(Expression::TupleOrLocationExpr(
-                            TupleOrLocationExpr::LocationExpr(*rhs.arr)),
+                            TupleOrLocationExpr::LocationExpr(*rhs.arr),
                         ))),
                     );
                     let mut lbase = if let Some(base) = &lhs.base {
