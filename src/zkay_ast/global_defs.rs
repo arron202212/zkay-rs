@@ -2,7 +2,7 @@
 use crate::zkay_ast::ast::{
     AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName, Identifier,
     Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
-    UserDefinedTypeName, VariableDeclaration,
+    UserDefinedTypeName, VariableDeclaration,IdentifierBase,
 };
 // use crate::zkay_ast::pointers::parent_setter::set_parents;
 
@@ -11,7 +11,7 @@ lazy_static! {
     pub static ref array_length_member: VariableDeclaration = VariableDeclaration::new(
         vec![],
         AnnotatedTypeName::uint_all(),
-        Identifier::new(String::from("length"))
+        Identifier::Identifier(IdentifierBase::new(String::from("length"))),None
     );
 }
 

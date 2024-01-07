@@ -10,7 +10,7 @@ use crate::zkay_ast::ast::{
     IfStatement, IndexExpr, IntTypeName, LiteralExpr, LocationExpr, NamespaceDefinition,
     NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
     RequireStatement, SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr,
-    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,
+    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,FunctionCallExprBase,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -58,13 +58,13 @@ macro_rules! _visit_binary_expr {
         let mut f = BuiltinFunction::new("");
         if let Some(op) = &($ctx).op {
             f = BuiltinFunction::new(&op.text);
-            f.line = op.line as i32;
-            f.column = op.column as i32;
+            f.expression_base.ast_base.line = op.line as i32;
+            f.expression_base.ast_base.column = op.column as i32;
         }
         let lhs = if let Some(expr) = &($ctx).lhs {
             expr.accept($self);
             if let ast::AST::Expression(expr) = ($self).temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -74,18 +74,18 @@ macro_rules! _visit_binary_expr {
         let rhs = if let Some(expr) = &($ctx).rhs {
             expr.accept($self);
             if let ast::AST::Expression(expr) = ($self).temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![lhs, rhs],
             Some(0),
-        ))
+        ))))
     }};
 }
 
@@ -98,9 +98,9 @@ macro_rules! _visit_bool_expr {
 
 pub fn build_ast_from_parse_tree(code: &str) -> ast::AST {
     let mut lexer = SolidityLexer::new(InputStream::new(code));
-    lexer.add_error_listener(MyErrorListener {
+    lexer.add_error_listener(Box::new(MyErrorListener {
         code: code.to_string(),
-    });
+    }));
     let tokens = CommonTokenStream::new(lexer);
     let mut parser = SolidityParser::new(tokens);
     let root = parser.sourceUnit().expect("");
@@ -272,7 +272,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     ) -> Self::Return {
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let ast::AST::Identifier(Identifier::Identifier(a)) = self.temp_result().clone() {
+            if let ast::AST::Identifier(a) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -366,15 +366,15 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .collect();
 
         ast::AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(
-            ContractDefinition {
+            ContractDefinition::new (
                 idf,
                 state_variable_declarations,
                 constructor_definitions,
                 function_definitions,
                 enum_definitions,
-                struct_definitions: vec![],
-                used_crypto_backends: None,
-            },
+                None,
+                None,
+            ),
         ))
     }
 
@@ -395,7 +395,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // self.handle_fdef(ctx)
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let ast::AST::Identifier(Identifier::Identifier(a)) = self.temp_result().clone() {
+            if let ast::AST::Identifier(a) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -461,8 +461,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             p.accept(self);
             if let ast::AST::Statement(Statement::StatementList(block)) = self.temp_result().clone()
             {
-                if let StatementList::Block(block) = *block {
-                    *block
+                if let StatementList::Block(block) = block {
+                    block
                 } else {
                     Block::default()
                 }
@@ -526,8 +526,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             p.accept(self);
             if let ast::AST::Statement(Statement::StatementList(block)) = self.temp_result().clone()
             {
-                if let StatementList::Block(block) = *block {
-                    *block
+                if let StatementList::Block(block) = block {
+                    block
                 } else {
                     Block::default()
                 }
@@ -556,7 +556,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return ast.EnumDefinition(idf, values)
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let ast::AST::Identifier(Identifier::Identifier(a)) = self.temp_result().clone() {
+            if let ast::AST::Identifier(a) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -588,7 +588,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return ast.EnumValue(idf)
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let ast::AST::Identifier(Identifier::Identifier(a)) = self.temp_result().clone() {
+            if let ast::AST::Identifier(a) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -657,7 +657,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         for idx in (0..contents.len()).step_by(2) {
             contents[idx].accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                elements.push(*expr);
+                elements.push(expr);
             }
         }
         // contents = ctx.expr.children[1:-1]
@@ -694,7 +694,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         if let Some(pa) = &ctx.privacy_annotation {
             pa.accept(self);
             privacy_annotation = if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                Some(*expr)
+                Some(expr)
             } else {
                 None
             };
@@ -803,9 +803,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let arr = if let Some(arr) = &ctx.arr {
             arr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                if let Expression::TupleOrLocationExpr(expr) = *expr {
-                    if let TupleOrLocationExpr::LocationExpr(expr) = *expr {
-                        *expr
+                if let Expression::TupleOrLocationExpr(expr) = expr {
+                    if let TupleOrLocationExpr::LocationExpr(expr) = expr {
+                        expr
                     } else {
                         LocationExpr::default()
                     }
@@ -821,7 +821,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let index = if let Some(index) = &ctx.index {
             index.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -839,23 +839,23 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("parenthesis");
-        f.line = ctx.start().line as i32;
-        f.column = ctx.start().column as i32;
+        f.expression_base.ast_base.line = ctx.start().line as i32;
+        f.expression_base.ast_base.column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![expr],
             Some(0),
-        ))
+        ))))
     }
 
     fn visit_SignExpr(&mut self, ctx: &SignExprContext<'input>) -> Self::Return {
@@ -865,24 +865,24 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut f = BuiltinFunction::new("sign");
         if let Some(op) = &ctx.op {
             f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
-            f.line = op.line as i32;
-            f.column = op.column as i32;
+            f.expression_base.ast_base.line = op.line as i32;
+            f.expression_base.ast_base.column = op.column as i32;
         }
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![expr],
             Some(0),
-        ))
+        ))))
     }
 
     fn visit_NotExpr(&mut self, ctx: &NotExprContext<'input>) -> Self::Return {
@@ -890,23 +890,23 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("!");
-        f.line = ctx.start().line as i32;
-        f.column = ctx.start().column as i32;
+        f.expression_base.ast_base.line = ctx.start().line as i32;
+        f.expression_base.ast_base.column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![expr],
             Some(0),
-        ))
+        ))))
     }
 
     fn visit_BitwiseNotExpr(&mut self, ctx: &BitwiseNotExprContext<'input>) -> Self::Return {
@@ -914,23 +914,23 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("~");
-        f.line = ctx.start().line as i32;
-        f.column = ctx.start().column as i32;
+        f.expression_base.ast_base.line = ctx.start().line as i32;
+        f.expression_base.ast_base.column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![expr],
             Some(0),
-        ))
+        ))))
     }
 
     //     fn  _visitBinaryExpr(self, ctx){
@@ -1010,7 +1010,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let cond = if let Some(expr) = &ctx.cond {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1020,7 +1020,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let then_expr = if let Some(expr) = &ctx.then_expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1030,18 +1030,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let else_expr = if let Some(expr) = &ctx.else_expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(Box::new(Expression::BuiltinFunction(f))),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
             vec![cond, then_expr, else_expr],
             Some(0),
-        ))
+        ))))
     }
 
     // rehom_expressions = {}
@@ -1068,7 +1068,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut func = if let Some(expr) = &ctx.func {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1081,7 +1081,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .map(|expr| {
                     expr.accept(self);
                     if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                        *expr
+                        expr
                     } else {
                         Expression::None
                     }
@@ -1091,9 +1091,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             vec![]
         };
         func = if let Expression::TupleOrLocationExpr(func) = &func {
-            if let TupleOrLocationExpr::LocationExpr(func) = *func.clone() {
-                if let LocationExpr::IdentifierExpr(func) = *func {
-                    if func.idf.name == String::from("reveal") {
+            if let TupleOrLocationExpr::LocationExpr(func) = func {
+                if let LocationExpr::IdentifierExpr(func) = func {
+                    if func.idf.name() == String::from("reveal") {
                         assert!(
                             args.len() == 2,
                             "Invalid number of arguments for reveal: {args:?},{:?},{:?}",
@@ -1101,11 +1101,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             self.code
                         );
                         // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
-                        Expression::ReclassifyExpr(ReclassifyExpr::ReclassifyExpr(Box::new(
-                            ReclassifyExpr::new(Box::new(args[0].clone()), args[1].clone(), None),
-                        )))
+                        Expression::ReclassifyExpr(ReclassifyExpr::ReclassifyExpr(
+                            ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None),
+                        ))
                     } else if let Some(homomorphism) =
-                        REHOM_EXPRESSIONS.lock().unwrap().get(&func.idf.name)
+                        REHOM_EXPRESSIONS.lock().unwrap().get(&func.idf.name())
                     {
                         assert!(
                             args.len() == 1,
@@ -1116,7 +1116,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         );
                         // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
                         Expression::ReclassifyExpr(ReclassifyExpr::RehomExpr(RehomExpr::new(
-                            Box::new(args[0].clone()),
+                            args[0].clone(),
                             Some(homomorphism.value.clone()),
                         )))
                     } else {
@@ -1131,11 +1131,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(
-            FunctionCallExpr::new(func),
+        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
+            FunctionCallExprBase::new(func,
             args,
             Some(0),
-        ))
+        ))))
     }
 
     fn visit_ifStatement(&mut self, ctx: &IfStatementContext<'input>) -> Self::Return {
@@ -1155,7 +1155,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1166,8 +1166,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             if let ast::AST::Statement(Statement::StatementList(expr)) = self.temp_result().clone()
             {
-                if let StatementList::Block(expr) = *expr {
-                    *expr
+                if let StatementList::Block(expr) = expr {
+                    expr
                 } else {
                     Block::default()
                 }
@@ -1185,8 +1185,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 if let ast::AST::Statement(Statement::StatementList(expr)) =
                     self.temp_result().clone()
                 {
-                    if let StatementList::Block(expr) = *expr {
-                        *expr
+                    if let StatementList::Block(expr) = expr {
+                        expr
                     } else {
                         Block::default()
                     }
@@ -1215,7 +1215,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1226,8 +1226,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             if let ast::AST::Statement(Statement::StatementList(expr)) = self.temp_result().clone()
             {
-                if let StatementList::Block(expr) = *expr {
-                    *expr
+                if let StatementList::Block(expr) = expr {
+                    expr
                 } else {
                     Block::default()
                 }
@@ -1253,8 +1253,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             if let ast::AST::Statement(Statement::StatementList(expr)) = self.temp_result().clone()
             {
-                if let StatementList::Block(expr) = *expr {
-                    *expr
+                if let StatementList::Block(expr) = expr {
+                    expr
                 } else {
                     Block::default()
                 }
@@ -1269,7 +1269,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1298,7 +1298,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 if let ast::AST::Statement(Statement::SimpleStatement(expr)) =
                     self.temp_result().clone()
                 {
-                    *expr
+                    expr
                 } else {
                     SimpleStatement::None
                 },
@@ -1309,7 +1309,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1320,7 +1320,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             Some(
                 if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                    SimpleStatement::ExpressionStatement(ExpressionStatement::new(*expr))
+                    SimpleStatement::ExpressionStatement(ExpressionStatement::new(expr))
                 } else {
                     SimpleStatement::None
                 },
@@ -1332,8 +1332,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             if let ast::AST::Statement(Statement::StatementList(expr)) = self.temp_result().clone()
             {
-                if let StatementList::Block(expr) = *expr {
-                    *expr
+                if let StatementList::Block(expr) = expr {
+                    expr
                 } else {
                     Block::default()
                 }
@@ -1377,7 +1377,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let lhs = if let Some(expr) = &ctx.lhs {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1387,7 +1387,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut rhs = if let Some(expr) = &ctx.rhs {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1405,16 +1405,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             if !op.is_empty() {
                 // If the assignment contains an additional operator -> replace lhs = rhs with lhs = lhs "op" rhs
                 let mut f = BuiltinFunction::new(&op);
-                f.line = line;
-                f.column = column;
-                let mut fce = FunctionCallExpr::new(
+                f.expression_base.ast_base.line = line;
+                f.expression_base.ast_base.column = column;
+                let mut fce = FunctionCallExprBase::new(
                     Expression::BuiltinFunction(f),
                     vec![lhs.clone(), rhs],
                     Some(0),
                 );
-                fce.line = line;
-                fce.column = column + 1;
-                rhs = Expression::FunctionCallExpr(fce);
+                fce.expression_base.ast_base.line = line;
+                fce.expression_base.ast_base.column = column + 1;
+                rhs = Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce));
             }
             op
         } else {
@@ -1422,10 +1422,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             String::new()
         };
         let lhs = if let Expression::TupleOrLocationExpr(expr) = lhs {
-            match *expr {
-                TupleOrLocationExpr::TupleExpr(expr) => AssignmentStatementUnion::TupleExpr(*expr),
+            match expr {
+                TupleOrLocationExpr::TupleExpr(expr) => AssignmentStatementUnion::TupleExpr(expr),
                 TupleOrLocationExpr::LocationExpr(expr) => {
-                    AssignmentStatementUnion::LocationExpr(*expr)
+                    AssignmentStatementUnion::LocationExpr(expr)
                 }
                 _ => AssignmentStatementUnion::None,
             }
@@ -1435,7 +1435,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
         ast::AST::Statement(Statement::SimpleStatement(
             SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                AssignmentStatement::new(lhs, rhs, Some(op)),
+                AssignmentStatementBase::new(lhs, rhs, Some(op)),
             )),
         ))
     }
@@ -1463,7 +1463,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1478,12 +1478,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 "-"
             });
             let mut one = NumberLiteralExpr::new(1, false);
-            one.line = line;
-            one.column = column + 1;
+            one.literal_expr_base.expression_base.ast_base.line = line;
+            one.literal_expr_base.expression_base.ast_base.column = column + 1;
             let mut f = BuiltinFunction::new(&optext);
-            f.line = line;
-            f.column = column;
-            let mut fce = FunctionCallExpr::new(
+            f.expression_base.ast_base.line = line;
+            f.expression_base.ast_base.column = column;
+            let mut fce = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(f),
                 vec![
                     expr.clone(),
@@ -1491,16 +1491,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 ],
                 Some(0),
             );
-            fce.line = line;
-            fce.column = column + 1;
+            fce.expression_base.ast_base.line = line;
+            fce.expression_base.ast_base.column = column + 1;
 
             let expr = if let Expression::TupleOrLocationExpr(expr) = expr {
-                match *expr {
+                match expr {
                     TupleOrLocationExpr::TupleExpr(expr) => {
-                        AssignmentStatementUnion::TupleExpr(*expr)
+                        AssignmentStatementUnion::TupleExpr(expr)
                     }
                     TupleOrLocationExpr::LocationExpr(expr) => {
-                        AssignmentStatementUnion::LocationExpr(*expr)
+                        AssignmentStatementUnion::LocationExpr(expr)
                     }
                     _ => AssignmentStatementUnion::None,
                 }
@@ -1509,10 +1509,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             };
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                    AssignmentStatement::new(expr, Expression::FunctionCallExpr(fce)),
+                    AssignmentStatementBase::new(expr, Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
                     Some(format!("{kind}{}", op.text)),
-                )),
-            ))
+                ))),)
+            )
         } else {
             ast::AST::None
         }
@@ -1524,7 +1524,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1539,12 +1539,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 "-"
             });
             let mut one = NumberLiteralExpr::new(1, false);
-            one.line = line;
-            one.column = column + 1;
+            one.literal_expr_base.expression_base.ast_base.line = line;
+            one.literal_expr_base.expression_base.ast_base.column = column + 1;
             let mut f = BuiltinFunction::new(&optext);
-            f.line = line;
-            f.column = column;
-            let mut fce = FunctionCallExpr::new(
+            f.expression_base.ast_base.line = line;
+            f.expression_base.ast_base.column = column;
+            let mut fce = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(f),
                 vec![
                     expr.clone(),
@@ -1552,16 +1552,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 ],
                 Some(0),
             );
-            fce.line = line;
-            fce.column = column + 1;
+            fce.expression_base.ast_base.line = line;
+            fce.expression_base.ast_base.column = column + 1;
 
             let expr = if let Expression::TupleOrLocationExpr(expr) = expr {
-                match *expr {
+                match expr {
                     TupleOrLocationExpr::TupleExpr(expr) => {
-                        AssignmentStatementUnion::TupleExpr(*expr)
+                        AssignmentStatementUnion::TupleExpr(expr)
                     }
                     TupleOrLocationExpr::LocationExpr(expr) => {
-                        AssignmentStatementUnion::LocationExpr(*expr)
+                        AssignmentStatementUnion::LocationExpr(expr)
                     }
                     _ => AssignmentStatementUnion::None,
                 }
@@ -1570,9 +1570,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             };
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                    AssignmentStatement::new(expr, Expression::FunctionCallExpr(fce)),
+                    AssignmentStatementBase::new(expr, Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
                     Some(format!("{kind}{}", op.text)),
-                )),
+                )),)
             ))
         } else {
             ast::AST::None
@@ -1603,7 +1603,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                *expr
+                expr
             } else {
                 Expression::None
             }
@@ -1614,22 +1614,22 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     return self.temp_result().clone();
         // }
         if let Expression::FunctionCallExpr(e) = &expr {
-            let f = e.func.clone();
-            if let Expression::TupleOrLocationExpr(f) = *f {
-                if let TupleOrLocationExpr::LocationExpr(f) = *f {
-                    if let LocationExpr::IdentifierExpr(f) = *f {
-                        if f.idf.name == String::from("require") {
+            let f = e.func().unwrap_or_default();
+            if let Expression::TupleOrLocationExpr(f) = f {
+                if let TupleOrLocationExpr::LocationExpr(f) = f {
+                    if let LocationExpr::IdentifierExpr(f) = f {
+                        if f.idf.name() == String::from("require") {
                             assert!(
-                                e.args.len() == 1,
+                                e.args().len() == 1,
                                 "Invalid number of arguments for require: {:?},{:?},{:?}",
-                                e.args,
+                                e.args(),
                                 ctx.expr,
                                 self.code
                             );
                             // raise SyntaxException(f"Invalid number of arguments for require: {e.args}", ctx.expr, self.code)}
                             return ast::AST::Statement(Statement::SimpleStatement(
                                 SimpleStatement::RequireStatement(RequireStatement::new(
-                                    e.args[0].clone(),
+                                    e.args()[0].clone(),
                                     None,
                                 )),
                             ));

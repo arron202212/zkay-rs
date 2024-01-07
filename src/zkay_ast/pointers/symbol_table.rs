@@ -5,7 +5,7 @@ use crate::zkay_ast::ast::{
     IdentifierExpr, IndexExpr, LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition,
     SimpleStatement, SourceUnit, Statement, StatementList, StructDefinition, TargetDefinition,
     TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    VariableDeclarationStatement, AST,ASTCode,IdentifierBase,
 };
 use crate::zkay_ast::global_defs::array_length_member;
 use serde::{Deserialize, Serialize}; //GlobalDefs, GlobalVars,
@@ -125,36 +125,37 @@ impl AstVisitor for SymbolTableLinker {
 impl SymbolTableLinker {
     pub fn _find_next_decl(ast: AST, name: String) -> (AST, TargetDefinition) {
         let mut ancestor = ast.parent();
-        while let Some(ancestor) = ancestor {
-            if let Some(nameo) = ancestor.names.get(&name) {
+        while let Some(_ancestor) = ancestor {
+            if let Some(nameo) = _ancestor.names().get(&name) {
                 let decl = nameo.parent();
-                if !(if let AST::Statement(Statement::SimpleStatement(
+                if !(if let Some(AST::Statement(Statement::SimpleStatement(
                     SimpleStatement::VariableDeclarationStatement(_),
-                )) = &decl.parent()
+                ))) = &decl.clone().unwrap_or_default().parent()
                 {
                     true
                 } else {
                     false
-                }) || !decl.parent().is_parent_of(ast)
+                }) || !decl.clone().unwrap_or_default().parent().unwrap_or_default().is_parent_of(&ast)
                 {
-                    return (ancestor, decl);
+                    return (_ancestor, decl.unwrap_or_default().into())
                 }
             }
-            ancestor = ancestor.parent();
+            ancestor = _ancestor.parent();
         }
         // raise UnknownIdentifierException(f"Undefined identifier {name}", ast)
-        assert!(false, "Undefined identifier {name},{:?}", ast);
+        // assert!(false, "Undefined identifier {name},{:?}", ast);
+        (AST::None,TargetDefinition::None)
     }
 
     pub fn _find_lca(mut ast1: AST, mut ast2: AST, root: AST) -> (StatementList, AST, AST) {
         assert!(ast1 != ast2);
 
         // Gather ast1"s ancestors + immediate child towards ast1 (for each)
-        let ancs = HashMap::new();
+        let mut ancs = HashMap::new();
         loop {
             assert!(ast1.parent().is_some());
-            ancs.insert(ast1.parent(), ast1);
-            ast1 = ast1.parent();
+            ancs.insert(ast1.parent().unwrap(), ast1.clone());
+            ast1 = ast1.parent().unwrap_or_default();
             if ast1 == root {
                 break;
             }
@@ -163,118 +164,147 @@ impl SymbolTableLinker {
         // Find least common ancestor with ast2 + immediate child towards ast2
         loop {
             assert!(ast2.parent().is_some());
-            let old_ast = ast2;
+            let old_ast = ast2.clone();
             let ast2 = ast2.parent();
-            if let Some(ast2v) = ancs.get(ast2) {
-                assert!(if let AST::Statement(Statement::ForStatement(_))
-                | AST::Statement(Statement::StatementList(_)) = &ast2
+            if let Some(ast2v) = ancs.get(&ast2.clone().unwrap_or_default()) {
+                assert!(if let Some(AST::Statement(Statement::ForStatement(_)))
+                | Some(AST::Statement(Statement::StatementList(_))) = &ast2
                 {
                     true
                 } else {
                     false
                 });
-                return (ast2, ast2v, old_ast);
+                return (ast2.clone().map(|a| if let AST::Statement(Statement::StatementList(a))=a{a}else{StatementList::default()}).unwrap_or_default(), ast2v.clone(), old_ast);
             }
         }
     }
 
-    pub fn find_type_declaration(t: UserDefinedTypeName) -> NamespaceDefinition {
-        SymbolTableLinker::_find_next_decl(t, t.names[0].name)
+    pub fn find_type_declaration(&self,t: UserDefinedTypeName) -> NamespaceDefinition {
+         if let TargetDefinition::NamespaceDefinition(s)=SymbolTableLinker::_find_next_decl(AST::TypeName(TypeName::UserDefinedTypeName(t.clone())), t.names()[0].name())
             .1
-            .clone()
+            {s}else{NamespaceDefinition::default()}
     }
 
-    pub fn find_identifier_declaration(mut ast: IdentifierExpr) -> TargetDefinitionUnion {
-        let name = ast.idf.name;
+    pub fn find_identifier_declaration(&self,mut ast: &IdentifierExpr) -> TargetDefinitionUnion {
+        let mut ast=ast.get_ast();
+        let name = ast.idf().name();
         loop {
-            let (anc, decl) = SymbolTableLinker::_find_next_decl(ast, name);
+            let (anc, decl) = SymbolTableLinker::_find_next_decl(ast.clone(), name.clone());
             if let (
                 AST::Statement(Statement::ForStatement(anc))
-                | AST::Statement(Statement::StatementList(StatementList::Block(anc))),
-                TargetDefinition::VariableDeclaration(decl),
-            ) = (anc, decl)
+                ,
+                TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(decl)),
+            ) = (&anc, &decl)
             {
                 // Check if identifier really references this declaration (does not come before declaration)
-                let (lca, ref_anchor, decl_anchor) = SymbolTableLinker::_find_lca(ast, decl, anc);
-                if lca.statements.iter().find(|&&x| x == ref_anchor)
-                    <= lca.statements.iter().find(|&&x| x == decl_anchor)
+                let (lca, ref_anchor, decl_anchor) = SymbolTableLinker::_find_lca(ast.clone(), decl.get_ast(), anc.get_ast());
+                if lca.statements().iter().find(|x| AST::Statement((*x).clone()) == ref_anchor)
+                    <= lca.statements().iter().find(|x| AST::Statement((*x).clone()) == decl_anchor)
                 {
-                    ast = anc;
-                    continue;
+                    ast = anc.get_ast();
+                    continue
                 }
             }
-            return decl;
+ if let (
+                 AST::Statement(Statement::StatementList(StatementList::Block(anc))),
+                TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(decl)),
+            ) = (&anc, &decl)
+            {
+                // Check if identifier really references this declaration (does not come before declaration)
+                let (lca, ref_anchor, decl_anchor) = SymbolTableLinker::_find_lca(ast.get_ast(), decl.get_ast(), anc.get_ast());
+                if lca.statements().iter().find(|x| AST::Statement((*x).clone()) == ref_anchor)
+                    <= lca.statements().iter().find(|x| AST::Statement((*x).clone()) == decl_anchor)
+                {
+                    ast = anc.get_ast();
+                    continue
+                }
+            }
+            return TargetDefinitionUnion::TargetDefinition(decl.clone())
         }
     }
 
     pub fn in_scope_at(target_idf: Identifier, ast: AST) -> bool {
-        let ancestor = ast.parent;
-        while ancestor.is_some() {
-            if let Some(name) = ancestor.names.get(&target_idf.name)
+        let mut ancestor = ast.parent();
+        while let Some(_ancestor)=ancestor {
+            if let Some(name) = _ancestor.names().get(&target_idf.name())
             // found name
             {
-                if name == target_idf {
-                    return true;
+                if name == &target_idf {
+                    return true
                 }
             }
-            ancestor = ancestor.parent;
+            ancestor = _ancestor.parent();
         }
-        return false;
+        false
     }
 
     pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) -> IdentifierExpr {
-        let decl = self.find_identifier_declaration(ast);
-        ast.target = decl;
-        assert!(ast.target.is_some());
+        let decl = self.find_identifier_declaration(&ast);
+        if let TargetDefinitionUnion::TargetDefinition(decl)=decl{
+ ast.location_expr_base.target = Some(Box::new(decl));
+        }
+       
+        assert!(ast.location_expr_base.target.as_ref().is_some());
         ast
     }
 
     pub fn visitUserDefinedTypeName(&self, mut ast: UserDefinedTypeName) -> UserDefinedTypeName {
         //  try:
-        let mut type_def = self.find_type_declaration(ast);
-        for idf in &ast.names[1..] {
-            if let Some(_idf) = type_def.names.get(&idf.name) {
-                type_def = _idf.parent;
+        let mut type_def = self.find_type_declaration(ast.clone());
+        for idf in &ast.names()[1..] {
+            if let Some(_idf) = type_def.names().get(&idf.name()) {
+                if let Some(AST::NamespaceDefinition(parent))=_idf.parent(){
+                    type_def = parent;
+                }
             } else {
-                return ast;
+                return ast
             }
         }
-        ast.target = type_def;
+        ast=match ast {
+            UserDefinedTypeName::EnumTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));UserDefinedTypeName::EnumTypeName(ast)}
+            UserDefinedTypeName::EnumValueTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));UserDefinedTypeName::EnumValueTypeName( ast)}
+            UserDefinedTypeName::StructTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));UserDefinedTypeName::StructTypeName( ast)}
+            UserDefinedTypeName::ContractTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def)); UserDefinedTypeName::ContractTypeName( ast)}
+            UserDefinedTypeName::AddressTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def)); UserDefinedTypeName::AddressTypeName( ast)}
+            UserDefinedTypeName::AddressPayableTypeName(mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));UserDefinedTypeName::AddressPayableTypeName( ast)}
+            _ => UserDefinedTypeName::default(),
+        };
+       
         // except UnknownIdentifierException:
         //     pass
         ast
     }
     pub fn visitMemberAccessExpr(&self, mut ast: MemberAccessExpr) -> MemberAccessExpr {
-        assert!(
-            if let AST::Expression(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(_),
-            )) = &ast.expr
-            {
-                true
-            } else {
-                false
-            },
-            "Function call return value member access not yet supported"
-        );
-        if let AST::NamespaceDefinition(t) = &ast.expr.target {
-            if let Some(idf) = t.ast_base.names.get(&ast.member.name) {
-                ast.target = idf.parent;
+        // assert!(
+        //     if let 
+        //         TupleOrLocationExpr::LocationExpr(_),
+        //     ) = *ast.expr
+        //     {
+        //         true
+        //     } else {
+        //         false
+        //     },
+        //     "Function call return value member access not yet supported"
+        // );
+        if let Some(TargetDefinition::NamespaceDefinition(target) )= ast.expr.target().map(|t|*t) {
+            if let Some(idf) = target.names().get(&ast.member.name()) {
+                ast.location_expr_base.target = idf.parent().map(|t| Box::new(t.into()));
             }
         } else {
-            let t = ast.expr.target.annotated_type.type_name;
-            if let AST::TypeName(TypeName::Array(_)) = t {
-                assert!(ast.member.name == "length");
-                ast.location_expr_base.target = array_length_member;
-            } else if let AST::TypeName(TypeName::UserDefinedTypeName(t)) = t {
+            let mut t = ast.expr.target().unwrap_or_default().annotated_type().type_name;
+            if let TypeName::Array(_) = *t {
+                assert!(ast.member.name() == "length");
+                ast.location_expr_base.target = Some(Box::new(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(array_length_member.clone()))));
+            } else if let TypeName::UserDefinedTypeName(mut t) = *t {
                 // assert!(isinstance(t, UserDefinedTypeName));
-                if let Some(target) = &t.target {
-                    if let Some(idf) = target.names.get(&ast.member.name) {
-                        ast.location_expr_base.target = idf.parent;
+                if let Some(target) = t.target() {
+                    if let Some(idf) = target.names().get(&ast.member.name()) {
+                        ast.location_expr_base.target = idf.parent().map(|p|Box::new(p.into()));
                     }
                 } else {
                     t = t.clone();
-                    t.parent = ast;
-                    self.visit(t);
+                    t.set_parent(Some(ast.get_ast()));
+                    self.visit(t.get_ast());
                 }
             } else {
                 assert!(false);
@@ -283,31 +313,31 @@ impl SymbolTableLinker {
         ast
     }
 
-    pub fn visitIndexExpr(&self, ast: IndexExpr) -> IndexExpr {
-        assert!(
-            if let AST::Expression(expr) = &ast.arr {
-                if let Expression::TupleOrLocationExpr(tole) = *expr {
-                    if let TupleOrLocationExpr::LocationExpr(_) = *tole {
-                        true
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            } else {
-                false
-            },
-            "Function call return value indexing not yet supported"
-        );
-        let source_t = ast.arr.target.annotated_type.type_name;
+    pub fn visitIndexExpr(&self, mut ast: IndexExpr) -> IndexExpr {
+        // assert!(
+        //     if let AST::Expression(expr) = &ast.arr {
+        //         if let Expression::TupleOrLocationExpr(tole) = *expr {
+        //             if let TupleOrLocationExpr::LocationExpr(_) = *tole {
+        //                 true
+        //             } else {
+        //                 false
+        //             }
+        //         } else {
+        //             false
+        //         }
+        //     } else {
+        //         false
+        //     },
+        //     "Function call return value indexing not yet supported"
+        // );
+        let source_t = ast.arr.target().unwrap_or_default().annotated_type().type_name;
         ast.location_expr_base.target =
-            TargetDefinition::VariableDeclaration(VariableDeclaration::new(
+            Some(Box::new(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(VariableDeclaration::new(
                 vec![],
-                source_t.value_type,
-                Identifier::new(String::new()),
+                source_t.value_type(),
+                Identifier::Identifier(IdentifierBase::new(String::new())),
                 None,
-            ));
+            )))));
         ast
     }
 }

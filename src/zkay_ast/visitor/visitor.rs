@@ -19,7 +19,7 @@ pub trait AstVisitor {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
         }
-        let mut ret = None;
+        let mut ret: std::option::Option<Self::Return>  = None;
         let mut ret_children = None;
 
         if self.traversal() == "post" {
