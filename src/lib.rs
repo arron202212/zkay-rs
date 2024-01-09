@@ -14,6 +14,7 @@ pub mod config_user;
 pub mod config_version;
 pub mod solidity_parser;
 pub mod transaction;
+pub mod type_check;
 pub mod utils;
 pub mod zkay_ast;
 pub mod zkay_frontend;

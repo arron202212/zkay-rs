@@ -1,24 +1,33 @@
-from zkay.zkay_ast.ast import AnnotatedTypeName, AST
-from zkay.zkay_ast.visitor.visitor import AstVisitor
+use crate::zkay_ast::ast::{AnnotatedTypeName, AST};
+use crate::zkay_ast::visitor::visitor::AstVisitor;
 
+pub fn contains_private(ast: AST) -> bool {
+    let v = ContainsPrivateVisitor::new();
+    v.visit(ast);
+    v.contains_private
+}
 
-def contains_private(ast):
-    v = ContainsPrivateVisitor()
-    v.visit(ast)
-    return v.contains_private
+// class ContainsPrivateVisitor(AstVisitor)
+pub struct ContainsPrivateVisitor;
+impl ContainsPrivateVisitor {
+    // pub fn __init__(self)
+    //     super().__init__()
+    //     self.contains_private = False
+    pub fn new() -> Self {
+        Self {
+            contains_private: false,
+        }
+    }
+    pub fn visitAST(self, ast: AST) {
+        if hasattr(ast, "annotated_type") {
+            let t = ast.annotated_type;
+            if t.is_some() {
+                assert(isinstance(t, AnnotatedTypeName));
 
-
-class ContainsPrivateVisitor(AstVisitor):
-
-    def __init__(self):
-        super().__init__()
-        self.contains_private = False
-
-    def visitAST(self, ast: AST):
-        if hasattr(ast, 'annotated_type'):
-            t = ast.annotated_type
-            if t is not None:
-                assert (isinstance(t, AnnotatedTypeName))
-
-                if not t.privacy_annotation.is_all_expr():
-                    self.contains_private = True
+                if !t.privacy_annotation.is_all_expr() {
+                    self.contains_private = True;
+                }
+            }
+        }
+    }
+}

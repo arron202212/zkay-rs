@@ -6,11 +6,12 @@ use crate::zkay_ast::ast::{
     AssignmentStatementBase, AssignmentStatementUnion, Block, BoolTypeName, BooleanLiteralExpr,
     BuiltinFunction, ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement,
     ElementaryTypeName, EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement,
-    FunctionCallExpr, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
-    IfStatement, IndexExpr, IntTypeName, LiteralExpr, LocationExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
-    RequireStatement, SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr,
-    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,FunctionCallExprBase,
+    FunctionCallExpr, FunctionCallExprBase, Identifier, IdentifierBase, IdentifierDeclaration,
+    IdentifierExpr, IfStatement, IndexExpr, IntTypeName, LiteralExpr, LocationExpr,
+    NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr,
+    ReclassifyExprBase, RehomExpr, RequireStatement, SimpleStatement, Statement, StatementList,
+    StringLiteralExpr, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName,
+    WhileStatement, AST,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -81,11 +82,13 @@ macro_rules! _visit_binary_expr {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![lhs, rhs],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![lhs, rhs],
+                Some(0),
+            )),
+        ))
     }};
 }
 
@@ -107,15 +110,14 @@ pub fn build_ast_from_parse_tree(code: &str) -> ast::AST {
     // parser.add_error_listener(MyErrorListener{code:code.to_string()}));
     let mut v = BuildASTVisitor::new(code.to_string());
     root.accept(&mut v);
-    ast::AST::None
+    *v.temp_result()
 }
 
 pub fn build_ast(code: &str) -> ast::AST {
     let mut full_ast = build_ast_from_parse_tree(code);
     // assert isinstance(full_ast, ast.SourceUnit)
-    // let full_ast.original_code = str(code).split("\n");
-    //  full_ast
-    ast::AST::None
+    full_ast.set_original_code(code.split("\n").map(String::from).collect());
+    full_ast
 }
 
 struct BuildASTVisitor {
@@ -366,7 +368,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .collect();
 
         ast::AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(
-            ContractDefinition::new (
+            ContractDefinition::new(
                 idf,
                 state_variable_declarations,
                 constructor_definitions,
@@ -851,11 +853,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![expr],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![expr],
+                Some(0),
+            )),
+        ))
     }
 
     fn visit_SignExpr(&mut self, ctx: &SignExprContext<'input>) -> Self::Return {
@@ -878,11 +882,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![expr],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![expr],
+                Some(0),
+            )),
+        ))
     }
 
     fn visit_NotExpr(&mut self, ctx: &NotExprContext<'input>) -> Self::Return {
@@ -902,11 +908,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![expr],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![expr],
+                Some(0),
+            )),
+        ))
     }
 
     fn visit_BitwiseNotExpr(&mut self, ctx: &BitwiseNotExprContext<'input>) -> Self::Return {
@@ -926,11 +934,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![expr],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![expr],
+                Some(0),
+            )),
+        ))
     }
 
     //     fn  _visitBinaryExpr(self, ctx){
@@ -1037,11 +1047,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f),
-            vec![cond, then_expr, else_expr],
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![cond, then_expr, else_expr],
+                Some(0),
+            )),
+        ))
     }
 
     // rehom_expressions = {}
@@ -1131,11 +1143,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             Expression::None
         };
-        ast::AST::Expression(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(
-            FunctionCallExprBase::new(func,
-            args,
-            Some(0),
-        ))))
+        ast::AST::Expression(Expression::FunctionCallExpr(
+            FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(func, args, Some(0))),
+        ))
     }
 
     fn visit_ifStatement(&mut self, ctx: &IfStatementContext<'input>) -> Self::Return {
@@ -1509,10 +1519,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             };
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                    AssignmentStatementBase::new(expr, Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
-                    Some(format!("{kind}{}", op.text)),
-                ))),)
-            )
+                    AssignmentStatementBase::new(
+                        expr,
+                        Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
+                        Some(format!("{kind}{}", op.text)),
+                    ),
+                )),
+            ))
         } else {
             ast::AST::None
         }
@@ -1570,9 +1583,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             };
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                    AssignmentStatementBase::new(expr, Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
-                    Some(format!("{kind}{}", op.text)),
-                )),)
+                    AssignmentStatementBase::new(
+                        expr,
+                        Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)),
+                        Some(format!("{kind}{}", op.text)),
+                    ),
+                )),
             ))
         } else {
             ast::AST::None

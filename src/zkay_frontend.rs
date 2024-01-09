@@ -1,37 +1,37 @@
 // """
 // This module exposes functionality to compile and package zkay code
 // """
-// import importlib
-// import json
-// import os
-// import re
-// import shutil
-// import sys
-// import tempfile
-// import zipfile
-// from contextlib import contextmanager
-// from copy import deepcopy
-// from typing import Tuple, List, Type, Dict, Optional, Any, ContextManager
+//::importlib
+//::json
+//::os
+//::re
+//::shutil
+//::sys
+//::tempfile
+//::zipfile
+// from contextlib::contextmanager
+// from copy::deepcopy
+// from typing::Tuple, List, Type, Dict, Optional, Any, ContextManager
 
-// use crate import my_logging
-// use crate::compiler::privacy import library_contracts
-// use crate::compiler::privacy::circuit_generation::backends::jsnark_generator import JsnarkGenerator
-// use crate::compiler::privacy::circuit_generation::circuit_generator import CircuitGenerator
-// use crate::compiler::privacy::circuit_generation::circuit_helper import CircuitHelper
-// use crate::compiler::privacy::manifest import Manifest
-// use crate::compiler::privacy::offchain_compiler import PythonOffchainVisitor
-// use crate::compiler::privacy::proving_scheme::backends::gm17 import ProvingSchemeGm17
-// use crate::compiler::privacy::proving_scheme::backends::groth16 import ProvingSchemeGroth16
-// use crate::compiler::privacy::proving_scheme::proving_scheme import ProvingScheme
-// use crate::compiler::privacy::transformation::zkay_contract_transformer import transform_ast
-// use crate::compiler::solidity::compiler::check_compilation
-// use crate::config import cfg
+// use crate::my_logging
+use crate::compiler::privacy::library_contracts;
+// use crate::compiler::privacy::circuit_generation::backends::jsnark_generator::JsnarkGenerator
+// use crate::compiler::privacy::circuit_generation::circuit_generator::CircuitGenerator
+// use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper
+use crate::compiler::privacy::manifest::Manifest;
+// use crate::compiler::privacy::offchain_compiler::PythonOffchainVisitor
+// use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17
+// use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16
+// use crate::compiler::privacy::proving_scheme::proving_scheme::ProvingScheme
+use crate::compiler::privacy::transformation::zkay_contract_transformer::transform_ast;
+use crate::compiler::solidity::compiler::check_compilation;
+use crate::config::CFG;
 use crate::utils::helpers::read_file; //, lines_of_code, without_extension;}
-                                      // use crate::utils::progress_printer import print_step
-                                      // use crate::utils::timer import time_measure
-                                      // use crate::zkay_ast::homomorphism import String
-use crate::zkay_ast::process_ast::get_processed_ast; //, get_verification_contract_names
-                                                     // use crate::zkay_ast::visitor::solidity_visitor import to_solidity
+use crate::utils::progress_printer::print_step;
+// use crate::utils::timer::time_measure
+// use crate::zkay_ast::homomorphism::String
+use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
+use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
 
 // proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
 //     'groth16': ProvingSchemeGroth16,
@@ -106,81 +106,119 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
             .unwrap_or(false)
     {
         //  raise RuntimeError('Zkay file is expected to already be in the output directory when importing keys')
+        assert!(
+            false,
+            "Zkay file is expected to already be in the output directory when importing keys"
+        );
     } else if !import_keys {
-        //  _dump_to_output(code, output_dir, zkay_filename)
+        _dump_to_output(code, output_dir, zkay_filename);
     }
 
     // Type checking
     let zkay_ast = get_processed_ast(code, None);
 
     // Contract transformation
-    // print_step("Transforming zkay -> public contract");
-    //  let    ast, circuits = transform_ast(deepcopy(zkay_ast));
+    print_step("Transforming zkay -> public contract");
+    let (ast, circuits) = transform_ast(zkay_ast);
 
-    // // Dump libraries
-    // with print_step("Write library contract files"):
-    //     with cfg.library_compilation_environment():
-    //         for crypto_params in ast.used_crypto_backends:
-    //             // Write pki contract
-    //             pki_contract_code = library_contracts.get_pki_contract(crypto_params)
-    //             pki_contract_file = f'{cfg.get_pki_contract_name(crypto_params)}.sol'
-    //             _dump_to_output(pki_contract_code, output_dir, pki_contract_file, dryrun_solc=True)
+    // Dump libraries
+    print_step("Write library contract files");
+    CFG.lock().unwrap().library_compilation_environment();
+    for crypto_params in ast.used_crypto_backends {
+        // Write pki contract
+        pki_contract_code = library_contracts::get_pki_contract(crypto_params);
+        pki_contract_file = format!(
+            "{}.sol",
+            CFG.lock().unwrap().get_pki_contract_name(crypto_params)
+        );
+        _dump_to_output(
+            pki_contract_code,
+            output_dir,
+            pki_contract_file,
+            dryrun_solc = True,
+        );
+    }
 
-    //         // Write library contract
-    //         _dump_to_output(library_contracts.get_verify_libs_code(), output_dir, ProvingScheme.verify_libs_contract_filename, dryrun_solc=True)
+    // Write library contract
+    _dump_to_output(
+        library_contracts::get_verify_libs_code(),
+        output_dir,
+        ProvingScheme::verify_libs_contract_filename,
+        True,
+    );
 
-    // // Write public contract file
-    // with print_step('Write public solidity code'):
-    //     output_filename = 'contract.sol'
-    //     solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename)
+    // Write public contract file
+    print_step("Write public solidity code");
+    output_filename = "contract.sol";
+    solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename);
 
-    // // Get all circuit helpers for the transformed contract
-    // circuits: List[CircuitHelper] = list(circuits.values())
+    // Get all circuit helpers for the transformed contract
+    let circuits: Vec<_> = circuits.values().collect();
 
-    // // Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
-    // offchain_simulation_code = PythonOffchainVisitor(circuits).visit(ast)
-    // _dump_to_output(offchain_simulation_code, output_dir, 'contract.py')
+    // Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
+    //    let  offchain_simulation_code = (circuits as PythonOffchainVisitor).visit(ast);
+    //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");
 
-    // // Instantiate proving scheme and circuit generator
-    // ps = proving_scheme_classes[cfg.proving_scheme]()
-    // cg = generator_classes[cfg.snark_backend](circuits, ps, output_dir)
+    // Instantiate proving scheme and circuit generator
+    let ps = proving_scheme_classes[CFG.lock().unwrap().proving_scheme]();
+    let cg = generator_classes[CFG.lock().unwrap().snark_backend](circuits, ps, output_dir);
+    let mut kwargs = std::collections::HashMap::new();
+    if let Some(v) = kwargs.get("verifier_names") {
+        assert!(isinstance(v, list));
+        let mut verifier_names = get_verification_contract_names(zkay_ast);
+        verifier_names.sort_unstable();
+        let mut verifier_contract_type_codes: Vec<_> = cg
+            .circuits_to_prove
+            .iter()
+            .map(|cc| cc.verifier_contract_type.code())
+            .collect();
+        verifier_contract_type_codes.sort_unstable();
+        assert!(verifier_names == verifier_contract_type_codes);
+        kwargs.insert("verifier_names", verifier_names.clone());
+    }
 
-    // if 'verifier_names' in kwargs:
-    //     assert isinstance(kwargs['verifier_names'], list)
-    //     verifier_names = get_verification_contract_names(zkay_ast)
-    //     assert sorted(verifier_names) == sorted([cc.verifier_contract_type.code() for cc in cg.circuits_to_prove])
-    //     kwargs['verifier_names'][:] = verifier_names[:]
+    // Generate manifest
+    if !import_keys {
+        print_step("Writing manifest file");
+        // Set crypto backends for unused homomorphisms to None
+        for hom in String {
+            if !ast.used_homomorphisms.contains(hom) {
+                CFG.lock().unwrap().set_crypto_backend(hom, None);
+            }
+        }
 
-    // // Generate manifest
-    // if not import_keys:
-    //     with print_step("Writing manifest file"):
-    //         // Set crypto backends for unused homomorphisms to None
-    //         for hom in String:
-    //             if hom not in ast.used_homomorphisms:
-    //                 cfg.set_crypto_backend(hom, None)
+        let manifest = json!({
+            Manifest::zkay_version: CFG.lock().unwrap().zkay_version,
+            Manifest::solc_version: CFG.lock().unwrap().solc_version,
+            Manifest::zkay_options: CFG.lock().unwrap().export_compiler_settings(),
+        });
+        _dump_to_output(format!("{manifest}"), output_dir, "manifest.json")
+    } else if !std::path::PathBuf::from(output_dir)
+        .join("manifest.json")
+        .try_exists()
+        .unwrap_or(false)
+    {
+        // raise RuntimeError("Zkay contract::failed: Manifest file is missing")
+        assert!(false, "Zkay contract::failed: Manifest file is missing");
+    }
 
-    //         manifest = {
-    //             Manifest.zkay_version: cfg.zkay_version,
-    //             Manifest.solc_version: cfg.solc_version,
-    //             Manifest.zkay_options: cfg.export_compiler_settings(),
-    //         }
-    //         _dump_to_output(json.dumps(manifest), output_dir, 'manifest.json')
-    // elif not os.path.exists(os.path.join(output_dir, 'manifest.json')):
-    //     raise RuntimeError('Zkay contract import failed: Manifest file is missing')
+    // Generate circuits and corresponding verification contracts
+    cg.generate_circuits(import_keys);
 
-    // // Generate circuits and corresponding verification contracts
-    // cg.generate_circuits(import_keys=import_keys)
+    // Check that all verification contracts and the main contract compile
+    let main_solidity_files = cg
+        .get_verification_contract_filenames()
+        .iter()
+        .chain([std::path::PathBuf::from(output_dir).join(output_filename)]);
+    for f in main_solidity_files {
+        check_compilation(f, false);
+    }
 
-    // // Check that all verification contracts and the main contract compile
-    // main_solidity_files = cg.get_verification_contract_filenames() + [os.path.join(output_dir, output_filename)]
-    // for f in main_solidity_files:
-    //     check_compilation(f, show_errors=False)
-
-    // return cg, solidity_code_output
+    (cg, solidity_code_output)
 }
 
 // def use_configuration_from_manifest(contract_dir: str) -> Any:
-//     from zkay.transaction.runtime import Runtime
+//     from zkay.transaction.runtime::Runtime
 //     manifest = Manifest.load(contract_dir)
 //     Manifest.import_manifest_config(manifest)
 //     Runtime.reset()
@@ -203,7 +241,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 //     use_configuration_from_manifest(contract_dir)
 //     cfg.verbosity = 0
 //     cfg.log_dir = contract_dir
-//     log_file = my_logging.get_log_file(filename=log_filename, include_timestamp=False, label=None)
+//     log_file = my_logging.get_log_file(filename=log_filename, include_timestamp=false, label=None)
 //     my_logging.prepare_logger(log_file)
 //     with time_measure('all_transactions', should_print=True):
 //         yield load_transaction_interface_from_directory(contract_dir)
@@ -330,7 +368,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 
 //     :param zkp_filename: path to the packaged contract
 //     :param output_dir: directory where to unpack and compile the contract
-//     :raise Exception: if import fails
+//     :raise Exception: if::fails
 //     """
 //     os.makedirs(output_dir)
 //     try:
@@ -342,7 +380,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 //             with print_step('Checking for correct file structure'):
 //                 zkp.extract('contract.zkay', output_dir)
 //                 zkp.extract('manifest.json', output_dir)
-//                 expected_files = sorted(_collect_package_contents(output_dir, False))
+//                 expected_files = sorted(_collect_package_contents(output_dir, false))
 //                 contained_files = sorted([d.filename for d in zkp.infolist() if not d.is_dir()])
 //                 if expected_files != contained_files:
 //                     raise ValueError(f'Package is invalid, does not match expected contents')

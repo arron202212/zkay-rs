@@ -16,4 +16,7 @@
 // * :py:mod:`.proving_scheme`: Contains modules for generating verification contracts for different proving schemes.
 // """
 pub mod circuit_generation;
+pub mod library_contracts;
+pub mod manifest;
 pub mod proving_scheme;
+pub mod transformation;

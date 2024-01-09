@@ -8,4 +8,5 @@
 // * :py:mod:`.pointer_exceptions`: Exceptions raised within this module
 // * :py:mod:`.symbol_table`: Construct symbol table from AST and resolve identifier and user-defined-type targets.
 // """
+pub mod parent_setter;
 pub mod symbol_table;

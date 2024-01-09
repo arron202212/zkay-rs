@@ -13,3 +13,4 @@
 // * :py:mod:`.solidity`: Solidity compilation
 // """
 pub mod privacy;
+pub mod solidity;

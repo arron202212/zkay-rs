@@ -2,13 +2,14 @@
 // from enum import Enum
 // from typing import ContextManager
 
-// from zkay.config import zk_print
+use crate::config::zk_print;
 
 // @contextlib.contextmanager
-// def print_step(name):
-//     zk_print(f'{name}... ', end='', flush=True)
-//     yield
-//     zk_print('done')
+pub fn print_step(name: &str) {
+    zk_print!(format!"{name}... ");
+    // yield
+    zk_print!("done");
+}
 
 pub enum TermColor {
     HEADER,

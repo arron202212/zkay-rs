@@ -19,15 +19,15 @@ pub trait AstVisitor {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
         }
-        let mut ret: std::option::Option<Self::Return>  = None;
+        let mut ret: std::option::Option<Self::Return> = None;
         let mut ret_children = None;
 
         if self.traversal() == "post" {
             ret_children = self.visit_children(&ast);
         }
-        let f = self.get_visit_function("SourceUnit");
+        let f = self.try_call_visit_function("SourceUnit", &ast);
         if f.is_some() {
-            // ret = f(ast);
+            ret = f;
         } else if self.traversal() == "node-or-children" {
             ret_children = self.visit_children(&ast);
         }
@@ -43,21 +43,23 @@ pub trait AstVisitor {
             None
         }
     }
-    fn get_visit_function(&self, c: &str) -> Option<String>
+
+    fn try_call_visit_function(&self, c: &str, ast: &AST) -> Option<Self::Return>
 // std::any::type_name::<Option<String>>(),
     {
         let visitor_function = c.to_owned(); // String::from("visit") +
-        if self.has_attr(&visitor_function) {
-            return self.get_attr(&visitor_function);
+        let ret = self.call_visit_function(ast);
+        if ret.is_some() {
+            return ret;
         } else {
-            let f = self.get_visit_function(AST::bases(c));
+            let f = self.try_call_visit_function(AST::bases(c), ast);
             if f.is_some() {
                 return f;
             }
         }
         None
     }
-
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return>;
     fn visit_children(&self, ast: &AST) -> Option<Self::Return> {
         let mut ast = ast.clone();
         for c in ast.children() {

@@ -274,8 +274,7 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
-
- pub fn line(&self) -> i32 {
+    pub fn line(&self) -> i32 {
         0
     }
     pub fn column(&self) -> i32 {
@@ -299,9 +298,10 @@ impl AST {
         let v = CodeVisitor::new(true);
         v.visit(&self)
     }
- pub fn original_code(&self) -> Vec<String> {
+    pub fn original_code(&self) -> Vec<String> {
         vec![]
     }
+    pub fn set_original_code(&mut self, code: Vec<String>) {}
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
@@ -316,11 +316,11 @@ impl AST {
     pub fn bases(child: &str) -> &'static str {
         ""
     }
-    pub fn  names(&self)-> BTreeMap<String, Identifier>{
+    pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
     }
-    pub fn idf(&self)->Identifier{
-Identifier::default()
+    pub fn idf(&self) -> Identifier {
+        Identifier::default()
     }
 }
 
@@ -534,9 +534,11 @@ pub enum Comment {
     #[default]
     None,
 }
-impl Comment{
-pub fn text(&self)->String{
-String::new()}}
+impl Comment {
+    pub fn text(&self) -> String {
+        String::new()
+    }
+}
 impl ASTCode for Comment {
     fn get_ast(&self) -> AST {
         match self {
@@ -955,7 +957,10 @@ impl Expression {
                         .iter()
                         .map(|t| {
                             CombinedPrivacyUnion::AST(
-                                t.clone().privacy_annotation.clone().map(|pa| AST::Expression(*pa)),
+                                t.clone()
+                                    .privacy_annotation
+                                    .clone()
+                                    .map(|pa| AST::Expression(*pa)),
                             )
                         })
                         .collect::<Vec<_>>())
@@ -1530,7 +1535,10 @@ impl BuiltinFunction {
             .unwrap();
         let base_type = AnnotatedTypeName::new(
             elem_type,
-            inaccessible_arg_types[0].clone().privacy_annotation.map(|pr| *pr),
+            inaccessible_arg_types[0]
+                .clone()
+                .privacy_annotation
+                .map(|pr| *pr),
             String::from("NON_HOMOMORPHIC"),
         );
         let public_args: Vec<_> = arg_types.iter().map(|a| a.is_public()).collect();
@@ -1750,7 +1758,7 @@ impl HomomorphicBuiltinFunction {
     }
     pub fn input_types(&self) -> Vec<AnnotatedTypeName> {
         let public_type = AnnotatedTypeName::all(*self.target_type.type_name.clone()); // same data type, but @all
-                                                                               //  [public_type if public else self.target_type for public in self.public_args]
+                                                                                       //  [public_type if public else self.target_type for public in self.public_args]
         self.public_args
             .iter()
             .map(|&public| {
@@ -2191,8 +2199,9 @@ impl NumberLiteralExpr {
 
         selfs
     }
-    pub fn value(&self)->i32{
-    0}
+    pub fn value(&self) -> i32 {
+        0
+    }
 }
 
 // class NumberLiteralExpr(LiteralExpr):
@@ -2423,8 +2432,9 @@ impl TupleOrLocationExpr {
                 .tuple_or_location_expr_base
                 .expression_base
                 .ast_base
-                .parent.clone()
-                .map(|p|*p),
+                .parent
+                .clone()
+                .map(|p| *p),
             TupleOrLocationExpr::LocationExpr(te) => te.parent(),
             _ => None,
         };
@@ -2446,7 +2456,7 @@ impl TupleOrLocationExpr {
                     if let TupleOrLocationExpr::LocationExpr(le) = parent {
                         if let LocationExpr::IndexExpr(ie) = le {
                             if self == &TupleOrLocationExpr::LocationExpr(*ie.arr.clone()) {
-                                return parent.is_lvalue()
+                                return parent.is_lvalue();
                             }
                         }
                     }
@@ -2457,7 +2467,7 @@ impl TupleOrLocationExpr {
                     if let TupleOrLocationExpr::LocationExpr(ie) = parent {
                         if let LocationExpr::MemberAccessExpr(ie) = ie {
                             if self == &TupleOrLocationExpr::LocationExpr(*ie.expr.clone()) {
-                                return parent.is_lvalue()
+                                return parent.is_lvalue();
                             }
                         }
                     }
@@ -2571,7 +2581,6 @@ impl TupleExpr {
 
         selfs
     }
-
 }
 impl ASTChildren for TupleExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -2623,34 +2632,38 @@ impl ASTCode for LocationExpr {
 impl LocationExpr {
     pub fn parent(&self) -> Option<AST> {
         match self {
-            LocationExpr::IdentifierExpr(ie) => ie.clone()
+            LocationExpr::IdentifierExpr(ie) => ie
+                .clone()
                 .location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
                 .ast_base
                 .parent
-                .map(|p|*p),
-            LocationExpr::MemberAccessExpr(mae) => mae.clone()
+                .map(|p| *p),
+            LocationExpr::MemberAccessExpr(mae) => mae
+                .clone()
                 .location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
                 .ast_base
                 .parent
-                .map(|p|*p),
-            LocationExpr::IndexExpr(ie) => ie.clone()
+                .map(|p| *p),
+            LocationExpr::IndexExpr(ie) => ie
+                .clone()
                 .location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
                 .ast_base
                 .parent
-                .map(|p|*p),
-            LocationExpr::SliceExpr(se) => se.clone()
+                .map(|p| *p),
+            LocationExpr::SliceExpr(se) => se
+                .clone()
                 .location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
                 .ast_base
                 .parent
-                .map(|p|*p),
+                .map(|p| *p),
             _ => None,
         }
     }
@@ -2775,8 +2788,9 @@ impl LocationExpr {
             _ => Self::default(),
         }
     }
-    pub fn target(&self)-> Option<Box<TargetDefinition>>{
-    None}
+    pub fn target(&self) -> Option<Box<TargetDefinition>> {
+        None
+    }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LocationExprBase {
@@ -2857,7 +2871,8 @@ impl IdentifierExpr {
     }
     pub fn get_annotated_type(&self) -> AnnotatedTypeName {
         self.location_expr_base
-            .target.clone()
+            .target
+            .clone()
             .map_or(AnnotatedTypeName::default(), |t| t.annotated_type())
     }
 
@@ -3237,12 +3252,15 @@ impl ReclassifyExpr {
             _ => Self::default(),
         }
     }
-    pub fn expr(&self)->Option<Expression>{
-    None}
-pub fn privacy(&self)->Option<Expression>{
-    None}
-pub fn homomorphism(&self)->Option<String>{
-    None}
+    pub fn expr(&self) -> Option<Expression> {
+        None
+    }
+    pub fn privacy(&self) -> Option<Expression> {
+        None
+    }
+    pub fn homomorphism(&self) -> Option<String> {
+        None
+    }
 }
 impl ASTCode for ReclassifyExpr {
     fn get_ast(&self) -> AST {
@@ -3645,7 +3663,9 @@ impl HybridArgumentIdf {
             )
             .arr
             .assign(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(self.serialized_loc.clone())),
+                TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(
+                    self.serialized_loc.clone(),
+                )),
             ))
         } else if let Some(base) = &base {
             self.get_loc_expr(None).assign(
@@ -3747,7 +3767,7 @@ impl HybridArgumentIdf {
                 //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
             };
 
-            if let Some(base) = &base{
+            if let Some(base) = &base {
                 LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(tgt.clone()).index(
                     ExprUnion::Expression(Expression::FunctionCallExpr(base.binop(
                         String::from("+"),
@@ -3788,6 +3808,9 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
+    pub fn identifier(name: &str) -> Self {
+        Self::Identifier(IdentifierBase::new(String::from(name)))
+    }
     pub fn name(&self) -> String {
         String::new()
     }
@@ -3954,7 +3977,7 @@ pub enum Statement {
     None,
 }
 impl Statement {
-    pub fn function(&self)->Option<Box<ConstructorOrFunctionDefinition>>{
+    pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
         None
     }
     pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
@@ -4556,13 +4579,16 @@ pub enum AssignmentStatement {
     #[default]
     None,
 }
-impl AssignmentStatement{
-    pub fn lhs(&self)->Option<AssignmentStatementUnion>{
-    None}
-   pub fn rhs(&self)->Option<Expression>{
-    None}
- pub fn op(&self)->Option<String>{
-    None}
+impl AssignmentStatement {
+    pub fn lhs(&self) -> Option<AssignmentStatementUnion> {
+        None
+    }
+    pub fn rhs(&self) -> Option<Expression> {
+        None
+    }
+    pub fn op(&self) -> Option<String> {
+        None
+    }
 }
 impl ASTCode for AssignmentStatement {
     fn get_ast(&self) -> AST {
@@ -4730,12 +4756,12 @@ impl StatementList {
         for s in self.statements() {
             if let Statement::StatementList(StatementList::Block(sl)) = &s {
                 if sl.statement_list_base.statements.contains(stmt) {
-                    return true
+                    return true;
                 }
             }
             if let Statement::StatementList(StatementList::IndentBlock(sl)) = &s {
                 if sl.statement_list_base.statements.contains(stmt) {
-                    return true
+                    return true;
                 }
             }
         }
@@ -4888,11 +4914,11 @@ impl ASTCode for TypeName {
     }
 }
 impl TypeName {
-    pub fn has_key_label(&self)->bool{
+    pub fn has_key_label(&self) -> bool {
         false
     }
-    pub fn value_type(&self)-> AnnotatedTypeName{
-AnnotatedTypeName::default()
+    pub fn value_type(&self) -> AnnotatedTypeName {
+        AnnotatedTypeName::default()
     }
     pub fn names(&self) -> Vec<Identifier> {
         vec![]
@@ -5864,35 +5890,80 @@ pub enum UserDefinedTypeName {
     #[default]
     None,
 }
-impl UserDefinedTypeName{
-pub fn parent(&self)->Option<AST>{
-None}
-pub fn set_parent(&mut self,parent:Option<AST>){
- match self {
-            UserDefinedTypeName::EnumTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}//UserDefinedTypeName::EnumTypeName(ast)}
-            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}//UserDefinedTypeName::EnumValueTypeName(ast)}
-            UserDefinedTypeName::StructTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}//UserDefinedTypeName::StructTypeName(ast)}
-            UserDefinedTypeName::ContractTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}// UserDefinedTypeName::ContractTypeName(ast)}
-            UserDefinedTypeName::AddressTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}// UserDefinedTypeName::AddressTypeName(ast)}
-            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {ast.user_defined_type_name_base.type_name_base.ast_base.parent = parent.map(|p|Box::new(p));}//UserDefinedTypeName::AddressPayableTypeName(ast)}
-            _ => {}//UserDefinedTypeName::default()},
+impl UserDefinedTypeName {
+    pub fn parent(&self) -> Option<AST> {
+        None
+    }
+    pub fn set_parent(&mut self, parent: Option<AST>) {
+        match self {
+            UserDefinedTypeName::EnumTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } //UserDefinedTypeName::EnumTypeName(ast)}
+            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } //UserDefinedTypeName::EnumValueTypeName(ast)}
+            UserDefinedTypeName::StructTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } //UserDefinedTypeName::StructTypeName(ast)}
+            UserDefinedTypeName::ContractTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } // UserDefinedTypeName::ContractTypeName(ast)}
+            UserDefinedTypeName::AddressTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } // UserDefinedTypeName::AddressTypeName(ast)}
+            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base
+                    .type_name_base
+                    .ast_base
+                    .parent = parent.map(|p| Box::new(p));
+            } //UserDefinedTypeName::AddressPayableTypeName(ast)}
+            _ => {} //UserDefinedTypeName::default()},
         };
-}
-pub fn target(&self)->Option<NamespaceDefinition>{
-None}
-pub fn set_target(&mut self,type_def:NamespaceDefinition){
- match self {
-            UserDefinedTypeName::EnumTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));}//UserDefinedTypeName::EnumTypeName(ast)}
-            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));}//UserDefinedTypeName::EnumValueTypeName(ast)}
-            UserDefinedTypeName::StructTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));}//UserDefinedTypeName::StructTypeName(ast)}
-            UserDefinedTypeName::ContractTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));}// UserDefinedTypeName::ContractTypeName(ast)}
-            UserDefinedTypeName::AddressTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def)); }//UserDefinedTypeName::AddressTypeName(ast)}
-            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {ast.user_defined_type_name_base.target = Some(Box::new(type_def));}//UserDefinedTypeName::AddressPayableTypeName(ast)}
-            _ => {}//UserDefinedTypeName::default(),
+    }
+    pub fn target(&self) -> Option<NamespaceDefinition> {
+        None
+    }
+    pub fn set_target(&mut self, type_def: NamespaceDefinition) {
+        match self {
+            UserDefinedTypeName::EnumTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } //UserDefinedTypeName::EnumTypeName(ast)}
+            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } //UserDefinedTypeName::EnumValueTypeName(ast)}
+            UserDefinedTypeName::StructTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } //UserDefinedTypeName::StructTypeName(ast)}
+            UserDefinedTypeName::ContractTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } // UserDefinedTypeName::ContractTypeName(ast)}
+            UserDefinedTypeName::AddressTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } //UserDefinedTypeName::AddressTypeName(ast)}
+            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
+            } //UserDefinedTypeName::AddressPayableTypeName(ast)}
+            _ => {} //UserDefinedTypeName::default(),
         };
-}
-pub fn names(&self)->Vec<Identifier>{
-vec![]}
+    }
+    pub fn names(&self) -> Vec<Identifier> {
+        vec![]
+    }
 }
 impl ASTCode for UserDefinedTypeName {
     fn get_ast(&self) -> AST {
@@ -6010,10 +6081,17 @@ impl EnumValueTypeName {
         TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(EnumTypeName::new(
             names,
             self.user_defined_type_name_base
-                .target.clone()
+                .target
+                .clone()
                 .unwrap_or_default()
                 .parent()
-                .map(|p| if let AST::NamespaceDefinition(p)=p{p}else{NamespaceDefinition::default()}),
+                .map(|p| {
+                    if let AST::NamespaceDefinition(p) = p {
+                        p
+                    } else {
+                        NamespaceDefinition::default()
+                    }
+                }),
         )))
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
@@ -6066,6 +6144,9 @@ impl StructTypeName {
         Self {
             user_defined_type_name_base: UserDefinedTypeNameBase::new(names, target),
         }
+    }
+    pub fn to_type_name(&self) -> TypeName {
+        TypeName::UserDefinedTypeName(UserDefinedTypeName::StructTypeName(self.clone()))
     }
 }
 // class StructTypeName(UserDefinedTypeName):
@@ -6361,7 +6442,7 @@ impl ArrayBase {
     pub fn size_in_uints(&self) -> i32 {
         if let ExprUnion::Expression(Expression::LiteralExpr(le)) = &self.expr {
             if let LiteralExpr::NumberLiteralExpr(expr) = le.clone() {
-                return expr.value.clone()
+                return expr.value.clone();
             }
         }
         -1
@@ -6655,7 +6736,7 @@ impl TupleType {
     pub fn check_component_wise(
         &self,
         other: &Self,
-        f: impl FnOnce(AnnotatedTypeName, AnnotatedTypeName) -> bool+ std::marker::Copy,
+        f: impl FnOnce(AnnotatedTypeName, AnnotatedTypeName) -> bool + std::marker::Copy,
     ) -> bool {
         if self.len() != other.len() {
             false
@@ -6704,8 +6785,9 @@ impl TupleType {
                     .map(|(e1, e2)| {
                         AnnotatedTypeName::new(
                             TypeName::TupleType(
-                                if let TypeName::TupleType(tt) =
-                                    e1.type_name.combined_type(*e2.type_name.clone(), convert_literals)
+                                if let TypeName::TupleType(tt) = e1
+                                    .type_name
+                                    .combined_type(*e2.type_name.clone(), convert_literals)
                                 {
                                     tt
                                 } else {
@@ -7047,7 +7129,11 @@ impl AnnotatedTypeName {
         }
     }
     pub fn with_homomorphism(&self, hom: String) -> Self {
-        AnnotatedTypeName::new(*self.type_name.clone(), self.privacy_annotation.clone().map(|p| *p), hom)
+        AnnotatedTypeName::new(
+            *self.type_name.clone(),
+            self.privacy_annotation.clone().map(|p| *p),
+            hom,
+        )
     }
     pub fn uint_all() -> Self {
         AnnotatedTypeName::new(TypeName::uint_type(), None, String::from("NON_HOMOMORPHIC"))
@@ -7250,9 +7336,10 @@ pub enum IdentifierDeclaration {
     #[default]
     None,
 }
-impl IdentifierDeclaration{
-    pub fn annotated_type(&self)->Option<AnnotatedTypeName>{
-    None}
+impl IdentifierDeclaration {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
+    }
 }
 impl ASTCode for IdentifierDeclaration {
     fn get_ast(&self) -> AST {
@@ -8030,6 +8117,9 @@ impl StructDefinition {
             members,
         }
     }
+    pub fn to_namespace_definition(&self) -> NamespaceDefinition {
+        NamespaceDefinition::StructDefinition(self.clone())
+    }
 }
 impl ASTChildren for StructDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -8322,7 +8412,7 @@ impl TargetDefinition {
     pub fn annotated_type(&self) -> AnnotatedTypeName {
         AnnotatedTypeName::default()
     }
-     pub fn idf(&self) -> Identifier {
+    pub fn idf(&self) -> Identifier {
         Identifier::default()
     }
 }
@@ -8347,7 +8437,12 @@ pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum InstanceTargetExprUnion {
-    Tuple((Option<Box<TargetDefinition>>, Option<IdentifierExpressionUnion>)),
+    Tuple(
+        (
+            Option<Box<TargetDefinition>>,
+            Option<IdentifierExpressionUnion>,
+        ),
+    ),
     VariableDeclaration(VariableDeclaration),
     LocationExpr(LocationExpr),
     #[default]
@@ -8367,7 +8462,12 @@ impl InstanceTarget {
             expr
         } else {
             if let InstanceTargetExprUnion::VariableDeclaration(expr) = expr {
-                (Some(Box::new(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(expr)))), None)
+                (
+                    Some(Box::new(TargetDefinition::IdentifierDeclaration(
+                        IdentifierDeclaration::VariableDeclaration(expr),
+                    ))),
+                    None,
+                )
             } else if let InstanceTargetExprUnion::LocationExpr(expr) = expr {
                 match expr {
                     LocationExpr::IdentifierExpr(expr) => {
@@ -8377,16 +8477,25 @@ impl InstanceTarget {
                         expr.location_expr_base.target.clone(),
                         Some(IdentifierExpressionUnion::Identifier(*expr.member)),
                     ),
-                    LocationExpr::IndexExpr(expr) => {
-                        (expr.location_expr_base.target.clone(),Some(IdentifierExpressionUnion::Expression(* expr.key)) )
-                    }
+                    LocationExpr::IndexExpr(expr) => (
+                        expr.location_expr_base.target.clone(),
+                        Some(IdentifierExpressionUnion::Expression(*expr.key)),
+                    ),
                     _ => (None, None),
                 }
-            }else{(None, None)}
+            } else {
+                (None, None)
+            }
         };
-        assert!(if let Some(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(_)))
-        | Some(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::Parameter(_)))
-        | Some(TargetDefinition::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(_))) = target_key.0.clone().map(|k|*k)
+        assert!(if let Some(TargetDefinition::IdentifierDeclaration(
+            IdentifierDeclaration::VariableDeclaration(_),
+        ))
+        | Some(TargetDefinition::IdentifierDeclaration(
+            IdentifierDeclaration::Parameter(_),
+        ))
+        | Some(TargetDefinition::IdentifierDeclaration(
+            IdentifierDeclaration::StateVariableDeclaration(_),
+        )) = target_key.0.clone().map(|k| *k)
         {
             true
         } else {
@@ -8405,19 +8514,33 @@ impl InstanceTarget {
 
     pub fn privacy(&self) -> PrivacyLabelExpr {
         if let TypeName::Mapping(_) = *self.target().unwrap().annotated_type().type_name {
-            let t = self.target().unwrap().annotated_type().zkay_type().type_name;
+            let t = self
+                .target()
+                .unwrap()
+                .annotated_type()
+                .zkay_type()
+                .type_name;
             if t.has_key_label() {
-                self.key().unwrap().privacy_annotation_label().map_or(PrivacyLabelExpr::None,|x| x.into())
+                self.key()
+                    .unwrap()
+                    .privacy_annotation_label()
+                    .map_or(PrivacyLabelExpr::None, |x| x.into())
             } else {
-                t.value_type().privacy_annotation.unwrap_or_default().privacy_annotation_label().map_or(PrivacyLabelExpr::None,|x| x.into())
+                t.value_type()
+                    .privacy_annotation
+                    .unwrap_or_default()
+                    .privacy_annotation_label()
+                    .map_or(PrivacyLabelExpr::None, |x| x.into())
             }
         } else if self.key().is_none() {
             self.target()
                 .unwrap()
                 .annotated_type()
                 .zkay_type()
-                .privacy_annotation.unwrap_or_default()
-                .privacy_annotation_label().map_or(PrivacyLabelExpr::None,|x| x.into())
+                .privacy_annotation
+                .unwrap_or_default()
+                .privacy_annotation_label()
+                .map_or(PrivacyLabelExpr::None, |x| x.into())
         } else {
             PrivacyLabelExpr::None
         }
@@ -8563,7 +8686,9 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
 
     // Get surrounding function
     let fct = if let Some(stmt) = &stmt {
-       stmt.function().map(|f| AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(*f)))
+        stmt.function().map(|f| {
+            AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(*f))
+        })
     } else if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
         _,
     )) = &ast
@@ -8574,7 +8699,11 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     };
 
     // Get surrounding contract
-    let mut ctr = if let Some(fct) = &fct { fct.clone() } else { ast.clone() };
+    let mut ctr = if let Some(fct) = &fct {
+        fct.clone()
+    } else {
+        ast.clone()
+    };
     while ctr != AST::None
         && !(if let AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(_)) = &ctr {
             true
@@ -8590,7 +8719,11 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     }
 
     // Get source root
-    let mut root = if AST::None != ctr { ctr.clone() } else { ast.clone() };
+    let mut root = if AST::None != ctr {
+        ctr.clone()
+    } else {
+        ast.clone()
+    };
     while root != AST::None
         && !(if let AST::SourceUnit(_) = &root {
             true
@@ -8611,8 +8744,17 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
             ast.column(),
             root.original_code(),
             ctr.contract_definition(),
-            fct.clone().map(|f| if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(f))=f{f}else{ConstructorOrFunctionDefinition::default()}),
-            stmt.clone().map(|s|*s),
+            fct.clone().map(|f| {
+                if let AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(f),
+                ) = f
+                {
+                    f
+                } else {
+                    ConstructorOrFunctionDefinition::default()
+                }
+            }),
+            stmt.clone().map(|s| *s),
         )
     };
 
@@ -8680,6 +8822,9 @@ impl AstVisitor for CodeVisitor {
         self.get_attr(name).is_some()
     }
     fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -8867,7 +9012,6 @@ impl CodeVisitor {
         let p = self.visit(&AST::Expression(ast.privacy().unwrap_or_default()));
         let h = HOMOMORPHISM_STORE
             .lock()
-
             .unwrap()
             .get(&ast.homomorphism().unwrap_or_default())
             .unwrap()
@@ -8988,7 +9132,11 @@ impl CodeVisitor {
         let mut op = ast.op().unwrap_or_default();
         match &lhs {
             AssignmentStatementUnion::TupleExpr(asu) => {
-                if let Some(at) = &asu.tuple_or_location_expr_base.expression_base.annotated_type {
+                if let Some(at) = &asu
+                    .tuple_or_location_expr_base
+                    .expression_base
+                    .annotated_type
+                {
                     if at.is_private() {
                         op = String::new();
                     }
@@ -9003,24 +9151,24 @@ impl CodeVisitor {
                             None
                         }
                     }
-                    LocationExpr::MemberAccessExpr(ie) => {
-                        ie.location_expr_base
-                            .tuple_or_location_expr_base
-                            .expression_base
-                            .annotated_type.clone()
-                    }
-                    LocationExpr::IndexExpr(ie) => {
-                        ie.location_expr_base
-                            .tuple_or_location_expr_base
-                            .expression_base
-                            .annotated_type.clone()
-                    }
-                    LocationExpr::SliceExpr(ie) => {
-                        ie.location_expr_base
-                            .tuple_or_location_expr_base
-                            .expression_base
-                            .annotated_type.clone()
-                    }
+                    LocationExpr::MemberAccessExpr(ie) => ie
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .annotated_type
+                        .clone(),
+                    LocationExpr::IndexExpr(ie) => ie
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .annotated_type
+                        .clone(),
+                    LocationExpr::SliceExpr(ie) => ie
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .annotated_type
+                        .clone(),
                     _ => None,
                 };
                 if let Some(at) = annotated_type {
@@ -9138,7 +9286,8 @@ impl CodeVisitor {
             StatementList::Block(block) => indent(
                 self.visit_list(
                     block
-                        .statement_list_base.statements
+                        .statement_list_base
+                        .statements
                         .iter()
                         .map(|statement| ListUnion::AST(AST::Statement(statement.clone())))
                         .collect(),
@@ -9148,7 +9297,8 @@ impl CodeVisitor {
             StatementList::IndentBlock(block) => indent(
                 self.visit_list(
                     block
-                        .statement_list_base.statements
+                        .statement_list_base
+                        .statements
                         .iter()
                         .map(|statement| ListUnion::AST(AST::Statement(statement.clone())))
                         .collect(),
@@ -9164,7 +9314,8 @@ impl CodeVisitor {
             StatementList::Block(block) => indent(
                 self.visit_list(
                     block
-                        .statement_list_base.statements
+                        .statement_list_base
+                        .statements
                         .iter()
                         .map(|statement| ListUnion::AST(AST::Statement(statement.clone())))
                         .collect(),
@@ -9174,7 +9325,8 @@ impl CodeVisitor {
             StatementList::IndentBlock(block) => indent(
                 self.visit_list(
                     block
-                        .statement_list_base.statements
+                        .statement_list_base
+                        .statements
                         .iter()
                         .map(|statement| ListUnion::AST(AST::Statement(statement.clone())))
                         .collect(),
@@ -9204,14 +9356,30 @@ impl CodeVisitor {
     pub fn visit_ElementaryTypeName(&self, ast: ElementaryTypeName) -> CodeVisitorReturn {
         match ast {
             ElementaryTypeName::NumberTypeName(ntn) => match ntn {
-                NumberTypeName::NumberLiteralType(nlt) => nlt.number_type_name_base.elementary_type_name_base.name.clone(),
-                NumberTypeName::IntTypeName(itn) => itn.number_type_name_base.elementary_type_name_base.name.clone(),
-                NumberTypeName::UintTypeName(utn) => utn.number_type_name_base.elementary_type_name_base.name.clone(),
-                NumberTypeName::NumberTypeNameBase(antn) => antn.elementary_type_name_base.name.clone(),
+                NumberTypeName::NumberLiteralType(nlt) => nlt
+                    .number_type_name_base
+                    .elementary_type_name_base
+                    .name
+                    .clone(),
+                NumberTypeName::IntTypeName(itn) => itn
+                    .number_type_name_base
+                    .elementary_type_name_base
+                    .name
+                    .clone(),
+                NumberTypeName::UintTypeName(utn) => utn
+                    .number_type_name_base
+                    .elementary_type_name_base
+                    .name
+                    .clone(),
+                NumberTypeName::NumberTypeNameBase(antn) => {
+                    antn.elementary_type_name_base.name.clone()
+                }
                 _ => String::new(),
             },
             ElementaryTypeName::BoolTypeName(btn) => btn.elementary_type_name_base.name.clone(),
-            ElementaryTypeName::BooleanLiteralType(blt) => blt.elementary_type_name_base.name.clone(),
+            ElementaryTypeName::BooleanLiteralType(blt) => {
+                blt.elementary_type_name_base.name.clone()
+            }
             _ => String::new(),
         }
     }
@@ -9223,7 +9391,9 @@ impl CodeVisitor {
             UserDefinedTypeName::StructTypeName(ast) => ast.user_defined_type_name_base.names,
             UserDefinedTypeName::ContractTypeName(ast) => ast.user_defined_type_name_base.names,
             UserDefinedTypeName::AddressTypeName(ast) => ast.user_defined_type_name_base.names,
-            UserDefinedTypeName::AddressPayableTypeName(ast) => ast.user_defined_type_name_base.names,
+            UserDefinedTypeName::AddressPayableTypeName(ast) => {
+                ast.user_defined_type_name_base.names
+            }
             _ => vec![],
         })
         .iter()
@@ -9265,10 +9435,10 @@ impl CodeVisitor {
     pub fn visit_Mapping(&self, ast: Mapping) -> CodeVisitorReturn {
         let k = self.visit(&AST::TypeName(TypeName::ElementaryTypeName(ast.key_type)));
         let label = if let Some(Identifier::Identifier(idf)) = ast.key_label {
-                format!(
-                    "!{}",
-                    self.visit(&AST::Identifier(Identifier::Identifier(idf)))
-                )
+            format!(
+                "!{}",
+                self.visit(&AST::Identifier(Identifier::Identifier(idf)))
+            )
         } else {
             if let Some(Identifier::HybridArgumentIdf(key_label)) = ast.key_label {
                 format!("/*!{:?}*/", key_label)
@@ -9328,7 +9498,8 @@ impl CodeVisitor {
 
     pub fn visit_VariableDeclaration(&self, ast: VariableDeclaration) -> CodeVisitorReturn {
         let keywords: Vec<_> = ast
-            .identifier_declaration_base.keywords
+            .identifier_declaration_base
+            .keywords
             .iter()
             .filter_map(|k| {
                 if self.display_final || k != "final" {
@@ -9339,7 +9510,9 @@ impl CodeVisitor {
             })
             .collect();
         let k = keywords.join(" ");
-        let t = self.visit(&AST::AnnotatedTypeName(*ast.identifier_declaration_base.annotated_type));
+        let t = self.visit(&AST::AnnotatedTypeName(
+            *ast.identifier_declaration_base.annotated_type,
+        ));
         let s = if let Some(storage_location) = ast.identifier_declaration_base.storage_location {
             format!(" {storage_location}")
         } else {
@@ -9368,13 +9541,19 @@ impl CodeVisitor {
         let f = if !self.display_final {
             None
         } else {
-            if ast.identifier_declaration_base.keywords.contains(&final_string) {
+            if ast
+                .identifier_declaration_base
+                .keywords
+                .contains(&final_string)
+            {
                 Some(final_string)
             } else {
                 None
             }
         };
-        let t = Some(self.visit(&AST::AnnotatedTypeName(*ast.identifier_declaration_base.annotated_type)));
+        let t = Some(self.visit(&AST::AnnotatedTypeName(
+            *ast.identifier_declaration_base.annotated_type,
+        )));
         let i = Some(self.visit(&AST::Identifier(*ast.identifier_declaration_base.idf)));
         let description: Vec<_> = [f, t, ast.identifier_declaration_base.storage_location, i]
             .iter()
@@ -9477,13 +9656,16 @@ impl CodeVisitor {
         );
         format!(
             "enum {} {{\n{values}\n}}",
-                self.visit(&AST::Identifier(ast.namespace_definition_base.idf))
-                 )
+            self.visit(&AST::Identifier(ast.namespace_definition_base.idf))
+        )
     }
 
     // @staticmethod
     fn __cmp_type_size(v1: &VariableDeclaration, v2: &VariableDeclaration) -> Ordering {
-        let (t1, t2) = (&v1.identifier_declaration_base.annotated_type.type_name, &v2.identifier_declaration_base.annotated_type.type_name);
+        let (t1, t2) = (
+            &v1.identifier_declaration_base.annotated_type.type_name,
+            &v2.identifier_declaration_base.annotated_type.type_name,
+        );
         let mut cmp = if t1.size_in_uints() > t2.size_in_uints() {
             1
         } else {
@@ -9538,7 +9720,8 @@ impl CodeVisitor {
     ) -> CodeVisitorReturn {
         let final_string = String::from("final");
         let keywords: Vec<_> = ast
-            .identifier_declaration_base.keywords
+            .identifier_declaration_base
+            .keywords
             .iter()
             .filter_map(|k| {
                 if self.display_final || k != &final_string {
@@ -9553,9 +9736,12 @@ impl CodeVisitor {
         } else {
             String::new()
         };
-        let t = self.visit(&AST::AnnotatedTypeName(*ast.identifier_declaration_base.annotated_type));
+        let t = self.visit(&AST::AnnotatedTypeName(
+            *ast.identifier_declaration_base.annotated_type,
+        ));
         let mut k = ast
-            .identifier_declaration_base.keywords
+            .identifier_declaration_base
+            .keywords
             .iter()
             .filter_map(|k| {
                 if k != &final_string {

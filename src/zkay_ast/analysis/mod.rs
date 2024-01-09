@@ -14,4 +14,11 @@
 // * :py:mod:`.return_checker`: Ensure that there is at most one return statement per function at the end of the body.
 // * :py:mod:`.side_effects`: Determine whether element contains side effects.
 // """
+pub mod alias_analysis;
+pub mod call_graph;
+pub mod circuit_compatibility_checker;
+pub mod hybrid_function_detector;
+pub mod loop_checker;
 pub mod partition_state;
+pub mod return_checker;
+pub mod side_effects;

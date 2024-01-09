@@ -12,4 +12,6 @@
 // * :py:mod:`.transformer_visitor`: Visitor base class which replaces visited AST elements by the visit function's return value.
 // * :py:mod:`.visitor`: AST visitor base class
 // """
+pub mod function_visitor;
+pub mod solidity_visitor;
 pub mod visitor;

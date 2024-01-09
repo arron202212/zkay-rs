@@ -1,157 +1,231 @@
-from typing import List, Union
+// use crate::type_check::type_exceptions::TypeException
+use crate::zkay_ast::ast::{
+    AssignmentStatement, BuiltinFunction, Expression, FunctionCallExpr, InstanceTarget,
+    LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr, VariableDeclaration,
+    AST,
+};
+use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
+use crate::zkay_ast::visitor::visitor::AstVisitor;
 
-from zkay.type_check.type_exceptions import TypeException
-from zkay.zkay_ast.ast import FunctionCallExpr, LocationExpr, AssignmentStatement, \
-    AST, Expression, Statement, StateVariableDeclaration, BuiltinFunction, \
-    TupleExpr, InstanceTarget, VariableDeclaration, Parameter
-from zkay.zkay_ast.visitor.function_visitor import FunctionVisitor
-from zkay.zkay_ast.visitor.visitor import AstVisitor
+pub fn has_side_effects(ast: AST) -> bool {
+    SideEffectsDetector::new().visit(ast)
+}
 
+pub fn compute_modified_sets(ast: AST) {
+    let v = DirectModificationDetector::new();
+    v.visit(ast);
 
-def has_side_effects(ast: AST) -> bool:
-    return SideEffectsDetector().visit(ast)
+    let v = IndirectModificationDetector::new();
+    v.iterate_until_fixed_point(ast);
+}
 
+pub fn check_for_undefined_behavior_due_to_eval_order(ast: AST) {
+    EvalOrderUBChecker::new().visit(ast);
+}
 
-def compute_modified_sets(ast: AST):
-    v = DirectModificationDetector()
-    v.visit(ast)
+// class SideEffectsDetector(AstVisitor)
+pub struct SideEffectsDetector;
+impl SideEffectsDetector {
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+        if isinstance(ast.func, LocationExpr) && !ast.is_cast && ast.func.target.has_side_effects {
+            true
+        } else {
+            self.visitExpression(ast)
+        }
+    }
+    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+        true
+    }
 
-    v = IndirectModificationDetector()
-    v.iterate_until_fixed_point(ast)
-
-
-def check_for_undefined_behavior_due_to_eval_order(ast: AST):
-    EvalOrderUBChecker().visit(ast)
-
-
-class SideEffectsDetector(AstVisitor):
-
-    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, LocationExpr) and not ast.is_cast and ast.func.target.has_side_effects:
-            return True
-        else:
-            return self.visitExpression(ast)
-
-    def visitAssignmentStatement(self, ast: AssignmentStatement):
-        return True
-
-    def visitExpression(self, ast: Expression):
-        return self.visitAST(ast)
-
-    def visitStatement(self, ast: Statement):
-        return self.visitAST(ast)
-
-    def visitAST(self, ast: AST):
-        return any(map(self.visit, ast.children()))
-
-
-class DirectModificationDetector(FunctionVisitor):
-    def visitAssignmentStatement(self, ast: AssignmentStatement):
+    pub fn visitExpression(&self, ast: Expression) {
         self.visitAST(ast)
-        self.collect_modified_values(ast, ast.lhs)
+    }
 
-    def collect_modified_values(self, target: Union[Expression, Statement], expr: Union[TupleExpr, LocationExpr]):
-        if isinstance(expr, TupleExpr):
-            for elem in expr.elements:
-                self.collect_modified_values(target, elem)
-        else:
-            mod_value = InstanceTarget(expr)
-            if mod_value in target.modified_values:
-                raise TypeException(f'Undefined behavior due multiple different assignments to the same target in tuple assignment', expr)
-            target.modified_values[mod_value] = None
-
-    def visitLocationExpr(self, ast: LocationExpr):
+    pub fn visitStatement(&self, ast: Statement) {
         self.visitAST(ast)
-        if ast.is_rvalue() and isinstance(ast.target, (VariableDeclaration, StateVariableDeclaration, Parameter)):
-            ast.read_values.add(InstanceTarget(ast))
+    }
 
-    def visitVariableDeclaration(self, ast: VariableDeclaration):
-        ast.modified_values[InstanceTarget(ast)] = None
+    pub fn visitAST(&self, ast: AST) {
+        any(map(self.visit, ast.children()))
+    }
+}
+// class DirectModificationDetector(FunctionVisitor)
+pub struct DirectModificationDetector;
+impl DirectModificationDetector {
+    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+        self.visitAST(ast);
+        self.collect_modified_values(ast, ast.lhs);
+    }
 
-    def visitAST(self, ast: AST):
-        ast.modified_values.clear()
-        ast.read_values.clear()
-        for child in ast.children():
-            self.visit(child)
-            ast.modified_values.update(child.modified_values)
-            ast.read_values.update(child.read_values)
+    pub fn collect_modified_values(
+        &self,
+        target: vec![Expression, Statement],
+        expr: vec![TupleExpr, LocationExpr],
+    ) {
+        if isinstance(expr, TupleExpr) {
+            for elem in expr.elements {
+                self.collect_modified_values(target, elem);
+            }
+        } else {
+            mod_value = InstanceTarget(expr);
+            if target.modified_values.contains(mod_value) {
+                assert!(false,"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
+            }
+            target.modified_values[mod_value] = None;
+        }
+    }
+    pub fn visitLocationExpr(&self, ast: LocationExpr) {
+        self.visitAST(ast);
+        if ast.is_rvalue()
+            && isinstance(
+                ast.target,
+                (VariableDeclaration, StateVariableDeclaration, Parameter),
+            )
+        {
+            ast.read_values.add(InstanceTarget(ast));
+        }
+    }
+    pub fn visitVariableDeclaration(&self, ast: VariableDeclaration) {
+        ast.modified_values[InstanceTarget(ast)] = None;
+    }
 
+    pub fn visitAST(&self, ast: AST) {
+        ast.modified_values.clear();
+        ast.read_values.clear();
+        for child in ast.children() {
+            self.visit(child);
+            ast.modified_values.update(child.modified_values);
+            ast.read_values.update(child.read_values);
+        }
+    }
+}
+// class IndirectModificationDetector(FunctionVisitor)
+struct IndirectModificationDetector {
+    fixed_point_reached: bool,
+}
+impl IndirectModificationDetector {
+    // pub fn __init__(self)
+    //     super().__init__()
+    //     self.fixed_point_reached = true
+    pub fn new() -> Self {
+        Self {
+            fixed_point_reached: true,
+        }
+    }
+    pub fn iterate_until_fixed_point(&self, ast: AST) {
+        loop {
+            self.visit(ast);
+            if self.fixed_point_reached {
+                break;
+            } else {
+                self.fixed_point_reached = true;
+            }
+        }
+    }
 
-class IndirectModificationDetector(FunctionVisitor):
-    def __init__(self):
-        super().__init__()
-        self.fixed_point_reached = True
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+        self.visitAST(ast);
+        if isinstance(ast.func, LocationExpr) {
+            //for now no reference types -> only state could have been modified
+            let fdef = ast.func.target;
+            let rlen = len(ast.read_values);
+            ast.read_values.update(
+                fdef.read_values
+                    .iter()
+                    .filter_map(|v| {
+                        if isinstance(v.target, StateVariableDeclaration) {
+                            Some(v)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
+            self.fixed_point_reached &= rlen == len(ast.read_values);
 
-    def iterate_until_fixed_point(self, ast):
-        while True:
-            self.visit(ast)
-            if self.fixed_point_reached:
-                break
-            else:
-                self.fixed_point_reached = True
+            //update modified values if any
+            let mlen = len(ast.modified_values);
+            for v in fdef.modified_values {
+                if isinstance(v.target, StateVariableDeclaration) {
+                    ast.modified_values[v] = None;
+                }
+            }
+            self.fixed_point_reached &= mlen == len(ast.modified_values);
+        }
+    }
+    pub fn visitAST(&self, ast: AST) {
+        let mlen = len(ast.modified_values);
+        let rlen = len(ast.read_values);
+        for child in ast.children() {
+            self.visit(child);
+            ast.modified_values.update(child.modified_values);
+            ast.read_values.update(child.read_values);
+        }
+        self.fixed_point_reached &= mlen == len(ast.modified_values);
+        self.fixed_point_reached &= rlen == len(ast.read_values);
+    }
+}
+// class EvalOrderUBChecker(AstVisitor)
+struct EvalOrderUBChecker;
+impl EvalOrderUBChecker {
+    // @staticmethod
+    pub fn visit_child_expressions(parent: AST, exprs: Vec<AST>) {
+        if len(exprs) > 1 {
+            modset = set(exprs[0].modified_values.keys());
+            for arg in exprs[1..] {
+                diffset = modset.intersection(arg.modified_values);
+                if diffset {
+                    let setstr = format!("{{{", ".join(map(str, diffset))}}}");
+                    assert!(
+                        false,
+                        r#"Undefined behavior due to potential side effect on the same value(s) \"{setstr}\" in multiple expression children.\n"
+                                        "Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n"
+                                        "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined."#,
+                        parent
+                    )
+                } else {
+                    modset.update(diffset);
+                }
+            }
 
-    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        self.visitAST(ast)
-        if isinstance(ast.func, LocationExpr):
-            # for now no reference types -> only state could have been modified
-            fdef = ast.func.target
-            rlen = len(ast.read_values)
-            ast.read_values.update({v for v in fdef.read_values if isinstance(v.target, StateVariableDeclaration)})
-            self.fixed_point_reached &= rlen == len(ast.read_values)
+            for arg in exprs {
+                let modset: BTreeSet<_> = arg.modified_values.keys().iter().cloned().collect();
+                let other_args = exprs
+                    .iter()
+                    .filter_map(|e| if e != arg { Some(e) } else { None })
+                    .collect();
+                for arg2 in other_args {
+                    diffset = modset.intersection(arg2.read_values);
+                    if diffset {
+                        let setstr = format!(
+                            r#"{{{", ".join([str(val) + (f".{str(member)}" if member else "") for val, member in diffset])}}}"#
+                        );
+                        assert!(
+                            false,
+                            r#"Undefined behavior due to read of value(s) \"{setstr}\" which might be modified in this subexpression.\n"
+                            "Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n"
+                            "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined."#,
+                            arg
+                        );
+                    }
+                }
+            }
+        }
+    }
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+        if isinstance(ast.func, BuiltinFunction) {
+            if ast.func.has_shortcircuiting() {
+                return;
+            }
+        }
+        self.visit_child_expressions(ast, ast.args);
+    }
 
-            # update modified values if any
-            mlen = len(ast.modified_values)
-            for v in fdef.modified_values:
-                if isinstance(v.target, StateVariableDeclaration):
-                    ast.modified_values[v] = None
-            self.fixed_point_reached &= mlen == len(ast.modified_values)
+    pub fn visitExpression(&self, ast: Expression) {
+        self.visit_child_expressions(ast, ast.children());
+    }
 
-    def visitAST(self, ast: AST):
-        mlen = len(ast.modified_values)
-        rlen = len(ast.read_values)
-        for child in ast.children():
-            self.visit(child)
-            ast.modified_values.update(child.modified_values)
-            ast.read_values.update(child.read_values)
-        self.fixed_point_reached &= mlen == len(ast.modified_values)
-        self.fixed_point_reached &= rlen == len(ast.read_values)
-
-
-class EvalOrderUBChecker(AstVisitor):
-    @staticmethod
-    def visit_child_expressions(parent: AST, exprs: List[AST]):
-        if len(exprs) > 1:
-            modset = set(exprs[0].modified_values.keys())
-            for arg in exprs[1:]:
-                diffset = modset.intersection(arg.modified_values)
-                if diffset:
-                    setstr = f'{{{", ".join(map(str, diffset))}}}'
-                    raise TypeException(f'Undefined behavior due to potential side effect on the same value(s) \'{setstr}\' in multiple expression children.\n'
-                                        'Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n'
-                                        'Since zkay requires local simulation for transaction transformation, all semantics must be well-defined.', parent)
-                else:
-                    modset.update(diffset)
-
-            for arg in exprs:
-                modset = set(arg.modified_values.keys())
-                other_args = [e for e in exprs if e != arg]
-                for arg2 in other_args:
-                    diffset = modset.intersection(arg2.read_values)
-                    if diffset:
-                        setstr = f'{{{", ".join([str(val) + (f".{str(member)}" if member else "") for val, member in diffset])}}}'
-                        raise TypeException(
-                            f'Undefined behavior due to read of value(s) \'{setstr}\' which might be modified in this subexpression.\n'
-                            'Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n'
-                            'Since zkay requires local simulation for transaction transformation, all semantics must be well-defined.', arg)
-
-    def visitFunctionCallExpr(self, ast: FunctionCallExpr):
-        if isinstance(ast.func, BuiltinFunction):
-            if ast.func.has_shortcircuiting():
-                return
-        self.visit_child_expressions(ast, ast.args)
-
-    def visitExpression(self, ast: Expression):
-        self.visit_child_expressions(ast, ast.children())
-
-    def visitAssignmentStatement(self, ast: AssignmentStatement):
-        self.visit_child_expressions(ast, ast.children())
+    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+        self.visit_child_expressions(ast, ast.children());
+    }
+}
