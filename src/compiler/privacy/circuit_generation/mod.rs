@@ -13,4 +13,6 @@
 // ===========
 // * :py:mod:`.backends`:           CircuitGenerator implementations for different NIZK backends (for now just jsnark)
 // """
-// pub mod circuit_helper;
+pub mod circuit_helper;
+pub mod circuit_constraints;
+pub mod name_factory;

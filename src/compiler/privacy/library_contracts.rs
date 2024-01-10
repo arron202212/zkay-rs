@@ -18,6 +18,16 @@
 //         code += f'{alt_bn128_pairing_lib_simple}'
 //     return f'pragma solidity {cfg.zkay_solc_version_compatibility.expression};\n\n{code}'
 
+
+use once_cell::sync::Lazy;
+use tiny_keccak::{Hasher, Keccak};
+use zkp_u256::{Zero, U256};
+pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {
+    U256::from_decimal_str(
+        "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+    )
+    .unwrap()
+});
 // bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 // """The field prime used by the zk-snark elliptic curve"""
 

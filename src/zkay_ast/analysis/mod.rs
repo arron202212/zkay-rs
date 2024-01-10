@@ -22,3 +22,5 @@ pub mod loop_checker;
 pub mod partition_state;
 pub mod return_checker;
 pub mod side_effects;
+pub mod used_homomorphisms;
+pub mod contains_private_checker;

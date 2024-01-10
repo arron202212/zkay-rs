@@ -9,3 +9,5 @@
 // * :py:mod:`.internal_call_transformer`: Transforms calls to functions which require verification
 // """
 pub mod zkay_contract_transformer;
+pub mod internal_call_transformer;
+pub mod zkay_transformer;

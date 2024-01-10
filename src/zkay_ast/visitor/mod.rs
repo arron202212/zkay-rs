@@ -15,3 +15,4 @@
 pub mod function_visitor;
 pub mod solidity_visitor;
 pub mod visitor;
+pub mod transformer_visitor;
