@@ -1,44 +1,45 @@
-// import json
-// import os
-// from contextlib import contextmanager
-// from typing import ContextManager
+//::json
+//::os
+// from contextlib::contextmanager
+// from typing::ContextManager
 
-// from zkay.config import cfg
-// from zkay.utils.progress_printer import warn_print
+use crate::config::CFG
+use crate::utils::progress_printer::warn_print;
 
-// class Manifest:
-//     """Static class, which holds the string keys of all supported zkay manifest keys """
-//     zkay_version = 'zkay-version'
-//     solc_version = 'solc-version'
-//     zkay_options = 'zkay-options'
+pub struct  Manifest;
+impl Manifest{
+    // """Static class, which holds the string keys of all supported zkay manifest keys """
+    pub const zkay_version:&str = "zkay-version";
+    pub const solc_version:&str = "solc-version";
+    pub const zkay_options:&str = "zkay-options";
 
-//     @staticmethod
-//     def load(project_dir):
-//         """Returned parsed manifest json file located in project dir."""
-//         with open(os.path.join(project_dir, 'manifest.json')) as f:
-//             j = json.loads(f.read())
-//         return j
+    // @staticmethod
+    pub fn load(project_dir:&str)
+        // """Returned parsed manifest json file located in project dir::"""
+     {   let f= open(os::path::join(project_dir, "manifest::json"));
+           let  j = json::loads(f::read());
+         j}
 
-//     @staticmethod
-//     def import_manifest_config(manifest):
-//         # Check if zkay version matches
-//         if manifest[Manifest.zkay_version] != cfg.zkay_version:
-//             with warn_print():
-//                 print(
-//                     f'Zkay version in manifest ({manifest[Manifest.zkay_version]}) does not match current zkay version ({cfg.zkay_version})\n'
-//                     f'Compilation or integrity check with deployed bytecode might fail due to version differences')
+    // @staticmethod
+    pub fn import_manifest_config(manifest:&str)
+        // Check if zkay version matches
+       { if manifest[Manifest::zkay_version] != CFG.lock().unwrap().zkay_version
+            { warn_print();
+                print!(
+                    "Zkay version in manifest ({manifest[Manifest::zkay_version]}) does not match current zkay version ({CFG.lock().unwrap().zkay_version})\nCompilation or integrity check with deployed bytecode might fail due to version differences");}
 
-//         cfg.override_solc(manifest[Manifest.solc_version])
-//         cfg.import_compiler_settings(manifest[Manifest.zkay_options])
+        CFG.lock().unwrap().override_solc(manifest[Manifest::solc_version]);
+        CFG.lock().unwrap().import_compiler_settings(manifest[Manifest::zkay_options]);}
 
-//     @staticmethod
-//     @contextmanager
-//     def with_manifest_config(manifest) -> ContextManager:
-//         old_solc = cfg.solc_version
-//         old_settings = cfg.export_compiler_settings()
-//         try:
-//             Manifest.import_manifest_config(manifest)
-//             yield
-//         finally:
-//             cfg.override_solc(old_solc)
-//             cfg.import_compiler_settings(old_settings)
+    // @staticmethod
+    // @contextmanager
+    pub fn with_manifest_config(manifest:&str)
+       { let old_solc = CFG.lock().unwrap().solc_version;
+        let old_settings = CFG.lock().unwrap().export_compiler_settings();
+        // try
+            Manifest::import_manifest_config(manifest);
+            // yield
+        // finally
+            CFG.lock().unwrap().override_solc(old_solc);
+            CFG.lock().unwrap().import_compiler_settings(old_settings);}
+}

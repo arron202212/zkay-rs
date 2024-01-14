@@ -17,7 +17,8 @@ serde_repr = "0.1.12"
 regex = "1.10.2"
 semver_rs = "0.2"
 app_dirs2 = "2.5.5"
-solc={git="https://github.com/g-r-a-n-t/solc-rust",branch="master"}
+# solc={git="https://github.com/g-r-a-n-t/solc-rust",branch="master"}
+# solc={git="https://github.com/Zokrates/solc-rust.git",branch="master"}
 zkp-u256 = { git = "https://github.com/patractlabs/OpenZKP", branch = "master" }
 textwrap="0.16.0"
 eyre = "0.6.8"

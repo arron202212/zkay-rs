@@ -100,7 +100,7 @@ impl fmt::Display for G2Point {
 }
 // class VerifyingKey(metaclass=ABCMeta)
 // """Abstract base data class for verification keys"""
-pub trait VerifyingKey {
+pub trait VerifyingKeyMeta{
     // @classmethod
     // @abstractmethod
     // pub fn create_dummy_key(cls)
