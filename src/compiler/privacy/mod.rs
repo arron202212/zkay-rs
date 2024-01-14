@@ -20,3 +20,4 @@ pub mod library_contracts;
 pub mod manifest;
 pub mod proving_scheme;
 pub mod transformation;
+// pub mod offchain_compiler;

@@ -8619,7 +8619,7 @@ impl IdentifierExpressionUnion {
 
 // // UTIL FUNCTIONS
 
-fn indent(s: String) -> String {
+pub fn indent(s: String) -> String {
     format!("{}{}", CFG.lock().unwrap().user_config.indentation(), s)
 }
 

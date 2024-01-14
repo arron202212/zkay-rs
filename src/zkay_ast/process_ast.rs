@@ -25,7 +25,7 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
     print_step("Parsing");
     let _ast = build_ast(code);
     // except SyntaxException as e:
-    //     raise ZkaySyntaxError(f'\n\nSYNTAX ERROR: {e}')
+    //     raise ZkaySyntaxError(f"\n\nSYNTAX ERROR: {e}")
 
     let fake_code = zkay::compiler::solidity::fake_solidity_generator::fake_solidity_code(code);
     if solc_check {
@@ -34,16 +34,14 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
         // try:
         check_for_zkay_solc_errors(code, fake_code);
         // except SolcException as e:
-        //     raise ZkayCompilerError(f'{e}')
+        //     raise ZkayCompilerError(f"{e}")
     }
     (ast, fake_code)
 }
 
 //parents:bool, link_identifiers:bool, check_return:bool, alias_analysis:bool, type_check:bool, solc_check:bool
-pub fn get_processed_ast(code: &str, flag: Option<i32>) //-> SourceUnit
-{
-    // ast, _ =
-    get_parsed_ast_and_fake_code(code, (flag.unwrap_or(0) >> 5) == 1); //solc_check
+pub fn get_processed_ast(code: &str, flag: Option<i32>) -> AST {
+    let (ast, _) = get_parsed_ast_and_fake_code(code, (flag.unwrap_or(0) >> 5) == 1); //solc_check
 
     // Zkay preprocessing and type checking
     process_ast(
@@ -55,7 +53,7 @@ pub fn get_processed_ast(code: &str, flag: Option<i32>) //-> SourceUnit
         type_check,
     );
 
-    // ast
+    ast
 }
 
 fn process_ast(
@@ -76,7 +74,7 @@ fn process_ast(
         link(ast);
     }
     // except UnknownIdentifierException as e:
-    //     raise PreprocessAstException(f'\n\nSYMBOL ERROR: {e}')
+    //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")
     // try:
     if check_return {
         r(ast);
@@ -88,7 +86,7 @@ fn process_ast(
     compute_modified_sets(ast);
     check_for_undefined_behavior_due_to_eval_order(ast);
     // except AstException as e:
-    //     raise AnalysisException(f'\n\nANALYSIS ERROR: {e}')
+    //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
     if type_check {
         print_step("Zkay type checking");
         // try:
@@ -97,21 +95,41 @@ fn process_ast(
         detect_hybrid_functions(ast);
         check_loops(ast);
         // except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
-        //     raise TypeCheckException(f'\n\nCOMPILER ERROR: {e}')
+        //     raise TypeCheckException(f"\n\nCOMPILER ERROR: {e}")
     }
 }
 
-// def get_verification_contract_names(code_or_ast) -> List[str]:
-//     if isinstance(code_or_ast, str):
-//         ast = get_processed_ast(code_or_ast)
-//     else:
-//         ast = code_or_ast
-//     if not isinstance(ast, SourceUnit):
-//         raise ZkayCompilerError('Invalid AST (no source unit at root)')
+pub fn get_verification_contract_names(
+    code_or_ast: (Option<String>, Option<SourceUnit>),
+) -> Vec<String> {
+    let ast = if isinstance(code_or_ast, str) {
+        get_processed_ast(code_or_ast)
+    } else {
+        code_or_ast
+    };
+    if !isinstance(ast, SourceUnit) {
+        assert!(false, "Invalid AST (no source unit at root)")
+    }
 
-//     vc_names = []
-//     for contract in ast.contracts:
-//         cname = contract.idf.name
-//         fcts = [fct for fct in contract.function_definitions + contract.constructor_definitions if fct.requires_verification_when_external and fct.has_side_effects]
-//         vc_names += [cfg.get_verification_contract_name(cname, fct.name) for fct in fcts]
-//     return vc_names
+    let mut vc_names = vec![];
+    for contract in ast.contracts {
+        let cname = contract.idf.name;
+        let fcts = contract
+            .function_definitions
+            .iter()
+            .chain(contract.constructor_definitions)
+            .filter_map(|fct| {
+                if fct.requires_verification_when_external && fct.has_side_effects {
+                    Some(fct)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        vc_names += fcts
+            .iter()
+            .map(|fct| cfg.get_verification_contract_name(cname, fct.name))
+            .collect();
+    }
+    vc_names
+}

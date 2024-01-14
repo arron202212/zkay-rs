@@ -6,7 +6,7 @@ use crate::config::zk_print;
 
 // @contextlib.contextmanager
 pub fn print_step(name: &str) {
-    zk_print!(format!"{name}... ");
+    zk_print!(format!("{name}... "));
     // yield
     zk_print!("done");
 }

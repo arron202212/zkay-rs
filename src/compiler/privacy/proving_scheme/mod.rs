@@ -12,4 +12,6 @@
 // ===========
 // * :py:mod:`.backends`: Package with concrete ProvingScheme implementations
 // """
+pub mod backends;
 pub mod meta;
+pub mod proving_scheme;

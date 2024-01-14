@@ -19,3 +19,6 @@ semver_rs = "0.2"
 app_dirs2 = "2.5.5"
 solc={git="https://github.com/g-r-a-n-t/solc-rust",branch="master"}
 zkp-u256 = { git = "https://github.com/patractlabs/OpenZKP", branch = "master" }
+textwrap="0.16.0"
+eyre = "0.6.8"
+num_cpus="1.16.0"

@@ -17,10 +17,10 @@
 pub mod alias_analysis;
 pub mod call_graph;
 pub mod circuit_compatibility_checker;
+pub mod contains_private_checker;
 pub mod hybrid_function_detector;
 pub mod loop_checker;
 pub mod partition_state;
 pub mod return_checker;
 pub mod side_effects;
 pub mod used_homomorphisms;
-pub mod contains_private_checker;

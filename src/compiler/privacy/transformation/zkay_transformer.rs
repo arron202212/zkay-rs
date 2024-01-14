@@ -2,514 +2,757 @@
 // This module defines zkay->solidity transformers for the smaller contract elements (statements, expressions, state variables).
 // """
 
-
-
-use crate::compiler::privacy::circuit_generation::circuit_helper::{HybridArgumentIdf, CircuitHelper};
-use crate::zkay_ast::homomorphism::Homomorphism;
-use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
-use crate::compiler::solidity::fake_solidity_generator::{WS_PATTERN, ID_PATTERN};
+use crate::compiler::privacy::circuit_generation::circuit_helper::{
+    CircuitHelper, HybridArgumentIdf,
+};
+use crate::compiler::solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use crate::config::CFG;
 use crate::zkay_ast::analysis::contains_private_checker::contains_private_expr;
-use crate::zkay_ast::ast::{ReclassifyExpr, Expression, IfStatement, StatementList, HybridArgType, BlankLine, 
-    IdentifierExpr, Parameter, VariableDeclaration, AnnotatedTypeName, StateVariableDeclaration, Mapping, MeExpr, 
-    VariableDeclarationStatement, ReturnStatement, LocationExpr, AST, AssignmentStatement, Block, 
-    Comment, LiteralExpr, Statement, SimpleStatement, IndexExpr, FunctionCallExpr, BuiltinFunction, TupleExpr, 
-    NumberLiteralExpr, 
-    MemberAccessExpr, WhileStatement, BreakStatement, ContinueStatement, ForStatement, DoWhileStatement, 
-    BooleanLiteralType, NumberLiteralType, BooleanLiteralExpr, PrimitiveCastExpr, EnumDefinition, EncryptionExpression, 
-    TypeName};
+use crate::zkay_ast::ast::{
+    AnnotatedTypeName, AssignmentStatement, BlankLine, Block, BooleanLiteralExpr,
+    BooleanLiteralType, BreakStatement, BuiltinFunction, Comment, ContinueStatement,
+    DoWhileStatement, EncryptionExpression, EnumDefinition, Expression, ForStatement,
+    FunctionCallExpr, HybridArgType, IdentifierExpr, IfStatement, IndexExpr, LiteralExpr,
+    LocationExpr, Mapping, MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType,
+    Parameter, PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
+    VariableDeclarationStatement, WhileStatement, AST,
+};
+use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::deep_copy::replace_expr;
-
+use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
 
 // class ZkayVarDeclTransformer(AstTransformerVisitor)
-    // """
-    // Transformer for types, which was left out in the paper.
+// """
+// Transformer for types, which was left out in the paper.
 
-    // This removes all privacy labels and converts the types of non-public variables (not @all)
-    // to cipher_type.
-    // """
+// This removes all privacy labels and converts the types of non-public variables (not @all)
+// to cipher_type.
+// """
 
-    // pub fn __init__(self)
-    //     super().__init__()
-    //     self.expr_trafo = ZkayExpressionTransformer(None)
-pub struct ZkayVarDeclTransformer{
-expr_trafo :Option<ZkayExpressionTransformer>,
+// pub fn __init__(self)
+//     super().__init__()
+//     self.expr_trafo = ZkayExpressionTransformer(None)
+pub struct ZkayVarDeclTransformer {
+    expr_trafo: Option<ZkayExpressionTransformer>,
 }
-impl ZkayVarDeclTransformer{
-pub fn new()->Self{
-Self{expr_trafo:None}}
+impl ZkayVarDeclTransformer {
+    pub fn new() -> Self {
+        Self { expr_trafo: None }
+    }
 
-    pub fn visitAnnotatedTypeName(self, ast: AnnotatedTypeName)
-        {  t = if ast.is_private()
-          {TypeName.cipher_type(ast, ast.homomorphism)}
-        else
-            {self.visit(ast.type_name.clone())}
-        return AnnotatedTypeName(t)}
+    pub fn visitAnnotatedTypeName(self, ast: AnnotatedTypeName) {
+        let t = if ast.is_private() {
+            TypeName.cipher_type(ast, ast.homomorphism)
+        } else {
+            self.visit(ast.type_name.clone())
+        };
+        return AnnotatedTypeName(t);
+    }
 
-    pub fn visitVariableDeclaration(self, ast: VariableDeclaration)
-       { if ast.annotated_type.is_private()
-            {ast.storage_location = "memory";}
-        return self.visit_children(ast)}
+    pub fn visitVariableDeclaration(self, ast: VariableDeclaration) {
+        if ast.annotated_type.is_private() {
+            ast.storage_location = "memory";
+        }
+        return self.visit_children(ast);
+    }
 
-    pub fn visitParameter(self, ast: Parameter)
-       { ast = self.visit_children(ast);
-        if not ast.annotated_type.type_name.is_primitive_type()
-           { ast.storage_location = "memory";}
-        return ast}
+    pub fn visitParameter(self, ast: Parameter) {
+        ast = self.visit_children(ast);
+        if !ast.annotated_type.type_name.is_primitive_type() {
+            ast.storage_location = "memory";
+        }
+        return ast;
+    }
 
-    pub fn visitStateVariableDeclaration(self, ast: StateVariableDeclaration)
-       { ast.keywords = [k for k in ast.keywords if k != "public"];
+    pub fn visitStateVariableDeclaration(self, ast: StateVariableDeclaration) {
+        ast.keywords = ast
+            .keywords
+            .iter()
+            .filter_map(|k| if k != "public" { Some(k) } else { None })
+            .collect();
         //make sure every state var gets a public getter (required for simulation)
-        ast.keywords.append("public");
+        ast.keywords.push("public");
         ast.expr = self.expr_trafo.visit(ast.expr);
-        return self.visit_children(ast)}
+        return self.visit_children(ast);
+    }
 
-    pub fn visitMapping(self, ast: Mapping)
-        {if ast.key_label is not None
-            {ast.key_label = ast.key_label.name;}
-        return self.visit_children(ast)}
-
+    pub fn visitMapping(self, ast: Mapping) {
+        if ast.key_label.is_some() {
+            ast.key_label = ast.key_label.name;
+        }
+        return self.visit_children(ast);
+    }
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
-    // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-pub struct ZkayStatementTransformer{
-gen: CircuitHelper,
-expr_trafo = ZkayExpressionTransformer,
-var_decl_trafo = ZkayVarDeclTransformer,
+// """Corresponds to T from paper, (with additional handling of return statement and loops)."""
+pub struct ZkayStatementTransformer {
+    gen: CircuitHelper,
+    expr_trafo: ZkayExpressionTransformer,
+    var_decl_trafo: ZkayVarDeclTransformer,
 }
-    // pub fn __init__(self, current_gen: CircuitHelper)
-    //     super().__init__()
-    //     self.gen = current_gen
-    //     self.expr_trafo = ZkayExpressionTransformer(self.gen)
-    //     self.var_decl_trafo = ZkayVarDeclTransformer()
-pub fn new(current_gen: CircuitHelper)->Self{
-Self{gen:current_gen.clone(),expr_trafo:ZkayExpressionTransformer::new(current_gen),var_decl_trafo: ZkayVarDeclTransformer::new()}}
-    pub fn visitStatementList(self, ast: StatementList)
-        // """
-        // Rule (1)
-
-        // All statements are transformed individually.
-        // Whenever the transformation of a statement requires the introduction of additional statements
-        // (the CircuitHelper indicates this by storing them in the statement"s pre_statements list), they are prepended to the transformed
-        // statement in the list.
-
-        // If transformation changes the appearance of a statement (apart from type changes),
-        // the statement is wrapped in a comment block which displays the original statement"s code.
-        // """
-       { new_statements = vec![];
-        for idx, stmt in enumerate(ast.statements)
-           { old_code = stmt.code();
-            transformed_stmt = self.visit(stmt);
-            if transformed_stmt is None
-                {continue}
-
-            old_code_wo_annotations = re.sub(r"(?=\b)me(?=\b)", "msg.sender",
-                                             re.sub(f"@{WS_PATTERN}*{ID_PATTERN}", "", old_code));
-            new_code_wo_annotation_comments = re.sub(r"/\*.*?\*/", "", transformed_stmt.code());
-            if old_code_wo_annotations == new_code_wo_annotation_comments;
-                {new_statements.append(transformed_stmt)}
-            else
-               { new_statements += Comment.comment_wrap_block(old_code, transformed_stmt.pre_statements + [transformed_stmt]);}
+// pub fn __init__(self, current_gen: CircuitHelper)
+//     super().__init__()
+//     self.gen = current_gen
+//     self.expr_trafo = ZkayExpressionTransformer(self.gen)
+//     self.var_decl_trafo = ZkayVarDeclTransformer()
+pub fn new(current_gen: CircuitHelper) -> Self {
+    Self {
+        gen: current_gen.clone(),
+        expr_trafo: ZkayExpressionTransformer::new(current_gen),
+        var_decl_trafo: ZkayVarDeclTransformer::new(),
+    }
 }
-        if new_statements and isinstance(new_statements[-1], BlankLine)
-            {new_statements = new_statements[:-1];}
-        ast.statements = new_statements;
-        return ast}
+pub fn visitStatementList(self, ast: StatementList)
+// """
+// Rule (1)
 
-    pub fn process_statement_child(self, child: AST)
-        // """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
-     {   if isinstance(child, Expression)
-            {return self.expr_trafo.visit(child)}
-        else if child is not None
-           { assert isinstance(child, VariableDeclaration);
-            return self.var_decl_trafo.visit(child)}}
+// All statements are transformed individually.
+// Whenever the transformation of a statement requires the introduction of additional statements
+// (the CircuitHelper indicates this by storing them in the statement"s pre_statements list), they are prepended to the transformed
+// statement in the list.
 
-    pub fn visitStatement(self, ast: Statement)
+// If transformation changes the appearance of a statement (apart from type changes),
+// the statement is wrapped in a comment block which displays the original statement"s code.
+// """
+{
+    let mut new_statements = vec![];
+    for (idx, stmt) in enumerate(ast.statements) {
+        let old_code = stmt.code();
+        let transformed_stmt = self.visit(stmt);
+        if transformed_stmt.is_none() {
+            continue;
+        }
+
+        let old_code_wo_annotations = re.sub(
+            r"(?=\b)me(?=\b)",
+            "msg.sender",
+            re.sub(r"@{WS_PATTERN}*{ID_PATTERN}", "", old_code),
+        );
+        let new_code_wo_annotation_comments = re.sub(r"/\*.*?\*/", "", transformed_stmt.code());
+        if old_code_wo_annotations == new_code_wo_annotation_comments {
+            new_statements.push(transformed_stmt)
+        } else {
+            new_statements.extend(
+                Comment.comment_wrap_block(
+                    old_code,
+                    transformed_stmt
+                        .pre_statements
+                        .iter()
+                        .chain([transformed_stmt])
+                        .collect(),
+                ),
+            );
+        }
+    }
+    if new_statements && isinstance(new_statements[-1], BlankLine) {
+        new_statements.pop();
+    }
+    ast.statements = new_statements;
+    return ast;
+}
+
+pub fn process_statement_child(self, child: AST)
+// """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
+{
+    if isinstance(child, Expression) {
+        return self.expr_trafo.visit(child);
+    } else if child.is_some() {
+        assert!(isinstance(child, VariableDeclaration));
+        return self.var_decl_trafo.visit(child);
+    }
+}
+
+pub fn visitStatement(self, ast: Statement)
+// """
+// Rules (3), (4)
+
+// This is for all the statements where the statements themselves remain untouched and only the children are altered.
+// """
+{
+    assert!(isinstance(ast, SimpleStatement) || isinstance(ast, VariableDeclarationStatement));
+    ast.process_children(self.process_statement_child);
+    return ast;
+}
+
+pub fn visitAssignmentStatement(self, ast: AssignmentStatement)
+// """Rule (2)"""
+{
+    ast.lhs = self.expr_trafo.visit(ast.lhs);
+    ast.rhs = self.expr_trafo.visit(ast.rhs);
+    let mut modvals = ast.modified_values.keys().collect();
+    if cfg.opt_cache_circuit_outputs
+        && isinstance(ast.lhs, IdentifierExpr)
+        && isinstance(ast.rhs, MemberAccessExpr)
+    {
+        //Skip invalidation if rhs is circuit output
+        if isinstance(ast.rhs.member, HybridArgumentIdf)
+            && ast.rhs.member.arg_type == HybridArgType.PUB_CIRCUIT_ARG
+        {
+            modvals = modvals
+                .iter()
+                .filter_map(|mv| {
+                    if mv.target != ast.lhs.target {
+                        Some(mv)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            let ridf = if isinstance(
+                ast.rhs.member.corresponding_priv_expression,
+                EncryptionExpression,
+            ) {
+                ast.rhs
+                    .member
+                    .corresponding_priv_expression
+                    .expr
+                    .idf
+                    .clone()
+            } else {
+                ast.rhs.member.corresponding_priv_expression.idf.clone()
+            };
+            assert!(isinstance(ridf, HybridArgumentIdf));
+            self.gen._remapper.remap(ast.lhs.target.idf, ridf);
+        }
+    }
+
+    if self.gen.is_some()
+    //Invalidate circuit value for assignment targets
+    {
+        for val in modvals {
+            if val.key.is_none() {
+                self.gen.invalidate_idf(val.target.idf);
+            }
+        }
+    }
+    return ast;
+}
+
+pub fn visitIfStatement(self, ast: IfStatement)
+// """
+// Rule (6) + additional support for private conditions
+
+// If the condition is public, guard conditions are introduced for both branches if any of the branches contains private expressions.
+
+// If the condition is private, the whole if statement is inlined into the circuit. The only side-effects which are allowed
+// inside the branch bodies are assignment statements with an lhs@me. (anything else would leak private information).
+// The if statement will be replaced by an assignment statement where the lhs is a tuple of all locations which are written
+// in either branch and rhs is a tuple of the corresponding circuit outputs.
+// """
+{
+    if ast.condition.annotated_type.is_public() {
+        if contains_private_expr(ast.then_branch) || contains_private_expr(ast.else_branch) {
+            before_if_state = self.gen._remapper.get_state();
+            guard_var = self.gen.add_to_circuit_inputs(ast.condition);
+            ast.condition = guard_var.get_loc_expr(ast);
+            self.gen.guarded(guard_var, True);
+            {
+                ast.then_branch = self.visit(ast.then_branch);
+                self.gen._remapper.set_state(before_if_state);
+            }
+            if ast.else_branch.is_some() {
+                self.gen.guarded(guard_var, False);
+                {
+                    ast.else_branch = self.visit(ast.else_branch);
+                    self.gen._remapper.set_state(before_if_state);
+                }
+            }
+
+            //Invalidate values modified in either branch
+            for val in ast.modified_values {
+                if val.key.is_none() {
+                    self.gen.invalidate_idf(val.target.idf);
+                }
+            }
+        } else {
+            ast.condition = self.expr_trafo.visit(ast.condition);
+            ast.then_branch = self.visit(ast.then_branch);
+            if ast.else_branch.is_some() {
+                ast.else_branch = self.visit(ast.else_branch);
+            }
+        }
+        return ast;
+    } else {
+        return self.gen.evaluate_stmt_in_circuit(ast);
+    }
+}
+pub fn visitWhileStatement(self, ast: WhileStatement)
+//Loops must always be purely public
+{
+    assert!(!contains_private_expr(ast.condition));
+    assert!(!contains_private_expr(ast.body));
+    return ast;
+}
+
+pub fn visitDoWhileStatement(self, ast: DoWhileStatement)
+//Loops must always be purely public
+{
+    assert!(!contains_private_expr(ast.condition));
+    assert!(!contains_private_expr(ast.body));
+    return ast;
+}
+
+pub fn visitForStatement(self, ast: ForStatement) {
+    if ast.init.is_some()
+    //Init is the only part of a for loop which may contain private expressions
+    {
+        ast.init = self.visit(ast.init);
+        ast.pre_statements += ast.init.pre_statements;
+    }
+    assert!(!contains_private_expr(ast.condition));
+    assert!(!ast.update || !contains_private_expr(ast.update));
+    assert!(!contains_private_expr(ast.body)); //OR fixed size loop -> static analysis can prove that loop terminates in fixed //iterations
+    return ast;
+}
+
+pub fn visitContinueStatement(self, ast: ContinueStatement) {
+    ast
+}
+
+pub fn visitBreakStatement(self, ast: BreakStatement) {
+    ast
+}
+
+pub fn visitReturnStatement(self, ast: ReturnStatement)
+// """
+// Handle return statement.
+
+// If the function requires verification, the return statement is replaced by an assignment to a return variable.
+// (which will be returned at the very end of the function body, after any verification wrapper code).
+// Otherwise only the expression is transformed.
+// """
+{
+    if ast.function.requires_verification {
+        if ast.expr.is_none() {
+            return None;
+        }
+        assert!(!self.gen.has_return_var);
+        self.gen.has_return_var = True;
+        expr = self.expr_trafo.visit(ast.expr);
+        ret_args = ast
+            .function
+            .return_var_decls
+            .iter()
+            .map(|vd| {
+                let mut idf = IdentifierExpr(vd.idf.clone());
+                idf.target = vd;
+            })
+            .collect();
+        let mut te = TupleExpr(ret_args).assign(expr);
+        te.pre_statements = ast.pre_statements;
+        te
+    } else {
+        ast.expr = self.expr_trafo.visit(ast.expr);
+        return ast;
+    }
+}
+
+pub fn visitExpression(self, ast: Expression)
+// """Fail if there are any untransformed expressions left."""
+{
+    assert!(false, "Missed an expression of type {type(ast)}")
+}
+
+// class ZkayExpressionTransformer(AstTransformerVisitor)
+// """
+// Roughly corresponds to T_L / T_e from paper.
+
+// T_L and T_e are equivalent here, because parameter encryption checks are handled in the verification wrapper of the function body.
+// In addition to the features described in the paper, this transformer also supports primitive type casting,
+// tuples (multiple return values), operations with short-circuiting and function calls.
+// """
+pub struct ZkayExpressionTransformer {
+    gen: Option<CircuitHelper>,
+}
+
+pub fn new(current_generator: Option<CircuitHelper>) -> Self
+// super().__init__()
+        // self.gen = current_generator
+{
+    Self {
+        gen: current_generator,
+    }
+}
+
+// @staticmethod
+pub fn visitMeExpr(ast: MeExpr)
+// """Replace me with msg.sender."""
+{
+    replace_expr(ast, IdentifierExpr("msg").dot("sender")).as_type(AnnotatedTypeName.address_all())
+}
+
+pub fn visitLiteralExpr(self, ast: LiteralExpr)
+// """Rule (7), don"t modify constants."""
+{
+    ast
+}
+
+pub fn visitIdentifierExpr(self, ast: IdentifierExpr)
+// """Rule (8), don"t modify identifiers."""
+{
+    ast
+}
+
+pub fn visitIndexExpr(self, ast: IndexExpr)
+// """Rule (9), transform location and index expressions separately."""
+{
+    replace_expr(ast, self.visit(ast.arr).index(self.visit(ast.key)))
+}
+
+pub fn visitMemberAccessExpr(self, ast: MemberAccessExpr) {
+    self.visit_children(ast)
+}
+
+pub fn visitTupleExpr(self, ast: TupleExpr) {
+    self.visit_children(ast)
+}
+
+pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
+// """
+// Rule (11), trigger a boundary crossing.
+
+// The reclassified expression is evaluated in the circuit and its result is made available in solidity.
+// """
+{
+    self.gen.evaluate_expr_in_circuit(
+        ast.expr,
+        ast.privacy.privacy_annotation_label(),
+        ast.annotated_type.homomorphism,
+    )
+}
+
+pub fn visitBuiltinFunction(self, ast: BuiltinFunction) {
+    ast
+}
+
+pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    if isinstance(ast.func, BuiltinFunction) {
+        if ast.func.is_private
         // """
-        // Rules (3), (4)
+        // Modified Rule (12) builtin functions with private operands and homomorphic operations on ciphertexts
+        // are evaluated inside the circuit.
 
-        // This is for all the statements where the statements themselves remain untouched and only the children are altered.
+        // A private expression on its own (like an IdentifierExpr referring to a private variable) is not enough to trigger a
+        // boundary crossing (assignment of private variables is a public operation).
         // """
-       { assert! (isinstance(ast, SimpleStatement) or isinstance(ast, VariableDeclarationStatement));
-        ast.process_children(self.process_statement_child);
-        return ast}
+        {
+            privacy_label = ast
+                .annotated_type
+                .privacy_annotation
+                .privacy_annotation_label();
+            return self
+                .gen
+                .evaluate_expr_in_circuit(ast, privacy_label, ast.func.homomorphism);
+        } else
+        // """
+        // Rule (10) with additional short-circuit handling.
 
-    pub fn visitAssignmentStatement(self, ast: AssignmentStatement)
-        // """Rule (2)"""
-        ast.lhs = self.expr_trafo.visit(ast.lhs)
-        ast.rhs = self.expr_trafo.visit(ast.rhs)
-        modvals = list(ast.modified_values.keys())
-        if cfg.opt_cache_circuit_outputs and isinstance(ast.lhs, IdentifierExpr) and isinstance(ast.rhs, MemberAccessExpr)
-            //Skip invalidation if rhs is circuit output
-            if isinstance(ast.rhs.member, HybridArgumentIdf) and ast.rhs.member.arg_type == HybridArgType.PUB_CIRCUIT_ARG
-                modvals = [mv for mv in modvals if mv.target != ast.lhs.target]
-                if isinstance(ast.rhs.member.corresponding_priv_expression, EncryptionExpression)
-                    ridf = ast.rhs.member.corresponding_priv_expression.expr.idf
-                else
-                    ridf = ast.rhs.member.corresponding_priv_expression.idf
-                assert isinstance(ridf, HybridArgumentIdf)
-                self.gen._remapper.remap(ast.lhs.target.idf, ridf)
+        // Builtin operations on public operands are normally left untransformed, but if the builtin function has
+        // short-circuiting semantics, guard conditions must be added if any of the public operands contains
+        // nested private expressions.
+        // """
+        //handle short-circuiting
+        {
+            if ast.func.has_shortcircuiting()
+                && ast.args[1..].iter().any(|arg| contains_private_expr(arg))
+            {
+                let op = ast.func.op;
+                let guard_var = self.gen.add_to_circuit_inputs(ast.args[0]);
+                ast.args[0] = guard_var.get_loc_expr(ast);
+                if op == "ite" {
+                    ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1]);
+                    ast.args[2] = self.visit_guarded_expression(guard_var, False, ast.args[2]);
+                } else if op == "||" {
+                    ast.args[1] = self.visit_guarded_expression(guard_var, False, ast.args[1]);
+                } else if op == "&&" {
+                    ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1]);
+                }
+                return ast;
+            }
 
-        if self.gen is not None
-            //Invalidate circuit value for assignment targets
-            for val in modvals
-                if val.key is None
-                    self.gen.invalidate_idf(val.target.idf)
-        return ast
+            return self.visit_children(ast);
+        }
+    } else if ast.is_cast
+    // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
+    {
+        assert!(isinstance(ast.func.target, EnumDefinition));
+        if ast.args[0].evaluate_privately {
+            privacy_label = ast
+                .annotated_type
+                .privacy_annotation
+                .privacy_annotation_label();
+            return self.gen.evaluate_expr_in_circuit(
+                ast,
+                privacy_label,
+                ast.annotated_type.homomorphism,
+            );
+        } else {
+            return self.visit_children(ast);
+        }
+    } else
+    // """
+    // Handle normal function calls (outside private expression case).
 
-    pub fn visitIfStatement(self, ast: IfStatement)
-        """
-        Rule (6) + additional support for private conditions
+    // The called functions are allowed to have side effects,
+    // if the function does not require verification it can even be recursive.
+    // """
+    {
+        assert!(isinstance(ast.func, LocationExpr));
+        ast = self.visit_children(ast);
+        if ast.func.target.requires_verification_when_external
+        //Reroute the function call to the corresponding internal function if the called function was split into external/internal.
+        {
+            if !isinstance(ast.func, IdentifierExpr) {
+                unimplemented!();
+            }
+            ast.func.idf.name = cfg.get_internal_name(ast.func.target);
+        }
 
-        If the condition is public, guard conditions are introduced for both branches if any of the branches contains private expressions.
+        if ast.func.target.requires_verification
+        //If the target function has an associated circuit, make this function"s circuit aware of the call.
+        {
+            self.gen.call_function(ast);
+        } else if ast.func.target.has_side_effects && self.gen.is_some()
+        //Invalidate modified state variables for the current circuit
+        {
+            for val in ast.modified_values {
+                if val.key.is_none() && isinstance(val.target, StateVariableDeclaration) {
+                    self.gen.invalidate_idf(val.target.idf);
+                }
+            }
+        }
 
-        If the condition is private, the whole if statement is inlined into the circuit. The only side-effects which are allowed
-        inside the branch bodies are assignment statements with an lhs@me. (anything else would leak private information).
-        The if statement will be replaced by an assignment statement where the lhs is a tuple of all locations which are written
-        in either branch and rhs is a tuple of the corresponding circuit outputs.
-        """
-        if ast.condition.annotated_type.is_public()
-            if contains_private_expr(ast.then_branch) or contains_private_expr(ast.else_branch)
-                before_if_state = self.gen._remapper.get_state()
-                guard_var = self.gen.add_to_circuit_inputs(ast.condition)
-                ast.condition = guard_var.get_loc_expr(ast)
-                with self.gen.guarded(guard_var, True)
-                    ast.then_branch = self.visit(ast.then_branch)
-                    self.gen._remapper.set_state(before_if_state)
-                if ast.else_branch is not None
-                    with self.gen.guarded(guard_var, False)
-                        ast.else_branch = self.visit(ast.else_branch)
-                        self.gen._remapper.set_state(before_if_state)
+        //The call will be present as a normal function call in the output solidity code.
+        return ast;
+    }
+}
+pub fn visit_guarded_expression(
+    self,
+    guard_var: HybridArgumentIdf,
+    if_true: bool,
+    expr: Expression,
+) {
+    prelen = len(expr.statement.pre_statements);
 
-                //Invalidate values modified in either branch
-                for val in ast.modified_values
-                    if val.key is None
-                        self.gen.invalidate_idf(val.target.idf)
-            else
-                ast.condition = self.expr_trafo.visit(ast.condition)
-                ast.then_branch = self.visit(ast.then_branch)
-                if ast.else_branch is not None
-                    ast.else_branch = self.visit(ast.else_branch)
-            return ast
-        else
-            return self.gen.evaluate_stmt_in_circuit(ast)
+    //Transform expression with guard condition in effect
+    self.gen.guarded(guard_var, if_true);
+    {
+        ret = self.visit(expr);
+    }
 
-    pub fn visitWhileStatement(self, ast: WhileStatement)
-        //Loops must always be purely public
-        assert not contains_private_expr(ast.condition)
-        assert not contains_private_expr(ast.body)
-        return ast
+    //If new pre statements were added, they must be guarded using an if statement in the public solidity code
+    new_pre_stmts = expr.statement.pre_statements[prelen..];
+    if new_pre_stmts {
+        cond_expr = guard_var.get_loc_expr();
+        if isinstance(cond_expr, BooleanLiteralExpr) {
+            cond_expr = BooleanLiteralExpr(cond_expr.value == if_true);
+        } else if !if_true {
+            cond_expr = cond_expr.unop("!");
+        }
+        expr.statement.pre_statements = expr.statement.pre_statements[..prelen]
+            + [IfStatement(cond_expr, Block(new_pre_stmts), None)];
+    }
+    return ret;
+}
 
-    pub fn visitDoWhileStatement(self, ast: DoWhileStatement)
-        //Loops must always be purely public
-        assert not contains_private_expr(ast.condition)
-        assert not contains_private_expr(ast.body)
-        return ast
+pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+// """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
+{
+    if ast.evaluate_privately {
+        privacy_label = ast
+            .annotated_type
+            .privacy_annotation
+            .privacy_annotation_label();
+        return self.gen.evaluate_expr_in_circuit(
+            ast,
+            privacy_label,
+            ast.annotated_type.homomorphism,
+        );
+    } else {
+        return self.visit_children(ast);
+    }
+}
 
-    pub fn visitForStatement(self, ast: ForStatement)
-        if ast.init is not None
-            //Init is the only part of a for loop which may contain private expressions
-            ast.init = self.visit(ast.init)
-            ast.pre_statements += ast.init.pre_statements
-        assert not contains_private_expr(ast.condition)
-        assert not ast.update or not contains_private_expr(ast.update)
-        assert not contains_private_expr(ast.body) //OR fixed size loop -> static analysis can prove that loop terminates in fixed //iterations
-        return ast
+pub fn visitExpression(self, ast: Expression) {
+    // raise NotImplementedError()
+    unimplemented!();
+}
 
-    pub fn visitContinueStatement(self, ast: ContinueStatement)
-        return ast
+// class ZkayCircuitTransformer(AstTransformerVisitor)
+// """
+// Corresponds to T_phi from paper.
 
-    pub fn visitBreakStatement(self, ast: BreakStatement)
-        return ast
+// This extends the abstract circuit representation while transforming private expressions and statements.
+// Private expressions can never have side effects.
+// Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
+// """
+pub struct ZkayCircuitTransformer {
+    gen: CircuitHelper,
+}
+pub fn new(current_generator: CircuitHelper) -> Self {
+    Self {
+        gen: current_generator,
+    }
+}
+// super().__init__()
+// self.gen = current_generator
 
-    pub fn visitReturnStatement(self, ast: ReturnStatement)
-        """
-        Handle return statement.
+pub fn visitLiteralExpr(self, ast: LiteralExpr)
+// """Rule (13), don"t modify constants."""
+{
+    ast
+}
 
-        If the function requires verification, the return statement is replaced by an assignment to a return variable.
-        (which will be returned at the very end of the function body, after any verification wrapper code).
-        Otherwise only the expression is transformed.
-        """
-        if ast.function.requires_verification
-            if ast.expr is None
-                return None
-            assert not self.gen.has_return_var
-            self.gen.has_return_var = True
-            expr = self.expr_trafo.visit(ast.expr)
-            ret_args = [IdentifierExpr(vd.idf.clone()).override(target=vd) for vd in ast.function.return_var_decls]
-            return TupleExpr(ret_args).assign(expr).override(pre_statements=ast.pre_statements)
-        else
-            ast.expr = self.expr_trafo.visit(ast.expr)
-            return ast
+pub fn visitIndexExpr(self, ast: IndexExpr) {
+    self.transform_location(ast)
+}
 
-    pub fn visitExpression(self, ast: Expression)
-        """Fail if there are any untransformed expressions left."""
-        raise RuntimeError(f"Missed an expression of type {type(ast)}")
+pub fn visitIdentifierExpr(self, ast: IdentifierExpr) {
+    if !isinstance(ast.idf, HybridArgumentIdf)
+    //If ast is not already transformed, get current SSA version
+    {
+        ast = self.gen.get_remapped_idf_expr(ast);
+    }
+    if isinstance(ast, IdentifierExpr) && isinstance(ast.idf, HybridArgumentIdf)
+    //The current version of ast.idf is already in the circuit
+    {
+        assert!(ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL);
+        return ast;
+    } else
+    //ast is not yet in the circuit -> move it in
+    {
+        return self.transform_location(ast);
+    }
+}
 
+pub fn transform_location(self, loc: LocationExpr)
+// """Rule (14), move location into the circuit."""
+{
+    self.gen.add_to_circuit_inputs(loc).get_idf_expr()
+}
 
-class ZkayExpressionTransformer(AstTransformerVisitor)
-    """
-    Roughly corresponds to T_L / T_e from paper.
+pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
+// """Rule (15), boundary crossing if analysis determined that it is """
+{
+    if ast.annotated_type.is_cipher()
+    //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
+    {
+        orig_type = ast.annotated_type.zkay_type;
+        orig_privacy = orig_type.privacy_annotation.privacy_annotation_label();
+        orig_homomorphism = orig_type.homomorphism;
+        return self
+            .gen
+            .evaluate_expr_in_circuit(ast.expr, orig_privacy, orig_homomorphism);
+    } else if ast.expr.evaluate_privately {
+        return self.visit(ast.expr);
+    } else {
+        assert!(ast.expr.annotated_type.is_public());
+        return self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr();
+    }
+}
 
-    T_L and T_e are equivalent here, because parameter encryption checks are handled in the verification wrapper of the function body.
-    In addition to the features described in the paper, this transformer also supports primitive type casting,
-    tuples (multiple return values), operations with short-circuiting and function calls.
-    """
+pub fn visitExpression(self, ast: Expression)
+// """Rule (16), other expressions don"t need special treatment."""
+{
+    self.visit_children(ast)
+}
 
-    pub fn __init__(self, current_generator: Optional[CircuitHelper])
-        super().__init__()
-        self.gen = current_generator
+pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    t = ast.annotated_type.type_name;
 
-    @staticmethod
-    pub fn visitMeExpr(ast: MeExpr)
-        """Replace me with msg.sender."""
-        return replace_expr(ast, IdentifierExpr("msg").dot("sender")).as_type(AnnotatedTypeName.address_all())
+    //Constant folding for literal types
+    if isinstance(t, BooleanLiteralType) {
+        return replace_expr(ast, BooleanLiteralExpr(t.value));
+    } else if isinstance(t, NumberLiteralType) {
+        return replace_expr(ast, NumberLiteralExpr(t.value));
+    }
 
-    pub fn visitLiteralExpr(self, ast: LiteralExpr)
-        """Rule (7), don"t modify constants."""
-        return ast
+    if isinstance(ast.func, BuiltinFunction) {
+        if ast.func.homomorphism != Homomorphism.NonHomomorphic
+        //To perform homomorphic operations, we require the recipient"s public key
+        {
+            crypto_params = cfg.get_crypto_params(ast.func.homomorphism);
+            recipient = ast
+                .annotated_type
+                .zkay_type
+                .privacy_annotation
+                .privacy_annotation_label();
+            ast.public_key =
+                self.gen
+                    ._require_public_key_for_label_at(ast.statement, recipient, crypto_params);
 
-    pub fn visitIdentifierExpr(self, ast: IdentifierExpr)
-        """Rule (8), don"t modify identifiers."""
-        return ast
+            if ast.func.op == "*"
+            //special case: private scalar multiplication using additive homomorphism
+            //TODO ugly hack below removes ReclassifyExpr
+            {
+                new_args = [];
+                for arg in ast.args {
+                    if isinstance(arg, ReclassifyExpr) {
+                        arg = arg.expr;
+                        ast.func.rerand_using = self.gen.get_randomness_for_rerand(ast);
+                    //result requires re-randomization
+                    } else if arg.annotated_type.is_private() {
+                        arg.annotated_type = AnnotatedTypeName
+                            .cipher_type(arg.annotated_type, ast.func.homomorphism);
+                    }
+                    new_args.append(arg);
+                }
+                ast.args = new_args;
+            } else
+            //We require all non-public arguments to be present as ciphertexts
+            {
+                for arg in ast.args {
+                    if arg.annotated_type.is_private() {
+                        arg.annotated_type = AnnotatedTypeName
+                            .cipher_type(arg.annotated_type, ast.func.homomorphism);
+                    }
+                }
+            }
+        }
 
-    pub fn visitIndexExpr(self, ast: IndexExpr)
-        """Rule (9), transform location and index expressions separately."""
-        return replace_expr(ast, self.visit(ast.arr).index(self.visit(ast.key)))
+        //Builtin functions are supported natively by the circuit
+        return self.visit_children(ast);
+    }
 
-    pub fn visitMemberAccessExpr(self, ast: MemberAccessExpr)
-        return self.visit_children(ast)
+    fdef = ast.func.target;
+    assert!(fdef.is_function);
+    assert!(fdef.return_parameters);
+    assert!(fdef.has_static_body);
 
-    pub fn visitTupleExpr(self, ast: TupleExpr)
-        return self.visit_children(ast)
+    //Function call inside private expression -> entire body will be inlined into circuit.
+    //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)
+    return self.gen.inline_function_call_into_circuit(ast);
+}
 
-    pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
-        """
-        Rule (11), trigger a boundary crossing.
+pub fn visitReturnStatement(self, ast: ReturnStatement) {
+    self.gen.add_return_stmt_to_circuit(ast)
+}
 
-        The reclassified expression is evaluated in the circuit and its result is made available in solidity.
-        """
-        return self.gen.evaluate_expr_in_circuit(ast.expr, ast.privacy.privacy_annotation_label(), ast.annotated_type.homomorphism)
+pub fn visitAssignmentStatement(self, ast: AssignmentStatement) {
+    self.gen.add_assignment_to_circuit(ast)
+}
 
-    pub fn visitBuiltinFunction(self, ast: BuiltinFunction)
-        return ast
+pub fn visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement) {
+    self.gen.add_var_decl_to_circuit(ast)
+}
 
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr)
-        if isinstance(ast.func, BuiltinFunction)
-            if ast.func.is_private
-                """
-                Modified Rule (12) builtin functions with private operands and homomorphic operations on ciphertexts
-                are evaluated inside the circuit.
+pub fn visitIfStatement(self, ast: IfStatement) {
+    self.gen.add_if_statement_to_circuit(ast)
+}
 
-                A private expression on its own (like an IdentifierExpr referring to a private variable) is not enough to trigger a
-                boundary crossing (assignment of private variables is a public operation).
-                """
-                privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
-                return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.func.homomorphism)
-            else
-                """
-                Rule (10) with additional short-circuit handling.
+pub fn visitBlock(
+    self,
+    ast: Block,
+    guard_cond: Option<HybridArgumentIdf>,
+    guard_val: Option<boll>,
+) {
+    self.gen.add_block_to_circuit(ast, guard_cond, guard_val)
+}
 
-                Builtin operations on public operands are normally left untransformed, but if the builtin function has
-                short-circuiting semantics, guard conditions must be added if any of the public operands contains
-                nested private expressions.
-                """
-                //handle short-circuiting
-                if ast.func.has_shortcircuiting() and any(map(contains_private_expr, ast.args[1:]))
-                    op = ast.func.op
-                    guard_var = self.gen.add_to_circuit_inputs(ast.args[0])
-                    ast.args[0] = guard_var.get_loc_expr(ast)
-                    if op == "ite"
-                        ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1])
-                        ast.args[2] = self.visit_guarded_expression(guard_var, False, ast.args[2])
-                    elif op == "||"
-                        ast.args[1] = self.visit_guarded_expression(guard_var, False, ast.args[1])
-                    elif op == "&&"
-                        ast.args[1] = self.visit_guarded_expression(guard_var, True, ast.args[1])
-                    return ast
-
-                return self.visit_children(ast)
-        elif ast.is_cast
-            """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
-            assert isinstance(ast.func.target, EnumDefinition)
-            if ast.args[0].evaluate_privately
-                privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
-                return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.annotated_type.homomorphism)
-            else
-                return self.visit_children(ast)
-        else
-            """
-            Handle normal function calls (outside private expression case).
-
-            The called functions are allowed to have side effects,
-            if the function does not require verification it can even be recursive.
-            """
-            assert isinstance(ast.func, LocationExpr)
-            ast = self.visit_children(ast)
-            if ast.func.target.requires_verification_when_external
-                //Reroute the function call to the corresponding internal function if the called function was split into external/internal.
-                if not isinstance(ast.func, IdentifierExpr)
-                    raise NotImplementedError()
-                ast.func.idf.name = cfg.get_internal_name(ast.func.target)
-
-            if ast.func.target.requires_verification
-                //If the target function has an associated circuit, make this function"s circuit aware of the call.
-                self.gen.call_function(ast)
-            elif ast.func.target.has_side_effects and self.gen is not None
-                //Invalidate modified state variables for the current circuit
-                for val in ast.modified_values
-                    if val.key is None and isinstance(val.target, StateVariableDeclaration)
-                        self.gen.invalidate_idf(val.target.idf)
-
-            //The call will be present as a normal function call in the output solidity code.
-            return ast
-
-    pub fn visit_guarded_expression(self, guard_var: HybridArgumentIdf, if_true: bool, expr: Expression)
-        prelen = len(expr.statement.pre_statements)
-
-        //Transform expression with guard condition in effect
-        with self.gen.guarded(guard_var, if_true)
-            ret = self.visit(expr)
-
-        //If new pre statements were added, they must be guarded using an if statement in the public solidity code
-        new_pre_stmts = expr.statement.pre_statements[prelen:]
-        if new_pre_stmts
-            cond_expr = guard_var.get_loc_expr()
-            if isinstance(cond_expr, BooleanLiteralExpr)
-                cond_expr = BooleanLiteralExpr(cond_expr.value == if_true)
-            elif not if_true
-                cond_expr = cond_expr.unop("!")
-            expr.statement.pre_statements = expr.statement.pre_statements[:prelen] + [IfStatement(cond_expr, Block(new_pre_stmts), None)]
-        return ret
-
-    pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
-        """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
-        if ast.evaluate_privately
-            privacy_label = ast.annotated_type.privacy_annotation.privacy_annotation_label()
-            return self.gen.evaluate_expr_in_circuit(ast, privacy_label, ast.annotated_type.homomorphism)
-        else
-            return self.visit_children(ast)
-
-    pub fn visitExpression(self, ast: Expression)
-        raise NotImplementedError()
-
-
-class ZkayCircuitTransformer(AstTransformerVisitor)
-    """
-    Corresponds to T_phi from paper.
-
-    This extends the abstract circuit representation while transforming private expressions and statements.
-    Private expressions can never have side effects.
-    Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
-    """
-
-    pub fn __init__(self, current_generator: CircuitHelper)
-        super().__init__()
-        self.gen = current_generator
-
-    pub fn visitLiteralExpr(self, ast: LiteralExpr)
-        """Rule (13), don"t modify constants."""
-        return ast
-
-    pub fn visitIndexExpr(self, ast: IndexExpr)
-        return self.transform_location(ast)
-
-    pub fn visitIdentifierExpr(self, ast: IdentifierExpr)
-        if not isinstance(ast.idf, HybridArgumentIdf)
-            //If ast is not already transformed, get current SSA version
-            ast = self.gen.get_remapped_idf_expr(ast)
-        if isinstance(ast, IdentifierExpr) and isinstance(ast.idf, HybridArgumentIdf)
-            //The current version of ast.idf is already in the circuit
-            assert ast.idf.arg_type != HybridArgType.PUB_CONTRACT_VAL
-            return ast
-        else
-            //ast is not yet in the circuit -> move it in
-            return self.transform_location(ast)
-
-    pub fn transform_location(self, loc: LocationExpr)
-        """Rule (14), move location into the circuit."""
-        return self.gen.add_to_circuit_inputs(loc).get_idf_expr()
-
-    pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
-        """Rule (15), boundary crossing if analysis determined that it is """
-        if ast.annotated_type.is_cipher()
-            //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
-            orig_type = ast.annotated_type.zkay_type
-            orig_privacy = orig_type.privacy_annotation.privacy_annotation_label()
-            orig_homomorphism = orig_type.homomorphism
-            return self.gen.evaluate_expr_in_circuit(ast.expr, orig_privacy, orig_homomorphism)
-        elif ast.expr.evaluate_privately
-            return self.visit(ast.expr)
-        else
-            assert ast.expr.annotated_type.is_public()
-            return self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr()
-
-    pub fn visitExpression(self, ast: Expression)
-        """Rule (16), other expressions don"t need special treatment."""
-        return self.visit_children(ast)
-
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr)
-        t = ast.annotated_type.type_name
-
-        //Constant folding for literal types
-        if isinstance(t, BooleanLiteralType)
-            return replace_expr(ast, BooleanLiteralExpr(t.value))
-        elif isinstance(t, NumberLiteralType)
-            return replace_expr(ast, NumberLiteralExpr(t.value))
-
-        if isinstance(ast.func, BuiltinFunction)
-            if ast.func.homomorphism != Homomorphism.NonHomomorphic
-                //To perform homomorphic operations, we require the recipient"s public key
-                crypto_params = cfg.get_crypto_params(ast.func.homomorphism)
-                recipient = ast.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
-                ast.public_key = self.gen._require_public_key_for_label_at(ast.statement, recipient, crypto_params)
-
-                if ast.func.op == "*"
-                    //special case: private scalar multiplication using additive homomorphism
-                    //TODO ugly hack below removes ReclassifyExpr
-                    new_args = []
-                    for arg in ast.args
-                        if isinstance(arg, ReclassifyExpr)
-                            arg = arg.expr
-                            ast.func.rerand_using = self.gen.get_randomness_for_rerand(ast)  //result requires re-randomization
-                        elif arg.annotated_type.is_private()
-                            arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type,
-                                                                               ast.func.homomorphism)
-                        new_args.append(arg)
-                    ast.args = new_args
-                else
-                    //We require all non-public arguments to be present as ciphertexts
-                    for arg in ast.args
-                        if arg.annotated_type.is_private()
-                            arg.annotated_type = AnnotatedTypeName.cipher_type(arg.annotated_type, ast.func.homomorphism)
-
-            //Builtin functions are supported natively by the circuit
-            return self.visit_children(ast)
-
-        fdef = ast.func.target
-        assert fdef.is_function
-        assert fdef.return_parameters
-        assert fdef.has_static_body
-
-        //Function call inside private expression -> entire body will be inlined into circuit.
-        //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)
-        return self.gen.inline_function_call_into_circuit(ast)
-
-    pub fn visitReturnStatement(self, ast: ReturnStatement)
-        self.gen.add_return_stmt_to_circuit(ast)
-
-    pub fn visitAssignmentStatement(self, ast: AssignmentStatement)
-        self.gen.add_assignment_to_circuit(ast)
-
-    pub fn visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement)
-        self.gen.add_var_decl_to_circuit(ast)
-
-    pub fn visitIfStatement(self, ast: IfStatement)
-        self.gen.add_if_statement_to_circuit(ast)
-
-    pub fn visitBlock(self, ast: Block, guard_cond: Optional[HybridArgumentIdf] = None, guard_val: Optional[bool] = None)
-        self.gen.add_block_to_circuit(ast, guard_cond, guard_val)
-
-    pub fn visitStatement(self, ast: Statement)
-        """Fail if statement type was not handled."""
-        raise NotImplementedError("Unsupported statement")
+pub fn visitStatement(self, ast: Statement)
+// """Fail if statement type was not handled."""
+// raise NotImplementedError("Unsupported statement")
+{
+    unimplemented!("Unsupported statement")
+}

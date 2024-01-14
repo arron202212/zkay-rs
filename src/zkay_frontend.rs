@@ -14,34 +14,43 @@
 // from typing::Tuple, List, Type, Dict, Optional, Any, ContextManager
 
 // use crate::my_logging
+use crate::compiler::privacy::circuit_generation::backends::jsnark_generator::JsnarkGenerator;
+use crate::compiler::privacy::circuit_generation::circuit_generator::CircuitGenerator;
+use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::compiler::privacy::library_contracts;
-// use crate::compiler::privacy::circuit_generation::backends::jsnark_generator::JsnarkGenerator
-// use crate::compiler::privacy::circuit_generation::circuit_generator::CircuitGenerator
-// use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper
 use crate::compiler::privacy::manifest::Manifest;
 // use crate::compiler::privacy::offchain_compiler::PythonOffchainVisitor
-// use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17
-// use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16
-// use crate::compiler::privacy::proving_scheme::proving_scheme::ProvingScheme
+use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17;
+use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16;
+use crate::compiler::privacy::proving_scheme::proving_scheme::ProvingScheme;
 use crate::compiler::privacy::transformation::zkay_contract_transformer::transform_ast;
 use crate::compiler::solidity::compiler::check_compilation;
 use crate::config::CFG;
-use crate::utils::helpers::read_file; //, lines_of_code, without_extension;}
+use crate::utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use crate::utils::progress_printer::print_step;
 // use crate::utils::timer::time_measure
 // use crate::zkay_ast::homomorphism::String
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
 
-// proving_scheme_classes: Dict[str, Type[ProvingScheme]] = {
-//     'groth16': ProvingSchemeGroth16,
-//     'gm17': ProvingSchemeGm17
-// }
-
-// generator_classes: Dict[str, Type[CircuitGenerator]] = {
-//     'jsnark': JsnarkGenerator
-// }
-
+lazy_static! {
+    static ref proving_scheme_classes: HashMap<String, Box<dyn ProvingScheme + Send>> =
+        HashMap::from([
+            (
+                String::from("groth16"),
+                Box::new(ProvingSchemeGroth16 {}) as Box<dyn ProvingScheme + Send>
+            ),
+            (
+                String::from("gm17"),
+                Box::new(ProvingSchemeGm17 {}) as Box<dyn ProvingScheme + Send>
+            )
+        ]);
+    static ref generator_classes: HashMap<String, Box<dyn CircuitGenerator + Send>> =
+        HashMap::from([(
+            String::from("jsnark"),
+            Box::new(JsnarkGenerator {}) as Box<dyn CircuitGenerator + Send>
+        )]);
+}
 // """
 // Parse, type-check and compile the given zkay contract file.
 
@@ -51,7 +60,7 @@ use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
 //                     | if true, zk-snark keys for all circuits are expected to be already present in the output directory, and the compilation will use the provided keys to generate the verification contracts
 //                     | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
 // :raise ZkayCompilerError: if any compilation stage fails
-// :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
+// :raise RuntimeError: if import_keys is true and zkay file, manifest file or any of the key files is missing
 // """
 pub fn compile_zkay_file(
     input_file_path: &str,
@@ -93,7 +102,7 @@ pub fn compile_zkay_file(
 //                       and the compilation will use the provided keys to generate the verification contracts
 //                     | This option is mostly used internally when connecting to a zkay contract provided by a 3rd-party
 // :raise ZkayCompilerError: if any compilation stage fails
-// :raise RuntimeError: if import_keys is True and zkay file, manifest file or any of the key files is missing
+// :raise RuntimeError: if import_keys is true and zkay file, manifest file or any of the key files is missing
 // """
 fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGenerator, str)
 {
@@ -131,12 +140,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
             "{}.sol",
             CFG.lock().unwrap().get_pki_contract_name(crypto_params)
         );
-        _dump_to_output(
-            pki_contract_code,
-            output_dir,
-            pki_contract_file,
-            dryrun_solc = True,
-        );
+        _dump_to_output(pki_contract_code, output_dir, pki_contract_file, true);
     }
 
     // Write library contract
@@ -144,7 +148,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
         library_contracts::get_verify_libs_code(),
         output_dir,
         ProvingScheme::verify_libs_contract_filename,
-        True,
+        true,
     );
 
     // Write public contract file
@@ -156,7 +160,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     let circuits: Vec<_> = circuits.values().collect();
 
     // Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
-    //    let  offchain_simulation_code = (circuits as PythonOffchainVisitor).visit(ast);
+    //    let  offchain_simulation_code = PythonOffchainVisitor::new(circuits).visit(ast);//TODO LS
     //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");
 
     // Instantiate proving scheme and circuit generator
@@ -243,7 +247,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 //     cfg.log_dir = contract_dir
 //     log_file = my_logging.get_log_file(filename=log_filename, include_timestamp=false, label=None)
 //     my_logging.prepare_logger(log_file)
-//     with time_measure('all_transactions', should_print=True):
+//     with time_measure('all_transactions', should_print=true):
 //         yield load_transaction_interface_from_directory(contract_dir)
 //         pass
 
@@ -351,13 +355,13 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 //         output_filename += '.zkp'
 
 //     with print_step('Packaging for distribution'):
-//         files = _collect_package_contents(zkay_output_dir, True)
+//         files = _collect_package_contents(zkay_output_dir, true)
 
 //         with tempfile.TemporaryDirectory() as tmpdir:
 //             for file in files:
 //                 src = os.path.join(zkay_output_dir, file)
 //                 dest = os.path.join(tmpdir, file)
-//                 os.makedirs(os.path.dirname(dest), exist_ok=True)
+//                 os.makedirs(os.path.dirname(dest), exist_ok=true)
 //                 shutil.copyfile(src, dest)
 //             shutil.make_archive(without_extension(output_filename), 'zip', tmpdir)
 //         os.rename(f'{without_extension(output_filename)}.zip', output_filename)
@@ -392,7 +396,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 //         zkay_filename = os.path.join(output_dir, 'contract.zkay')
 //         manifest = Manifest.load(output_dir)
 //         with Manifest.with_manifest_config(manifest):
-//             compile_zkay_file(zkay_filename, output_dir, import_keys=True)
+//             compile_zkay_file(zkay_filename, output_dir, import_keys=true)
 //     except Exception as e:
 //         // If there was an exception, the archive is not safe -> remove extracted contents
 //         print(f'Package {zkp_filename} is either corrupt or incompatible with this zkay version.')
@@ -402,7 +406,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 // """
 // Dump 'content' into file 'output_dir/filename' and optionally check if it compiles error-free with solc.
 
-// :raise SolcException: if dryrun_solc is True and there are compilation errors
+// :raise SolcException: if dryrun_solc is true and there are compilation errors
 // :return: dumped content as string
 // """
 fn _dump_to_output(content: &str, output_dir: &str, filename: &str, dryrun_solc: bool) -> String {
