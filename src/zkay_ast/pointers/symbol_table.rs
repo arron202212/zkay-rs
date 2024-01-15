@@ -210,7 +210,6 @@ impl SymbolTableFiller {
     }
 }
 
-use std::collections::BTreeMap;
 pub struct SymbolTableLinker;
 // class SymbolTableLinker(AstVisitor)
 impl AstVisitor for SymbolTableLinker {

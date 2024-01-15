@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
-    BuiltinFunction, ConstructorOrFunctionDefinition, ConstructorOrFunctionDefinition,
-    ForStatement, FunctionCallExpr, LocationExpr, WhileStatement,
+    BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement, FunctionCallExpr, LocationExpr,
+    WhileStatement,
 };
 use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
 

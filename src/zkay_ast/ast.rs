@@ -74,6 +74,13 @@ pub trait Immutable {
     fn is_immutable(&self) -> bool;
 }
 
+#[macro_export]
+macro_rules! is_instance {
+    ($var: expr,$typ: expr) => {
+        var.get_ast_type() == ASTType::$typ
+    };
+}
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ASTType {

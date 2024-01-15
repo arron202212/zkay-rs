@@ -15,5 +15,6 @@
 // """
 pub mod backends;
 pub mod circuit_constraints;
+pub mod circuit_generator;
 pub mod circuit_helper;
 pub mod name_factory;

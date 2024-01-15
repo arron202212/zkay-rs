@@ -91,7 +91,7 @@ impl NonInlineableCallDetector {
             if ast.func.target.requires_verification && ast.func.target.is_recursive {
                 assert!(
                     false,
-                    "Non-inlineable call to recursive private function",
+                    "Non-inlineable call to recursive private function {:?}",
                     ast.func
                 )
             }

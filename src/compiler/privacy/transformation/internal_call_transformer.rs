@@ -108,16 +108,20 @@ pub fn transform_internal_calls(
             fc.sec_start_offset = circuit.priv_in_size + p;
             fc.args += [
                 IdentifierExpr(cfg.zk_in_name),
-                IdentifierExpr(format!("{cfg.zk_in_name}_start_idx"))
+                IdentifierExpr(format!("{}_start_idx", cfg.zk_in_name))
                     .binop('+', NumberLiteralExpr(circuit.in_size + i)),
                 IdentifierExpr(cfg.zk_out_name),
-                IdentifierExpr(format!("{cfg.zk_out_name}_start_idx"))
+                IdentifierExpr(format!("{}_start_idx", cfg.zk_out_name))
                     .binop('+', NumberLiteralExpr(circuit.out_size + o)),
             ];
             i += cgens[fdef].in_size_trans;
             o += cgens[fdef].out_size_trans;
             p += cgens[fdef].priv_in_size_trans;
         }
-        assert! (i == circuit.trans_in_size and o == circuit.trans_out_size and p == circuit.trans_priv_size);
+        assert!(
+            i == circuit.trans_in_size
+                && o == circuit.trans_out_size
+                && p == circuit.trans_priv_size
+        );
     }
 }

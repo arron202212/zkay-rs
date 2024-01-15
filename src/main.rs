@@ -9,7 +9,7 @@
 #[macro_use]
 extern crate lazy_static;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 // def parse_config_doc():
 //     import textwrap
 //     from typing import get_type_hints
@@ -90,7 +90,7 @@ fn parse_arguments() -> ArgMatches {
 
     lazy_static! {
         static ref CURR_DIRS: String = std::env::current_dir()
-            .unwrap_or(std::path::PathBuf::from("."))
+            .unwrap_or(PathBuf::from("."))
             .to_str()
             .unwrap()
             .to_string();
@@ -349,7 +349,7 @@ fn main() {
     use zkay_rs::zkay_frontend as frontend;
     //     from zkay import my_logging
     //     from zkay.config import cfg
-    //     from zkay.utils.helpers import read_file, save_to_file
+    //     use crate::utils::helpers::{read_file, save_to_file};
     //     from zkay.errors.exceptions import ZkayCompilerError
     //     from zkay.my_logging.log_context import log_context
     //     from zkay.utils.progress_printer import fail_print, success_print
@@ -420,9 +420,8 @@ fn main() {
         //
         println!("Using solc version Versions.SOLC_VERSION");
 
-        let input_path = if let Some(input_path) = a.get_one::<std::path::PathBuf>("manifest-path")
-        {
-            if let Err(_) | Ok(false) = std::path::Path::new(input_path).try_exists() {
+        let input_path = if let Some(input_path) = a.get_one::<PathBuf>("manifest-path") {
+            if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
                 fail_print();
                 println!("Error: input file \'{input_path:?}\' does not exist");
                 std::process::exit(10);
@@ -460,11 +459,9 @@ fn main() {
             }
             Some(("compile", _)) => {
                 // create output directory
-                let output = a.get_one::<std::path::PathBuf>("output").unwrap();
+                let output = a.get_one::<PathBuf>("output").unwrap();
                 use path_absolutize::*;
-                let output_dir = std::path::Path::new(output)
-                    .absolutize()
-                    .expect("absolute path fail");
+                let output_dir = Path::new(output).absolutize().expect("absolute path fail");
                 if let Err(_) | Ok(false) = output_dir.try_exists() {
                     let _ = std::fs::create_dir_all(output_dir.clone());
                 } else if !output_dir.is_dir() {

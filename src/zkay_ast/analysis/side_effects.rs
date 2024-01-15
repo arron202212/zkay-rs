@@ -59,8 +59,8 @@ impl DirectModificationDetector {
 
     pub fn collect_modified_values(
         &self,
-        target: vec![Expression, Statement],
-        expr: vec![TupleExpr, LocationExpr],
+        target: (Option<Expression>, Option<Statement>),
+        expr: (Option<TupleExpr>, Option<LocationExpr>),
     ) {
         if isinstance(expr, TupleExpr) {
             for elem in expr.elements {
@@ -173,14 +173,19 @@ impl EvalOrderUBChecker {
         if len(exprs) > 1 {
             modset = set(exprs[0].modified_values.keys());
             for arg in exprs[1..] {
-                diffset = modset.intersection(arg.modified_values);
-                if diffset {
-                    let setstr = format!("{{{", ".join(map(str, diffset))}}}");
+                let diffset = modset.intersection(arg.modified_values);
+                if !diffset.is_empty() {
+                    let setstr = format!(
+                        "{{{}}}",
+                        (diffset.iter().map(String::from))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
                     assert!(
                         false,
                         r#"Undefined behavior due to potential side effect on the same value(s) \"{setstr}\" in multiple expression children.\n"
                                         "Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n"
-                                        "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined."#,
+                                        "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined. {:?}"#,
                         parent
                     )
                 } else {
@@ -198,13 +203,21 @@ impl EvalOrderUBChecker {
                     diffset = modset.intersection(arg2.read_values);
                     if diffset {
                         let setstr = format!(
-                            r#"{{{", ".join([str(val) + (f".{str(member)}" if member else "") for val, member in diffset])}}}"#
+                            r#"{{{}}}"#,
+                            diffset
+                                .iter()
+                                .map(|(val, member)| format!(
+                                    "{val}{}",
+                                    if member { &format!(".{member}") } else { "" }
+                                ))
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         );
                         assert!(
                             false,
                             r#"Undefined behavior due to read of value(s) \"{setstr}\" which might be modified in this subexpression.\n"
                             "Solidity does not guarantee an evaluation order for non-shortcircuit expressions.\n"
-                            "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined."#,
+                            "Since zkay requires local simulation for transaction transformation, all semantics must be well-defined. {:?}"#,
                             arg
                         );
                     }

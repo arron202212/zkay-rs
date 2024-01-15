@@ -76,7 +76,7 @@ impl ParentSetterVisitor {
                 c.namespace = ast.namespace.clone();
                 self.visit(c);
             } else {
-                print!(c, ast, ast.children());
+                print!("{:?},{:?}, {:?}", c, ast, ast.children());
             }
         }
     }

@@ -8,57 +8,98 @@ use crate::utils::run_command::run_command;
 use crate::zkay_ast::ast::indent;
 
 //path to jsnark interface jar
-const circuit_builder_jar:&str = "JsnarkCircuitBuilder.jar";
-circuit_builder_jar_hash = hash_file(circuit_builder_jar).hex()
-
-
+const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
+lazy_static! {
+    pub static ref circuit_builder_jar_hash: String = hash_file(circuit_builder_jar).hex();
+}
 pub fn compile_circuit(circuit_dir: &str, javacode: &str)
-    // """
-    // Compile the given circuit java code and then compile the circuit which it describes using jsnark.
+// """
+// Compile the given circuit java code and then compile the circuit which it describes using jsnark.
 
-    // :param circuit_dir: output directory
-    // :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
-    // :raise SubprocessError: if compilation fails
-    // """
-    {let class_name = cfg.jsnark_circuit_classname;
-    let jfile = os.path.join(circuit_dir, class_name + ".java");
-    with open(jfile, "w") as f
-        f.write(javacode)
+// :param circuit_dir: output directory
+// :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
+// :raise SubprocessError: if compilation fails
+// """
+{
+    let class_name = CFG.lock().unwrap().jsnark_circuit_classname;
+    let jfile = Path::new(circuit_dir).join(class_name + ".java");
+    let f = File::open(jfile).expect("");
+    f.write_all(javacode);
 
-    compile_and_run_with_circuit_builder(circuit_dir, class_name, jfile, ["compile"]);}
-
-
-pub fn compile_and_run_with_circuit_builder(working_dir, class_name, java_file_name, args: Vec<&str>)
-    //Compile the circuit java file
-   { run_command(["javac", "-cp", f"{circuit_builder_jar}", java_file_name], cwd=working_dir);
-    //Run jsnark to generate the circuit
-    return run_command(
-        ["java", "-Xms4096m", "-Xmx16384m", "-cp", f"{circuit_builder_jar}:{working_dir}", class_name, *args],
-        cwd=working_dir, allow_verbose=True)}
-
-
-pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i32>)
-    // """
-    // Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
-
-    // :param circuit_dir: directory where the compiled circuit is located
-    // :param output_dir: directory, where to store the jsnark output files
-    // :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
-    // :raise SubprocessError: if circuit evaluation fails
-    // """
-    {let serialized_arg_str = [format(arg, "x") for arg in serialized_args];
-
-    //Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(["java", "-Xms4096m", "-Xmx16384m", "-cp", f"{circuit_builder_jar}:{circuit_dir}", cfg.jsnark_circuit_classname, "prove", *serialized_arg_str], cwd=output_dir, allow_verbose=True)
+    compile_and_run_with_circuit_builder(circuit_dir, class_name, jfile, ["compile"]);
 }
 
+pub fn compile_and_run_with_circuit_builder(
+    working_dir: &str,
+    class_name: &str,
+    java_file_name: &str,
+    args: Vec<&str>,
+)
+//Compile the circuit java file
+{
+    run_command(
+        [
+            "javac",
+            "-cp",
+            &format!("{circuit_builder_jar}"),
+            java_file_name,
+        ],
+        cwd = working_dir,
+    );
+    //Run jsnark to generate the circuit
+    return run_command(
+        vec![
+            "java",
+            "-Xms4096m",
+            "-Xmx16384m",
+            "-cp",
+            &format!("{circuit_builder_jar}:{working_dir}"),
+            class_name,
+            args,
+        ],
+        working_dir,
+        true,
+    );
+}
+
+pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i32>)
+// """
+// Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
+
+// :param circuit_dir: directory where the compiled circuit is located
+// :param output_dir: directory, where to store the jsnark output files
+// :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
+// :raise SubprocessError: if circuit evaluation fails
+// """
+{
+    let serialized_arg_str: Vec<_> = serialized_args.iter().map(|arg| format(arg, "x")).collect();
+
+    //Run jsnark to evaluate the circuit and compute prover inputs
+    run_command(
+        vec![
+            "java",
+            "-Xms4096m",
+            "-Xmx16384m",
+            "-cp",
+            &format!("{circuit_builder_jar}:{circuit_dir}"),
+            CFG.lock().unwrap().jsnark_circuit_classname,
+            "prove",
+            serialized_arg_str,
+        ],
+        cwd = output_dir,
+        true,
+    )
+}
 
 // """Java circuit code template"""
 
-
-pub fn get_jsnark_circuit_class_str(circuit: CircuitHelper, crypto_init_stmts: Vec<String>,
-                                 fdefs: Vec<String>, circuit_statements: Vec<String>) -> String
-    // """
+pub fn get_jsnark_circuit_class_str(
+    circuit: CircuitHelper,
+    crypto_init_stmts: Vec<String>,
+    fdefs: Vec<String>,
+    circuit_statements: Vec<String>,
+) -> String
+// """
     // Inject circuit and input code into jsnark-wrapper skeleton.
 
     // :param circuit: the abstract circuit to which this java code corresponds
@@ -67,11 +108,14 @@ pub fn get_jsnark_circuit_class_str(circuit: CircuitHelper, crypto_init_stmts: V
     // :param circuit_statements: the java code corresponding to this circuit
     // :return: complete java file as string
     // """
-   { let mut function_definitions = fdefs.join("\n\n");
-    if function_definitions.is_empty()
-        {function_definitions = format!("\n{function_definitions}\n");}
+{
+    let mut function_definitions = fdefs.join("\n\n");
+    if function_definitions.is_empty() {
+        function_definitions = format!("\n{function_definitions}\n");
+    }
 
-    return format!(r#"
+    return format!(
+        r#"
 import zkay.ZkayCircuitBase;
 import zkay.HomomorphicInput;
 import static zkay.ZkayType.ZkUint;
@@ -95,12 +139,15 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
         circuit.run(args);
     }}
 }}
-"#,circuit_class_name=cfg.jsnark_circuit_classname,
-                                      circuit_name=circuit.get_verification_contract_name(),
-                                      crypto_init_stmts=indent(indent("\n".join(crypto_init_stmts))),
-                                      pub_in_size=circuit.in_size_trans,
-                                      pub_out_size=circuit.out_size_trans,
-                                      priv_in_size=circuit.priv_in_size_trans,
-                                      use_input_hashing=&str(cfg.should_use_hash(circuit)).lower(),
-                                      fdefs=indent(function_definitions),
-                                      circuit_statements=indent(indent("\n".join(circuit_statements))))}
+"#,
+        circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname,
+        circuit_name = circuit.get_verification_contract_name(),
+        crypto_init_stmts = indent(indent("\n".join(crypto_init_stmts))),
+        pub_in_size = circuit.in_size_trans,
+        pub_out_size = circuit.out_size_trans,
+        priv_in_size = circuit.priv_in_size_trans,
+        use_input_hashing = &str(CFG.lock().unwrap().should_use_hash(circuit)).lower(),
+        fdefs = indent(function_definitions),
+        circuit_statements = indent(indent("\n".join(circuit_statements)))
+    );
+}

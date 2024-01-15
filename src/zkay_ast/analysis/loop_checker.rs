@@ -18,14 +18,14 @@ impl LoopChecker {
         if contains_private_expr(ast.condition) {
             assert!(
                 false,
-                "Loop condition cannot contain private expressions",
+                "Loop condition cannot contain private expressions {:?}",
                 ast.condition
             )
         }
         if contains_private_expr(ast.body) {
             assert!(
                 false,
-                "Loop body cannot contain private expressions",
+                "Loop body cannot contain private expressions {:?}",
                 ast.body
             )
         }
@@ -36,14 +36,14 @@ impl LoopChecker {
         if contains_private_expr(ast.condition) {
             assert!(
                 false,
-                "Loop condition cannot contain private expressions",
+                "Loop condition cannot contain private expressions {:?}",
                 ast.condition
             )
         }
         if contains_private_expr(ast.body) {
             assert!(
                 false,
-                "Loop body cannot contain private expressions",
+                "Loop body cannot contain private expressions {:?}",
                 ast.body
             )
         }
@@ -54,21 +54,21 @@ impl LoopChecker {
         if contains_private_expr(ast.condition) {
             assert!(
                 false,
-                "Loop condition cannot contain private expressions",
+                "Loop condition cannot contain private expressions {:?}",
                 ast.condition
             )
         }
         if contains_private_expr(ast.body) {
             assert!(
                 false,
-                "Loop body cannot contain private expressions",
+                "Loop body cannot contain private expressions {:?}",
                 ast.body
             )
         }
         if ast.update.is_some() && contains_private_expr(ast.update) {
             assert!(
                 false,
-                "Loop update statement cannot contain private expressions",
+                "Loop update statement cannot contain private expressions {:?}",
                 ast.update
             )
         }

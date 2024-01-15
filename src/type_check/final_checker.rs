@@ -39,7 +39,7 @@ impl FinalVisitor {
 
         for (sv, assigned) in self.state_vars_assigned.items() {
             if !assigned {
-                assert!(false, "Did not set all final state variables", sv)
+                assert!(false, "Did not set all final state variables {}", sv)
             }
         }
 
@@ -93,8 +93,7 @@ impl FinalVisitor {
             {
                 assert!(
                     false,
-                    r#"{str(ast)} is reading "final" state variable before writing it"#,
-                    ast
+                    r#"{ast:?} is reading "final" state variable before writing it"#,
                 );
             }
         }

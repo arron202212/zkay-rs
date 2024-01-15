@@ -450,7 +450,7 @@ impl ZkayTransformer {
         );
         ast.add_param(
             AnnotatedTypeName.uint_all(),
-            format!("{CFG.lock().unwrap().zk_in_name}_start_idx"),
+            format!("{}_start_idx", CFG.lock().unwrap().zk_in_name),
         );
         ast.add_param(
             Array(AnnotatedTypeName.uint_all()),
@@ -458,13 +458,13 @@ impl ZkayTransformer {
         );
         ast.add_param(
             AnnotatedTypeName.uint_all(),
-            format!("{CFG.lock().unwrap().zk_out_name}_start_idx"),
+            format!("{}_start_idx", CFG.lock().unwrap().zk_out_name),
         );
 
         // Verify that in/out parameters have correct size
         let (out_start_idx, in_start_idx) = (
-            IdentifierExpr(format!("{CFG.lock().unwrap().zk_out_name}_start_idx")),
-            IdentifierExpr(format!("{CFG.lock().unwrap().zk_in_name}_start_idx")),
+            IdentifierExpr(format!("{}_start_idx", CFG.lock().unwrap().zk_out_name)),
+            IdentifierExpr(format!("{}_start_idx", CFG.lock().unwrap().zk_in_name)),
         );
         let (out_var, in_var) = (
             IdentifierExpr(CFG.lock().unwrap().zk_out_name),
@@ -753,7 +753,7 @@ impl ZkayTransformer {
 
             let tmp_keys = BTreeMap::new();
             for crypto_params in int_fct.used_crypto_backends {
-                let tmp_key_var = Identifier(format!("_tmp_key_{crypto_params.identifier_name}"));
+                let tmp_key_var = Identifier(format!("_tmp_key_{}", crypto_params.identifier_name));
                 key_req_stmts.push(tmp_key_var.decl_var(AnnotatedTypeName.key_type(crypto_params)));
                 tmp_keys.insert(crypto_params, tmp_key_var);
             }

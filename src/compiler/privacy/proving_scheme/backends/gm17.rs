@@ -12,7 +12,7 @@ use crate::config::CFG;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::compiler::privacy::library_contracts::{bn128_scalar_field, bn128_scalar_field_bits};
 use crate::compiler::privacy::proving_scheme::proving_scheme::{
-    G1Point, G2Point, ProvingScheme, VerifyingKey as VK,
+    G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK,
 };
 use crate::utils::multiline_formatter::MultiLineFormatter;
 

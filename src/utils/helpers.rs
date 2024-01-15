@@ -3,15 +3,18 @@
 // import hashlib
 // from typing import Optional, List
 // from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
-
-// pub fn save_to_file(output_directory: Optional[str], filename: str, code: str)
-//     if output_directory is not None
-//         target = os.path.join(output_directory, filename)
-//     else
-//         target = filename
-//     with open(target, "w") as f
-//         f.write(code)
-//     return target
+use std::fs::File;
+use std::io::{BufRead, BufReader, Error, Write};
+pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) -> String {
+    let target = if let Some(output_directory) = output_directory {
+        Path::new(output_directory).join(filename)
+    } else {
+        Path::new(filename)
+    };
+    let mut f = File::create(target).expect("");
+    write!(f, "{}", code).expect("");
+    target.to_string()
+}
 
 pub fn read_file(filename: &str) -> String {
     let f = std::fs::File::open(filename).unwrap();

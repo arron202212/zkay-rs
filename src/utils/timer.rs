@@ -1,32 +1,41 @@
-import contextlib
-import time
+// import contextlib
+// import time
 
-from zkay import my_logging
-from zkay.config import zk_print
+use crate::config::zk_print;
+use crate::my_logging;
 
+// @contextlib.contextmanager
+pub fn time_measure(key: &str, should_print: bool, skip: bool) {
+    let start = time.time();
+    // yield
+    let end = time.time();
+    let elapsed = end - start;
 
-@contextlib.contextmanager
-def time_measure(key, should_print=False, skip=False):
-    start = time.time()
-    yield
-    end = time.time()
-    elapsed = end - start
+    if !skip {
+        if should_print {
+            zk_print("Took {elapsed} s");
+        }
+        my_logging.data("time_" + key, elapsed);
+    }
+}
 
-    if not skip:
-        if should_print:
-            zk_print(f"Took {elapsed} s")
-        my_logging.data("time_" + key, elapsed)
+pub struct Timer {
+    key: String,
+}
+// class Timer(object):
+impl Timer {
+    pub fn new(key: String) -> Self {
+        Self { key }
+    }
 
-
-class Timer(object):
-
-    def __init__(self, key):
-        self.key = key
-
-    def __call__(self, method):
-        def timed(*args, **kw):
-            with time_measure(self.key):
-                result = method(*args, **kw)
-                return result
-
-        return timed
+    pub fn __call__(
+        &self,
+        method: impl FnOnce(Vec<&str>, Vec<&str>) -> String,
+    ) -> impl FnOnce(Vec<&str>, Vec<&str>) -> String {
+        fn timed(args: Vec<&str>, kw: Vec<&str>) -> String {
+            time_measure(self.key);
+            method(args, kw)
+        }
+        timed
+    }
+}

@@ -1,9 +1,9 @@
-from zkay.zkay_ast.ast import AstException
+// from zkay.zkay_ast.ast import AstException
 
 
-class UnknownIdentifierException(AstException):
-    """
-    Exception when an unknown identifier is used
-    """
+// class UnknownIdentifierException(AstException):
+//     """
+//     Exception when an unknown identifier is used
+//     """
 
-    pass
+//     pass

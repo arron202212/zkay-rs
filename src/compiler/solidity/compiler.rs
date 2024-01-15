@@ -198,7 +198,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
             zk_print!();
             if had_error {
                 // raise SolcException(fatal_error_report)
-                assert!(false, fatal_error_report);
+                assert!(false, "{}", fatal_error_report);
             }
         }
     }
@@ -226,7 +226,7 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
     dir.push(file_name);
 
     let mut file = File::create(dir).unwrap();
-    write!(mut, fake_solidity_code);
+    write!(file, "{}", ake_solidity_code);
     // dump fake solidity code into temporary file
     // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
     //     f.write(fake_solidity_code)

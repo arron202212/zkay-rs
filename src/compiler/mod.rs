@@ -12,5 +12,6 @@
 // * :py:mod:`.privacy`: Zkay compilation
 // * :py:mod:`.solidity`: Solidity compilation
 // """
+pub mod name_remapper;
 pub mod privacy;
 pub mod solidity;

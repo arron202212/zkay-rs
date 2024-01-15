@@ -12,7 +12,12 @@ pub fn get_verify_libs_code() -> String
 // """Return all verification contract libraries combined into single string"""
 {
     let mut code = String::new();
-    if cfg.external_crypto_lib_names.contains("BN256G2") {
+    if CFG
+        .lock()
+        .unwrap()
+        .external_crypto_lib_names
+        .contains("BN256G2")
+    {
         code += format!(
             "{}\n\n{alt_bn128_pairing_lib}",
             include_str!("./bn256g2.sol")
@@ -20,7 +25,13 @@ pub fn get_verify_libs_code() -> String
     } else {
         code += format!("{alt_bn128_pairing_lib_simple}");
     }
-    format!("pragma solidity {cfg.zkay_solc_version_compatibility.expression};\n\n{code}")
+    format!(
+        "pragma solidity {};\n\n{code}",
+        CFG.lock()
+            .unwrap()
+            .zkay_solc_version_compatibility
+            .expression
+    )
 }
 
 use once_cell::sync::Lazy;
@@ -67,8 +78,12 @@ pub fn get_pki_contract(params: &CryptoParams) -> String
         }}
     }}
     "#,
-        expression = cfg.zkay_solc_version_compatibility.expression,
-        pki_contract_name = cfg.get_pki_contract_name(params),
+        expression = CFG
+            .lock()
+            .unwrap()
+            .zkay_solc_version_compatibility
+            .expression,
+        pki_contract_name = CFG.lock().unwrap().get_pki_contract_name(params),
         key_len = params.key_len,
     ))
 }

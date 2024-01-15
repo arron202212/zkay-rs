@@ -12,3 +12,4 @@
 pub mod contains_private;
 pub mod final_checker;
 pub mod type_checker;
+pub mod type_exceptions;

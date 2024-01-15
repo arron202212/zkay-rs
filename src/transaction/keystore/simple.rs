@@ -1,5 +1,5 @@
-from zkay.transaction.interface import ZkayKeystoreInterface
+// from zkay.transaction.interface import ZkayKeystoreInterface
 
 
-class SimpleKeystore(ZkayKeystoreInterface):
-    pass
+// class SimpleKeystore(ZkayKeystoreInterface):
+//     pass

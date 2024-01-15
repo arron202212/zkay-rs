@@ -9,43 +9,43 @@ pub struct G1Point {
 }
 // class G1Point
 // """Data class to represent curve points"""
-
-pub fn new(self, x: String, y: String)
-// """Construct G1Point from coordinate integer literal strings."""
-// self.x: String = x
-// self.y: String = y
-{
-    Self { x, y }
-}
-
-pub fn negated(self) {
-    let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
-    if self.x == "0" && self.y == "0" {
-        G1Point("0", "0")
-    } else {
-        G1Point(self.x, hex(q - (int(self.y, 0) % q)))
+impl G1Point {
+    pub fn new(self, x: String, y: String)
+    // """Construct G1Point from coordinate integer literal strings."""
+    // self.x: String = x
+    // self.y: String = y
+    {
+        Self { x, y }
     }
-}
 
-// @staticmethod
-pub fn from_seq(seq: Vec<String>) -> Self
+    pub fn negated(self) {
+        let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+        if self.x == "0" && self.y == "0" {
+            G1Point("0", "0")
+        } else {
+            G1Point(self.x, hex(q - (int(self.y, 0) % q)))
+        }
+    }
+
+    // @staticmethod
+    pub fn from_seq(seq: Vec<String>) -> Self
 // """
         // Construct G1Point from a sequence of length 2 of integer literal strings
         // First entry makes up the X coordinate, second entry makes up the Y coordinate
         // """
-{
-    assert!(len(seq) == 2);
-    return G1Point::new(seq[0], seq[1]);
+    {
+        assert!(len(seq) == 2);
+        return G1Point::new(seq[0], seq[1]);
+    }
+
+    // @staticmethod
+    pub fn from_it<T: std::io::Lines>(it: &T) -> Self {
+        G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
+    }
+
+    // pub fn __str__(G1Point)
+    //     return f"uint256({self.x}), uint256({self.y})"
 }
-
-// @staticmethod
-pub fn from_it<'a>(it: &mut impl Iterator<Item = &'a String>) -> Self {
-    G1Point::new(it.next().unwrap(), it.next().unwrap())
-}
-
-// pub fn __str__(G1Point)
-//     return f"uint256({self.x}), uint256({self.y})"
-
 use std::fmt;
 
 impl fmt::Display for G1Point {
@@ -81,12 +81,12 @@ impl G2Point {
     }
 
     // @staticmethod
-    pub fn from_it<'a>(it: &mut impl Iterator<Item = &'a String>) -> Self {
+    pub fn from_it<T: std::io::Lines>(it: &T) -> Self {
         G2Point(
-            it.next().unwrap(),
-            it.next().unwrap(),
-            it.next().unwrap(),
-            it.next().unwrap(),
+            it.next().unwrap().unwrap(),
+            it.next().unwrap().unwrap(),
+            it.next().unwrap().unwrap(),
+            it.next().unwrap().unwrap(),
         )
     }
 
@@ -100,7 +100,7 @@ impl fmt::Display for G2Point {
 }
 // class VerifyingKey(metaclass=ABCMeta)
 // """Abstract base data class for verification keys"""
-pub trait VerifyingKeyMeta{
+pub trait VerifyingKeyMeta {
     // @classmethod
     // @abstractmethod
     // pub fn create_dummy_key(cls)

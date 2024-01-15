@@ -111,9 +111,9 @@ impl ProvingScheme for ProvingSchemeGm17 {
 
             function getVk() pure internal returns(Vk memory vk) {{"#,prover_key_hash_name=cfg.prover_key_hash_name,prover_key_hash=prover_key_hash.hex(),snark_scalar_field_var_name=self.snark_scalar_field_var_name)).div(format!(r#"
                 vk.a_neg = G1({a});
-                vk.b = G2({vk.b});
-                vk.gamma = G2({vk.gamma});
-                vk.delta = G2({vk.delta});"#,a=vk.a.negated(),b=vk.b,gamma=vk.gamma,delta=vk.delta)).mul(
+                vk.b = G2({b});
+                vk.gamma = G2({gamma});
+                vk.delta = G2({delta});"#,a=vk.a.negated(),b=vk.b,gamma=vk.gamma,delta=vk.delta)).mul(
 vk.gamma_abc.iter().enumerate().map(|(idx, G )|format!("vk.gamma_abc[{idx}] = G1({g});")).collect()).floordiv(
             format!(r#"
             }}

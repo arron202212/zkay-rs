@@ -157,7 +157,7 @@ impl CircuitComplianceChecker {
                 .before_analysis
                 .same_partition(ast.privacy.privacy_annotation_label(), Expression.me_expr())
         {
-            assert!(false,"Revealing information to other parties is not allowed inside private if statements", ast)
+            assert!(false,"Revealing information to other parties is not allowed inside private if statements {:?}", ast)
         }
         if ast.expr.annotated_type.is_public() {
             eval_in_public = False;
@@ -211,14 +211,14 @@ impl CircuitComplianceChecker {
                     .type_name
                     .is_primitive_type()
                 {
-                    assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements", ast)
+                    assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
                 }
                 if val.in_scope_at(ast)
                     && !ast
                         .before_analysis
                         .same_partition(val.privacy, Expression.me_expr())
                 {
-                    assert!(false,"If statement with private condition must not contain side effects to variables with owner != me", ast)
+                    assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
                 }
             }
             self.inside_privif_stmt = True;
@@ -242,7 +242,11 @@ impl PrivateSetter {
             evaluate_privately: None,
         }
     }
-    pub fn set_evaluation(self, ast: vec![Expression, Statement], evaluate_privately: bool) {
+    pub fn set_evaluation(
+        self,
+        ast: (Option<Expression>, Option<Statement>),
+        evaluate_privately: bool,
+    ) {
         self.evaluate_privately = evaluate_privately;
         self.visit(ast);
         self.evaluate_privately = None;
@@ -256,7 +260,7 @@ impl PrivateSetter {
         {
             assert!(
                 false,
-                "Expressions with side effects are not allowed inside private expressions",
+                "Expressions with side effects are not allowed inside private expressions {:?}",
                 ast
             )
         }
@@ -299,13 +303,13 @@ impl NonstaticOrIncompatibilityDetector {
         if has_nonstatic_call {
             assert!(
                 false,
-                "Function calls to non static functions are not allowed inside private expressions",
+                "Function calls to non static functions are not allowed inside private expressions ,{:?}",
                 ast
             )
         }
         if !can_be_private {
             assert!(false,
-                "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions", ast)
+                "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions {:?}", ast)
         }
         self.visitChildren(ast);
     }

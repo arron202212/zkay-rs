@@ -126,10 +126,11 @@ impl UsedHomomorphismsVisitor {
     pub fn visitAST(self, ast: AST) -> BTreeSet<Homomorphism>
 // Base case, make sure we don"t miss any annotated types
     {
-        if hasattr(ast, "annotated_type") {
+        if ast.has_annotated_type() {
             assert!(
                 false,
-                "Unhandled AST element of type {ast.__class__.__name__} with annotated type"
+                "Unhandled AST element of type {:?} with annotated type",
+                ast
             )
         }
         return self.visitChildren(ast);
