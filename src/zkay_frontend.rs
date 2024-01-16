@@ -32,7 +32,8 @@ use crate::utils::progress_printer::print_step;
 // use crate::zkay_ast::homomorphism::String
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
-
+use lazy_static::lazy_static;
+use serde_json::json;
 lazy_static! {
     static ref proving_scheme_classes: HashMap<String, Box<dyn ProvingScheme + Send>> =
         HashMap::from([

@@ -6,11 +6,13 @@ use crate::config::CFG;
 use crate::utils::helpers::hash_file;
 use crate::utils::run_command::run_command;
 use crate::zkay_ast::ast::indent;
-
+use lazy_static::lazy_static;
+use std::path::Path;
+use std::fs::File;
 //path to jsnark interface jar
 const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
-    pub static ref circuit_builder_jar_hash: String = hash_file(circuit_builder_jar).hex();
+    pub static ref CIRCUIT_BUILDER_JAR_HASH: String = hash_file(circuit_builder_jar).hex();
 }
 pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // """
@@ -44,7 +46,7 @@ pub fn compile_and_run_with_circuit_builder(
             &format!("{circuit_builder_jar}"),
             java_file_name,
         ],
-        cwd = working_dir,
+        working_dir,
     );
     //Run jsnark to generate the circuit
     return run_command(
@@ -72,7 +74,7 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
 // :raise SubprocessError: if circuit evaluation fails
 // """
 {
-    let serialized_arg_str: Vec<_> = serialized_args.iter().map(|arg| format(arg, "x")).collect();
+    let serialized_arg_str: Vec<_> = serialized_args.iter().map(|arg| format!( "{:x}",arg)).collect();
 
     //Run jsnark to evaluate the circuit and compute prover inputs
     run_command(
@@ -86,7 +88,7 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
             "prove",
             serialized_arg_str,
         ],
-        cwd = output_dir,
+       output_dir,
         true,
     )
 }

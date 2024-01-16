@@ -10,13 +10,11 @@
 
 // timestamp = '{:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now())
 
-
 // # shutdown current logger (useful for debugging, ...)
 // def shutdown(handler_list=None):
 //     if handler_list is None:
 //         handler_list = []
 //     logging.shutdown(handler_list)
-
 
 // ##########################
 // # add log level for DATA #
@@ -31,14 +29,12 @@
 // DATA = 5
 // addLevelName(DATA, "DATA")
 
-
 // def data(key, value):
 //     """
 //     Log (key, value) to log-level DATA
 //     """
 //     d = {'key': key, 'value': value, 'context': full_log_context}
 //     return logging.log(DATA, json.dumps(d))
-
 
 // def get_log_dir(parent_dir, label):
 //     """
@@ -51,7 +47,6 @@
 //         os.makedirs(d)
 
 //     return d
-
 
 // def get_log_file(label='default', parent_dir=None, filename='log', include_timestamp=True):
 //     if parent_dir is None:
@@ -66,7 +61,6 @@
 //     log_file = os.path.join(log_dir, filename)
 
 //     return log_file
-
 
 // def prepare_logger(log_file=None, silent=True):
 //     # shutdown previous logger (if one was registered)
@@ -136,13 +130,11 @@
 //     }
 //     logging.config.dictConfig(default_logging)
 
-
 // class OnlyData(logging.Filter):
 
 //     def filter(self, record):
 //         # print(record.__dict__)
 //         return record.levelno == DATA
-
 
 // # register a default logger (can be overwritten later)
 // prepare_logger()

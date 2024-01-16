@@ -15,6 +15,16 @@ use crate::lc_vec_s;
 use app_dirs2::*;
 use serde_json::{Map, Result, Value};
 use std::collections::HashMap;
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+lazy_static! {
+    pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
+    pub static ref VERSIONS: Versions = {
+        let mut versions_internal = Versions::new();
+        versions_internal.set_solc_version(String::from("latest"));
+        versions_internal
+    };
+}
 #[macro_export]
 macro_rules! zk_print {
     (verbosity_level: $verbosity_level:expr, $fmt:expr $(, $($arg:tt)*)?) => {
@@ -38,16 +48,7 @@ pub fn zk_print_banner(title: String) {
     let l = "#".repeat(title.len() + 4);
     zk_print!("{}\n// {title} #\n{}\n", l, l);
 }
-use lazy_static::lazy_static;
-use std::sync::Mutex;
-lazy_static! {
-    pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
-    pub static ref VERSIONS: Versions = {
-        let mut versions_internal = Versions::new();
-        versions_internal.set_solc_version(String::from("latest"));
-        versions_internal
-    };
-}
+
 // Versions::set_solc_version("latest")
 pub struct Config {
     pub user_config: UserConfig,

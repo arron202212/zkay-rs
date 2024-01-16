@@ -1,13 +1,16 @@
 use crate::zkay_ast::ast::{
     BuiltinFunction, Expression, FunctionCallExpr, HybridArgType, HybridArgumentIdf, Identifier,
-    IdentifierExpr,
+    IdentifierExpr,is_instance,ASTType,IdentifierExprUnion,
 };
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
-
+use std::collections::BTreeMap;
+use std::any::Any;
 // K = TypeVar("K")
 // V = TypeVar("V")
 // class Remapper(Generic[K, V]):
-pub struct Remapper<K: Identifier, V: HybridArgumentIdf> {
+    type RemapMapType = BTreeMap; //#[(bool, K), V]
+
+pub struct Remapper<K, V> {
     rmap: RemapMapType<K, V>,
 }
 // """
@@ -32,8 +35,7 @@ pub struct Remapper<K: Identifier, V: HybridArgumentIdf> {
 // :param K: name type
 // :param V: type of element to which key refers at a code location
 // """
-impl RemapMapper {
-    type RemapMapType = BTreeMap; //#[(bool, K), V]
+impl<K,V> Remapper<K=Identifier,V=HybridArgumentIdf> {
 
     pub fn new() -> Self
 // super().__init__()
@@ -78,7 +80,7 @@ impl RemapMapper {
     }
 
     // @contextmanager
-    pub fn remap_scope(&mut self, scope_stmt: Option<AST>)
+    pub fn remap_scope(&mut self, scope_stmt: Option<V>)
     // """
     // Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.
 
@@ -123,7 +125,7 @@ impl RemapMapper {
         // """
     {
         let k = key;
-        if let Some(v) = self.rmap.get(&v) {
+        if let Some(v) = self.rmap.get(&k) {
             v
         } else {
             if default.is_none() {
@@ -139,16 +141,18 @@ impl RemapMapper {
         self.rmap.clone()
     }
 
-    pub fn set_state(&mut self, state: Any)
+    pub fn set_state(&mut self, state: &Any)
     // """ Restore internal state from an opaque copy previously obtained using get_state. """
     {
-        assert!(isinstance(state, BTreeMap));
-        self.rmap = state.copy();
+        // assert!(isinstance(state, BTreeMap));
+        if let Some(state)=state.downcast_ref::<BTreeMap>()
+            {self.rmap = state.copy();
+            }else{assert!(false);}
     }
 
     pub fn join_branch(
         &self,
-        stmt: AST,
+        stmt: V,
         true_cond_for_other_branch: IdentifierExpr,
         other_branch_state: Any,
         create_val_for_name_and_expr_fct: impl FnOnce(K, Expression) -> V,
@@ -180,16 +184,16 @@ impl RemapMapper {
         let false_state = self.rmap;
         self.rmap = BTreeMap::new();
 
-        pub fn join(then_idf: AST, else_idf: AST)
+        let join=|then_idf: V, else_idf: V,key:K,val:V|->V
         // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         {
-            let rhs = FunctionCallExpr(
-                BuiltinFunction("ite"),
-                [true_cond_for_other_branch.clone(), then_idf, else_idf],
+            let rhs = FunctionCallExpr::new(
+                BuiltinFunction::new("ite"),
+                vec![true_cond_for_other_branch.clone(), then_idf, else_idf],
             )
             .as_type(val.t);
-            return create_val_for_name_and_expr_fct(key.name, rhs);
-        }
+            create_val_for_name_and_expr_fct(key.name, rhs)
+        };
 
         for (key, val) in true_state {
             if !SymbolTableLinker.in_scope_at(key, stmt)
@@ -207,9 +211,9 @@ impl RemapMapper {
             // If value was only read (remapping points to a circuit input) -> can just take as-is,
             // otherwise have to use conditional assignment
             {
-                if isinstance(val, HybridArgumentIdf)
-                    && (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG
-                        || val.arg_type == HybridArgType.PrivCircuitVal)
+                if is_instance(val, ASTType::HybridArgumentIdf)
+                    && (val.arg_type == HybridArgType::PubCircuitArg
+                        || val.arg_type == HybridArgType::PrivCircuitVal)
                 {
                     self.rmap(key, val);
                 } else
@@ -218,12 +222,12 @@ impl RemapMapper {
                 {
                     let key_decl = key.parent;
                     assert!(key_decl.annotated_type.is_some());
-                    let mut prev_val = IdentifierExpr(key.clone())
+                    let mut prev_val = IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()),None)
                         .as_type(key_decl.annotated_type.zkay_type.clone());
                     prev_val.target = key_decl;
                     prev_val.parent = stmt;
                     prev_val.statement = stmt;
-                    self.rmap[key] = join(true_state[key].get_idf_expr(stmt), prev_val);
+                    self.rmap[key] = join(true_state[key].get_idf_expr(stmt), prev_val,key,val);
                 }
             } else
             // key was modified in both branches
@@ -243,9 +247,9 @@ impl RemapMapper {
             }
 
             if !true_state.contains(&key) {
-                if isinstance(val, HybridArgumentIdf)
-                    && (val.arg_type == HybridArgType.PUB_CIRCUIT_ARG
-                        || val.arg_type == HybridArgType.PrivCircuitVal)
+                if is_instance(&val,ASTType:: HybridArgumentIdf)
+                    && (val.arg_type == HybridArgType::PubCircuitArg
+                        || val.arg_type == HybridArgType::PrivCircuitVal)
                 {
                     self.rmap[key] = val;
                 } else
@@ -254,12 +258,12 @@ impl RemapMapper {
                 {
                     let key_decl = key.parent;
                     assert!(key_decl.annotated_type.is_some());
-                    let mut prev_val = IdentifierExpr(key.clone())
+                    let mut prev_val = IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()),None)
                         .as_type(key_decl.annotated_type.zkay_type.clone());
                     prev_val.target = key_decl;
                     prev_val.parent = stmt;
                     prev_val.statement = stmt;
-                    self.rmap[key] = join(prev_val, false_state[key].get_idf_expr(stmt));
+                    self.rmap[key] = join(prev_val, false_state[key].get_idf_expr(stmt),key,val);
                 }
             }
         }

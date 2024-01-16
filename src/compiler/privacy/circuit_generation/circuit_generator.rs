@@ -3,14 +3,19 @@
 // from abc import ABCMeta, abstractmethod
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
-
+use crate::zkay_ast::ast::ConstructorOrFunctionDefinition;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use crate::config::{zk_print, CFG};
+use crate::{zk_print, config::CFG};
 use crate::utils::progress_printer::print_step;
 use crate::utils::timer::time_measure;
 use rayon::prelude::*;
+use std::path::Path;
 extern crate num_cpus;
+use lazy_static::lazy_static;
+use std::collections::BTreeMap;
+use std::sync::Mutex;
+use std::fs::File;
 lazy_static! {
     pub static ref finish_counter: Mutex<i32> = Mutex::new(0);
     pub static ref c_count: Mutex<i32> = Mutex::new(0);
@@ -84,7 +89,7 @@ impl CircuitGenerator {
 
     //Compile circuits
     {
-        let c_count = self.circuits_to_prove.len();
+        let _c_count = self.circuits_to_prove.len();
         zk_print("Compiling {c_count} circuits...");
 
         let gen_circs =
@@ -124,7 +129,7 @@ impl CircuitGenerator {
             time_measure("key_generation", true);
             {
                 if self.parallel_keygen && !CFG.lock().unwrap().is_unit_test {
-                    let counter = Value("i", 0);
+                    let counter =0;// Value("i", 0);
                     // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
                     {
                         modified_circuits_to_prove
@@ -175,7 +180,7 @@ impl CircuitGenerator {
         self.circuits_to_prove
             .iter()
             .map(|circuit| {
-                path::new(pathself.output_dir)
+                Path::new(self.output_dir)
                     .join(circuit.verifier_contract_filename)
                     .to_string()
             })
@@ -254,7 +259,7 @@ impl CircuitGenerator {
     // pass
 
     // @abstractmethod
-    pub fn _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey
+    pub fn _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKeyMeta
 // """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
     {
         self.proving_scheme.VerifyingKey.create_dummy_key()
@@ -278,7 +283,7 @@ impl CircuitGenerator {
         if CFG.lock().unwrap().should_use_hash(circuit) {
             vec![self.proving_scheme.hash_var_name.clone()]
         } else {
-            primary_inputs = [];
+            let primary_inputs = vec![];
             for (name, count) in inputs {
                 primary_inputs.extend((0..count).map(|i| format!("{name}[{i}]")).collect())
             }

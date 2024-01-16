@@ -39,7 +39,7 @@ impl G1Point {
     }
 
     // @staticmethod
-    pub fn from_it<T: std::io::Lines>(it: &T) -> Self {
+    pub fn from_it<T=std::io::Lines>(it: &T) -> Self {
         G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
     }
 
@@ -81,7 +81,7 @@ impl G2Point {
     }
 
     // @staticmethod
-    pub fn from_it<T: std::io::Lines>(it: &T) -> Self {
+    pub fn from_it<T=std::io::Lines>(it: &T) -> Self {
         G2Point(
             it.next().unwrap().unwrap(),
             it.next().unwrap().unwrap(),
@@ -149,10 +149,10 @@ pub trait ProvingScheme {
     // @abstractmethod
     fn generate_verification_contract(
         &self,
-        verification_key: VerifyingKey,
+        verification_key: Self::VerifyingKey,
         circuit: CircuitHelper,
         primary_inputs: Vec<String>,
-        prover_key_hash: bytes,
+        prover_key_hash: Vec<u8>,
     ) -> String;
     // """
     // Generate a verification contract for the zk-snark corresponding to circuit.

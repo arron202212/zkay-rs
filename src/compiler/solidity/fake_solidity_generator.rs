@@ -5,22 +5,21 @@
 use lazy_static::lazy_static;
 
 use crate::config::CFG;
-use regex::Regex;
-use regex::RegexSetBuilder;
+use regex::{Regex,RegexSet,RegexSetBuilder};
 // // Declaration for me which is injected into each contract
-// ME_DECL = ' address private me = msg.sender;'
+pub const ME_DECL:&str = " address private me = msg.sender;";
 
 // // ---------  Lexer Rules ---------
+pub const WS_PATTERN: &str = r"[ \t\r\n\u000C]";
+  pub const ID_PATTERN : &str = r"[a-zA-Z\$_][a-zA-Z0-9\$_]*";
+  pub const UINT_PATTERN: &str  = r"uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256";
+  pub const INT_PATTERN: &str  = r"int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256";
+    pub const HOMOMORPHISM_PATTERN: &str  = r"<\+?>";
+ pub const NONID_START: &str  = r"(?:[^a-zA-Z0-9\$_]|^)";
+ pub const NONID_END: &str  = r"(?:[^a-zA-Z0-9\$_]|$)";
 lazy_static! {
-  pub static ref WS_PATTERN: Regex = Regex::new(r"[ \t\r\n\u000C]").unwrap();
-  pub static ref ID_PATTERN : Regex=  Regex::new(r"[a-zA-Z\$_][a-zA-Z0-9\$_]*").unwrap();
-  static ref UINT_PATTERN: Regex =  Regex::new(r"uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256").unwrap();
-  static ref INT_PATTERN: Regex =  Regex::new(r"int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256").unwrap();
-  static ref USER_TYPE_PATTERN: Regex = Regex::new(&format!("(?:(?:{ID_PATTERN}\\.)*(?:{ID_PATTERN}))")).unwrap();
-  static ref ELEM_TYPE_PATTERN: Regex =  Regex::new(format!("(?:address|address payable|bool|{UINT_PATTERN}|{INT_PATTERN}|{USER_TYPE_PATTERN})")).unwrap();
-  static ref HOMOMORPHISM_PATTERN: Regex =  Regex::new(r"<\+?>").unwrap();
-  static ref NONID_START: Regex =  Regex::new(r"(?:[^a-zA-Z0-9\$_]|^)").unwrap();
-  static ref NONID_END: Regex =  Regex::new(r"(?:[^a-zA-Z0-9\$_]|$)").unwrap();
+  static ref USER_TYPE_PATTERN: String = format!("(?:(?:{ID_PATTERN}\\.)*(?:{ID_PATTERN}))");
+  static ref ELEM_TYPE_PATTERN: String =  format!("(?:address|address payable|bool|{UINT_PATTERN}|{INT_PATTERN}|{USER_TYPE_PATTERN})");
   static ref PARENS_PATTERN: Regex =  Regex::new(r"[()]").unwrap();
   static ref BRACE_PATTERN: Regex =  Regex::new(r"[{}]").unwrap();
   static ref STRING_OR_COMMENT_PATTERN: RegexSet = RegexSetBuilder::new(&[
@@ -31,35 +30,36 @@ lazy_static! {
    r#"|(?:(?<=")(?:[^"\r\n\\]|(?:\\.))*(?="))"#,  // match double quoted string literal
    r")"]).build().expect("RegexSetBuilder build fail");
 
+
+
+// ---------  Parsing ---------
+  static ref CONTRACT_START_PATTERN : Regex =  Regex::new(r"{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])").unwrap();
+// Regex to match annotated types
+
+static ref ATYPE_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)").unwrap();  
+       // match basic type
+  // match @owner[<op>]
+
+// Regexes to match "all" and "final"
+//   pub const  MATCH_WORD_FSTR : &str = "(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})";
+  static ref FINAL_PATTERN : Regex =  Regex::new(format!( "(?P<keep>{NONID_START})(?P<repl>{{{}}})(?={NONID_END})","final")).unwrap();
+  static ref ALL_PATTERN : Regex =  Regex::new(format!("(?P<keep>{NONID_START})(?P<repl>{{{}}})(?={NONID_END})","all")).unwrap();
+
+// Pragma regex
+  static ref PRAGMA_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);").unwrap();
+
+// Regex to match tagged mapping declarations
+  static ref MAP_PATTERN : Regex =  Regex::new(
+    r"(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>!{WS_PATTERN}*{ID_PATTERN})(?={WS_PATTERN}*=>{WS_PATTERN}*)").unwrap();   // match "mapping (address"
+                                               // match "!tag"
+                                                   // expect "=>"
+
+// Regex to detect start of reveal
+  static ref REVEAL_START_PATTERN : Regex =  Regex::new(r"(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()").unwrap();  // match "reveal", expect "("
+
+// Regex to detect addhom & unhom
+  static ref ADDHOM_UNHOM_PATTERN : Regex =  Regex::new(r"(?:^|(?<=[^\\w]))(?P<repl>addhom|unhom){WS_PATTERN}*(?=\\()").unwrap();
 }
-
-// // ---------  Parsing ---------
-// CONTRACT_START_PATTERN = re.compile(f'{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])')
-
-// // Regex to match annotated types
-// ATYPE_PATTERN = re.compile(f'(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'          // match basic type
-//                            f'(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)')   // match @owner[<op>]
-
-// // Regexes to match 'all' and 'final'
-// MATCH_WORD_FSTR = f'(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})'
-// FINAL_PATTERN = re.compile(MATCH_WORD_FSTR.format('final'))
-// ALL_PATTERN = re.compile(MATCH_WORD_FSTR.format('all'))
-
-// // Pragma regex
-// PRAGMA_PATTERN = re.compile(f'(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);')
-
-// // Regex to match tagged mapping declarations
-// MAP_PATTERN = re.compile(
-//     f'(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*{ELEM_TYPE_PATTERN}{WS_PATTERN}*)'  // match 'mapping (address'
-//     f'(?P<repl>!{WS_PATTERN}*{ID_PATTERN})'                                             // match '!tag'
-//     f'(?={WS_PATTERN}*=>{WS_PATTERN}*)')                                                // expect '=>'
-
-// // Regex to detect start of reveal
-// REVEAL_START_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()')  // match 'reveal', expect '('
-
-// // Regex to detect addhom & unhom
-// ADDHOM_UNHOM_PATTERN = re.compile(f'(?:^|(?<=[^\\w]))(?P<repl>addhom|unhom){WS_PATTERN}*(?=\\()')
-
 // """
 // Preserve newlines and replace all other characters with spaces
 // :return whitespace string with same length as instr and with the same line breaks
@@ -67,7 +67,7 @@ lazy_static! {
 pub fn create_surrogate_string(instr: &str) -> String {
     instr
         .chars()
-        .map(|e| if e == '\n' { '\n' } else { ' ' })
+        .map(|e| if e == "\n" { "\n" } else { " " })
         .collect()
 }
 
@@ -81,12 +81,13 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
 
     // Determine parenthesis characters
     let open_sym = code.as_bytes()[open_parens_loc] as char();
-    if open_sym == '(' {
-        close_sym = ')'
-    } else if open_sym == '{' {
-        close_sym = '}'
-    } else if open_sym == '[' {
-        close_sym = ']'
+    let mut close_sym="";
+    if open_sym == "(" {
+        close_sym = ")"
+    } else if open_sym == "{" {
+        close_sym = "}"
+    } else if open_sym == "[" {
+        close_sym = "]"
     } else {
         // raise ValueError("Unsupported parenthesis type")
         assert!(false, "Unsupported parenthesis type");
@@ -109,7 +110,7 @@ pub fn strip_reveals(code: &str)
 // """Replace reveal expressions by their inner expression, with whitespace padding."""
 {
     let mut code = code.to_owned();
-    let matches = re.find_iter(REVEAL_START_PATTERN, code);
+    let matches = REVEAL_START_PATTERN.find_iter(code);
     for m in matches {
         let before_reveal_loc = m.start();
         let reveal_open_parens_loc = m.end();
@@ -154,7 +155,7 @@ pub fn inject_me_decls(code: &str) -> String
 // Replace all occurrences of search_pattern with capture group <keep> (if any) + replacement.
 
 // Replacement is either
-//     a) replacement_fstr (if replacement_fstr does not contain '{}')
+//     a) replacement_fstr (if replacement_fstr does not contain "{}")
 //     b) replacement_fstr with {} replaced by whitespace corresponding to content of capture group <repl>
 //        (such that replacement length == <repl> length with line breaks preserved)
 
@@ -203,7 +204,7 @@ pub fn fake_solidity_code(code: &str) -> String {
         PRAGMA_PATTERN,
         &format!(
             "solidity {};",
-            cfg.lock().unwrap().zkay_solc_version_compatibility
+            CFG.lock().unwrap().zkay_solc_version_compatibility
         ),
     );
 

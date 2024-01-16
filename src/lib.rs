@@ -13,6 +13,7 @@ pub mod config;
 pub mod config_user;
 pub mod config_version;
 pub mod jsnark_interface;
+pub mod my_logging;
 pub mod solidity_parser;
 pub mod transaction;
 pub mod type_check;

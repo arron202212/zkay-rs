@@ -19,9 +19,9 @@ pub fn run_command(
     // """
     //cwd=None, allow_verbose: bool = False
 {
-    if let Some(cwd) = cwd {
-        cwd = os.path.abspath(cwd);
-    }
+    let cwd=if let Some(cwd) = cwd {
+        std::fs::canonicalize(cwd)
+    }else{""};
 
     let (output, error) =
         if allow_verbose && CFG.lock().unwrap().verbosity >= 2 && !CFG.lock().unwrap().is_unit_test

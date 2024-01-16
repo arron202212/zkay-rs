@@ -2,11 +2,10 @@
 // from enum import Enum
 // from typing import ContextManager
 
-use crate::config::zk_print;
-
+use crate::{zk_print,config::CFG};
 // @contextlib.contextmanager
 pub fn print_step(name: &str) {
-    zk_print!(format!("{name}... "));
+    zk_print!("{name}... ");
     // yield
     zk_print!("done");
 }

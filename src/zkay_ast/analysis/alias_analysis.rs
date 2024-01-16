@@ -29,7 +29,7 @@ impl AliasAnalysisVisitor {
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition) {
         let s: PartitionState<PrivacyLabelExpr> = PartitionState::new();
-        s.insert(MeExpr().privacy_annotation_label());
+        s.insert(MeExpr::new().privacy_annotation_label());
         s.insert(AllExpr().privacy_annotation_label());
         for d in ast.parent.state_variable_declarations {
             s.insert(d.idf);

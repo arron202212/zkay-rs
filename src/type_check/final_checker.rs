@@ -1,9 +1,10 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
     AssignmentStatement, Block, ConstructorOrFunctionDefinition, ContractDefinition,
-    IdentifierExpr, IfStatement, StateVariableDeclaration,
+    IdentifierExpr, IfStatement, StateVariableDeclaration,AST,is_instance,ASTType,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
+use std::collections::BTreeMap;
 
 pub fn check_final(ast: AST) {
     let v = FinalVisitor();
@@ -27,17 +28,17 @@ impl FinalVisitor {
         self.state_vars_assigned = {};
         for v in ast.state_variable_declarations {
             if v.is_final && v.expr.is_none() {
-                self.state_vars_assigned[v] = False;
+                self.state_vars_assigned[v] = false;
             }
         }
 
-        if len(ast.constructor_definitions) > 0 {
-            assert!(len(ast.constructor_definitions) == 1);
-            c = ast.constructor_definitions[0];
+        if ast.constructor_definitions.len() > 0 {
+            assert!(ast.constructor_definitions.len() == 1);
+            let c = &ast.constructor_definitions[0];
             self.visit(c.body);
         }
 
-        for (sv, assigned) in self.state_vars_assigned.items() {
+        for (sv, assigned) in &self.state_vars_assigned{
             if !assigned {
                 assert!(false, "Did not set all final state variables {}", sv)
             }
@@ -51,7 +52,7 @@ impl FinalVisitor {
 
     pub fn visitAssignmentStatement(self, ast: AssignmentStatement) {
         self.visit(ast.rhs);
-        if isinstance(ast.lhs, IdentifierExpr) {
+        if is_instance(&ast.lhs, ASTType::IdentifierExpr) {
             let var = &ast.lhs.target;
             if self.state_vars_assigned.contains(var) {
                 {
@@ -60,16 +61,16 @@ impl FinalVisitor {
                     }
                 }
 
-                self.state_vars_assigned[var] = True;
+                self.state_vars_assigned[var] = true;
             }
         }
     }
 
     pub fn visitIfStatement(self, ast: IfStatement) {
         self.visit(ast.condition);
-        prev = self.state_vars_assigned.copy();
+        let prev = self.state_vars_assigned.copy();
         self.visit(ast.then_branch);
-        then_b = self.state_vars_assigned.copy();
+        let then_b = self.state_vars_assigned.copy();
         self.state_vars_assigned = prev;
         if ast.else_branch.is_some() {
             self.visit(ast.else_branch);

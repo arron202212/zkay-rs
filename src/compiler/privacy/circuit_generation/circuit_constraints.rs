@@ -174,9 +174,9 @@ pub fn guarded(phi: Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true
 //                 proof generation time
 // """
 {
-    phi.append(CircGuardModification(guard_idf, is_true));
+    phi.push(CircGuardModification::new(Some(guard_idf), is_true));
     // yield
-    phi.append(CircGuardModification(None));
+    phi.push(CircGuardModification::new(None,None));
 }
 
 // class CircEncConstraint(CircuitStatement)

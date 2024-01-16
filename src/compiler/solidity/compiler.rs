@@ -8,13 +8,13 @@
 // from solcx import compile_standard
 // from solcx.exceptions import SolcError
 
+use crate::{zk_print, config::CFG};
 use crate::zkay_ast::ast::get_code_error_msg;
-use zkay::config::{zk_print, CFG};
 
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass
-
+ use std::fs::File;
 use std::collections::HashMap;
 use std::env::{current_dir, set_current_dir};
 fn compile_solidity_json(
@@ -66,7 +66,7 @@ fn compile_solidity_json(
     } else {
         String::new()
     };
-    let solps = std::fs::canonicalize(solp);
+    let solps = std::fs::canonicalize(sol_filename);
     let solp = PathBuf::from(sol_filename);
     let mut json_in = format!(
         r#"{{
@@ -97,7 +97,7 @@ fn compile_solidity_json(
     ret
 }
 
-fn _get_line_col(code: str, idx: int) -> (i32, i32)
+fn _get_line_col(code: str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
 {
     let line = code[..idx + 1].split("\n").count();
@@ -149,7 +149,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
     // if solc reported any errors or warnings, print them and throw exception
     if let Value::Object(errors) = v {
         if errors.contains("errors") {
-            zk_print!();
+            zk_print!("");
             let mut errors = errors["errors"].clone();
             errors.sort_unstable_by_key(|x| get_error_order_key(x));
 
@@ -163,22 +163,22 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 } else {
                     TermColor::WARNING
                 });
-                if error.contains_key("sourceLocation") {
+                let mut report =if error.contains_key("sourceLocation") {
                     let file = error["sourceLocation"]["file"];
                     if file == sol_name {
                         let (line, column) = _get_line_col(code, error["sourceLocation"]["start"]);
-                        report = format!(
+                        had_error |= is_error;
+                        format!(
                             "{:?}\n",
                             get_code_error_msg(line, column + 1, display_code.split("\n"))
-                        );
-                        had_error |= is_error;
+                        )
                     } else {
-                        report = format!(
+                         format!(
                             "In imported file \"{file}\" idx: {}\n",
                             error["sourceLocation"]["start"]
-                        );
+                        )
                     }
-                }
+                }else{String::new()};
                 report = format!(
                     "\n{}: {}\n{report}\n{}\n",
                     error["severity"].upper_ascii_case(),
@@ -187,7 +187,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 );
 
                 if is_error {
-                    fatal_error_report += report;
+                    fatal_error_report += &report;
                 } else if !error.contains_key("errorCode") || !["1878"].contains(error["errorCode"])
                 // Suppress SPDX license warning
                 {
@@ -195,7 +195,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 }
             }
 
-            zk_print!();
+            zk_print!("");
             if had_error {
                 // raise SolcException(fatal_error_report)
                 assert!(false, "{}", fatal_error_report);
@@ -226,7 +226,7 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
     dir.push(file_name);
 
     let mut file = File::create(dir).unwrap();
-    write!(file, "{}", ake_solidity_code);
+    write!(file, "{}", fake_solidity_code);
     // dump fake solidity code into temporary file
     // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
     //     f.write(fake_solidity_code)

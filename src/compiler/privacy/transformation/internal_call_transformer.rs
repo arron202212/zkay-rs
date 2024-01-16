@@ -1,7 +1,8 @@
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
-use crate::zkay_ast::ast::{ConstructorOrFunctionDefinition, IdentifierExpr, NumberLiteralExpr};
-
+ use crate::transaction::crypto::params::CryptoParams;
+use crate::zkay_ast::ast::{ConstructorOrFunctionDefinition, IdentifierExpr, NumberLiteralExpr,MeExpr,Identifier};
+use std::collections::{BTreeMap,BTreeSet};
 pub fn compute_transitive_circuit_io_sizes(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
@@ -20,9 +21,9 @@ pub fn compute_transitive_circuit_io_sizes(
 // """
 {
     for fct in fcts_with_verification {
-        glob_keys = OrderedDict();
-        called_fcts = OrderedDict();
-        circuit = cgens[fct];
+        let glob_keys = BTreeSet::new();
+        let called_fcts = BTreeSet::new();
+        let mut circuit = cgens[&fct].clone();
         let (trans_in_size, trans_out_size, trans_priv_size) =
             _compute_transitive_circuit_io_sizes(cgens, fct, glob_keys, called_fcts);
         circuit.trans_in_size = trans_in_size;
@@ -50,8 +51,8 @@ pub fn _compute_transitive_circuit_io_sizes(
     let circuit = cgens[fct].clone();
     if circuit.trans_in_size.is_some() {
         //Memoized
-        gkeys.append(cgens[fct]._global_keys);
-        called_fcts.append(cgens[fct].transitively_called_functions);
+        gkeys.push(cgens[fct]._global_keys);
+        called_fcts.push(cgens[fct].transitively_called_functions);
         return (
             circuit.trans_in_size,
             circuit.trans_out_size,
@@ -59,24 +60,24 @@ pub fn _compute_transitive_circuit_io_sizes(
         );
     }
 
-    gkeys.append(cgens[fct].requested_global_keys);
+    gkeys.push(cgens[fct].requested_global_keys);
     for call in cgens[fct].function_calls_with_verification {
         called_fcts[call.func.target] = None;
     }
 
     if !circuit.function_calls_with_verification {
-        return (0, 0, 0);
+         (0, 0, 0)
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
         for f in circuit.function_calls_with_verification {
             let (i, o, p) =
                 _compute_transitive_circuit_io_sizes(cgens, f.func.target, gkeys, called_fcts);
-            target_circuit = cgens[f.func.target];
+            let target_circuit = &cgens[&f.func.target];
             insum += i + target_circuit.in_size;
             outsum += o + target_circuit.out_size;
             psum += p + target_circuit.priv_in_size;
         }
-        return (insum, outsum, psum);
+        (insum, outsum, psum)
     }
 }
 
@@ -107,12 +108,12 @@ pub fn transform_internal_calls(
             let fdef = fc.func.target.clone();
             fc.sec_start_offset = circuit.priv_in_size + p;
             fc.args += [
-                IdentifierExpr(cfg.zk_in_name),
-                IdentifierExpr(format!("{}_start_idx", cfg.zk_in_name))
-                    .binop('+', NumberLiteralExpr(circuit.in_size + i)),
-                IdentifierExpr(cfg.zk_out_name),
-                IdentifierExpr(format!("{}_start_idx", cfg.zk_out_name))
-                    .binop('+', NumberLiteralExpr(circuit.out_size + o)),
+                IdentifierExpr::new(CFG.lock().unwrap().zk_in_name),
+                IdentifierExpr::new(format!("{}_start_idx", CFG.lock().unwrap().zk_in_name))
+                    .binop('+', NumberLiteralExpr::new(circuit.in_size + i)),
+                IdentifierExpr::new(CFG.lock().unwrap().zk_out_name),
+                IdentifierExpr::new(format!("{}_start_idx", CFG.lock().unwrap().zk_out_name))
+                    .binop('+', NumberLiteralExpr::new(circuit.out_size + o)),
             ];
             i += cgens[fdef].in_size_trans;
             o += cgens[fdef].out_size_trans;

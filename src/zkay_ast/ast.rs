@@ -74,12 +74,19 @@ pub trait Immutable {
     fn is_immutable(&self) -> bool;
 }
 
-#[macro_export]
-macro_rules! is_instance {
-    ($var: expr,$typ: expr) => {
-        var.get_ast_type() == ASTType::$typ
-    };
+pub fn is_instance<T:ASTCode>(var:&T,ast_type:ASTType)->bool{
+        var.get_ast_type()==ast_type
 }
+pub fn is_instances<T:ASTCode>(var:&T,ast_types:Vec<ASTType>)->bool{
+        ast_type.iter().any(|t|t==var.get_ast_type())
+}
+// #[mac
+// #[macro_export]
+// macro_rules! is_instance {
+//     ($var: expr,$typ:expr) => {
+//         var.get_ast_type() == std::concat_idents(ASTType,($typ))
+//     };
+// }
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -1048,7 +1055,7 @@ impl ExpressionBase {
 
 //     @staticmethod
 //     def me_expr(stmt: Optional[Statement] = None):
-//         me = MeExpr()
+//         me = MeExpr::new()
 //         me.statement = stmt
 //         return me
 
@@ -3175,7 +3182,7 @@ impl Immutable for MeExpr {
 //         return True
 
 //     def clone(&self) -> MeExpr:
-//         return MeExpr()
+//         return MeExpr::new()
 
 //     def __eq__(self, other):
 //         return isinstance(other, MeExpr)
@@ -3401,7 +3408,7 @@ impl RehomExpr {
 // class RehomExpr(ReclassifyExpr):
 
 //     def __init__(self, expr: Expression, homomorphism: Homomorphism):
-//         super().__init__(expr, MeExpr(), homomorphism)
+//         super().__init__(expr, MeExpr::new(), homomorphism)
 
 //     def func_name(&self):
 //         return self.homomorphism.rehom_expr_name
@@ -3856,12 +3863,12 @@ impl ASTCode for Identifier {
 //         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
 
 //     def get_loc_expr(self, parent=None) -> Union[LocationExpr, NumberLiteralExpr, BooleanLiteralExpr]:
-//         if self.arg_type == HybridArgType.TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
+//         if self.arg_type == HybridArgType::TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
 //             return BooleanLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
-//         elif self.arg_type == HybridArgType.TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
+//         elif self.arg_type == HybridArgType::TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
 //             return NumberLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
 //         else:
-//             assert self.arg_type == HybridArgType.PubCircuitArg
+//             assert self.arg_type == HybridArgType::PubCircuitArg
 //             ma = IdentifierExpr(cfg.zk_data_var_name).dot(&self).as_type(self.t)
 //             return ma.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
 
@@ -7281,7 +7288,7 @@ impl ASTChildren for AnnotatedTypeName {
 
 //     def is_private_at_me(self, analysis: PartitionState[PrivacyLabelExpr]):
 //         p = self.privacy_annotation
-//         return p.is_me_expr() or (analysis is not None and analysis.same_partition(p.privacy_annotation_label(), MeExpr()))
+//         return p.is_me_expr() or (analysis is not None and analysis.same_partition(p.privacy_annotation_label(), MeExpr::new()))
 
 //     def is_accessible(self, analysis: PartitionState[PrivacyLabelExpr]):
 //         return self.is_public() or self.is_private_at_me(analysis)

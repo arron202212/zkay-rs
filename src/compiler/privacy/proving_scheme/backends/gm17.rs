@@ -10,13 +10,13 @@
 use crate::config::CFG;
 
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::library_contracts::{bn128_scalar_field, bn128_scalar_field_bits};
+use crate::compiler::privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
 use crate::compiler::privacy::proving_scheme::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK,
 };
 use crate::utils::multiline_formatter::MultiLineFormatter;
 
-struct VerifyingKey {
+pub struct VerifyingKey {
     h: G2Point,
     g_alpha: G1Point,
     h_beta: G2Point,
@@ -64,7 +64,7 @@ impl VK for VerifyingKey {
 pub struct ProvingSchemeGm17;
 impl ProvingScheme for ProvingSchemeGm17 {
     const NAME: &'static str = "gm17";
-    type VerificationKey = VerifyingKey;
+    type VerifyingKey = VerifyingKey;
 
     fn generate_verification_contract(
         &self,
@@ -73,15 +73,15 @@ impl ProvingScheme for ProvingSchemeGm17 {
         primary_inputs: Vec<String>,
         prover_key_hash: &[u8],
     ) -> String {
-        vk = verification_key;
-        should_hash = cfg.should_use_hash(circuit);
+        let vk = verification_key;
+        let should_hash = CFG.lock().unwrap().should_use_hash(circuit);
 
-        query_length = len(vk.query);
+        let query_length = len(vk.query);
         assert!(query_length == len(primary_inputs) + 1);
 
         assert!(primary_inputs, "No public inputs");
-        first_pi = primary_inputs[0];
-        potentially_overflowing_pi = primary_inputs
+        let first_pi = primary_inputs[0];
+        let potentially_overflowing_pi:Vec<_>= primary_inputs
             .iter()
             .filter_map(|pi| {
                 if !["1", self.hash_var_name].contains(pi) {
@@ -99,12 +99,12 @@ impl ProvingScheme for ProvingSchemeGm17 {
 
         import {{ Pairing, G1Point as G1, G2Point as G2 }} from "{verify_libs_contract_filename}";
 
-        contract {get_verification_contract_name} {{"#,zkay_solc_version_compatibility=cfg.zkay_solc_version_compatibility,verify_libs_contract_filename=ProvingScheme.verify_libs_contract_filename,get_verification_contract_name=circuit.get_verification_contract_name())).div(format!(r#"
+        contract {get_verification_contract_name} {{"#,zkay_solc_version_compatibility=CFG.lock().unwrap().zkay_solc_version_compatibility,verify_libs_contract_filename=ProvingScheme::verify_libs_contract_filename,get_verification_contract_name=circuit.get_verification_contract_name())).div(format!(r#"
             using Pairing for G1;
             using Pairing for G2;
 
             bytes32 public constant {prover_key_hash_name} = 0x{prover_key_hash};
-            uint256 constant {snark_scalar_field_var_name} = {bn128_scalar_field};
+            uint256 constant {snark_scalar_field_var_name} = {BN128_SCALAR_FIELD};
 
             struct Proof {{
                 G1 a;
@@ -121,7 +121,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
                 G1[{query_length}] query;
             }}
 
-            function getVk() pure internal returns(Vk memory vk) {{"#,prover_key_hash_name=cfg.prover_key_hash_name,prover_key_hash=prover_key_hash.hex(),snark_scalar_field_var_name=self.snark_scalar_field_var_name)).div(format!(r#"
+            function getVk() pure internal returns(Vk memory vk) {{"#,prover_key_hash_name=CFG.lock().unwrap().prover_key_hash_name,prover_key_hash=prover_key_hash.hex(),snark_scalar_field_var_name=self.snark_scalar_field_var_name)).div(format!(r#"
                 vk.h = G2({h});
                 vk.g_alpha = G1({g_alpha});
                 vk.h_beta = G2({h_beta});
@@ -130,12 +130,12 @@ impl ProvingScheme for ProvingSchemeGm17 {
             format!(r#"
             }}
 
-            function {verification_function_name}(uint[8] memory proof_, uint[] memory {zk_in_name}, uint[] memory {zk_out_name}) public {{"#,verification_function_name=cfg.verification_function_name,zk_in_name=cfg.zk_in_name,zk_out_name=cfg.zk_out_name)).div(format!(r#"
+            function {verification_function_name}(uint[8] memory proof_, uint[] memory {zk_in_name}, uint[] memory {zk_out_name}) public {{"#,verification_function_name=CFG.lock().unwrap().verification_function_name,zk_in_name=CFG.lock().unwrap().zk_in_name,zk_out_name=CFG.lock().unwrap().zk_out_name)).div(format!(r#"
                 // Check if input size correct
                 require({zk_in_name}.length == {in_size_trans}, "Wrong public input length");
 
                 // Check if output size correct
-                require({zk_out_name}.length == {out_size_trans}, "Wrong public output length");"#, zk_in_name=cfg.zk_in_name,in_size_trans=circuit.in_size_trans,zk_out_name=cfg.zk_out_name,out_size_trans=circuit.out_size_trans)).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
+                require({zk_out_name}.length == {out_size_trans}, "Wrong public output length");"#, zk_in_name=CFG.lock().unwrap().zk_in_name,in_size_trans=circuit.in_size_trans,zk_out_name=CFG.lock().unwrap().zk_out_name,out_size_trans=circuit.out_size_trans)).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
                 \n// Check that inputs do not overflow\n{}\n",
 potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",self.snark_scalar_field_var_name)).collect::<Vec<_>>().concat())}).mul(r#"
                 // Create proof and vk data structures
@@ -146,10 +146,10 @@ potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",self.sn
                 Vk memory vk = getVk();
 
                 // Compute linear combination of public inputs"#).mul(if should_hash.is_empty(){String::new()}else{
-                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",self.hash_var_name,cfg.zk_in_name,cfg.zk_out_name,256 - bn128_scalar_field_bits) }).mul(
-                format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.query[1].scalar_mul({})",first_pi)}  else {String::from("vk.query[1]")})).mul(format!(
-    "lc = lc.add({}); ",if pi != "1"{format!("vk.query[{}].scalar_mul({pi})",idx + 2)}else{
-                 primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!("vk.query[{}]",idx+2)).collect::<Vec<_>>().concat()})).mul(r#"
+                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",self.hash_var_name,CFG.lock().unwrap().zk_in_name,CFG.lock().unwrap().zk_out_name,256 - BN128_SCALAR_FIELD_BITS) }).mul(
+                format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.query[1].scalar_mul({})",first_pi)}  else {String::from("vk.query[1]")})).mul(
+                 primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!(
+    "lc = lc.add({}); ",format!("vk.query[{}]{}",idx+2,if pi != "1"{&format!(".scalar_mul({pi})")}else{""}))).collect::<Vec<_>>().concat()).mul(r#"
                 lc = lc.add(vk.query[0]);
 
                 // Verify proof

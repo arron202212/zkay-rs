@@ -1,7 +1,7 @@
 // import contextlib
 // import time
 
-use crate::config::zk_print;
+use crate::zk_print;
 use crate::my_logging;
 
 // @contextlib.contextmanager
@@ -32,10 +32,10 @@ impl Timer {
         &self,
         method: impl FnOnce(Vec<&str>, Vec<&str>) -> String,
     ) -> impl FnOnce(Vec<&str>, Vec<&str>) -> String {
-        fn timed(args: Vec<&str>, kw: Vec<&str>) -> String {
+        let  timed=|args: Vec<&str>, kw: Vec<&str>| -> String {
             time_measure(self.key);
             method(args, kw)
-        }
+        };
         timed
     }
 }

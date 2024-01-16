@@ -16,7 +16,6 @@ use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGr
 use crate::compiler::privacy::proving_scheme::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta,
 };
-use crate::config::{zk_print, CFG};
 use crate::jsnark_interface::jsnark_interface as jsnark;
 use crate::jsnark_interface::libsnark_interface as libsnark;
 use crate::utils::helpers::{hash_file, hash_string};
@@ -24,16 +23,18 @@ use crate::utils::helpers::{read_file, save_to_file};
 use crate::zkay_ast::ast::{
     indent, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression, FunctionCallExpr,
     IdentifierExpr, IndexExpr, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,
-    TypeName,
+    TypeName,is_instance,ASTType,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
+use crate::{config::CFG, zk_print};
+use std::path::Path;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 pub fn _get_t(t: (Option<TypeName>, Option<Expression>))
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
-    if isinstance(t, Expression) {
+    if is_instance(&t,ASTType::Expression) {
         t = t.annotated_type.type_name;
     }
     let bits = t.elem_bitwidth;
@@ -77,7 +78,7 @@ impl JsnarkVisitor
         if stmt.name {
             format!(
                 r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
-                indent(stmts.join("\n"), name = stmt.name)
+                indent(stmts.join("\n")), name = stmt.name
             )
         } else {
             indent(stmts.join("\n"))
@@ -105,7 +106,7 @@ impl JsnarkVisitor
             stmt.cipher.t.crypto_params == stmt.pk.t.crypto_params
                 && stmt.pk.t.crypto_params == stmt.rnd.t.crypto_params
         );
-        backend = stmt.pk.t.crypto_params.crypto_name;
+        let backend = stmt.pk.t.crypto_params.crypto_name;
 
         format!(
             r#"check{}("{backend}", "{}", "{}", "{}", "{}");"#,
@@ -120,7 +121,7 @@ impl JsnarkVisitor
         assert!(stmt.iv_cipher.t.is_cipher());
         assert!(stmt.other_pk.t.is_key());
         assert!(stmt.iv_cipher.t.crypto_params == stmt.other_pk.t.crypto_params);
-        backend = stmt.other_pk.t.crypto_params.crypto_name;
+        let backend = stmt.other_pk.t.crypto_params.crypto_name;
         format!(
             r#"checkSymm{}("{backend}", "{}", "{}", "{}");"#,
             if stmt.is_dec { "Dec" } else { "Enc" },
@@ -146,7 +147,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitNumberLiteralExpr(self, ast: NumberLiteralExpr) {
-        t = _get_t(ast);
+        let t = _get_t(ast);
         if ast.value < (1 << 31) {
             format!(r#"val({}, {t})"#, ast.value)
         } else {
@@ -155,7 +156,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitIdentifierExpr(self, ast: IdentifierExpr) {
-        if isinstance(ast.idf, HybridArgumentIdf) && ast.idf.t.is_cipher() {
+        if is_instance(&ast.idf,ASTType:: HybridArgumentIdf) && ast.idf.t.is_cipher() {
             format!(r#"getCipher("{}")"#, ast.idf.name)
         } else {
             format!(r#"get("{}")"#, ast.idf.name)
@@ -163,7 +164,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitMemberAccessExpr(self, ast: MemberAccessExpr) {
-        assert!(isinstance(ast.member, HybridArgumentIdf));
+        assert!(is_instance(&ast.member,ASTType:: HybridArgumentIdf));
         if ast.member.t.is_cipher() {
             format!(r#"getCipher("{}")"#, ast.member.name)
         } else {
@@ -177,7 +178,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, BuiltinFunction) {
+        if is_instance(&ast.func,ASTType:: BuiltinFunction) {
             assert!(ast.func.can_be_private());
             let mut args: Vec<_> = ast.args.iter().map(self.visit).collect();
             if ast.func.is_shiftop() {
@@ -191,17 +192,17 @@ impl JsnarkVisitor
                 unimplemented!()
             }
             let homomorphism = ast.func.homomorphism.clone();
-            let f_start = if homomorphism == Homomorphism.NonHomomorphic {
-                "o_("
+            let (f_start,crypto_backend,public_key_name) = if homomorphism == Homomorphism::non_homomorphic() {
+                (String::from("o_("),String::new(),String::new())
             } else {
-                let crypto_backend = cfg.get_crypto_params(homomorphism).crypto_name;
+                let crypto_backend = CFG.lock().unwrap().get_crypto_params(homomorphism).crypto_name;
                 let public_key_name = ast.public_key.name;
 
                 args = args
                     .iter()
                     .map(|arg| format!(r#"HomomorphicInput.of({arg})"#))
                     .collect();
-                format!(r#"o_hom("{crypto_backend}", "{public_key_name}", "#)
+                (format!(r#"o_hom("{crypto_backend}", "{public_key_name}", "#),crypto_backend,public_key_name)
             };
 
             if op == "ite" {
@@ -225,16 +226,16 @@ impl JsnarkVisitor
                         // re-randomize homomorphic scalar multiplication
                         let rnd = self.visit(ast.func.rerand_using);
                         format!(
-                            r#"o_rerand({fstr}, "{crypto_backend}", "{public_key_name}", {rnd})"#
+                            r#"o_rerand({f_start}{{{}}}, {o}, {{{}}}), "{crypto_backend}", "{public_key_name}", {rnd})"#, args[0], args[1]
                         )
                     } else {
                         format!(r#"{f_start}{{{}}}, {o}, {{{}}})"#, args[0], args[1])
                     }
                 }
             }
-        } else if ast.is_cast && isinstance(ast.func.target, EnumDefinition) {
+        } else if ast.is_cast && is_instance(&ast.func.target,ASTType:: EnumDefinition) {
             assert!(ast.annotated_type.type_name.elem_bitwidth == 256);
-            return self.handle_cast(self.visit(ast.args[0]), TypeName.uint_type());
+            return self.handle_cast(self.visit(ast.args[0]), TypeName::uint_type());
         }
 
         assert!(
@@ -296,8 +297,8 @@ pub fn add_function_circuit_arguments(circuit: CircuitHelper)
         .iter()
         .map(|sec_input| sec_input.name.clone())
         .collect();
-    for crypto_params in cfg.all_crypto_params() {
-        let pk_name = circuit.get_glob_key_name(MeExpr(), crypto_params);
+    for crypto_params in CFG.lock().unwrap().all_crypto_params() {
+        let pk_name = circuit.get_glob_key_name(MeExpr::new(), crypto_params);
         let sk_name = circuit.get_own_secret_key_name(crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(sk_name) {
             assert!(circuit
@@ -344,7 +345,7 @@ impl JsnarkGenerator {
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
         for params in circuit.fct.used_crypto_backends {
-            init_stmt = format!(
+            let init_stmt = format!(
                 r#"addCryptoBackend("{}", "{}", {});"#,
                 params.crypto_name, params.crypto_name, params.key_bits
             );
@@ -375,27 +376,25 @@ impl JsnarkGenerator {
         }
 
         //Generate java code for the function corresponding to this circuit
-        input_init_stmts = add_function_circuit_arguments(circuit);
-        constraints = JsnarkVisitor(circuit.phi).visitCircuit();
+        let input_init_stmts = add_function_circuit_arguments(circuit);
+        let constraints = JsnarkVisitor::new()(circuit.phi).visitCircuit();
 
         //Inject the function definitions into the java template
-        code = jsnark.get_jsnark_circuit_class_str(
+        let code = jsnark::get_jsnark_circuit_class_str(
             circuit,
             crypto_init_stmts,
             fdefs,
-            input_init_stmts + [""] + constraints,
+            input_init_stmts.iter().chain([""]).chain(constraints).collect(),
         );
 
         //Compute combined hash of the current jsnark interface jar and of the contents of the java file
-        hashfile = output_dir.join(format!(
+        let hashfile = output_dir.join(format!(
             r#"{}.hash"#,
             CFG.lock().unwrap().jsnark_circuit_classname
         ));
-        digest = hash_string(
-            (jsnark.circuit_builder_jar_hash + &code + &CFG.lock().unwrap().proving_scheme)
-                .encode("utf-8"),
-        )
-        .hex();
+        let digest = hex::encode(hash_string(
+            &(jsnark::CIRCUIT_BUILDER_JAR_HASH + &code + &CFG.lock().unwrap().proving_scheme)
+        ));
         let oldhash = if let Ok(true) = hashfile.try_exists() {
             read_file(hashfile)
         } else {
@@ -413,12 +412,12 @@ impl JsnarkGenerator {
             //Remove old keys
             {
                 for f in self._get_vk_and_pk_paths(circuit) {
-                    if os.path.exists(f) {
-                        os.remove(f)
+                    if Path::new(f).try_exists().map_or(false,|v|v) {
+                        std::fs::remove_file(f);
                     }
                 }
             }
-            jsnark.compile_circuit(output_dir, code);
+            jsnark::compile_circuit(output_dir, code);
             save_to_file(None, hashfile, digest);
             true
         } else {
@@ -432,8 +431,8 @@ impl JsnarkGenerator {
     pub fn _generate_keys(self, circuit: CircuitHelper)
     //Invoke the custom libsnark interface to generate keys
     {
-        output_dir = self._get_circuit_output_dir(circuit);
-        libsnark.generate_keys(output_dir, output_dir, self.proving_scheme.name);
+        let output_dir = self._get_circuit_output_dir(circuit);
+        libsnark::generate_keys(output_dir, output_dir, self.proving_scheme.name);
     }
 
     // @classmethod
@@ -444,34 +443,34 @@ impl JsnarkGenerator {
             .collect()
     }
 
-    pub fn _parse_verification_key(self, circuit: CircuitHelper) -> VerifyingKey {
+    pub fn _parse_verification_key(self, circuit: CircuitHelper) -> impl VerifyingKeyMeta {
         let f = File::open(self._get_vk_and_pk_paths(circuit)[0]).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
         let data = buf.lines();
-        if isinstance(self.proving_scheme, ProvingSchemeGroth16) {
-            a = G1Point.from_it(data);
-            b = G2Point.from_it(data);
-            gamma = G2Point.from_it(data);
-            delta = G2Point.from_it(data);
-            query_len = int(next(data));
-            gamma_abc = vec![None; query_len];
-            for idx in range(query_len) {
-                gamma_abc[idx] = G1Point.from_it(data)
+        if is_instance(&self.proving_scheme,ASTType:: ProvingSchemeGroth16) {
+            let a = G1Point::from_it(data);
+            let b = G2Point::from_it(data);
+            let gamma = G2Point::from_it(data);
+            let delta = G2Point::from_it(data);
+            let query_len = int(next(data));
+            let gamma_abc = vec![None; query_len];
+            for idx in 0..query_len {
+                gamma_abc.insert(idx,G1Point::from_it(data));
             }
             return ProvingSchemeGroth16.VerifyingKey(a, b, gamma, delta, gamma_abc);
-        } else if isinstance(self.proving_scheme, ProvingSchemeGm17) {
-            h = G2Point.from_it(data);
-            g_alpha = G1Point.from_it(data);
-            h_beta = G2Point.from_it(data);
-            g_gamma = G1Point.from_it(data);
-            h_gamma = G2Point.from_it(data);
-            query_len = int(next(data));
-            query = vec![None; query_len];
-            for idx in range(query_len) {
-                query[idx] = G1Point.from_it(data);
+        } else if is_instance(&self.proving_scheme,ASTType:: ProvingSchemeGm17) {
+            let h = G2Point::from_it(data);
+            let g_alpha = G1Point::from_it(data);
+            let h_beta = G2Point::from_it(data);
+            let g_gamma = G1Point::from_it(data);
+            let h_gamma = G2Point::from_it(data);
+            let query_len = data.next().unwrap();
+            let query = vec![None; query_len];
+            for idx in 0..query_len {
+                query.insert(idx,G1Point::from_it(data));
             }
-            return ProvingSchemeGm17.VerifyingKey(h, g_alpha, h_beta, g_gamma, h_gamma, query);
+            return ProvingSchemeGm17.VerifyingKey(h, g_alpha, h_beta, g_gamma, h_gamma, query)
         } else {
             unimplemented!()
         }
@@ -484,6 +483,6 @@ impl JsnarkGenerator {
     pub fn _get_primary_inputs(self, circuit: CircuitHelper) -> Vec<String>
 //Jsnark requires an additional public input with the value 1 as first input
     {
-        ["1"] + self.circuit_generator_base._get_primary_inputs(circuit)
+        [String::from("1")].into_iter().chain(self.circuit_generator_base._get_primary_inputs(circuit)).collect()
     }
 }

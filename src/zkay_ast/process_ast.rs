@@ -27,7 +27,7 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
     // except SyntaxException as e:
     //     raise ZkaySyntaxError(f"\n\nSYNTAX ERROR: {e}")
 
-    let fake_code = zkay::compiler::solidity::fake_solidity_generator::fake_solidity_code(code);
+    let fake_code = crate::compiler::solidity::fake_solidity_generator::fake_solidity_code(code);
     if solc_check {
         // Solc type checking
         print_step("Type checking with solc");

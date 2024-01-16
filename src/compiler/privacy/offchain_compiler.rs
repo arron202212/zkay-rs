@@ -238,10 +238,10 @@
 
 //     pub fn get_loc_value(self, arr: Identifier, indices: List[&str]) -> String
 //         """Get the location of the given identifier/array element."""
-//         if isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PrivCircuitVal and not arr.name.startswith("tmp")
+//         if isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType::PrivCircuitVal and not arr.name.startswith("tmp")
 //             # Private circuit values are located in private value dictionary
 //             return self.get_priv_value(arr.name)
-//         elif isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType.PUB_CIRCUIT_ARG
+//         elif isinstance(arr, HybridArgumentIdf) and arr.arg_type == HybridArgType::PubCircuitArg
 //             # Public circuit inputs are in the zk_data dict
 //             return self.visit(arr.get_loc_expr())
 //         else
@@ -582,7 +582,7 @@
 //     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr)
 //         if isinstance(ast.func, BuiltinFunction) and (ast.func.is_arithmetic() or ast.func.op == "~")
 //             # For arithmetic operations, need to simulate finite integer semantics (since python has arbitrary precision ints)
-//             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName.uint_type()
+//             t = ast.annotated_type.type_name if ast.annotated_type is not None else TypeName::uint_type()
 //             res = super().visitFunctionCallExpr(ast)
 //             if not t.is_literal and ast.func.homomorphism == Homomorphism.NonHomomorphic
 //                 # Use cast for correct overflow behavior according to type
