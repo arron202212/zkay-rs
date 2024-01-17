@@ -78,7 +78,7 @@ pub fn is_instance<T:ASTCode>(var:&T,ast_type:ASTType)->bool{
         var.get_ast_type()==ast_type
 }
 pub fn is_instances<T:ASTCode>(var:&T,ast_types:Vec<ASTType>)->bool{
-        ast_type.iter().any(|t|t==var.get_ast_type())
+        ast_types.iter().any(|t|t==var.get_ast_type())
 }
 // #[mac
 // #[macro_export]
@@ -182,6 +182,8 @@ pub enum ASTType {
     StructDefinition,
     ContractDefinition,
     DummyAnnotation,
+ProvingSchemeGroth16,
+ProvingSchemeGm17,
     #[default]
     None,
 }
@@ -8639,7 +8641,7 @@ pub fn indent(s: String) -> String {
 
 // // EXCEPTIONS
 
-fn get_code_error_msg(
+pub fn get_code_error_msg(
     line: i32,
     column: i32,
     code: Vec<String>,

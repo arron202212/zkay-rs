@@ -2,11 +2,11 @@
 use crate::zkay_ast::ast::{
     AssignmentStatement, BuiltinFunction, Expression, FunctionCallExpr, InstanceTarget,
     LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr, VariableDeclaration,
-    AST,
+    AST,ASTType,is_instance,is_instances,
 };
 use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
-
+use std::collections::BTreeSet;
 pub fn has_side_effects(ast: AST) -> bool {
     SideEffectsDetector::new().visit(ast)
 }
@@ -27,7 +27,7 @@ pub fn check_for_undefined_behavior_due_to_eval_order(ast: AST) {
 pub struct SideEffectsDetector;
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, LocationExpr) && !ast.is_cast && ast.func.target.has_side_effects {
+        if is_instance(&ast.func,ASTType:: LocationExpr) && !ast.is_cast && ast.func.target.has_side_effects {
             true
         } else {
             self.visitExpression(ast)
@@ -46,7 +46,7 @@ impl SideEffectsDetector {
     }
 
     pub fn visitAST(&self, ast: AST) {
-        any(map(self.visit, ast.children()))
+       ast.children().iter().any(|c|self.visit(c))
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
@@ -62,31 +62,31 @@ impl DirectModificationDetector {
         target: (Option<Expression>, Option<Statement>),
         expr: (Option<TupleExpr>, Option<LocationExpr>),
     ) {
-        if isinstance(expr, TupleExpr) {
+        if is_instance(&expr,ASTType:: TupleExpr) {
             for elem in expr.elements {
                 self.collect_modified_values(target, elem);
             }
         } else {
-            mod_value = InstanceTarget(expr);
+            let mod_value = InstanceTarget::new(expr);
             if target.modified_values.contains(mod_value) {
                 assert!(false,"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
             }
-            target.modified_values[mod_value] = None;
+            target.modified_values.insert(mod_value);
         }
     }
     pub fn visitLocationExpr(&self, ast: LocationExpr) {
         self.visitAST(ast);
         if ast.is_rvalue()
-            && isinstance(
-                ast.target,
-                (VariableDeclaration, StateVariableDeclaration, Parameter),
+            && is_instances(
+                &ast.target,
+                vec![ASTType::VariableDeclaration, ASTType::StateVariableDeclaration, ASTType::Parameter],
             )
         {
-            ast.read_values.add(InstanceTarget(ast));
+            ast.read_values.add(InstanceTarget::new(ast));
         }
     }
     pub fn visitVariableDeclaration(&self, ast: VariableDeclaration) {
-        ast.modified_values[InstanceTarget(ast)] = None;
+        ast.modified_values[InstanceTarget::new(ast)] = None;
     }
 
     pub fn visitAST(&self, ast: AST) {
@@ -94,8 +94,8 @@ impl DirectModificationDetector {
         ast.read_values.clear();
         for child in ast.children() {
             self.visit(child);
-            ast.modified_values.update(child.modified_values);
-            ast.read_values.update(child.read_values);
+            ast.modified_values=ast.modified_values.union(&child.modified_values);
+            ast.read_values=ast.read_values.union(&child.read_values);
         }
     }
 }
@@ -125,15 +125,15 @@ impl IndirectModificationDetector {
 
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         self.visitAST(ast);
-        if isinstance(ast.func, LocationExpr) {
+        if is_instance(&ast.func,ASTType:: LocationExpr) {
             //for now no reference types -> only state could have been modified
             let fdef = ast.func.target;
-            let rlen = len(ast.read_values);
+            let rlen = ast.read_values.len();
             ast.read_values.update(
                 fdef.read_values
                     .iter()
                     .filter_map(|v| {
-                        if isinstance(v.target, StateVariableDeclaration) {
+                        if is_instance(&v.target,ASTType:: StateVariableDeclaration) {
                             Some(v)
                         } else {
                             None
@@ -141,28 +141,28 @@ impl IndirectModificationDetector {
                     })
                     .collect(),
             );
-            self.fixed_point_reached &= rlen == len(ast.read_values);
+            self.fixed_point_reached &= rlen == ast.read_values.len();
 
             //update modified values if any
-            let mlen = len(ast.modified_values);
+            let mlen = ast.modified_values.len();
             for v in fdef.modified_values {
-                if isinstance(v.target, StateVariableDeclaration) {
+                if is_instance(&v.target,ASTType:: StateVariableDeclaration) {
                     ast.modified_values[v] = None;
                 }
             }
-            self.fixed_point_reached &= mlen == len(ast.modified_values);
+            self.fixed_point_reached &= mlen == ast.modified_values.len();
         }
     }
     pub fn visitAST(&self, ast: AST) {
-        let mlen = len(ast.modified_values);
-        let rlen = len(ast.read_values);
+        let mlen = ast.modified_values.len();
+        let rlen = ast.read_values.len();
         for child in ast.children() {
             self.visit(child);
             ast.modified_values.update(child.modified_values);
             ast.read_values.update(child.read_values);
         }
-        self.fixed_point_reached &= mlen == len(ast.modified_values);
-        self.fixed_point_reached &= rlen == len(ast.read_values);
+        self.fixed_point_reached &= mlen == ast.modified_values.len();
+        self.fixed_point_reached &= rlen == ast.read_values.len();
     }
 }
 // class EvalOrderUBChecker(AstVisitor)
@@ -170,8 +170,8 @@ struct EvalOrderUBChecker;
 impl EvalOrderUBChecker {
     // @staticmethod
     pub fn visit_child_expressions(parent: AST, exprs: Vec<AST>) {
-        if len(exprs) > 1 {
-            modset = set(exprs[0].modified_values.keys());
+        if exprs.len() > 1 {
+            let mut modset:BTreeSet<_> = exprs[0].modified_values.keys().collect();
             for arg in exprs[1..] {
                 let diffset = modset.intersection(arg.modified_values);
                 if !diffset.is_empty() {
@@ -189,7 +189,7 @@ impl EvalOrderUBChecker {
                         parent
                     )
                 } else {
-                    modset.update(diffset);
+                    modset=modset.union(diffset).collect();
                 }
             }
 
@@ -200,8 +200,8 @@ impl EvalOrderUBChecker {
                     .filter_map(|e| if e != arg { Some(e) } else { None })
                     .collect();
                 for arg2 in other_args {
-                    diffset = modset.intersection(arg2.read_values);
-                    if diffset {
+                    let diffset:BTreeSet<_> = modset.intersection(arg2.read_values).collect();
+                    if !diffset.is_empty(){
                         let setstr = format!(
                             r#"{{{}}}"#,
                             diffset
@@ -226,7 +226,7 @@ impl EvalOrderUBChecker {
         }
     }
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, BuiltinFunction) {
+        if is_instance(&ast.func,ASTType:: BuiltinFunction) {
             if ast.func.has_shortcircuiting() {
                 return;
             }

@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
     BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement, FunctionCallExpr, LocationExpr,
-    WhileStatement,
+    WhileStatement,AST,is_instance,ASTType,
 };
 use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
 
@@ -24,11 +24,11 @@ struct DirectCalledFunctionDetector;
 // class DirectCalledFunctionDetector(FunctionVisitor)
 impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if !isinstance(ast.func, BuiltinFunction) && !ast.is_cast {
-            assert!(isinstance(ast.func, LocationExpr));
-            fdef = ast.func.target;
-            assert!(fdef.is_function);
-            ast.statement.function.called_functions[fdef] = None;
+        if !is_instance(&ast.func,ASTType:: BuiltinFunction) && !ast.is_cast {
+            assert!(is_instance(&ast.func,ASTType:: LocationExpr));
+            let fdef = &ast.func.target;
+            assert!(fdef.is_function());
+            ast.statement.function.called_functions.insert(fdef.clone());
         }
         self.visitChildren(ast);
     }
@@ -47,10 +47,10 @@ impl IndirectCalledFunctionDetector {
     pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition)
     //Fixed point iteration
     {
-        size = 0;
-        leaves = ast.called_functions;
-        while len(ast.called_functions) > size {
-            size = len(ast.called_functions);
+        let mut size = 0;
+        let mut leaves = ast.called_functions.clone();
+        while ast.called_functions.len() > size {
+            size = ast.called_functions.len();
             leaves = leaves
                 .iter()
                 .map(|leaf| {
@@ -65,12 +65,12 @@ impl IndirectCalledFunctionDetector {
                         })
                         .collect()
                 })
-                .collecdt();
-            ast.called_functions.update(leaves);
+                .collect();
+            ast.called_functions=ast.called_functions.union(&leaves).collect();
         }
 
         if ast.called_functions.contains(ast) {
-            ast.is_recursive = True;
+            ast.is_recursive = true;
             ast.has_static_body = false;
         }
     }

@@ -1,10 +1,14 @@
 // import contextlib
 // from typing import List
-
-// full_log_context: List = []
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+lazy_static!{
+pub static ref FULL_LOG_CONTEXT: Mutex<Vec<String>> = Mutex::new(vec![]);
+}
 
 // @contextlib.contextmanager
-// def log_context(key: str):
-//     full_log_context.append(key)
-//     yield
-//     full_log_context.pop()
+pub fn  log_context(key: &str)
+   { FULL_LOG_CONTEXT.lock().unwrap().push(key);
+    // yield
+    FULL_LOG_CONTEXT.lock().unwrap().pop();
+    }

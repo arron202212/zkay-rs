@@ -5,12 +5,12 @@ use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
     ForStatement, FunctionCallExpr, IfStatement, LocationExpr, MeExpr, PrivacyLabelExpr,
     RequireStatement, ReturnStatement, StatementList, TupleExpr, VariableDeclarationStatement,
-    WhileStatement,
+    WhileStatement,AST,Statement,is_instance,ASTType,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn alias_analysis(ast: AST) {
-    v = AliasAnalysisVisitor();
+    let v = AliasAnalysisVisitor::new();
     v.visit(ast);
 }
 
@@ -28,9 +28,9 @@ impl AliasAnalysisVisitor {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition) {
-        let s: PartitionState<PrivacyLabelExpr> = PartitionState::new();
+        let mut s: PartitionState<PrivacyLabelExpr> = PartitionState::new();
         s.insert(MeExpr::new().privacy_annotation_label());
-        s.insert(AllExpr().privacy_annotation_label());
+        s.insert(AllExpr::new().privacy_annotation_label());
         for d in ast.parent.state_variable_declarations {
             s.insert(d.idf);
         }
@@ -46,22 +46,23 @@ impl AliasAnalysisVisitor {
         statements: Vec<Statement>,
         before_analysis: PartitionState<PrivacyLabelExpr>,
     ) -> PartitionState<PrivacyLabelExpr> {
-        last = before_analysis.copy();
+        let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements {
             statement.before_analysis = last;
-            // print("before", statement, last)
+            print!("before  {:?},{:?}", statement, last);
             self.visit(statement);
-            last = statement.after_analysis;
+            last = statement.after_analysis.clone();
+            print!("after {:?},{:?}", statement, last);
         }
-        // print("after", statement, last)
-        return last.copy();
+       
+         last
     }
     pub fn visitStatementList(&self, ast: StatementList) {
         ast.after_analysis = self.propagate(ast.statements, ast.before_analysis);
     }
     pub fn visitBlock(&self, ast: Block) {
-        last = ast.before_analysis.copy();
+        let mut last = ast.before_analysis.clone();
 
         // add fresh names from this block
         for name in ast.names.values() {
@@ -77,14 +78,14 @@ impl AliasAnalysisVisitor {
     }
     pub fn visitIfStatement(&self, ast: IfStatement) {
         // condition
-        before_then = self
+        let before_then = self
             .cond_analyzer
             .analyze(ast.condition, ast.before_analysis);
 
         // then
         ast.then_branch.before_analysis = before_then;
         self.visit(ast.then_branch);
-        after_then = ast.then_branch.after_analysis;
+        let after_then = ast.then_branch.after_analysis;
 
         // else
         let after_else = if ast.else_branch.is_some() {
@@ -137,17 +138,17 @@ impl AliasAnalysisVisitor {
             ast.before_analysis = ast.before_analysis.separate_all();
         }
 
-        ast.body.before_analysis = ast.before_analysis.copy();
+        ast.body.before_analysis = ast.before_analysis.clone();
         self.visit(ast.body);
 
         // ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
-        ast.before_analysis = ast.body.after_analysis.copy();
+        ast.before_analysis = ast.body.after_analysis.clone();
         ast.after_analysis = self
             .cond_analyzer
             .analyze(ast.condition.unop("!"), ast.before_analysis);
     }
     pub fn visitForStatement(&self, ast: ForStatement) {
-        last = ast.before_analysis.copy();
+        let mut last = ast.before_analysis.clone();
 
         // add names introduced in init
         for name in ast.names.values() {
@@ -155,9 +156,9 @@ impl AliasAnalysisVisitor {
         }
 
         if ast.init.is_some() {
-            ast.init.before_analysis = last.copy();
+            ast.init.before_analysis = last.clone();
             self.visit(ast.init);
-            ast.before_analysis = ast.init.after_analysis.copy(); // init should be taken into account when looking up things in the condition
+            ast.before_analysis = ast.init.after_analysis.clone(); // init should be taken into account when looking up things in the condition
         }
         if has_side_effects(ast.condition)
             || has_side_effects(ast.body)
@@ -172,14 +173,14 @@ impl AliasAnalysisVisitor {
         if ast.update.is_some()
         // Update is always executed after the body (if it is executed)
         {
-            ast.update.before_analysis = ast.body.after_analysis.copy();
+            ast.update.before_analysis = ast.body.after_analysis.clone();
             self.visit(ast.update);
         }
 
-        skip_loop = self
+        let skip_loop = self
             .cond_analyzer
             .analyze(ast.condition.unop("!"), ast.init.after_analysis);
-        did_loop = self.cond_analyzer.analyze(
+        let did_loop = self.cond_analyzer.analyze(
             ast.condition.unop("!"),
             if ast.update {
                 ast.update.after_analysis
@@ -197,22 +198,22 @@ impl AliasAnalysisVisitor {
         }
     }
     pub fn visitVariableDeclarationStatement(&self, ast: VariableDeclarationStatement) {
-        e = ast.expr;
-        if e && has_side_effects(e) {
+        let e = &ast.expr;
+        if e.is_some() && has_side_effects(e) {
             ast.before_analysis = ast.before_analysis.separate_all();
         }
 
         // visit expression
-        if e {
+        if e.is_some() {
             self.visit(e);
         }
 
         // state after declaration
-        after = ast.before_analysis.copy();
+        let after = ast.before_analysis.clone();
 
         // name of variable is already in list
-        name = ast.variable_declaration.idf;
-        assert(after.has(name));
+        let name = &ast.variable_declaration.idf;
+        assert!(after.has(name));
 
         // make state more precise
         if e && e.privacy_annotation_label() {
@@ -229,12 +230,12 @@ impl AliasAnalysisVisitor {
         self.visit(ast.condition);
 
         // state after require
-        after = ast.before_analysis.copy();
+        let after = ast.before_analysis.clone();
 
         // make state more precise
-        c = ast.condition;
-        if isinstance(c, FunctionCallExpr)
-            && isinstance(c.func, BuiltinFunction)
+        let &c = ast.condition;
+        if is_instance(&c,ASTType:: FunctionCallExpr)
+            && is_instance(&c.func,ASTType:: BuiltinFunction)
             && c.func.op == "=="
         {
             let lhs = c.args[0].privacy_annotation_label();
@@ -247,8 +248,8 @@ impl AliasAnalysisVisitor {
         ast.after_analysis = after;
     }
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
-        lhs = ast.lhs;
-        rhs = ast.rhs;
+        let lhs = &ast.lhs;
+        let rhs = &ast.rhs;
         if has_side_effects(lhs) || has_side_effects(rhs) {
             ast.before_analysis = ast.before_analysis.separate_all();
         }
@@ -258,7 +259,7 @@ impl AliasAnalysisVisitor {
         self.visit(ast.rhs);
 
         // state after assignment
-        after = ast.before_analysis.copy();
+        let after = ast.before_analysis.clone();
         recursive_assign(lhs, rhs, after);
 
         // save state
@@ -273,7 +274,7 @@ impl AliasAnalysisVisitor {
         self.visit(ast.expr);
 
         // if expression has effect, we are already at TOP
-        ast.after_analysis = ast.before_analysis.copy();
+        ast.after_analysis = ast.before_analysis.clone();
     }
     pub fn visitReturnStatement(&self, ast: ReturnStatement) {
         ast.after_analysis = ast.before_analysis;
@@ -308,12 +309,12 @@ impl GuardConditionAnalyzer {
             _analysis: None,
         }
     }
-    pub fn analyze(&mut self, cond: AST, before_analysis: PartitionState) -> PartitionState {
+    pub fn analyze<V: Ord>(&mut self, cond: AST, before_analysis: PartitionState<V>) -> PartitionState<V>{
         if has_side_effects(cond) {
-            before_analysis.copy().separate_all()
+            before_analysis.clone().separate_all()
         } else {
             self._neg = false;
-            self._analysis = before_analysis.copy();
+            self._analysis = before_analysis.clone();
             self.visit(cond);
             self._analysis.clone()
         }
@@ -326,7 +327,7 @@ impl GuardConditionAnalyzer {
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, BuiltinFunction) {
+        if is_instance(&ast.func,ASTType:: BuiltinFunction) {
             let op = ast.func.op;
             if op == "!" {
                 self._negated();
@@ -343,14 +344,14 @@ impl GuardConditionAnalyzer {
         }
     }
 }
-pub fn _recursive_update(lhs: AST, rhs: AST, analysis: PartitionState, merge: bool) {
-    if isinstance(lhs, TupleExpr) && isinstance(rhs, TupleExpr) {
+pub fn _recursive_update<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>, merge: bool) {
+    if is_instance(&lhs,ASTType:: TupleExpr) && is_instance(&rhs,ASTType:: TupleExpr) {
         for (l, r) in lhs.elements.iter().zip(rhs.elements) {
             _recursive_update(l, r, analysis, merge);
         }
     } else {
-        lhs = lhs.privacy_annotation_label();
-        rhs = rhs.privacy_annotation_label();
+        let lhs = lhs.privacy_annotation_label();
+        let rhs = rhs.privacy_annotation_label();
         if lhs && rhs && analysis.has(rhs) {
             if merge {
                 analysis.merge(lhs, rhs);
@@ -362,10 +363,10 @@ pub fn _recursive_update(lhs: AST, rhs: AST, analysis: PartitionState, merge: bo
         }
     }
 }
-pub fn recursive_merge(lhs: AST, rhs: AST, analysis: PartitionState) {
+pub fn recursive_merge<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
     _recursive_update(lhs, rhs, analysis, true);
 }
 
-pub fn recursive_assign(lhs: AST, rhs: AST, analysis: PartitionState) {
+pub fn recursive_assign<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
     _recursive_update(lhs, rhs, analysis, false);
 }

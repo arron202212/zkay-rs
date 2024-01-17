@@ -92,11 +92,14 @@ fn compile_solidity_json(
     }
     let old_cwd = std::env::current_dir();
     set_current_dir(cwd);
-    let ret = solc::compile(&json_in);
+    let ret = compile(&json_in);
     set_current_dir(old_cwd);
     ret
 }
-
+//TODO dummy
+fn compile(json:&str)->String{
+String::new()
+}
 fn _get_line_col(code: str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
 {
@@ -105,7 +108,7 @@ fn _get_line_col(code: str, idx: i32) -> (i32, i32)
     (line, col)
 }
 
-pub fn get_error_order_key(error: Map) -> i32 {
+pub fn get_error_order_key<K,V>(error: Map<K,V>) -> i32 {
     if let Some(e) = error.get("sourceLocation") {
         *e.get("start").unwrap_or(&-1)
     } else {
@@ -191,7 +194,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 } else if !error.contains_key("errorCode") || !["1878"].contains(error["errorCode"])
                 // Suppress SPDX license warning
                 {
-                    zk_print(report);
+                    zk_print!("{:?}",report);
                 }
             }
 

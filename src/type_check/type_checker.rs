@@ -28,7 +28,7 @@ impl TypeCheckVisitor {
         if is_instance(&rhs,ASTType:: TupleExpr) {
             if !is_instance(&rhs,ASTType:: TupleExpr)
                 || !is_instance(&expected_type.type_name,ASTType:: TupleType)
-                || len(rhs.elements) != len(expected_type.type_name.types)
+                || rhs.elements.len() != expected_type.type_name.types.len()
             {
                 assert!(
                     false,
@@ -84,15 +84,14 @@ impl TypeCheckVisitor {
     }
     //@staticmethod
     pub fn check_for_invalid_private_type(ast: AST) {
-        assert!(hasattr(ast, "annotated_type"));
-        let at = &ast.annotated_type;
+        if let Some(at) = &ast.annotated_type(){
         if at.is_private() && !at.type_name.can_be_private() {
             assert!(
                 false,
                 "Type {:?} cannot be private {:?}",
                 at.type_name, ast.annotated_type
             );
-        }
+        }}
     }
     pub fn check_final(self, fct: ConstructorOrFunctionDefinition, ast: Expression) {
         if is_instance(&ast,ASTType:: IdentifierExpr) {
@@ -222,7 +221,7 @@ impl TypeCheckVisitor {
         }
 
         let t1 = &ast.args[0].annotated_type.type_name;
-        let t2 = if len(ast.args) == 1 {
+        let t2 = if ast.args.len() == 1 {
             None
         } else {
             ast.args[1].annotated_type.type_name.clone()
@@ -235,7 +234,7 @@ impl TypeCheckVisitor {
                 t1
             }
         } else {
-            assert!(ast.argsl.en() == 2);
+            assert!(ast.args.len() == 2);
             let is_eq_with_tuples = func.is_eq() && is_instance(&t1,ASTType:: TupleType);
             t1.combined_type(t2, is_eq_with_tuples)
         };
@@ -567,17 +566,17 @@ impl TypeCheckVisitor {
             let ft = &ast.func.annotated_type.type_name;
             assert!(is_instance(ft,ASTType:: FunctionTypeName));
 
-            if len(ft.parameters) != len(ast.args) {
+            if ft.parameters.len() != ast.args.len() {
                 assert!(false, "Wrong number of arguments {:?}", ast.func)
             }
 
             //Check arguments
-            for i in 0..ast.argslen() {
+            for i in 0..ast.args.len() {
                 ast.args[i] = self.get_rhs(ast.args[i], ft.parameters[i].annotated_type);
             }
 
             //Set expression type to return type
-            if len(ft.return_parameters) == 1 {
+            if ft.return_parameters.len() == 1 {
                 ast.annotated_type = ft.return_parameters[0].annotated_type.clone();
             } else {
                 //TODO maybe not None label in the future
@@ -643,7 +642,7 @@ impl TypeCheckVisitor {
         }
 
         let mut homomorphism = ast.homomorphism || ast.expr.annotated_type.homomorphism;
-        assert(homomorphism);
+        assert!(homomorphism);
 
         //Prevent ReclassifyExpr to all with homomorphic type
         if ast.privacy.is_all_expr() && homomorphism != Homomorphism::non_homomorphic() {

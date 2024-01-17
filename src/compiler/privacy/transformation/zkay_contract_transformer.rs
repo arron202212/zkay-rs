@@ -27,11 +27,11 @@ use crate::zkay_ast::visitor::deep_copy::deep_copy;
 use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
 use std::collections::BTreeMap;
 
-pub fn transform_ast(
+pub fn transform_ast<V>(
     ast: SourceUnit,
 ) -> (
     SourceUnit,
-    BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
+    BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
 // """
     // Convert zkay to solidity AST + proof circuits
@@ -143,11 +143,11 @@ pub fn transform_ast(
 //     (0 for out array, after last key for in array) are added as additional arguments.
 //   * Finally the verification contract is invoked to verify the proof (the in array was populated by the called functions themselves).
 // """
-pub struct ZkayTransformer {
-    circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
-    var_decl_trafo: ZkayVarDeclTransformer,
+pub struct ZkayTransformer<V> {
+    circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl ZkayTransformer {
+impl<V> ZkayTransformer<V> {
     // pub fn __init__(self)
     //     super().__init__()
     //     self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}
@@ -165,7 +165,7 @@ impl ZkayTransformer {
     pub fn import_contract(
         cname: &str,
         su: &SourceUnit,
-        corresponding_circuit: Option<CircuitHelper>,
+        corresponding_circuit: Option<CircuitHelper<V>>,
     )
     // """
     // Import contract "vname" into the given source unit.
@@ -239,7 +239,7 @@ impl ZkayTransformer {
     pub fn create_circuit_helper(
         fct: ConstructorOrFunctionDefinition,
         global_owners: Vec<PrivacyLabelExpr>,
-        internal_circ: Option<CircuitHelper>,
+        internal_circ: Option<CircuitHelper<V>>,
     )
     // """
     // Create circuit helper for the given function.
@@ -684,7 +684,7 @@ impl ZkayTransformer {
 
     pub fn create_external_wrapper_body(
         int_fct: ConstructorOrFunctionDefinition,
-        ext_circuit: CircuitHelper,
+        ext_circuit: CircuitHelper<V>,
         original_params: Vec<Parameter>,
         requires_proof: bool,
     ) -> Block

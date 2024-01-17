@@ -1,21 +1,20 @@
 // import contextlib
 // import time
-
+use std::time::{Duration, Instant};
 use crate::zk_print;
-use crate::my_logging;
-
+use crate::my_logging::logger;
+use crate::config::CFG;
 // @contextlib.contextmanager
 pub fn time_measure(key: &str, should_print: bool, skip: bool) {
-    let start = time.time();
+    let start = Instant::now();
     // yield
-    let end = time.time();
-    let elapsed = end - start;
+    let elapsed =start.elapsed();
 
     if !skip {
         if should_print {
-            zk_print("Took {elapsed} s");
+            zk_print!("Took {elapsed} s");
         }
-        my_logging.data("time_" + key, elapsed);
+        logger::data("time_".to_owned() + key, elapsed);
     }
 }
 

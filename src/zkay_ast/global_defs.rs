@@ -11,7 +11,7 @@ lazy_static! {
     pub static ref ARRAY_LENGTH_MEMBER: VariableDeclaration = VariableDeclaration::new(
         vec![],
         AnnotatedTypeName::uint_all(),
-        Identifier::Identifier::identifier(IdentifierBase::new(String::from("length"))),
+        Identifier::identifier(IdentifierBase::new(String::from("length"))),
         None
     );
     pub static ref GLOBAL_DEFS: GlobalDefs = GlobalDefs::new();
@@ -80,7 +80,7 @@ impl GlobalDefs {
                     )]),
                     Some(vec![String::from("public")]),
                     Some(vec![]),
-                    Some(Block(vec![], false)),
+                    Some(Block::new(vec![], false)),
                 ),
             ],
         );
@@ -88,7 +88,7 @@ impl GlobalDefs {
         address_payable_struct.members[2].can_be_private = false;
         set_parents(address_payable_struct);
 
-        let msg_struct: StructDefinition = StructDefinition(
+        let msg_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<msg>"),
             vec![
                 VariableDeclaration::new(
@@ -105,7 +105,7 @@ impl GlobalDefs {
         );
         set_parents(msg_struct);
 
-        let block_struct: StructDefinition = StructDefinition(
+        let block_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<block>"),
             vec![
                 VariableDeclaration::new(
@@ -137,7 +137,7 @@ impl GlobalDefs {
         );
         set_parents(block_struct);
 
-        let tx_struct: StructDefinition = StructDefinition(
+        let tx_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<tx>"),
             vec![
                 VariableDeclaration::new(
@@ -195,7 +195,7 @@ impl GlobalVars {
         );
         msg.idf.parent = msg;
 
-        let mut block: StateVariableDeclaration = StateVariableDeclaration(
+        let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![GLOBAL_DEFS.block_struct.idf.clone()],
@@ -209,7 +209,7 @@ impl GlobalVars {
         );
         block.idf.parent = block;
 
-        let mut tx: StateVariableDeclaration = StateVariableDeclaration(
+        let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![GLOBAL_DEFS.tx_struct.idf.clone()],
@@ -223,7 +223,7 @@ impl GlobalVars {
         );
         tx.idf.parent = tx;
 
-        let mut now: StateVariableDeclaration = StateVariableDeclaration(
+        let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
             vec![],
             Identifier::identifier("now"),

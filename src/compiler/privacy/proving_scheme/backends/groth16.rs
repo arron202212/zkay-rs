@@ -42,10 +42,11 @@ impl VerifyingKey {
     }
 }
 impl VK for VerifyingKey {
+    type Output=Self;
     // @classmethod
-    fn create_dummy_key() -> Self {
-        let p1 = G1Point('0', '0');
-        let p2 = G2Point('0', '0', '0', '0');
+    fn create_dummy_key() -> Self::Output {
+        let p1 = G1Point::new('0', '0');
+        let p2 = G2Point::new('0', '0', '0', '0');
         Self::new(p1.clone(), p2.clone(), p2.clone(), p2, vec![p1.clone(), p1])
     }
 }
@@ -58,7 +59,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     fn generate_verification_contract(
         self,
         verification_key: VerifyingKey,
-        circuit: CircuitHelper,
+        circuit: CircuitHelper<Self>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {
@@ -66,7 +67,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
         let should_hash = CFG.lock().unwrap().should_use_hash(circuit);
 
         let query_length = vk.gamma_abc.len();
-        assert!(query_length == len(primary_inputs) + 1);
+        assert!(query_length == primary_inputs.len() + 1);
 
         assert!(primary_inputs, "No public inputs");
         let first_pi = primary_inputs[0].clone();

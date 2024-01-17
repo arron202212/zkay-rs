@@ -1,13 +1,13 @@
-use crate::zkay_ast::ast::{Expression, FunctionCallExpr, LocationExpr, AST};
+use crate::zkay_ast::ast::{Expression, FunctionCallExpr, LocationExpr, AST,ASTType,is_instance};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private_expr(ast: Option<AST>) {
     if ast.is_none() {
         return false;
     }
-    v = ContainsPrivVisitor();
+    let v = ContainsPrivVisitor::new();
     v.visit(ast);
-    return v.contains_private;
+    v.contains_private
 }
 
 // class ContainsPrivVisitor(AstVisitor)
@@ -24,7 +24,7 @@ impl ContainsPrivVisitor {
         }
     }
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, LocationExpr) && !ast.is_cast {
+        if is_instance(&ast.func, ASTType::LocationExpr) && !ast.is_cast {
             self.contains_private |= ast.func.target.requires_verification;
         }
         self.visitExpression(ast)
@@ -32,7 +32,7 @@ impl ContainsPrivVisitor {
 
     pub fn visitExpression(self, ast: Expression) {
         if ast.evaluate_privately {
-            self.contains_private = True;
+            self.contains_private = true;
         }
         self.visitAST(ast)
     }

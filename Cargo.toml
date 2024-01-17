@@ -28,6 +28,10 @@ once_cell="1.19"
 tiny-keccak = { version = "2.0.0", features = ["keccak"] }
 hex="0.4.3"
 rs_sha512="0.1.3"
+log="0.4.10"
+env_logger="0.10.1"
+chrono="0.4.31"
+bitflags="2.4.1"
 [dependencies.uuid]
 version = "1.6.1"
 features = [

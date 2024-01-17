@@ -95,8 +95,8 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
 
 // """Java circuit code template"""
 
-pub fn get_jsnark_circuit_class_str(
-    circuit: CircuitHelper,
+pub fn get_jsnark_circuit_class_str<V>(
+    circuit: CircuitHelper<V>,
     crypto_init_stmts: Vec<String>,
     fdefs: Vec<String>,
     circuit_statements: Vec<String>,
@@ -148,7 +148,7 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
         pub_in_size = circuit.in_size_trans,
         pub_out_size = circuit.out_size_trans,
         priv_in_size = circuit.priv_in_size_trans,
-        use_input_hashing = &str(CFG.lock().unwrap().should_use_hash(circuit)).lower(),
+        use_input_hashing = CFG.lock().unwrap().should_use_hash(circuit).to_ascii_lowercase(),
         fdefs = indent(function_definitions),
         circuit_statements = indent(indent("\n".join(circuit_statements)))
     );

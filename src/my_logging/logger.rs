@@ -5,11 +5,14 @@
 // from logging import addLevelName
 
 // # current time
-// from zkay.config import cfg
-// from zkay.my_logging.log_context import full_log_context
+use crate::config::CFG;
+use crate::my_logging::log_context::FULL_LOG_CONTEXT;
 
-// timestamp = '{:%Y-%m-%d_%H-%M-%S}'.format(datetime.datetime.now())
+// timestamp = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 
+ fn   timestamp()->String{
+use chrono::Local;
+Local::now().format("%Y-%m-%d_%H:%M:%S")}
 // # shutdown current logger (useful for debugging, ...)
 // def shutdown(handler_list=None):
 //     if handler_list is None:
@@ -26,15 +29,39 @@
 // # WARNING = 30
 // # INFO = 20
 // # DEBUG = 10
-// DATA = 5
+const DATA:i32 = 5;
 // addLevelName(DATA, "DATA")
+use log::{Record, Level, Metadata, LevelFilter, SetLoggerError};
 
-// def data(key, value):
-//     """
-//     Log (key, value) to log-level DATA
-//     """
-//     d = {'key': key, 'value': value, 'context': full_log_context}
-//     return logging.log(DATA, json.dumps(d))
+static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
+
+struct ConsoleLogger;
+
+impl log::Log for ConsoleLogger {
+  fn enabled(&self, metadata: &Metadata) -> bool {
+     metadata.level() <= Level::Info
+    }
+
+    fn log(&self, record: &Record) {
+        if self.enabled(record.metadata()) {
+            println!("Rust says: {} - {}", record.level(), record.args());
+        }
+    }
+
+    fn flush(&self) {}
+}
+fn set_log() -> Result<(), SetLoggerError> {
+    log::set_logger(&CONSOLE_LOGGER)?;
+    log::set_max_level(LevelFilter::Info);
+}
+use serde_json::json;
+pub fn data(key:&str, value:&str)->String
+    // """
+    // Log (key, value) to log-level DATA
+    // """
+   { let d = json!({"key": key, "value": value, "context": FULL_LOG_CONTEXT.lock().unwrap().clone()});
+    return log::debug!( "{DATA},{}",d)
+    }
 
 // def get_log_dir(parent_dir, label):
 //     """
@@ -48,7 +75,7 @@
 
 //     return d
 
-// def get_log_file(label='default', parent_dir=None, filename='log', include_timestamp=True):
+// def get_log_file(label="default", parent_dir=None, filename="log", include_timestamp=True):
 //     if parent_dir is None:
 //         parent_dir = os.path.realpath(cfg.log_dir)
 //     if label is None:
@@ -57,7 +84,7 @@
 //         log_dir = get_log_dir(parent_dir, label)
 
 //     if include_timestamp:
-//         filename += '_' + timestamp
+//         filename += "_" + timestamp
 //     log_file = os.path.join(log_dir, filename)
 
 //     return log_file
@@ -70,61 +97,61 @@
 //     if log_file is None:
 //         log_file = get_log_file()
 
-//     console_loglevel = 'WARNING'
+//     console_loglevel = "WARNING"
 
 //     if not silent:
 //         print(f"Saving logs to {log_file}*...")
 
 //     # set default logging settings
 //     default_logging = {
-//         'version': 1,
-//         'formatters': {
-//             'standard': {
-//                 'format': '%(asctime)s [%(levelname)s]: %(message)s',
-//                 'datefmt': '%Y-%m-%d_%H-%M-%S'
+//         "version": 1,
+//         "formatters": {
+//             "standard": {
+//                 "format": "%(asctime)s [%(levelname)s]: %(message)s",
+//                 "datefmt": "%Y-%m-%d_%H-%M-%S"
 //             },
-//             'minimal': {
-//                 'format': '%(message)s'
+//             "minimal": {
+//                 "format": "%(message)s"
 //             },
 //         },
-//         'filters': {
-//             'onlydata': {
-//                 '()': OnlyData
+//         "filters": {
+//             "onlydata": {
+//                 "()": OnlyData
 //             }
 //         },
-//         'handlers': {
-//             'default': {
-//                 'level': console_loglevel,
-//                 'formatter': 'standard',
-//                 'class': 'logging.StreamHandler',
+//         "handlers": {
+//             "default": {
+//                 "level": console_loglevel,
+//                 "formatter": "standard",
+//                 "class": "logging.StreamHandler",
 //             },
-//             'fileinfo': {
-//                 'level': 'INFO',
-//                 'formatter': 'standard',
-//                 'filename': log_file + '_info.log',
-//                 'mode': 'w',
-//                 'class': 'logging.FileHandler',
+//             "fileinfo": {
+//                 "level": "INFO",
+//                 "formatter": "standard",
+//                 "filename": log_file + "_info.log",
+//                 "mode": "w",
+//                 "class": "logging.FileHandler",
 //             },
-//             'filedebug': {
-//                 'level': 'DEBUG',
-//                 'formatter': 'standard',
-//                 'filename': log_file + '_debug.log',
-//                 'mode': 'w',
-//                 'class': 'logging.FileHandler',
+//             "filedebug": {
+//                 "level": "DEBUG",
+//                 "formatter": "standard",
+//                 "filename": log_file + "_debug.log",
+//                 "mode": "w",
+//                 "class": "logging.FileHandler",
 //             },
-//             'filedata': {
-//                 'level': 'DATA',
-//                 'formatter': 'minimal',
-//                 'filename': log_file + '_data.log',
-//                 'mode': 'w',
-//                 'class': 'logging.FileHandler',
-//                 'filters': ['onlydata']
+//             "filedata": {
+//                 "level": "DATA",
+//                 "formatter": "minimal",
+//                 "filename": log_file + "_data.log",
+//                 "mode": "w",
+//                 "class": "logging.FileHandler",
+//                 "filters": ["onlydata"]
 //             }
 //         },
-//         'loggers': {
-//             '': {
-//                 'handlers': ['default', 'fileinfo', 'filedebug', 'filedata'],
-//                 'level': 0
+//         "loggers": {
+//             "": {
+//                 "handlers": ["default", "fileinfo", "filedebug", "filedata"],
+//                 "level": 0
 //             }
 //         }
 //     }

@@ -1,7 +1,7 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
     AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition, FunctionCallExpr, LocationExpr,
-    PrimitiveCastExpr, ReclassifyExpr,
+    PrimitiveCastExpr, ReclassifyExpr,AST,ASTType,is_instance,
 };
 use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
 
@@ -25,12 +25,12 @@ pub fn detect_hybrid_functions(ast: AST)
 pub struct DirectHybridFunctionDetectionVisitor;
 impl DirectHybridFunctionDetectionVisitor {
     pub fn visitReclassifyExpr(self, ast: ReclassifyExpr) {
-        ast.statement.function.requires_verification = True;
+        ast.statement.function.requires_verification = true;
     }
 
     pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) {
         if ast.expr.evaluate_privately {
-            ast.statement.function.requires_verification = True;
+            ast.statement.function.requires_verification = true;
         } else {
             self.visitChildren(ast);
         }
@@ -41,10 +41,10 @@ impl DirectHybridFunctionDetectionVisitor {
     {
     }
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if isinstance(ast.func, BuiltinFunction) && ast.func.is_private {
-            ast.statement.function.requires_verification = True;
+        if is_instance(&ast.func, ASTType::BuiltinFunction) && ast.func.is_private {
+            ast.statement.function.requires_verification = true;
         } else if ast.is_cast && ast.evaluate_privately {
-            ast.statement.function.requires_verification = True;
+            ast.statement.function.requires_verification = true;
         } else {
             self.visitChildren(ast);
         }
@@ -54,11 +54,11 @@ impl DirectHybridFunctionDetectionVisitor {
 
         if ast.can_be_external {
             if ast.requires_verification {
-                ast.requires_verification_when_external = True;
+                ast.requires_verification_when_external = true;
             } else {
                 for param in ast.parameters {
                     if param.annotated_type.is_private() {
-                        ast.requires_verification_when_external = True;
+                        ast.requires_verification_when_external = true;
                         break;
                     }
                 }
@@ -73,9 +73,9 @@ impl IndirectHybridFunctionDetectionVisitor {
         if !ast.requires_verification {
             for fct in ast.called_functions {
                 if fct.requires_verification {
-                    ast.requires_verification = True;
+                    ast.requires_verification = true;
                     if ast.can_be_external {
-                        ast.requires_verification_when_external = True;
+                        ast.requires_verification_when_external = true;
                     }
                     break;
                 }
@@ -87,7 +87,7 @@ impl IndirectHybridFunctionDetectionVisitor {
 pub struct NonInlineableCallDetector;
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if !ast.is_cast && isinstance(ast.func, LocationExpr) {
+        if !ast.is_cast && is_instance(&ast.func, ASTType::LocationExpr) {
             if ast.func.target.requires_verification && ast.func.target.is_recursive {
                 assert!(
                     false,

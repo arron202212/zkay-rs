@@ -80,7 +80,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
     // """
 
     // Determine parenthesis characters
-    let open_sym = code.as_bytes()[open_parens_loc] as char();
+    let open_sym = code.as_bytes()[open_parens_loc] as char;
     let mut close_sym="";
     if open_sym == "(" {
         close_sym = ")"

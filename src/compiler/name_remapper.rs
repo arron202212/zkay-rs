@@ -8,7 +8,7 @@ use std::any::Any;
 // K = TypeVar("K")
 // V = TypeVar("V")
 // class Remapper(Generic[K, V]):
-    type RemapMapType = BTreeMap; //#[(bool, K), V]
+    type RemapMapType<K,V> = BTreeMap<K,V>; //#[(bool, K), V]
 
 pub struct Remapper<K, V> {
     rmap: RemapMapType<K, V>,
@@ -35,7 +35,7 @@ pub struct Remapper<K, V> {
 // :param K: name type
 // :param V: type of element to which key refers at a code location
 // """
-impl<K,V> Remapper<K=Identifier,V=HybridArgumentIdf> {
+impl<K,V> Remapper<K,V> {
 
     pub fn new() -> Self
 // super().__init__()
@@ -135,13 +135,13 @@ impl<K,V> Remapper<K=Identifier,V=HybridArgumentIdf> {
         }
     }
 
-    pub fn get_state(&self) -> Any
+    pub fn get_state(&self) -> dyn Any
 // """ Return an opaque copy of the internal state. """
     {
         self.rmap.clone()
     }
 
-    pub fn set_state(&mut self, state: &Any)
+    pub fn set_state(&mut self, state: &dyn Any)
     // """ Restore internal state from an opaque copy previously obtained using get_state. """
     {
         // assert!(isinstance(state, BTreeMap));
@@ -154,7 +154,7 @@ impl<K,V> Remapper<K=Identifier,V=HybridArgumentIdf> {
         &self,
         stmt: V,
         true_cond_for_other_branch: IdentifierExpr,
-        other_branch_state: Any,
+        other_branch_state: dyn Any,
         create_val_for_name_and_expr_fct: impl FnOnce(K, Expression) -> V,
     )
     // """

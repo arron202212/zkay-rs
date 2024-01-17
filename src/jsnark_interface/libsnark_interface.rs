@@ -28,7 +28,7 @@ pub fn generate_keys(input_dir: &str, output_dir: &str, proving_scheme: &str)
             "keygen",
             input_dir,
             output_dir,
-            str(proving_scheme_map[proving_scheme]),
+            proving_scheme_map[proving_scheme],
         ],
          true,
     );
@@ -53,10 +53,9 @@ pub fn generate_proof(key_dir: &str, input_dir: &str, output_path: &str, proving
             input_dir,
             output_path,
             key_dir,
-            str(proving_scheme_map[proving_scheme]),
-            str(int(
-                CFG.lock().unwrap().libsnark_check_verify_locally_during_proof_generation
-            )),
+            proving_scheme_map[proving_scheme],
+            CFG.lock().unwrap().libsnark_check_verify_locally_during_proof_generation
+            ,
         ],
          true,
     );

@@ -20,7 +20,59 @@ use crate::zkay_ast::build_ast::build_ast;
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 // use crate::zkay_ast::pointers::pointer_exceptions::UnknownIdentifierException;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers as link;
+use bitflags::bitflags;
+use std::fmt;
 
+bitflags! {
+    struct ASTFlags: u32 {
+        const PARENTS           = 0b00000001;
+        const LINK_IDENTIFIERS  = 0b00000010;
+        const CHECK_RETURN      = 0b00000100;
+        const ALIAS_ANALYSIS      = 0b00100000;
+        const TYPE_CHECK        = 0b00001000;
+        const SOLC_CHECK        = 0b00010000;
+        const FLAG_ALL    = Self::PARENTS.bits
+                           | Self::LINK_IDENTIFIERS.bits
+                           | Self::CHECK_RETURN.bits
+                           | Self::ALIAS_ANALYSIS.bits
+                           | Self::TYPE_CHECK.bits
+                           | Self::SOLC_CHECK.bits;
+    }
+}
+
+impl ASTFlags {
+    pub fn new(flag: Option<u32>)->Self{
+        Self{bits:flag.unwrap_or(ASTFlags::FLAG_ALL)}
+    }
+    pub fn clear(&mut self) -> &mut ASTFlags {
+        self.bits = 0;  
+        self
+    }
+    pub fn parents(&self) -> bool {
+        self.bits&Self::PARENTS==Self::PARENTS 
+    }
+   pub fn link_identifiers(&self) -> bool {
+        self.bits&Self::LINK_IDENTIFIERS==Self::LINK_IDENTIFIERS 
+    }
+   pub fn check_return(&self) -> bool {
+        self.bits&Self::CHECK_RETURN==Self::CHECK_RETURN 
+    }
+    pub fn alias_analysis(&self) -> bool {
+        self.bits&Self::ALIAS_ANALYSIS==Self::ALIAS_ANALYSIS 
+    }
+    pub fn type_check(&self) -> bool {
+        self.bits&Self::TYPE_CHECK==Self::TYPE_CHECK 
+    }
+    pub fn solc_check(&self) -> bool {
+        self.bits&Self::SOLC_CHECK==Self::SOLC_CHECK 
+    }
+}
+
+impl fmt::Display for ASTFlags {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:032b}", self.bits)
+    }
+}
 fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
     print_step("Parsing");
     let _ast = build_ast(code);
@@ -36,21 +88,23 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
         // except SolcException as e:
         //     raise ZkayCompilerError(f"{e}")
     }
-    (ast, fake_code)
+    (_ast, fake_code)
 }
 
 //parents:bool, link_identifiers:bool, check_return:bool, alias_analysis:bool, type_check:bool, solc_check:bool
-pub fn get_processed_ast(code: &str, flag: Option<i32>) -> AST {
-    let (ast, _) = get_parsed_ast_and_fake_code(code, (flag.unwrap_or(0) >> 5) == 1); //solc_check
+pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
+    let flag=ASTFlags::new(flag);
+    
+    let (ast, _) = get_parsed_ast_and_fake_code(code, flag&ASTFlags::SOLC_CHECK==ASTFlags::SOLC_CHECK); //solc_check
 
     // Zkay preprocessing and type checking
     process_ast(
         ast,
-        parents,
-        link_identifiers,
-        check_return,
-        alias_analysis,
-        type_check,
+        flag.parents(),
+        flag.link_identifiers(),
+        flag.check_return(),
+        flag.alias_analysis(),
+        flag.type_check(),
     );
 
     ast
@@ -102,14 +156,13 @@ fn process_ast(
 pub fn get_verification_contract_names(
     code_or_ast: (Option<String>, Option<SourceUnit>),
 ) -> Vec<String> {
-    let ast = if isinstance(code_or_ast, str) {
+    let ast = if let (Some(code_or_ast), None)=code_or_ast {
         get_processed_ast(code_or_ast)
-    } else {
-        code_or_ast
+    } else  if let (None,Some(code_or_ast))=code_or_ast {
+        code_or_ast.get_ast()
+    }else{
+        assert!(false, "Invalid AST (no source unit at root)");
     };
-    if !isinstance(ast, SourceUnit) {
-        assert!(false, "Invalid AST (no source unit at root)")
-    }
 
     let mut vc_names = vec![];
     for contract in ast.contracts {
@@ -128,7 +181,7 @@ pub fn get_verification_contract_names(
             .collect();
         vc_names += fcts
             .iter()
-            .map(|fct| cfg.get_verification_contract_name(cname, fct.name))
+            .map(|fct| CFG.lock().unwrap().get_verification_contract_name(cname, fct.name))
             .collect();
     }
     vc_names

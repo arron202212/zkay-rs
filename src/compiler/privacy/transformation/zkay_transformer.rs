@@ -3,7 +3,7 @@
 // """
 
 use crate::compiler::privacy::circuit_generation::circuit_helper::{
-    CircuitHelper, HybridArgumentIdf,
+    CircuitHelper,
 };
 use crate::compiler::solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use crate::config::CFG;
@@ -16,7 +16,7 @@ use crate::zkay_ast::ast::{
     LocationExpr, Mapping, MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType,
     Parameter, PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement,
     StateVariableDeclaration, Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, WhileStatement, AST,is_instance,ASTType,
+    VariableDeclarationStatement, WhileStatement, AST,is_instance,ASTType, HybridArgumentIdf,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::deep_copy::replace_expr;
@@ -35,10 +35,10 @@ use regex::RegexSetBuilder;
 // pub fn __init__(self)
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
-pub struct ZkayVarDeclTransformer {
-    expr_trafo: Option<ZkayExpressionTransformer>,
+pub struct ZkayVarDeclTransformer<V> {
+    expr_trafo: Option<ZkayExpressionTransformer<V>>,
 }
-impl ZkayVarDeclTransformer {
+impl<V> ZkayVarDeclTransformer<V> {
     pub fn new() -> Self {
         Self { expr_trafo: None }
     }
@@ -88,18 +88,18 @@ impl ZkayVarDeclTransformer {
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-pub struct ZkayStatementTransformer {
-    gen: CircuitHelper,
-    expr_trafo: ZkayExpressionTransformer,
-    var_decl_trafo: ZkayVarDeclTransformer,
+pub struct ZkayStatementTransformer<V>{
+    gen: CircuitHelper<V>,
+    expr_trafo: ZkayExpressionTransformer<V>,
+    var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl ZkayStatementTransformer {
+impl<V> ZkayStatementTransformer<V> {
     // pub fn __init__(self, current_gen: CircuitHelper)
     //     super().__init__()
     //     self.gen = current_gen
     //     self.expr_trafo = ZkayExpressionTransformer(self.gen)
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
-    pub fn new(current_gen: CircuitHelper) -> Self {
+    pub fn new(current_gen: CircuitHelper<V>) -> Self {
         Self {
             gen: current_gen.clone(),
             expr_trafo: ZkayExpressionTransformer::new(current_gen),
@@ -120,11 +120,11 @@ impl ZkayStatementTransformer {
     // """
     {
         let mut new_statements = vec![];
-        for (idx, stmt) in enumerate(ast.statements) {
+        for (idx, stmt) in ast.statements.iter().enumerate() {
             let old_code = stmt.code();
             let transformed_stmt = self.visit(stmt);
             if transformed_stmt.is_none() {
-                continue;
+                continue
             }
 
             let old_code_wo_annotations = Regex::new(
@@ -199,8 +199,8 @@ impl ZkayStatementTransformer {
                         }
                     })
                     .collect();
-                let ridf = if isinstance(
-                    ast.rhs.member.corresponding_priv_expression,
+                let ridf = if is_instance(
+                    &ast.rhs.member.corresponding_priv_expression,
                     ASTType::EncryptionExpression,
                 ) {
                     ast.rhs
@@ -362,11 +362,11 @@ impl ZkayStatementTransformer {
 // In addition to the features described in the paper, this transformer also supports primitive type casting,
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
-pub struct ZkayExpressionTransformer {
-    gen: Option<CircuitHelper>,
+pub struct ZkayExpressionTransformer<V> {
+    gen: Option<CircuitHelper<V>>,
 }
-impl ZkayExpressionTransformer {
-    pub fn new(current_generator: Option<CircuitHelper>) -> Self
+impl<V> ZkayExpressionTransformer<V> {
+    pub fn new(current_generator: Option<CircuitHelper<V>>) -> Self
 // super().__init__()
         // self.gen = current_generator
     {
@@ -588,12 +588,12 @@ impl ZkayExpressionTransformer {
 // Private expressions can never have side effects.
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
-pub struct ZkayCircuitTransformer {
-    gen: CircuitHelper,
+pub struct ZkayCircuitTransformer<V> {
+    gen: CircuitHelper<V>,
 }
 
-impl ZkayCircuitTransformer {
-    pub fn new(current_generator: CircuitHelper) -> Self {
+impl<V> ZkayCircuitTransformer<V> {
+    pub fn new(current_generator: CircuitHelper<V>) -> Self {
         Self {
             gen: current_generator,
         }

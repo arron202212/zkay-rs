@@ -1,6 +1,6 @@
 // import os
 // import subprocess
-
+use std::process::{Command, Stdio};
 use crate::config::CFG;
 // from typing import List, Optional, Tuple
 
@@ -23,43 +23,39 @@ pub fn run_command(
         std::fs::canonicalize(cwd)
     }else{""};
 
-    let (output, error) =
+    let (output, error,process) =
         if allow_verbose && CFG.lock().unwrap().verbosity >= 2 && !CFG.lock().unwrap().is_unit_test
         {
-            process = subprocess.Popen(cmd, cwd = cwd);
-            process.communicate() // will be None
+            let process= Command::new(cmd).current_dir(cwd).output().expect("");
+            (process.stdout,process.stderr,process)
         } else {
             //run
-            let process = subprocess.Popen(
-                cmd,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-                cwd = cwd,
-            );
+            let process =  Command::new(cmd).current_dir(cwd).stderr(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn().expect("").wait_with_output().expect("");
+            
 
             //collect output
-            let (mut output, mut error) = process.communicate();
-
             //decode output
-            output = output.decode("utf-8").rtrim();
-            error = error.decode("utf-8").rtrim();
-            (output, error)
+        //     let output = output.decode("utf-8").rtrim();
+        //    let  error = error.decode("utf-8").rtrim();
+            (process.stdout, process.stderr,process)
         };
 
     //check for error
-    if process.returncode != 0 {
+    if !process.status.success() {
         let cmd = get_command(cmd);
         // raise subprocess.SubprocessError(msg)
         assert!(
             false,
             "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output}\n{error}",
-            process.returncode
+            process.status
         );
     } else if CFG.lock().unwrap().verbosity >= 2 {
         print!("Ran command {}:\n\n{output}\n{error}", get_command(cmd));
     }
 
-    (output, error)
+    (String::from_utf8(output).ok(), String::from_utf8(error).ok())
 }
 
 pub fn get_command(cmd: Vec<&str>) -> String {

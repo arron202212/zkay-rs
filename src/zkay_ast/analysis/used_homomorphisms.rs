@@ -6,7 +6,7 @@ use crate::zkay_ast::ast::{
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
-
+ use std::collections::{BTreeSet,BTreeMap};
 // class UsedHomomorphismsVisitor(AstVisitor)
 pub struct UsedHomomorphismsVisitor;
 impl UsedHomomorphismsVisitor {
@@ -116,7 +116,7 @@ impl UsedHomomorphismsVisitor {
                     continue;
                 }
                 let old_len = g.used_homomorphisms.len();
-                g.used_homomorphisms = used_homomorphisms.union(f.used_homomorphisms).collect();
+                g.used_homomorphisms = g.used_homomorphisms.union(f.used_homomorphisms).collect();
                 if g.used_homomorphisms.len() > old_len && callers[g] {
                     dirty.add(g);
                 }
@@ -137,11 +137,11 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visit(self, ast: AST) {
-        let all_homs = super().visit(ast);
-        if hasattr(ast, "used_homomorphisms") {
+        let all_homs = self.visit(ast);//TODO super()
+        if let Some(_)=ast.used_homomorphisms() {
             ast.used_homomorphisms = all_homs.clone();
         }
-        if hasattr(ast, "used_crypto_backends") {
+        if let Some(_)=ast.used_crypto_backends(){
             ast.used_crypto_backends = self.used_crypto_backends(all_homs);
         }
         all_homs
@@ -151,9 +151,9 @@ impl UsedHomomorphismsVisitor {
 // Guarantee consistent order
     {
         let mut result = vec![];
-        for hom in Homomorphism {
+        for hom in Homomorphism::fields(){
             if used_homs.contains(&hom) {
-                let crypto_backend = cfg.get_crypto_params(hom);
+                let crypto_backend = CFG.lock().unwrap().get_crypto_params(hom);
                 if !result.contain(&crypto_backend) {
                     result.push(crypto_backend);
                 }

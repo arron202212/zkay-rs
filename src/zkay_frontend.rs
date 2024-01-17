@@ -29,29 +29,24 @@ use crate::config::CFG;
 use crate::utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use crate::utils::progress_printer::print_step;
 // use crate::utils::timer::time_measure
-// use crate::zkay_ast::homomorphism::String
+use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
 use lazy_static::lazy_static;
 use serde_json::json;
-lazy_static! {
-    static ref proving_scheme_classes: HashMap<String, Box<dyn ProvingScheme + Send>> =
-        HashMap::from([
-            (
-                String::from("groth16"),
-                Box::new(ProvingSchemeGroth16 {}) as Box<dyn ProvingScheme + Send>
-            ),
-            (
-                String::from("gm17"),
-                Box::new(ProvingSchemeGm17 {}) as Box<dyn ProvingScheme + Send>
-            )
-        ]);
-    static ref generator_classes: HashMap<String, Box<dyn CircuitGenerator + Send>> =
-        HashMap::from([(
-            String::from("jsnark"),
-            Box::new(JsnarkGenerator {}) as Box<dyn CircuitGenerator + Send>
-        )]);
+ use std::collections::HashMap;
+use std::path::PathBuf;
+fn  proving_scheme_classes<VK>(proving_scheme:&String)->&'static impl ProvingScheme<VerifyingKey=VK>{
+        match proving_scheme{
+        "groth16"=>&ProvingSchemeGroth16,
+        _=>&ProvingSchemeGm17,//"gm17"
 }
+}
+fn generator_classes<T,V>(_snark_backend:&String)->impl FnOnce(Vec<CircuitHelper<V>>,  T,  String)->JsnarkGenerator<T,V>{
+        JsnarkGenerator::new
+}
+
+
 // """
 // Parse, type-check and compile the given zkay contract file.
 
@@ -110,7 +105,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     // Copy zkay code to output
     let zkay_filename = "contract.zkay";
     if import_keys
-        && !std::path::PathBuf::from(output_dir)
+        && !PathBuf::from(output_dir)
             .join(zkay_filename)
             .try_exists()
             .unwrap_or(false)
@@ -136,8 +131,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     CFG.lock().unwrap().library_compilation_environment();
     for crypto_params in ast.used_crypto_backends {
         // Write pki contract
-        pki_contract_code = library_contracts::get_pki_contract(crypto_params);
-        pki_contract_file = format!(
+        let pki_contract_code = library_contracts::get_pki_contract(crypto_params);
+        let pki_contract_file = format!(
             "{}.sol",
             CFG.lock().unwrap().get_pki_contract_name(crypto_params)
         );
@@ -154,8 +149,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
 
     // Write public contract file
     print_step("Write public solidity code");
-    output_filename = "contract.sol";
-    solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename);
+    let output_filename = "contract.sol";
+    let solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename);
 
     // Get all circuit helpers for the transformed contract
     let circuits: Vec<_> = circuits.values().collect();
@@ -165,11 +160,11 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");
 
     // Instantiate proving scheme and circuit generator
-    let ps = proving_scheme_classes[CFG.lock().unwrap().proving_scheme]();
-    let cg = generator_classes[CFG.lock().unwrap().snark_backend](circuits, ps, output_dir);
+    let ps = proving_scheme_classes(CFG.lock().unwrap().proving_scheme);
+    let cg = generator_classes(CFG.lock().unwrap().snark_backend)(circuits, ps, output_dir);
     let mut kwargs = std::collections::HashMap::new();
     if let Some(v) = kwargs.get("verifier_names") {
-        assert!(isinstance(v, list));
+        // assert!(isinstance(v, list));
         let mut verifier_names = get_verification_contract_names(zkay_ast);
         verifier_names.sort_unstable();
         let mut verifier_contract_type_codes: Vec<_> = cg
@@ -186,7 +181,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     if !import_keys {
         print_step("Writing manifest file");
         // Set crypto backends for unused homomorphisms to None
-        for hom in String {
+        for hom in Homomorphism::fields() {
             if !ast.used_homomorphisms.contains(hom) {
                 CFG.lock().unwrap().set_crypto_backend(hom, None);
             }
@@ -198,7 +193,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
             Manifest::zkay_options: CFG.lock().unwrap().export_compiler_settings(),
         });
         _dump_to_output(format!("{manifest}"), output_dir, "manifest.json")
-    } else if !std::path::PathBuf::from(output_dir)
+    } else if !PathBuf::from(output_dir)
         .join("manifest.json")
         .try_exists()
         .unwrap_or(false)
@@ -214,7 +209,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     let main_solidity_files = cg
         .get_verification_contract_filenames()
         .iter()
-        .chain([std::path::PathBuf::from(output_dir).join(output_filename)]);
+        .chain([PathBuf::from(output_dir).join(output_filename)]);
     for f in main_solidity_files {
         check_compilation(f, false);
     }

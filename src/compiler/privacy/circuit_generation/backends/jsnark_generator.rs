@@ -4,13 +4,10 @@
 // from typing import List, Optional, Union, Tuple
 
 use crate::compiler::privacy::circuit_generation::circuit_constraints::{
-    CircCall, CircComment, CircGuardModification, CircIndentBlock, CircSymmEncConstraint,
+    CircuitStatement,CircEqConstraint, CircVarDecl,CircEncConstraint, CircCall, CircComment, CircGuardModification, CircIndentBlock, CircSymmEncConstraint,
 };
-use crate::compiler::privacy::circuit_generation::circuit_generator::CircuitGenerator;
-use crate::compiler::privacy::circuit_generation::circuit_helper::{
-    CircEncConstraint, CircEqConstraint, CircVarDecl, CircuitHelper, CircuitStatement,
-    HybridArgumentIdf,
-};
+use crate::compiler::privacy::circuit_generation::circuit_generator::{CircuitGenerator,CircuitGeneratorBase};
+use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17;
 use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use crate::compiler::privacy::proving_scheme::proving_scheme::{
@@ -23,7 +20,7 @@ use crate::utils::helpers::{read_file, save_to_file};
 use crate::zkay_ast::ast::{
     indent, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression, FunctionCallExpr,
     IdentifierExpr, IndexExpr, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,
-    TypeName,is_instance,ASTType,
+    TypeName,is_instance,ASTType,HybridArgumentIdf,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -74,7 +71,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitCircIndentBlock(self, stmt: CircIndentBlock) {
-        let stmts = list(map(self.visit, stmt.statements));
+        let stmts:Vec<_>= stmt.statements.iter().map(|s|self.visit(s)).collect();
         if stmt.name {
             format!(
                 r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
@@ -213,15 +210,15 @@ impl JsnarkVisitor
             } else if op == "parenthesis" {
                 String::from("({})")
             } else {
-                let o = if len(op) == 1 {
+                let o = if op.len() == 1 {
                     format!(r#"'{op}'"#)
                 } else {
                     format!(r#""{op}""#)
                 };
-                if len(args) == 1 {
+                if args.len() == 1 {
                     format!(r#"{f_start}{o}, {{{}}})"#, args[0])
                 } else {
-                    assert!(len(args) == 2);
+                    assert!(args.len() == 2);
                     if op == "*" && ast.func.rerand_using.is_some() {
                         // re-randomize homomorphic scalar multiplication
                         let rnd = self.visit(ast.func.rerand_using);
@@ -254,7 +251,7 @@ impl JsnarkVisitor
     }
 }
 
-pub fn add_function_circuit_arguments(circuit: CircuitHelper)
+pub fn add_function_circuit_arguments<V>(circuit: CircuitHelper<V>)
 // """Generate java code which adds circuit IO as described by circuit"""
 {
     let mut input_init_stmts = vec![];
@@ -318,12 +315,12 @@ pub fn add_function_circuit_arguments(circuit: CircuitHelper)
 }
 
 // class JsnarkGenerator(CircuitGenerator)
-pub struct JsnarkGenerator {
-    circuit_generator_base: CircuitGenerator,
+pub struct JsnarkGenerator<T:ProvingScheme ,V> {
+    circuit_generator_base: CircuitGeneratorBase<T,V>,
 }
 
-impl JsnarkGenerator {
-    pub fn new(circuits: Vec<CircuitHelper>, proving_scheme: ProvingScheme, output_dir: String) {
+impl<T:ProvingScheme,V> JsnarkGenerator<T,V> {
+    pub fn new(circuits: Vec<CircuitHelper<V>>, proving_scheme: T, output_dir: String) {
         Self {
             circuit_generator_base: CircuitGenerator::new(
                 circuits,
@@ -334,7 +331,7 @@ impl JsnarkGenerator {
         }
     }
 
-    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper) -> bool
+    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper<V>) -> bool
 //Create output directory
     {
         let output_dir = self._get_circuit_output_dir(circuit);
@@ -357,7 +354,7 @@ impl JsnarkGenerator {
         let mut fdefs = vec![];
         for fct in circuit.transitively_called_functions.keys() {
             let target_circuit = self.circuits[fct];
-            let body_stmts = JsnarkVisitor(target_circuit.phi).visitCircuit();
+            let body_stmts = JsnarkVisitor::new(target_circuit.phi).visitCircuit();
 
             let body = [format!(r#"stepIn("{}");"#, fct.name)]
                 .into_iter()
@@ -421,14 +418,14 @@ impl JsnarkGenerator {
             save_to_file(None, hashfile, digest);
             true
         } else {
-            zk_print(format!(
+            zk_print!(
                 r#"Circuit \"{}\" not modified, skipping compilation"#,
                 circuit.get_verification_contract_name()
-            ));
+            );
             false
         }
     }
-    pub fn _generate_keys(self, circuit: CircuitHelper)
+    pub fn _generate_keys(self, circuit: CircuitHelper<V>)
     //Invoke the custom libsnark interface to generate keys
     {
         let output_dir = self._get_circuit_output_dir(circuit);
@@ -443,17 +440,17 @@ impl JsnarkGenerator {
             .collect()
     }
 
-    pub fn _parse_verification_key(self, circuit: CircuitHelper) -> impl VerifyingKeyMeta {
+    pub fn _parse_verification_key(self, circuit: CircuitHelper<V>) -> impl VerifyingKeyMeta {
         let f = File::open(self._get_vk_and_pk_paths(circuit)[0]).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
         let data = buf.lines();
-        if is_instance(&self.proving_scheme,ASTType:: ProvingSchemeGroth16) {
+        if is_instance(&self.circuit_generator_base.proving_scheme,ASTType:: ProvingSchemeGroth16) {
             let a = G1Point::from_it(data);
             let b = G2Point::from_it(data);
             let gamma = G2Point::from_it(data);
             let delta = G2Point::from_it(data);
-            let query_len = int(next(data));
+            let query_len = data.next().unwrap() as i32;
             let gamma_abc = vec![None; query_len];
             for idx in 0..query_len {
                 gamma_abc.insert(idx,G1Point::from_it(data));
@@ -476,11 +473,11 @@ impl JsnarkGenerator {
         }
     }
 
-    pub fn _get_prover_key_hash(self, circuit: CircuitHelper) -> Vec<u8> {
-        hash_file(self._get_vk_and_pk_paths(circuit)[1])
+    pub fn _get_prover_key_hash(self, circuit: CircuitHelper<V>) -> Vec<u8> {
+        hash_file(self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1])
     }
 
-    pub fn _get_primary_inputs(self, circuit: CircuitHelper) -> Vec<String>
+    pub fn _get_primary_inputs(self, circuit: CircuitHelper<V>) -> Vec<String>
 //Jsnark requires an additional public input with the value 1 as first input
     {
         [String::from("1")].into_iter().chain(self.circuit_generator_base._get_primary_inputs(circuit)).collect()

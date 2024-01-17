@@ -45,10 +45,11 @@ impl VerifyingKey {
     }
 }
 impl VK for VerifyingKey {
+    type Output=Self;
     // @classmethod
-    fn create_dummy_key() {
-        let p1 = G1Point("0", "0");
-        let p2 = G2Point("0", "0", "0", "0");
+    fn create_dummy_key()->Self::Output {
+        let p1 = G1Point::new("0", "0");
+        let p2 = G2Point::new("0", "0", "0", "0");
         Self::new(
             p2.clone(),
             p1.clone(),
@@ -69,15 +70,15 @@ impl ProvingScheme for ProvingSchemeGm17 {
     fn generate_verification_contract(
         &self,
         verification_key: VerifyingKey,
-        circuit: CircuitHelper,
+        circuit: CircuitHelper<ProvingSchemeGm17>,
         primary_inputs: Vec<String>,
         prover_key_hash: &[u8],
     ) -> String {
         let vk = verification_key;
         let should_hash = CFG.lock().unwrap().should_use_hash(circuit);
 
-        let query_length = len(vk.query);
-        assert!(query_length == len(primary_inputs) + 1);
+        let query_length = vk.query.len();
+        assert!(query_length == primary_inputs.len() + 1);
 
         assert!(primary_inputs, "No public inputs");
         let first_pi = primary_inputs[0];

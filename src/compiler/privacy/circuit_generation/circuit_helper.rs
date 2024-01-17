@@ -29,7 +29,7 @@ use std::collections::{BTreeMap,BTreeSet};
 
 // Typically there is one instance of this class for every function which requires verification.
 // """
-pub struct CircuitHelper {
+pub struct CircuitHelper<T> {
     // Function and verification contract corresponding to this circuit
     fct: ConstructorOrFunctionDefinition,
     verifier_contract_filename: Option<String>,
@@ -37,8 +37,8 @@ pub struct CircuitHelper {
     // Metadata set later by ZkayContractTransformer
     has_return_var: bool,
     // Transformer visitors
-    _expr_trafo: AstTransformerVisitor,
-    _circ_trafo: AstTransformerVisitor,
+    _expr_trafo: T,//AstTransformerVisitor
+    _circ_trafo: T,
     // List of proof circuit statements (assertions and assignments)
     // WARNING: Never assign to let _phi, always access it using the phi property and only mutate it
     _phi: Vec<CircuitStatement>,
@@ -73,13 +73,13 @@ pub struct CircuitHelper {
     _remapper: CircVarRemapper,
 }
 
-impl CircuitHelper {
+impl<T> CircuitHelper<T> {
     pub fn new(
         fct: ConstructorOrFunctionDefinition,
         static_owner_labels: Vec<PrivacyLabelExpr>,
-        expr_trafo_constructor: impl FnOnce(&CircuitHelper) -> AstTransformerVisitor,
-        circ_trafo_constructor: impl FnOnce(&CircuitHelper) -> AstTransformerVisitor,
-        internal_circuit: &mut Option<CircuitHelper>,
+        expr_trafo_constructor: impl FnOnce(&Self) -> T,
+        circ_trafo_constructor: impl FnOnce(&Self) -> T,
+        internal_circuit: &mut Option<CircuitHelper<T>>,
     ) -> Self {
         // """
         // Create a new CircuitHelper instance
@@ -97,8 +97,8 @@ impl CircuitHelper {
         // super().__init__()
         let verifier_contract_filename: Option<str> = None;
         let verifier_contract_type: Option<UserDefinedTypeName> = None;
-        let _expr_trafo: AstTransformerVisitor = AstTransformerVisitor::new(false);//expr_trafo_constructor(&self);
-        let _circ_trafo: AstTransformerVisitor = AstTransformerVisitor::new(false);//circ_trafo_constructor(&self);
+        let _expr_trafo: T = AstTransformerVisitor::default();//expr_trafo_constructor(&self);
+        let _circ_trafo: T = AstTransformerVisitor::default();//circ_trafo_constructor(&self);
         let mut _needed_secret_key = BTreeMap::new();
         let mut _global_keys = BTreeMap::new();
         let transitively_called_functions = BTreeMap::new();
@@ -578,9 +578,9 @@ impl CircuitHelper {
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
         //rather than introducing an unnecessary public circuit input (expensive)
         if is_instance(&t,ASTType:: BooleanLiteralType) {
-            return self._evaluate_private_expression(input_expr, str(t.value));
+            return self._evaluate_private_expression(input_expr, t.value.to_string());
         } else if is_instance(&t,ASTType:: NumberLiteralType) {
-            return self._evaluate_private_expression(input_expr, str(t.value));
+            return self._evaluate_private_expression(input_expr, t.value.to_string());
         }
 
         let mut t_suffix = String::new();
@@ -716,7 +716,7 @@ impl CircuitHelper {
       
             //with
             if fcall.func.target.idf.name == "<stmt_fct>" {
-                nullcontext();
+                {}
             } else {
                 self.circ_indent_block(format!("INLINED {}", fcall.code()));
             }
@@ -754,7 +754,7 @@ impl CircuitHelper {
                         .collect(),
                 );
         
-        if len(ret.elements) == 1
+        if ret.elements.len() == 1
         //Unpack 1-length tuple
         {
             ret = ret.elements[0];
@@ -843,38 +843,30 @@ impl CircuitHelper {
         self.phi.push(CircComment::new("{"));
         // with
         self.circ_indent_block();
-        {
             // with
-            if guard_cond.is_none() {
-                nullcontext();
-            } else {
+            if let Some(guard_cond)=guard_cond {
                 self.guarded(guard_cond, guard_val);
             }
-            {
                 //with
-                if is_already_scoped {
-                    nullcontext();
-                } else {
+                if !is_already_scoped {
                     self._remapper.remap_scope(ast);
                 }
-                {
                     for stmt in ast.statements {
                         self._circ_trafo.visit(stmt);
                         //Bubble up nested pre statements
                         ast.pre_statements += stmt.pre_statements;
-                        stmt.pre_statements = [];
+                        stmt.pre_statements = vec![];
                     }
-                }
-            }
-        }
+            
+    
         self.phi.push(CircComment::new("}"));
     }
 
     //Internal functionality #
 
-    pub fn _get_canonical_privacy_label(
+    pub fn _get_canonical_privacy_label<P:Ord>(
         &self,
-        analysis: &PartitionState,
+        analysis: &PartitionState<P>,
         privacy: &PrivacyLabelExpr,
     )
     // """

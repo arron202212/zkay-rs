@@ -7,7 +7,7 @@ use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
 
 pub fn check_final(ast: AST) {
-    let v = FinalVisitor();
+    let v = FinalVisitor::new();
     v.visit(ast);
 }
 

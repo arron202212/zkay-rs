@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStatement}; //, AstException
+use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStatement,AST}; //, AstException
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: AST) {
@@ -49,7 +49,7 @@ impl ReturnCheckVisitor {
         if !ok
         // raise ReturnPositionException(ast)}
         {
-            assert(
+            assert!(
                 false,
                 "Return statements are only allowed at the end of a function. {:?}",
                 ast,

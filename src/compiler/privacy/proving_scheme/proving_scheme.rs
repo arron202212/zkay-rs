@@ -21,9 +21,9 @@ impl G1Point {
     pub fn negated(self) {
         let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
         if self.x == "0" && self.y == "0" {
-            G1Point("0", "0")
+            G1Point::new("0", "0")
         } else {
-            G1Point(self.x, hex(q - (int(self.y, 0) % q)))
+            G1Point::new(self.x,self.y)// hex(q - (int(self.y, 0) % q)) TODO
         }
     }
 
@@ -34,12 +34,12 @@ impl G1Point {
         // First entry makes up the X coordinate, second entry makes up the Y coordinate
         // """
     {
-        assert!(len(seq) == 2);
+        assert!(seq.len() == 2);
         return G1Point::new(seq[0], seq[1]);
     }
 
     // @staticmethod
-    pub fn from_it<T=std::io::Lines>(it: &T) -> Self {
+    pub fn from_it<T>(it: &T) -> Self {
         G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
     }
 
@@ -77,12 +77,12 @@ impl G2Point {
         //
     {
         assert!(seq.len() == 4);
-        G2Point(seq[0], seq[1], seq[2], seq[3])
+        G2Point::new(seq[0], seq[1], seq[2], seq[3])
     }
 
     // @staticmethod
-    pub fn from_it<T=std::io::Lines>(it: &T) -> Self {
-        G2Point(
+    pub fn from_it<T>(it: &T) -> Self {
+        G2Point::new(
             it.next().unwrap().unwrap(),
             it.next().unwrap().unwrap(),
             it.next().unwrap().unwrap(),
@@ -101,11 +101,12 @@ impl fmt::Display for G2Point {
 // class VerifyingKey(metaclass=ABCMeta)
 // """Abstract base data class for verification keys"""
 pub trait VerifyingKeyMeta {
+    type Output;
     // @classmethod
     // @abstractmethod
     // pub fn create_dummy_key(cls)
     //     """Generate a dummy key."""
-    fn create_dummy_key();
+    fn create_dummy_key()->Self::Output where Self: Sized;
     //     pass
 }
 
@@ -147,10 +148,10 @@ pub trait ProvingScheme {
 
     type VerifyingKey;
     // @abstractmethod
-    fn generate_verification_contract(
+    fn generate_verification_contract<V>(
         &self,
         verification_key: Self::VerifyingKey,
-        circuit: CircuitHelper,
+        circuit: CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String;
