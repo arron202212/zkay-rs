@@ -19,7 +19,9 @@
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
 
-use crate::zkay_ast::ast::{ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf};
+use crate::zkay_ast::ast::{
+    ASTCode, ASTType, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, AST,
+};
 
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
@@ -33,7 +35,46 @@ pub enum CircuitStatement {
     CircSymmEncConstraint(CircSymmEncConstraint),
     CircEqConstraint(CircEqConstraint),
 }
-
+impl ASTCode for CircuitStatement {
+    fn get_ast(&self) -> AST {
+        match self {
+            // AST::Identifier(ast) => ast.get_ast(),
+            // AST::Comment(ast) => ast.get_ast(),
+            // AST::Expression(ast) => ast.get_ast(),
+            // AST::Statement(ast) => ast.get_ast(),
+            // AST::TypeName(ast) => ast.get_ast(),
+            // AST::AnnotatedTypeName(ast) => ast.get_ast(),
+            // AST::IdentifierDeclaration(ast) => ast.get_ast(),
+            // AST::NamespaceDefinition(ast) => ast.get_ast(),
+            // AST::EnumValue(ast) => ast.get_ast(),
+            // AST::SourceUnit(ast) => ast.get_ast(),
+            // AST::Pragma(_) => self.clone(),
+            // AST::VersionPragma(_) => self.clone(),
+            // AST::Modifier(_) => self.clone(),
+            // AST::Homomorphism(_) => self.clone(),
+            _ => AST::None,
+        }
+    }
+    fn get_ast_type(&self) -> ASTType {
+        match self {
+            // AST::Identifier(ast) => ast.get_ast_type(),
+            // AST::Comment(ast) => ast.get_ast_type(),
+            // AST::Expression(ast) => ast.get_ast_type(),
+            // AST::Statement(ast) => ast.get_ast_type(),
+            // AST::TypeName(ast) => ast.get_ast_type(),
+            // AST::AnnotatedTypeName(ast) => ast.get_ast_type(),
+            // AST::IdentifierDeclaration(ast) => ast.get_ast_type(),
+            // AST::NamespaceDefinition(ast) => ast.get_ast_type(),
+            // AST::EnumValue(ast) => ast.get_ast_type(),
+            // AST::SourceUnit(ast) => ast.get_ast_type(),
+            // AST::Pragma(_) => ASTType::Pragma,
+            // AST::VersionPragma(_) => ASTType::VersionPragma,
+            // AST::Modifier(_) => ASTType::Modifier,
+            // AST::Homomorphism(_) => ASTType::Homomorphism,
+            _ => ASTType::None,
+        }
+    }
+}
 // class CircComment(CircuitStatement)
 // """
 // A textual comment, has no impact on circuit semantics (meta statement)
@@ -45,7 +86,7 @@ pub enum CircuitStatement {
 //     super().__init__()
 //     self.text = text
 pub struct CircComment {
-    text: String,
+    pub text: String,
 }
 impl CircComment {
     pub fn new(text: String) -> Self {
@@ -66,8 +107,8 @@ impl CircComment {
 //     self.name = name
 //     self.statements = statements
 pub struct CircIndentBlock {
-    name: String,
-    statements: Vec<CircuitStatement>,
+    pub name: String,
+    pub statements: Vec<CircuitStatement>,
 }
 impl CircIndentBlock {
     pub fn new(name: String, statements: Vec<CircuitStatement>) -> Self {
@@ -102,7 +143,15 @@ impl CircIndentBlock {
 //     super().__init__()
 //     self.fct = fct
 pub struct CircCall {
-    fct: ConstructorOrFunctionDefinition,
+    pub fct: ConstructorOrFunctionDefinition,
+}
+impl ASTCode for CircCall {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircCall(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircCall
+    }
 }
 impl CircCall {
     pub fn new(fct: ConstructorOrFunctionDefinition) -> Self {
@@ -123,8 +172,16 @@ impl CircCall {
 //     self.lhs = lhs
 //     self.expr = expr
 pub struct CircVarDecl {
-    lhs: HybridArgumentIdf,
-    expr: Expression,
+    pub lhs: HybridArgumentIdf,
+    pub expr: Expression,
+}
+impl ASTCode for CircVarDecl {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircVarDecl(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircVarDecl
+    }
 }
 impl CircVarDecl {
     pub fn new(lhs: HybridArgumentIdf, expr: Expression) -> Self {
@@ -153,8 +210,16 @@ impl CircVarDecl {
 //     self.new_cond = new_cond
 //     self.is_true = is_true
 pub struct CircGuardModification {
-    new_cond: Option<HybridArgumentIdf>,
-    is_true: Option<bool>,
+    pub new_cond: Option<HybridArgumentIdf>,
+    pub is_true: Option<bool>,
+}
+impl ASTCode for CircGuardModification {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircGuardModification(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircGuardModification
+    }
 }
 impl CircGuardModification {
     pub fn new(new_cond: Option<HybridArgumentIdf>, is_true: Option<bool>) -> Self {
@@ -176,7 +241,7 @@ pub fn guarded(phi: Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true
 {
     phi.push(CircGuardModification::new(Some(guard_idf), is_true));
     // yield
-    phi.push(CircGuardModification::new(None,None));
+    phi.push(CircGuardModification::new(None, None));
 }
 
 // class CircEncConstraint(CircuitStatement)
@@ -204,11 +269,19 @@ pub fn guarded(phi: Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true
 //     self.cipher = cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
 pub struct CircEncConstraint {
-    plain: HybridArgumentIdf,
-    rnd: HybridArgumentIdf,
-    pk: HybridArgumentIdf,
-    cipher: HybridArgumentIdf,
-    is_dec: bool,
+    pub plain: HybridArgumentIdf,
+    pub rnd: HybridArgumentIdf,
+    pub pk: HybridArgumentIdf,
+    pub cipher: HybridArgumentIdf,
+    pub is_dec: bool,
+}
+impl ASTCode for CircEncConstraint {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircEncConstraint(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircEncConstraint
+    }
 }
 impl CircEncConstraint {
     pub fn new(
@@ -245,10 +318,18 @@ impl CircEncConstraint {
 //     self.iv_cipher = iv_cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
 pub struct CircSymmEncConstraint {
-    plain: HybridArgumentIdf,
-    other_pk: HybridArgumentIdf,
-    iv_cipher: HybridArgumentIdf,
-    is_dec: bool,
+    pub plain: HybridArgumentIdf,
+    pub other_pk: HybridArgumentIdf,
+    pub iv_cipher: HybridArgumentIdf,
+    pub is_dec: bool,
+}
+impl ASTCode for CircSymmEncConstraint {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircSymmEncConstraint(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircSymmEncConstraint
+    }
 }
 impl CircSymmEncConstraint {
     pub fn new(
@@ -276,8 +357,16 @@ impl CircSymmEncConstraint {
 //     self.tgt = tgt
 //     self.val = val
 pub struct CircEqConstraint {
-    tgt: HybridArgumentIdf,
-    val: HybridArgumentIdf,
+    pub tgt: HybridArgumentIdf,
+    pub val: HybridArgumentIdf,
+}
+impl ASTCode for CircEqConstraint {
+    fn get_ast(&self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircEqConstraint(self.clone()))
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircEqConstraint
+    }
 }
 impl CircEqConstraint {
     pub fn new(tgt: HybridArgumentIdf, val: HybridArgumentIdf) -> Self {

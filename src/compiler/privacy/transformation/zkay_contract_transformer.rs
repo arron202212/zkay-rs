@@ -14,12 +14,13 @@ use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use crate::zkay_ast::ast::{
-    AnnotatedTypeName, Array, ArrayLiteralExpr, BlankLine, Block, CipherText, Comment,
-    ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, Expression,
-    ExpressionStatement, FunctionCallExpr, Identifier,IdentifierBase, IdentifierExpr, MeExpr, NewExpr,
-    NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr, RequireStatement,
-    ReturnStatement, SourceUnit, StateVariableDeclaration, StatementList, StructDefinition,
-    StructTypeName, TupleExpr, TypeName, VariableDeclaration, VariableDeclarationStatement, AST,is_instance,ASTType,ArrayBase,
+    is_instance, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr, BlankLine, Block,
+    CipherText, Comment, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName,
+    Expression, ExpressionStatement, FunctionCallExpr, Identifier, IdentifierBase, IdentifierExpr,
+    MeExpr, NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr,
+    RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration, StatementList,
+    StructDefinition, StructTypeName, TupleExpr, TypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
@@ -179,7 +180,8 @@ impl<V> ZkayTransformer<V> {
         su.used_contracts.push(import_filename);
 
         if corresponding_circuit.is_some() {
-            let c_type = ContractTypeName::new(vec![Identifier::Identifier(IdentifierBase::new(cname))]);
+            let c_type =
+                ContractTypeName::new(vec![Identifier::Identifier(IdentifierBase::new(cname))]);
             corresponding_circuit.register_verification_contract_metadata(c_type, import_filename);
         }
     }
@@ -187,7 +189,9 @@ impl<V> ZkayTransformer<V> {
     pub fn create_contract_variable(cname: &str) -> StateVariableDeclaration
 // """Create a public constant state variable with which contract with name "cname" can be accessed"""
     {
-        let inst_idf = Identifier::Identifier(IdentifierBase::new(CFG.lock().unwrap().get_contract_var_name(cname)));
+        let inst_idf = Identifier::Identifier(IdentifierBase::new(
+            CFG.lock().unwrap().get_contract_var_name(cname),
+        ));
         let c_type = ContractTypeName::new([Identifier::Identifier(IdentifierBase::new(cname))]);
 
         let cast_0_to_c = PrimitiveCastExpr::new(c_type, NumberLiteralExpr::new(0));
@@ -312,7 +316,7 @@ impl<V> ZkayTransformer<V> {
 
         // Backup untransformed function bodies
         for fct in all_fcts {
-            fct.original_body = deep_copy(fct.body,  true,  true);
+            fct.original_body = deep_copy(fct.body, true, true);
         }
 
         // Transform types of normal state variables
@@ -324,7 +328,7 @@ impl<V> ZkayTransformer<V> {
         let mut req_ext_fcts = {};
         let (new_fcts, new_constr) = ([], []);
         for fct in all_fcts {
-            assert!(is_instance(&fct,ASTType:: ConstructorOrFunctionDefinition));
+            assert!(is_instance(&fct, ASTType::ConstructorOrFunctionDefinition));
             if fct.requires_verification || fct.requires_verification_when_external {
                 self.circuits[fct] = self.create_circuit_helper(fct, global_owners);
             }
@@ -348,7 +352,10 @@ impl<V> ZkayTransformer<V> {
         let contract_var_decls = self.include_verification_contracts(su, c);
         c.state_variable_declarations = [field_prime_decl, Comment::new("")]
             .into_iter()
-            .chain(Comment::comment_list("Helper Contracts", contract_var_decls))
+            .chain(Comment::comment_list(
+                "Helper Contracts",
+                contract_var_decls,
+            ))
             .chain([Comment::new("User state variables")])
             .chain(c.state_variable_declarations)
             .collect();
@@ -369,7 +376,7 @@ impl<V> ZkayTransformer<V> {
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
-        let fcts_with_verification:Vec<_> = all_fcts
+        let fcts_with_verification: Vec<_> = all_fcts
             .iter()
             .filter_map(|fct| {
                 if fct.requires_verification {
@@ -395,7 +402,12 @@ impl<V> ZkayTransformer<V> {
                         .chain(circuit.input_idfs)
                         .iter()
                         .map(|idf| {
-                            VariableDeclaration::new(vec![], AnnotatedTypeName::new(idf.t), idf.clone(), "")
+                            VariableDeclaration::new(
+                                vec![],
+                                AnnotatedTypeName::new(idf.t),
+                                idf.clone(),
+                                "",
+                            )
                         })
                         .collect(),
                 );
@@ -485,9 +497,12 @@ impl<V> ZkayTransformer<V> {
 
         // Declare zk_data struct var (if needed)
         if circuit.requires_zk_data_struct() {
-            let zk_struct_type = StructTypeName::new(vec![Identifier::Identifier(IdentifierBase::new(circuit.zk_data_struct_name))]);
+            let zk_struct_type = StructTypeName::new(vec![Identifier::Identifier(
+                IdentifierBase::new(circuit.zk_data_struct_name),
+            )]);
             stmts.extend(vec![
-                Identifier::Identifier(IdentifierBase::new(CFG.lock().unwrap().zk_data_var_name)).decl_var(zk_struct_type),
+                Identifier::Identifier(IdentifierBase::new(CFG.lock().unwrap().zk_data_var_name))
+                    .decl_var(zk_struct_type),
                 BlankLine::new(),
             ]);
         }
@@ -523,7 +538,7 @@ impl<V> ZkayTransformer<V> {
                 out_start_idx,
                 offset,
             ));
-            if is_instance(&s.t,ASTType:: CipherText) && s.t.crypto_params.is_symmetric_cipher()
+            if is_instance(&s.t, ASTType::CipherText) && s.t.crypto_params.is_symmetric_cipher()
             // Assign sender field to user-encrypted values if necessary
             // Assumption: s.t.crypto_params.key_len == 1 for all symmetric ciphers
             {
@@ -545,7 +560,7 @@ impl<V> ZkayTransformer<V> {
         if deserialize_stmts {
             stmts.push(StatementList::new(
                 Comment::comment_wrap_block("Deserialize output values", deserialize_stmts),
-                 true,
+                true,
             ));
         }
 
@@ -556,12 +571,19 @@ impl<V> ZkayTransformer<V> {
         let mut serialize_stmts = vec![];
         let mut offset = 0;
         for s in circuit.input_idfs {
-            serialize_stmts.extend( vec![s.serialize(CFG.lock().unwrap().zk_in_name, in_start_idx, offset)]);
+            serialize_stmts.extend(vec![s.serialize(
+                CFG.lock().unwrap().zk_in_name,
+                in_start_idx,
+                offset,
+            )]);
             offset += s.t.size_in_uints;
         }
         if offset {
             stmts.push(Comment::new(""));
-            stmts.extend(Comment::comment_wrap_block("Serialize input values", serialize_stmts));
+            stmts.extend(Comment::comment_wrap_block(
+                "Serialize input values",
+                serialize_stmts,
+            ));
         }
 
         // Add return statement at the end if necessary
@@ -606,7 +628,7 @@ impl<V> ZkayTransformer<V> {
         let new_modifiers = if f.is_function {
             original_params = original_params
                 .iter()
-                .map(|p| deep_copy(p,  true).with_changed_storage("memory", "calldata"))
+                .map(|p| deep_copy(p, true).with_changed_storage("memory", "calldata"))
                 .collect();
             vec!["external"]
         } else {
@@ -707,17 +729,20 @@ impl<V> ZkayTransformer<V> {
                 }
             })
             .collect();
-        let args_backends:Vec<_>= 
-            priv_args
-                .iter()
-                .map(|p| p.annotated_type.type_name.crypto_params.clone())
-                .collect();
+        let args_backends: Vec<_> = priv_args
+            .iter()
+            .map(|p| p.annotated_type.type_name.crypto_params.clone())
+            .collect();
         let mut stmts = vec![];
 
         for crypto_params in args_backends {
             assert!(int_fct.used_crypto_backends.contains(&crypto_params));
             // If there are any private arguments with homomorphism "hom", we need the public key for that crypto backend
-            ext_circuit._require_public_key_for_label_at(None, Expression::me_expr(), crypto_params);
+            ext_circuit._require_public_key_for_label_at(
+                None,
+                Expression::me_expr(),
+                crypto_params,
+            );
         }
         for crypto_params in CFG.lock().unwrap().all_crypto_params() {
             if crypto_params.is_symmetric_cipher() {
@@ -753,8 +778,12 @@ impl<V> ZkayTransformer<V> {
 
             let tmp_keys = BTreeMap::new();
             for crypto_params in int_fct.used_crypto_backends {
-                let tmp_key_var = Identifier::Identifier(IdentifierBase::new(format!("_tmp_key_{}", crypto_params.identifier_name)));
-                key_req_stmts.push(tmp_key_var.decl_var(AnnotatedTypeName::key_type(crypto_params)));
+                let tmp_key_var = Identifier::Identifier(IdentifierBase::new(format!(
+                    "_tmp_key_{}",
+                    crypto_params.identifier_name
+                )));
+                key_req_stmts
+                    .push(tmp_key_var.decl_var(AnnotatedTypeName::key_type(crypto_params)));
                 tmp_keys.insert(crypto_params, tmp_key_var);
             }
             for (key_owner, crypto_params) in keys {
@@ -790,7 +819,8 @@ impl<V> ZkayTransformer<V> {
         for p in original_params {
             // """ * of T_e rule 8 """
             if p.annotated_type.is_cipher() {
-                let cipher_payload_len = p.annotated_type.type_name.crypto_params.cipher_payload_len;
+                let cipher_payload_len =
+                    p.annotated_type.type_name.crypto_params.cipher_payload_len;
                 let assign_stmt = in_arr_var
                     .slice(offset, cipher_payload_len)
                     .assign(IdentifierExpr::new(p.idf.clone()).slice(0, cipher_payload_len));
@@ -807,7 +837,7 @@ impl<V> ZkayTransformer<V> {
         for p in original_params {
             if p.annotated_type.is_cipher() {
                 let c = &p.annotated_type.type_name;
-                assert!(is_instance(c,ASTType:: CipherText));
+                assert!(is_instance(c, ASTType::CipherText));
                 if c.crypto_params.is_symmetric_cipher() {
                     let sender_key = in_arr_var.index(me_key_idx[c.crypto_params]);
                     let idf = IdentifierExpr::new(p.idf.clone()).as_type(p.annotated_type.clone());
@@ -823,7 +853,12 @@ impl<V> ZkayTransformer<V> {
                             .collect(),
                     );
                     copy_stmts.push(VariableDeclarationStatement::new(
-                        VariableDeclaration::new(vec![], p.annotated_type.clone(), p.idf.clone(), "memory"),
+                        VariableDeclaration::new(
+                            vec![],
+                            p.annotated_type.clone(),
+                            p.idf.clone(),
+                            "memory",
+                        ),
                         lit,
                     ));
                 }
@@ -906,7 +941,7 @@ impl<V> ZkayTransformer<V> {
                 IdentifierExpr::new(CFG.lock().unwrap().zk_in_name),
                 IdentifierExpr::new(CFG.lock().unwrap().zk_out_name),
             ];
-           let  verify = ExpressionStatement::new(verifier.call(
+            let verify = ExpressionStatement::new(verifier.call(
                 CFG.lock().unwrap().verification_function_name,
                 verifier_args,
             ));

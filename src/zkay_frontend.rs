@@ -34,18 +34,19 @@ use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
 use lazy_static::lazy_static;
 use serde_json::json;
- use std::collections::HashMap;
+use std::collections::HashMap;
 use std::path::PathBuf;
-fn  proving_scheme_classes<VK>(proving_scheme:&String)->&'static impl ProvingScheme<VerifyingKey=VK>{
-        match proving_scheme{
-        "groth16"=>&ProvingSchemeGroth16,
-        _=>&ProvingSchemeGm17,//"gm17"
+fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
+    match proving_scheme {
+        "groth16" => &ProvingSchemeGroth16,
+        _ => &ProvingSchemeGm17, //"gm17"
+    }
 }
+fn generator_classes<T: ProvingScheme, V>(
+    _snark_backend: &String,
+) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, V> {
+    JsnarkGenerator::new
 }
-fn generator_classes<T,V>(_snark_backend:&String)->impl FnOnce(Vec<CircuitHelper<V>>,  T,  String)->JsnarkGenerator<T,V>{
-        JsnarkGenerator::new
-}
-
 
 // """
 // Parse, type-check and compile the given zkay contract file.
@@ -100,7 +101,7 @@ pub fn compile_zkay_file(
 // :raise ZkayCompilerError: if any compilation stage fails
 // :raise RuntimeError: if import_keys is true and zkay file, manifest file or any of the key files is missing
 // """
-fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGenerator, str)
+fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitGenerator, String)
 {
     // Copy zkay code to output
     let zkay_filename = "contract.zkay";
@@ -160,7 +161,14 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
     //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");
 
     // Instantiate proving scheme and circuit generator
-    let ps = proving_scheme_classes(CFG.lock().unwrap().proving_scheme);
+    let ps = proving_scheme_classes(
+        CFG.lock().unwrap().proving_scheme,
+        if &CFG.lock().unwrap().proving_scheme == "groth16" {
+            ProvingSchemeGroth16
+        } else {
+            ProvingSchemeGm17
+        },
+    );
     let cg = generator_classes(CFG.lock().unwrap().snark_backend)(circuits, ps, output_dir);
     let mut kwargs = std::collections::HashMap::new();
     if let Some(v) = kwargs.get("verifier_names") {
@@ -211,10 +219,10 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) //-> (CircuitGe
         .iter()
         .chain([PathBuf::from(output_dir).join(output_filename)]);
     for f in main_solidity_files {
-        check_compilation(f, false);
+        check_compilation(f, false, "");
     }
 
-    (cg, solidity_code_output)
+    // (cg, solidity_code_output)
 }
 
 // def use_configuration_from_manifest(contract_dir: str) -> Any:

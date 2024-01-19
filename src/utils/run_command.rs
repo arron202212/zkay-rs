@@ -1,7 +1,7 @@
 // import os
 // import subprocess
-use std::process::{Command, Stdio};
 use crate::config::CFG;
+use std::process::{Command, Stdio};
 // from typing import List, Optional, Tuple
 
 pub fn run_command(
@@ -19,27 +19,33 @@ pub fn run_command(
     // """
     //cwd=None, allow_verbose: bool = False
 {
-    let cwd=if let Some(cwd) = cwd {
+    let cwd = if let Some(cwd) = cwd {
         std::fs::canonicalize(cwd)
-    }else{""};
+    } else {
+        ""
+    };
 
-    let (output, error,process) =
+    let (output, error, process) =
         if allow_verbose && CFG.lock().unwrap().verbosity >= 2 && !CFG.lock().unwrap().is_unit_test
         {
-            let process= Command::new(cmd).current_dir(cwd).output().expect("");
-            (process.stdout,process.stderr,process)
+            let process = Command::new(cmd).current_dir(cwd).output().expect("");
+            (process.stdout, process.stderr, process)
         } else {
             //run
-            let process =  Command::new(cmd).current_dir(cwd).stderr(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn().expect("").wait_with_output().expect("");
-            
+            let process = Command::new(cmd)
+                .current_dir(cwd)
+                .stderr(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .expect("")
+                .wait_with_output()
+                .expect("");
 
             //collect output
             //decode output
-        //     let output = output.decode("utf-8").rtrim();
-        //    let  error = error.decode("utf-8").rtrim();
-            (process.stdout, process.stderr,process)
+            //     let output = output.decode("utf-8").rtrim();
+            //    let  error = error.decode("utf-8").rtrim();
+            (process.stdout, process.stderr, process)
         };
 
     //check for error
@@ -55,7 +61,10 @@ pub fn run_command(
         print!("Ran command {}:\n\n{output}\n{error}", get_command(cmd));
     }
 
-    (String::from_utf8(output).ok(), String::from_utf8(error).ok())
+    (
+        String::from_utf8(output).ok(),
+        String::from_utf8(error).ok(),
+    )
 }
 
 pub fn get_command(cmd: Vec<&str>) -> String {

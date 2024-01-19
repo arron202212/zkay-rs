@@ -5,9 +5,9 @@
 
 use crate::config::CFG;
 use crate::utils::progress_printer::warn_print;
-use std::path::Path;
-use std::fs::File;
 use serde_json::{Map, Result, Value};
+use std::fs::File;
+use std::path::Path;
 pub struct Manifest;
 impl Manifest {
     // """Static class, which holds the string keys of all supported zkay manifest keys """
@@ -20,7 +20,7 @@ impl Manifest {
     // """Returned parsed manifest json file located in project dir::"""
     {
         let f = File::open(Path::new(project_dir).join("manifest::json"));
-        let j:Value= serde_json::from_str(f.read_to_string());
+        let j: Value = serde_json::from_str(f.read_to_string());
         j
     }
 

@@ -5,7 +5,7 @@ use crate::transaction::crypto::meta::CRYPTOPARAMS;
 use serde::{Deserialize, Serialize};
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CryptoParams {
-    crypto_name: String,
+    pub crypto_name: String,
 }
 pub fn title(data: String) -> String {
     let mut result = String::new();

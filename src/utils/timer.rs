@@ -1,14 +1,14 @@
 // import contextlib
 // import time
-use std::time::{Duration, Instant};
-use crate::zk_print;
-use crate::my_logging::logger;
 use crate::config::CFG;
+use crate::my_logging::logger;
+use crate::zk_print;
+use std::time::{Duration, Instant};
 // @contextlib.contextmanager
 pub fn time_measure(key: &str, should_print: bool, skip: bool) {
     let start = Instant::now();
     // yield
-    let elapsed =start.elapsed();
+    let elapsed = start.elapsed();
 
     if !skip {
         if should_print {
@@ -27,14 +27,14 @@ impl Timer {
         Self { key }
     }
 
-    pub fn __call__(
-        &self,
-        method: impl FnOnce(Vec<&str>, Vec<&str>) -> String,
-    ) -> impl FnOnce(Vec<&str>, Vec<&str>) -> String {
-        let  timed=|args: Vec<&str>, kw: Vec<&str>| -> String {
-            time_measure(self.key);
-            method(args, kw)
-        };
-        timed
-    }
+    // pub fn __call__(
+    //     &self,
+    //     method: impl FnOnce(Vec<String>, Vec<String>) -> String,
+    // ) -> impl FnOnce(Vec<String>, Vec<String>) -> String {
+    //     let  timed = |args: Vec<String>, kw: Vec<String>| -> String{
+    //         time_measure(&self.key,false,false);
+    //         method(args, kw)
+    //     };
+    //     timed
+    // }
 }

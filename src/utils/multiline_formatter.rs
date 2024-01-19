@@ -31,9 +31,9 @@ impl MultiLineFormatter {
     }
 
     pub fn mul(&mut self, other: (Option<String>, Option<Vec<String>>)) -> Self {
-        if let (Some(other),None)=other{
+        if let (Some(other), None) = other {
             self.append(other)
-        } else if let (None,Some(other))=other{
+        } else if let (None, Some(other)) = other {
             self.text += "\n";
             self.append_lines(other)
         }

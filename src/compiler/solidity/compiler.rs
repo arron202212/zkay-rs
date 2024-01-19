@@ -8,15 +8,15 @@
 // from solcx import compile_standard
 // from solcx.exceptions import SolcError
 
-use crate::{zk_print, config::CFG};
 use crate::zkay_ast::ast::get_code_error_msg;
+use crate::{config::CFG, zk_print};
 
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass
- use std::fs::File;
 use std::collections::HashMap;
 use std::env::{current_dir, set_current_dir};
+use std::fs::File;
 fn compile_solidity_json(
     sol_filename: &str,
     libs: Option<HashMap<String, String>>,
@@ -97,8 +97,8 @@ fn compile_solidity_json(
     ret
 }
 //TODO dummy
-fn compile(json:&str)->String{
-String::new()
+fn compile(json: &str) -> String {
+    String::new()
 }
 fn _get_line_col(code: str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
@@ -108,7 +108,7 @@ fn _get_line_col(code: str, idx: i32) -> (i32, i32)
     (line, col)
 }
 
-pub fn get_error_order_key<K,V>(error: Map<K,V>) -> i32 {
+pub fn get_error_order_key<K, V>(error: Map<K, V>) -> i32 {
     if let Some(e) = error.get("sourceLocation") {
         *e.get("start").unwrap_or(&-1)
     } else {
@@ -166,7 +166,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 } else {
                     TermColor::WARNING
                 });
-                let mut report =if error.contains_key("sourceLocation") {
+                let mut report = if error.contains_key("sourceLocation") {
                     let file = error["sourceLocation"]["file"];
                     if file == sol_name {
                         let (line, column) = _get_line_col(code, error["sourceLocation"]["start"]);
@@ -176,12 +176,14 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                             get_code_error_msg(line, column + 1, display_code.split("\n"))
                         )
                     } else {
-                         format!(
+                        format!(
                             "In imported file \"{file}\" idx: {}\n",
                             error["sourceLocation"]["start"]
                         )
                     }
-                }else{String::new()};
+                } else {
+                    String::new()
+                };
                 report = format!(
                     "\n{}: {}\n{report}\n{}\n",
                     error["severity"].upper_ascii_case(),
@@ -194,7 +196,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                 } else if !error.contains_key("errorCode") || !["1878"].contains(error["errorCode"])
                 // Suppress SPDX license warning
                 {
-                    zk_print!("{:?}",report);
+                    zk_print!("{:?}", report);
                 }
             }
 

@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{Expression, FunctionCallExpr, LocationExpr, AST,ASTType,is_instance};
+use crate::zkay_ast::ast::{is_instance, ASTType, Expression, FunctionCallExpr, LocationExpr, AST};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private_expr(ast: Option<AST>) {

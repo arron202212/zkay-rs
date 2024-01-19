@@ -13,13 +13,13 @@ const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
+use crate::compiler::privacy::circuit_generation::circuit_constraints::CircuitStatement;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::utils::progress_printer::warn_print;
 use crate::zkay_ast::analysis::partition_state::PartitionState;
 use crate::zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
-use crate::{config::CFG, zk_print};
-
 use crate::zkay_ast::visitor::visitor::AstVisitor;
+use crate::{config::CFG, zk_print};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -74,11 +74,11 @@ pub trait Immutable {
     fn is_immutable(&self) -> bool;
 }
 
-pub fn is_instance<T:ASTCode>(var:&T,ast_type:ASTType)->bool{
-        var.get_ast_type()==ast_type
+pub fn is_instance<T: ASTCode>(var: &T, ast_type: ASTType) -> bool {
+    var.get_ast_type() == ast_type
 }
-pub fn is_instances<T:ASTCode>(var:&T,ast_types:Vec<ASTType>)->bool{
-        ast_types.iter().any(|t|t==var.get_ast_type())
+pub fn is_instances<T: ASTCode>(var: &T, ast_types: Vec<ASTType>) -> bool {
+    ast_types.iter().any(|t| t == var.get_ast_type())
 }
 // #[mac
 // #[macro_export]
@@ -182,8 +182,14 @@ pub enum ASTType {
     StructDefinition,
     ContractDefinition,
     DummyAnnotation,
-ProvingSchemeGroth16,
-ProvingSchemeGm17,
+    CircComment,
+    CircIndentBlock,
+    CircCall,
+    CircVarDecl,
+    CircGuardModification,
+    CircEncConstraint,
+    CircSymmEncConstraint,
+    CircEqConstraint,
     #[default]
     None,
 }
@@ -199,6 +205,12 @@ pub trait ASTChildren {
 }
 
 pub trait ASTCode {
+    fn to_statement(&self) -> Statement {
+        Statement::None
+    }
+    fn to_expr(&self) -> Expression {
+        Expression::None
+    }
     fn get_ast(&self) -> AST;
     fn get_ast_type(&self) -> ASTType;
     fn code(&self) -> String {
@@ -243,6 +255,7 @@ pub enum AST {
     VersionPragma(String),
     Modifier(String),
     Homomorphism(String),
+    CircuitStatement(CircuitStatement),
     #[default]
     None,
 }
@@ -290,6 +303,9 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn get_annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
+    }
     pub fn line(&self) -> i32 {
         0
     }
@@ -726,6 +742,21 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
+        None
+    }
+    pub fn op(&self) -> Option<String> {
+        None
+    }
+    pub fn homomorphism(&self) -> Option<String> {
+        None
+    }
+    pub fn can_be_private(&self) -> bool {
+        false
+    }
+    pub fn is_shiftop(&self) -> bool {
+        false
+    }
     pub fn all_expr() -> Self {
         Expression::AllExpr(AllExpr::new())
     }
@@ -1406,6 +1437,7 @@ impl BuiltinFunction {
             rerand_using: None,
         }
     }
+
     pub fn format_string(&self, args: &Vec<String>) -> String {
         let op = self.op.as_str();
 
@@ -1816,6 +1848,9 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn public_key(&self) -> Option<HybridArgumentIdf> {
+        None
+    }
     pub fn func(&self) -> Option<Expression> {
         None
     }
@@ -1833,6 +1868,14 @@ impl FunctionCallExpr {
     }
 }
 impl ASTCode for FunctionCallExpr {
+    fn to_expr(&self) -> Expression {
+        match self {
+            FunctionCallExpr::FunctionCallExpr(ast) => ast.to_expr(),
+            FunctionCallExpr::NewExpr(ast) => ast.to_expr(),
+            _ => AST::None,
+        }
+    }
+
     fn get_ast(&self) -> AST {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => ast.get_ast(),
@@ -1854,8 +1897,12 @@ pub struct FunctionCallExprBase {
     pub func: Box<Expression>,
     pub args: Vec<Expression>,
     pub sec_start_offset: Option<i32>,
+    pub public_key: Option<Box<HybridArgumentIdf>>,
 }
 impl ASTCode for FunctionCallExprBase {
+    fn to_expr(&self) -> Expression {
+        Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(self.clone()))
+    }
     fn get_ast(&self) -> AST {
         AST::Expression(Expression::FunctionCallExpr(
             FunctionCallExpr::FunctionCallExpr(self.clone()),
@@ -1872,8 +1919,10 @@ impl FunctionCallExprBase {
             func: Box::new(func),
             args,
             sec_start_offset,
+            public_key: None,
         }
     }
+
     pub fn is_cast(&self) -> bool {
         // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
         if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
@@ -2175,6 +2224,9 @@ pub struct NumberLiteralExpr {
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
 impl ASTCode for NumberLiteralExpr {
+    fn to_expr(&self) -> Expression {
+        Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(self.clone()))
+    }
     fn get_ast(&self) -> AST {
         AST::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
             self.clone(),
@@ -2201,6 +2253,7 @@ impl NumberLiteralExpr {
             ))),
         }
     }
+
     pub fn as_type(&self, t: AsTypeUnion) -> Self {
         let mut selfs = self.clone();
         if let AsTypeUnion::AnnotatedTypeName(at) = t {
@@ -2862,6 +2915,11 @@ pub struct IdentifierExpr {
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
 impl ASTCode for IdentifierExpr {
+    fn to_expr(&self) -> Expression {
+        Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
+            LocationExpr::IdentifierExpr(self.clone()),
+        ))
+    }
     fn get_ast(&self) -> AST {
         AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(self.clone())),
@@ -2885,6 +2943,7 @@ impl IdentifierExpr {
             annotated_type,
         }
     }
+
     pub fn get_annotated_type(&self) -> AnnotatedTypeName {
         self.location_expr_base
             .target
@@ -3142,6 +3201,9 @@ pub struct MeExpr {
     name: String,
 }
 impl ASTCode for MeExpr {
+    fn to_expr(&self) -> Expression {
+        Expression::MeExpr(self.clone())
+    }
     fn get_ast(&self) -> AST {
         AST::Expression(Expression::MeExpr(self.clone()))
     }
@@ -3156,6 +3218,7 @@ impl MeExpr {
             name: String::from("me"),
         }
     }
+
     pub fn as_type(&self, t: AsTypeUnion) -> Self {
         let mut selfs = self.clone();
         if let AsTypeUnion::AnnotatedTypeName(at) = t {
@@ -3831,6 +3894,9 @@ impl Identifier {
         String::new()
     }
     pub fn parent(&self) -> Option<AST> {
+        None
+    }
+    pub fn t(&self) -> Option<TypeName> {
         None
     }
 }
@@ -5160,6 +5226,12 @@ impl TypeName {
             },
             String::from("NON_HOMOMORPHIC"),
         )
+    }
+    pub fn crypto_params(&self) -> Option<CryptoParams> {
+        None
+    }
+    pub fn op(&self) -> Option<String> {
+        None
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -7474,6 +7546,9 @@ pub struct VariableDeclarationStatement {
     expr: Option<Expression>,
 }
 impl ASTCode for VariableDeclarationStatement {
+    fn to_statement(&self) -> Statement {
+        Statement::SimpleStatement(SimpleStatement::VariableDeclarationStatement(self.clone()))
+    }
     fn get_ast(&self) -> AST {
         AST::Statement(Statement::SimpleStatement(
             SimpleStatement::VariableDeclarationStatement(self.clone()),

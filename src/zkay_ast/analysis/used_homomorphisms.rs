@@ -6,7 +6,7 @@ use crate::zkay_ast::ast::{
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
- use std::collections::{BTreeSet,BTreeMap};
+use std::collections::{BTreeMap, BTreeSet};
 // class UsedHomomorphismsVisitor(AstVisitor)
 pub struct UsedHomomorphismsVisitor;
 impl UsedHomomorphismsVisitor {
@@ -137,11 +137,11 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visit(self, ast: AST) {
-        let all_homs = self.visit(ast);//TODO super()
-        if let Some(_)=ast.used_homomorphisms() {
+        let all_homs = self.visit(ast); //TODO super()
+        if let Some(_) = ast.used_homomorphisms() {
             ast.used_homomorphisms = all_homs.clone();
         }
-        if let Some(_)=ast.used_crypto_backends(){
+        if let Some(_) = ast.used_crypto_backends() {
             ast.used_crypto_backends = self.used_crypto_backends(all_homs);
         }
         all_homs
@@ -151,7 +151,7 @@ impl UsedHomomorphismsVisitor {
 // Guarantee consistent order
     {
         let mut result = vec![];
-        for hom in Homomorphism::fields(){
+        for hom in Homomorphism::fields() {
             if used_homs.contains(&hom) {
                 let crypto_backend = CFG.lock().unwrap().get_crypto_params(hom);
                 if !result.contain(&crypto_backend) {

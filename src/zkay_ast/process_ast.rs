@@ -41,30 +41,32 @@ bitflags! {
 }
 
 impl ASTFlags {
-    pub fn new(flag: Option<u32>)->Self{
-        Self{bits:flag.unwrap_or(ASTFlags::FLAG_ALL)}
+    pub fn new(flag: Option<u32>) -> Self {
+        Self {
+            bits: flag.unwrap_or(ASTFlags::FLAG_ALL),
+        }
     }
     pub fn clear(&mut self) -> &mut ASTFlags {
-        self.bits = 0;  
+        self.bits = 0;
         self
     }
     pub fn parents(&self) -> bool {
-        self.bits&Self::PARENTS==Self::PARENTS 
+        self.bits & Self::PARENTS == Self::PARENTS
     }
-   pub fn link_identifiers(&self) -> bool {
-        self.bits&Self::LINK_IDENTIFIERS==Self::LINK_IDENTIFIERS 
+    pub fn link_identifiers(&self) -> bool {
+        self.bits & Self::LINK_IDENTIFIERS == Self::LINK_IDENTIFIERS
     }
-   pub fn check_return(&self) -> bool {
-        self.bits&Self::CHECK_RETURN==Self::CHECK_RETURN 
+    pub fn check_return(&self) -> bool {
+        self.bits & Self::CHECK_RETURN == Self::CHECK_RETURN
     }
     pub fn alias_analysis(&self) -> bool {
-        self.bits&Self::ALIAS_ANALYSIS==Self::ALIAS_ANALYSIS 
+        self.bits & Self::ALIAS_ANALYSIS == Self::ALIAS_ANALYSIS
     }
     pub fn type_check(&self) -> bool {
-        self.bits&Self::TYPE_CHECK==Self::TYPE_CHECK 
+        self.bits & Self::TYPE_CHECK == Self::TYPE_CHECK
     }
     pub fn solc_check(&self) -> bool {
-        self.bits&Self::SOLC_CHECK==Self::SOLC_CHECK 
+        self.bits & Self::SOLC_CHECK == Self::SOLC_CHECK
     }
 }
 
@@ -93,9 +95,10 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
 
 //parents:bool, link_identifiers:bool, check_return:bool, alias_analysis:bool, type_check:bool, solc_check:bool
 pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
-    let flag=ASTFlags::new(flag);
-    
-    let (ast, _) = get_parsed_ast_and_fake_code(code, flag&ASTFlags::SOLC_CHECK==ASTFlags::SOLC_CHECK); //solc_check
+    let flag = ASTFlags::new(flag);
+
+    let (ast, _) =
+        get_parsed_ast_and_fake_code(code, flag & ASTFlags::SOLC_CHECK == ASTFlags::SOLC_CHECK); //solc_check
 
     // Zkay preprocessing and type checking
     process_ast(
@@ -156,11 +159,11 @@ fn process_ast(
 pub fn get_verification_contract_names(
     code_or_ast: (Option<String>, Option<SourceUnit>),
 ) -> Vec<String> {
-    let ast = if let (Some(code_or_ast), None)=code_or_ast {
+    let ast = if let (Some(code_or_ast), None) = code_or_ast {
         get_processed_ast(code_or_ast)
-    } else  if let (None,Some(code_or_ast))=code_or_ast {
+    } else if let (None, Some(code_or_ast)) = code_or_ast {
         code_or_ast.get_ast()
-    }else{
+    } else {
         assert!(false, "Invalid AST (no source unit at root)");
     };
 
@@ -181,7 +184,11 @@ pub fn get_verification_contract_names(
             .collect();
         vc_names += fcts
             .iter()
-            .map(|fct| CFG.lock().unwrap().get_verification_contract_name(cname, fct.name))
+            .map(|fct| {
+                CFG.lock()
+                    .unwrap()
+                    .get_verification_contract_name(cname, fct.name)
+            })
             .collect();
     }
     vc_names

@@ -375,7 +375,7 @@ impl SymbolTableLinker {
         }
     }
 
-    pub fn in_scope_at(target_idf: Identifier, ast: AST) -> bool {
+    pub fn in_scope_at(target_idf: &Identifier, ast: AST) -> bool {
         let mut ancestor = ast.parent();
         while let Some(_ancestor) = ancestor {
             if let Some(name) = _ancestor.names().get(&target_idf.name())

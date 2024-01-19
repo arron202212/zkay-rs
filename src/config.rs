@@ -13,9 +13,9 @@ use crate::transaction::crypto::params::CryptoParams;
 use crate::config_user::UserConfig;
 use crate::lc_vec_s;
 use app_dirs2::*;
+use lazy_static::lazy_static;
 use serde_json::{Map, Result, Value};
 use std::collections::HashMap;
-use lazy_static::lazy_static;
 use std::sync::Mutex;
 lazy_static! {
     pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());

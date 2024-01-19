@@ -7,21 +7,21 @@ use crate::compiler::privacy::circuit_generation::name_factory::NameFactory;
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::type_check::type_checker::TypeCheckVisitor;
-use crate::zkay_ast::ast::{
-    get_privacy_expr_from_label, AllExpr, AnnotatedTypeName, AssignmentStatement, Block,
-    BooleanLiteralType, BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
-    ConstructorOrFunctionDefinition, EncryptionExpression, EnterPrivateKeyStatement, Expression,
-    ExpressionStatement, FunctionCallExpr, HybridArgType, HybridArgumentIdf, Identifier,
-    IdentifierExpr, IfStatement, IndexExpr, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
-    NumberLiteralExpr, NumberLiteralType, Parameter, PrivacyLabelExpr, ReturnStatement,
-    StateVariableDeclaration, Statement, TupleExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement,is_instance,is_instances,ASTType,IdentifierBase,
-};
 use crate::zkay_ast::analysis::partition_state::PartitionState;
+use crate::zkay_ast::ast::{
+    get_privacy_expr_from_label, is_instance, is_instances, ASTType, AllExpr, AnnotatedTypeName,
+    AssignmentStatement, Block, BooleanLiteralType, BuiltinFunction, CircuitComputationStatement,
+    CircuitInputStatement, ConstructorOrFunctionDefinition, EncryptionExpression,
+    EnterPrivateKeyStatement, Expression, ExpressionStatement, FunctionCallExpr, HybridArgType,
+    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierExpr, IfStatement, IndexExpr,
+    KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType,
+    Parameter, PrivacyLabelExpr, ReturnStatement, StateVariableDeclaration, Statement, TupleExpr,
+    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement,
+};
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::deep_copy::deep_copy;
 use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
-use std::collections::{BTreeMap,BTreeSet};
+use std::collections::{BTreeMap, BTreeSet};
 // class CircuitHelper
 
 // """
@@ -37,7 +37,7 @@ pub struct CircuitHelper<T> {
     // Metadata set later by ZkayContractTransformer
     has_return_var: bool,
     // Transformer visitors
-    _expr_trafo: T,//AstTransformerVisitor
+    _expr_trafo: T, //AstTransformerVisitor
     _circ_trafo: T,
     // List of proof circuit statements (assertions and assignments)
     // WARNING: Never assign to let _phi, always access it using the phi property and only mutate it
@@ -97,8 +97,8 @@ impl<T> CircuitHelper<T> {
         // super().__init__()
         let verifier_contract_filename: Option<str> = None;
         let verifier_contract_type: Option<UserDefinedTypeName> = None;
-        let _expr_trafo: T = AstTransformerVisitor::default();//expr_trafo_constructor(&self);
-        let _circ_trafo: T = AstTransformerVisitor::default();//circ_trafo_constructor(&self);
+        let _expr_trafo: T = AstTransformerVisitor::default(); //expr_trafo_constructor(&self);
+        let _circ_trafo: T = AstTransformerVisitor::default(); //circ_trafo_constructor(&self);
         let mut _needed_secret_key = BTreeMap::new();
         let mut _global_keys = BTreeMap::new();
         let transitively_called_functions = BTreeMap::new();
@@ -125,7 +125,7 @@ impl<T> CircuitHelper<T> {
             }
         }
 
-        let mut selfs=Self {
+        let mut selfs = Self {
             fct,
             verifier_contract_filename,
             verifier_contract_type,
@@ -133,21 +133,15 @@ impl<T> CircuitHelper<T> {
             _expr_trafo,
             _circ_trafo,
             _phi: vec![],
-            _secret_input_name_factory: NameFactory::new(
-                "secret",
-                 HybridArgType::PrivCircuitVal,
-            ),
-            _circ_temp_name_factory: NameFactory::new(
-                "tmp",
-                 HybridArgType::TmpCircuitVal,
-            ),
+            _secret_input_name_factory: NameFactory::new("secret", HybridArgType::PrivCircuitVal),
+            _circ_temp_name_factory: NameFactory::new("tmp", HybridArgType::TmpCircuitVal),
             _in_name_factory: NameFactory::new(
                 CFG.lock().unwrap().zk_in_name,
-                 HybridArgType::PubCircuitArg,
+                HybridArgType::PubCircuitArg,
             ),
             _out_name_factory: NameFactory::new(
                 CFG.lock().unwrap().zk_out_name,
-                 HybridArgType::PubCircuitArg,
+                HybridArgType::PubCircuitArg,
             ),
             static_owner_labels,
             _requested_dynamic_pks: BTreeMap::new(),
@@ -160,8 +154,8 @@ impl<T> CircuitHelper<T> {
             trans_out_size,
             _remapper: CircVarRemapper::new(),
         };
-          selfs._expr_trafo = expr_trafo_constructor(&selfs);
-         selfs. _circ_trafo= circ_trafo_constructor(&selfs);
+        selfs._expr_trafo = expr_trafo_constructor(&selfs);
+        selfs._circ_trafo = circ_trafo_constructor(&selfs);
         selfs
     }
     pub fn register_verification_contract_metadata(
@@ -286,8 +280,8 @@ impl<T> CircuitHelper<T> {
         self.phi = self.phi[..old_len] + [CircIndentBlock::new(name, self.phi[old_len..])];
     }
 
-    pub fn guarded(&self, guard_idf: HybridArgumentIdf, is_true: bool) 
-// """Return a context manager which manages the lifetime of a guard variable."""
+    pub fn guarded(&self, guard_idf: HybridArgumentIdf, is_true: bool)
+    // """Return a context manager which manages the lifetime of a guard variable."""
     {
         CircGuardModification::guarded(self.phi, guard_idf, is_true);
     }
@@ -295,7 +289,10 @@ impl<T> CircuitHelper<T> {
     pub fn get_glob_key_name(label: PrivacyLabelExpr, crypto_params: CryptoParams) -> String
 // """Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label."""
     {
-        assert!(is_instances(&label,vec![ASTType::MeExpr, ASTType::Identifier]));
+        assert!(is_instances(
+            &label,
+            vec![ASTType::MeExpr, ASTType::Identifier]
+        ));
         format!("glob_key_{}__{}", crypto_params.identifier_name, label.name)
     }
 
@@ -392,7 +389,7 @@ impl<T> CircuitHelper<T> {
         for var in ast.modified_values {
             if var.in_scope_at(ast) {
                 astmt = AssignmentStatement::new(None, None);
-                break
+                break;
             }
         }
 
@@ -408,7 +405,11 @@ impl<T> CircuitHelper<T> {
                     .same_partition(var.privacy, Expression::me_expr()));
                 assert!(is_instances(
                     &var.target,
-                    vec![ASTType::Parameter, ASTType::VariableDeclaration, ASTType::StateVariableDeclaration]
+                    vec![
+                        ASTType::Parameter,
+                        ASTType::VariableDeclaration,
+                        ASTType::StateVariableDeclaration
+                    ]
                 ));
                 let t = var.target.annotated_type.zkay_type;
                 if !t.type_name.is_primitive_type() {
@@ -416,7 +417,8 @@ impl<T> CircuitHelper<T> {
                         "Reference types inside private if statements are not supported"
                     );
                 }
-                let ret_t = AnnotatedTypeName::New(t.type_name, Expression::me_expr(), t.homomorphism); //t, but @me
+                let ret_t =
+                    AnnotatedTypeName::New(t.type_name, Expression::me_expr(), t.homomorphism); //t, but @me
                 let mut idf = IdentifierExpr::new(var.target.idf.clone(), ret_t);
                 idf.target = var.target.clone();
                 let mut ret_param = idf;
@@ -434,7 +436,10 @@ impl<T> CircuitHelper<T> {
                 .iter()
                 .map(|ret| Parameter::new(vec![], ret.annotated_type, ret.target.idf))
                 .collect(),
-            Block::new(vec![ast, ReturnStatement::new(TupleExpr::new(ret_params)).get_ast()]),
+            Block::new(vec![
+                ast,
+                ReturnStatement::new(TupleExpr::new(ret_params)).get_ast(),
+            ]),
         );
         fdef.original_body = fdef.body.clone();
         fdef.body.parent = fdef.clone();
@@ -472,7 +477,7 @@ impl<T> CircuitHelper<T> {
             astmt.rhs = TupleExpr::new(ret_arg_outs);
             astmt
         } else {
-            assert!(is_instance(&astmt,ASTType:: ExpressionStatement));
+            assert!(is_instance(&astmt, ASTType::ExpressionStatement));
             astmt
         }
     }
@@ -511,7 +516,11 @@ impl<T> CircuitHelper<T> {
         let idf = self
             ._in_name_factory
             .add_idf(name, TypeName::key_type(crypto_params));
-        let pki = IdentifierExpr::new(CFG.lock().unwrap().get_contract_var_name(CFG.lock().unwrap().get_pki_contract_name(crypto_params)));
+        let pki = IdentifierExpr::new(
+            CFG.lock()
+                .unwrap()
+                .get_contract_var_name(CFG.lock().unwrap().get_pki_contract_name(crypto_params)),
+        );
         let privacy_label_expr = get_privacy_expr_from_label(plabel);
         (
             idf,
@@ -538,7 +547,7 @@ impl<T> CircuitHelper<T> {
         let key_name = self.get_own_secret_key_name(crypto_params);
         self._secret_input_name_factory
             .add_idf(key_name, TypeName::key_type(crypto_params));
-        return vec![EnterPrivateKeyStatement::new(crypto_params)]
+        return vec![EnterPrivateKeyStatement::new(crypto_params)];
     }
 
     //Circuit-side interface #
@@ -577,25 +586,25 @@ impl<T> CircuitHelper<T> {
 
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
         //rather than introducing an unnecessary public circuit input (expensive)
-        if is_instance(&t,ASTType:: BooleanLiteralType) {
+        if is_instance(&t, ASTType::BooleanLiteralType) {
             return self._evaluate_private_expression(input_expr, t.value.to_string());
-        } else if is_instance(&t,ASTType:: NumberLiteralType) {
+        } else if is_instance(&t, ASTType::NumberLiteralType) {
             return self._evaluate_private_expression(input_expr, t.value.to_string());
         }
 
         let mut t_suffix = String::new();
-        if is_instance(&expr,ASTType:: IdentifierExpr)
+        if is_instance(&expr, ASTType::IdentifierExpr)
         //Look in cache before doing expensive move-in
         {
             if self._remapper.is_remapped(expr.target.idf) {
-                return self._remapper.get_current(expr.target.idf)
+                return self._remapper.get_current(expr.target.idf);
             }
 
             t_suffix = format!("_{}", expr.idf.name);
         }
 
         //Generate circuit inputs
-        let (return_idf,input_idf) = if is_public {
+        let (return_idf, input_idf) = if is_public {
             let tname = format!(
                 "{}{t_suffix}",
                 self._in_name_factory
@@ -605,9 +614,11 @@ impl<T> CircuitHelper<T> {
                 ._in_name_factory
                 .add_idf(tname, expr.annotated_type.type_name);
             let return_idf = input_idf.clone();
-            self._phi
-                .push(CircComment::new(format!("{} = {expr_text}", input_idf.name)));
-            (return_idf,input_idf)
+            self._phi.push(CircComment::new(format!(
+                "{} = {expr_text}",
+                input_idf.name
+            )));
+            (return_idf, input_idf)
         } else
         //Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
         {
@@ -628,18 +639,24 @@ impl<T> CircuitHelper<T> {
                 cipher_t,
                 IdentifierExpr::new(locally_decrypted_idf),
             );
-            (return_idf,input_idf)
+            (return_idf, input_idf)
         };
 
         //Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         //but also signals the offchain simulator to perform decryption if necessary
         expr.statement
             .pre_statements
-            .push(CircuitInputStatement::new(input_idf.get_loc_expr(), input_expr));
+            .push(CircuitInputStatement::new(
+                input_idf.get_loc_expr(),
+                input_expr,
+            ));
 
         if !is_public {
             //Check if the secret plain input corresponds to the decrypted cipher value
-            let crypto_params = CFG.lock().unwrap().get_crypto_params(expr.annotated_type.homomorphism);
+            let crypto_params = CFG
+                .lock()
+                .unwrap()
+                .get_crypto_params(expr.annotated_type.homomorphism);
             self._phi.push(CircComment::new(format!(
                 "{locally_decrypted_idf} = dec({expr_text}) [{}]",
                 input_idf.name
@@ -656,7 +673,8 @@ impl<T> CircuitHelper<T> {
         }
 
         //Cache circuit input for later reuse if possible
-        if CFG.lock().unwrap().opt_cache_circuit_inputs && is_instance(&expr,ASTType:: IdentifierExpr)
+        if CFG.lock().unwrap().opt_cache_circuit_inputs
+            && is_instance(&expr, ASTType::IdentifierExpr)
         //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
         //      This works for now because we never perform homomorphic operations on variables we can decrypt.
         {
@@ -675,14 +693,14 @@ impl<T> CircuitHelper<T> {
         // """
     {
         assert!(idf.target.is_some());
-        assert!(!is_instance(&idf.idf,ASTType:: HybridArgumentIdf));
+        assert!(!is_instance(&idf.idf, ASTType::HybridArgumentIdf));
         if self._remapper.is_remapped(idf.target.idf) {
             let remapped_idf = self._remapper.get_current(idf.target.idf);
             remapped_idf
                 .get_idf_expr(idf.parent)
                 .as_type(idf.annotated_type)
         } else {
-             idf
+            idf
         }
     }
     pub fn create_new_idf_version_from_value(&self, orig_idf: Identifier, expr: Expression)
@@ -709,57 +727,56 @@ impl<T> CircuitHelper<T> {
         // :return: Expression (1 retval) / TupleExpr (multiple retvals) with return value(s)
         // """
     {
-        assert!(is_instance(&fcall.func,ASTType:: LocationExpr) && fcall.func.target.is_some());
+        assert!(is_instance(&fcall.func, ASTType::LocationExpr) && fcall.func.target.is_some());
         let fdef = fcall.func.target.clone();
         //with
         self._remapper.remap_scope(fcall.func.target.body);
-      
-            //with
-            if fcall.func.target.idf.name == "<stmt_fct>" {
-                {}
-            } else {
-                self.circ_indent_block(format!("INLINED {}", fcall.code()));
+
+        //with
+        if fcall.func.target.idf.name == "<stmt_fct>" {
+            {}
+        } else {
+            self.circ_indent_block(format!("INLINED {}", fcall.code()));
+        }
+
+        //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
+        for (param, arg) in fdef.parameters.iter().zip(&fcall.args) {
+            self.phi.push(CircComment::new(format!(
+                "ARG {}: {}",
+                param.idf.name,
+                arg.code()
+            )));
+            // with
+            self.circ_indent_block();
+            {
+                self.create_new_idf_version_from_value(param.idf, arg);
             }
-            
-                //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
-                for (param, arg) in fdef.parameters.iter().zip(&fcall.args) {
-                    self.phi.push(CircComment::new(format!(
-                        "ARG {}: {}",
-                        param.idf.name,
-                        arg.code()
-                    )));
-                    // with
-                    self.circ_indent_block();
-                    {
-                        self.create_new_idf_version_from_value(param.idf, arg);
-                    }
-                }
+        }
 
-                //Visit the untransformed target function body to include all statements in this circuit
-                let inlined_body =
-                    deep_copy(fdef.original_body,  true,  true);
-                self._circ_trafo.visit(inlined_body);
-                fcall.statement.pre_statements += inlined_body.pre_statements;
+        //Visit the untransformed target function body to include all statements in this circuit
+        let inlined_body = deep_copy(fdef.original_body, true, true);
+        self._circ_trafo.visit(inlined_body);
+        fcall.statement.pre_statements += inlined_body.pre_statements;
 
-                //Create TupleExpr with location expressions corresponding to the function return values as elements
-                let ret_idfs = fdef
-                    .return_var_decls
-                    .iter()
-                    .map(|vd| self._remapper.get_current(vd.idf))
-                    .collect();
-                 let mut ret=  TupleExpr::new(
-                    ret_idfs
-                        .iter()
-                        .map(|idf| IdentifierExpr::new(idf.clone()).as_type(idf.t))
-                        .collect(),
-                );
-        
+        //Create TupleExpr with location expressions corresponding to the function return values as elements
+        let ret_idfs = fdef
+            .return_var_decls
+            .iter()
+            .map(|vd| self._remapper.get_current(vd.idf))
+            .collect();
+        let mut ret = TupleExpr::new(
+            ret_idfs
+                .iter()
+                .map(|idf| IdentifierExpr::new(idf.clone()).as_type(idf.t))
+                .collect(),
+        );
+
         if ret.elements.len() == 1
         //Unpack 1-length tuple
         {
             ret = ret.elements[0];
         }
-         ret
+        ret
     }
     pub fn add_assignment_to_circuit(&self, ast: AssignmentStatement)
     // """Include private assignment statement in this circuit."""
@@ -786,7 +803,7 @@ impl<T> CircuitHelper<T> {
     pub fn add_return_stmt_to_circuit(&self, ast: ReturnStatement) {
         self.phi.push(CircComment::new(ast.code()));
         assert!(ast.expr.is_some());
-        if !is_instance(&ast.expr,ASTType:: TupleExpr) {
+        if !is_instance(&ast.expr, ASTType::TupleExpr) {
             ast.expr = TupleExpr::new(vec![ast.expr.clone()]);
         }
 
@@ -802,21 +819,21 @@ impl<T> CircuitHelper<T> {
         //Handle if branch
         // with
         self._remapper.remap_scope();
-            let mut comment = CircComment::new(format!("if ({})", ast.condition.code()));
-            self._phi.push(comment.clone());
-            let cond = self._evaluate_private_expression(ast.condition);
-            comment.text += format!(" [{}]", cond.name);
-            self._circ_trafo.visitBlock(ast.then_branch, cond, true);
-            let then_remap = self._remapper.get_state();
+        let mut comment = CircComment::new(format!("if ({})", ast.condition.code()));
+        self._phi.push(comment.clone());
+        let cond = self._evaluate_private_expression(ast.condition);
+        comment.text += format!(" [{}]", cond.name);
+        self._circ_trafo.visitBlock(ast.then_branch, cond, true);
+        let then_remap = self._remapper.get_state();
 
-            //Bubble up nested pre statements
-            ast.pre_statements.extend(ast.then_branch.pre_statements);
-            ast.then_branch.pre_statements = vec![];
-        
+        //Bubble up nested pre statements
+        ast.pre_statements.extend(ast.then_branch.pre_statements);
+        ast.then_branch.pre_statements = vec![];
 
         //Handle else branch
         if ast.else_branch.is_some() {
-            self._phi.push(CircComment::new(format!("else [{}]", cond.name)));
+            self._phi
+                .push(CircComment::new(format!("else [{}]", cond.name)));
             self._circ_trafo.visitBlock(ast.else_branch, cond, false);
 
             //Bubble up nested pre statements
@@ -827,10 +844,10 @@ impl<T> CircuitHelper<T> {
         //SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
         // with
         self.circ_indent_block(format!("JOIN [{}]", cond.name));
-            let cond_idf_expr = cond.get_idf_expr(ast);
-            assert!(is_instance(&cond_idf_expr,ASTType:: IdentifierExpr));
-            self._remapper
-                .join_branch(ast, cond_idf_expr, then_remap, self._create_temp_var);
+        let cond_idf_expr = cond.get_idf_expr(ast);
+        assert!(is_instance(&cond_idf_expr, ASTType::IdentifierExpr));
+        self._remapper
+            .join_branch(ast, cond_idf_expr, then_remap, self._create_temp_var);
     }
     pub fn add_block_to_circuit(
         &self,
@@ -839,32 +856,37 @@ impl<T> CircuitHelper<T> {
         guard_val: Option<bool>,
     ) {
         assert!(ast.parent.is_some());
-        let is_already_scoped = is_instances(&ast.parent, vec![ASTType::ConstructorOrFunctionDefinition, ASTType::IfStatement]);
+        let is_already_scoped = is_instances(
+            &ast.parent,
+            vec![
+                ASTType::ConstructorOrFunctionDefinition,
+                ASTType::IfStatement,
+            ],
+        );
         self.phi.push(CircComment::new("{"));
         // with
         self.circ_indent_block();
-            // with
-            if let Some(guard_cond)=guard_cond {
-                self.guarded(guard_cond, guard_val);
-            }
-                //with
-                if !is_already_scoped {
-                    self._remapper.remap_scope(ast);
-                }
-                    for stmt in ast.statements {
-                        self._circ_trafo.visit(stmt);
-                        //Bubble up nested pre statements
-                        ast.pre_statements += stmt.pre_statements;
-                        stmt.pre_statements = vec![];
-                    }
-            
-    
+        // with
+        if let Some(guard_cond) = guard_cond {
+            self.guarded(guard_cond, guard_val);
+        }
+        //with
+        if !is_already_scoped {
+            self._remapper.remap_scope(ast);
+        }
+        for stmt in ast.statements {
+            self._circ_trafo.visit(stmt);
+            //Bubble up nested pre statements
+            ast.pre_statements += stmt.pre_statements;
+            stmt.pre_statements = vec![];
+        }
+
         self.phi.push(CircComment::new("}"));
     }
 
     //Internal functionality #
 
-    pub fn _get_canonical_privacy_label<P:Ord>(
+    pub fn _get_canonical_privacy_label<P: Ord>(
         &self,
         analysis: &PartitionState<P>,
         privacy: &PrivacyLabelExpr,
@@ -878,16 +900,16 @@ impl<T> CircuitHelper<T> {
     {
         for owner in self._static_owner_labels {
             if analysis.same_partition(owner, privacy) {
-                return owner
+                return owner;
             }
         }
-         privacy
+        privacy
     }
 
     pub fn _create_temp_var(&self, tag: &str, expr: Expression) -> HybridArgumentIdf
 // """Assign expression to a fresh temporary circuit variable."""
     {
-        self._evaluate_private_expression(expr,  format!("_{tag}"))
+        self._evaluate_private_expression(expr, format!("_{tag}"))
     }
 
     pub fn _add_assign(&self, lhs: Expression, rhs: Expression)
@@ -898,20 +920,22 @@ impl<T> CircuitHelper<T> {
     // :param rhs: source
     // """
     {
-        if is_instance(&lhs,ASTType:: IdentifierExpr)
+        if is_instance(&lhs, ASTType::IdentifierExpr)
         //for now no ref types
         {
             assert!(lhs.target.is_some());
             self.create_new_idf_version_from_value(lhs.target.idf, rhs);
-        } else if is_instance(&lhs,ASTType:: IndexExpr) {
+        } else if is_instance(&lhs, ASTType::IndexExpr) {
             // raise NotImplementedError()
             unimplemented!();
         } else {
-            assert!(is_instance(&lhs,ASTType:: TupleExpr));
-            if is_instance(&rhs,ASTType:: FunctionCallExpr) {
+            assert!(is_instance(&lhs, ASTType::TupleExpr));
+            if is_instance(&rhs, ASTType::FunctionCallExpr) {
                 rhs = self._circ_trafo.visit(rhs);
             }
-            assert!(is_instance(&rhs,ASTType:: TupleExpr) && lhs.elements.len() == rhs.elements.len());
+            assert!(
+                is_instance(&rhs, ASTType::TupleExpr) && lhs.elements.len() == rhs.elements.len()
+            );
             for (e_l, e_r) in lhs.elements.iter().zip(&rhs.elements) {
                 self._add_assign(e_l, e_r);
             }
@@ -934,11 +958,11 @@ impl<T> CircuitHelper<T> {
         // :return: HybridArgumentIdf which references the circuit output containing the result of expr
         // """
     {
-        let is_circ_val = is_instance(&expr,ASTType:: IdentifierExpr)
-            && is_instance(&expr.idf,ASTType:: HybridArgumentIdf)
+        let is_circ_val = is_instance(&expr, ASTType::IdentifierExpr)
+            && is_instance(&expr.idf, ASTType::HybridArgumentIdf)
             && expr.idf.arg_type != HybridArgType::PUB_CONTRACT_VAL;
-        let is_hom_comp = is_instance(&expr,ASTType:: FunctionCallExpr)
-            && is_instance(&expr.func,ASTType:: BuiltinFunction)
+        let is_hom_comp = is_instance(&expr, ASTType::FunctionCallExpr)
+            && is_instance(&expr.func, ASTType::BuiltinFunction)
             && expr.func.homomorphism != Homomorphism::non_homomorphic();
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
@@ -957,11 +981,12 @@ impl<T> CircuitHelper<T> {
         let private_expr = priv_result_idf.get_idf_expr();
 
         let t_suffix = String::new();
-        if is_instance(&expr,ASTType:: IdentifierExpr) && !is_circ_val {
+        if is_instance(&expr, ASTType::IdentifierExpr) && !is_circ_val {
             t_suffix += &format!("_{}", expr.idf.name);
         }
 
-       let (out_var,new_out_param)= if is_instance(&new_privacy,ASTType:: AllExpr) || expr.annotated_type.type_name.is_cipher()
+        let (out_var, new_out_param) = if is_instance(&new_privacy, ASTType::AllExpr)
+            || expr.annotated_type.type_name.is_cipher()
         //If the result is public, add an equality constraint to ensure that the user supplied public output
         //is equal to the circuit evaluation result
         {
@@ -975,9 +1000,12 @@ impl<T> CircuitHelper<T> {
                     .add_idf(tname, expr.annotated_type.type_name, private_expr);
             self._phi
                 .push(CircEqConstraint::new(priv_result_idf, new_out_param));
-             (new_out_param
-                .get_loc_expr()
-                .explicitly_converted(expr.annotated_type.type_name),new_out_param)
+            (
+                new_out_param
+                    .get_loc_expr()
+                    .explicitly_converted(expr.annotated_type.type_name),
+                new_out_param,
+            )
         } else
         //If the result is encrypted, add an encryption constraint to ensure that the user supplied encrypted output
         //is equal to the correctly encrypted circuit evaluation result
@@ -989,7 +1017,8 @@ impl<T> CircuitHelper<T> {
                 "{}{t_suffix}",
                 self._out_name_factory.get_new_name(cipher_t)
             );
-            let enc_expr = EncryptionExpression::new(private_expr, privacy_label_expr, homomorphism);
+            let enc_expr =
+                EncryptionExpression::new(private_expr, privacy_label_expr, homomorphism);
             let new_out_param = self._out_name_factory.add_idf(tname, cipher_t, enc_expr);
             let crypto_params = CFG.lock().unwrap().get_crypto_params(homomorphism);
             self._ensure_encryption(
@@ -1001,7 +1030,7 @@ impl<T> CircuitHelper<T> {
                 false,
                 false,
             );
-             (new_out_param.get_loc_expr(),new_out_param)
+            (new_out_param.get_loc_expr(), new_out_param)
         };
 
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
@@ -1025,10 +1054,11 @@ impl<T> CircuitHelper<T> {
         // """
     {
         assert!(
-            !(is_instance(&expr,ASTType:: MemberAccessExpr) && is_instance(&expr.member,ASTType:: HybridArgumentIdf))
+            !(is_instance(&expr, ASTType::MemberAccessExpr)
+                && is_instance(&expr.member, ASTType::HybridArgumentIdf))
         );
-        if is_instance(&expr,ASTType:: IdentifierExpr)
-            && is_instance(&expr.idf,ASTType:: HybridArgumentIdf)
+        if is_instance(&expr, ASTType::IdentifierExpr)
+            && is_instance(&expr.idf, ASTType::HybridArgumentIdf)
             && expr.idf.arg_type != HybridArgType::PUB_CONTRACT_VAL
         //Already evaluated in circuit
         {
@@ -1046,7 +1076,7 @@ impl<T> CircuitHelper<T> {
             priv_expr.annotated_type.type_name,
             priv_expr,
         );
-        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(),priv_expr);
+        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(), priv_expr);
         self.phi.push(stmt);
         tmp_circ_var_idf
     }
@@ -1118,7 +1148,7 @@ impl<T> CircuitHelper<T> {
     pub fn _require_secret_key(&self, crypto_params: CryptoParams) -> HybridArgumentIdf {
         self._needed_secret_key[crypto_params] = None; //Add to _need_secret_key OrderedDict
         let key_name = self.get_own_secret_key_name(crypto_params);
-         HybridArgumentIdf::new(
+        HybridArgumentIdf::new(
             key_name,
             TypeName::key_type(crypto_params),
             HybridArgType::PrivCircuitVal,
@@ -1147,7 +1177,7 @@ impl<T> CircuitHelper<T> {
         //Statically known privacy -> keep track (all global keys will be requested only once)
         {
             self._global_keys[(privacy, crypto_params)] = None;
-             HybridArgumentIdf::new(
+            HybridArgumentIdf::new(
                 self.get_glob_key_name(privacy, crypto_params),
                 TypeName::key_type(crypto_params),
                 HybridArgType::PubCircuitArg,
@@ -1161,7 +1191,7 @@ impl<T> CircuitHelper<T> {
         }
 
         //privacy cannot be MeExpr (is in _static_owner_labels) or AllExpr (has no public key)
-        assert!(is_instance(&privacy,ASTType:: Identifier));
+        assert!(is_instance(&privacy, ASTType::Identifier));
 
         if !self._requested_dynamic_pks.contains(stmt) {
             self._requested_dynamic_pks[stmt] = {};

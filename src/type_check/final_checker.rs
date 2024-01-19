@@ -1,7 +1,7 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    AssignmentStatement, Block, ConstructorOrFunctionDefinition, ContractDefinition,
-    IdentifierExpr, IfStatement, StateVariableDeclaration,AST,is_instance,ASTType,
+    is_instance, ASTType, AssignmentStatement, Block, ConstructorOrFunctionDefinition,
+    ContractDefinition, IdentifierExpr, IfStatement, StateVariableDeclaration, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
@@ -38,7 +38,7 @@ impl FinalVisitor {
             self.visit(c.body);
         }
 
-        for (sv, assigned) in &self.state_vars_assigned{
+        for (sv, assigned) in &self.state_vars_assigned {
             if !assigned {
                 assert!(false, "Did not set all final state variables {}", sv)
             }

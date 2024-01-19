@@ -37,7 +37,7 @@ pub fn replace_expr(old_expr: Expression, mut new_expr: Expression, copy_type: b
     new_expr
 }
 
-pub fn _replace_ast(old_ast: Option<AST>,mut  new_ast: AST) {
+pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: AST) {
     new_ast.parent = old_ast.parent;
     DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
     if old_ast.parent.is_some() {
@@ -46,7 +46,7 @@ pub fn _replace_ast(old_ast: Option<AST>,mut  new_ast: AST) {
     }
 }
 
-const setting_later: Vec<&str> = [
+const setting_later: [&str; 42] = [
     //General fields
     "line",
     "column",
@@ -99,99 +99,99 @@ pub struct DeepCopyVisitor {
     with_types: bool,
     with_analysis: bool,
 }
-impl DeepCopyVisitor{
-pub fn new(with_types: bool, with_analysis: bool) -> Self
+impl DeepCopyVisitor {
+    pub fn new(with_types: bool, with_analysis: bool) -> Self
 // super().__init__("node-or-children")
         // self.with_types = with_types
         // self.with_analysis = with_analysis
-{
-    Self {
-        with_types,
-        with_analysis,
+    {
+        Self {
+            with_types,
+            with_analysis,
+        }
     }
-}
 
-// @staticmethod
-pub fn copy_ast_fields(ast: AST, ast_copy: AST) {
-    ast_copy.line = ast.line;
-    ast_copy.column = ast.column;
-    ast_copy.modified_values = ast.modified_values;
-    ast_copy.read_values = ast.read_values;
-}
-
-pub fn visitChildren(&self, ast: AST) {
-    // let c = ast;
-    // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
-    // let new_fields = BTreeMap::new();
-    // for arg_name in args_names {
-    //     let old_field = getattr(ast, arg_name);
-    //     new_fields[arg_name] = self.copy_field(old_field);
-    // }
-
-    // for k in ast.keys() {
-    //     if !new_fields.contains(&k)
-    //         && !self.setting_later.contains(&k)
-    //     {
-    //         // && !inspect.getfullargspec(c.__bases__[0].__init__).args[1..].contains(&k)
-    //         assert!(false, "Not copying,{}", k);
-    //     }
-    // }
-    // let mut ast_copy = c(new_fields);
-    // self.copy_ast_fields(ast, ast_copy);
-    // ast_copy
-}
-
-pub fn visitAnnotatedTypeName(self, ast: AST) {
-    let mut ast_copy = self.visitChildren(ast);
-    ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
-    ast_copy
-}
-
-pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) {
-    let mut ast_copy = self.visitChildren(ast);
-    ast_copy.target = ast.target;
-    ast_copy
-}
-
-pub fn visitBuiltinFunction(self, ast: AST) {
-    let mut ast_copy = self.visitChildren(ast);
-    ast_copy.is_private = ast.is_private;
-    ast_copy.homomorphism = ast.homomorphism;
-    ast_copy
-}
-
-pub fn visitExpression(self, ast: Expression) {
-    let mut ast_copy = self.visitChildren(ast);
-    if self.with_types && ast.annotated_type.is_some() {
-        ast_copy.annotated_type = ast.annotated_type.clone();
+    // @staticmethod
+    pub fn copy_ast_fields(ast: AST, ast_copy: AST) {
+        ast_copy.line = ast.line;
+        ast_copy.column = ast.column;
+        ast_copy.modified_values = ast.modified_values;
+        ast_copy.read_values = ast.read_values;
     }
-    ast_copy.evaluate_privately = ast.evaluate_privately;
-     ast_copy
-}
 
-pub fn visitStatement(self, ast: Statement) {
-    let mut ast_copy = self.visitChildren(ast);
-    if self.with_analysis {
-        ast_copy.before_analysis = ast.before_analysis;
+    pub fn visitChildren(&self, ast: AST) {
+        // let c = ast;
+        // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
+        // let new_fields = BTreeMap::new();
+        // for arg_name in args_names {
+        //     let old_field = getattr(ast, arg_name);
+        //     new_fields[arg_name] = self.copy_field(old_field);
+        // }
+
+        // for k in ast.keys() {
+        //     if !new_fields.contains(&k)
+        //         && !self.setting_later.contains(&k)
+        //     {
+        //         // && !inspect.getfullargspec(c.__bases__[0].__init__).args[1..].contains(&k)
+        //         assert!(false, "Not copying,{}", k);
+        //     }
+        // }
+        // let mut ast_copy = c(new_fields);
+        // self.copy_ast_fields(ast, ast_copy);
+        // ast_copy
     }
-     ast_copy
-}
 
-pub fn copy_field(self, field: AST) {
-    // if field.is_none() {
-    //     None
-    // } else if isinstance(field, str)
-    //     || isinstance(field, int)
-    //     || isinstance(field, bool)
-    //     || isinstance(field, Enum)
-    //     || isinstance(field, CryptoParams)
-    // {
-    //     field
-    // } else if isinstance(field, list) {
-    //     field.iter().map(|e| self.copy_field(e)).collect()
-    // } else {
-    //     self.visit(field)
-    // }
-    field.clone()
-}
+    pub fn visitAnnotatedTypeName(self, ast: AST) {
+        let mut ast_copy = self.visitChildren(ast);
+        ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
+        ast_copy
+    }
+
+    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) {
+        let mut ast_copy = self.visitChildren(ast);
+        ast_copy.target = ast.target;
+        ast_copy
+    }
+
+    pub fn visitBuiltinFunction(self, ast: AST) {
+        let mut ast_copy = self.visitChildren(ast);
+        ast_copy.is_private = ast.is_private;
+        ast_copy.homomorphism = ast.homomorphism;
+        ast_copy
+    }
+
+    pub fn visitExpression(self, ast: Expression) {
+        let mut ast_copy = self.visitChildren(ast);
+        if self.with_types && ast.annotated_type.is_some() {
+            ast_copy.annotated_type = ast.annotated_type.clone();
+        }
+        ast_copy.evaluate_privately = ast.evaluate_privately;
+        ast_copy
+    }
+
+    pub fn visitStatement(self, ast: Statement) {
+        let mut ast_copy = self.visitChildren(ast);
+        if self.with_analysis {
+            ast_copy.before_analysis = ast.before_analysis;
+        }
+        ast_copy
+    }
+
+    pub fn copy_field(self, field: AST) {
+        // if field.is_none() {
+        //     None
+        // } else if isinstance(field, str)
+        //     || isinstance(field, int)
+        //     || isinstance(field, bool)
+        //     || isinstance(field, Enum)
+        //     || isinstance(field, CryptoParams)
+        // {
+        //     field
+        // } else if isinstance(field, list) {
+        //     field.iter().map(|e| self.copy_field(e)).collect()
+        // } else {
+        //     self.visit(field)
+        // }
+        field.clone()
+    }
 }

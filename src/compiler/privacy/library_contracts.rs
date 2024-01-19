@@ -6,8 +6,8 @@
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::utils::helpers::read_file;
-use textwrap::dedent;
 use lazy_static::lazy_static;
+use textwrap::dedent;
 pub fn get_verify_libs_code() -> String
 // """Return all verification contract libraries combined into single string"""
 {
@@ -45,7 +45,7 @@ pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {
 });
 // bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
 // """The field prime used by the zk-snark elliptic curve"""
-
+use zkp_u256::Binary;
 pub const BN128_SCALAR_FIELD_BITS: usize =
     BN128_SCALAR_FIELD.most_significant_bit().unwrap_or(1) - 1;
 // """Integers of at most this many bits can be represented using field values"""

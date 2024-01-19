@@ -2,7 +2,7 @@
 // from typing import List
 
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-
+#[derive(Clone)]
 pub struct G1Point {
     x: String,
     y: String,
@@ -10,20 +10,27 @@ pub struct G1Point {
 // class G1Point
 // """Data class to represent curve points"""
 impl G1Point {
-    pub fn new(self, x: String, y: String)
-    // """Construct G1Point from coordinate integer literal strings."""
+    pub fn new(x: String, y: String) -> Self
+// """Construct G1Point from coordinate integer literal strings."""
     // self.x: String = x
     // self.y: String = y
     {
         Self { x, y }
     }
-
-    pub fn negated(self) {
+    pub fn default() -> Self
+// """Construct G1Point from coordinate integer literal strings."""
+    // self.x: String = x
+    // self.y: String = y
+    {
+        let zero = String::from("0");
+        Self { x: zero, y: zero }
+    }
+    pub fn negated(&self) {
         let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
         if self.x == "0" && self.y == "0" {
-            G1Point::new("0", "0")
+            G1Point::default()
         } else {
-            G1Point::new(self.x,self.y)// hex(q - (int(self.y, 0) % q)) TODO
+            G1Point::new(self.x, self.y) // hex(q - (int(self.y, 0) % q)) TODO
         }
     }
 
@@ -106,7 +113,9 @@ pub trait VerifyingKeyMeta {
     // @abstractmethod
     // pub fn create_dummy_key(cls)
     //     """Generate a dummy key."""
-    fn create_dummy_key()->Self::Output where Self: Sized;
+    fn create_dummy_key() -> Self::Output
+    where
+        Self: Sized;
     //     pass
 }
 
@@ -145,7 +154,6 @@ impl ProvingSchemeBase {
 
 pub trait ProvingScheme {
     const NAME: &'static str;
-
     type VerifyingKey;
     // @abstractmethod
     fn generate_verification_contract<V>(

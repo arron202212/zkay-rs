@@ -1,11 +1,11 @@
 use crate::zkay_ast::analysis::partition_state::PartitionState;
 use crate::zkay_ast::analysis::side_effects::has_side_effects;
 use crate::zkay_ast::ast::{
-    AllExpr, AssignmentStatement, Block, BreakStatement, BuiltinFunction,
+    is_instance, ASTType, AllExpr, AssignmentStatement, Block, BreakStatement, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
     ForStatement, FunctionCallExpr, IfStatement, LocationExpr, MeExpr, PrivacyLabelExpr,
-    RequireStatement, ReturnStatement, StatementList, TupleExpr, VariableDeclarationStatement,
-    WhileStatement,AST,Statement,is_instance,ASTType,
+    RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -55,8 +55,8 @@ impl AliasAnalysisVisitor {
             last = statement.after_analysis.clone();
             print!("after {:?},{:?}", statement, last);
         }
-       
-         last
+
+        last
     }
     pub fn visitStatementList(&self, ast: StatementList) {
         ast.after_analysis = self.propagate(ast.statements, ast.before_analysis);
@@ -234,8 +234,8 @@ impl AliasAnalysisVisitor {
 
         // make state more precise
         let &c = ast.condition;
-        if is_instance(&c,ASTType:: FunctionCallExpr)
-            && is_instance(&c.func,ASTType:: BuiltinFunction)
+        if is_instance(&c, ASTType::FunctionCallExpr)
+            && is_instance(&c.func, ASTType::BuiltinFunction)
             && c.func.op == "=="
         {
             let lhs = c.args[0].privacy_annotation_label();
@@ -309,7 +309,11 @@ impl GuardConditionAnalyzer {
             _analysis: None,
         }
     }
-    pub fn analyze<V: Ord>(&mut self, cond: AST, before_analysis: PartitionState<V>) -> PartitionState<V>{
+    pub fn analyze<V: Ord>(
+        &mut self,
+        cond: AST,
+        before_analysis: PartitionState<V>,
+    ) -> PartitionState<V> {
         if has_side_effects(cond) {
             before_analysis.clone().separate_all()
         } else {
@@ -327,7 +331,7 @@ impl GuardConditionAnalyzer {
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func,ASTType:: BuiltinFunction) {
+        if is_instance(&ast.func, ASTType::BuiltinFunction) {
             let op = ast.func.op;
             if op == "!" {
                 self._negated();
@@ -344,8 +348,8 @@ impl GuardConditionAnalyzer {
         }
     }
 }
-pub fn _recursive_update<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>, merge: bool) {
-    if is_instance(&lhs,ASTType:: TupleExpr) && is_instance(&rhs,ASTType:: TupleExpr) {
+pub fn _recursive_update<P: Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>, merge: bool) {
+    if is_instance(&lhs, ASTType::TupleExpr) && is_instance(&rhs, ASTType::TupleExpr) {
         for (l, r) in lhs.elements.iter().zip(rhs.elements) {
             _recursive_update(l, r, analysis, merge);
         }
@@ -363,10 +367,10 @@ pub fn _recursive_update<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>,
         }
     }
 }
-pub fn recursive_merge<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
+pub fn recursive_merge<P: Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
     _recursive_update(lhs, rhs, analysis, true);
 }
 
-pub fn recursive_assign<P:Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
+pub fn recursive_assign<P: Ord>(lhs: AST, rhs: AST, analysis: PartitionState<P>) {
     _recursive_update(lhs, rhs, analysis, false);
 }

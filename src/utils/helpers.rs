@@ -3,10 +3,10 @@
 // import hashlib
 // from typing import Optional, List
 // from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
-use std::fs::File;
-use std::path::Path;
 use rs_sha512::Sha512State;
+use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
+use std::path::Path;
 pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) -> String {
     let target = if let Some(output_directory) = output_directory {
         Path::new(output_directory).join(filename)
@@ -29,10 +29,10 @@ pub fn read_file(filename: &str) -> String {
 
 pub fn hash_string(data: &str) -> Vec<u8> {
     // let digest = hashlib.sha512(data).digest();
-let mut sha512hasher = Sha512State::default().build_hasher();
-sha512hasher.write(data.as_bytes());
-let digest = sha512hasher.finish();
-// let bytes_result = HasherContext::finish(&mut sha512hasher);
+    let mut sha512hasher = Sha512State::default().build_hasher();
+    sha512hasher.write(data.as_bytes());
+    let digest = sha512hasher.finish();
+    // let bytes_result = HasherContext::finish(&mut sha512hasher);
     assert!(digest.len() == 64);
     digest[..32].to_vec()
 }
@@ -40,13 +40,13 @@ let digest = sha512hasher.finish();
 pub fn hash_file(filename: &str, chunk_size: i32) -> Vec<u8> {
     //chunk_size: int = 1 << 27
     // let mut digest = hashlib.sha512();
-let mut digest = Sha512State::default().build_hasher();
+    let mut digest = Sha512State::default().build_hasher();
     let f = File::open(filename).expect("");
     loop {
         // Hash prover key in 128mb chunks
         let data = f.read(chunk_size);
         if data.is_err() {
-            break
+            break;
         }
         digest.write(data);
     }

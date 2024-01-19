@@ -3,36 +3,35 @@
 // from abc import ABCMeta, abstractmethod
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
-use crate::zkay_ast::ast::ConstructorOrFunctionDefinition;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use crate::{zk_print, config::CFG};
 use crate::utils::progress_printer::print_step;
 use crate::utils::timer::time_measure;
+use crate::zkay_ast::ast::ConstructorOrFunctionDefinition;
+use crate::{config::CFG, zk_print};
 use rayon::prelude::*;
 use std::path::Path;
 extern crate num_cpus;
 use lazy_static::lazy_static;
 use std::collections::BTreeMap;
-use std::sync::Mutex;
 use std::fs::File;
+use std::sync::Mutex;
 lazy_static! {
     pub static ref finish_counter: Mutex<i32> = Mutex::new(0);
     pub static ref c_count: Mutex<i32> = Mutex::new(0);
 }
-pub trait CircuitGenerator{
-}
+pub trait CircuitGenerator {}
 // class CircuitGeneratorBase(metaclass=ABCMeta)
-pub struct CircuitGeneratorBase<T:ProvingScheme,V> {
-    circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
-    circuits_to_prove: Vec<CircuitHelper<V>>,
-    proving_scheme: T,
-    output_dir: String,
-    parallel_keygen: bool,
-    p_count: i32,
+pub struct CircuitGeneratorBase<T: ProvingScheme, V> {
+    pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    pub circuits_to_prove: Vec<CircuitHelper<V>>,
+    pub proving_scheme: T,
+    pub output_dir: String,
+    pub parallel_keygen: bool,
+    pub p_count: i32,
 }
 
-impl<T:ProvingScheme,V> CircuitGeneratorBase<T,V> {
+impl<T: ProvingScheme, V> CircuitGeneratorBase<T, V> {
     // """
     // A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.
 
@@ -130,8 +129,8 @@ impl<T:ProvingScheme,V> CircuitGeneratorBase<T,V> {
             time_measure("key_generation", true);
             {
                 if self.parallel_keygen && !CFG.lock().unwrap().is_unit_test {
-                    let counter =0;// Value("i", 0);
-                    // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
+                    let counter = 0; // Value("i", 0);
+                                     // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
                     {
                         modified_circuits_to_prove
                             .par_iter()
@@ -260,7 +259,10 @@ impl<T:ProvingScheme,V> CircuitGeneratorBase<T,V> {
     // pass
 
     // @abstractmethod
-    pub fn _parse_verification_key<VK>(&self, circuit: CircuitHelper<V>) -> dyn VerifyingKeyMeta<Output=VK>
+    pub fn _parse_verification_key<VK>(
+        &self,
+        circuit: CircuitHelper<V>,
+    ) -> dyn VerifyingKeyMeta<Output = VK>
 // """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
     {
         self.proving_scheme.VerifyingKey.create_dummy_key()

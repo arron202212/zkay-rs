@@ -42,7 +42,7 @@ impl VerifyingKey {
     }
 }
 impl VK for VerifyingKey {
-    type Output=Self;
+    type Output = Self;
     // @classmethod
     fn create_dummy_key() -> Self::Output {
         let p1 = G1Point::new('0', '0');
@@ -56,10 +56,10 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     const NAME: &'static str = "groth16";
     type VerifyingKey = VerifyingKey;
 
-    fn generate_verification_contract(
-        self,
+    fn generate_verification_contract<V>(
+        &self,
         verification_key: VerifyingKey,
-        circuit: CircuitHelper<Self>,
+        circuit: CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {

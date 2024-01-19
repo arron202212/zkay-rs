@@ -5,18 +5,18 @@
 use lazy_static::lazy_static;
 
 use crate::config::CFG;
-use regex::{Regex,RegexSet,RegexSetBuilder};
+use regex::{Regex, RegexSet, RegexSetBuilder};
 // // Declaration for me which is injected into each contract
-pub const ME_DECL:&str = " address private me = msg.sender;";
+pub const ME_DECL: &str = " address private me = msg.sender;";
 
 // // ---------  Lexer Rules ---------
 pub const WS_PATTERN: &str = r"[ \t\r\n\u000C]";
-  pub const ID_PATTERN : &str = r"[a-zA-Z\$_][a-zA-Z0-9\$_]*";
-  pub const UINT_PATTERN: &str  = r"uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256";
-  pub const INT_PATTERN: &str  = r"int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256";
-    pub const HOMOMORPHISM_PATTERN: &str  = r"<\+?>";
- pub const NONID_START: &str  = r"(?:[^a-zA-Z0-9\$_]|^)";
- pub const NONID_END: &str  = r"(?:[^a-zA-Z0-9\$_]|$)";
+pub const ID_PATTERN: &str = r"[a-zA-Z\$_][a-zA-Z0-9\$_]*";
+pub const UINT_PATTERN: &str = r"uint|uint8|uint16|uint24|uint32|uint40|uint48|uint56|uint64|uint72|uint80|uint88|uint96|uint104|uint112|uint120|uint128|uint136|uint144|uint152|uint160|uint168|uint176|uint184|uint192|uint200|uint208|uint216|uint224|uint232|uint240|uint248|uint256";
+pub const INT_PATTERN: &str = r"int|int8|int16|int24|int32|int40|int48|int56|int64|int72|int80|int88|int96|int104|int112|int120|int128|int136|int144|int152|int160|int168|int176|int184|int192|int200|int208|int216|int224|int232|int240|int248|int256";
+pub const HOMOMORPHISM_PATTERN: &str = r"<\+?>";
+pub const NONID_START: &str = r"(?:[^a-zA-Z0-9\$_]|^)";
+pub const NONID_END: &str = r"(?:[^a-zA-Z0-9\$_]|$)";
 lazy_static! {
   static ref USER_TYPE_PATTERN: String = format!("(?:(?:{ID_PATTERN}\\.)*(?:{ID_PATTERN}))");
   static ref ELEM_TYPE_PATTERN: String =  format!("(?:address|address payable|bool|{UINT_PATTERN}|{INT_PATTERN}|{USER_TYPE_PATTERN})");
@@ -36,7 +36,7 @@ lazy_static! {
   static ref CONTRACT_START_PATTERN : Regex =  Regex::new(r"{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])").unwrap();
 // Regex to match annotated types
 
-static ref ATYPE_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)").unwrap();  
+static ref ATYPE_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)").unwrap();
        // match basic type
   // match @owner[<op>]
 
@@ -81,7 +81,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
 
     // Determine parenthesis characters
     let open_sym = code.as_bytes()[open_parens_loc] as char;
-    let mut close_sym="";
+    let mut close_sym = "";
     if open_sym == "(" {
         close_sym = ")"
     } else if open_sym == "{" {

@@ -7,8 +7,8 @@ use crate::utils::helpers::hash_file;
 use crate::utils::run_command::run_command;
 use crate::zkay_ast::ast::indent;
 use lazy_static::lazy_static;
-use std::path::Path;
 use std::fs::File;
+use std::path::Path;
 //path to jsnark interface jar
 const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
@@ -74,7 +74,10 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
 // :raise SubprocessError: if circuit evaluation fails
 // """
 {
-    let serialized_arg_str: Vec<_> = serialized_args.iter().map(|arg| format!( "{:x}",arg)).collect();
+    let serialized_arg_str: Vec<_> = serialized_args
+        .iter()
+        .map(|arg| format!("{:x}", arg))
+        .collect();
 
     //Run jsnark to evaluate the circuit and compute prover inputs
     run_command(
@@ -88,7 +91,7 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
             "prove",
             serialized_arg_str,
         ],
-       output_dir,
+        output_dir,
         true,
     )
 }
@@ -148,7 +151,11 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
         pub_in_size = circuit.in_size_trans,
         pub_out_size = circuit.out_size_trans,
         priv_in_size = circuit.priv_in_size_trans,
-        use_input_hashing = CFG.lock().unwrap().should_use_hash(circuit).to_ascii_lowercase(),
+        use_input_hashing = CFG
+            .lock()
+            .unwrap()
+            .should_use_hash(circuit)
+            .to_ascii_lowercase(),
         fdefs = indent(function_definitions),
         circuit_statements = indent(indent("\n".join(circuit_statements)))
     );

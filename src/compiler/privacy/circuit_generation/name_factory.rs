@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{Expression, HybridArgType, HybridArgumentIdf, TypeName,Identifier};
+use crate::zkay_ast::ast::{Expression, HybridArgType, HybridArgumentIdf, Identifier, TypeName};
 
 struct BaseNameFactory {
     base_name: String,

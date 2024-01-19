@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{AnnotatedTypeName, AST,is_instance,ASTType};
+use crate::zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, AST};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private(ast: AST) -> bool {
@@ -19,12 +19,12 @@ impl ContainsPrivateVisitor {
         }
     }
     pub fn visitAST(self, ast: AST) {
-        if let Some(t)=ast.annotated_type() {
-                assert!(is_instance(t, ASTType::AnnotatedTypeName));
+        if let Some(t) = ast.annotated_type() {
+            assert!(is_instance(t, ASTType::AnnotatedTypeName));
 
-                if !t.privacy_annotation.is_all_expr() {
-                    self.contains_private = true;
-                }
+            if !t.privacy_annotation.is_all_expr() {
+                self.contains_private = true;
+            }
         }
     }
 }

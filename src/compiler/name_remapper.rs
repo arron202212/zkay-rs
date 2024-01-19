@@ -1,17 +1,18 @@
 use crate::zkay_ast::ast::{
-    BuiltinFunction, Expression, FunctionCallExpr, HybridArgType, HybridArgumentIdf, Identifier,
-    IdentifierExpr,is_instance,ASTType,IdentifierExprUnion,
+    is_instance, ASTCode, ASTType, AsTypeUnion, BuiltinFunction, Expression, FunctionCallExpr,
+    FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
+    IdentifierExprUnion, VariableDeclarationStatement,
 };
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
-use std::collections::BTreeMap;
 use std::any::Any;
-// K = TypeVar("K")
-// V = TypeVar("V")
-// class Remapper(Generic[K, V]):
-    type RemapMapType<K,V> = BTreeMap<K,V>; //#[(bool, K), V]
+use std::collections::BTreeMap;
+// Identifier = TypeVar("Identifier")
+// HybridArgumentIdf = TypeVar("HybridArgumentIdf")
+// class Remapper(Generic[Identifier, HybridArgumentIdf]):
+type RemapMapType = BTreeMap<Identifier, HybridArgumentIdf>; //#[(bool, Identifier), HybridArgumentIdf]
 
-pub struct Remapper<K, V> {
-    rmap: RemapMapType<K, V>,
+pub struct Remapper {
+    rmap: RemapMapType,
 }
 // """
 // Helper class to simulate static single assignment, mostly used by CircuitHelper
@@ -32,11 +33,10 @@ pub struct Remapper<K, V> {
 //     tmp3 = get_current(x) + 1
 //     remap(x, tmp3)
 
-// :param K: name type
-// :param V: type of element to which key refers at a code location
+// :param Identifier: name type
+// :param HybridArgumentIdf: type of element to which key refers at a code location
 // """
-impl<K,V> Remapper<K,V> {
-
+impl Remapper {
     pub fn new() -> Self
 // super().__init__()
     {
@@ -61,13 +61,13 @@ impl<K,V> Remapper<K,V> {
         self.rmap.clear();
     }
 
-    pub fn reset_key(&self, key: K)
+    pub fn reset_key(&self, key: Identifier)
     // """Invalidate remapping information for the given key (is_remapped returns false after this)."""
     {
         self.rmap.remove(&key);
     }
 
-    pub fn remap(&self, key: K, value: V)
+    pub fn remap(&self, key: Identifier, value: HybridArgumentIdf)
     // """
     // Remap key to refer to new version element "value".
 
@@ -75,12 +75,12 @@ impl<K,V> Remapper<K,V> {
     // :param value: latest version of the element to which key refers
     // """
     {
-        assert!(key.parent().is_some());
-        self.rmap(key, value);
+        // assert!(key.parent().is_some());
+        self.rmap.insert(key, value);
     }
 
     // @contextmanager
-    pub fn remap_scope(&mut self, scope_stmt: Option<V>)
+    pub fn remap_scope(&mut self, scope_stmt: Option<HybridArgumentIdf>)
     // """
     // Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.
 
@@ -92,12 +92,12 @@ impl<K,V> Remapper<K,V> {
         let prev = self.rmap.clone();
         // yield
         if let Some(scope_stmt) = scope_stmt {
-            prev.update(
-                self.rmap
-                    .items()
-                    .iter()
+            prev.append(
+                &mut self
+                    .rmap
+                    .into_iter()
                     .filter_map(|(key, val)| {
-                        if SymbolTableLinker.in_scope_at(key, scope_stmt) {
+                        if SymbolTableLinker::in_scope_at(&key, scope_stmt.get_ast()) {
                             Some((key, val))
                         } else {
                             None
@@ -109,11 +109,15 @@ impl<K,V> Remapper<K,V> {
         self.rmap = prev;
     }
 
-    pub fn is_remapped(&self, key: K) -> bool {
-        self.rmap.contains(&key)
+    pub fn is_remapped(&self, key: Identifier) -> bool {
+        self.rmap.contains_key(&key)
     }
 
-    pub fn get_current(&self, key: K, default: Option<V>) -> V
+    pub fn get_current(
+        &self,
+        key: Identifier,
+        default: Option<HybridArgumentIdf>,
+    ) -> HybridArgumentIdf
 // """
         // Return the value to which key currently refers.
 
@@ -126,16 +130,16 @@ impl<K,V> Remapper<K,V> {
     {
         let k = key;
         if let Some(v) = self.rmap.get(&k) {
-            v
+            v.clone()
         } else {
             if default.is_none() {
                 assert!(false, "default is none");
             }
-            default
+            default.unwrap()
         }
     }
 
-    pub fn get_state(&self) -> dyn Any
+    pub fn get_state(&self) -> RemapMapType
 // """ Return an opaque copy of the internal state. """
     {
         self.rmap.clone()
@@ -145,17 +149,19 @@ impl<K,V> Remapper<K,V> {
     // """ Restore internal state from an opaque copy previously obtained using get_state. """
     {
         // assert!(isinstance(state, BTreeMap));
-        if let Some(state)=state.downcast_ref::<BTreeMap>()
-            {self.rmap = state.copy();
-            }else{assert!(false);}
+        if let Some(state) = state.downcast_ref::<BTreeMap<Identifier, HybridArgumentIdf>>() {
+            self.rmap = state.clone();
+        } else {
+            assert!(false);
+        }
     }
 
     pub fn join_branch(
         &self,
-        stmt: V,
+        stmt: VariableDeclarationStatement,
         true_cond_for_other_branch: IdentifierExpr,
-        other_branch_state: dyn Any,
-        create_val_for_name_and_expr_fct: impl FnOnce(K, Expression) -> V,
+        other_branch_state: RemapMapType,
+        create_val_for_name_and_expr_fct: impl FnOnce(String, Expression) -> HybridArgumentIdf,
     )
     // """
     // Perform an SSA join for two branches.
@@ -184,86 +190,132 @@ impl<K,V> Remapper<K,V> {
         let false_state = self.rmap;
         self.rmap = BTreeMap::new();
 
-        let join=|then_idf: V, else_idf: V,key:K,val:V|->V
+        let join = |then_idf: IdentifierExpr, else_idf: IdentifierExpr,key:Identifier,val:HybridArgumentIdf|->HybridArgumentIdf
         // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         {
-            let rhs = FunctionCallExpr::new(
-                BuiltinFunction::new("ite"),
-                vec![true_cond_for_other_branch.clone(), then_idf, else_idf],
-            )
-            .as_type(val.t);
-            create_val_for_name_and_expr_fct(key.name, rhs)
+            let rhs = FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
+                BuiltinFunction::new("ite").to_expr(),
+                vec![true_cond_for_other_branch.to_expr(), then_idf.to_expr(), else_idf.to_expr()],None
+            ))
+            .as_type(AsTypeUnion::TypeName(*val.t));
+            create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
         };
 
         for (key, val) in true_state {
-            if !SymbolTableLinker.in_scope_at(key, stmt)
+            if !SymbolTableLinker::in_scope_at(&key, stmt.get_ast())
             // Don"t keep local values
             {
                 continue;
             }
 
-            if false_state.contains(&key) && false_state[&key].name == val.name
+            if false_state.contains_key(&key)
+                && false_state[&key].identifier_base.name == val.identifier_base.name
             // key was not modified in either branch -> simply keep
             {
                 assert!(false_state[&key] == val);
-                self.rmap.insert(key, val);
-            } else if !false_state.contains(&key)
+                self.rmap.insert(key.clone(), val.clone());
+            } else if !false_state.contains_key(&key)
             // If value was only read (remapping points to a circuit input) -> can just take as-is,
             // otherwise have to use conditional assignment
             {
-                if is_instance(val, ASTType::HybridArgumentIdf)
+                if is_instance(&val, ASTType::HybridArgumentIdf)
                     && (val.arg_type == HybridArgType::PubCircuitArg
                         || val.arg_type == HybridArgType::PrivCircuitVal)
                 {
-                    self.rmap(key, val);
+                    self.rmap.insert(key.clone(), val.clone());
                 } else
                 // key was only modified in true branch
                 // remap key -> new temporary with value cond ? new_value : old_value
                 {
-                    let key_decl = key.parent;
-                    assert!(key_decl.annotated_type.is_some());
-                    let mut prev_val = IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()),None)
-                        .as_type(key_decl.annotated_type.zkay_type.clone());
-                    prev_val.target = key_decl;
-                    prev_val.parent = stmt;
-                    prev_val.statement = stmt;
-                    self.rmap[key] = join(true_state[key].get_idf_expr(stmt), prev_val,key,val);
+                    let key_decl = key.parent();
+                    assert!(key_decl.unwrap().get_annotated_type().is_some());
+                    let mut prev_val =
+                        IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
+                            .as_type(AsTypeUnion::AnnotatedTypeName(
+                                key_decl.unwrap().get_annotated_type().unwrap().zkay_type(),
+                            ));
+                    prev_val.location_expr_base.target = key_decl.map(|v| Box::new(v.into()));
+                    prev_val
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .ast_base
+                        .parent = Some(Box::new(stmt.get_ast()));
+                    prev_val
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .statement = Some(Box::new(stmt.to_statement()));
+                    self.rmap.insert(
+                        key.clone(),
+                        join(
+                            true_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                            prev_val,
+                            key,
+                            val,
+                        ),
+                    );
                 }
             } else
             // key was modified in both branches
             // remap key -> new temporary with value cond ? true_val : false_val
             {
-                self.rmap[key] = join(
-                    true_state[key].get_idf_expr(stmt),
-                    false_state[key].get_idf_expr(stmt),
+                self.rmap.insert(
+                    key.clone(),
+                    join(
+                        true_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                        false_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                        key.clone(),
+                        val.clone(),
+                    ),
                 );
             }
         }
         for (key, val) in false_state {
-            if !SymbolTableLinker.in_scope_at(key, stmt)
+            if !SymbolTableLinker::in_scope_at(&key, stmt.get_ast())
             // Don"t keep local values
             {
                 continue;
             }
 
-            if !true_state.contains(&key) {
-                if is_instance(&val,ASTType:: HybridArgumentIdf)
+            if !true_state.contains_key(&key) {
+                if is_instance(&val, ASTType::HybridArgumentIdf)
                     && (val.arg_type == HybridArgType::PubCircuitArg
                         || val.arg_type == HybridArgType::PrivCircuitVal)
                 {
-                    self.rmap[key] = val;
+                    self.rmap.insert(key.clone(), val.clone());
                 } else
                 // key was only modified in false branch
                 // remap key -> new temporary with value cond ? old_value : new_value
                 {
-                    let key_decl = key.parent;
-                    assert!(key_decl.annotated_type.is_some());
-                    let mut prev_val = IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()),None)
-                        .as_type(key_decl.annotated_type.zkay_type.clone());
-                    prev_val.target = key_decl;
-                    prev_val.parent = stmt;
-                    prev_val.statement = stmt;
-                    self.rmap[key] = join(prev_val, false_state[key].get_idf_expr(stmt),key,val);
+                    let key_decl = key.parent();
+                    assert!(key_decl.unwrap().get_annotated_type().is_some());
+                    let mut prev_val =
+                        IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
+                            .as_type(AsTypeUnion::AnnotatedTypeName(
+                                key_decl.unwrap().get_annotated_type().unwrap().zkay_type(),
+                            ));
+                    prev_val.location_expr_base.target = key_decl.map(|v| Box::new(v.into()));
+                    prev_val
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .ast_base
+                        .parent = Some(Box::new(stmt.get_ast()));
+                    prev_val
+                        .location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .statement = Some(Box::new(stmt.to_statement()));
+                    self.rmap.insert(
+                        key.clone(),
+                        join(
+                            prev_val,
+                            false_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                            key.clone(),
+                            val.clone(),
+                        ),
+                    );
                 }
             }
         }
@@ -272,4 +324,4 @@ impl<K,V> Remapper<K,V> {
 // class CircVarRemapper(Remapper[Identifier, HybridArgumentIdf])
 //     """Remapper class used by CircuitHelper"""
 //     pass
-pub struct CircVarRemapper(pub Remapper<Identifier, HybridArgumentIdf>);
+pub struct CircVarRemapper(pub Remapper);

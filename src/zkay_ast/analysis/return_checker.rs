@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStatement,AST}; //, AstException
+use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStatement, AST}; //, AstException
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: AST) {

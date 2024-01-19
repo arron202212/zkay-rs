@@ -5,10 +5,10 @@ use crate::zkay_ast::ast::AST;
 pub struct AstTransformerVisitorBase {
     log: bool,
 }
-pub trait  AstTransformerVisitor{
-// type Return ;
-// type AST;
- fn default()->Self;
+pub trait AstTransformerVisitor {
+    // type Return ;
+    // type AST;
+    fn default() -> Self;
 }
 // class AstTransformerVisitor
 // """
@@ -20,18 +20,20 @@ pub trait  AstTransformerVisitor{
 // """
 
 impl AstTransformerVisitor for AstTransformerVisitorBase {
+    fn default() -> Self {
+        Self::new(false)
+    }
 }
-impl  AstTransformerVisitorBase {
-   
- pub fn new(log: bool) -> Self {
+impl AstTransformerVisitorBase {
+    pub fn new(log: bool) -> Self {
         Self { log }
     }
-    pub fn visit(self, ast: AST)->AST {
+    pub fn visit(self, ast: AST) -> AST {
         self._visit_internal(ast)
     }
 
-    pub fn visit_list(self, ast_list: Vec<AST>)->Vec<AST> {
-        ast_list.iter().filter_map(|a| self.visit(a) ).collect()
+    pub fn visit_list(self, ast_list: Vec<AST>) -> Vec<AST> {
+        ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
 
     pub fn visit_children<T>(self, mut ast: T) -> T {
@@ -39,9 +41,9 @@ impl  AstTransformerVisitorBase {
         ast
     }
 
-    pub fn _visit_internal(self, ast: AST)->AST {
-        if ast==AST::None {
-            return ast
+    pub fn _visit_internal(self, ast: AST) -> AST {
+        if ast == AST::None {
+            return ast;
         }
 
         if self.log {
@@ -50,7 +52,7 @@ impl  AstTransformerVisitorBase {
         self.get_visit_function(ast)
     }
 
-    pub fn get_visit_function(self, c: AST)->AST {
+    pub fn get_visit_function(self, c: AST) -> AST {
         // let visitor_function = "visit" + c.name();
         // if hasattr(self, visitor_function) {
         //     return getattr(self, visitor_function);
@@ -66,7 +68,7 @@ impl  AstTransformerVisitorBase {
         c
     }
 
-    pub fn visitAST(self, ast: AST)->AST {
+    pub fn visitAST(self, ast: AST) -> AST {
         self.visit_children(ast)
     }
 }

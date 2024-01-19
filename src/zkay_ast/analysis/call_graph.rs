@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
-    BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement, FunctionCallExpr, LocationExpr,
-    WhileStatement,AST,is_instance,ASTType,
+    is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
+    FunctionCallExpr, LocationExpr, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
 
@@ -24,8 +24,8 @@ struct DirectCalledFunctionDetector;
 // class DirectCalledFunctionDetector(FunctionVisitor)
 impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if !is_instance(&ast.func,ASTType:: BuiltinFunction) && !ast.is_cast {
-            assert!(is_instance(&ast.func,ASTType:: LocationExpr));
+        if !is_instance(&ast.func, ASTType::BuiltinFunction) && !ast.is_cast {
+            assert!(is_instance(&ast.func, ASTType::LocationExpr));
             let fdef = &ast.func.target;
             assert!(fdef.is_function());
             ast.statement.function.called_functions.insert(fdef.clone());
@@ -66,7 +66,7 @@ impl IndirectCalledFunctionDetector {
                         .collect()
                 })
                 .collect();
-            ast.called_functions=ast.called_functions.union(&leaves).collect();
+            ast.called_functions = ast.called_functions.union(&leaves).collect();
         }
 
         if ast.called_functions.contains(ast) {

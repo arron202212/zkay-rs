@@ -1,8 +1,10 @@
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
- use crate::transaction::crypto::params::CryptoParams;
-use crate::zkay_ast::ast::{ConstructorOrFunctionDefinition, IdentifierExpr, NumberLiteralExpr,MeExpr,Identifier};
-use std::collections::{BTreeMap,BTreeSet};
+use crate::transaction::crypto::params::CryptoParams;
+use crate::zkay_ast::ast::{
+    ConstructorOrFunctionDefinition, Identifier, IdentifierExpr, MeExpr, NumberLiteralExpr,
+};
+use std::collections::{BTreeMap, BTreeSet};
 pub fn compute_transitive_circuit_io_sizes<V>(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
@@ -66,7 +68,7 @@ pub fn _compute_transitive_circuit_io_sizes<V>(
     }
 
     if !circuit.function_calls_with_verification {
-         (0, 0, 0)
+        (0, 0, 0)
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
         for f in circuit.function_calls_with_verification {

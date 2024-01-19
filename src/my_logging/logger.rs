@@ -10,9 +10,10 @@ use crate::my_logging::log_context::FULL_LOG_CONTEXT;
 
 // timestamp = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 
- fn   timestamp()->String{
-use chrono::Local;
-Local::now().format("%Y-%m-%d_%H:%M:%S")}
+fn timestamp() -> String {
+    use chrono::Local;
+    Local::now().format("%Y-%m-%d_%H:%M:%S")
+}
 // # shutdown current logger (useful for debugging, ...)
 // def shutdown(handler_list=None):
 //     if handler_list is None:
@@ -29,17 +30,17 @@ Local::now().format("%Y-%m-%d_%H:%M:%S")}
 // # WARNING = 30
 // # INFO = 20
 // # DEBUG = 10
-const DATA:i32 = 5;
+const DATA: i32 = 5;
 // addLevelName(DATA, "DATA")
-use log::{Record, Level, Metadata, LevelFilter, SetLoggerError};
+use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 
 static CONSOLE_LOGGER: ConsoleLogger = ConsoleLogger;
 
 struct ConsoleLogger;
 
 impl log::Log for ConsoleLogger {
-  fn enabled(&self, metadata: &Metadata) -> bool {
-     metadata.level() <= Level::Info
+    fn enabled(&self, metadata: &Metadata) -> bool {
+        metadata.level() <= Level::Info
     }
 
     fn log(&self, record: &Record) {
@@ -55,13 +56,15 @@ fn set_log() -> Result<(), SetLoggerError> {
     log::set_max_level(LevelFilter::Info);
 }
 use serde_json::json;
-pub fn data(key:&str, value:&str)->String
-    // """
+pub fn data(key: &str, value: &str) -> String
+// """
     // Log (key, value) to log-level DATA
     // """
-   { let d = json!({"key": key, "value": value, "context": FULL_LOG_CONTEXT.lock().unwrap().clone()});
-    return log::debug!( "{DATA},{}",d)
-    }
+{
+    let d =
+        json!({"key": key, "value": value, "context": FULL_LOG_CONTEXT.lock().unwrap().clone()});
+    return log::debug!("{DATA},{}", d);
+}
 
 // def get_log_dir(parent_dir, label):
 //     """
