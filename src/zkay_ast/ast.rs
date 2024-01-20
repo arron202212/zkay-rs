@@ -354,6 +354,9 @@ impl AST {
     pub fn idf(&self) -> Identifier {
         Identifier::default()
     }
+    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
+        BTreeSet::new()
+    }
 }
 
 use std::fmt;
@@ -742,6 +745,9 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn target(&self) -> Option<Box<TargetDefinition>> {
+        None
+    }
     pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
         None
     }
@@ -1848,9 +1854,16 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
+    }
+    pub fn is_cast(&self) -> bool {
+        false
+    }
     pub fn public_key(&self) -> Option<HybridArgumentIdf> {
         None
     }
+
     pub fn func(&self) -> Option<Expression> {
         None
     }
@@ -3198,7 +3211,7 @@ impl SliceExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MeExpr {
     pub expression_base: ExpressionBase,
-    name: String,
+    pub name: String,
 }
 impl ASTCode for MeExpr {
     fn to_expr(&self) -> Expression {
@@ -4537,7 +4550,13 @@ pub enum SimpleStatement {
     #[default]
     None,
 }
-
+impl SimpleStatement {
+    pub fn set_before_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
+}
 impl ASTCode for SimpleStatement {
     fn get_ast(&self) -> AST {
         match self {
@@ -7450,10 +7469,10 @@ impl ASTCode for IdentifierDeclaration {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierDeclarationBase {
     pub ast_base: ASTBase,
-    keywords: Vec<String>,
-    annotated_type: Box<AnnotatedTypeName>,
-    idf: Box<Identifier>,
-    storage_location: Option<String>,
+    pub keywords: Vec<String>,
+    pub annotated_type: Box<AnnotatedTypeName>,
+    pub idf: Box<Identifier>,
+    pub storage_location: Option<String>,
 }
 impl IdentifierDeclarationBase {
     fn new(
@@ -7722,22 +7741,22 @@ impl ASTChildren for NamespaceDefinitionBase {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
-    parameters: Vec<Parameter>,
-    modifiers: Vec<String>,
-    return_parameters: Vec<Parameter>,
-    body: Option<Block>,
-    return_var_decls: Vec<VariableDeclaration>,
-    parent: Option<ContractDefinition>,
-    original_body: Option<Block>,
-    annotated_type: Option<AnnotatedTypeName>,
-    called_functions: BTreeSet<ConstructorOrFunctionDefinition>,
-    is_recursive: bool,
-    has_static_body: bool,
-    can_be_private: bool,
-    used_homomorphisms: Option<BTreeSet<Homomorphism>>,
-    used_crypto_backends: Option<Vec<CryptoParams>>,
-    requires_verification: bool,
-    requires_verification_when_external: bool,
+    pub parameters: Vec<Parameter>,
+    pub modifiers: Vec<String>,
+    pub return_parameters: Vec<Parameter>,
+    pub body: Option<Block>,
+    pub return_var_decls: Vec<VariableDeclaration>,
+    pub parent: Option<ContractDefinition>,
+    pub original_body: Option<Block>,
+    pub annotated_type: Option<AnnotatedTypeName>,
+    pub called_functions: BTreeSet<ConstructorOrFunctionDefinition>,
+    pub is_recursive: bool,
+    pub has_static_body: bool,
+    pub can_be_private: bool,
+    pub used_homomorphisms: Option<BTreeSet<Homomorphism>>,
+    pub used_crypto_backends: Option<Vec<CryptoParams>>,
+    pub requires_verification: bool,
+    pub requires_verification_when_external: bool,
 }
 impl ASTCode for ConstructorOrFunctionDefinition {
     fn get_ast(&self) -> AST {
@@ -8495,6 +8514,15 @@ impl From<AST> for TargetDefinition {
         match v {
             AST::IdentifierDeclaration(id) => Self::IdentifierDeclaration(id),
             AST::NamespaceDefinition(nd) => Self::NamespaceDefinition(nd),
+            _ => Self::None,
+        }
+    }
+}
+impl From<TargetDefinition> for AST {
+    fn from(v: TargetDefinition) -> Self {
+        match v {
+            TargetDefinition::IdentifierDeclaration(id) => Self::IdentifierDeclaration(id),
+            TargetDefinition::NamespaceDefinition(nd) => Self::NamespaceDefinition(nd),
             _ => Self::None,
         }
     }

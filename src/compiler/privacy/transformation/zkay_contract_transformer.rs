@@ -28,7 +28,7 @@ use crate::zkay_ast::visitor::deep_copy::deep_copy;
 use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
 use std::collections::BTreeMap;
 
-pub fn transform_ast<V>(
+pub fn transform_ast<V: Clone + std::marker::Sync + std::default::Default>(
     ast: SourceUnit,
 ) -> (
     SourceUnit,
@@ -144,11 +144,11 @@ pub fn transform_ast<V>(
 //     (0 for out array, after last key for in array) are added as additional arguments.
 //   * Finally the verification contract is invoked to verify the proof (the in array was populated by the called functions themselves).
 // """
-pub struct ZkayTransformer<V> {
+pub struct ZkayTransformer<V: Clone + std::marker::Sync + std::default::Default> {
     circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl<V> ZkayTransformer<V> {
+impl<V: Clone + std::marker::Sync + std::default::Default> ZkayTransformer<V> {
     // pub fn __init__(self)
     //     super().__init__()
     //     self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}

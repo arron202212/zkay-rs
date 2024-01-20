@@ -8,11 +8,12 @@ use crate::compiler::privacy::circuit_generation::circuit_constraints::{
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
 use crate::compiler::privacy::circuit_generation::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorBase,
+    CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType,
 };
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17;
-use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16;
+use crate::compiler::privacy::proving_scheme::backends::{
+    gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
+};
 use crate::compiler::privacy::proving_scheme::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta,
 };
@@ -24,7 +25,7 @@ use crate::utils::helpers::{read_file, save_to_file};
 use crate::zkay_ast::ast::{
     indent, is_instance, ASTCode, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition,
     Expression, FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
+    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, PrivacyLabelExpr, TypeName, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -35,11 +36,6 @@ use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkp_u256::Binary;
 
-pub enum VerifyingKeyType {
-    ProvingSchemeGroth16(<ProvingSchemeGm17 as ProvingScheme>::VerifyingKey),
-    ProvingSchemeGm17(<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKey),
-    None,
-}
 pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
     TypeId::of::<S>() == s
 }
@@ -222,8 +218,8 @@ impl JsnarkVisitor
                 args[1] = ast.args()[1].annotated_type().type_name.value().to_string()
             }
 
-            let mut op = ast.func().unwrap().op().clone();
-            op = if op == "sign-" { "-" } else { op };
+            let mut op = &ast.func().unwrap().op().unwrap();
+            let op = if op == "sign-" { "-" } else { op };
             if op == "sign+" {
                 unimplemented!()
             }
@@ -236,7 +232,7 @@ impl JsnarkVisitor
                         .lock()
                         .unwrap()
                         .user_config
-                        .get_crypto_params(&homomorphism.unwrap())
+                        .get_crypto_params(&homomorphism)
                         .crypto_name;
                     let public_key_name = ast.public_key().unwrap().identifier_base.name;
 
@@ -280,9 +276,17 @@ impl JsnarkVisitor
                     }
                 }
             };
-        } else if ast.is_cast() && is_instance(&ast.func().unwrap().target, ASTType::EnumDefinition)
+        } else if ast.is_cast()
+            && is_instance(
+                &ast.func()
+                    .unwrap()
+                    .target()
+                    .map(|v| Into::<AST>::into(*v))
+                    .unwrap(),
+                ASTType::EnumDefinition,
+            )
         {
-            assert!(ast.annotated_type().type_name.elem_bitwidth == 256);
+            assert!(ast.annotated_type().unwrap().type_name.elem_bitwidth() == 256);
             return self.handle_cast(self.visit(ast.args()[0].get_ast()), TypeName::uint_type());
         }
 
@@ -303,59 +307,65 @@ impl JsnarkVisitor
     }
 }
 
-pub fn add_function_circuit_arguments<V>(circuit: CircuitHelper<V>) -> Vec<String>
+pub fn add_function_circuit_arguments<V: Clone + std::marker::Sync + std::default::Default>(
+    circuit: &CircuitHelper<V>,
+) -> Vec<String>
 // """Generate java code which adds circuit IO as described by circuit"""
 {
     let mut input_init_stmts = vec![];
     for sec_input in circuit.sec_idfs() {
         input_init_stmts.push(format!(
             r#"addS("{}", {}, {});"#,
-            sec_input.name,
-            sec_input.t.size_in_uints,
-            _get_t(sec_input.t)
+            sec_input.identifier_base.name,
+            sec_input.t.size_in_uints(),
+            _get_t((Some(*sec_input.t), None))
         ));
     }
 
     for pub_input in circuit.input_idfs() {
         input_init_stmts.push(if pub_input.t.is_key() {
-            let backend = pub_input.t.crypto_params.crypto_name;
+            let backend = pub_input.t.crypto_params().unwrap().crypto_name;
             format!(
                 r#"addK("{backend}", "{}", {});"#,
-                pub_input.name, pub_input.t.size_in_uints
+                pub_input.identifier_base.name,
+                pub_input.t.size_in_uints()
             )
         } else {
             format!(
                 r#"addIn("{}", {}, {});"#,
-                pub_input.name,
-                pub_input.t.size_in_uints,
-                _get_t(pub_input.t)
+                pub_input.identifier_base.name,
+                pub_input.t.size_in_uints(),
+                _get_t((Some(*pub_input.t), None))
             )
         });
     }
     for pub_output in circuit.output_idfs() {
         input_init_stmts.push(format!(
             r#"addOut("{}", {}, {});"#,
-            pub_output.name,
-            pub_output.t.size_in_uints,
-            _get_t(pub_output.t)
+            pub_output.identifier_base.name,
+            pub_output.t.size_in_uints(),
+            _get_t((Some(*pub_output.t), None))
         ));
     }
 
-    let sec_input_names = circuit
+    let sec_input_names: Vec<_> = circuit
         .sec_idfs()
         .iter()
-        .map(|sec_input| sec_input.name.clone())
+        .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
-    for crypto_params in CFG.lock().unwrap().all_crypto_params() {
-        let pk_name = circuit.get_glob_key_name(MeExpr::new(), crypto_params);
-        let sk_name = circuit.get_own_secret_key_name(crypto_params);
-        if crypto_params.is_symmetric_cipher() && sec_input_names.contains(sk_name) {
+    for crypto_params in CFG.lock().unwrap().user_config.all_crypto_params() {
+        let pk_name = CircuitHelper::<V>::get_glob_key_name(
+            PrivacyLabelExpr::MeExpr(MeExpr::new()),
+            crypto_params,
+        );
+        let sk_name = CircuitHelper::<V>::get_own_secret_key_name(crypto_params);
+        if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
-                .input_idfs
+                .input_idfs()
                 .iter()
-                .map(|pub_input| pub_input.name.clone())
-                .collect()
-                .contains(pk_name));
+                .map(|pub_input| pub_input.identifier_base.name.clone())
+                .collect::<Vec<_>>()
+                .contains(&pk_name));
             input_init_stmts.push(format!(
                 r#"setKeyPair("{}", "{pk_name}", "{sk_name}");"#,
                 crypto_params.crypto_name
@@ -367,14 +377,21 @@ pub fn add_function_circuit_arguments<V>(circuit: CircuitHelper<V>) -> Vec<Strin
 }
 
 // class JsnarkGenerator(CircuitGenerator)
-pub struct JsnarkGenerator<T: ProvingScheme, V> {
+pub struct JsnarkGenerator<
+    T: ProvingScheme + std::marker::Sync,
+    V: Clone + std::marker::Sync + std::default::Default,
+> {
     circuit_generator_base: CircuitGeneratorBase<T, V>,
 }
 
-impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
+impl<
+        T: ProvingScheme + std::marker::Sync,
+        V: Clone + std::marker::Sync + std::default::Default,
+    > JsnarkGenerator<T, V>
+{
     pub fn new(circuits: Vec<CircuitHelper<V>>, proving_scheme: T, output_dir: String) -> Self {
         Self {
-            circuit_generator_base: CircuitGenerator::new(
+            circuit_generator_base: CircuitGeneratorBase::new(
                 circuits,
                 proving_scheme,
                 output_dir,
@@ -383,20 +400,22 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
         }
     }
 
-    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: CircuitHelper<V>) -> bool
+    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: &CircuitHelper<V>) -> bool
 //Create output directory
     {
-        let output_dir = self._get_circuit_output_dir(circuit);
+        let output_dir = Path::new(&self.circuit_generator_base._get_circuit_output_dir(circuit));
         if let Err(_) | Ok(false) = output_dir.try_exists() {
-            std::fs::create_dir_all(output_dir).expect("{}", output_dir);
+            std::fs::create_dir_all(output_dir).expect(output_dir.to_str().unwrap());
         }
 
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
-        for params in circuit.fct.used_crypto_backends {
+        for params in &circuit.fct.used_crypto_backends.unwrap() {
             let init_stmt = format!(
                 r#"addCryptoBackend("{}", "{}", {});"#,
-                params.crypto_name, params.crypto_name, params.key_bits
+                params.crypto_name,
+                params.crypto_name,
+                params.key_bits()
             );
             crypto_init_stmts.push(init_stmt);
         }
@@ -404,29 +423,29 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
         //Generate java code for all functions which are transitively called by the fct corresponding to this circuit
         //(outside private expressions)
         let mut fdefs = vec![];
-        for fct in circuit.transitively_called_functions.keys() {
-            let target_circuit = self.circuits[fct];
-            let body_stmts = JsnarkVisitor::new(target_circuit.phi).visitCircuit();
+        for fct in &circuit.transitively_called_functions {
+            let target_circuit = &self.circuit_generator_base.circuits[fct];
+            let body_stmts = JsnarkVisitor::new(target_circuit.phi()).visitCircuit();
 
-            let body = [format!(r#"stepIn("{}");"#, fct.name)]
+            let body = [format!(r#"stepIn("{}");"#, fct.name())]
                 .into_iter()
                 .chain(add_function_circuit_arguments(target_circuit))
-                .chain([""])
+                .chain([String::new()])
                 .chain(body_stmts)
-                .chain(["stepOut();"])
+                .chain([(String::from("stepOut();"))])
                 .collect::<Vec<_>>()
                 .join("\n");
             let fdef = format!(
                 r#"private void _{name}() {{\n {body} \n}}"#,
                 body = indent(body),
-                name = fct.name
+                name = fct.name()
             );
             fdefs.push(format!(r#"{fdef}"#))
         }
 
         //Generate java code for the function corresponding to this circuit
         let input_init_stmts = add_function_circuit_arguments(circuit);
-        let constraints = JsnarkVisitor::new()(circuit.phi).visitCircuit();
+        let constraints = JsnarkVisitor::new(circuit.phi()).visitCircuit();
 
         //Inject the function definitions into the java template
         let code = jsnark::get_jsnark_circuit_class_str(
@@ -435,7 +454,8 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             fdefs,
             input_init_stmts
                 .iter()
-                .chain([""])
+                .cloned()
+                .chain([String::new()])
                 .chain(constraints)
                 .collect(),
         );
@@ -443,13 +463,15 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
         //Compute combined hash of the current jsnark interface jar and of the contents of the java file
         let hashfile = output_dir.join(format!(
             r#"{}.hash"#,
-            CFG.lock().unwrap().jsnark_circuit_classname
+            CFG.lock().unwrap().jsnark_circuit_classname()
         ));
         let digest = hex::encode(hash_string(
-            &(jsnark::CIRCUIT_BUILDER_JAR_HASH + &code + &CFG.lock().unwrap().proving_scheme),
+            &(jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string()
+                + &code
+                + &CFG.lock().unwrap().user_config.proving_scheme()),
         ));
         let oldhash = if let Ok(true) = hashfile.try_exists() {
-            read_file(hashfile)
+            read_file(hashfile.to_str().unwrap())
         } else {
             String::new()
         };
@@ -464,14 +486,14 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             if !import_keys
             //Remove old keys
             {
-                for f in self._get_vk_and_pk_paths(circuit) {
-                    if Path::new(f).try_exists().map_or(false, |v| v) {
+                for f in self.circuit_generator_base._get_vk_and_pk_paths(circuit) {
+                    if Path::new(&f).try_exists().map_or(false, |v| v) {
                         std::fs::remove_file(f);
                     }
                 }
             }
-            jsnark::compile_circuit(output_dir, code);
-            save_to_file(None, hashfile, digest);
+            jsnark::compile_circuit(output_dir.to_str().unwrap(), &code);
+            save_to_file(None, hashfile.to_str().unwrap(), &digest);
             true
         } else {
             zk_print!(
@@ -481,11 +503,15 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             false
         }
     }
-    pub fn _generate_keys(self, circuit: CircuitHelper<V>)
+    pub fn _generate_keys(self, circuit: &CircuitHelper<V>)
     //Invoke the custom libsnark interface to generate keys
     {
-        let output_dir = self._get_circuit_output_dir(circuit);
-        libsnark::generate_keys(output_dir, output_dir, self.proving_scheme.name);
+        let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
+        libsnark::generate_keys(
+            &output_dir,
+            &output_dir,
+            &self.circuit_generator_base.proving_scheme.name(),
+        );
     }
 
     // @classmethod
@@ -496,7 +522,7 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             .collect()
     }
 
-    pub fn _parse_verification_key(self, circuit: CircuitHelper<V>) -> VerifyingKeyType {
+    pub fn _parse_verification_key(&self, circuit: &CircuitHelper<V>) -> VerifyingKeyType {
         let f = File::open(self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0]).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
@@ -508,7 +534,7 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             let b = G2Point::from_it(data);
             let gamma = G2Point::from_it(data);
             let delta = G2Point::from_it(data);
-            let query_len = data.next().unwrap().unwrap() as usize;
+            let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let gamma_abc = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
                 gamma_abc.insert(idx, G1Point::from_it(data));
@@ -526,7 +552,7 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
             let h_beta = G2Point::from_it(data);
             let g_gamma = G1Point::from_it(data);
             let h_gamma = G2Point::from_it(data);
-            let query_len = data.next().unwrap() as usize;
+            let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let query = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
                 query.insert(idx, G1Point::from_it(data));
@@ -536,17 +562,21 @@ impl<T: ProvingScheme, V> JsnarkGenerator<T, V> {
                     h, g_alpha, h_beta, g_gamma, h_gamma, query,
                 ),
             );
-        } else {
-            unimplemented!()
         }
+        // else {
+        //     unimplemented!()
+        // }
         VerifyingKeyType::None
     }
 
-    pub fn _get_prover_key_hash(self, circuit: CircuitHelper<V>) -> Vec<u8> {
-        hash_file(self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1])
+    pub fn _get_prover_key_hash(self, circuit: &CircuitHelper<V>) -> Vec<u8> {
+        hash_file(
+            &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
+            0,
+        )
     }
 
-    pub fn _get_primary_inputs(self, circuit: CircuitHelper<V>) -> Vec<String>
+    pub fn _get_primary_inputs(self, circuit: &CircuitHelper<V>) -> Vec<String>
 //Jsnark requires an additional public input with the value 1 as first input
     {
         [String::from("1")]

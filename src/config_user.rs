@@ -71,44 +71,44 @@ pub fn _check_is_one_of(val: &String, legal_vals: &Vec<String>) {
 
 pub struct UserConfig {
     pub _appdirs: AppInfo,
-    _proving_scheme: String,
-    _proving_scheme_values: Vec<String>,
+    pub _proving_scheme: String,
+    pub _proving_scheme_values: Vec<String>,
 
-    _snark_backend: String,
-    _snark_backend_values: Vec<String>,
+    pub _snark_backend: String,
+    pub _snark_backend_values: Vec<String>,
 
     // These only exist for the auto-generated help strings in __main__ and should not be used directly
-    _main_crypto_backend: String,
-    _main_crypto_backend_values: Vec<Option<String>>,
-    _addhom_crypto_backend: String,
-    _addhom_crypto_backend_values: Vec<Option<String>>,
+    pub _main_crypto_backend: String,
+    pub _main_crypto_backend_values: Vec<Option<String>>,
+    pub _addhom_crypto_backend: String,
+    pub _addhom_crypto_backend_values: Vec<Option<String>>,
 
     // This map of crypto backends / values is actually used
-    _crypto_backends: BTreeMap<String, String>,
-    _crypto_backend_values: BTreeMap<String, Vec<Option<String>>>,
+    pub _crypto_backends: BTreeMap<String, String>,
+    pub _crypto_backend_values: BTreeMap<String, Vec<Option<String>>>,
 
-    _blockchain_backend: String,
-    _blockchain_backend_values: Vec<String>,
-    _blockchain_node_uri: Option<String>,
-    _blockchain_pki_address: String,
-    _blockchain_crypto_lib_addresses: String,
-    _blockchain_default_account: Option<String>,
+    pub _blockchain_backend: String,
+    pub _blockchain_backend_values: Vec<String>,
+    pub _blockchain_node_uri: Option<String>,
+    pub _blockchain_pki_address: String,
+    pub _blockchain_crypto_lib_addresses: String,
+    pub _blockchain_default_account: Option<String>,
 
-    _indentation: String,
-    _libsnark_check_verify_locally_during_proof_generation: bool,
+    pub _indentation: String,
+    pub _libsnark_check_verify_locally_during_proof_generation: bool,
 
-    _opt_solc_optimizer_runs: i32,
-    _opt_hash_threshold: i32,
-    _opt_eval_constexpr_in_circuit: bool,
-    _opt_cache_circuit_inputs: bool,
-    _opt_cache_circuit_outputs: bool,
+    pub _opt_solc_optimizer_runs: i32,
+    pub _opt_hash_threshold: i32,
+    pub _opt_eval_constexpr_in_circuit: bool,
+    pub _opt_cache_circuit_inputs: bool,
+    pub _opt_cache_circuit_outputs: bool,
 
-    _data_dir: String,
-    _log_dir: String,
-    _use_circuit_cache_during_testing_with_encryption: bool,
-    _verbosity: i32,
+    pub _data_dir: String,
+    pub _log_dir: String,
+    pub _use_circuit_cache_during_testing_with_encryption: bool,
+    pub _verbosity: i32,
 
-    _disable_verification: bool,
+    pub _disable_verification: bool,
 }
 impl UserConfig {
     pub fn new() -> Self {

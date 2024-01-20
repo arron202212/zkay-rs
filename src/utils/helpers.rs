@@ -37,7 +37,10 @@ pub fn hash_string(data: &str) -> Vec<u8> {
     digest[..32].to_vec()
 }
 
-pub fn hash_file(filename: &str, chunk_size: i32) -> Vec<u8> {
+pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
+    if chunk_size == 0 {
+        chunk_size = 1 << 27;
+    }
     //chunk_size: int = 1 << 27
     // let mut digest = hashlib.sha512();
     let mut digest = Sha512State::default().build_hasher();

@@ -33,10 +33,10 @@ use regex::RegexSetBuilder;
 // pub fn __init__(self)
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
-pub struct ZkayVarDeclTransformer<V> {
+pub struct ZkayVarDeclTransformer<V: Clone + std::marker::Sync + std::default::Default> {
     expr_trafo: Option<ZkayExpressionTransformer<V>>,
 }
-impl<V> ZkayVarDeclTransformer<V> {
+impl<V: Clone + std::marker::Sync + std::default::Default> ZkayVarDeclTransformer<V> {
     pub fn new() -> Self {
         Self { expr_trafo: None }
     }
@@ -86,12 +86,12 @@ impl<V> ZkayVarDeclTransformer<V> {
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-pub struct ZkayStatementTransformer<V> {
+pub struct ZkayStatementTransformer<V: Clone + std::marker::Sync + std::default::Default> {
     gen: CircuitHelper<V>,
     expr_trafo: ZkayExpressionTransformer<V>,
     var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl<V> ZkayStatementTransformer<V> {
+impl<V: Clone + std::marker::Sync + std::default::Default> ZkayStatementTransformer<V> {
     // pub fn __init__(self, current_gen: CircuitHelper)
     //     super().__init__()
     //     self.gen = current_gen
@@ -367,10 +367,10 @@ impl<V> ZkayStatementTransformer<V> {
 // In addition to the features described in the paper, this transformer also supports primitive type casting,
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
-pub struct ZkayExpressionTransformer<V> {
+pub struct ZkayExpressionTransformer<V: Clone + std::marker::Sync + std::default::Default> {
     gen: Option<CircuitHelper<V>>,
 }
-impl<V> ZkayExpressionTransformer<V> {
+impl<V: Clone + std::marker::Sync + std::default::Default> ZkayExpressionTransformer<V> {
     pub fn new(current_generator: Option<CircuitHelper<V>>) -> Self
 // super().__init__()
         // self.gen = current_generator
@@ -594,11 +594,11 @@ impl<V> ZkayExpressionTransformer<V> {
 // Private expressions can never have side effects.
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
-pub struct ZkayCircuitTransformer<V> {
+pub struct ZkayCircuitTransformer<V: Clone + std::marker::Sync + std::default::Default> {
     gen: CircuitHelper<V>,
 }
 
-impl<V> ZkayCircuitTransformer<V> {
+impl<V: Clone + std::marker::Sync + std::default::Default> ZkayCircuitTransformer<V> {
     pub fn new(current_generator: CircuitHelper<V>) -> Self {
         Self {
             gen: current_generator,
@@ -639,7 +639,7 @@ impl<V> ZkayCircuitTransformer<V> {
     pub fn transform_location(self, loc: LocationExpr)
     // """Rule (14), move location into the circuit."""
     {
-        self.gen.add_to_circuit_inputs(loc).get_idf_expr()
+        self.gen.add_to_circuit_inputs(loc).get_idf_expr(&None)
     }
 
     pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
@@ -657,7 +657,7 @@ impl<V> ZkayCircuitTransformer<V> {
             self.visit(ast.expr)
         } else {
             assert!(ast.expr.annotated_type.is_public());
-            self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr()
+            self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr(&None)
         }
     }
 

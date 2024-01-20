@@ -5,7 +5,7 @@ use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, Identifier, IdentifierExpr, MeExpr, NumberLiteralExpr,
 };
 use std::collections::{BTreeMap, BTreeSet};
-pub fn compute_transitive_circuit_io_sizes<V>(
+pub fn compute_transitive_circuit_io_sizes<V: Clone + std::marker::Sync + std::default::Default>(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
@@ -44,7 +44,9 @@ pub fn compute_transitive_circuit_io_sizes<V>(
     }
 }
 
-pub fn _compute_transitive_circuit_io_sizes<V>(
+pub fn _compute_transitive_circuit_io_sizes<
+    V: Clone + std::marker::Sync + std::default::Default,
+>(
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     fct: ConstructorOrFunctionDefinition,
     gkeys: BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
@@ -83,7 +85,7 @@ pub fn _compute_transitive_circuit_io_sizes<V>(
     }
 }
 
-pub fn transform_internal_calls<V>(
+pub fn transform_internal_calls<V: Clone + std::marker::Sync + std::default::Default>(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )

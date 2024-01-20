@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 // HybridArgumentIdf = TypeVar("HybridArgumentIdf")
 // class Remapper(Generic[Identifier, HybridArgumentIdf]):
 type RemapMapType = BTreeMap<Identifier, HybridArgumentIdf>; //#[(bool, Identifier), HybridArgumentIdf]
-
+#[derive(Clone)]
 pub struct Remapper {
     rmap: RemapMapType,
 }
@@ -324,4 +324,10 @@ impl Remapper {
 // class CircVarRemapper(Remapper[Identifier, HybridArgumentIdf])
 //     """Remapper class used by CircuitHelper"""
 //     pass
+#[derive(Clone)]
 pub struct CircVarRemapper(pub Remapper);
+impl CircVarRemapper {
+    pub fn new() -> Self {
+        Self(Remapper::new())
+    }
+}

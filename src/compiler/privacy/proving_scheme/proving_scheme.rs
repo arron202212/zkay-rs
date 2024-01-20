@@ -155,11 +155,18 @@ impl ProvingSchemeBase {
 pub trait ProvingScheme {
     const NAME: &'static str;
     type VerifyingKey;
+    fn name(&self) -> String {
+        Self::NAME.to_string()
+    }
+
+    fn hash_var_name(&self) -> String {
+        String::new()
+    }
     // @abstractmethod
-    fn generate_verification_contract<V>(
+    fn generate_verification_contract<V: Clone + std::marker::Sync + std::default::Default, VK>(
         &self,
-        verification_key: Self::VerifyingKey,
-        circuit: CircuitHelper<V>,
+        verification_key: VK,
+        circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String;

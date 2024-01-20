@@ -42,7 +42,10 @@ fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
         _ => &ProvingSchemeGm17, //"gm17"
     }
 }
-fn generator_classes<T: ProvingScheme, V>(
+fn generator_classes<
+    T: ProvingScheme + std::marker::Sync,
+    V: Clone + std::marker::Sync + std::default::Default,
+>(
     _snark_backend: &String,
 ) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, V> {
     JsnarkGenerator::new

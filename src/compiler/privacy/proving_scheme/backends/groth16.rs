@@ -56,10 +56,10 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     const NAME: &'static str = "groth16";
     type VerifyingKey = VerifyingKey;
 
-    fn generate_verification_contract<V>(
+    fn generate_verification_contract<V: Clone + std::marker::Sync + std::default::Default, VK>(
         &self,
-        verification_key: VerifyingKey,
-        circuit: CircuitHelper<V>,
+        verification_key: VK,
+        circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {

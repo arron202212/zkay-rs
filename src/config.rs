@@ -218,7 +218,7 @@ impl Config {
         pub_arg_size
             > self
                 .get_attr(&String::from("opt_hash_threshold"))
-                .parse()
+                .parse::<i32>()
                 .unwrap()
     }
 
