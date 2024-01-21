@@ -5,7 +5,11 @@ use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, Identifier, IdentifierExpr, MeExpr, NumberLiteralExpr,
 };
 use std::collections::{BTreeMap, BTreeSet};
-pub fn compute_transitive_circuit_io_sizes<V: Clone + std::marker::Sync + std::default::Default>(
+pub fn compute_transitive_circuit_io_sizes<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+>(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
@@ -45,7 +49,9 @@ pub fn compute_transitive_circuit_io_sizes<V: Clone + std::marker::Sync + std::d
 }
 
 pub fn _compute_transitive_circuit_io_sizes<
-    V: Clone + std::marker::Sync + std::default::Default,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     fct: ConstructorOrFunctionDefinition,
@@ -85,7 +91,11 @@ pub fn _compute_transitive_circuit_io_sizes<
     }
 }
 
-pub fn transform_internal_calls<V: Clone + std::marker::Sync + std::default::Default>(
+pub fn transform_internal_calls<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+>(
     fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
     cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )

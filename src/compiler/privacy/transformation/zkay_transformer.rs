@@ -33,10 +33,19 @@ use regex::RegexSetBuilder;
 // pub fn __init__(self)
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
-pub struct ZkayVarDeclTransformer<V: Clone + std::marker::Sync + std::default::Default> {
+pub struct ZkayVarDeclTransformer<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+> {
     expr_trafo: Option<ZkayExpressionTransformer<V>>,
 }
-impl<V: Clone + std::marker::Sync + std::default::Default> ZkayVarDeclTransformer<V> {
+impl<
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+    > ZkayVarDeclTransformer<V>
+{
     pub fn new() -> Self {
         Self { expr_trafo: None }
     }
@@ -86,12 +95,21 @@ impl<V: Clone + std::marker::Sync + std::default::Default> ZkayVarDeclTransforme
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-pub struct ZkayStatementTransformer<V: Clone + std::marker::Sync + std::default::Default> {
+pub struct ZkayStatementTransformer<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+> {
     gen: CircuitHelper<V>,
     expr_trafo: ZkayExpressionTransformer<V>,
     var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl<V: Clone + std::marker::Sync + std::default::Default> ZkayStatementTransformer<V> {
+impl<
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+    > ZkayStatementTransformer<V>
+{
     // pub fn __init__(self, current_gen: CircuitHelper)
     //     super().__init__()
     //     self.gen = current_gen
@@ -367,10 +385,19 @@ impl<V: Clone + std::marker::Sync + std::default::Default> ZkayStatementTransfor
 // In addition to the features described in the paper, this transformer also supports primitive type casting,
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
-pub struct ZkayExpressionTransformer<V: Clone + std::marker::Sync + std::default::Default> {
+pub struct ZkayExpressionTransformer<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+> {
     gen: Option<CircuitHelper<V>>,
 }
-impl<V: Clone + std::marker::Sync + std::default::Default> ZkayExpressionTransformer<V> {
+impl<
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+    > ZkayExpressionTransformer<V>
+{
     pub fn new(current_generator: Option<CircuitHelper<V>>) -> Self
 // super().__init__()
         // self.gen = current_generator
@@ -594,11 +621,20 @@ impl<V: Clone + std::marker::Sync + std::default::Default> ZkayExpressionTransfo
 // Private expressions can never have side effects.
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
-pub struct ZkayCircuitTransformer<V: Clone + std::marker::Sync + std::default::Default> {
+pub struct ZkayCircuitTransformer<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+> {
     gen: CircuitHelper<V>,
 }
 
-impl<V: Clone + std::marker::Sync + std::default::Default> ZkayCircuitTransformer<V> {
+impl<
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+    > ZkayCircuitTransformer<V>
+{
     pub fn new(current_generator: CircuitHelper<V>) -> Self {
         Self {
             gen: current_generator,

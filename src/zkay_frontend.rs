@@ -44,7 +44,9 @@ fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
 }
 fn generator_classes<
     T: ProvingScheme + std::marker::Sync,
-    V: Clone + std::marker::Sync + std::default::Default,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
     _snark_backend: &String,
 ) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, V> {
@@ -120,7 +122,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             "Zkay file is expected to already be in the output directory when importing keys"
         );
     } else if !import_keys {
-        _dump_to_output(code, output_dir, zkay_filename);
+        _dump_to_output(code, output_dir, zkay_filename, false);
     }
 
     // Type checking
@@ -154,7 +156,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Write public contract file
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
-    let solidity_code_output = _dump_to_output(to_solidity(ast), output_dir, output_filename);
+    let solidity_code_output =
+        _dump_to_output(to_solidity(ast), output_dir, output_filename, false);
 
     // Get all circuit helpers for the transformed contract
     let circuits: Vec<_> = circuits.values().collect();
@@ -199,11 +202,11 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         }
 
         let manifest = json!({
-            Manifest::zkay_version: CFG.lock().unwrap().zkay_version,
-            Manifest::solc_version: CFG.lock().unwrap().solc_version,
+            Manifest::zkay_version: CFG.lock().unwrap().zkay_version(),
+            Manifest::solc_version: CFG.lock().unwrap().solc_version(),
             Manifest::zkay_options: CFG.lock().unwrap().export_compiler_settings(),
         });
-        _dump_to_output(format!("{manifest}"), output_dir, "manifest.json")
+        _dump_to_output(&format!("{manifest}"), output_dir, "manifest.json", false);
     } else if !PathBuf::from(output_dir)
         .join("manifest.json")
         .try_exists()
@@ -214,15 +217,17 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     }
 
     // Generate circuits and corresponding verification contracts
-    cg.generate_circuits(import_keys);
+    cg.circuit_generator_base.generate_circuits(import_keys);
 
     // Check that all verification contracts and the main contract compile
     let main_solidity_files = cg
+        .circuit_generator_base
         .get_verification_contract_filenames()
         .iter()
+        .map(|v| PathBuf::from(v))
         .chain([PathBuf::from(output_dir).join(output_filename)]);
     for f in main_solidity_files {
-        check_compilation(f, false, "");
+        check_compilation(f.to_str().unwrap(), false, "");
     }
 
     // (cg, solidity_code_output)

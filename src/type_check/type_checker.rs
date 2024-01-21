@@ -535,7 +535,7 @@ impl TypeCheckVisitor {
     pub fn implicitly_converted_to(expr: Expression, t: TypeName) -> Expression {
         if is_instance(&expr, ASTType::ReclassifyExpr) && !expr.privacy.is_all_expr() {
             //Cast the argument of the ReclassifyExpr instead
-            expr.expr = TypeCheckVisitor.implicitly_converted_to(expr.expr, t);
+            expr.expr = Some(TypeCheckVisitor.implicitly_converted_to(expr.expr, t));
             expr.annotated_type.type_name = expr.expr.annotated_type.type_name;
             return expr;
         }

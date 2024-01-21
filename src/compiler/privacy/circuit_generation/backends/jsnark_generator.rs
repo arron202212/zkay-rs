@@ -307,7 +307,11 @@ impl JsnarkVisitor
     }
 }
 
-pub fn add_function_circuit_arguments<V: Clone + std::marker::Sync + std::default::Default>(
+pub fn add_function_circuit_arguments<
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+>(
     circuit: &CircuitHelper<V>,
 ) -> Vec<String>
 // """Generate java code which adds circuit IO as described by circuit"""
@@ -358,7 +362,7 @@ pub fn add_function_circuit_arguments<V: Clone + std::marker::Sync + std::defaul
             PrivacyLabelExpr::MeExpr(MeExpr::new()),
             crypto_params,
         );
-        let sk_name = CircuitHelper::<V>::get_own_secret_key_name(crypto_params);
+        let sk_name = CircuitHelper::<V>::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
                 .input_idfs()
@@ -379,14 +383,18 @@ pub fn add_function_circuit_arguments<V: Clone + std::marker::Sync + std::defaul
 // class JsnarkGenerator(CircuitGenerator)
 pub struct JsnarkGenerator<
     T: ProvingScheme + std::marker::Sync,
-    V: Clone + std::marker::Sync + std::default::Default,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 > {
-    circuit_generator_base: CircuitGeneratorBase<T, V>,
+    pub circuit_generator_base: CircuitGeneratorBase<T, V>,
 }
 
 impl<
         T: ProvingScheme + std::marker::Sync,
-        V: Clone + std::marker::Sync + std::default::Default,
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
     > JsnarkGenerator<T, V>
 {
     pub fn new(circuits: Vec<CircuitHelper<V>>, proving_scheme: T, output_dir: String) -> Self {

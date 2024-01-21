@@ -256,7 +256,7 @@ impl Config {
     // Return an identifier referring to the address variable of verification contract of type "type_name"
     // :param type_name: name of the unqualified verification contract type
     // :return: new identifier
-    pub fn get_contract_var_name(type_name: String) -> String {
+    pub fn get_contract_var_name(&self, type_name: String) -> String {
         format!("{type_name}_inst")
     }
 
@@ -264,7 +264,7 @@ impl Config {
         format!("{}PublicKeyInfrastructure", self.reserved_name_prefix())
     }
 
-    pub fn get_pki_contract_name(&self, params_identifier_name: String) -> String {
+    pub fn get_pki_contract_name(&self, params_identifier_name: &String) -> String {
         format!("{}_{}", self.pki_contract_name(), params_identifier_name)
     }
 

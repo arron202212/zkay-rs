@@ -35,7 +35,9 @@ pub trait CircuitGenerator {}
 // class CircuitGeneratorBase(metaclass=ABCMeta)
 pub struct CircuitGeneratorBase<
     T: ProvingScheme + std::marker::Sync,
-    V: Clone + std::marker::Sync + std::default::Default,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 > {
     pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     pub circuits_to_prove: Vec<CircuitHelper<V>>,
@@ -47,7 +49,9 @@ pub struct CircuitGeneratorBase<
 
 impl<
         T: ProvingScheme + std::marker::Sync,
-        V: Clone + std::marker::Sync + std::default::Default,
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
     > CircuitGeneratorBase<T, V>
 {
     // """

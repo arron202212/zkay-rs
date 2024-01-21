@@ -303,6 +303,9 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
+        None
+    }
     pub fn get_annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
@@ -356,6 +359,9 @@ impl AST {
     }
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
+    }
+    pub fn requires_verification(&self) -> bool {
+        false
     }
 }
 
@@ -745,6 +751,8 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+    pub fn set_statement(&mut self, statement: Statement) {}
     pub fn target(&self) -> Option<Box<TargetDefinition>> {
         None
     }
@@ -2005,7 +2013,7 @@ impl ASTChildren for FunctionCallExprBase {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NewExpr {
     pub function_call_expr_base: FunctionCallExprBase,
-    annotated_type: AnnotatedTypeName,
+    pub annotated_type: AnnotatedTypeName,
 }
 impl ASTCode for NewExpr {
     fn get_ast(&self) -> AST {
@@ -2617,7 +2625,7 @@ impl TupleOrLocationExprBase {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleExpr {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
-    elements: Vec<Expression>,
+    pub elements: Vec<Expression>,
 }
 impl ASTCode for TupleExpr {
     fn get_ast(&self) -> AST {
@@ -3270,7 +3278,7 @@ impl Immutable for MeExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AllExpr {
     pub expression_base: ExpressionBase,
-    name: String,
+    pub name: String,
 }
 impl ASTCode for AllExpr {
     fn get_ast(&self) -> AST {
@@ -4072,6 +4080,13 @@ pub enum Statement {
     None,
 }
 impl Statement {
+    pub fn add_pre_statement(&mut self, statement: Statement) {}
+    pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
+    pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
+    pub fn clear_pre_statements(&mut self) {}
+    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
+        BTreeSet::new()
+    }
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
         None
     }
@@ -4123,10 +4138,10 @@ impl ASTCode for Statement {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: ASTBase,
-    before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    function: Option<Box<ConstructorOrFunctionDefinition>>,
-    pre_statements: Vec<CircuitInputStatement>,
+    pub before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    pub after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    pub function: Option<Box<ConstructorOrFunctionDefinition>>,
+    pub pre_statements: Vec<CircuitInputStatement>,
 }
 impl StatementBase {
     pub fn new() -> Self {
@@ -4556,6 +4571,8 @@ impl SimpleStatement {
         before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
     ) {
     }
+    pub fn set_lhs(&mut self, lhs: AssignmentStatementUnion) {}
+    pub fn set_rhs(&mut self, rhs: Expression) {}
 }
 impl ASTCode for SimpleStatement {
     fn get_ast(&self) -> AST {
@@ -4768,6 +4785,7 @@ pub enum AssignmentStatementUnion {
     #[default]
     None,
 }
+
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
     pub assignment_statement_base: AssignmentStatementBase,
@@ -5416,7 +5434,7 @@ impl ASTCode for ElementaryTypeName {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ElementaryTypeNameBase {
     pub type_name_base: TypeNameBase,
-    name: String,
+    pub name: String,
 }
 impl ElementaryTypeNameBase {
     pub fn new(name: String) -> Self {
@@ -5638,10 +5656,10 @@ impl NumberTypeName {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberTypeNameBase {
     pub elementary_type_name_base: ElementaryTypeNameBase,
-    prefix: String,
-    signed: bool,
-    bitwidth: Option<i32>,
-    _size_in_bits: i32,
+    pub prefix: String,
+    pub signed: bool,
+    pub bitwidth: Option<i32>,
+    pub _size_in_bits: i32,
 }
 impl ASTCode for NumberTypeNameBase {
     fn get_ast(&self) -> AST {
@@ -7027,9 +7045,9 @@ impl TupleType {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionTypeName {
     pub type_name_base: TypeNameBase,
-    parameters: Vec<Parameter>,
-    modifiers: Vec<String>,
-    return_parameters: Vec<Parameter>,
+    pub parameters: Vec<Parameter>,
+    pub modifiers: Vec<String>,
+    pub return_parameters: Vec<Parameter>,
 }
 impl ASTCode for FunctionTypeName {
     fn get_ast(&self) -> AST {
@@ -7561,8 +7579,8 @@ impl VariableDeclaration {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclarationStatement {
     pub simple_statement_base: SimpleStatementBase,
-    variable_declaration: VariableDeclaration,
-    expr: Option<Expression>,
+    pub variable_declaration: VariableDeclaration,
+    pub expr: Option<Expression>,
 }
 impl ASTCode for VariableDeclarationStatement {
     fn to_statement(&self) -> Statement {
@@ -7713,7 +7731,7 @@ impl ASTCode for NamespaceDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NamespaceDefinitionBase {
     pub ast_base: ASTBase,
-    idf: Identifier,
+    pub idf: Identifier,
 }
 impl NamespaceDefinitionBase {
     pub fn new(idf: Identifier) -> Self {
@@ -8068,7 +8086,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
     pub identifier_declaration_base: IdentifierDeclarationBase,
-    expr: Option<Expression>,
+    pub expr: Option<Expression>,
 }
 impl ASTCode for StateVariableDeclaration {
     fn get_ast(&self) -> AST {
@@ -8129,8 +8147,8 @@ impl ASTChildren for StateVariableDeclaration {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
     pub ast_base: ASTBase,
-    idf: Option<Identifier>,
-    annotated_type: Option<AnnotatedTypeName>,
+    pub idf: Option<Identifier>,
+    pub annotated_type: Option<AnnotatedTypeName>,
 }
 impl ASTCode for EnumValue {
     fn get_ast(&self) -> AST {
@@ -8168,8 +8186,8 @@ impl ASTChildren for EnumValue {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
-    values: Vec<EnumValue>,
-    annotated_type: Option<AnnotatedTypeName>,
+    pub values: Vec<EnumValue>,
+    pub annotated_type: Option<AnnotatedTypeName>,
 }
 impl ASTCode for EnumDefinition {
     fn get_ast(&self) -> AST {
@@ -8210,7 +8228,7 @@ impl ASTChildren for EnumDefinition {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
-    members: Vec<VariableDeclaration>,
+    pub members: Vec<VariableDeclaration>,
 }
 impl ASTCode for StructDefinition {
     fn get_ast(&self) -> AST {
@@ -8383,12 +8401,12 @@ impl ASTChildren for ContractDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
     pub ast_base: ASTBase,
-    pragma_directive: String,
-    contracts: Vec<ContractDefinition>,
-    used_contracts: Vec<String>,
+    pub pragma_directive: String,
+    pub contracts: Vec<ContractDefinition>,
+    pub used_contracts: Vec<String>,
     pub used_homomorphisms: Option<BTreeSet<Homomorphism>>,
-    used_crypto_backends: Option<Vec<CryptoParams>>,
-    original_code: Vec<String>,
+    pub used_crypto_backends: Option<Vec<CryptoParams>>,
+    pub original_code: Vec<String>,
 }
 impl ASTCode for SourceUnit {
     fn get_ast(&self) -> AST {
@@ -8468,6 +8486,33 @@ pub enum PrivacyLabelExpr {
     #[default]
     None,
 }
+impl From<(Option<MeExpr>, Option<Identifier>)> for PrivacyLabelExpr {
+    fn from(v: (Option<MeExpr>, Option<Identifier>)) -> Self {
+        match v {
+            (Some(me), None) => Self::MeExpr(me),
+            (None, Some(le)) => Self::AllExpr(le),
+            _ => Self::None,
+        }
+    }
+}
+impl From<Expression> for PrivacyLabelExpr {
+    fn from(v: Expression) -> Self {
+        match v {
+            Expression::MeExpr(me) => Self::MeExpr(me),
+            Expression::AllExpr(le) => Self::AllExpr(le),
+            _ => Self::None,
+        }
+    }
+}
+impl From<PrivacyLabelExpr> for Expression {
+    fn from(v: PrivacyLabelExpr) -> Self {
+        match v {
+            PrivacyLabelExpr::MeExpr(me) => Self::MeExpr(me),
+            PrivacyLabelExpr::AllExpr(le) => Self::AllExpr(le),
+            _ => Self::None,
+        }
+    }
+}
 impl From<AST> for PrivacyLabelExpr {
     fn from(v: AST) -> Self {
         match v {
@@ -8534,6 +8579,9 @@ impl TargetDefinition {
     pub fn idf(&self) -> Identifier {
         Identifier::default()
     }
+    // pub fn idf(&self) -> Identifier {
+    //     Identifier::default()
+    // }
 }
 pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
@@ -8570,7 +8618,7 @@ pub enum InstanceTargetExprUnion {
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct InstanceTarget {
-    target_key: (
+    pub target_key: (
         Option<Box<TargetDefinition>>,
         Option<IdentifierExpressionUnion>,
     ),
@@ -8919,9 +8967,9 @@ pub enum SingleOrListUnion {
     None,
 }
 pub struct CodeVisitor {
-    display_final: bool,
-    traversal: &'static str,
-    log: bool,
+    pub display_final: bool,
+    pub traversal: &'static str,
+    pub log: bool,
 }
 fn a(ast: AST) -> Option<String> {
     Some(String::new())

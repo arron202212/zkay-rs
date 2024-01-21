@@ -9,6 +9,13 @@ pub trait AstTransformerVisitor {
     // type Return ;
     // type AST;
     fn default() -> Self;
+    fn visit(self, ast: AST) -> AST;
+    fn visitBlock(
+        self,
+        ast: Block,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST;
 }
 // class AstTransformerVisitor
 // """
@@ -19,19 +26,10 @@ pub trait AstTransformerVisitor {
 // (Corresponds to node-or-children traversal order from AstVisitor)
 // """
 
-impl AstTransformerVisitor for AstTransformerVisitorBase {
-    fn default() -> Self {
-        Self::new(false)
-    }
-}
 impl AstTransformerVisitorBase {
     pub fn new(log: bool) -> Self {
         Self { log }
     }
-    pub fn visit(self, ast: AST) -> AST {
-        self._visit_internal(ast)
-    }
-
     pub fn visit_list(self, ast_list: Vec<AST>) -> Vec<AST> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
@@ -69,6 +67,23 @@ impl AstTransformerVisitorBase {
     }
 
     pub fn visitAST(self, ast: AST) -> AST {
+        self.visit_children(ast)
+    }
+}
+impl AstTransformerVisitor for AstTransformerVisitorBase {
+    fn default() -> Self {
+        Self::new(false)
+    }
+
+    fn visit(self, ast: AST) -> AST {
+        self._visit_internal(ast)
+    }
+    fn visitBlock(
+        self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
         self.visit_children(ast)
     }
 }
