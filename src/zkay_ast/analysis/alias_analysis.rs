@@ -297,6 +297,27 @@ pub struct GuardConditionAnalyzer {
     _neg: bool,
     _analysis: Option<PartitionState<PrivacyLabelExpr>>,
 }
+impl AstVisitor for GuardConditionAnalyzer {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 // class GuardConditionAnalyzer(AstVisitor)
 // pub fn __init__(&self, log=False)
 //     super().__init__("node-or-children", log)
@@ -320,7 +341,7 @@ impl GuardConditionAnalyzer {
             self._neg = false;
             self._analysis = before_analysis.clone();
             self.visit(cond);
-            self._analysis.clone()
+            self._analysis.unwrap()
         }
     }
 
@@ -332,18 +353,19 @@ impl GuardConditionAnalyzer {
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if is_instance(&ast.func, ASTType::BuiltinFunction) {
-            let op = ast.func.op;
+            let args = ast.args();
+            let op = ast.func().op;
             if op == "!" {
                 self._negated();
-                self.visit(ast.args[0]);
+                self.visit(args[0]);
                 self._negated();
             } else if (op == "&&" && !self._neg) || (op == "||" && self._neg) {
-                self.visit(ast.args[0]);
-                self.visit(ast.args[1]);
+                self.visit(args[0]);
+                self.visit(args[1]);
             } else if op == "parenthesis" {
-                self.visit(ast.args[0])
+                self.visit(args[0])
             } else if (op == "==" && !self._neg) || (op == "!=" && self._neg) {
-                recursive_merge(ast.args[0], ast.args[1], self._analysis)
+                recursive_merge(args[0], args[1], self._analysis)
             }
         }
     }

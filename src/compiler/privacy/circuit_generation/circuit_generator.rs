@@ -188,16 +188,28 @@ impl<
                 .expect("");
                 let primary_inputs = self._get_primary_inputs(circuit);
                 if let VerifyingKeyType::ProvingSchemeGroth16(vk) = vk {
+                    let vk: <T as ProvingScheme>::VerifyingKey = vk;
                     f.write_all(
-                        self.proving_scheme
-                            .generate_verification_contract(vk, circuit, primary_inputs, pk_hash)
-                            .as_bytes(),
+                        ProvingSchemeGroth16::generate_verification_contract(
+                            &self.proving_scheme,
+                            vk,
+                            circuit,
+                            primary_inputs,
+                            pk_hash,
+                        )
+                        .as_bytes(),
                     );
-                } else if let VerifyingKeyType::ProvingSchemeGroth16(vk) = vk {
+                } else if let VerifyingKeyType::ProvingSchemeGm17(vk) = vk {
+                    let vk: <T as ProvingScheme>::VerifyingKey = vk;
                     f.write_all(
-                        self.proving_scheme
-                            .generate_verification_contract(vk, circuit, primary_inputs, pk_hash)
-                            .as_bytes(),
+                        ProvingSchemeGm17::generate_verification_contract(
+                            self.proving_scheme,
+                            vk,
+                            circuit,
+                            primary_inputs,
+                            pk_hash,
+                        )
+                        .as_bytes(),
                     );
                 }
             }

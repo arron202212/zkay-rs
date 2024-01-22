@@ -60,10 +60,9 @@ impl ProvingScheme for ProvingSchemeGroth16 {
         V: Clone
             + std::marker::Sync
             + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-        VK,
     >(
         &self,
-        verification_key: VK,
+        verification_key: <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKey,
         circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,

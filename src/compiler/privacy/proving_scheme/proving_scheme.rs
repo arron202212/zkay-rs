@@ -23,7 +23,10 @@ impl G1Point {
     // self.y: String = y
     {
         let zero = String::from("0");
-        Self { x: zero, y: zero }
+        Self {
+            x: zero.clone(),
+            y: zero,
+        }
     }
     pub fn negated(&self) {
         let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
@@ -63,6 +66,7 @@ impl fmt::Display for G1Point {
 
 // class G2Point
 // """Data class to represent curve points which are encoded using two field elements"""
+#[derive(Clone)]
 pub struct G2Point {
     x: G1Point,
     y: G1Point,
@@ -74,7 +78,13 @@ impl G2Point {
             y: G1Point::new(y1, y2),
         }
     }
-
+    pub fn default() -> Self {
+        let zero = G1Point::default();
+        Self {
+            x: zero.clone(),
+            y: zero,
+        }
+    }
     // @staticmethod
     pub fn from_seq(seq: Vec<String>) -> Self
 // """
@@ -167,10 +177,9 @@ pub trait ProvingScheme {
         V: Clone
             + std::marker::Sync
             + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-        VK,
     >(
         &self,
-        verification_key: VK,
+        verification_key: Self::VerifyingKey,
         circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,

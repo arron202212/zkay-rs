@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::AST;
+use crate::zkay_ast::ast::{Block, HybridArgumentIdf, AST};
 
 // T = TypeVar("T")
 
@@ -12,7 +12,7 @@ pub trait AstTransformerVisitor {
     fn visit(self, ast: AST) -> AST;
     fn visitBlock(
         self,
-        ast: Block,
+        ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> AST;

@@ -48,8 +48,8 @@ impl VK for VerifyingKey {
     type Output = Self;
     // @classmethod
     fn create_dummy_key() -> Self::Output {
-        let p1 = G1Point::new("0", "0");
-        let p2 = G2Point::new("0", "0", "0", "0");
+        let p1 = G1Point::default();
+        let p2 = G2Point::default();
         Self::new(
             p2.clone(),
             p1.clone(),
@@ -71,21 +71,23 @@ impl ProvingScheme for ProvingSchemeGm17 {
         V: Clone
             + std::marker::Sync
             + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-        VK,
     >(
         &self,
-        verification_key: VK,
+        verification_key: <ProvingSchemeGm17 as ProvingScheme>::VerifyingKey,
         circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {
         let vk = verification_key;
-        let should_hash = CFG.lock().unwrap().should_use_hash(circuit);
+        let should_hash = CFG
+            .lock()
+            .unwrap()
+            .should_use_hash(circuit.trans_in_size + circuit.trans_out_size);
 
         let query_length = vk.query.len();
         assert!(query_length == primary_inputs.len() + 1);
 
-        assert!(primary_inputs, "No public inputs");
+        assert!(!primary_inputs.is_empty(), "No public inputs");
         let first_pi = primary_inputs[0];
         let potentially_overflowing_pi: Vec<_> = primary_inputs
             .iter()

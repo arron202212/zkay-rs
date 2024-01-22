@@ -44,6 +44,28 @@ impl<
         V: Clone
             + std::marker::Sync
             + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
+    > AstTransformerVisitor for ZkayVarDeclTransformer<V>
+{
+    fn default() -> Self {
+        Self::new(false)
+    }
+
+    fn visit(self, ast: AST) -> AST {
+        self._visit_internal(ast)
+    }
+    fn visitBlock(
+        self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
+        self.visit_children(ast)
+    }
+}
+impl<
+        V: Clone
+            + std::marker::Sync
+            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
     > ZkayVarDeclTransformer<V>
 {
     pub fn new() -> Self {
@@ -61,27 +83,33 @@ impl<
 
     pub fn visitVariableDeclaration(self, ast: VariableDeclaration) {
         if ast.annotated_type.is_private() {
-            ast.storage_location = "memory";
+            ast.identifier_declaration_base.storage_location = "memory";
         }
         return self.visit_children(ast);
     }
 
-    pub fn visitParameter(self, ast: Parameter) {
+    pub fn visitParameter(self, mut ast: Parameter) -> AST {
         ast = self.visit_children(ast);
-        if !ast.annotated_type.type_name.is_primitive_type() {
-            ast.storage_location = "memory";
+        if !ast
+            .identifier_declaration_base
+            .annotated_type
+            .type_name
+            .is_primitive_type()
+        {
+            ast.identifier_declaration_base.storage_location = "memory";
         }
-        ast
+        ast.get_ast()
     }
 
     pub fn visitStateVariableDeclaration(self, ast: StateVariableDeclaration) {
-        ast.keywords = ast
+        ast.identifier_declaration_base.keywords = ast
+            .identifier_declaration_base
             .keywords
             .iter()
             .filter_map(|k| if k != "public" { Some(k) } else { None })
             .collect();
         //make sure every state var gets a public getter (required for simulation)
-        ast.keywords.push("public");
+        ast.identifier_declaration_base.keywords.push("public");
         ast.expr = self.expr_trafo.visit(ast.expr);
         return self.visit_children(ast);
     }

@@ -15,22 +15,20 @@ pub fn get_verify_libs_code() -> String
     if CFG
         .lock()
         .unwrap()
-        .external_crypto_lib_names
-        .contains("BN256G2")
+        .external_crypto_lib_names()
+        .contains(&String::from("BN256G2"))
     {
-        code += format!(
-            "{}\n\n{alt_bn128_pairing_lib}",
-            include_str!("./bn256g2.sol")
+        code += &format!(
+            "{}\n\n{:?}",
+            include_str!("./bn256g2.sol"),
+            alt_bn128_pairing_lib.to_string(),
         );
     } else {
-        code += format!("{alt_bn128_pairing_lib_simple}");
+        code += &format!("{alt_bn128_pairing_lib_simple}");
     }
     format!(
-        "pragma solidity {};\n\n{code}",
-        CFG.lock()
-            .unwrap()
-            .zkay_solc_version_compatibility
-            .expression
+        "pragma solidity {:?};\n\n{code}",
+        CFG.lock().unwrap().zkay_solc_version_compatibility()
     )
 }
 
@@ -54,7 +52,7 @@ pub fn get_pki_contract(params: &CryptoParams) -> String
 // """Contract of the public key infrastructure used for asymmetric cryptography"""
     //TODO prove private key knowledge during announcePk
 {
-    dedent(format!(
+    dedent(&format!(
         r#"
     pragma solidity {expression};
 
@@ -78,13 +76,12 @@ pub fn get_pki_contract(params: &CryptoParams) -> String
         }}
     }}
     "#,
-        expression = CFG
+        expression = CFG.lock().unwrap().zkay_solc_version_compatibility(),
+        pki_contract_name = CFG
             .lock()
             .unwrap()
-            .zkay_solc_version_compatibility
-            .expression,
-        pki_contract_name = CFG.lock().unwrap().get_pki_contract_name(params),
-        key_len = params.key_len,
+            .get_pki_contract_name(&params.identifier_name()),
+        key_len = params.key_len(),
     ))
 }
 

@@ -751,6 +751,22 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn member(&self) -> Identifier {
+        Identifier::None
+    }
+    pub fn func(&self) -> Option<Expression> {
+        None
+    }
+    pub fn idf(&self) -> Identifier {
+        Identifier::default()
+    }
+    pub fn evaluate_privately(&self) -> bool {
+        false
+    }
+    pub fn elements(&self) -> Vec<Expression> {
+        vec![]
+    }
+    pub fn add_pre_statement(&mut self, statement: Statement) {}
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn set_statement(&mut self, statement: Statement) {}
     pub fn target(&self) -> Option<Box<TargetDefinition>> {
@@ -1862,6 +1878,8 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
+
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
@@ -3521,7 +3539,16 @@ pub enum LocationExprUnion {
     #[default]
     None,
 }
-
+impl From<LocationExprUnion> for ExplicitlyConvertedUnion<Expression> {
+    fn from(v: LocationExprUnion) -> Self {
+        match v {
+            LocationExprUnion::LocationExpr(me) => Self::Type(me.to_expr()),
+            LocationExprUnion::NumberLiteralExpr(me) => Self::Type(me.to_expr()),
+            LocationExprUnion::BooleanLiteralExpr(me) => Self::Type(me.to_expr()),
+            _ => Self::None,
+        }
+    }
+}
 impl From<LocationExprUnion> for Expression {
     fn from(v: LocationExprUnion) -> Self {
         match v {
@@ -3540,6 +3567,9 @@ impl From<LocationExprUnion> for Expression {
 }
 
 impl LocationExprUnion {
+    pub fn to_expr(&self) -> Expression {
+        Expression::None
+    }
     pub fn assign(&self, val: Expression) -> AssignmentStatement {
         match self {
             LocationExprUnion::LocationExpr(le) => {
@@ -3908,6 +3938,9 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
+    pub fn arg_type(&self) -> HybridArgType {
+        HybridArgType::PubContractVal
+    }
     pub fn identifier(name: &str) -> Self {
         Self::Identifier(IdentifierBase::new(String::from(name)))
     }
@@ -4083,7 +4116,9 @@ impl Statement {
     pub fn add_pre_statement(&mut self, statement: Statement) {}
     pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
     pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
-    pub fn clear_pre_statements(&mut self) {}
+    pub fn drain_pre_statements(&mut self) -> Vec<Statement> {
+        vec![]
+    }
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
     }
@@ -4141,7 +4176,7 @@ pub struct StatementBase {
     pub before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
     pub after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
     pub function: Option<Box<ConstructorOrFunctionDefinition>>,
-    pub pre_statements: Vec<CircuitInputStatement>,
+    pub pre_statements: Vec<Statement>,
 }
 impl StatementBase {
     pub fn new() -> Self {
@@ -4785,7 +4820,19 @@ pub enum AssignmentStatementUnion {
     #[default]
     None,
 }
-
+impl From<LocationExprUnion> for AssignmentStatementUnion {
+    fn from(v: LocationExprUnion) -> Self {
+        match v {
+            Expression::LocationExpr(me) => Self::LocationExpr(me),
+            _ => Self::None,
+        }
+    }
+}
+impl AssignmentStatementUnion {
+    pub fn to_expr(&self) -> Expression {
+        Expression::None
+    }
+}
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
     pub assignment_statement_base: AssignmentStatementBase,
@@ -7771,7 +7818,7 @@ pub struct ConstructorOrFunctionDefinition {
     pub is_recursive: bool,
     pub has_static_body: bool,
     pub can_be_private: bool,
-    pub used_homomorphisms: Option<BTreeSet<Homomorphism>>,
+    pub used_homomorphisms: Option<BTreeSet<String>>,
     pub used_crypto_backends: Option<Vec<CryptoParams>>,
     pub requires_verification: bool,
     pub requires_verification_when_external: bool,
@@ -8486,11 +8533,25 @@ pub enum PrivacyLabelExpr {
     #[default]
     None,
 }
+impl PrivacyLabelExpr {
+    pub fn name(&self) -> String {
+        String::new()
+    }
+}
 impl From<(Option<MeExpr>, Option<Identifier>)> for PrivacyLabelExpr {
     fn from(v: (Option<MeExpr>, Option<Identifier>)) -> Self {
         match v {
             (Some(me), None) => Self::MeExpr(me),
             (None, Some(le)) => Self::AllExpr(le),
+            _ => Self::None,
+        }
+    }
+}
+impl From<PrivacyLabelExpr> for (Option<MeExpr>, Option<Identifier>) {
+    fn from(v: PrivacyLabelExpr) -> Self {
+        match v {
+            Self::MeExpr(me) => (Some(me), None),
+            Self::AllExpr(le) => (None, Some(le)),
             _ => Self::None,
         }
     }
@@ -8579,9 +8640,18 @@ impl TargetDefinition {
     pub fn idf(&self) -> Identifier {
         Identifier::default()
     }
-    // pub fn idf(&self) -> Identifier {
-    //     Identifier::default()
-    // }
+    pub fn body(&self) -> Block {
+        Block::default()
+    }
+    pub fn original_body(&self) -> Block {
+        Block::default()
+    }
+    pub fn parameters(&self) -> Vec<Parameter> {
+        vec![]
+    }
+    pub fn return_var_decls(&self) -> Vec<VariableDeclaration> {
+        vec![]
+    }
 }
 pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""

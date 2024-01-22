@@ -1,7 +1,7 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, AsTypeUnion, BuiltinFunction, Expression, FunctionCallExpr,
-    FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
-    IdentifierExprUnion, VariableDeclarationStatement,
+    is_instance, ASTCode, ASTType, AsTypeUnion, Block, BuiltinFunction, Expression,
+    FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier,
+    IdentifierExpr, IdentifierExprUnion, IfStatement, VariableDeclarationStatement,
 };
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
 use std::any::Any;
@@ -80,7 +80,7 @@ impl Remapper {
     }
 
     // @contextmanager
-    pub fn remap_scope(&mut self, scope_stmt: Option<HybridArgumentIdf>)
+    pub fn remap_scope(&mut self, scope_stmt: Option<Block>)
     // """
     // Return a context manager which will automatically rollback the remap state once the end of the with statement is reached.
 
@@ -158,7 +158,7 @@ impl Remapper {
 
     pub fn join_branch(
         &self,
-        stmt: VariableDeclarationStatement,
+        stmt: IfStatement,
         true_cond_for_other_branch: IdentifierExpr,
         other_branch_state: RemapMapType,
         create_val_for_name_and_expr_fct: impl FnOnce(String, Expression) -> HybridArgumentIdf,

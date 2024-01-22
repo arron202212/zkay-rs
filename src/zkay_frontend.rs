@@ -196,8 +196,11 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         print_step("Writing manifest file");
         // Set crypto backends for unused homomorphisms to None
         for hom in Homomorphism::fields() {
-            if !ast.used_homomorphisms.contains(hom) {
-                CFG.lock().unwrap().set_crypto_backend(hom, None);
+            if !ast.used_homomorphisms.unwrap().contains(&hom) {
+                CFG.lock()
+                    .unwrap()
+                    .user_config
+                    .set_crypto_backend(&hom, String::new());
             }
         }
 

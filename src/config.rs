@@ -19,11 +19,11 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 lazy_static! {
     pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
-    pub static ref VERSIONS: Versions = {
+    pub static ref VERSIONS: Mutex<Versions> = Mutex::new({
         let mut versions_internal = Versions::new();
         versions_internal.set_solc_version(String::from("latest"));
         versions_internal
-    };
+    });
 }
 #[macro_export]
 macro_rules! zk_print {
@@ -139,14 +139,14 @@ impl Config {
         }
     }
 
-    pub fn export_compiler_settings(&self) -> HashMap<String, String> {
+    pub fn export_compiler_settings(&self) -> Value {
         self._options_with_effect_on_circuit_output
             .iter()
             .map(|k| (k.clone(), self.get_attr(k)))
             .collect()
     }
 
-    pub fn import_compiler_settings(&mut self, vals: &HashMap<String, String>) {
+    pub fn import_compiler_settings(&mut self, vals: Value) {
         for (k, v) in vals {
             if !self._options_with_effect_on_circuit_output.contains(k) {
                 // raise KeyError(f"vals contains unknown option "{k}"")
@@ -178,18 +178,22 @@ impl Config {
 
     pub fn zkay_solc_version_compatibility(&self) -> semver_rs::Version {
         // Target solidity language level for the current zkay version
-        VERSIONS.zkay_solc_version_compatibility.clone()
+        VERSIONS
+            .lock()
+            .unwrap()
+            .zkay_solc_version_compatibility
+            .clone()
     }
 
     pub fn solc_version(&self) -> String {
-        let version = VERSIONS.solc_version.clone();
+        let version = VERSIONS.lock().unwrap().solc_version.clone();
         assert!(version.is_some() && version != Some(String::from("latest")));
         version.unwrap().to_string()
     }
 
     //     @staticmethod
-    pub fn override_solc(new_version: String) {
-        // Versions::set_solc_version(new_version);
+    pub fn override_solc(&self, new_version: String) {
+        VERSIONS.lock().unwrap().set_solc_version(new_version);
     }
 
     pub fn is_symmetric_cipher(&self, hom: String) -> bool {

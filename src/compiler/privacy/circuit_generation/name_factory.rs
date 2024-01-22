@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{Expression, HybridArgType, HybridArgumentIdf, Identifier, TypeName};
-
+#[derive(Clone)]
 pub struct BaseNameFactory {
     pub base_name: String,
     pub count: i32,
@@ -64,10 +64,10 @@ impl NameFactory {
     pub fn get_new_idf(&mut self, t: TypeName, priv_expr: Option<Expression>) -> HybridArgumentIdf
 // """Generate a new HybridArgumentIdf which references priv_expr and has transformed type t."""
     {
-        let name = self.get_new_name(t, true);
+        let name = self.base_name_factory.get_new_name(t, true);
         let idf = HybridArgumentIdf::new(name, t, self.arg_type, priv_expr);
-        self.size += t.size_in_uints;
-        self.idfs.push(idf);
+        self.size += t.size_in_uints();
+        self.idfs.push(Identifier::HybridArgumentIdf(idf));
         idf
     }
 
@@ -84,9 +84,9 @@ impl NameFactory {
     // """
     {
         let idf = HybridArgumentIdf::new(name, t, self.arg_type, priv_expr);
-        self.count += 1;
-        self.size += t.size_in_uints;
-        self.idfs.push(idf);
+        self.base_name_factory.count += 1;
+        self.size += t.size_in_uints();
+        self.idfs.push(Identifier::HybridArgumentIdf(idf));
         idf
     }
 }
