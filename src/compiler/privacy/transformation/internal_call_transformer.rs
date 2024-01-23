@@ -2,7 +2,8 @@ use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::ast::{
-    ConstructorOrFunctionDefinition, Identifier, IdentifierExpr, MeExpr, NumberLiteralExpr,
+    ASTCode, ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
+    IdentifierExprUnion, MeExpr, NamespaceDefinition, NumberLiteralExpr, TargetDefinition,
 };
 use std::collections::{BTreeMap, BTreeSet};
 pub fn compute_transitive_circuit_io_sizes<
@@ -10,8 +11,8 @@ pub fn compute_transitive_circuit_io_sizes<
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
-    fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
-    cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
 // """
 // Compute transitive circuit IO sizes (account for called circuits).
@@ -26,12 +27,12 @@ pub fn compute_transitive_circuit_io_sizes<
 // :return
 // """
 {
-    for fct in fcts_with_verification {
+    for fct in fcts_with_verification.iter_mut() {
         let glob_keys = BTreeSet::new();
         let called_fcts = BTreeSet::new();
-        let mut circuit = cgens[&fct].clone();
+        let mut circuit = cgens.get_mut(&fct).unwrap();
         let (trans_in_size, trans_out_size, trans_priv_size) =
-            _compute_transitive_circuit_io_sizes(cgens, fct, glob_keys, called_fcts);
+            _compute_transitive_circuit_io_sizes(cgens, fct, &mut glob_keys, &mut called_fcts);
         circuit.trans_in_size = trans_in_size;
         circuit.trans_out_size = trans_out_size;
         circuit.trans_priv_size = trans_priv_size;
@@ -39,7 +40,7 @@ pub fn compute_transitive_circuit_io_sizes<
         circuit.transitively_called_functions = called_fcts;
     }
 
-    for (fct, circ) in cgens {
+    for (fct, circ) in cgens.iter_mut() {
         if !fct.requires_verification {
             circ.trans_out_size = 0;
             circ.trans_in_size = 0;
@@ -53,16 +54,19 @@ pub fn _compute_transitive_circuit_io_sizes<
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
-    cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
-    fct: ConstructorOrFunctionDefinition,
-    gkeys: BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
-    called_fcts: BTreeSet<ConstructorOrFunctionDefinition>,
-) {
-    let circuit = cgens[fct].clone();
-    if circuit.trans_in_size.is_some() {
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    fct: &ConstructorOrFunctionDefinition,
+    gkeys: &mut BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
+    called_fcts: &mut BTreeSet<ConstructorOrFunctionDefinition>,
+) -> (i32, i32, i32) {
+    let circuit = cgens.get(fct).unwrap();
+    if circuit.trans_in_size != 0 {
         //Memoized
-        gkeys.push(cgens[fct]._global_keys);
-        called_fcts.push(cgens[fct].transitively_called_functions);
+        *gkeys = (*gkeys).union(&cgens[fct]._global_keys).cloned().collect();
+        *called_fcts = (*called_fcts)
+            .union(&cgens[fct].transitively_called_functions)
+            .cloned()
+            .collect();
         return (
             circuit.trans_in_size,
             circuit.trans_out_size,
@@ -70,22 +74,35 @@ pub fn _compute_transitive_circuit_io_sizes<
         );
     }
 
-    gkeys.push(cgens[fct].requested_global_keys);
+    *gkeys = (*gkeys)
+        .union(&cgens[fct].requested_global_keys())
+        .cloned()
+        .collect();
     for call in cgens[fct].function_calls_with_verification {
-        called_fcts[call.func.target] = None;
+        if let Some(TargetDefinition::NamespaceDefinition(
+            NamespaceDefinition::ConstructorOrFunctionDefinition(cofd),
+        )) = call.func().unwrap().target().map(|t| *t)
+        {
+            called_fcts.insert(cofd.clone());
+        }
     }
 
-    if !circuit.function_calls_with_verification {
+    if circuit.function_calls_with_verification.is_empty() {
         (0, 0, 0)
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
-        for f in circuit.function_calls_with_verification {
-            let (i, o, p) =
-                _compute_transitive_circuit_io_sizes(cgens, f.func.target, gkeys, called_fcts);
-            let target_circuit = &cgens[&f.func.target];
-            insum += i + target_circuit.in_size;
-            outsum += o + target_circuit.out_size;
-            psum += p + target_circuit.priv_in_size;
+        for f in &circuit.function_calls_with_verification {
+            if let Some(TargetDefinition::NamespaceDefinition(
+                NamespaceDefinition::ConstructorOrFunctionDefinition(ref mut t),
+            )) = f.func().unwrap().target().map(|t| *t)
+            {
+                let (i, o, p) = _compute_transitive_circuit_io_sizes(cgens, t, gkeys, called_fcts);
+                if let Some(target_circuit) = cgens.get(&*t) {
+                    insum += i + target_circuit.in_size();
+                    outsum += o + target_circuit.out_size();
+                    psum += p + target_circuit.priv_in_size();
+                }
+            }
         }
         (insum, outsum, psum)
     }
@@ -96,8 +113,8 @@ pub fn transform_internal_calls<
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
-    fcts_with_verification: Vec<ConstructorOrFunctionDefinition>,
-    cgens: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
 // """
 // Add required additional args for public calls to functions which require verification.
@@ -116,22 +133,60 @@ pub fn transform_internal_calls<
 // """
 {
     for fct in fcts_with_verification {
-        let circuit = cgens[fct].clone();
+        let circuit = cgens[&fct].clone();
         let (mut i, mut o, mut p) = (0, 0, 0);
-        for fc in &circuit.function_calls_with_verification {
-            let fdef = fc.func.target.clone();
-            fc.sec_start_offset = circuit.priv_in_size + p;
-            fc.args += [
-                IdentifierExpr::new(CFG.lock().unwrap().zk_in_name),
-                IdentifierExpr::new(format!("{}_start_idx", CFG.lock().unwrap().zk_in_name))
-                    .binop('+', NumberLiteralExpr::new(circuit.in_size + i)),
-                IdentifierExpr::new(CFG.lock().unwrap().zk_out_name),
-                IdentifierExpr::new(format!("{}_start_idx", CFG.lock().unwrap().zk_out_name))
-                    .binop('+', NumberLiteralExpr::new(circuit.out_size + o)),
-            ];
-            i += cgens[fdef].in_size_trans;
-            o += cgens[fdef].out_size_trans;
-            p += cgens[fdef].priv_in_size_trans;
+        for fc in circuit.function_calls_with_verification.iter_mut() {
+            if let FunctionCallExpr::FunctionCallExpr(ref mut fc) = fc {
+                fc.sec_start_offset = Some(circuit.priv_in_size() + p);
+                fc.args.extend(vec![
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
+                        None,
+                    )
+                    .to_expr(),
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(format!(
+                            "{}_start_idx",
+                            CFG.lock().unwrap().zk_in_name()
+                        )),
+                        None,
+                    )
+                    .to_expr()
+                    .binop(
+                        String::from("+"),
+                        NumberLiteralExpr::new(circuit.in_size() + i, false).to_expr(),
+                    )
+                    .to_expr(),
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
+                        None,
+                    )
+                    .to_expr(),
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(format!(
+                            "{}_start_idx",
+                            CFG.lock().unwrap().zk_out_name()
+                        )),
+                        None,
+                    )
+                    .to_expr()
+                    .binop(
+                        String::from("+"),
+                        NumberLiteralExpr::new(circuit.out_size() + o, false).to_expr(),
+                    )
+                    .to_expr(),
+                ]);
+                if let Some(TargetDefinition::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(t),
+                )) = fc.func.unwrap().target().map(|t| *t)
+                {
+                    if let Some(cg) = cgens.get(&t) {
+                        i += cg.in_size_trans;
+                        o += cg.out_size_trans;
+                        p += cg.priv_in_size_trans;
+                    }
+                }
+            }
         }
         assert!(
             i == circuit.trans_in_size

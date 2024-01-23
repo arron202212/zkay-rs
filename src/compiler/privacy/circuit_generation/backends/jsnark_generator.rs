@@ -381,21 +381,24 @@ pub fn add_function_circuit_arguments<
 }
 
 // class JsnarkGenerator(CircuitGenerator)
-pub struct JsnarkGenerator<
-    T: ProvingScheme + std::marker::Sync,
+pub struct JsnarkGenerator<T, VK, V>
+where
+    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    VK: VerifyingKeyMeta<Output = VK>,
     V: Clone
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    pub circuit_generator_base: CircuitGeneratorBase<T, V>,
+{
+    pub circuit_generator_base: CircuitGeneratorBase<T, VK, V>,
 }
 
-impl<
-        T: ProvingScheme + std::marker::Sync,
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > JsnarkGenerator<T, V>
+impl<T, VK, V> JsnarkGenerator<T, VK, V>
+where
+    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    VK: VerifyingKeyMeta<Output = VK>,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
     pub fn new(circuits: Vec<CircuitHelper<V>>, proving_scheme: T, output_dir: String) -> Self {
         Self {
@@ -548,7 +551,7 @@ impl<
                 gamma_abc.insert(idx, G1Point::from_it(data));
             }
             return VerifyingKeyType::ProvingSchemeGroth16(
-                <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKey::new(
+                <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::new(
                     a, b, gamma, delta, gamma_abc,
                 ),
             );
@@ -566,7 +569,7 @@ impl<
                 query.insert(idx, G1Point::from_it(data));
             }
             return VerifyingKeyType::ProvingSchemeGm17(
-                <ProvingSchemeGm17 as ProvingScheme>::VerifyingKey::new(
+                <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::new(
                     h, g_alpha, h_beta, g_gamma, h_gamma, query,
                 ),
             );

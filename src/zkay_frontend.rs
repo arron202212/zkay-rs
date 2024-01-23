@@ -22,7 +22,7 @@ use crate::compiler::privacy::manifest::Manifest;
 // use crate::compiler::privacy::offchain_compiler::PythonOffchainVisitor
 use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17;
 use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16;
-use crate::compiler::privacy::proving_scheme::proving_scheme::ProvingScheme;
+use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use crate::compiler::privacy::transformation::zkay_contract_transformer::transform_ast;
 use crate::compiler::solidity::compiler::check_compilation;
 use crate::config::CFG;
@@ -42,14 +42,16 @@ fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
         _ => &ProvingSchemeGm17, //"gm17"
     }
 }
-fn generator_classes<
-    T: ProvingScheme + std::marker::Sync,
+fn generator_classes<T, VK, V>(
+    _snark_backend: &String,
+) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, VK, V>
+where
+    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    VK: VerifyingKeyMeta<Output = VK>,
     V: Clone
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
-    _snark_backend: &String,
-) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, V> {
+{
     JsnarkGenerator::new
 }
 

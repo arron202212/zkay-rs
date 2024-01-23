@@ -33,46 +33,35 @@ use regex::RegexSetBuilder;
 // pub fn __init__(self)
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
-pub struct ZkayVarDeclTransformer<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    expr_trafo: Option<ZkayExpressionTransformer<V>>,
+#[derive(Clone)]
+pub struct ZkayVarDeclTransformer {
+    expr_trafo: Option<ZkayExpressionTransformer>,
 }
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > AstTransformerVisitor for ZkayVarDeclTransformer<V>
-{
+impl AstTransformerVisitor for ZkayVarDeclTransformer {
     fn default() -> Self {
-        Self::new(false)
+        Self::new()
     }
 
-    fn visit(self, ast: AST) -> AST {
-        self._visit_internal(ast)
+    fn visit(&self, ast: AST) -> AST {
+        // self._visit_internal(ast)
+        AST::None
     }
     fn visitBlock(
-        self,
+        &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> AST {
-        self.visit_children(ast)
+        // self.visit_children(ast)
+        AST::None
     }
 }
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > ZkayVarDeclTransformer<V>
-{
+impl ZkayVarDeclTransformer {
     pub fn new() -> Self {
         Self { expr_trafo: None }
     }
 
-    pub fn visitAnnotatedTypeName(self, ast: AnnotatedTypeName) {
+    pub fn visitAnnotatedTypeName(&self, ast: AnnotatedTypeName) {
         let t = if ast.is_private() {
             TypeName::cipher_type(ast, ast.homomorphism)
         } else {
@@ -81,14 +70,14 @@ impl<
         AnnotatedTypeName::new(t)
     }
 
-    pub fn visitVariableDeclaration(self, ast: VariableDeclaration) {
+    pub fn visitVariableDeclaration(&self, ast: VariableDeclaration) {
         if ast.annotated_type.is_private() {
             ast.identifier_declaration_base.storage_location = "memory";
         }
         return self.visit_children(ast);
     }
 
-    pub fn visitParameter(self, mut ast: Parameter) -> AST {
+    pub fn visitParameter(&self, mut ast: Parameter) -> AST {
         ast = self.visit_children(ast);
         if !ast
             .identifier_declaration_base
@@ -101,7 +90,7 @@ impl<
         ast.get_ast()
     }
 
-    pub fn visitStateVariableDeclaration(self, ast: StateVariableDeclaration) {
+    pub fn visitStateVariableDeclaration(&self, ast: StateVariableDeclaration) {
         ast.identifier_declaration_base.keywords = ast
             .identifier_declaration_base
             .keywords
@@ -114,7 +103,7 @@ impl<
         return self.visit_children(ast);
     }
 
-    pub fn visitMapping(self, ast: Mapping) {
+    pub fn visitMapping(&self, ast: Mapping) {
         if ast.key_label.is_some() {
             ast.key_label = ast.key_label.name;
         }
@@ -123,34 +112,45 @@ impl<
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-pub struct ZkayStatementTransformer<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    gen: CircuitHelper<V>,
-    expr_trafo: ZkayExpressionTransformer<V>,
-    var_decl_trafo: ZkayVarDeclTransformer<V>,
+#[derive(Clone)]
+pub struct ZkayStatementTransformer {
+    gen: Box<CircuitHelper<Self>>,
+    expr_trafo: ZkayExpressionTransformer,
+    var_decl_trafo: ZkayVarDeclTransformer,
 }
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > ZkayStatementTransformer<V>
-{
-    // pub fn __init__(self, current_gen: CircuitHelper)
+impl AstTransformerVisitor for ZkayStatementTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
+
+    fn visit(&self, ast: AST) -> AST {
+        // self._visit_internal(ast)
+        AST::None
+    }
+    fn visitBlock(
+        &self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
+        // self.visit_children(ast)
+        AST::None
+    }
+}
+impl ZkayStatementTransformer {
+    // pub fn __init__(&self, current_gen: CircuitHelper)
     //     super().__init__()
     //     self.gen = current_gen
     //     self.expr_trafo = ZkayExpressionTransformer(self.gen)
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
-    pub fn new(current_gen: CircuitHelper<V>) -> Self {
+    pub fn new(current_gen: Box<CircuitHelper<Self>>) -> Self {
         Self {
             gen: current_gen.clone(),
             expr_trafo: ZkayExpressionTransformer::new(current_gen),
             var_decl_trafo: ZkayVarDeclTransformer::new(),
         }
     }
-    pub fn visitStatementList(self, ast: StatementList)
+    pub fn visitStatementList(&self, ast: StatementList)
     // """
     // Rule (1)
 
@@ -200,7 +200,7 @@ impl<
         ast
     }
 
-    pub fn process_statement_child(self, child: AST)
+    pub fn process_statement_child(&self, child: AST)
     // """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
     {
         if is_instance(&child, ASTType::Expression) {
@@ -211,7 +211,7 @@ impl<
         }
     }
 
-    pub fn visitStatement(self, ast: Statement)
+    pub fn visitStatement(&self, ast: Statement)
     // """
     // Rules (3), (4)
 
@@ -226,7 +226,7 @@ impl<
         ast
     }
 
-    pub fn visitAssignmentStatement(self, ast: AssignmentStatement)
+    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement)
     // """Rule (2)"""
     {
         ast.lhs = self.expr_trafo.visit(ast.lhs);
@@ -280,7 +280,7 @@ impl<
         ast
     }
 
-    pub fn visitIfStatement(self, ast: IfStatement)
+    pub fn visitIfStatement(&self, ast: IfStatement)
     // """
     // Rule (6) + additional support for private conditions
 
@@ -328,7 +328,7 @@ impl<
             self.gen.evaluate_stmt_in_circuit(ast)
         }
     }
-    pub fn visitWhileStatement(self, ast: WhileStatement)
+    pub fn visitWhileStatement(&self, ast: WhileStatement)
     //Loops must always be purely public
     {
         assert!(!contains_private_expr(ast.condition));
@@ -336,7 +336,7 @@ impl<
         ast
     }
 
-    pub fn visitDoWhileStatement(self, ast: DoWhileStatement)
+    pub fn visitDoWhileStatement(&self, ast: DoWhileStatement)
     //Loops must always be purely public
     {
         assert!(!contains_private_expr(ast.condition));
@@ -344,7 +344,7 @@ impl<
         ast
     }
 
-    pub fn visitForStatement(self, ast: ForStatement) {
+    pub fn visitForStatement(&self, ast: ForStatement) {
         if ast.init.is_some()
         //Init is the only part of a for loop which may contain private expressions
         {
@@ -357,15 +357,15 @@ impl<
         ast
     }
 
-    pub fn visitContinueStatement(self, ast: ContinueStatement) {
+    pub fn visitContinueStatement(&self, ast: ContinueStatement) {
         ast
     }
 
-    pub fn visitBreakStatement(self, ast: BreakStatement) {
+    pub fn visitBreakStatement(&self, ast: BreakStatement) {
         ast
     }
 
-    pub fn visitReturnStatement(self, ast: ReturnStatement)
+    pub fn visitReturnStatement(&self, ast: ReturnStatement)
     // """
     // Handle return statement.
 
@@ -399,7 +399,7 @@ impl<
         }
     }
 
-    pub fn visitExpression(self, ast: Expression)
+    pub fn visitExpression(&self, ast: Expression)
     // """Fail if there are any untransformed expressions left."""
     {
         assert!(false, "Missed an expression of type {:?}", ast);
@@ -413,20 +413,32 @@ impl<
 // In addition to the features described in the paper, this transformer also supports primitive type casting,
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
-pub struct ZkayExpressionTransformer<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    gen: Option<CircuitHelper<V>>,
+#[derive(Clone)]
+pub struct ZkayExpressionTransformer {
+    gen: Option<Box<CircuitHelper<Self>>>,
 }
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > ZkayExpressionTransformer<V>
-{
-    pub fn new(current_generator: Option<CircuitHelper<V>>) -> Self
+
+impl AstTransformerVisitor for ZkayExpressionTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
+
+    fn visit(&self, ast: AST) -> AST {
+        // self._visit_internal(ast)
+        AST::None
+    }
+    fn visitBlock(
+        &self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
+        // self.visit_children(ast)
+        AST::None
+    }
+}
+impl ZkayExpressionTransformer {
+    pub fn new(current_generator: Option<Box<CircuitHelper<Self>>>) -> Self
 // super().__init__()
         // self.gen = current_generator
     {
@@ -443,33 +455,33 @@ impl<
             .as_type(AnnotatedTypeName::address_all())
     }
 
-    pub fn visitLiteralExpr(self, ast: LiteralExpr)
+    pub fn visitLiteralExpr(&self, ast: LiteralExpr)
     // """Rule (7), don"t modify constants."""
     {
         ast
     }
 
-    pub fn visitIdentifierExpr(self, ast: IdentifierExpr)
+    pub fn visitIdentifierExpr(&self, ast: IdentifierExpr)
     // """Rule (8), don"t modify identifiers."""
     {
         ast
     }
 
-    pub fn visitIndexExpr(self, ast: IndexExpr)
+    pub fn visitIndexExpr(&self, ast: IndexExpr)
     // """Rule (9), transform location and index expressions separately."""
     {
         replace_expr(ast, self.visit(ast.arr).index(self.visit(ast.key)))
     }
 
-    pub fn visitMemberAccessExpr(self, ast: MemberAccessExpr) {
+    pub fn visitMemberAccessExpr(&self, ast: MemberAccessExpr) {
         self.visit_children(ast)
     }
 
-    pub fn visitTupleExpr(self, ast: TupleExpr) {
+    pub fn visitTupleExpr(&self, ast: TupleExpr) {
         self.visit_children(ast)
     }
 
-    pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
+    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr)
     // """
     // Rule (11), trigger a boundary crossing.
 
@@ -483,11 +495,11 @@ impl<
         )
     }
 
-    pub fn visitBuiltinFunction(self, ast: BuiltinFunction) {
+    pub fn visitBuiltinFunction(&self, ast: BuiltinFunction) {
         ast
     }
 
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if is_instance(&ast.func, ASTType::BuiltinFunction) {
             if ast.func.is_private
             // """
@@ -593,7 +605,7 @@ impl<
         }
     }
     pub fn visit_guarded_expression(
-        self,
+        &self,
         guard_var: HybridArgumentIdf,
         if_true: bool,
         expr: Expression,
@@ -621,7 +633,7 @@ impl<
         ret
     }
 
-    pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr)
+    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr)
     // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
     {
         if ast.evaluate_privately {
@@ -636,7 +648,7 @@ impl<
         }
     }
 
-    pub fn visitExpression(self, ast: Expression) {
+    pub fn visitExpression(&self, ast: Expression) {
         // raise NotImplementedError()
         unimplemented!();
     }
@@ -649,21 +661,32 @@ impl<
 // Private expressions can never have side effects.
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
-pub struct ZkayCircuitTransformer<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    gen: CircuitHelper<V>,
+#[derive(Clone)]
+pub struct ZkayCircuitTransformer {
+    gen: Box<CircuitHelper<Self>>,
 }
 
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > ZkayCircuitTransformer<V>
-{
-    pub fn new(current_generator: CircuitHelper<V>) -> Self {
+impl AstTransformerVisitor for ZkayCircuitTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
+
+    fn visit(&self, ast: AST) -> AST {
+        // self._visit_internal(ast)
+        AST::None
+    }
+    fn visitBlock(
+        &self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
+        // self.visit_children(ast)
+        AST::None
+    }
+}
+impl ZkayCircuitTransformer {
+    pub fn new(current_generator: Box<CircuitHelper<Self>>) -> Self {
         Self {
             gen: current_generator,
         }
@@ -671,17 +694,17 @@ impl<
     // super().__init__()
     // self.gen = current_generator
 
-    pub fn visitLiteralExpr(self, ast: LiteralExpr)
+    pub fn visitLiteralExpr(&self, ast: LiteralExpr)
     // """Rule (13), don"t modify constants."""
     {
         ast
     }
 
-    pub fn visitIndexExpr(self, ast: IndexExpr) {
+    pub fn visitIndexExpr(&self, ast: IndexExpr) {
         self.transform_location(ast)
     }
 
-    pub fn visitIdentifierExpr(self, ast: IdentifierExpr) {
+    pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) {
         if !is_instance(&ast.idf, ASTType::HybridArgumentIdf)
         //If ast is not already transformed, get current SSA version
         {
@@ -700,13 +723,13 @@ impl<
         }
     }
 
-    pub fn transform_location(self, loc: LocationExpr)
+    pub fn transform_location(&self, loc: LocationExpr)
     // """Rule (14), move location into the circuit."""
     {
         self.gen.add_to_circuit_inputs(loc).get_idf_expr(&None)
     }
 
-    pub fn visitReclassifyExpr(self, ast: ReclassifyExpr)
+    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr)
     // """Rule (15), boundary crossing if analysis determined that it is """
     {
         if ast.annotated_type.is_cipher()
@@ -725,13 +748,13 @@ impl<
         }
     }
 
-    pub fn visitExpression(self, ast: Expression)
+    pub fn visitExpression(&self, ast: Expression)
     // """Rule (16), other expressions don"t need special treatment."""
     {
         self.visit_children(ast)
     }
 
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         let t = &ast.annotated_type.type_name;
 
         //Constant folding for literal types
@@ -804,24 +827,24 @@ impl<
         return self.gen.inline_function_call_into_circuit(ast);
     }
 
-    pub fn visitReturnStatement(self, ast: ReturnStatement) {
+    pub fn visitReturnStatement(&self, ast: ReturnStatement) {
         self.gen.add_return_stmt_to_circuit(ast)
     }
 
-    pub fn visitAssignmentStatement(self, ast: AssignmentStatement) {
+    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
         self.gen.add_assignment_to_circuit(ast)
     }
 
-    pub fn visitVariableDeclarationStatement(self, ast: VariableDeclarationStatement) {
+    pub fn visitVariableDeclarationStatement(&self, ast: VariableDeclarationStatement) {
         self.gen.add_var_decl_to_circuit(ast)
     }
 
-    pub fn visitIfStatement(self, ast: IfStatement) {
+    pub fn visitIfStatement(&self, ast: IfStatement) {
         self.gen.add_if_statement_to_circuit(ast)
     }
 
     pub fn visitBlock(
-        self,
+        &self,
         ast: Block,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
@@ -829,7 +852,7 @@ impl<
         self.gen.add_block_to_circuit(ast, guard_cond, guard_val)
     }
 
-    pub fn visitStatement(self, ast: Statement)
+    pub fn visitStatement(&self, ast: Statement)
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
     {

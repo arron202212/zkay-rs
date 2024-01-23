@@ -1,11 +1,25 @@
 // from abc import ABCMeta, abstractmethod
 // from typing import List
-
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
+use std::fs::File;
+use std::io::BufReader;
 #[derive(Clone)]
 pub struct G1Point {
     x: String,
     y: String,
+}
+impl Default for G1Point {
+    fn default() -> Self
+// """Construct G1Point from coordinate integer literal strings."""
+    // self.x: String = x
+    // self.y: String = y
+    {
+        let zero = String::from("0");
+        Self {
+            x: zero.clone(),
+            y: zero,
+        }
+    }
 }
 // class G1Point
 // """Data class to represent curve points"""
@@ -17,18 +31,8 @@ impl G1Point {
     {
         Self { x, y }
     }
-    pub fn default() -> Self
-// """Construct G1Point from coordinate integer literal strings."""
-    // self.x: String = x
-    // self.y: String = y
-    {
-        let zero = String::from("0");
-        Self {
-            x: zero.clone(),
-            y: zero,
-        }
-    }
-    pub fn negated(&self) {
+
+    pub fn negated(&self) -> Self {
         let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
         if self.x == "0" && self.y == "0" {
             G1Point::default()
@@ -49,7 +53,9 @@ impl G1Point {
     }
 
     // @staticmethod
-    pub fn from_it<T>(it: &T) -> Self {
+    pub fn from_it<T: Iterator<Item = Result<std::string::String, std::io::Error>>>(
+        it: &T,
+    ) -> Self {
         G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
     }
 
@@ -71,6 +77,15 @@ pub struct G2Point {
     x: G1Point,
     y: G1Point,
 }
+impl Default for G2Point {
+    fn default() -> Self {
+        let zero = G1Point::default();
+        Self {
+            x: zero.clone(),
+            y: zero,
+        }
+    }
+}
 impl G2Point {
     pub fn new(x1: String, x2: String, y1: String, y2: String) -> Self {
         Self {
@@ -78,13 +93,7 @@ impl G2Point {
             y: G1Point::new(y1, y2),
         }
     }
-    pub fn default() -> Self {
-        let zero = G1Point::default();
-        Self {
-            x: zero.clone(),
-            y: zero,
-        }
-    }
+
     // @staticmethod
     pub fn from_seq(seq: Vec<String>) -> Self
 // """
@@ -98,7 +107,9 @@ impl G2Point {
     }
 
     // @staticmethod
-    pub fn from_it<T>(it: &T) -> Self {
+    pub fn from_it<T: Iterator<Item = Result<std::string::String, std::io::Error>>>(
+        it: &T,
+    ) -> Self {
         G2Point::new(
             it.next().unwrap().unwrap(),
             it.next().unwrap().unwrap(),
@@ -119,6 +130,8 @@ impl fmt::Display for G2Point {
 // """Abstract base data class for verification keys"""
 pub trait VerifyingKeyMeta {
     type Output;
+    type G1;
+    type G2;
     // @classmethod
     // @abstractmethod
     // pub fn create_dummy_key(cls)
@@ -164,12 +177,19 @@ impl ProvingSchemeBase {
 
 pub trait ProvingScheme {
     const NAME: &'static str;
-    type VerifyingKey;
+    type VerifyingKeyX;
+
     fn name(&self) -> String {
         Self::NAME.to_string()
     }
 
-    fn hash_var_name(&self) -> String {
+    fn hash_var_name() -> String {
+        String::new()
+    }
+    fn verify_libs_contract_filename() -> String {
+        String::new()
+    }
+    fn snark_scalar_field_var_name() -> String {
         String::new()
     }
     // @abstractmethod
@@ -179,7 +199,7 @@ pub trait ProvingScheme {
             + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
     >(
         &self,
-        verification_key: Self::VerifyingKey,
+        verification_key: Self::VerifyingKeyX,
         circuit: &CircuitHelper<V>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,

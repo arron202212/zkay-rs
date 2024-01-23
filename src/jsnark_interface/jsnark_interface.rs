@@ -158,7 +158,7 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
         use_input_hashing = CFG
             .lock()
             .unwrap()
-            .should_use_hash(circuit)
+            .should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
             .to_ascii_lowercase(),
         fdefs = indent(function_definitions),
         circuit_statements = indent(indent("\n".join(circuit_statements)))

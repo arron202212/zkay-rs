@@ -84,7 +84,7 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         static_owner_labels: Vec<PrivacyLabelExpr>,
         expr_trafo_constructor: impl FnOnce(&Self) -> T,
         circ_trafo_constructor: impl FnOnce(&Self) -> T,
-        internal_circuit: &mut Option<CircuitHelper<T>>,
+        internal_circuit: Option<&mut CircuitHelper<T>>,
     ) -> Self {
         // """
         // Create a new CircuitHelper instance

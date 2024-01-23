@@ -14,13 +14,13 @@ use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use crate::zkay_ast::ast::{
-    is_instance, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr, BlankLine, Block,
-    CipherText, Comment, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName,
-    Expression, ExpressionStatement, FunctionCallExpr, Identifier, IdentifierBase, IdentifierExpr,
-    MeExpr, NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr,
-    RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration, StatementList,
-    StructDefinition, StructTypeName, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    is_instance, ASTCode, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
+    BlankLine, Block, CipherText, Comment, ConstructorOrFunctionDefinition, ContractDefinition,
+    ContractTypeName, Expression, ExpressionStatement, FunctionCallExpr, HybridArgumentIdf,
+    Identifier, IdentifierBase, IdentifierExpr, MeExpr, NewExpr, NumberLiteralExpr, Parameter,
+    PrimitiveCastExpr, PrivacyLabelExpr, RequireStatement, ReturnStatement, SourceUnit,
+    StateVariableDeclaration, StatementList, StructDefinition, StructTypeName, TupleExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
@@ -47,12 +47,19 @@ pub fn transform_ast<
     // """
 {
     let zt = ZkayTransformer::new();
-    let new_ast = zt.visit(ast);
+    let new_ast = zt.visit(ast.get_ast());
 
     // restore all parent pointers and identifier targets
     set_parents(new_ast);
-    link_identifiers(new_ast);
-    (new_ast, zt.circuits)
+    link_identifiers(&new_ast);
+    (
+        if let AST::SourceUnit(su) = new_ast {
+            su
+        } else {
+            SourceUnit::default()
+        },
+        zt.circuits,
+    )
 }
 
 // class ZkayTransformer(AstTransformerVisitor)
@@ -148,20 +155,31 @@ pub fn transform_ast<
 //     (0 for out array, after last key for in array) are added as additional arguments.
 //   * Finally the verification contract is invoked to verify the proof (the in array was populated by the called functions themselves).
 // """
-pub struct ZkayTransformer<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
-    circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
-    var_decl_trafo: ZkayVarDeclTransformer<V>,
+#[derive(Clone)]
+pub struct ZkayTransformer {
+    circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<Self>>,
+    var_decl_trafo: ZkayVarDeclTransformer,
 }
-impl<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > ZkayTransformer<V>
-{
+impl AstTransformerVisitor for ZkayTransformer {
+    fn default() -> Self {
+        Self::new()
+    }
+
+    fn visit(&self, ast: AST) -> AST {
+        // self._visit_internal(ast)
+        AST::None
+    }
+    fn visitBlock(
+        &self,
+        ast: AST,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> AST {
+        // self.visit_children(ast)
+        AST::None
+    }
+}
+impl ZkayTransformer {
     // pub fn __init__(self)
     //     super().__init__()
     //     self.circuits: Dict[ConstructorOrFunctionDefinition, CircuitHelper] = {}
@@ -178,8 +196,8 @@ impl<
 
     pub fn import_contract(
         cname: &str,
-        su: &SourceUnit,
-        corresponding_circuit: Option<CircuitHelper<V>>,
+        su: &mut SourceUnit,
+        corresponding_circuit: Option<&CircuitHelper<Self>>,
     )
     // """
     // Import contract "vname" into the given source unit.
@@ -192,10 +210,19 @@ impl<
         let import_filename = format!("./{cname}.sol");
         su.used_contracts.push(import_filename);
 
-        if corresponding_circuit.is_some() {
-            let c_type =
-                ContractTypeName::new(vec![Identifier::Identifier(IdentifierBase::new(cname))]);
-            corresponding_circuit.register_verification_contract_metadata(c_type, import_filename);
+        if let Some(corresponding_circuit) = corresponding_circuit {
+            let c_type = ContractTypeName::new(
+                vec![Identifier::Identifier(IdentifierBase::new(
+                    cname.to_string(),
+                ))],
+                None,
+            );
+            corresponding_circuit.register_verification_contract_metadata(
+                TypeName::UserDefinedTypeName(UserDefinedTypeName::ContractTypeName(
+                    c_type.clone(),
+                )),
+                &import_filename,
+            );
         }
     }
 
@@ -203,22 +230,37 @@ impl<
 // """Create a public constant state variable with which contract with name "cname" can be accessed"""
     {
         let inst_idf = Identifier::Identifier(IdentifierBase::new(
-            CFG.lock().unwrap().get_contract_var_name(cname),
+            CFG.lock().unwrap().get_contract_var_name(cname.to_string()),
         ));
-        let c_type = ContractTypeName::new([Identifier::Identifier(IdentifierBase::new(cname))]);
+        let c_type = ContractTypeName::new(
+            vec![Identifier::Identifier(IdentifierBase::new(
+                cname.to_string(),
+            ))],
+            None,
+        );
 
-        let cast_0_to_c = PrimitiveCastExpr::new(c_type, NumberLiteralExpr::new(0));
+        let cast_0_to_c = PrimitiveCastExpr::new(
+            TypeName::UserDefinedTypeName(UserDefinedTypeName::ContractTypeName(c_type.clone())),
+            NumberLiteralExpr::new(0, false).to_expr(),
+            false,
+        );
         StateVariableDeclaration::new(
-            AnnotatedTypeName::new(c_type),
-            vec!["public", "constant"],
+            AnnotatedTypeName::new(
+                TypeName::UserDefinedTypeName(UserDefinedTypeName::ContractTypeName(
+                    c_type.clone(),
+                )),
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ),
+            crate::lc_vec_s!["public", "constant"],
             inst_idf.clone(),
-            cast_0_to_c,
+            Some(cast_0_to_c.to_expr()),
         )
     }
 
     pub fn include_verification_contracts(
-        self,
-        su: SourceUnit,
+        &self,
+        su: &mut SourceUnit,
         c: ContractDefinition,
     ) -> Vec<StateVariableDeclaration>
 // """
@@ -230,23 +272,26 @@ impl<
         // """
     {
         let mut contract_var_decls = vec![];
-        for crypto_params in c.used_crypto_backends {
-            let contract_name = CFG.lock().unwrap().get_pki_contract_name(crypto_params);
-            contract_var_decls.push(self.create_contract_variable(contract_name));
+        for crypto_params in &c.used_crypto_backends.unwrap() {
+            let contract_name = CFG
+                .lock()
+                .unwrap()
+                .get_pki_contract_name(&crypto_params.identifier_name());
+            contract_var_decls.push(Self::create_contract_variable(&contract_name));
         }
 
         for f in c
             .constructor_definitions
             .iter()
-            .chain(c.function_definitions)
+            .chain(&c.function_definitions)
         {
-            if f.requires_verification_when_external && f.has_side_effects {
-                let name = CFG
-                    .lock()
-                    .unwrap()
-                    .get_verification_contract_name(c.idf.name, f.name);
-                self.import_contract(name, su, self.circuits[f]);
-                contract_var_decls.push(self.create_contract_variable(name));
+            if f.requires_verification_when_external && f.has_side_effects() {
+                let name = CFG.lock().unwrap().get_verification_contract_name(
+                    c.namespace_definition_base.idf.name(),
+                    f.name(),
+                );
+                Self::import_contract(&name, su, self.circuits.get(&f));
+                contract_var_decls.push(Self::create_contract_variable(&name));
             }
         }
 
@@ -256,9 +301,9 @@ impl<
     pub fn create_circuit_helper(
         fct: ConstructorOrFunctionDefinition,
         global_owners: Vec<PrivacyLabelExpr>,
-        internal_circ: Option<CircuitHelper<V>>,
-    )
-    // """
+        internal_circ: Option<&mut CircuitHelper<Self>>,
+    ) -> CircuitHelper<Self>
+// """
     // Create circuit helper for the given function.
 
     // :param fct: function for which to create a circuit
@@ -271,21 +316,28 @@ impl<
         CircuitHelper::new(
             fct,
             global_owners,
-            ZkayExpressionTransformer::new,
-            ZkayCircuitTransformer::new,
+            |ch: &CircuitHelper<ZkayExpressionTransformer>| {
+                ZkayExpressionTransformer::new(Some(Box::new(ch.clone())))
+            },
+            |ch: &CircuitHelper<ZkayCircuitTransformer>| {
+                ZkayCircuitTransformer::new(Box::new(ch.clone()))
+            },
             internal_circ,
         )
     }
 
-    pub fn visitSourceUnit(self, ast: SourceUnit)
-    // Figure out which crypto backends were used
+    pub fn visitSourceUnit(&self, ast: SourceUnit) -> SourceUnit
+// Figure out which crypto backends were used
     {
-        UsedHomomorphismsVisitor::new().visit(ast);
+        UsedHomomorphismsVisitor::new().visit(ast.get_ast());
 
-        for crypto_params in ast.used_crypto_backends {
-            self.import_contract(
-                CFG.lock().unwrap().get_pki_contract_name(crypto_params),
-                ast,
+        for crypto_params in ast.clone().used_crypto_backends.unwrap() {
+            Self::import_contract(
+                &CFG.lock()
+                    .unwrap()
+                    .get_pki_contract_name(crypto_params.identifier_name()),
+                &mut ast,
+                None,
             );
         }
 
@@ -296,7 +348,11 @@ impl<
         ast
     }
 
-    pub fn transform_contract(self, su: SourceUnit, c: ContractDefinition) -> ContractDefinition
+    pub fn transform_contract(
+        &mut self,
+        su: &mut SourceUnit,
+        c: ContractDefinition,
+    ) -> ContractDefinition
 // """
         // Transform an entire zkay contract into a public solidity contract.
 
@@ -317,19 +373,21 @@ impl<
         let all_fcts = c
             .constructor_definitions
             .iter()
-            .chain(c.function_definitions);
+            .chain(&c.function_definitions);
 
         // Get list of static owner labels for this contract
-        let mut global_owners = vec![Expression::me_expr()];
+        let mut global_owners = vec![Expression::me_expr(None)];
         for var in c.state_variable_declarations {
-            if var.annotated_type.is_address() && (var.is_final || var.is_constant) {
-                global_owners.push(var.idf);
+            if var.identifier_declaration_base.annotated_type.is_address()
+                && (var.is_final() || var.is_constant())
+            {
+                global_owners.push(var.identifier_declaration_base.idf);
             }
         }
 
         // Backup untransformed function bodies
         for fct in all_fcts {
-            fct.original_body = deep_copy(fct.body, true, true);
+            fct.original_body = fct.body.clone(); //deep_copy(fct.body, true, true);
         }
 
         // Transform types of normal state variables
@@ -338,38 +396,40 @@ impl<
             .visit_list(c.state_variable_declarations);
 
         // Split into functions which require verification and those which don"t need a circuit helper
-        let mut req_ext_fcts = {};
-        let (new_fcts, new_constr) = ([], []);
+        let mut req_ext_fcts = BTreeMap::new();
+        let (mut new_fcts, mut new_constr) = (vec![], vec![]);
         for fct in all_fcts {
-            assert!(is_instance(&fct, ASTType::ConstructorOrFunctionDefinition));
+            assert!(is_instance(fct, ASTType::ConstructorOrFunctionDefinition));
             if fct.requires_verification || fct.requires_verification_when_external {
-                self.circuits[fct] = self.create_circuit_helper(fct, global_owners);
+                self.circuits[fct] = Self::create_circuit_helper(fct, global_owners, None);
             }
 
             if fct.requires_verification_when_external {
-                req_ext_fcts[fct] = fct.parameters.clone();
-            } else if fct.is_constructor {
-                new_constr.push(fct);
+                req_ext_fcts.insert(fct, fct.parameters.clone());
+            } else if fct.is_constructor() {
+                new_constr.push(fct.clone());
             } else {
-                new_fcts.push(fct);
+                new_fcts.push(fct.clone());
             }
         }
 
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
-            ["public", "constant"],
-            Identifier::new(CFG.lock().unwrap().field_prime_var_name),
-            NumberLiteralExpr::new(BN128_SCALAR_FIELD),
+            crate::lc_vec_s!["public", "constant"],
+            Identifier::Identifier(IdentifierBase::new(
+                CFG.lock().unwrap().field_prime_var_name(),
+            )),
+            NumberLiteralExpr::new_string(BN128_SCALAR_FIELD.to_hex_string()).to_expr(),
         );
         let contract_var_decls = self.include_verification_contracts(su, c);
-        c.state_variable_declarations = [field_prime_decl, Comment::new("")]
+        c.state_variable_declarations = [field_prime_decl, Comment::new(String::new())]
             .into_iter()
-            .chain(Comment::comment_list(
-                "Helper Contracts",
+            .chain(CommentBase::comment_list(
+                String::from("Helper Contracts"),
                 contract_var_decls,
             ))
-            .chain([Comment::new("User state variables")])
+            .chain([CommentBase::new(String::from("User state variables")).get_ast()])
             .chain(c.state_variable_declarations)
             .collect();
 
@@ -383,14 +443,14 @@ impl<
         }
 
         // Transform bodies
-        for fct in all_fcts {
-            let gen = self.circuits.get(fct, None);
-            fct.body = ZkayStatementTransformer::new(gen).visit(fct.body);
+        for fct in &all_fcts {
+            let gen = self.circuits.get(fct);
+            fct.body = ZkayStatementTransformer::new(Box::new(gen.unwrap().clone()))
+                .visit(fct.body.unwrap().get_ast());
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
         let fcts_with_verification: Vec<_> = all_fcts
-            .iter()
             .filter_map(|fct| {
                 if fct.requires_verification {
                     Some(fct)
@@ -400,7 +460,7 @@ impl<
             })
             .collect();
         compute_transitive_circuit_io_sizes(fcts_with_verification, self.circuits);
-        transform_internal_calls(fcts_with_verification, self.circuits);
+        transform_internal_calls(fcts_with_verification, &mut self.circuits);
         for f in fcts_with_verification {
             let circuit = self.circuits[f];
             assert!(circuit.requires_verification());
@@ -408,18 +468,22 @@ impl<
             // Add zk data struct for f to contract
             {
                 let zk_data_struct = StructDefinition::new(
-                    Identifier::Identifier(IdentifierBase::new(circuit.zk_data_struct_name)),
+                    Identifier::Identifier(IdentifierBase::new(circuit.zk_data_struct_name())),
                     circuit
-                        .output_idfs
+                        .output_idfs()
                         .iter()
-                        .chain(circuit.input_idfs)
+                        .chain(circuit.input_idfs())
                         .iter()
                         .map(|idf| {
                             VariableDeclaration::new(
                                 vec![],
-                                AnnotatedTypeName::new(idf.t),
+                                AnnotatedTypeName::new(
+                                    idf.t,
+                                    None,
+                                    Homomorphism::non_homomorphic(),
+                                ),
                                 idf.clone(),
-                                "",
+                                None,
                             )
                         })
                         .collect(),
@@ -433,7 +497,7 @@ impl<
         for (f, params) in req_ext_fcts {
             let (ext_f, int_f) =
                 self.split_into_external_and_internal_fct(f, params, global_owners);
-            if ext_f.is_function {
+            if ext_f.is_function() {
                 new_fcts.push(ext_f);
             } else {
                 new_constr.push(ext_f);
@@ -446,7 +510,7 @@ impl<
         return c;
     }
 
-    pub fn create_internal_verification_wrapper(self, ast: ConstructorOrFunctionDefinition)
+    pub fn create_internal_verification_wrapper(&self, ast: &ConstructorOrFunctionDefinition)
     // """
     // Add the necessary additional parameters and boiler plate code for verification support to the given function.
     // :param ast: [SIDE EFFECT] Internal function which requires verification
@@ -457,6 +521,7 @@ impl<
 
         let symmetric_cipher_used = ast
             .used_crypto_backends
+            .unwrap()
             .iter()
             .any(|backend| backend.is_symmetric_cipher());
         if symmetric_cipher_used && ast.modifiers.contain("pure")
@@ -618,8 +683,8 @@ impl<
     }
 
     pub fn split_into_external_and_internal_fct(
-        self,
-        f: ConstructorOrFunctionDefinition,
+        &self,
+        f: &ConstructorOrFunctionDefinition,
         mut original_params: Vec<Parameter>,
         global_owners: Vec<PrivacyLabelExpr>,
     ) -> (
@@ -719,7 +784,7 @@ impl<
 
     pub fn create_external_wrapper_body(
         int_fct: ConstructorOrFunctionDefinition,
-        ext_circuit: CircuitHelper<V>,
+        ext_circuit: CircuitHelper<Self>,
         original_params: Vec<Parameter>,
         requires_proof: bool,
     ) -> Block

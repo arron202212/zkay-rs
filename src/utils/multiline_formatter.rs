@@ -4,8 +4,8 @@ use textwrap::{dedent, indent};
 // class MultiLineFormatter
 pub struct MultiLineFormatter {
     pub text: String,
-    current_indent: String,
-    indent_str: String,
+    pub current_indent: String,
+    pub indent_str: String,
 }
 impl MultiLineFormatter {
     // """
@@ -30,25 +30,19 @@ impl MultiLineFormatter {
         }
     }
 
-    pub fn mul(&mut self, other: (Option<String>, Option<Vec<String>>)) -> Self {
-        if let (Some(other), None) = other {
-            self.append(other)
-        } else if let (None, Some(other)) = other {
-            self.text += "\n";
-            self.append_lines(other)
-        }
+    pub fn mul(&mut self, other: String) -> Self {
+        self.append(other)
     }
-
-    pub fn modular(&mut self, other: (Option<String>, Option<Vec<String>>)) -> Self {
-        if let (Some(str), None) = other {
-            self.append(other, ", ")
-        } else if let (Some(str), None) = other {
-            self.append_lines(other, ", ")
-        } else {
-            self.clone()
-        }
+    pub fn mulx(&mut self, other: Vec<String>) -> Self {
+        self.text += "\n";
+        self.append_lines(other)
     }
-
+    pub fn modular(&mut self, other: String) -> Self {
+        self.append(other, ", ")
+    }
+    pub fn modularx(&mut self, other: Vec<String>) -> Self {
+        self.append_lines(other, ", ")
+    }
     pub fn truediv(&mut self, other: String) -> Self {
         if other {
             self.indent().mul(other)
@@ -57,7 +51,7 @@ impl MultiLineFormatter {
         }
     }
 
-    pub fn floordiv(&mut self, other: &str) -> Self {
+    pub fn floordiv(&mut self, other: String) -> Self {
         self.dedent().mul(other)
     }
 

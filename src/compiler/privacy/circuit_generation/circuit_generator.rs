@@ -22,8 +22,8 @@ use std::fs::File;
 use std::io::Write;
 use std::sync::Mutex;
 pub enum VerifyingKeyType {
-    ProvingSchemeGroth16(<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKey),
-    ProvingSchemeGm17(<ProvingSchemeGm17 as ProvingScheme>::VerifyingKey),
+    ProvingSchemeGroth16(<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX),
+    ProvingSchemeGm17(<ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX),
     None,
 }
 lazy_static! {
@@ -33,12 +33,14 @@ lazy_static! {
 
 pub trait CircuitGenerator {}
 // class CircuitGeneratorBase(metaclass=ABCMeta)
-pub struct CircuitGeneratorBase<
-    T: ProvingScheme + std::marker::Sync,
+pub struct CircuitGeneratorBase<T, VK, V>
+where
+    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    VK: VerifyingKeyMeta<Output = VK>,
     V: Clone
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-> {
+{
     pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     pub circuits_to_prove: Vec<CircuitHelper<V>>,
     pub proving_scheme: T,
@@ -47,12 +49,13 @@ pub struct CircuitGeneratorBase<
     pub p_count: i32,
 }
 
-impl<
-        T: ProvingScheme + std::marker::Sync,
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    > CircuitGeneratorBase<T, V>
+impl<T, VK, V> CircuitGeneratorBase<T, VK, V>
+where
+    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    VK: VerifyingKeyMeta<Output = VK>,
+    V: Clone
+        + std::marker::Sync
+        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
     // """
     // A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.
@@ -187,31 +190,27 @@ impl<
                 ))
                 .expect("");
                 let primary_inputs = self._get_primary_inputs(circuit);
-                if let VerifyingKeyType::ProvingSchemeGroth16(vk) = vk {
-                    let vk: <T as ProvingScheme>::VerifyingKey = vk;
-                    f.write_all(
-                        ProvingSchemeGroth16::generate_verification_contract(
-                            &self.proving_scheme,
-                            vk,
-                            circuit,
-                            primary_inputs,
-                            pk_hash,
-                        )
+                // if let VerifyingKeyType::ProvingSchemeGroth16(vk) = vk {
+                // let vk: <T as ProvingScheme>::VerifyingKey = vk;
+                // let vkk=||-><T as ProvingScheme>::VerifyingKeyX {vk};
+                f.write_all(
+                    self.proving_scheme
+                        .generate_verification_contract(vk, circuit, primary_inputs, pk_hash)
                         .as_bytes(),
-                    );
-                } else if let VerifyingKeyType::ProvingSchemeGm17(vk) = vk {
-                    let vk: <T as ProvingScheme>::VerifyingKey = vk;
-                    f.write_all(
-                        ProvingSchemeGm17::generate_verification_contract(
-                            self.proving_scheme,
-                            vk,
-                            circuit,
-                            primary_inputs,
-                            pk_hash,
-                        )
-                        .as_bytes(),
-                    );
-                }
+                );
+                // } else if let VerifyingKeyType::ProvingSchemeGm17(vk) = vk {
+                //     let vkk=||-><T as ProvingScheme>::VerifyingKeyX {vk};
+                //     // let vk: <T as ProvingScheme>::VerifyingKey = vk;
+                //     f.write_all(
+                //         self.proving_scheme.generate_verification_contract(
+                //             vkk(),
+                //             circuit,
+                //             primary_inputs,
+                //             pk_hash,
+                //         )
+                //         .as_bytes(),
+                //     );
+                // }
             }
         }
     }
@@ -323,10 +322,13 @@ impl<
     // pass
 
     // @abstractmethod
-    pub fn _parse_verification_key(&self, circuit: &CircuitHelper<V>) -> VerifyingKeyType
+    pub fn _parse_verification_key(
+        &self,
+        circuit: &CircuitHelper<V>,
+    ) -> <T as ProvingScheme>::VerifyingKeyX
 // """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
     {
-        VerifyingKeyType::None //self.proving_scheme.VerifyingKey::create_dummy_key()
+        <T as ProvingScheme>::VerifyingKeyX::create_dummy_key()
     }
 
     // @abstractmethod
@@ -349,7 +351,7 @@ impl<
             .unwrap()
             .should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
         {
-            vec![self.proving_scheme.hash_var_name()]
+            vec![<T as ProvingScheme>::hash_var_name()]
         } else {
             let primary_inputs = vec![];
             for (name, count) in inputs {

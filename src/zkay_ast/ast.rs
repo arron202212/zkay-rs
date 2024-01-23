@@ -2259,6 +2259,7 @@ impl BooleanLiteralExpr {
 pub struct NumberLiteralExpr {
     pub literal_expr_base: Box<LiteralExprBase>,
     pub value: i32,
+    pub value_string: String,
     pub was_hex: bool,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
@@ -2280,6 +2281,7 @@ impl NumberLiteralExpr {
         Self {
             literal_expr_base: Box::new(LiteralExprBase::new()),
             value,
+            value_string: String::new(),
             was_hex,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
@@ -2292,7 +2294,23 @@ impl NumberLiteralExpr {
             ))),
         }
     }
-
+    pub fn new_string(value_string: String) -> Self {
+        Self {
+            literal_expr_base: Box::new(LiteralExprBase::new()),
+            value: 0,
+            value_string,
+            was_hex: false,
+            annotated_type: Some(Box::new(AnnotatedTypeName::new(
+                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                    NumberTypeName::NumberLiteralType(NumberLiteralType::new(
+                        NumberLiteralTypeUnion::I32(value),
+                    )),
+                )),
+                None,
+                String::from("NON_HOMOMORPHIC"),
+            ))),
+        }
+    }
     pub fn as_type(&self, t: AsTypeUnion) -> Self {
         let mut selfs = self.clone();
         if let AsTypeUnion::AnnotatedTypeName(at) = t {
@@ -6544,7 +6562,7 @@ pub enum Array {
     Randomness(Randomness),
     Key(Key),
     Proof(Proof),
-    ArrayBase(ArrayBase),
+    Array(ArrayBase),
     #[default]
     None,
 }
