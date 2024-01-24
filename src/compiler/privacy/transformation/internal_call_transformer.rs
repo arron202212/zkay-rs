@@ -1,3 +1,4 @@
+use super::zkay_transformer::TransformerVisitorEx;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
@@ -6,11 +7,7 @@ use crate::zkay_ast::ast::{
     IdentifierExprUnion, MeExpr, NamespaceDefinition, NumberLiteralExpr, TargetDefinition,
 };
 use std::collections::{BTreeMap, BTreeSet};
-pub fn compute_transitive_circuit_io_sizes<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
+pub fn compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
     fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
     cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
@@ -49,11 +46,7 @@ pub fn compute_transitive_circuit_io_sizes<
     }
 }
 
-pub fn _compute_transitive_circuit_io_sizes<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
+pub fn _compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
     cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
     fct: &ConstructorOrFunctionDefinition,
     gkeys: &mut BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
@@ -108,11 +101,7 @@ pub fn _compute_transitive_circuit_io_sizes<
     }
 }
 
-pub fn transform_internal_calls<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
+pub fn transform_internal_calls<V: TransformerVisitorEx>(
     fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
     cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
 )
@@ -178,12 +167,12 @@ pub fn transform_internal_calls<
                 ]);
                 if let Some(TargetDefinition::NamespaceDefinition(
                     NamespaceDefinition::ConstructorOrFunctionDefinition(t),
-                )) = fc.func.unwrap().target().map(|t| *t)
+                )) = fc.func.target().map(|t| *t)
                 {
                     if let Some(cg) = cgens.get(&t) {
-                        i += cg.in_size_trans;
-                        o += cg.out_size_trans;
-                        p += cg.priv_in_size_trans;
+                        i += cg.in_size_trans();
+                        o += cg.out_size_trans();
+                        p += cg.priv_in_size_trans();
                     }
                 }
             }

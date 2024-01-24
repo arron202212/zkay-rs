@@ -156,13 +156,11 @@ fn process_ast(
     }
 }
 
-pub fn get_verification_contract_names(
-    code_or_ast: (Option<String>, Option<SourceUnit>),
-) -> Vec<String> {
+pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>)) -> Vec<String> {
     let ast = if let (Some(code_or_ast), None) = code_or_ast {
         get_processed_ast(code_or_ast)
     } else if let (None, Some(code_or_ast)) = code_or_ast {
-        code_or_ast.get_ast()
+        code_or_ast
     } else {
         assert!(false, "Invalid AST (no source unit at root)");
     };

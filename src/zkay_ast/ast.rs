@@ -2259,7 +2259,7 @@ impl BooleanLiteralExpr {
 pub struct NumberLiteralExpr {
     pub literal_expr_base: Box<LiteralExprBase>,
     pub value: i32,
-    pub value_string: String,
+    pub value_string: Option<String>,
     pub was_hex: bool,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
@@ -2281,7 +2281,7 @@ impl NumberLiteralExpr {
         Self {
             literal_expr_base: Box::new(LiteralExprBase::new()),
             value,
-            value_string: String::new(),
+            value_string: None,
             was_hex,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
@@ -2298,12 +2298,12 @@ impl NumberLiteralExpr {
         Self {
             literal_expr_base: Box::new(LiteralExprBase::new()),
             value: 0,
-            value_string,
+            value_string: Some(value_string),
             was_hex: false,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
                     NumberTypeName::NumberLiteralType(NumberLiteralType::new(
-                        NumberLiteralTypeUnion::I32(value),
+                        NumberLiteralTypeUnion::String(value_string),
                     )),
                 )),
                 None,
@@ -4895,6 +4895,7 @@ impl ASTChildren for CircuitInputStatement {
 pub enum StatementList {
     Block(Block),
     IndentBlock(IndentBlock),
+    StatementList(StatementListBase),
     #[default]
     None,
 }
@@ -4956,11 +4957,11 @@ impl StatementList {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementListBase {
     pub statement_base: StatementBase,
-    pub statements: Vec<Statement>,
+    pub statements: Vec<AST>,
     pub excluded_from_simulation: bool,
 }
 impl StatementListBase {
-    pub fn new(statements: Vec<Statement>, excluded_from_simulation: bool) -> Self {
+    pub fn new(statements: Vec<AST>, excluded_from_simulation: bool) -> Self {
         Self {
             statement_base: StatementBase::new(),
             statements,
@@ -4971,7 +4972,7 @@ impl StatementListBase {
 impl ASTChildren for StatementListBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.statements.iter().for_each(|statement| {
-            cb.add_child(AST::Statement(statement.clone()));
+            cb.add_child(statement.clone());
         });
     }
 }
@@ -5847,7 +5848,7 @@ impl ASTCode for NumberLiteralType {
 impl NumberLiteralType {
     pub fn new(name: NumberLiteralTypeUnion) -> Self {
         let name = match name {
-            NumberLiteralTypeUnion::String(v) => v.parse::<i32>().unwrap(),
+            NumberLiteralTypeUnion::String(v) => v.parse::<i32>().unwrap(), //TODO U256
             NumberLiteralTypeUnion::I32(v) => v,
         };
         let blen = (i32::BITS - name.leading_zeros()) as i32;
@@ -7997,9 +7998,9 @@ impl ConstructorOrFunctionDefinition {
         &mut self,
         t: IdentifierUnion,
         idf: IdentifierExprUnion,
-        ref_storage_loc: String,
+        ref_storage_loc: Option<String>,
     ) {
-        //str = "memory"
+        let ref_storage_loc = ref_storage_loc.unwrap_or(String::from("memory"));
         let t = if let IdentifierUnion::AnnotatedTypeName(t) = t {
             t
         } else if let IdentifierUnion::TypeName(t) = t {
@@ -8337,7 +8338,7 @@ impl ASTChildren for StructDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
-    pub state_variable_declarations: Vec<StateVariableDeclaration>,
+    pub state_variable_declarations: Vec<AST>,
     pub constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub function_definitions: Vec<ConstructorOrFunctionDefinition>,
     pub enum_definitions: Vec<EnumDefinition>,
@@ -8469,7 +8470,7 @@ pub struct SourceUnit {
     pub pragma_directive: String,
     pub contracts: Vec<ContractDefinition>,
     pub used_contracts: Vec<String>,
-    pub used_homomorphisms: Option<BTreeSet<Homomorphism>>,
+    pub used_homomorphisms: Option<BTreeSet<String>>,
     pub used_crypto_backends: Option<Vec<CryptoParams>>,
     pub original_code: Vec<String>,
 }

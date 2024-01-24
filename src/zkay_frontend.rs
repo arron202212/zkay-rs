@@ -170,8 +170,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Instantiate proving scheme and circuit generator
     let ps = proving_scheme_classes(
-        CFG.lock().unwrap().proving_scheme,
-        if &CFG.lock().unwrap().proving_scheme == "groth16" {
+        CFG.lock().unwrap().user_config.proving_scheme(),
+        if &CFG.lock().unwrap().user_config.proving_scheme() == "groth16" {
             ProvingSchemeGroth16
         } else {
             ProvingSchemeGm17
@@ -181,9 +181,10 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     let mut kwargs = std::collections::HashMap::new();
     if let Some(v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
-        let mut verifier_names = get_verification_contract_names(zkay_ast);
+        let mut verifier_names = get_verification_contract_names((None, Some(zkay_ast)));
         verifier_names.sort_unstable();
         let mut verifier_contract_type_codes: Vec<_> = cg
+            .circuit_generator_base
             .circuits_to_prove
             .iter()
             .map(|cc| cc.verifier_contract_type.code())

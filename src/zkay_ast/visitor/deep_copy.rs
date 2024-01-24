@@ -25,19 +25,19 @@ pub fn deep_copy<T>(ast: T, with_types: bool, with_analysis: bool) -> T
     ast_copy
 }
 
-pub fn replace_expr(old_expr: Expression, mut new_expr: Expression, copy_type: bool)
+pub fn replace_expr(old_expr: Expression, new_expr: &mut Expression, copy_type: bool)
 // """
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
 {
     _replace_ast(old_expr, new_expr);
     if copy_type {
-        new_expr.annotated_type = old_expr.annotated_type;
+        // new_expr.annotated_type = old_expr.annotated_type;
     }
     new_expr
 }
 
-pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: AST) {
+pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
     new_ast.parent = old_ast.parent;
     DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
     if old_ast.parent.is_some() {
@@ -112,14 +112,14 @@ impl DeepCopyVisitor {
     }
 
     // @staticmethod
-    pub fn copy_ast_fields(ast: AST, ast_copy: AST) {
-        ast_copy.line = ast.line;
-        ast_copy.column = ast.column;
-        ast_copy.modified_values = ast.modified_values;
-        ast_copy.read_values = ast.read_values;
+    pub fn copy_ast_fields(ast: AST, ast_copy: &mut AST) {
+        // ast_copy.line = ast.line;
+        // ast_copy.column = ast.column;
+        // ast_copy.modified_values = ast.modified_values;
+        // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, ast: AST) {
+    pub fn visitChildren(&self, ast: AST) -> AST {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();
@@ -139,45 +139,46 @@ impl DeepCopyVisitor {
         // let mut ast_copy = c(new_fields);
         // self.copy_ast_fields(ast, ast_copy);
         // ast_copy
+        AST::None
     }
 
-    pub fn visitAnnotatedTypeName(self, ast: AST) {
+    pub fn visitAnnotatedTypeName(self, ast: AST) -> AST {
         let mut ast_copy = self.visitChildren(ast);
-        ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
+        // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
         ast_copy
     }
 
-    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) {
+    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> AST {
         let mut ast_copy = self.visitChildren(ast);
-        ast_copy.target = ast.target;
+        // ast_copy.target = ast.target;
         ast_copy
     }
 
-    pub fn visitBuiltinFunction(self, ast: AST) {
+    pub fn visitBuiltinFunction(self, ast: AST) -> AST {
         let mut ast_copy = self.visitChildren(ast);
-        ast_copy.is_private = ast.is_private;
-        ast_copy.homomorphism = ast.homomorphism;
+        // ast_copy.is_private = ast.is_private;
+        // ast_copy.homomorphism = ast.homomorphism;
         ast_copy
     }
 
-    pub fn visitExpression(self, ast: Expression) {
+    pub fn visitExpression(self, ast: Expression) -> AST {
         let mut ast_copy = self.visitChildren(ast);
-        if self.with_types && ast.annotated_type.is_some() {
-            ast_copy.annotated_type = ast.annotated_type.clone();
+        if self.with_types && ast.annotated_type().is_some() {
+            // ast_copy.annotated_type = ast.annotated_type.clone();
         }
-        ast_copy.evaluate_privately = ast.evaluate_privately;
+        // ast_copy.evaluate_privately = ast.evaluate_privately();
         ast_copy
     }
 
-    pub fn visitStatement(self, ast: Statement) {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitStatement(self, ast: Statement) -> AST {
+        let mut ast_copy = self.visitChildren(ast.get_ast());
         if self.with_analysis {
-            ast_copy.before_analysis = ast.before_analysis;
+            // ast_copy.before_analysis = ast.before_analysis();
         }
         ast_copy
     }
 
-    pub fn copy_field(self, field: AST) {
+    pub fn copy_field(self, field: AST) -> AST {
         // if field.is_none() {
         //     None
         // } else if isinstance(field, str)

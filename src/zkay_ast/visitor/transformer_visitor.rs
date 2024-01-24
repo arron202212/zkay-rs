@@ -17,7 +17,19 @@ pub trait AstTransformerVisitor {
         guard_val: Option<bool>,
     ) -> AST;
     fn visit_list(&self, ast_list: Vec<AST>) -> Vec<AST> {
-        ast_list.iter().filter_map(|a| self.visit(a)).collect()
+        ast_list
+            .iter()
+            .filter_map(|a| Some(self.visit(a.clone())))
+            .collect()
+    }
+    fn visit_children(&self, mut ast: AST) -> AST {
+        // ast.process_children(self.visit);
+        // ast
+        AST::None
+    }
+
+    fn _visit_internal(&self, ast: AST) -> AST {
+        AST::None
     }
 }
 // class AstTransformerVisitor
@@ -35,7 +47,7 @@ impl AstTransformerVisitorBase {
     }
 
     pub fn visit_children<T>(&self, mut ast: T) -> T {
-        ast.process_children(self.visit);
+        // ast.process_children(self.visit);
         ast
     }
 

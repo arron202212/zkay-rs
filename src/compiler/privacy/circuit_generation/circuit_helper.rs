@@ -1211,9 +1211,11 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         }
         let mut statements = vec![];
         for stmt in ast.statement_list_base.statements.iter_mut() {
-            self._circ_trafo.visit((*stmt).get_ast());
-            //Bubble up nested pre statements
-            statements.append(&mut stmt.drain_pre_statements());
+            if let AST::Statement(ref mut stmt) = stmt {
+                self._circ_trafo.visit((*stmt).get_ast());
+                //Bubble up nested pre statements
+                statements.append(&mut stmt.drain_pre_statements());
+            }
             // stmt.pre_statements = vec![];
         }
         ast.statement_list_base

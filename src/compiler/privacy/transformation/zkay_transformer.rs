@@ -21,7 +21,10 @@ use crate::zkay_ast::visitor::deep_copy::replace_expr;
 use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
 use regex::Regex;
 use regex::RegexSetBuilder;
-
+pub trait TransformerVisitorEx:
+    Clone + std::marker::Sync + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor
+{
+}
 // class ZkayVarDeclTransformer(AstTransformerVisitor)
 // """
 // Transformer for types, which was left out in the paper.
@@ -34,10 +37,10 @@ use regex::RegexSetBuilder;
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
 #[derive(Clone)]
-pub struct ZkayVarDeclTransformer {
-    expr_trafo: Option<ZkayExpressionTransformer>,
+pub struct ZkayVarDeclTransformer<V: TransformerVisitorEx> {
+    expr_trafo: Option<ZkayExpressionTransformer<V>>,
 }
-impl AstTransformerVisitor for ZkayVarDeclTransformer {
+impl<V: TransformerVisitorEx> AstTransformerVisitor for ZkayVarDeclTransformer<V> {
     fn default() -> Self {
         Self::new()
     }
@@ -56,7 +59,7 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
         AST::None
     }
 }
-impl ZkayVarDeclTransformer {
+impl<V: TransformerVisitorEx> ZkayVarDeclTransformer<V> {
     pub fn new() -> Self {
         Self { expr_trafo: None }
     }
@@ -113,12 +116,12 @@ impl ZkayVarDeclTransformer {
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
 #[derive(Clone)]
-pub struct ZkayStatementTransformer {
-    gen: Box<CircuitHelper<Self>>,
-    expr_trafo: ZkayExpressionTransformer,
-    var_decl_trafo: ZkayVarDeclTransformer,
+pub struct ZkayStatementTransformer<V: TransformerVisitorEx> {
+    gen: Box<CircuitHelper<V>>,
+    expr_trafo: ZkayExpressionTransformer<V>,
+    var_decl_trafo: ZkayVarDeclTransformer<V>,
 }
-impl AstTransformerVisitor for ZkayStatementTransformer {
+impl<V: TransformerVisitorEx> AstTransformerVisitor for ZkayStatementTransformer<V> {
     fn default() -> Self {
         Self::new()
     }
@@ -137,13 +140,13 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
         AST::None
     }
 }
-impl ZkayStatementTransformer {
+impl<V: TransformerVisitorEx> ZkayStatementTransformer<V> {
     // pub fn __init__(&self, current_gen: CircuitHelper)
     //     super().__init__()
     //     self.gen = current_gen
     //     self.expr_trafo = ZkayExpressionTransformer(self.gen)
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
-    pub fn new(current_gen: Box<CircuitHelper<Self>>) -> Self {
+    pub fn new(current_gen: Box<CircuitHelper<V>>) -> Self {
         Self {
             gen: current_gen.clone(),
             expr_trafo: ZkayExpressionTransformer::new(current_gen),
@@ -414,11 +417,11 @@ impl ZkayStatementTransformer {
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
 #[derive(Clone)]
-pub struct ZkayExpressionTransformer {
-    gen: Option<Box<CircuitHelper<Self>>>,
+pub struct ZkayExpressionTransformer<V: TransformerVisitorEx> {
+    gen: Option<Box<CircuitHelper<V>>>,
 }
 
-impl AstTransformerVisitor for ZkayExpressionTransformer {
+impl<V: TransformerVisitorEx> AstTransformerVisitor for ZkayExpressionTransformer<V> {
     fn default() -> Self {
         Self::new()
     }
@@ -437,8 +440,11 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
         AST::None
     }
 }
-impl ZkayExpressionTransformer {
-    pub fn new(current_generator: Option<Box<CircuitHelper<Self>>>) -> Self
+impl<V: TransformerVisitorEx> ZkayExpressionTransformer<V> {
+    pub fn vv(current_generator: Option<Box<CircuitHelper<V>>>) -> V {
+        Self::new(current_generator)
+    }
+    pub fn new(current_generator: Option<Box<CircuitHelper<V>>>) -> Self
 // super().__init__()
         // self.gen = current_generator
     {
@@ -451,7 +457,7 @@ impl ZkayExpressionTransformer {
     pub fn visitMeExpr(ast: MeExpr)
     // """Replace me with msg.sender."""
     {
-        replace_expr(ast, IdentifierExpr::new("msg").dot("sender"))
+        replace_expr(ast, &mut IdentifierExpr::new("msg").dot("sender"))
             .as_type(AnnotatedTypeName::address_all())
     }
 
@@ -470,7 +476,7 @@ impl ZkayExpressionTransformer {
     pub fn visitIndexExpr(&self, ast: IndexExpr)
     // """Rule (9), transform location and index expressions separately."""
     {
-        replace_expr(ast, self.visit(ast.arr).index(self.visit(ast.key)))
+        replace_expr(ast, &mut self.visit(ast.arr).index(self.visit(ast.key)))
     }
 
     pub fn visitMemberAccessExpr(&self, ast: MemberAccessExpr) {
@@ -662,11 +668,11 @@ impl ZkayExpressionTransformer {
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
 #[derive(Clone)]
-pub struct ZkayCircuitTransformer {
-    gen: Box<CircuitHelper<Self>>,
+pub struct ZkayCircuitTransformer<V: TransformerVisitorEx> {
+    gen: Box<CircuitHelper<V>>,
 }
 
-impl AstTransformerVisitor for ZkayCircuitTransformer {
+impl<V: TransformerVisitorEx> AstTransformerVisitor for ZkayCircuitTransformer<V> {
     fn default() -> Self {
         Self::new()
     }
@@ -685,8 +691,11 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         AST::None
     }
 }
-impl ZkayCircuitTransformer {
-    pub fn new(current_generator: Box<CircuitHelper<Self>>) -> Self {
+impl<V: TransformerVisitorEx> ZkayCircuitTransformer<V> {
+    pub fn vv(current_generator: Option<Box<CircuitHelper<V>>>) -> V {
+        Self::new(current_generator)
+    }
+    pub fn new(current_generator: Box<CircuitHelper<V>>) -> Self {
         Self {
             gen: current_generator,
         }
@@ -729,8 +738,8 @@ impl ZkayCircuitTransformer {
         self.gen.add_to_circuit_inputs(loc).get_idf_expr(&None)
     }
 
-    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr)
-    // """Rule (15), boundary crossing if analysis determined that it is """
+    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr) -> AST
+// """Rule (15), boundary crossing if analysis determined that it is """
     {
         if ast.annotated_type.is_cipher()
         //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
@@ -739,12 +748,15 @@ impl ZkayCircuitTransformer {
             let orig_privacy = orig_type.privacy_annotation.privacy_annotation_label();
             let orig_homomorphism = orig_type.homomorphism;
             self.gen
-                .evaluate_expr_in_circuit(ast.expr, orig_privacy, orig_homomorphism)
+                .evaluate_expr_in_circuit(ast.expr(), orig_privacy, orig_homomorphism)
         } else if ast.expr.evaluate_privately {
-            self.visit(ast.expr)
+            self.visit(ast.expr())
         } else {
-            assert!(ast.expr.annotated_type.is_public());
-            self.gen.add_to_circuit_inputs(ast.expr).get_idf_expr(&None)
+            assert!(ast.expr().annotated_type.is_public());
+            self.gen
+                .add_to_circuit_inputs(ast.expr())
+                .get_idf_expr(&None)
+                .get_ast()
         }
     }
 
@@ -759,13 +771,21 @@ impl ZkayCircuitTransformer {
 
         //Constant folding for literal types
         if is_instance(t, ASTType::BooleanLiteralType) {
-            return replace_expr(ast, BooleanLiteralExpr::new(t.value));
+            return replace_expr(
+                ast.to_expr(),
+                BooleanLiteralExpr::new(t.value).to_expr(),
+                false,
+            );
         } else if is_instance(t, ASTType::NumberLiteralType) {
-            return replace_expr(ast, NumberLiteralExpr::new(t.value));
+            return replace_expr(
+                ast.to_expr(),
+                NumberLiteralExpr::new(t.value, false).to_expr(),
+                false,
+            );
         }
 
-        if is_instance(&ast.func, ASTType::BuiltinFunction) {
-            if ast.func.homomorphism != Homomorphism::non_homomorphic()
+        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
+            if ast.func().unwrap().homomorphism() != Homomorphism::non_homomorphic()
             //To perform homomorphic operations, we require the recipient"s public key
             {
                 let crypto_params = CFG.lock().unwrap().get_crypto_params(ast.func.homomorphism);
