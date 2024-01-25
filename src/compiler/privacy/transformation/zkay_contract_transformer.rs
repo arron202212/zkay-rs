@@ -16,14 +16,15 @@ use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use crate::zkay_ast::ast::{
     is_instance, ASTCode, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
-    ArrayLiteralExprBase, AsTypeUnion, BlankLine, Block, CipherText, Comment, CommentBase,
-    ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
-    ExpressionStatement, FunctionCallExpr, HybridArgumentIdf, Identifier, IdentifierBase,
-    IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IdentifierUnion, LocationExpr,
-    MeExpr, NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr,
-    RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration, Statement,
-    StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    ArrayLiteralExprBase, AsTypeUnion, AssignmentStatement, AssignmentStatementBase, BlankLine,
+    Block, CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
+    ContractTypeName, ExprUnion, Expression, ExpressionStatement, FunctionCallExpr,
+    FunctionCallExprBase, HybridArgumentIdf, Identifier, IdentifierBase, IdentifierDeclaration,
+    IdentifierExpr, IdentifierExprUnion, IdentifierUnion, LocationExpr, MeExpr, NewExpr,
+    NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr, RequireStatement,
+    ReturnStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
+    StatementListBase, StructDefinition, StructTypeName, TupleExpr, TypeName, UserDefinedTypeName,
+    VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
@@ -690,7 +691,8 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     .binop(
                         String::from("<="),
                         LocationExpr::IdentifierExpr(in_var)
-                            .dot(IdentifierExprUnion::String(String::from("length")).to_expr()),
+                            .dot(IdentifierExprUnion::String(String::from("length")).into())
+                            .to_expr(),
                     )
                     .to_expr(),
                 None,
@@ -767,6 +769,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                 deserialize_stmts.push(
                     s.get_loc_expr(None)
                         .index(cipher_payload_len)
+                        .into()
                         .assign(sender_key),
                 );
             }
@@ -833,7 +836,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
             );
         }
 
-        ast.body.unwrap().statements = stmts;
+        ast.body.unwrap().statement_list_base.statements = stmts;
     }
 
     pub fn split_into_external_and_internal_fct(
@@ -915,12 +918,12 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
         new_f.called_functions = f.called_functions.clone();
         new_f.called_functions.insert(f.clone());
         new_f.used_crypto_backends = f.used_crypto_backends.clone();
-        new_f.body = Self::create_external_wrapper_body(
+        new_f.body = Some(Self::create_external_wrapper_body(
             f.clone(),
             circuit.clone(),
             original_params.clone(),
             requires_proof.clone(),
-        );
+        ));
 
         // Add out and proof parameter to external wrapper
         let storage_loc = if new_f.is_function() {
@@ -929,10 +932,10 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
             "memory"
         };
         new_f.add_param(
-            Array::Array(ArrayBase::new(
+            IdentifierUnion::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
-            )),
+            )))),
             IdentifierExprUnion::Identifier(Identifier::Identifier(IdentifierBase::new(
                 CFG.lock().unwrap().zk_out_name(),
             ))),
@@ -942,8 +945,10 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
         if requires_proof {
             new_f.add_param(
                 IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::proof_type()),
-                Identifier::Identifier(IdentifierBase::new(CFG.lock().unwrap().proof_param_name())),
-                storage_loc,
+                IdentifierExprUnion::Identifier(Identifier::Identifier(IdentifierBase::new(
+                    CFG.lock().unwrap().proof_param_name(),
+                ))),
+                Some(storage_loc.to_string()),
             );
         }
         self.circuits.insert(new_f.clone(), circuit);
@@ -977,7 +982,13 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
             .collect();
         let args_backends: Vec<_> = priv_args
             .iter()
-            .map(|p| p.annotated_type.type_name.crypto_params.clone())
+            .map(|p| {
+                p.identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .crypto_params()
+                    .unwrap()
+            })
             .collect();
         let mut stmts = vec![];
 
@@ -997,7 +1008,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
             if crypto_params.is_symmetric_cipher() {
                 if ext_circuit
                     .requested_global_keys()
-                    .contains(&(Some(MeExpr::new()), Some(crypto_params)))
+                    .contains(&(Some(MeExpr::new()), crypto_params))
                     || args_backends.contains(&crypto_params)
                 // Make sure msg.sender"s key pair is available in the circuit
                 {
@@ -1047,20 +1058,24 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                 let tmp_key_var =
                     IdentifierBase::new(format!("_tmp_key_{}", crypto_params.identifier_name()));
 
-                key_req_stmts
-                    .push(tmp_key_var.decl_var(AnnotatedTypeName::key_type(crypto_params)));
+                key_req_stmts.push(tmp_key_var.decl_var(
+                    IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::key_type(crypto_params)),
+                    None,
+                ));
                 tmp_keys.insert(crypto_params, tmp_key_var);
             }
             for (key_owner, crypto_params) in keys {
-                let tmp_key_var = tmp_keys[crypto_params];
+                let tmp_key_var = tmp_keys[&crypto_params];
                 let (idf, assignment) = ext_circuit.request_public_key(
                     crypto_params.clone(),
                     key_owner,
                     &CircuitHelper::<V>::get_glob_key_name(key_owner.into(), crypto_params.clone()),
                 );
-                assignment.lhs =
-                    IdentifierExpr::new(IdentifierExprUnion::Identifier(tmp_key_var.clone()), None);
-                key_req_stmts.push(assignment);
+                assignment.lhs = IdentifierExpr::new(
+                    IdentifierExprUnion::Identifier(Identifier::Identifier(tmp_key_var.clone())),
+                    None,
+                );
+                key_req_stmts.push(assignment.to_statement());
 
                 // Remember me-keys for later use in symmetrically encrypted keys
                 if let (Some(_), None) = key_owner {
@@ -1072,14 +1087,20 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                 // Manually add to circuit inputs
                 let key_len = crypto_params.key_len();
                 key_req_stmts.push(
-                    in_arr_var.slice(offset, key_len, None).arr.assign(
-                        IdentifierExpr::new(
-                            IdentifierExprUnion::Identifier(tmp_key_var.clone()),
-                            None,
+                    in_arr_var
+                        .slice(offset, key_len, None)
+                        .arr
+                        .assign(
+                            IdentifierExpr::new(
+                                IdentifierExprUnion::Identifier(Identifier::Identifier(
+                                    tmp_key_var.clone(),
+                                )),
+                                None,
+                            )
+                            .slice(0, key_len, None)
+                            .to_expr(),
                         )
-                        .slice(0, key_len, None)
-                        .to_expr(),
-                    ),
+                        .to_statement(),
                 );
                 offset += key_len;
                 assert!(offset == ext_circuit.in_size());
@@ -1104,7 +1125,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     .assign(
                         IdentifierExpr::new(
                             IdentifierExprUnion::Identifier(
-                                p.identifier_declaration_base.idf.clone(),
+                                *p.identifier_declaration_base.idf.clone(),
                             ),
                             None,
                         )
@@ -1123,16 +1144,18 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
         let mut copy_stmts = vec![];
         for p in original_params {
             if p.identifier_declaration_base.annotated_type.is_cipher() {
-                let c = &p.identifier_declaration_base.annotated_type.type_name;
+                let c = p.identifier_declaration_base.annotated_type.type_name;
                 assert!(is_instance(&*c, ASTType::CipherText));
                 if c.crypto_params().unwrap().is_symmetric_cipher() {
                     let sender_key = LocationExpr::IdentifierExpr(in_arr_var)
-                        .index(me_key_idx[&c.crypto_params().unwrap()]);
+                        .index(ExprUnion::I32(me_key_idx[&c.crypto_params().unwrap()]));
                     let idf = IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(*p.identifier_declaration_base.idf.clone()),
                         None,
                     )
-                    .as_type(p.identifier_declaration_base.annotated_type.clone());
+                    .as_type(AsTypeUnion::AnnotatedTypeName(
+                        *p.identifier_declaration_base.annotated_type.clone(),
+                    ));
                     let cipher_payload_len = CFG
                         .lock()
                         .unwrap()
@@ -1144,9 +1167,11 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     let lit = ArrayLiteralExpr::ArrayLiteralExpr(ArrayLiteralExprBase::new(
                         (0..cipher_payload_len)
                             .map(|i| {
-                                LocationExpr::IdentifierExpr(idf.clone()).index(ExprUnion::I32(i))
+                                LocationExpr::IdentifierExpr(idf.clone())
+                                    .index(ExprUnion::I32(i))
+                                    .to_expr()
                             })
-                            .chain([sender_key])
+                            .chain([sender_key.to_expr()])
                             .collect(),
                     ));
                     copy_stmts.push(VariableDeclarationStatement::new(
@@ -1156,7 +1181,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                             *p.identifier_declaration_base.idf.clone(),
                             None,
                         ),
-                        (lit.to_expr()),
+                        Some(lit.to_expr()),
                     ));
                 }
             }
@@ -1175,13 +1200,13 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
         // Declare in array
         let new_in_array_expr = NewExpr::new(
             AnnotatedTypeName::new(TypeName::dyn_uint_array(), None, String::from("NON_")),
-            vec![NumberLiteralExpr::new(ext_circuit.in_size_trans(), false)],
+            vec![NumberLiteralExpr::new(ext_circuit.in_size_trans(), false).to_expr()],
         );
         let in_var_decl = in_arr_var
             .idf
             .decl_var(TypeName::dyn_uint_array(), new_in_array_expr);
         stmts.push(in_var_decl);
-        stmts.push(CommentBase::new(String::new()));
+        stmts.push(CommentBase::new(String::new()).get_ast());
         stmts.extend(CommentBase::comment_wrap_block(
             String::from("Request static public keys"),
             key_req_stmts,
@@ -1196,7 +1221,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
             .iter()
             .map(|param| {
                 IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(param.identifier_declaration_base.idf.clone()),
+                    IdentifierExprUnion::Identifier(*param.identifier_declaration_base.idf.clone()),
                     None,
                 )
             })
@@ -1207,18 +1232,19 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
         );
         idf.location_expr_base.target = int_fct;
         let mut internal_call = FunctionCallExprBase::new(idf, args);
-        internal_call.sec_start_offset = ext_circuit.priv_in_size();
+        internal_call.sec_start_offset = Some(ext_circuit.priv_in_size());
 
         if int_fct.requires_verification {
-            ext_circuit.call_function(internal_call);
+            ext_circuit.call_function(FunctionCallExpr::FunctionCallExpr(internal_call));
             args.extend(vec![
-                in_arr_var.clone(),
-                NumberLiteralExpr::new(ext_circuit.in_size(), false),
+                in_arr_var.to_expr(),
+                NumberLiteralExpr::new(ext_circuit.in_size(), false).to_expr(),
                 IdentifierExpr::new(
                     IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
                     None,
-                ),
-                NumberLiteralExpr::new(ext_circuit.out_size(), false),
+                )
+                .to_expr(),
+                NumberLiteralExpr::new(ext_circuit.out_size(), false).to_expr(),
             ]);
         }
 
@@ -1228,7 +1254,10 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                 int_fct
                     .return_var_decls
                     .iter()
-                    .map(|vd| VariableDeclarationStatement::new(deep_copy(vd.clone())))
+                    .map(|vd| {
+                        VariableDeclarationStatement::new(deep_copy(vd.clone(), false, false), None)
+                            .get_ast()
+                    })
                     .collect(),
             ));
             TupleExpr::new(
@@ -1238,7 +1267,7 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     .map(|vd| {
                         IdentifierExpr::new(
                             IdentifierExprUnion::Identifier(
-                                vd.identifier_declaration_base.idf.clone(),
+                                *vd.identifier_declaration_base.idf.clone(),
                             ),
                             None,
                         )
@@ -1246,21 +1275,24 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     })
                     .collect(),
             )
-            .assign(internal_call)
+            .assign(internal_call.to_expr())
         } else {
-            ExpressionStatement::new(internal_call)
+            AssignmentStatementBase::new(internal_call)
         };
-        stmts.push(CommentBase::new(String::from("Call internal function")));
+        stmts.push(CommentBase::new(String::from("Call internal function")).to_statement());
         stmts.push(in_call);
-        stmts.push(CommentBase::new(String::new()));
+        stmts.push(CommentBase::new(String::new()).to_statement());
 
         // Call verifier
-        if requires_proof && !CFG.lock().unwrap().disable_verification {
-            let verifier = IdentifierExpr::new(IdentifierExprUnion::String(
-                CFG.lock()
-                    .unwrap()
-                    .get_contract_var_name(ext_circuit.verifier_contract_type.code()),
-            ));
+        if requires_proof && !CFG.lock().unwrap().user_config.disable_verification() {
+            let verifier = IdentifierExpr::new(
+                IdentifierExprUnion::String(
+                    CFG.lock()
+                        .unwrap()
+                        .get_contract_var_name(ext_circuit.verifier_contract_type.unwrap().code()),
+                ),
+                None,
+            );
             let verifier_args = [
                 IdentifierExpr::new(
                     IdentifierExprUnion::String(CFG.lock().unwrap().proof_param_name()),
@@ -1275,38 +1307,53 @@ impl<V: TransformerVisitorEx> ZkayTransformer<V> {
                     None,
                 ),
             ];
-            let verify = ExpressionStatement::new(verifier.call(
-                CFG.lock().unwrap().verification_function_name,
-                verifier_args,
-            ));
-            stmts.push(StatementListBase::new(
-                vec![
-                    CommentBase::new(String::from("Verify zk proof of execution")),
-                    verify,
-                ],
-                true,
-            ));
+            let verify = ExpressionStatement::new(
+                LocationExpr::IdentifierExpr(verifier)
+                    .call(
+                        IdentifierExprUnion::String(
+                            CFG.lock().unwrap().verification_function_name(),
+                        ),
+                        verifier_args,
+                    )
+                    .to_expr(),
+            );
+            stmts.push(
+                StatementListBase::new(
+                    vec![
+                        CommentBase::new(String::from("Verify zk proof of execution")).get_ast(),
+                        verify.get_ast(),
+                    ],
+                    true,
+                )
+                .get_ast(),
+            );
         }
 
         // Add return statement at the end if necessary
         if !int_fct.return_parameters.is_empty() {
             stmts.push(
-                ReturnStatement::new(TupleExpr::new(
-                    int_fct
-                        .return_var_decls
-                        .iter()
-                        .map(|vd| {
-                            IdentifierExpr::new(
-                                IdentifierExprUnion::Identifier(vd.idf.clone()),
-                                None,
-                            )
-                        })
-                        .collect(),
-                ))
-                .get_ast(),
+                ReturnStatement::new(
+                    TupleExpr::new(
+                        int_fct
+                            .return_var_decls
+                            .iter()
+                            .map(|vd| {
+                                IdentifierExpr::new(
+                                    IdentifierExprUnion::Identifier(
+                                        *vd.identifier_declaration_base.idf.clone(),
+                                    ),
+                                    None,
+                                )
+                                .to_expr()
+                            })
+                            .collect(),
+                    )
+                    .to_expr(),
+                )
+                .to_statement(),
             );
         }
 
-        Block::new(stmts)
+        Block::new(stmts, false)
     }
 }

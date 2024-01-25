@@ -1878,6 +1878,8 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn set_args(&mut self, args: Vec<Expression>) {}
+
     pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
 
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
@@ -4967,6 +4969,14 @@ impl StatementListBase {
             statements,
             excluded_from_simulation,
         }
+    }
+}
+impl ASTCode for StatementListBase {
+    fn get_ast(&self) -> AST {
+        StatementList::StatementList(self.clone()).get_ast()
+    }
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::StatementList
     }
 }
 impl ASTChildren for StatementListBase {

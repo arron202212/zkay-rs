@@ -1,7 +1,7 @@
 use crate::zkay_ast::ast::{is_instance, ASTType, Expression, FunctionCallExpr, LocationExpr, AST};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
-pub fn contains_private_expr(ast: Option<AST>) {
+pub fn contains_private_expr(ast: Option<AST>) -> bool {
     if ast.is_none() {
         return false;
     }
@@ -15,7 +15,7 @@ pub fn contains_private_expr(ast: Option<AST>) {
 //     super().__init__('node-or-children')
 //     self.contains_private = False
 pub struct ContainsPrivVisitor {
-    contains_private: bool,
+    pub contains_private: bool,
 }
 impl ContainsPrivVisitor {
     pub fn new() -> Self {

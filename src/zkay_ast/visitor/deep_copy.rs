@@ -25,7 +25,11 @@ pub fn deep_copy<T>(ast: T, with_types: bool, with_analysis: bool) -> T
     ast_copy
 }
 
-pub fn replace_expr(old_expr: Expression, new_expr: &mut Expression, copy_type: bool)
+pub fn replace_expr(
+    old_expr: Expression,
+    new_expr: &mut Expression,
+    copy_type: bool,
+) -> Expression
 // """
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """

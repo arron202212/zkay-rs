@@ -10,7 +10,7 @@
 
 use crate::zkay_ast::ast::get_code_error_msg;
 use crate::{config::CFG, zk_print};
-
+use std::io::Read;
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass
@@ -23,7 +23,7 @@ fn compile_solidity_json(
     optimizer_runs: i32,
     output_selection: Vec<String>,
     cwd: &str,
-) -> HashMap<String, String>
+) -> String
 // """
     // Compile the given solidity file using solc json interface with the provided options.
 
@@ -60,8 +60,9 @@ fn compile_solidity_json(
     let libraries = if libs.is_some() {
         format!(
             "{{
-            {sol_filename}: {libs}
-        }}"
+            {sol_filename}: {:?}
+        }}",
+            libs
         )
     } else {
         String::new()
@@ -74,13 +75,13 @@ fn compile_solidity_json(
         "sources": {{
             "{sol_filename}": {{
                 "urls": [
-                    {solps}
+                    {solps:?}
                 ]
             }}
         }},
         "settings": {{
             "outputSelection": {{
-                "*": {{"*": {output_selection}  }}
+                "*": {{"*": {output_selection:?}  }}
             }},
             {optimizer}{libraries}
           }}
@@ -88,9 +89,9 @@ fn compile_solidity_json(
     );
 
     if cwd.is_empty() {
-        cwd = std::fs::canonicalize(solp).parent();
+        cwd = std::fs::canonicalize(solp).unwrap().parent();
     }
-    let old_cwd = std::env::current_dir();
+    let old_cwd = std::env::current_dir().unwrap();
     set_current_dir(cwd);
     let ret = compile(&json_in);
     set_current_dir(old_cwd);
@@ -100,17 +101,18 @@ fn compile_solidity_json(
 fn compile(json: &str) -> String {
     String::new()
 }
-fn _get_line_col(code: str, idx: i32) -> (i32, i32)
+fn _get_line_col(code: &str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
 {
-    let line = code[..idx + 1].split("\n").count();
-    let col = idx - (code[..idx + 1].rfind("\n") + 1);
+    let i = idx as usize;
+    let line = code[..i + 1].split("\n").count();
+    let col = idx - (code[..i + 1].rfind("\n") + 1);
     (line, col)
 }
 
-pub fn get_error_order_key<K, V>(error: Map<K, V>) -> i32 {
-    if let Some(e) = error.get("sourceLocation") {
-        *e.get("start").unwrap_or(&-1)
+pub fn get_error_order_key(error: String) -> i32 {
+    if let Some(e) = error.find("sourceLocation") {
+        *e.find("start").map(|i| i as i32).unwrap_or(&-1)
     } else {
         -1
     }
@@ -130,12 +132,12 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
     let sol_name = PathBuf::PathBuf(filename).name;
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();
-    f.read_to_string(&mut code)?;
+    f.read_to_string(&mut code).unwrap();
 
     let display_code = if display_code.is_empty() {
         code
     } else {
-        display_code
+        String::from(display_code)
     };
 
     let mut had_error = false;

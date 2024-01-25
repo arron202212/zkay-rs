@@ -67,7 +67,7 @@ static ref ATYPE_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}{ELEM_TYP
 pub fn create_surrogate_string(instr: &str) -> String {
     instr
         .chars()
-        .map(|e| if e == "\n" { "\n" } else { " " })
+        .map(|e| if e == '\n' { '\n' } else { ' ' })
         .collect()
 }
 
@@ -80,14 +80,14 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
     // """
 
     // Determine parenthesis characters
-    let open_sym = code.as_bytes()[open_parens_loc] as char;
-    let mut close_sym = "";
-    if open_sym == "(" {
-        close_sym = ")"
-    } else if open_sym == "{" {
-        close_sym = "}"
-    } else if open_sym == "[" {
-        close_sym = "]"
+    let open_sym = code.as_bytes()[open_parens_loc as usize] as char;
+    let mut close_sym = ' ';
+    if open_sym == '(' {
+        close_sym = ')'
+    } else if open_sym == '{' {
+        close_sym = '}'
+    } else if open_sym == '[' {
+        close_sym = ']'
     } else {
         // raise ValueError("Unsupported parenthesis type")
         assert!(false, "Unsupported parenthesis type");
@@ -98,8 +98,12 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
     let mut open = 1;
     while open > 0 {
         let cstr = &code[idx..];
-        idx += pattern.find(cstr).start();
-        open += if code[idx] == open_sym { 1 } else { -1 };
+        idx += pattern.find(cstr).unwrap().start();
+        open += if code.as_bytes()[idx as usize] as char == open_sym {
+            1
+        } else {
+            -1
+        };
         idx += 1;
     }
     idx - 1
@@ -110,24 +114,27 @@ pub fn strip_reveals(code: &str)
 // """Replace reveal expressions by their inner expression, with whitespace padding."""
 {
     let mut code = code.to_owned();
-    let matches = REVEAL_START_PATTERN.find_iter(code);
+    let matches = REVEAL_START_PATTERN.find_iter(&code);
     for m in matches {
         let before_reveal_loc = m.start();
         let reveal_open_parens_loc = m.end();
 
         // Find matching closing parenthesis
-        let reveal_close_parens_loc = find_matching_parenthesis(&code, reveal_open_parens_loc);
+        let reveal_close_parens_loc =
+            find_matching_parenthesis(&code, reveal_open_parens_loc as usize)
+                .unwrap()
+                .start();
 
         // Go backwards to find comma before owner tag
-        let last_comma_loc = code[..reveal_close_parens_loc].rfind(",");
+        let last_comma_loc = code[..reveal_close_parens_loc as usize].rfind(",").unwrap();
 
         // Replace reveal by its inner expression + padding
         code = format!(
             "{}{}{}{}{}",
             code[..before_reveal_loc],
-            create_surrogate_string(code[before_reveal_loc..reveal_open_parens_loc]),
+            create_surrogate_string(&code[before_reveal_loc..reveal_open_parens_loc]),
             code[reveal_open_parens_loc..last_comma_loc],
-            create_surrogate_string(code[last_comma_loc..reveal_close_parens_loc]),
+            create_surrogate_string(&code[last_comma_loc..reveal_close_parens_loc]),
             code[reveal_close_parens_loc..]
         );
     }
@@ -145,7 +152,7 @@ pub fn inject_me_decls(code: &str) -> String
     let parts: Vec<_> = [0]
         .iter()
         .chain(&insert_indices)
-        .zip(insert_indices.iter().chain([code.len()]))
+        .zip(insert_indices.iter().chain([code.len() as i32]))
         .map(|(i, j)| code[i..j].to_owned())
         .collect();
     parts.join(ME_DECL)
