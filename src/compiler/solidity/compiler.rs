@@ -89,7 +89,12 @@ fn compile_solidity_json(
     );
 
     if cwd.is_empty() {
-        cwd = std::fs::canonicalize(solp).unwrap().parent();
+        cwd = std::fs::canonicalize(solp)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap();
     }
     let old_cwd = std::env::current_dir().unwrap();
     set_current_dir(cwd);
@@ -105,8 +110,8 @@ fn _get_line_col(code: &str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
 {
     let i = idx as usize;
-    let line = code[..i + 1].split("\n").count();
-    let col = idx - (code[..i + 1].rfind("\n") + 1);
+    let line = code[..i + 1].split("\n").count() as i32;
+    let col = idx - (code[..i + 1].rfind("\n").unwrap() as i32 + 1);
     (line, col)
 }
 

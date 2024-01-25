@@ -71,7 +71,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
     >(
         &self,
         verification_key: <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX,
-        circuit: &CircuitHelper<V>,
+        circuit: &CircuitHelper,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {

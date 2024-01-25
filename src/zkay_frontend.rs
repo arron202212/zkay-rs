@@ -42,15 +42,12 @@ fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
         _ => &ProvingSchemeGm17, //"gm17"
     }
 }
-fn generator_classes<T, VK, V>(
+fn generator_classes<T, VK>(
     _snark_backend: &String,
-) -> impl FnOnce(Vec<CircuitHelper<V>>, T, String) -> JsnarkGenerator<T, VK, V>
+) -> impl FnOnce(Vec<CircuitHelper>, T, String) -> JsnarkGenerator<T, VK>
 where
     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
     VK: VerifyingKeyMeta<Output = VK>,
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
     JsnarkGenerator::new
 }

@@ -24,7 +24,7 @@ use crate::zkay_ast::ast::{
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::deep_copy::deep_copy;
-use crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor;
+use crate::zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use std::collections::{BTreeMap, BTreeSet};
 // class CircuitHelper
 
@@ -34,7 +34,10 @@ use std::collections::{BTreeMap, BTreeSet};
 // Typically there is one instance of this class for every function which requires verification.
 // """
 #[derive(Clone)]
-pub struct CircuitHelper<T: Clone + AstTransformerVisitor> {
+pub struct CircuitHelper
+where
+    Self: Sized,
+{
     // Function and verification contract corresponding to this circuit
     pub fct: ConstructorOrFunctionDefinition,
     pub verifier_contract_filename: Option<String>,
@@ -42,8 +45,8 @@ pub struct CircuitHelper<T: Clone + AstTransformerVisitor> {
     // Metadata set later by ZkayContractTransformer
     pub has_return_var: bool,
     // Transformer visitors
-    pub _expr_trafo: T, //AstTransformerVisitor
-    pub _circ_trafo: T,
+    pub _expr_trafo: Option<Box<dyn TransformerVisitorEx>>, //AstTransformerVisitor
+    pub _circ_trafo: Option<Box<dyn TransformerVisitorEx>>,
     // List of proof circuit statements (assertions and assignments)
     // WARNING: Never assign to let _phi, always access it using the phi property and only mutate it
     pub _phi: Vec<CircuitStatement>,
@@ -78,14 +81,20 @@ pub struct CircuitHelper<T: Clone + AstTransformerVisitor> {
     pub _remapper: CircVarRemapper,
 }
 
-impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
+impl CircuitHelper
+where
+    Self: Sized,
+{
     pub fn new(
         fct: ConstructorOrFunctionDefinition,
         static_owner_labels: Vec<PrivacyLabelExpr>,
-        expr_trafo_constructor: impl FnOnce(&Self) -> T,
-        circ_trafo_constructor: impl FnOnce(&Self) -> T,
-        internal_circuit: Option<&mut CircuitHelper<T>>,
-    ) -> Self {
+        expr_trafo_constructor: impl FnOnce(&Self) -> Option<Box<dyn TransformerVisitorEx>>,
+        circ_trafo_constructor: impl FnOnce(&Self) -> Option<Box<dyn TransformerVisitorEx>>,
+        internal_circuit: Option<&mut Self>,
+    ) -> Self
+    where
+        Self: Sized,
+    {
         // """
         // Create a new CircuitHelper instance
 
@@ -102,8 +111,8 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         // super().__init__()
         let verifier_contract_filename: Option<String> = None;
         let verifier_contract_type: Option<UserDefinedTypeName> = None;
-        let _expr_trafo: T = T::default(); //expr_trafo_constructor(&self);
-        let _circ_trafo: T = T::default(); //circ_trafo_constructor(&self);
+        let _expr_trafo = None; //expr_trafo_constructor(&self);
+        let _circ_trafo = None; //circ_trafo_constructor(&self);
         let mut _needed_secret_key = BTreeSet::new();
         let mut _global_keys = BTreeSet::new();
         let transitively_called_functions = BTreeSet::new();
@@ -576,11 +585,11 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
             ),
             Some(Block::new(
                 vec![
-                    ast,
+                    ast.get_ast(),
                     ReturnStatement::new(
                         TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_expr(),
                     )
-                    .to_statement(),
+                    .get_ast(),
                 ],
                 false,
             )),
@@ -725,7 +734,7 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         )
     }
 
-    pub fn request_private_key(&self, crypto_params: CryptoParams) -> Vec<Statement> {
+    pub fn request_private_key(&self, crypto_params: CryptoParams) -> Vec<AST> {
         assert!(
             self._needed_secret_key.contains(&crypto_params)
                 || self
@@ -748,7 +757,7 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         let key_name = Self::get_own_secret_key_name(&crypto_params);
         self._secret_input_name_factory
             .add_idf(key_name, TypeName::key_type(crypto_params), None);
-        vec![EnterPrivateKeyStatement::new(crypto_params).to_statement()]
+        vec![EnterPrivateKeyStatement::new(crypto_params).get_ast()]
     }
 
     //Circuit-side interface #
@@ -917,7 +926,7 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
 
         return_idf
     }
-    pub fn get_remapped_idf_expr(&self, idf: IdentifierExpr) -> LocationExpr
+    pub fn get_remapped_idf_expr(&self, idf: IdentifierExpr) -> IdentifierExpr
 // """
         // Get location expression for the most recently assigned value of idf according to the SSA simulation.
 
@@ -931,19 +940,17 @@ impl<T: Clone + AstTransformerVisitor> CircuitHelper<T> {
         assert!(!is_instance(&*idf.idf, ASTType::HybridArgumentIdf));
         if self._remapper.0.is_remapped(target.unwrap().idf()) {
             let remapped_idf = self._remapper.0.get_current(target.unwrap().idf(), None);
-            LocationExpr::IdentifierExpr(
-                remapped_idf
-                    .get_idf_expr(
-                        &idf.location_expr_base
-                            .tuple_or_location_expr_base
-                            .expression_base
-                            .ast_base
-                            .parent,
-                    )
-                    .as_type(AsTypeUnion::AnnotatedTypeName(*idf.annotated_type.unwrap())),
-            )
+            remapped_idf
+                .get_idf_expr(
+                    &idf.location_expr_base
+                        .tuple_or_location_expr_base
+                        .expression_base
+                        .ast_base
+                        .parent,
+                )
+                .as_type(AsTypeUnion::AnnotatedTypeName(*idf.annotated_type.unwrap()))
         } else {
-            LocationExpr::IdentifierExpr(idf)
+            idf
         }
     }
     pub fn create_new_idf_version_from_value(&self, orig_idf: Identifier, expr: Expression)

@@ -193,14 +193,10 @@ pub trait ProvingScheme {
         String::new()
     }
     // @abstractmethod
-    fn generate_verification_contract<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    >(
+    fn generate_verification_contract(
         &self,
         verification_key: Self::VerifyingKeyX,
-        circuit: &CircuitHelper<V>,
+        circuit: &CircuitHelper,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String;

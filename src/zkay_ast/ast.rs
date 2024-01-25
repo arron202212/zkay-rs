@@ -303,6 +303,37 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn func(&self) -> Option<Expression> {
+        None
+    }
+    pub fn set_func_idf_name(&mut self, name: String) {}
+    pub fn to_location_expr(&self) -> LocationExpr {
+        // if let Self::LocationExpr(le) = self {
+        //     le.clone()
+        // } else {
+        LocationExpr::default()
+        // }
+    }
+    pub fn init(&self) -> Option<SimpleStatement> {
+        None
+    }
+    pub fn expr(&self) -> Expression {
+        if let Self::Expression(expr) = self {
+            expr
+        } else {
+            Expression::None
+        }
+    }
+    pub fn pre_statements(&self) -> Vec<AST> {
+        vec![]
+    }
+    pub fn block(&self) -> Option<Block> {
+        if let AST::Statement(Statement::StatementList(StatementList::Block(b))) = self {
+            Some(b.clone())
+        } else {
+            None
+        }
+    }
     pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
         None
     }
@@ -500,11 +531,7 @@ impl IdentifierBase {
         }
     }
 
-    pub fn decl_var(
-        &self,
-        t: IdentifierUnion,
-        expr: Option<Expression>,
-    ) -> VariableDeclarationStatement {
+    pub fn decl_var(&self, t: IdentifierUnion, expr: Option<Expression>) -> Statement {
         let t = match t {
             IdentifierUnion::TypeName(t) => {
                 AnnotatedTypeName::new(t, None, Homomorphism::non_homomorphic())
@@ -526,6 +553,7 @@ impl IdentifierBase {
             ),
             expr,
         )
+        .to_statement()
     }
 }
 impl Immutable for IdentifierBase {
@@ -751,6 +779,24 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn expr(&self) -> Option<Expression> {
+        None
+    }
+    pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
+    pub fn has_shortcircuiting(&self) -> bool {
+        false
+    }
+    pub fn is_private(&self) -> bool {
+        false
+    }
+    pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
+    pub fn to_location_expr(&self) -> LocationExpr {
+        // if let Self::LocationExpr(le) = self {
+        //     le.clone()
+        // } else {
+        LocationExpr::default()
+        // }
+    }
     pub fn member(&self) -> Identifier {
         Identifier::None
     }
@@ -1878,6 +1924,12 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
+    pub fn statement(&self) -> Option<Box<Statement>> {
+        None
+    }
+    pub fn set_public_key(&mut self, public_key: Option<Box<HybridArgumentIdf>>) {}
+    pub fn set_func_idf_name(&mut self, name: String) {}
     pub fn set_args(&mut self, args: Vec<Expression>) {}
 
     pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
@@ -3380,6 +3432,9 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
+    pub fn annotated_type(&self) -> AnnotatedTypeName {
+        AnnotatedTypeName::default()
+    }
     pub fn as_type(&self, t: AsTypeUnion) -> Self {
         match self {
             ReclassifyExpr::ReclassifyExpr(ast) => ReclassifyExpr::ReclassifyExpr(ast.as_type(t)),
@@ -3585,8 +3640,30 @@ impl From<LocationExprUnion> for Expression {
         }
     }
 }
-
+impl From<LocationExprUnion> for AST {
+    fn from(v: LocationExprUnion) -> Self {
+        match v {
+            LocationExprUnion::LocationExpr(le) => {
+                Self::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(le)).get_ast()
+            }
+            LocationExprUnion::NumberLiteralExpr(nle) => {
+                Self::LiteralExpr(LiteralExpr::NumberLiteralExpr(nle)).get_ast()
+            }
+            LocationExprUnion::BooleanLiteralExpr(ble) => {
+                Self::LiteralExpr(LiteralExpr::BooleanLiteralExpr(ble)).get_ast()
+            }
+            _ => Self::None,
+        }
+    }
+}
 impl LocationExprUnion {
+    pub fn to_location_expr(&self) -> LocationExpr {
+        if let Self::LocationExpr(le) = self {
+            le.clone()
+        } else {
+            LocationExpr::default()
+        }
+    }
     pub fn to_expr(&self) -> Expression {
         Expression::None
     }
@@ -3958,6 +4035,12 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
+    pub fn corresponding_priv_expression(&self) -> Option<Expression> {
+        None
+    }
+    pub fn decl_var(&self, t: IdentifierUnion, expr: Option<Expression>) -> AST {
+        AST::default()
+    }
     pub fn arg_type(&self) -> HybridArgType {
         HybridArgType::PubContractVal
     }
@@ -4133,10 +4216,13 @@ pub enum Statement {
     None,
 }
 impl Statement {
+    pub fn pre_statements(&self) -> Vec<AST> {
+        vec![]
+    }
     pub fn add_pre_statement(&mut self, statement: Statement) {}
     pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
     pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
-    pub fn drain_pre_statements(&mut self) -> Vec<Statement> {
+    pub fn drain_pre_statements(&mut self) -> Vec<AST> {
         vec![]
     }
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
@@ -4190,13 +4276,30 @@ impl ASTCode for Statement {
         }
     }
 }
+impl ASTChildren for Statement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        match self {
+            Statement::CircuitDirectiveStatement(ast) => ast.process_children(cb),
+            Statement::IfStatement(ast) => ast.process_children(cb),
+            Statement::WhileStatement(ast) => ast.process_children(cb),
+            Statement::DoWhileStatement(ast) => ast.process_children(cb),
+            Statement::ForStatement(ast) => ast.process_children(cb),
+            Statement::BreakStatement(ast) => ast.process_children(cb),
+            Statement::ContinueStatement(ast) => ast.process_children(cb),
+            Statement::ReturnStatement(ast) => ast.process_children(cb),
+            Statement::SimpleStatement(ast) => ast.process_children(cb),
+            Statement::StatementList(ast) => ast.process_children(cb),
+            _ => AST::None,
+        }
+    }
+}
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: ASTBase,
     pub before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
     pub after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
     pub function: Option<Box<ConstructorOrFunctionDefinition>>,
-    pub pre_statements: Vec<Statement>,
+    pub pre_statements: Vec<AST>,
 }
 impl StatementBase {
     pub fn new() -> Self {
@@ -4621,6 +4724,9 @@ pub enum SimpleStatement {
     None,
 }
 impl SimpleStatement {
+    pub fn pre_statements(&self) -> Vec<AST> {
+        vec![]
+    }
     pub fn set_before_analysis(
         &mut self,
         before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
@@ -4753,9 +4859,15 @@ pub enum AssignmentStatement {
     None,
 }
 impl AssignmentStatement {
+    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
+        BTreeSet::new()
+    }
     pub fn lhs(&self) -> Option<AssignmentStatementUnion> {
         None
     }
+    pub fn set_lhs(&mut self, lhs: Option<AssignmentStatementUnion>) {}
+    pub fn set_rhs(&mut self, rhs: Option<Expression>) {}
+    pub fn set_pre_statements(&mut self, pre_statements: Vec<AST>) {}
     pub fn rhs(&self) -> Option<Expression> {
         None
     }
@@ -4848,9 +4960,34 @@ impl From<LocationExprUnion> for AssignmentStatementUnion {
         }
     }
 }
+impl From<AssignmentStatementUnion> for AST {
+    fn from(v: AssignmentStatementUnion) -> Self {
+        match v {
+            AssignmentStatementUnion::TupleExpr(me) => me.get_ast(),
+            AssignmentStatementUnion::LocationExpr(me) => me.get_ast(),
+            _ => Self::None,
+        }
+    }
+}
+impl From<AST> for AssignmentStatementUnion {
+    fn from(v: AST) -> Self {
+        match v {
+            AST::Expression(Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(
+                me,
+            ))) => Self::TupleExpr(me),
+            AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(me),
+            )) => Self::LocationExpr(me),
+            _ => Self::None,
+        }
+    }
+}
 impl AssignmentStatementUnion {
     pub fn to_expr(&self) -> Expression {
         Expression::None
+    }
+    pub fn target(&self) -> Option<TargetDefinition> {
+        TargetDefinition::None
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -4919,6 +5056,7 @@ impl ASTCode for StatementList {
     }
 }
 impl StatementList {
+    pub fn set_statements(&mut self, statements: Vec<AST>) {}
     pub fn statements(&self) -> Vec<Statement> {
         vec![]
     }
@@ -5031,7 +5169,7 @@ impl ASTCode for Block {
     }
 }
 impl Block {
-    pub fn new(statements: Vec<Statement>, was_single_statement: bool) -> Self {
+    pub fn new(statements: Vec<AST>, was_single_statement: bool) -> Self {
         Self {
             statement_list_base: StatementListBase::new(statements, false),
             was_single_statement,
@@ -7294,7 +7432,7 @@ impl AnnotatedTypeName {
     }
 
     pub fn is_private(&self) -> bool {
-        self.is_public()
+        !self.is_public()
     }
     pub fn is_private_at_me(&self, analysis: &Option<PartitionState<PrivacyLabelExpr>>) -> bool {
         if let Some(p) = &self.privacy_annotation {
@@ -8662,7 +8800,33 @@ impl From<TargetDefinition> for AST {
         }
     }
 }
+impl ConstructorOrFunctionDefinitionAttr for TargetDefinition {
+    fn get_requires_verification_when_external(&self) -> bool {
+        self.requires_verification_when_external()
+    }
+    fn get_name(&self) -> String {
+        String::new()
+    }
+}
 impl TargetDefinition {
+    pub fn has_side_effects(&self) -> bool {
+        false
+    }
+    pub fn has_static_body(&self) -> bool {
+        false
+    }
+    pub fn return_parameters(&self) -> Vec<Parameter> {
+        vec![]
+    }
+    pub fn is_function(&self) -> bool {
+        false
+    }
+    pub fn requires_verification(&self) -> bool {
+        false
+    }
+    pub fn requires_verification_when_external(&self) -> bool {
+        false
+    }
     pub fn annotated_type(&self) -> AnnotatedTypeName {
         AnnotatedTypeName::default()
     }

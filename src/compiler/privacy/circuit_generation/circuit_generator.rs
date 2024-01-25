@@ -33,29 +33,23 @@ lazy_static! {
 
 pub trait CircuitGenerator {}
 // class CircuitGeneratorBase(metaclass=ABCMeta)
-pub struct CircuitGeneratorBase<T, VK, V>
+pub struct CircuitGeneratorBase<T, VK>
 where
     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
     VK: VerifyingKeyMeta<Output = VK>,
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
-    pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
-    pub circuits_to_prove: Vec<CircuitHelper<V>>,
+    pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
+    pub circuits_to_prove: Vec<CircuitHelper>,
     pub proving_scheme: T,
     pub output_dir: String,
     pub parallel_keygen: bool,
     pub p_count: i32,
 }
 
-impl<T, VK, V> CircuitGeneratorBase<T, VK, V>
+impl<T, VK> CircuitGeneratorBase<T, VK>
 where
     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
     VK: VerifyingKeyMeta<Output = VK>,
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
     // """
     // A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.
@@ -65,7 +59,7 @@ where
     // """
 
     pub fn new(
-        circuits: Vec<CircuitHelper<V>>,
+        circuits: Vec<CircuitHelper>,
         proving_scheme: T,
         output_dir: String,
         parallel_keygen: bool,
@@ -119,7 +113,7 @@ where
         zk_print!("Compiling {} circuits...", c_count.lock().unwrap());
 
         let gen_circs =
-            |circuit: &CircuitHelper<V>| -> bool { self._generate_zkcircuit(import_keys, circuit) };
+            |circuit: &CircuitHelper| -> bool { self._generate_zkcircuit(import_keys, circuit) };
         // with
         time_measure("circuit_compilation", true, false);
         let modified: Vec<_> = if CFG.lock().unwrap().is_unit_test() {
@@ -245,7 +239,7 @@ where
         *c_count.lock().unwrap() = total_count;
     }
 
-    pub fn _generate_keys_par(&self, circuit: &CircuitHelper<V>) {
+    pub fn _generate_keys_par(&self, circuit: &CircuitHelper) {
         self._generate_keys(circuit);
 
         *finish_counter.lock().unwrap() += 1;
@@ -257,7 +251,7 @@ where
         );
     }
 
-    pub fn _get_circuit_output_dir(&self, circuit: &CircuitHelper<V>) -> String
+    pub fn _get_circuit_output_dir(&self, circuit: &CircuitHelper) -> String
 // """Return the output directory for an individual circuit"""
     {
         PathBuf::from(self.output_dir)
@@ -271,7 +265,7 @@ where
             .to_string()
     }
 
-    pub fn _get_vk_and_pk_paths(&self, circuit: &CircuitHelper<V>) -> Vec<String>
+    pub fn _get_vk_and_pk_paths(&self, circuit: &CircuitHelper) -> Vec<String>
 // """Return a tuple which contains the paths to the verification and prover key files."""
     {
         let output_dir = self._get_circuit_output_dir(circuit);
@@ -288,7 +282,7 @@ where
     }
 
     // @abstractmethod
-    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &CircuitHelper<V>) -> bool
+    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &CircuitHelper) -> bool
 // """
         // Generate code and compile a single circuit.
 
@@ -310,7 +304,7 @@ where
     }
 
     // @abstractmethod
-    pub fn _generate_keys(&self, circuit: &CircuitHelper<V>) {}
+    pub fn _generate_keys(&self, circuit: &CircuitHelper) {}
     // """Generate prover and verification keys for the circuit stored in self._get_circuit_output_dir(circuit)."""
     // pass
 
@@ -324,7 +318,7 @@ where
     // @abstractmethod
     pub fn _parse_verification_key(
         &self,
-        circuit: &CircuitHelper<V>,
+        circuit: &CircuitHelper,
     ) -> <T as ProvingScheme>::VerifyingKeyX
 // """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
     {
@@ -332,12 +326,12 @@ where
     }
 
     // @abstractmethod
-    pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper<V>) -> Vec<u8> {
+    pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {
         vec![]
     }
     // pass
 
-    pub fn _get_primary_inputs(&self, circuit: &CircuitHelper<V>) -> Vec<String>
+    pub fn _get_primary_inputs(&self, circuit: &CircuitHelper) -> Vec<String>
 // """
         // Return list of all public input locations
         // :param circuit: abstract circuit representation

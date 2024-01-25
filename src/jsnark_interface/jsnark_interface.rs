@@ -98,12 +98,8 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
 
 // """Java circuit code template"""
 
-pub fn get_jsnark_circuit_class_str<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
-    circuit: &CircuitHelper<V>,
+pub fn get_jsnark_circuit_class_str(
+    circuit: &CircuitHelper,
     crypto_init_stmts: Vec<String>,
     fdefs: Vec<String>,
     circuit_statements: Vec<String>,

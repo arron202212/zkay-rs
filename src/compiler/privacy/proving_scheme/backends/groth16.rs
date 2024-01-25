@@ -61,7 +61,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     >(
         &self,
         verification_key: <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX,
-        circuit: &CircuitHelper<V>,
+        circuit: &CircuitHelper,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {

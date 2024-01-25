@@ -312,7 +312,7 @@ pub fn add_function_circuit_arguments<
         + std::marker::Sync
         + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 >(
-    circuit: &CircuitHelper<V>,
+    circuit: &CircuitHelper,
 ) -> Vec<String>
 // """Generate java code which adds circuit IO as described by circuit"""
 {
@@ -358,11 +358,11 @@ pub fn add_function_circuit_arguments<
         .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
     for crypto_params in CFG.lock().unwrap().user_config.all_crypto_params() {
-        let pk_name = CircuitHelper::<V>::get_glob_key_name(
+        let pk_name = CircuitHelper::get_glob_key_name(
             PrivacyLabelExpr::MeExpr(MeExpr::new()),
             crypto_params,
         );
-        let sk_name = CircuitHelper::<V>::get_own_secret_key_name(&crypto_params);
+        let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
                 .input_idfs()
@@ -381,26 +381,20 @@ pub fn add_function_circuit_arguments<
 }
 
 // class JsnarkGenerator(CircuitGenerator)
-pub struct JsnarkGenerator<T, VK, V>
+pub struct JsnarkGenerator<T, VK>
 where
     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
     VK: VerifyingKeyMeta<Output = VK>,
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
-    pub circuit_generator_base: CircuitGeneratorBase<T, VK, V>,
+    pub circuit_generator_base: CircuitGeneratorBase<T, VK>,
 }
 
-impl<T, VK, V> JsnarkGenerator<T, VK, V>
+impl<T, VK> JsnarkGenerator<T, VK>
 where
     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
     VK: VerifyingKeyMeta<Output = VK>,
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
 {
-    pub fn new(circuits: Vec<CircuitHelper<V>>, proving_scheme: T, output_dir: String) -> Self {
+    pub fn new(circuits: Vec<CircuitHelper>, proving_scheme: T, output_dir: String) -> Self {
         Self {
             circuit_generator_base: CircuitGeneratorBase::new(
                 circuits,
@@ -411,7 +405,7 @@ where
         }
     }
 
-    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: &CircuitHelper<V>) -> bool
+    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: &CircuitHelper) -> bool
 //Create output directory
     {
         let output_dir = Path::new(&self.circuit_generator_base._get_circuit_output_dir(circuit));
@@ -514,7 +508,7 @@ where
             false
         }
     }
-    pub fn _generate_keys(self, circuit: &CircuitHelper<V>)
+    pub fn _generate_keys(self, circuit: &CircuitHelper)
     //Invoke the custom libsnark interface to generate keys
     {
         let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
@@ -533,7 +527,7 @@ where
             .collect()
     }
 
-    pub fn _parse_verification_key(&self, circuit: &CircuitHelper<V>) -> VerifyingKeyType {
+    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> VerifyingKeyType {
         let f = File::open(self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0]).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
@@ -580,14 +574,14 @@ where
         VerifyingKeyType::None
     }
 
-    pub fn _get_prover_key_hash(self, circuit: &CircuitHelper<V>) -> Vec<u8> {
+    pub fn _get_prover_key_hash(self, circuit: &CircuitHelper) -> Vec<u8> {
         hash_file(
             &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
             0,
         )
     }
 
-    pub fn _get_primary_inputs(self, circuit: &CircuitHelper<V>) -> Vec<String>
+    pub fn _get_primary_inputs(self, circuit: &CircuitHelper) -> Vec<String>
 //Jsnark requires an additional public input with the value 1 as first input
     {
         [String::from("1")]

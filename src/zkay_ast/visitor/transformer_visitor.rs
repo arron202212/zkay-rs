@@ -1,14 +1,16 @@
 use crate::zkay_ast::ast::{Block, HybridArgumentIdf, AST};
 
 // T = TypeVar("T")
-
+pub trait TransformerVisitorEx: Clone + Sized + std::marker::Sync + AstTransformerVisitor {}
 pub struct AstTransformerVisitorBase {
     log: bool,
 }
 pub trait AstTransformerVisitor {
     // type Return ;
     // type AST;
-    fn default() -> Self;
+    fn default() -> Self
+    where
+        Self: Sized;
     fn visit(&self, ast: AST) -> AST;
     fn visitBlock(
         &self,

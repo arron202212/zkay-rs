@@ -1,4 +1,3 @@
-use super::zkay_transformer::TransformerVisitorEx;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
@@ -7,9 +6,9 @@ use crate::zkay_ast::ast::{
     IdentifierExprUnion, MeExpr, NamespaceDefinition, NumberLiteralExpr, TargetDefinition,
 };
 use std::collections::{BTreeMap, BTreeSet};
-pub fn compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
+pub fn compute_transitive_circuit_io_sizes(
     fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
-    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
 )
 // """
 // Compute transitive circuit IO sizes (account for called circuits).
@@ -46,8 +45,8 @@ pub fn compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
     }
 }
 
-pub fn _compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
-    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+pub fn _compute_transitive_circuit_io_sizes(
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
     fct: &ConstructorOrFunctionDefinition,
     gkeys: &mut BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
     called_fcts: &mut BTreeSet<ConstructorOrFunctionDefinition>,
@@ -101,9 +100,9 @@ pub fn _compute_transitive_circuit_io_sizes<V: TransformerVisitorEx>(
     }
 }
 
-pub fn transform_internal_calls<V: TransformerVisitorEx>(
+pub fn transform_internal_calls(
     fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
-    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper<V>>,
+    cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
 )
 // """
 // Add required additional args for public calls to functions which require verification.
