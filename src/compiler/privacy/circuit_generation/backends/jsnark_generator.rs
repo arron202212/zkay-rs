@@ -307,13 +307,7 @@ impl JsnarkVisitor
     }
 }
 
-pub fn add_function_circuit_arguments<
-    V: Clone
-        + std::marker::Sync
-        + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
->(
-    circuit: &CircuitHelper,
-) -> Vec<String>
+pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
 // """Generate java code which adds circuit IO as described by circuit"""
 {
     let mut input_init_stmts = vec![];

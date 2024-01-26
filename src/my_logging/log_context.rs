@@ -8,7 +8,7 @@ lazy_static! {
 
 // @contextlib.contextmanager
 pub fn log_context(key: &str) {
-    FULL_LOG_CONTEXT.lock().unwrap().push(key);
+    FULL_LOG_CONTEXT.lock().unwrap().push(key.to_owned());
     // yield
     FULL_LOG_CONTEXT.lock().unwrap().pop();
 }

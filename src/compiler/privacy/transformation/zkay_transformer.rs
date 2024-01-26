@@ -503,7 +503,7 @@ impl ZkayStatementTransformer {
 pub struct ZkayExpressionTransformer {
     gen: Option<Box<CircuitHelper>>,
 }
-
+impl TransformerVisitorEx for ZkayExpressionTransformer {}
 impl AstTransformerVisitor for ZkayExpressionTransformer {
     fn default() -> Self {
         Self::new(None)
@@ -538,7 +538,7 @@ impl ZkayExpressionTransformer {
 // """Replace me with msg.sender."""
     {
         replace_expr(
-            ast.to_expr(),
+            &ast.to_expr(),
             &mut LocationExpr::IdentifierExpr(IdentifierExpr::new(
                 IdentifierExprUnion::String(String::from("msg")),
                 None,
@@ -570,7 +570,7 @@ impl ZkayExpressionTransformer {
 // """Rule (9), transform location and index expressions separately."""
     {
         replace_expr(
-            ast.to_expr(),
+            &ast.to_expr(),
             &mut self
                 .visit((*ast.arr).get_ast())
                 .to_location_expr()
@@ -858,6 +858,7 @@ pub struct ZkayCircuitTransformer {
     gen: Option<Box<CircuitHelper>>,
 }
 
+impl TransformerVisitorEx for ZkayCircuitTransformer {}
 impl AstTransformerVisitor for ZkayCircuitTransformer {
     fn default() -> Self {
         Self::new(None)
@@ -970,7 +971,7 @@ impl ZkayCircuitTransformer {
         //Constant folding for literal types
         if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = *t {
             return replace_expr(
-                ast.to_expr(),
+                &ast.to_expr(),
                 &mut BooleanLiteralExpr::new(t.value()).to_expr(),
                 false,
             );
@@ -979,7 +980,7 @@ impl ZkayCircuitTransformer {
         )) = *t
         {
             return replace_expr(
-                ast.to_expr(),
+                &ast.to_expr(),
                 &mut NumberLiteralExpr::new(t.value(), false).to_expr(),
                 false,
             );

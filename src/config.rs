@@ -122,10 +122,11 @@ impl Config {
     pub fn get_attr(&self, arg: &String) -> String {
         self.attrs.get(arg).unwrap_or(&String::new()).clone()
     }
-    pub fn set_attr(&mut self, arg: &String, val: &String) {
-        self.attrs.insert(arg.clone(), val.clone());
+    pub fn set_attr(&mut self, arg: &String, val: &Value) {
+        self.attrs
+            .insert(arg.clone(), val.as_str().unwrap().to_owned());
     }
-    pub fn override_defaults(&mut self, overrides: &HashMap<String, String>) {
+    pub fn override_defaults(&mut self, overrides: &Map<String, Value>) {
         for (arg, val) in overrides {
             if !self.has_attr(arg) {
                 // raise ValueError(f"Tried to override non-existing config value {arg}")
@@ -147,6 +148,7 @@ impl Config {
     }
 
     pub fn import_compiler_settings(&mut self, vals: Value) {
+        let vals = vals.as_object().unwrap();
         for (k, v) in vals {
             if !self._options_with_effect_on_circuit_output.contains(k) {
                 // raise KeyError(f"vals contains unknown option "{k}"")

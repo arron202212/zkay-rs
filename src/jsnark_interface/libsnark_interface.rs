@@ -28,8 +28,9 @@ pub fn generate_keys(input_dir: &str, output_dir: &str, proving_scheme: &str)
             "keygen",
             input_dir,
             output_dir,
-            proving_scheme_map[proving_scheme],
+            &proving_scheme_map.get(&proving_scheme).unwrap().to_string(),
         ],
+        None,
         true,
     );
 }
@@ -47,17 +48,21 @@ pub fn generate_proof(key_dir: &str, input_dir: &str, output_path: &str, proving
 // """
 {
     run_command(
-        [
+        vec![
             libsnark_runner,
             "proofgen",
             input_dir,
             output_path,
             key_dir,
-            proving_scheme_map[proving_scheme],
-            CFG.lock()
+            &proving_scheme_map.get(&proving_scheme).unwrap().to_string(),
+            &CFG.lock()
                 .unwrap()
-                .libsnark_check_verify_locally_during_proof_generation,
+                .user_config
+                .libsnark_check_verify_locally_during_proof_generation()
+                .to_string()
+                .to_ascii_lowercase(),
         ],
+        None,
         true,
     );
 }

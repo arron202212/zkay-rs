@@ -303,6 +303,9 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn is_final(&self) -> bool {
+        false
+    }
     pub fn func(&self) -> Option<Expression> {
         None
     }
@@ -337,7 +340,7 @@ impl AST {
     pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
         None
     }
-    pub fn get_annotated_type(&self) -> Option<AnnotatedTypeName> {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
     pub fn line(&self) -> i32 {
@@ -1039,7 +1042,7 @@ impl Expression {
         ))
     }
 
-    pub fn instanceof(&self, expected: AnnotatedTypeName) -> String {
+    pub fn instance_of(&self, expected: &AnnotatedTypeName) -> String {
         // """
         // :param expected:
         // :return: true, false, or "make-private"
@@ -1237,7 +1240,7 @@ impl ExpressionBase {
 //     def ite(self, e_true: Expression, e_false: Expression) -> FunctionCallExpr:
 //         return FunctionCallExpr(BuiltinFunction('ite').override(is_private=self.annotated_type.is_private), [self, e_true, e_false])
 
-//     def instanceof(self, expected):
+//     def instance_of(self, expected):
 //         """
 
 //         :param expected:
@@ -3055,7 +3058,7 @@ impl IdentifierExpr {
         }
     }
 
-    pub fn get_annotated_type(&self) -> AnnotatedTypeName {
+    pub fn annotated_type(&self) -> AnnotatedTypeName {
         self.location_expr_base
             .target
             .clone()
@@ -3097,7 +3100,7 @@ impl ASTChildren for IdentifierExpr {
 //         self.idf: Identifier = idf if isinstance(idf, Identifier) else Identifier(idf)
 //         self.annotated_type = annotated_type
 
-//     def get_annotated_type(&self):
+//     def annotated_type(&self):
 //         return self.target.annotated_type
 
 //     def process_children(self, f: Callable[[T], T]):

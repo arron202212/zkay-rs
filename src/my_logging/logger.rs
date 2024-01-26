@@ -12,7 +12,7 @@ use crate::my_logging::log_context::FULL_LOG_CONTEXT;
 
 fn timestamp() -> String {
     use chrono::Local;
-    Local::now().format("%Y-%m-%d_%H:%M:%S")
+    Local::now().format("%Y-%m-%d_%H:%M:%S").to_string()
 }
 // # shutdown current logger (useful for debugging, ...)
 // def shutdown(handler_list=None):
@@ -54,6 +54,7 @@ impl log::Log for ConsoleLogger {
 fn set_log() -> Result<(), SetLoggerError> {
     log::set_logger(&CONSOLE_LOGGER)?;
     log::set_max_level(LevelFilter::Info);
+    Ok(())
 }
 use serde_json::json;
 pub fn data(key: &str, value: &str) -> String
@@ -63,7 +64,8 @@ pub fn data(key: &str, value: &str) -> String
 {
     let d =
         json!({"key": key, "value": value, "context": FULL_LOG_CONTEXT.lock().unwrap().clone()});
-    return log::debug!("{DATA},{}", d);
+    log::debug!("{DATA},{}", d);
+    format!("{DATA},{}", d)
 }
 
 // def get_log_dir(parent_dir, label):

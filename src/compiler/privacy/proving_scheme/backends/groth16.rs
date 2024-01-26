@@ -54,11 +54,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     const NAME: &'static str = "groth16";
     type VerifyingKeyX = VerifyingKey<G1Point, G2Point>;
 
-    fn generate_verification_contract<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    >(
+    fn generate_verification_contract(
         &self,
         verification_key: <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX,
         circuit: &CircuitHelper,

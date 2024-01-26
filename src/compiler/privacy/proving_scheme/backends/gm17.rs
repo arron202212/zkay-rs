@@ -64,11 +64,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
     const NAME: &'static str = "gm17";
     type VerifyingKeyX = VerifyingKey<G1Point, G2Point>;
 
-    fn generate_verification_contract<
-        V: Clone
-            + std::marker::Sync
-            + crate::zkay_ast::visitor::transformer_visitor::AstTransformerVisitor,
-    >(
+    fn generate_verification_contract(
         &self,
         verification_key: <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX,
         circuit: &CircuitHelper,

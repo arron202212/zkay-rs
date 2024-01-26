@@ -10,7 +10,9 @@
 
 use crate::zkay_ast::ast::get_code_error_msg;
 use crate::{config::CFG, zk_print};
+use serde_json::{Map, Result, Value};
 use std::io::Read;
+use std::path::PathBuf;
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass
@@ -23,7 +25,7 @@ fn compile_solidity_json(
     optimizer_runs: i32,
     output_selection: Vec<String>,
     cwd: &str,
-) -> String
+) -> Option<Map<String, Value>>
 // """
     // Compile the given solidity file using solc json interface with the provided options.
 
@@ -102,9 +104,16 @@ fn compile_solidity_json(
     set_current_dir(old_cwd);
     ret
 }
-//TODO dummy
-fn compile(json: &str) -> String {
-    String::new()
+//TODO
+fn compile(input: &str) -> Option<Map<String, Value>> {
+    let output = "{}"; //solc::compile(&input);
+    assert_ne!(output.len(), 0);
+    let v: Value = serde_json::from_str(output).unwrap();
+    if let Value::Object(m) = v {
+        Some(m)
+    } else {
+        None
+    }
 }
 fn _get_line_col(code: &str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
@@ -115,15 +124,19 @@ fn _get_line_col(code: &str, idx: i32) -> (i32, i32)
     (line, col)
 }
 
-pub fn get_error_order_key(error: String) -> i32 {
-    if let Some(e) = error.find("sourceLocation") {
-        *e.find("start").map(|i| i as i32).unwrap_or(&-1)
-    } else {
-        -1
+pub fn get_error_order_key(error: &Value) -> i64 {
+    if let Value::Object(error) = error {
+        if let Some(Value::Object(error)) = error.get(&String::from("sourceLocation")) {
+            if let Some(Value::Number(error)) = error.get(&String::from("start")) {
+                if let Some(error) = error.as_i64() {
+                    return error;
+                }
+            }
+        }
     }
+    -1
 }
-use serde_json::{Map, Result, Value};
-use std::path::PathBuf;
+
 pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
 // """
 // Run the given file through solc without output to check for compiler errors.
@@ -134,7 +147,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
 // :raise SolcException: raised if solc reports a compiler error
 // """
 {
-    let sol_name = PathBuf::PathBuf(filename).name;
+    let sol_name = PathBuf::from(filename).file_name().unwrap();
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();
     f.read_to_string(&mut code).unwrap();
@@ -148,59 +161,91 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
     let mut had_error = false;
     // try:
     let errors = compile_solidity_json(filename, None, -1, vec![], "");
-    if !show_errors {
+    if !show_errors || errors.is_none() {
         return;
     }
     // except SolcError as e:
     //     errors = json.loads(e.stdout_data)
     //     if not show_errors:
     //         raise SolcException()
-    let v: Value = serde_json::from_str(&errors).unwrap();
     // if solc reported any errors or warnings, print them and throw exception
-    if let Value::Object(errors) = v {
-        if errors.contains("errors") {
-            zk_print!("");
-            let mut errors = errors["errors"].clone();
+    if let Some(errors) = errors.unwrap().get(&String::from("errors")) {
+        zk_print!("");
+        if let Value::Array(mut errors) = errors {
             errors.sort_unstable_by_key(|x| get_error_order_key(x));
 
             let mut fatal_error_report = String::new();
             for error in errors {
+                if !error.is_object() {
+                    continue;
+                }
+                let error = error.as_object().unwrap();
                 use crate::utils::progress_printer::{colored_print, TermColor};
-                let is_error = error.get("severity") == Some("error");
+                let is_error = error.get(&String::from("severity"))
+                    == Some(&Value::String(String::from("error")));
 
                 colored_print(if is_error {
                     TermColor::FAIL
                 } else {
                     TermColor::WARNING
                 });
-                let mut report = if error.contains_key("sourceLocation") {
-                    let file = error["sourceLocation"]["file"];
-                    if file == sol_name {
-                        let (line, column) = _get_line_col(code, error["sourceLocation"]["start"]);
-                        had_error |= is_error;
-                        format!(
-                            "{:?}\n",
-                            get_code_error_msg(line, column + 1, display_code.split("\n"))
-                        )
+                let mut report =
+                    if let Some(Value::Object(sourceLocation)) = error.get("sourceLocation") {
+                        let file = sourceLocation.get("file").unwrap().as_str().unwrap();
+                        let start = sourceLocation
+                            .get(&String::from("start"))
+                            .unwrap()
+                            .as_i64()
+                            .unwrap() as i32;
+                        if file == sol_name {
+                            let (line, column) = _get_line_col(&code, start);
+                            had_error |= is_error;
+                            format!(
+                                "{:?}\n",
+                                get_code_error_msg(
+                                    line,
+                                    column + 1,
+                                    display_code.split("\n").map(String::from).collect(),
+                                    None,
+                                    None,
+                                    None
+                                )
+                            )
+                        } else {
+                            format!("In imported file \"{file}\" idx: {}\n", start)
+                        }
                     } else {
-                        format!(
-                            "In imported file \"{file}\" idx: {}\n",
-                            error["sourceLocation"]["start"]
-                        )
-                    }
-                } else {
-                    String::new()
-                };
+                        String::new()
+                    };
                 report = format!(
                     "\n{}: {}\n{report}\n{}\n",
-                    error["severity"].upper_ascii_case(),
-                    if is_error { error["type"] } else { "" },
-                    error["message"]
+                    error
+                        .get(&String::from("severity"))
+                        .unwrap()
+                        .as_str()
+                        .unwrap()
+                        .to_ascii_uppercase(),
+                    if is_error {
+                        error.get(&String::from("type")).unwrap().as_str().unwrap()
+                    } else {
+                        ""
+                    },
+                    error
+                        .get(&String::from("message"))
+                        .unwrap()
+                        .as_str()
+                        .unwrap()
                 );
 
                 if is_error {
                     fatal_error_report += &report;
-                } else if !error.contains_key("errorCode") || !["1878"].contains(error["errorCode"])
+                } else if !error.contains_key("errorCode")
+                    || String::from("1878")
+                        != error
+                            .get(&String::from("errorCode"))
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
                 // Suppress SPDX license warning
                 {
                     zk_print!("{:?}", report);
@@ -243,7 +288,7 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
     // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
     //     f.write(fake_solidity_code)
     //     f.flush()
-    check_compilation(file_name, true, zkay_code);
+    check_compilation(&file_name, true, zkay_code);
 }
 
 // def compile_solidity_code(code: str, working_directory: Optional[str] = None, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict:

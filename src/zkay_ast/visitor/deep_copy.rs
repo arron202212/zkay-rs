@@ -26,7 +26,7 @@ pub fn deep_copy<T>(ast: T, with_types: bool, with_analysis: bool) -> T
 }
 
 pub fn replace_expr(
-    old_expr: Expression,
+    old_expr: &Expression,
     new_expr: &mut Expression,
     copy_type: bool,
 ) -> Expression

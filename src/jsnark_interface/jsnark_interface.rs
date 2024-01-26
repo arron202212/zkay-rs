@@ -8,11 +8,13 @@ use crate::utils::run_command::run_command;
 use crate::zkay_ast::ast::indent;
 use lazy_static::lazy_static;
 use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 //path to jsnark interface jar
 const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
-    pub static ref CIRCUIT_BUILDER_JAR_HASH: String = hash_file(circuit_builder_jar).hex();
+    pub static ref CIRCUIT_BUILDER_JAR_HASH: String =
+        hex::encode(hash_file(circuit_builder_jar, 0));
 }
 pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // """
@@ -23,12 +25,17 @@ pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // :raise SubprocessError: if compilation fails
 // """
 {
-    let class_name = CFG.lock().unwrap().jsnark_circuit_classname;
+    let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let jfile = Path::new(circuit_dir).join(class_name + ".java");
     let f = File::open(jfile).expect("");
-    f.write_all(javacode);
+    f.write_all(javacode.as_bytes());
 
-    compile_and_run_with_circuit_builder(circuit_dir, class_name, jfile, ["compile"]);
+    compile_and_run_with_circuit_builder(
+        circuit_dir,
+        &class_name,
+        jfile.to_str().unwrap(),
+        vec!["compile"],
+    );
 }
 
 pub fn compile_and_run_with_circuit_builder(
@@ -36,35 +43,42 @@ pub fn compile_and_run_with_circuit_builder(
     class_name: &str,
     java_file_name: &str,
     args: Vec<&str>,
-)
+) -> (Option<String>, Option<String>)
 //Compile the circuit java file
 {
     run_command(
-        [
+        vec![
             "javac",
             "-cp",
             &format!("{circuit_builder_jar}"),
             java_file_name,
         ],
-        working_dir,
+        Some(working_dir),
+        false,
     );
     //Run jsnark to generate the circuit
     return run_command(
-        vec![
+        [
             "java",
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
             &format!("{circuit_builder_jar}:{working_dir}"),
             class_name,
-            args,
-        ],
-        working_dir,
+        ]
+        .into_iter()
+        .chain(args)
+        .collect(),
+        Some(working_dir),
         true,
     );
 }
 
-pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i32>)
+pub fn prepare_proof(
+    circuit_dir: &str,
+    output_dir: &str,
+    serialized_args: Vec<i32>,
+) -> (Option<String>, Option<String>)
 // """
 // Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
 
@@ -76,22 +90,24 @@ pub fn prepare_proof(circuit_dir: &str, output_dir: &str, serialized_args: Vec<i
 {
     let serialized_arg_str: Vec<_> = serialized_args
         .iter()
-        .map(|arg| format!("{:x}", arg))
+        .map(|arg| format!("{:x}", arg).as_str())
         .collect();
 
     //Run jsnark to evaluate the circuit and compute prover inputs
     run_command(
-        vec![
+        [
             "java",
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
             &format!("{circuit_builder_jar}:{circuit_dir}"),
-            CFG.lock().unwrap().jsnark_circuit_classname,
+            &CFG.lock().unwrap().jsnark_circuit_classname(),
             "prove",
-            serialized_arg_str,
-        ],
-        output_dir,
+        ]
+        .into_iter()
+        .chain(serialized_arg_str)
+        .collect(),
+        Some(output_dir),
         true,
     )
 }
@@ -145,18 +161,19 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
     }}
 }}
 "#,
-        circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname,
+        circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname(),
         circuit_name = circuit.get_verification_contract_name(),
-        crypto_init_stmts = indent(indent("\n".join(crypto_init_stmts))),
-        pub_in_size = circuit.in_size_trans,
-        pub_out_size = circuit.out_size_trans,
-        priv_in_size = circuit.priv_in_size_trans,
+        crypto_init_stmts = indent(indent(crypto_init_stmts.join("\n"))),
+        pub_in_size = circuit.in_size_trans(),
+        pub_out_size = circuit.out_size_trans(),
+        priv_in_size = circuit.priv_in_size_trans(),
         use_input_hashing = CFG
             .lock()
             .unwrap()
             .should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
+            .to_string()
             .to_ascii_lowercase(),
         fdefs = indent(function_definitions),
-        circuit_statements = indent(indent("\n".join(circuit_statements)))
+        circuit_statements = indent(indent(circuit_statements.join("\n")))
     );
 }

@@ -228,11 +228,11 @@ impl Remapper {
                 // remap key -> new temporary with value cond ? new_value : old_value
                 {
                     let key_decl = key.parent();
-                    assert!(key_decl.unwrap().get_annotated_type().is_some());
+                    assert!(key_decl.unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                             .as_type(AsTypeUnion::AnnotatedTypeName(
-                                key_decl.unwrap().get_annotated_type().unwrap().zkay_type(),
+                                key_decl.unwrap().annotated_type().unwrap().zkay_type(),
                             ));
                     prev_val.location_expr_base.target = key_decl.map(|v| Box::new(v.into()));
                     prev_val
@@ -289,11 +289,11 @@ impl Remapper {
                 // remap key -> new temporary with value cond ? old_value : new_value
                 {
                     let key_decl = key.parent();
-                    assert!(key_decl.unwrap().get_annotated_type().is_some());
+                    assert!(key_decl.unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                             .as_type(AsTypeUnion::AnnotatedTypeName(
-                                key_decl.unwrap().get_annotated_type().unwrap().zkay_type(),
+                                key_decl.unwrap().annotated_type().unwrap().zkay_type(),
                             ));
                     prev_val.location_expr_base.target = key_decl.map(|v| Box::new(v.into()));
                     prev_val

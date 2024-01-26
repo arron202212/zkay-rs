@@ -525,7 +525,7 @@ where
                     .target()
                     .map(|t| <TargetDefinition as Into<AST>>::into(*t))
                     .unwrap()
-                    .get_annotated_type()
+                    .annotated_type()
                     .unwrap()
                     .zkay_type();
                 if !t.type_name.is_primitive_type() {
@@ -721,8 +721,10 @@ where
                 LocationExpr::IdentifierExpr(pki)
                     .call(
                         IdentifierExprUnion::String(String::from("getPk")),
-                        vec![if let AST::Expression(expr) =
-                            self._expr_trafo.visit(privacy_label_expr.get_ast())
+                        vec![if let AST::Expression(expr) = self
+                            ._expr_trafo
+                            .unwrap()
+                            .visit(privacy_label_expr.get_ast())
                         {
                             expr
                         } else {
@@ -791,11 +793,12 @@ where
         let is_public = privacy == Some(Expression::all_expr().get_ast());
 
         let expr_text = expr.code();
-        let input_expr = if let AST::Expression(expr) = self._expr_trafo.visit(expr.get_ast()) {
-            expr
-        } else {
-            Expression::None
-        };
+        let input_expr =
+            if let AST::Expression(expr) = self._expr_trafo.unwrap().visit(expr.get_ast()) {
+                expr
+            } else {
+                Expression::None
+            };
         let t = input_expr.annotated_type().type_name;
         let mut locally_decrypted_idf = None;
 
@@ -1011,7 +1014,7 @@ where
 
         //Visit the untransformed target function body to include all statements in this circuit
         let inlined_body = fdef.unwrap().original_body().clone(); //deep_copy(fdef.original_body, true, true);
-        self._circ_trafo.visit(inlined_body.get_ast());
+        self._circ_trafo.unwrap().visit(inlined_body.get_ast());
 
         fcall
             .expression_base
@@ -1085,7 +1088,7 @@ where
             let mut nle = NumberLiteralExpr::new(0, false);
             nle.literal_expr_base.expression_base.ast_base.parent = Some(Box::new(ast.get_ast()));
             nle.literal_expr_base.expression_base.statement = Some(Box::new(ast.to_statement()));
-            ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(nle.to_expr(), *t));
+            ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(&nle.to_expr(), t));
         }
         self.create_new_idf_version_from_value(
             *ast.variable_declaration.identifier_declaration_base.idf,
@@ -1126,6 +1129,7 @@ where
         let cond = self._evaluate_private_expression(ast.condition, "");
         comment.text += &format!(" [{}]", cond.identifier_base.name);
         self._circ_trafo
+            .unwrap()
             .visitBlock(ast.then_branch.get_ast(), Some(cond), Some(true));
         let then_remap = self._remapper.0.get_state();
 
@@ -1147,7 +1151,7 @@ where
                     "else [{}]",
                     cond.identifier_base.name
                 ))));
-            self._circ_trafo.visitBlock(
+            self._circ_trafo.unwrap().visitBlock(
                 ast.else_branch.unwrap().get_ast(),
                 Some(cond),
                 Some(false),
@@ -1219,7 +1223,7 @@ where
         let mut statements = vec![];
         for stmt in ast.statement_list_base.statements.iter_mut() {
             if let AST::Statement(ref mut stmt) = stmt {
-                self._circ_trafo.visit((*stmt).get_ast());
+                self._circ_trafo.unwrap().visit((*stmt).get_ast());
                 //Bubble up nested pre statements
                 statements.append(&mut stmt.drain_pre_statements());
             }
@@ -1283,7 +1287,7 @@ where
         } else {
             assert!(is_instance(&lhs, ASTType::TupleExpr));
             if is_instance(&rhs, ASTType::FunctionCallExpr) {
-                if let AST::Expression(expr) = self._circ_trafo.visit(rhs.get_ast()) {
+                if let AST::Expression(expr) = self._circ_trafo.unwrap().visit(rhs.get_ast()) {
                     rhs = expr;
                 }
             }
@@ -1454,16 +1458,16 @@ where
             };
         }
 
-        let priv_expr = self._circ_trafo.visit(expr.get_ast());
+        let priv_expr = self._circ_trafo.unwrap().visit(expr.get_ast());
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory
                 .base_name_factory
-                .get_new_name(*priv_expr.get_annotated_type().unwrap().type_name, false)
+                .get_new_name(*priv_expr.annotated_type().unwrap().type_name, false)
         );
         let tmp_circ_var_idf = self._circ_temp_name_factory.add_idf(
             tname,
-            *priv_expr.get_annotated_type().unwrap().type_name,
+            *priv_expr.annotated_type().unwrap().type_name,
             if let AST::Expression(expr) = priv_expr {
                 Some(expr)
             } else {

@@ -8,7 +8,30 @@ pub fn contains_private(ast: AST) -> bool {
 }
 
 // class ContainsPrivateVisitor(AstVisitor)
-pub struct ContainsPrivateVisitor;
+pub struct ContainsPrivateVisitor {
+    pub contains_private: bool,
+}
+impl AstVisitor for ContainsPrivateVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl ContainsPrivateVisitor {
     // pub fn __init__(self)
     //     super().__init__()
@@ -20,9 +43,9 @@ impl ContainsPrivateVisitor {
     }
     pub fn visitAST(self, ast: AST) {
         if let Some(t) = ast.annotated_type() {
-            assert!(is_instance(t, ASTType::AnnotatedTypeName));
+            assert!(is_instance(&t, ASTType::AnnotatedTypeName));
 
-            if !t.privacy_annotation.is_all_expr() {
+            if !t.privacy_annotation.unwrap().is_all_expr() {
                 self.contains_private = true;
             }
         }

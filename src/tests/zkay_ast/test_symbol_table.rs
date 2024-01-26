@@ -44,7 +44,7 @@
 //         self.get_ast_elements(ast)
 
 //         self.assertEqual(self.identifier_expr.target, self.decl)
-//         self.assertEqual(self.identifier_expr.get_annotated_type(), self.decl.annotated_type)
+//         self.assertEqual(self.identifier_expr.annotated_type(), self.decl.annotated_type)
 
 
 // class TestSimpleStorageAST(ZkayTestCase):
