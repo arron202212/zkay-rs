@@ -1319,11 +1319,9 @@ impl ZkayTransformer {
         // Call verifier
         if requires_proof && !CFG.lock().unwrap().user_config.disable_verification() {
             let verifier = IdentifierExpr::new(
-                IdentifierExprUnion::String(
-                    CFG.lock()
-                        .unwrap()
-                        .get_contract_var_name(ext_circuit.verifier_contract_type.unwrap().code()),
-                ),
+                IdentifierExprUnion::String(CFG.lock().unwrap().get_contract_var_name(
+                    ext_circuit.verifier_contract_type.unwrap().get_ast().code(),
+                )),
                 None,
             );
             let verifier_args = vec![

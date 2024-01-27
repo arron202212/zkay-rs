@@ -196,7 +196,7 @@ where
 
     pub fn get_verification_contract_name(&self) -> String {
         assert!(self.verifier_contract_type.is_some());
-        self.verifier_contract_type.unwrap().code()
+        self.verifier_contract_type.unwrap().get_ast().code()
     }
 
     pub fn requires_zk_data_struct(&self) -> bool
@@ -991,7 +991,7 @@ where
         if fcall.func.target().unwrap().idf().name() == "<stmt_fct>" {
             {}
         } else {
-            self.circ_indent_block(&format!("INLINED {}", fcall.code()));
+            self.circ_indent_block(&format!("INLINED {}", fcall.get_ast().code()));
         }
 
         //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
@@ -1068,13 +1068,17 @@ where
     // """Include private assignment statement in this circuit."""
     {
         self._phi
-            .push(CircuitStatement::CircComment(CircComment::new(ast.code())));
+            .push(CircuitStatement::CircComment(CircComment::new(
+                ast.get_ast().code(),
+            )));
         self._add_assign(ast.lhs().unwrap().to_expr(), ast.rhs().unwrap());
     }
 
     pub fn add_var_decl_to_circuit(&self, ast: VariableDeclarationStatement) {
         self._phi
-            .push(CircuitStatement::CircComment(CircComment::new(ast.code())));
+            .push(CircuitStatement::CircComment(CircComment::new(
+                ast.get_ast().code(),
+            )));
         if ast.expr.is_none()
         //Default initialization is made explicit for circuit variables
         {
@@ -1088,7 +1092,10 @@ where
             let mut nle = NumberLiteralExpr::new(0, false);
             nle.literal_expr_base.expression_base.ast_base.parent = Some(Box::new(ast.get_ast()));
             nle.literal_expr_base.expression_base.statement = Some(Box::new(ast.to_statement()));
-            ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(&nle.to_expr(), t));
+            ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(
+                nle.to_expr(),
+                &*t,
+            ));
         }
         self.create_new_idf_version_from_value(
             *ast.variable_declaration.identifier_declaration_base.idf,
@@ -1098,7 +1105,9 @@ where
 
     pub fn add_return_stmt_to_circuit(&self, ast: ReturnStatement) {
         self._phi
-            .push(CircuitStatement::CircComment(CircComment::new(ast.code())));
+            .push(CircuitStatement::CircComment(CircComment::new(
+                ast.get_ast().code(),
+            )));
         assert!(ast.expr != Expression::None);
         if !is_instance(&ast.expr, ASTType::TupleExpr) {
             ast.expr = TupleExpr::new(vec![ast.expr.clone()]).to_expr();
@@ -1322,7 +1331,7 @@ where
             && expr.idf().arg_type() != HybridArgType::PubContractVal;
         let is_hom_comp = is_instance(&(*expr), ASTType::FunctionCallExpr)
             && is_instance(&(*expr).func().unwrap(), ASTType::BuiltinFunction)
-            && (*expr).func().unwrap().homomorphism() != Some(Homomorphism::non_homomorphic());
+            && (*expr).func().unwrap().homomorphism() != Homomorphism::non_homomorphic();
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
         {

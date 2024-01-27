@@ -245,7 +245,7 @@ where
         *finish_counter.lock().unwrap() += 1;
         zk_print!(
             r#"Generated keys for circuit "\"{}\" [{}/{}]"#,
-            circuit.verifier_contract_type.unwrap().code(),
+            circuit.verifier_contract_type.unwrap().get_ast().code(),
             finish_counter.lock().unwrap(),
             c_count.lock().unwrap()
         );

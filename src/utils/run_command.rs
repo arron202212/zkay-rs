@@ -3,7 +3,7 @@
 use crate::config::CFG;
 use std::process::{Command, Stdio};
 // from typing import List, Optional, Tuple
-
+use std::path::PathBuf;
 pub fn run_command(
     cmd: Vec<&str>,
     cwd: Option<&str>,
@@ -20,33 +20,37 @@ pub fn run_command(
     //cwd=None, allow_verbose: bool = False
 {
     let cwd = if let Some(cwd) = cwd {
-        std::fs::canonicalize(cwd)
+        std::fs::canonicalize(cwd).unwrap().to_str().unwrap()
     } else {
         ""
     };
 
-    let (output, error, process) =
-        if allow_verbose && CFG.lock().unwrap().verbosity >= 2 && !CFG.lock().unwrap().is_unit_test
-        {
-            let process = Command::new(cmd).current_dir(cwd).output().expect("");
-            (process.stdout, process.stderr, process)
-        } else {
-            //run
-            let process = Command::new(cmd)
-                .current_dir(cwd)
-                .stderr(Stdio::piped())
-                .stdout(Stdio::piped())
-                .spawn()
-                .expect("")
-                .wait_with_output()
-                .expect("");
+    let (output, error, process) = if allow_verbose
+        && CFG.lock().unwrap().user_config.verbosity() >= 2
+        && !CFG.lock().unwrap().is_unit_test()
+    {
+        let process = Command::new(cmd.join(" "))
+            .current_dir(cwd)
+            .output()
+            .expect("");
+        (process.stdout, process.stderr, process)
+    } else {
+        //run
+        let process = Command::new(cmd.join(" "))
+            .current_dir(cwd)
+            .stderr(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("")
+            .wait_with_output()
+            .expect("");
 
-            //collect output
-            //decode output
-            //     let output = output.decode("utf-8").rtrim();
-            //    let  error = error.decode("utf-8").rtrim();
-            (process.stdout, process.stderr, process)
-        };
+        //collect output
+        //decode output
+        //     let output = output.decode("utf-8").rtrim();
+        //    let  error = error.decode("utf-8").rtrim();
+        (process.stdout, process.stderr, process)
+    };
 
     //check for error
     if !process.status.success() {
@@ -54,11 +58,11 @@ pub fn run_command(
         // raise subprocess.SubprocessError(msg)
         assert!(
             false,
-            "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output}\n{error}",
+            "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output:?}\n{error:?}",
             process.status
         );
-    } else if CFG.lock().unwrap().verbosity >= 2 {
-        print!("Ran command {}:\n\n{output}\n{error}", get_command(cmd));
+    } else if CFG.lock().unwrap().verbosity() >= 2 {
+        print!("Ran command {}:\n\n{output:?}\n{error:?}", get_command(cmd));
     }
 
     (
@@ -68,11 +72,11 @@ pub fn run_command(
 }
 
 pub fn get_command(cmd: Vec<&str>) -> String {
-    fn format_part(p: &str) {
+    fn format_part(p: &str) -> String {
         if p.contains(" ") {
             format!(r#""{p}""#)
         } else {
-            p
+            p.to_owned()
         }
     }
 

@@ -2,6 +2,7 @@ use textwrap::{dedent, indent};
 // from typing import Union, List
 
 // class MultiLineFormatter
+#[derive(Clone)]
 pub struct MultiLineFormatter {
     pub text: String,
     pub current_indent: String,
@@ -31,11 +32,11 @@ impl MultiLineFormatter {
     }
 
     pub fn mul(&mut self, other: String) -> Self {
-        self.append(other)
+        self.append(other, "")
     }
     pub fn mulx(&mut self, other: Vec<String>) -> Self {
         self.text += "\n";
-        self.append_lines(other)
+        self.append_lines(other, "")
     }
     pub fn modular(&mut self, other: String) -> Self {
         self.append(other, ", ")
@@ -44,7 +45,7 @@ impl MultiLineFormatter {
         self.append_lines(other, ", ")
     }
     pub fn truediv(&mut self, other: String) -> Self {
-        if other {
+        if !other.is_empty() {
             self.indent().mul(other)
         } else {
             self.indent()
@@ -63,23 +64,23 @@ impl MultiLineFormatter {
         let sep = if sep.is_empty() { "\n" } else { sep };
         self.text += sep;
         if !txt.is_empty() {
-            self.text += indent(dedent(txt), self.current_indent);
+            self.text += &indent(&dedent(&txt), &self.current_indent);
         }
         self.clone()
     }
 
-    pub fn append_lines(&mut self, lines: Vec<&str>, sep: &str) -> Self {
+    pub fn append_lines(&mut self, lines: Vec<String>, sep: &str) -> Self {
         let sep = if sep.is_empty() { "\n" } else { sep };
-        self.text += lines
-            .inito_iter()
+        self.text += &lines
+            .into_iter()
             .filter_map(|t| {
                 if t.is_empty() {
                     None
                 } else {
-                    indent(
-                        dedent(if t != "\n" { t } else { String::new() }),
-                        self.current_indent,
-                    )
+                    Some(indent(
+                        &dedent(if t != "\n" { t } else { "" }),
+                        &self.current_indent,
+                    ))
                 }
             })
             .collect::<Vec<_>>()
@@ -88,14 +89,14 @@ impl MultiLineFormatter {
     }
 
     pub fn indent(&mut self) -> Self {
-        self.current_indent += self.indent_str;
+        self.current_indent += &self.indent_str;
         self.clone()
     }
 
     pub fn dedent(&self) -> Self {
         assert!(self.current_indent.len() >= self.indent_str.len());
         self.current_indent =
-            self.current_indent[..self.current_indent.len() - self.indent_str.len()];
+            self.current_indent[..self.current_indent.len() - self.indent_str.len()].to_string();
         self.clone()
     }
 }

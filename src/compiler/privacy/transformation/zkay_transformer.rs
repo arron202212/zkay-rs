@@ -189,7 +189,7 @@ impl ZkayStatementTransformer {
     {
         let mut new_statements = vec![];
         for (idx, stmt) in ast.statements().iter().enumerate() {
-            let old_code = stmt.code();
+            let old_code = stmt.get_ast().code();
             let transformed_stmt = self.visit(stmt.get_ast());
             if transformed_stmt == AST::None {
                 continue;
@@ -635,7 +635,7 @@ impl ZkayExpressionTransformer {
                     .evaluate_expr_in_circuit(
                         &mut ast.to_expr(),
                         &(privacy_label.unwrap().into()),
-                        &(ast.func().unwrap().homomorphism().unwrap().into()),
+                        &(ast.func().unwrap().homomorphism().into()),
                     )
                     .get_ast();
             } else
@@ -987,14 +987,14 @@ impl ZkayCircuitTransformer {
         }
 
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
-            if ast.func().unwrap().homomorphism() != Some(Homomorphism::non_homomorphic())
+            if ast.func().unwrap().homomorphism() != Homomorphism::non_homomorphic()
             //To perform homomorphic operations, we require the recipient"s public key
             {
                 let crypto_params = CFG
                     .lock()
                     .unwrap()
                     .user_config
-                    .get_crypto_params(&ast.func().unwrap().homomorphism().unwrap());
+                    .get_crypto_params(&ast.func().unwrap().homomorphism());
                 let recipient = ast
                     .annotated_type()
                     .unwrap()
@@ -1017,7 +1017,7 @@ impl ZkayCircuitTransformer {
                     let mut new_args = vec![];
                     for mut arg in ast.args() {
                         if is_instance(&arg, ASTType::ReclassifyExpr) {
-                            arg = arg.expr().unwrap();
+                            arg = arg.expr();
                             ast.set_func_rerand_using(Some(Box::new(
                                 self.gen.unwrap().get_randomness_for_rerand(ast.to_expr()),
                             )));
@@ -1025,7 +1025,7 @@ impl ZkayCircuitTransformer {
                         } else if arg.annotated_type().is_private() {
                             arg.set_annotated_type(AnnotatedTypeName::cipher_type(
                                 arg.annotated_type(),
-                                ast.func().unwrap().homomorphism(),
+                                Some(ast.func().unwrap().homomorphism()),
                             ));
                         }
                         new_args.push(arg);
@@ -1038,7 +1038,7 @@ impl ZkayCircuitTransformer {
                         if arg.annotated_type().is_private() {
                             arg.set_annotated_type(AnnotatedTypeName::cipher_type(
                                 arg.annotated_type(),
-                                ast.func().unwrap().homomorphism(),
+                                Some(ast.func().unwrap().homomorphism()),
                             ));
                         }
                     }

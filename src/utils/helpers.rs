@@ -3,25 +3,29 @@
 // import hashlib
 // from typing import Optional, List
 // from zkay.compiler.solidity.fake_solidity_generator import WS_PATTERN, ID_PATTERN
-use rs_sha512::Sha512State;
+use rs_sha512::{HasherContext, Sha512State};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Error, Write};
-use std::path::Path;
+use std::hash::BuildHasher;
+use std::hash::Hasher;
+use std::io::prelude::*;
+use std::io::{BufRead, BufReader, Error, Read, Write};
+use std::path::{Path, PathBuf};
+
 pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) -> String {
     let target = if let Some(output_directory) = output_directory {
         Path::new(output_directory).join(filename)
     } else {
-        Path::new(filename)
+        PathBuf::from(filename)
     };
     let mut f = File::create(target).expect("");
     write!(f, "{}", code).expect("");
-    target.to_string()
+    target.to_str().unwrap().to_string()
 }
 
 pub fn read_file(filename: &str) -> String {
-    let f = std::fs::File::open(filename).unwrap();
-    use std::io::Read;
-    let mut buffered = std::io::BufReader::new(f);
+    let f = File::open(filename).unwrap();
+
+    let mut buffered = BufReader::new(f);
     let mut buf = String::new();
     let _ = buffered.read_to_string(&mut buf);
     buf
@@ -32,9 +36,10 @@ pub fn hash_string(data: &str) -> Vec<u8> {
     let mut sha512hasher = Sha512State::default().build_hasher();
     sha512hasher.write(data.as_bytes());
     let digest = sha512hasher.finish();
-    // let bytes_result = HasherContext::finish(&mut sha512hasher);
+    let bytes_result = HasherContext::finish(&mut sha512hasher);
+    let digest = format!("{bytes_result:02x}");
     assert!(digest.len() == 64);
-    digest[..32].to_vec()
+    digest[..32].bytes().collect()
 }
 
 pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
@@ -47,16 +52,19 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
     let f = File::open(filename).expect("");
     loop {
         // Hash prover key in 128mb chunks
-        let data = f.read(chunk_size);
-        if data.is_err() {
+        let mut data = vec![0; chunk_size as usize];
+        let res = f.read(&mut data);
+        if res.is_err() {
             break;
         }
-        digest.write(data);
+        digest.write(&data);
     }
 
-    let digest = digest.finish();
+    // let digest = digest.finish();
+    let bytes_result = HasherContext::finish(&mut digest);
+    let digest = format!("{bytes_result:02x}");
     assert!(digest.len() == 64);
-    return digest[..32];
+    digest[..32].bytes().collect()
 }
 
 // pub fn without_extension(filename: str) -> str

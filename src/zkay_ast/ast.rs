@@ -213,10 +213,6 @@ pub trait ASTCode {
     }
     fn get_ast(&self) -> AST;
     fn get_ast_type(&self) -> ASTType;
-    fn code(&self) -> String {
-        let v = CodeVisitor::new(true);
-        v.visit(&self.get_ast())
-    }
 }
 
 trait ASTProperty {
@@ -782,9 +778,39 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
-    pub fn expr(&self) -> Option<Expression> {
+    pub fn code(&self) -> String {
+        let v = CodeVisitor::new(true);
+        v.visit(&self)
+    }
+    pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
+    pub fn parent(&self) -> Option<Box<AST>> {
         None
     }
+    pub fn privacy(&self) -> Expression {
+        Expression::None
+    }
+    pub fn line(&self) -> i32 {
+        -1
+    }
+    pub fn set_line(&mut self, line: i32) {}
+    pub fn set_column(&mut self, column: i32) {}
+    pub fn column(&self) -> i32 {
+        -1
+    }
+    pub fn is_ite(&self) -> bool {
+        false
+    }
+    pub fn set_homomorphism(&mut self, homomorphism: String) {}
+    pub fn homomorphism(&self) -> String {}
+    pub fn set_expr(&mut self, expr: Expression) {}
+    pub fn expr(&self) -> Expression {
+        Expression::None
+    }
+    pub fn set_args(&mut self, args: Vec<Expression>) {}
+    pub fn args(&self) -> Vec<Expression> {
+        vec![]
+    }
+
     pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
     pub fn has_shortcircuiting(&self) -> bool {
         false
@@ -827,9 +853,7 @@ impl Expression {
     pub fn op(&self) -> Option<String> {
         None
     }
-    pub fn homomorphism(&self) -> Option<String> {
-        None
-    }
+
     pub fn can_be_private(&self) -> bool {
         false
     }
@@ -1927,6 +1951,11 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+
     pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
     pub fn statement(&self) -> Option<Box<Statement>> {
         None
@@ -1934,7 +1963,9 @@ impl FunctionCallExpr {
     pub fn set_public_key(&mut self, public_key: Option<Box<HybridArgumentIdf>>) {}
     pub fn set_func_idf_name(&mut self, name: String) {}
     pub fn set_args(&mut self, args: Vec<Expression>) {}
-
+    pub fn args(&self) -> Vec<Expression> {
+        vec![]
+    }
     pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
 
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
@@ -1950,9 +1981,7 @@ impl FunctionCallExpr {
     pub fn func(&self) -> Option<Expression> {
         None
     }
-    pub fn args(&self) -> Vec<Expression> {
-        vec![]
-    }
+
     pub fn as_type(&self, t: AsTypeUnion) -> Self {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => {
@@ -2813,6 +2842,9 @@ impl ASTCode for LocationExpr {
     }
 }
 impl LocationExpr {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
+    }
     pub fn parent(&self) -> Option<AST> {
         match self {
             LocationExpr::IdentifierExpr(ie) => ie
@@ -3435,6 +3467,11 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
+    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+    pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_homomorphism(&mut self, homomorphism: String) {}
     pub fn annotated_type(&self) -> AnnotatedTypeName {
         AnnotatedTypeName::default()
     }
@@ -3456,6 +3493,9 @@ impl ReclassifyExpr {
     }
     pub fn homomorphism(&self) -> Option<String> {
         None
+    }
+    pub fn func_name(&self) -> String {
+        String::from("reveal")
     }
 }
 impl ASTCode for ReclassifyExpr {
@@ -4862,6 +4902,7 @@ pub enum AssignmentStatement {
     None,
 }
 impl AssignmentStatement {
+    pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {}
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
     }
@@ -4986,6 +5027,9 @@ impl From<AST> for AssignmentStatementUnion {
     }
 }
 impl AssignmentStatementUnion {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
+    }
     pub fn to_expr(&self) -> Expression {
         Expression::None
     }
@@ -5250,6 +5294,13 @@ impl ASTCode for TypeName {
     }
 }
 impl TypeName {
+    pub fn parameters(&self) -> Vec<Parameter> {
+        vec![]
+    }
+    pub fn return_parameters(&self) -> Vec<Parameter> {
+        vec![]
+    }
+    pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
     pub fn has_key_label(&self) -> bool {
         false
     }
@@ -6233,6 +6284,7 @@ pub enum UserDefinedTypeName {
     None,
 }
 impl UserDefinedTypeName {
+    pub fn set_type_name(&mut self, type_name: TypeName) {}
     pub fn parent(&self) -> Option<AST> {
         None
     }
@@ -6335,18 +6387,14 @@ impl ASTCode for UserDefinedTypeName {
 pub struct UserDefinedTypeNameBase {
     pub type_name_base: TypeNameBase,
     pub names: Vec<Identifier>,
-    pub target: Option<Box<NamespaceDefinition>>,
+    pub target: Option<Box<AST>>,
 }
 impl UserDefinedTypeNameBase {
-    pub fn new(names: Vec<Identifier>, target: Option<NamespaceDefinition>) -> Self {
+    pub fn new(names: Vec<Identifier>, target: Option<AST>) -> Self {
         Self {
             type_name_base: TypeNameBase::new(),
             names,
-            target: if let Some(target) = target {
-                Some(Box::new(target))
-            } else {
-                None
-            },
+            target: target.map(|t| Box::new(t)),
         }
     }
 }
@@ -8383,6 +8431,9 @@ impl EnumValue {
             annotated_type: None,
         }
     }
+    pub fn qualified_name(&mut self) -> Vec<Identifier> {
+        vec![]
+    }
 }
 impl ASTChildren for EnumValue {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -8421,6 +8472,9 @@ impl EnumDefinition {
             values,
             annotated_type: None,
         }
+    }
+    pub fn qualified_name(&mut self) -> Vec<Identifier> {
+        vec![]
     }
 }
 
@@ -8812,6 +8866,12 @@ impl ConstructorOrFunctionDefinitionAttr for TargetDefinition {
     }
 }
 impl TargetDefinition {
+    pub fn is_constant(&self) -> bool {
+        false
+    }
+    pub fn is_final(&self) -> bool {
+        false
+    }
     pub fn has_side_effects(&self) -> bool {
         false
     }

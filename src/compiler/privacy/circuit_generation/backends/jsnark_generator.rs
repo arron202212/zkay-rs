@@ -223,7 +223,7 @@ impl JsnarkVisitor
             if op == "sign+" {
                 unimplemented!()
             }
-            let homomorphism = ast.func().unwrap().homomorphism().unwrap();
+            let homomorphism = ast.func().unwrap().homomorphism();
             let (f_start, crypto_backend, public_key_name) =
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
