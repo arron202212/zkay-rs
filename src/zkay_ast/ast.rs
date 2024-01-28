@@ -299,6 +299,20 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn elements(&self) -> Vec<Expression> {
+        vec![]
+    }
+    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_before_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
+    pub fn privacy_annotation_label(&self) -> Option<AST> {
+        None
+    }
     pub fn is_final(&self) -> bool {
         false
     }
@@ -778,6 +792,9 @@ impl ASTCode for Expression {
     }
 }
 impl Expression {
+    pub fn is_eq(&self) -> bool {
+        false
+    }
     pub fn code(&self) -> String {
         let v = CodeVisitor::new(true);
         v.visit(&self)
@@ -2842,6 +2859,9 @@ impl ASTCode for LocationExpr {
     }
 }
 impl LocationExpr {
+    pub fn statement(&self) -> Option<Box<Statement>> {
+        None
+    }
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
@@ -3467,6 +3487,9 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
+    pub fn statement(&self) -> Option<Box<Statement>> {
+        None
+    }
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
@@ -4259,6 +4282,14 @@ pub enum Statement {
     None,
 }
 impl Statement {
+    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_before_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
     pub fn pre_statements(&self) -> Vec<AST> {
         vec![]
     }
@@ -4767,6 +4798,17 @@ pub enum SimpleStatement {
     None,
 }
 impl SimpleStatement {
+    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_after_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
     pub fn pre_statements(&self) -> Vec<AST> {
         vec![]
     }
@@ -4902,6 +4944,19 @@ pub enum AssignmentStatement {
     None,
 }
 impl AssignmentStatement {
+    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_after_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
+    pub fn set_before_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {}
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
@@ -5103,8 +5158,16 @@ impl ASTCode for StatementList {
     }
 }
 impl StatementList {
+    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+        None
+    }
+    pub fn set_after_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
+    }
     pub fn set_statements(&mut self, statements: Vec<AST>) {}
-    pub fn statements(&self) -> Vec<Statement> {
+    pub fn statements(&self) -> Vec<AST> {
         vec![]
     }
     pub fn get_item(&self, key: i32) -> Statement {
@@ -5221,6 +5284,11 @@ impl Block {
             statement_list_base: StatementListBase::new(statements, false),
             was_single_statement,
         }
+    }
+    pub fn set_before_analysis(
+        &mut self,
+        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    ) {
     }
 }
 // class Block(StatementList):

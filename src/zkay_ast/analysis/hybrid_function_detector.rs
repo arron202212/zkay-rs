@@ -3,7 +3,7 @@ use crate::zkay_ast::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
-use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
+use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn detect_hybrid_functions(ast: AST)
 // """
@@ -11,25 +11,54 @@ pub fn detect_hybrid_functions(ast: AST)
 // :return: marks all functions which will require verification
 // """
 {
-    let v = DirectHybridFunctionDetectionVisitor::new();
+    let v = DirectHybridFunctionDetectionVisitor;
     v.visit(ast);
 
-    let v = IndirectHybridFunctionDetectionVisitor::new();
+    let v = IndirectHybridFunctionDetectionVisitor;
     v.visit(ast);
 
-    let v = NonInlineableCallDetector::new();
+    let v = NonInlineableCallDetector;
     v.visit(ast);
 }
 
 // class DirectHybridFunctionDetectionVisitor(FunctionVisitor)
 pub struct DirectHybridFunctionDetectionVisitor;
+
+impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
+impl AstVisitor for DirectHybridFunctionDetectionVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl DirectHybridFunctionDetectionVisitor {
     pub fn visitReclassifyExpr(self, ast: ReclassifyExpr) {
-        ast.statement.function.requires_verification = true;
+        if let ReclassifyExpr::ReclassifyExpr(re) = ast {
+            re.expression_base
+                .statement
+                .unwrap()
+                .function
+                .requires_verification = true;
+        }
     }
 
     pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) {
-        if ast.expr.evaluate_privately {
+        if ast.expr.evaluate_privately() {
             ast.statement.function.requires_verification = true;
         } else {
             self.visitChildren(ast);
@@ -68,6 +97,29 @@ impl DirectHybridFunctionDetectionVisitor {
 }
 // class IndirectHybridFunctionDetectionVisitor(FunctionVisitor)
 pub struct IndirectHybridFunctionDetectionVisitor;
+
+impl FunctionVisitor for IndirectHybridFunctionDetectionVisitor {}
+impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl IndirectHybridFunctionDetectionVisitor {
     pub fn visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition) {
         if !ast.requires_verification {
@@ -85,6 +137,29 @@ impl IndirectHybridFunctionDetectionVisitor {
 }
 // class NonInlineableCallDetector(FunctionVisitor)
 pub struct NonInlineableCallDetector;
+
+impl FunctionVisitor for NonInlineableCallDetector {}
+impl AstVisitor for NonInlineableCallDetector {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
         if !ast.is_cast && is_instance(&ast.func, ASTType::LocationExpr) {

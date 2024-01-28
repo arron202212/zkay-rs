@@ -4,8 +4,7 @@ use crate::zkay_ast::ast::{
     FunctionCallExpr, InstanceTarget, LocationExpr, Parameter, StateVariableDeclaration, Statement,
     TupleExpr, VariableDeclaration, AST,
 };
-use crate::zkay_ast::visitor::function_visitor::FunctionVisitor;
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
 pub fn has_side_effects(ast: AST) -> bool {
     SideEffectsDetector::new().visit(ast)
@@ -25,6 +24,28 @@ pub fn check_for_undefined_behavior_due_to_eval_order(ast: AST) {
 
 // class SideEffectsDetector(AstVisitor)
 pub struct SideEffectsDetector;
+
+impl AstVisitor for SideEffectsDetector {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if is_instance(&ast.func, ASTType::LocationExpr)
@@ -54,6 +75,29 @@ impl SideEffectsDetector {
 }
 // class DirectModificationDetector(FunctionVisitor)
 pub struct DirectModificationDetector;
+
+impl FunctionVisitor for DirectModificationDetector {}
+impl AstVisitor for DirectModificationDetector {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
         self.visitAST(ast);
@@ -109,6 +153,29 @@ impl DirectModificationDetector {
 // class IndirectModificationDetector(FunctionVisitor)
 struct IndirectModificationDetector {
     fixed_point_reached: bool,
+}
+
+impl FunctionVisitor for IndirectModificationDetector {}
+impl AstVisitor for IndirectModificationDetector {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
 }
 impl IndirectModificationDetector {
     // pub fn __init__(self)
@@ -174,6 +241,28 @@ impl IndirectModificationDetector {
 }
 // class EvalOrderUBChecker(AstVisitor)
 struct EvalOrderUBChecker;
+
+impl AstVisitor for EvalOrderUBChecker {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl EvalOrderUBChecker {
     // @staticmethod
     pub fn visit_child_expressions(parent: AST, exprs: Vec<AST>) {

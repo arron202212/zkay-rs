@@ -6,7 +6,7 @@ pub fn contains_private_expr(ast: Option<AST>) -> bool {
         return false;
     }
     let v = ContainsPrivVisitor::new();
-    v.visit(ast);
+    v.visit(ast.unwrap());
     v.contains_private
 }
 
@@ -17,6 +17,28 @@ pub fn contains_private_expr(ast: Option<AST>) -> bool {
 pub struct ContainsPrivVisitor {
     pub contains_private: bool,
 }
+
+impl AstVisitor for ContainsPrivVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Option<Self::Return> {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+        None
+    }
+}
 impl ContainsPrivVisitor {
     pub fn new() -> Self {
         Self {
@@ -24,23 +46,28 @@ impl ContainsPrivVisitor {
         }
     }
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func, ASTType::LocationExpr) && !ast.is_cast {
-            self.contains_private |= ast.func.target.requires_verification;
+        if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) && !ast.is_cast() {
+            self.contains_private |= ast
+                .func()
+                .unwrap()
+                .target()
+                .unwrap()
+                .requires_verification();
         }
-        self.visitExpression(ast)
+        self.visitExpression(ast.to_expr())
     }
 
     pub fn visitExpression(self, ast: Expression) {
-        if ast.evaluate_privately {
+        if ast.evaluate_privately() {
             self.contains_private = true;
         }
-        self.visitAST(ast)
+        self.visitAST(ast.get_ast())
     }
 
     pub fn visitAST(self, ast: AST) {
         if self.contains_private {
             return;
         }
-        self.visitChildren(ast)
+        self.visit_children(ast)
     }
 }

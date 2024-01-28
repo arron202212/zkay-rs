@@ -12,9 +12,9 @@ pub fn time_measure(key: &str, should_print: bool, skip: bool) {
 
     if !skip {
         if should_print {
-            zk_print!("Took {elapsed} s");
+            zk_print!("Took {} s", elapsed.as_secs());
         }
-        logger::data(&("time_".to_owned() + key), &elapsed.to_string());
+        logger::data(&("time_".to_owned() + key), &elapsed.as_secs().to_string());
     }
 }
 

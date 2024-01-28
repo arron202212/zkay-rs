@@ -10,6 +10,8 @@ pub fn check_return(ast: AST) {
 // pub fn __init__(&self, ast: ReturnStatement):
 //     super().__init__("Return statements are only allowed at the end of a function.", ast)
 
+// class ReturnCheckVisitor(AstVisitor):
+
 struct ReturnCheckVisitor;
 impl AstVisitor for ReturnCheckVisitor {
     type Return = Option<String>;
@@ -32,7 +34,6 @@ impl AstVisitor for ReturnCheckVisitor {
         None
     }
 }
-// class ReturnCheckVisitor(AstVisitor):
 impl ReturnCheckVisitor {
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
         let container = ast.parent;

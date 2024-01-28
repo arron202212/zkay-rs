@@ -1,13 +1,13 @@
 use crate::zkay_ast::ast::{Parameter, SourceUnit};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
-
 // class FunctionVisitor(AstVisitor)
-pub struct FunctionVisitor;
-impl FunctionVisitor {
+pub trait FunctionVisitor: AstVisitor {
     // pub fn __init__(self)
     //     super().__init__('node-or-children')
-
-    pub fn visitSourceUnit(&self, ast: SourceUnit) {
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn visitSourceUnit(&self, ast: SourceUnit) {
         for c in ast.contracts {
             for cd in c.constructor_definitions {
                 self.visit(cd);
@@ -18,5 +18,5 @@ impl FunctionVisitor {
         }
     }
 
-    pub fn visitParameter(&self, ast: Parameter) {}
+    fn visitParameter(&self, ast: Parameter) {}
 }

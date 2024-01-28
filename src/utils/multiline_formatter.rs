@@ -78,7 +78,7 @@ impl MultiLineFormatter {
                     None
                 } else {
                     Some(indent(
-                        &dedent(if t != "\n" { t } else { "" }),
+                        &dedent(if t != "\n" { &t } else { "" }),
                         &self.current_indent,
                     ))
                 }

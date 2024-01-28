@@ -15,7 +15,7 @@ pub fn run_command(
     // :param cmd: the command to run (list of command and arguments)
     // :param cwd: if specified, use this path as working directory (otherwise current working directory is used)
     // :param allow_verbose: if true, redirect command output to stdout (WARNING, causes return values to be None)
-    // :return: command output and error output (if not (allow_verbose and CFG.lock().unwrap().verbosity))
+    // :return: command output and error output (if not (allow_verbose and CFG.lock().unwrap().user_config.verbosity))
     // """
     //cwd=None, allow_verbose: bool = False
 {
@@ -61,7 +61,7 @@ pub fn run_command(
             "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output:?}\n{error:?}",
             process.status
         );
-    } else if CFG.lock().unwrap().verbosity() >= 2 {
+    } else if CFG.lock().unwrap().user_config.verbosity() >= 2 {
         print!("Ran command {}:\n\n{output:?}\n{error:?}", get_command(cmd));
     }
 
