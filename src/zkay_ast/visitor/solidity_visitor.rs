@@ -1,13 +1,13 @@
 use crate::config::CFG;
 use crate::zkay_ast::ast::{AnnotatedTypeName, CodeVisitor, MeExpr, AST};
 
-pub fn to_solidity(ast: AST) {
-    SolidityVisitor::new().visit(ast)
+pub fn to_solidity(ast: AST) -> String {
+    SolidityVisitor::new().code_visitor_base.visit(ast)
 }
 
 // class SolidityVisitor(CodeVisitor)
 pub struct SolidityVisitor {
-    code_visitor_base: CodeVisitor,
+    pub code_visitor_base: CodeVisitor,
 }
 impl SolidityVisitor {
     // pub fn __init__(self)

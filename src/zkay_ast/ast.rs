@@ -404,6 +404,12 @@ impl AST {
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
     }
+    pub fn modified_values_mut(&mut self) -> &mut BTreeSet<InstanceTarget> {
+        &mut BTreeSet::new()
+    }
+    pub fn read_values_mut(&mut self) -> &mut BTreeSet<InstanceTarget> {
+        &mut BTreeSet::new()
+    }
     pub fn requires_verification(&self) -> bool {
         false
     }
@@ -855,6 +861,7 @@ impl Expression {
     pub fn evaluate_privately(&self) -> bool {
         false
     }
+    pub fn set_evaluate_privately(&self, v: bool) {}
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
     }
@@ -1968,6 +1975,9 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
+    pub fn evaluate_privately(&self) -> bool {
+        false
+    }
     pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
     }
@@ -2859,6 +2869,35 @@ impl ASTCode for LocationExpr {
     }
 }
 impl LocationExpr {
+    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        match self {
+            LocationExpr::IdentifierExpr(ast) => {
+                ast.location_expr_base
+                    .tuple_or_location_expr_base
+                    .expression_base
+                    .ast_base
+            }
+            LocationExpr::MemberAccessExpr(ast) => {
+                ast.location_expr_base
+                    .tuple_or_location_expr_base
+                    .expression_base
+                    .ast_base
+            }
+            LocationExpr::IndexExpr(ast) => {
+                ast.location_expr_base
+                    .tuple_or_location_expr_base
+                    .expression_base
+                    .ast_base
+            }
+            LocationExpr::SliceExpr(ast) => {
+                ast.location_expr_base
+                    .tuple_or_location_expr_base
+                    .expression_base
+                    .ast_base
+            }
+            _ => &mut ASTBase::new(),
+        }
+    }
     pub fn statement(&self) -> Option<Box<Statement>> {
         None
     }
@@ -4282,6 +4321,7 @@ pub enum Statement {
     None,
 }
 impl Statement {
+    pub fn statement_mut(&mut self) -> &mut StatementBase {}
     pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
     }
@@ -8934,6 +8974,9 @@ impl ConstructorOrFunctionDefinitionAttr for TargetDefinition {
     }
 }
 impl TargetDefinition {
+    pub fn can_be_private(&self) -> bool {
+        false
+    }
     pub fn is_constant(&self) -> bool {
         false
     }
@@ -8998,12 +9041,7 @@ pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum InstanceTargetExprUnion {
-    Tuple(
-        (
-            Option<Box<TargetDefinition>>,
-            Option<IdentifierExpressionUnion>,
-        ),
-    ),
+    Tuple(InstanceTarget),
     VariableDeclaration(VariableDeclaration),
     LocationExpr(LocationExpr),
     #[default]

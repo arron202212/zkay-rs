@@ -7,7 +7,7 @@ pub fn check_loops(ast: AST) {
     // """
     // Checks if loops don't contain private expressions
     // """
-    let v = LoopChecker::new();
+    let v = LoopChecker;
     v.visit(ast);
 }
 
@@ -38,63 +38,49 @@ impl AstVisitor for LoopChecker {
 }
 impl LoopChecker {
     pub fn visitWhileStatement(self, ast: WhileStatement) {
-        if contains_private_expr(ast.condition) {
-            assert!(
-                false,
-                "Loop condition cannot contain private expressions {:?}",
-                ast.condition
-            )
-        }
-        if contains_private_expr(ast.body) {
-            assert!(
-                false,
-                "Loop body cannot contain private expressions {:?}",
-                ast.body
-            )
-        }
-        self.visitChildren(ast);
+        assert!(
+            !contains_private_expr(Some(ast.condition.get_ast())),
+            "Loop condition cannot contain private expressions {:?}",
+            ast.condition
+        );
+        assert!(
+            !contains_private_expr(Some(ast.body.get_ast())),
+            "Loop body cannot contain private expressions {:?}",
+            ast.body
+        );
+        self.visit_children(ast);
     }
 
     pub fn visitDoWhileStatement(self, ast: DoWhileStatement) {
-        if contains_private_expr(ast.condition) {
-            assert!(
-                false,
-                "Loop condition cannot contain private expressions {:?}",
-                ast.condition
-            )
-        }
-        if contains_private_expr(ast.body) {
-            assert!(
-                false,
-                "Loop body cannot contain private expressions {:?}",
-                ast.body
-            )
-        }
-        self.visitChildren(ast);
+        assert!(
+            !contains_private_expr(Some(ast.condition.get_ast())),
+            "Loop condition cannot contain private expressions {:?}",
+            ast.condition
+        );
+        assert!(
+            !contains_private_expr(Some(ast.body.get_ast())),
+            "Loop body cannot contain private expressions {:?}",
+            ast.body
+        );
+        self.visit_children(ast);
     }
 
     pub fn visitForStatement(self, ast: ForStatement) {
-        if contains_private_expr(ast.condition) {
-            assert!(
-                false,
-                "Loop condition cannot contain private expressions {:?}",
-                ast.condition
-            )
-        }
-        if contains_private_expr(ast.body) {
-            assert!(
-                false,
-                "Loop body cannot contain private expressions {:?}",
-                ast.body
-            )
-        }
-        if ast.update.is_some() && contains_private_expr(ast.update) {
-            assert!(
-                false,
-                "Loop update statement cannot contain private expressions {:?}",
-                ast.update
-            )
-        }
-        self.visitChildren(ast);
+        assert!(
+            !contains_private_expr(ast.condition.get_ast()),
+            "Loop condition cannot contain private expressions {:?}",
+            ast.condition
+        );
+        assert!(
+            !contains_private_expr(Some(ast.body.get_ast())),
+            "Loop body cannot contain private expressions {:?}",
+            ast.body
+        );
+        assert!(
+            ast.update.is_none() || contains_private_expr(ast.update.map(|u| u.get_ast())),
+            "Loop update statement cannot contain private expressions {:?}",
+            ast.update
+        );
+        self.visit_children(ast);
     }
 }

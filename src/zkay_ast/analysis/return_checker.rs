@@ -2,7 +2,7 @@ use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStateme
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: AST) {
-    let v = ReturnCheckVisitor();
+    let v = ReturnCheckVisitor;
     v.visit(ast);
 }
 // class ReturnPositionException(AstException):
@@ -36,7 +36,7 @@ impl AstVisitor for ReturnCheckVisitor {
 }
 impl ReturnCheckVisitor {
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
-        let container = ast.parent;
+        let container = ast.statement_base.ast_base.parent;
         assert!(container.is_block());
         let ok = true;
         if container.statements.last().unwrap_or_default() != ast {

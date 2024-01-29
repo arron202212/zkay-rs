@@ -48,7 +48,7 @@ impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if !is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&ast.func().unwrap(), ASTType::LocationExpr));
-            let fdef = &ast.func().unwrap().target().unwrap();
+            let fdef = ast.func().unwrap().target().unwrap();
             assert!(fdef.is_function());
             if let TargetDefinition::NamespaceDefinition(
                 NamespaceDefinition::ConstructorOrFunctionDefinition(cofd),

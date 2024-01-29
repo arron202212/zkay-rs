@@ -129,24 +129,27 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(zkay_ast);
+    let (ast, circuits) = transform_ast(zkay_ast.get_ast());
 
     // Dump libraries
     print_step("Write library contract files");
     CFG.lock().unwrap().library_compilation_environment();
-    for crypto_params in ast.used_crypto_backends {
+    for crypto_params in ast.used_crypto_backends.unwrap() {
         // Write pki contract
-        let pki_contract_code = library_contracts::get_pki_contract(crypto_params);
+        let pki_contract_code =
+            library_contracts::get_pki_contract(crypto_params.identifier_name());
         let pki_contract_file = format!(
             "{}.sol",
-            CFG.lock().unwrap().get_pki_contract_name(crypto_params)
+            CFG.lock()
+                .unwrap()
+                .get_pki_contract_name(crypto_params.identifier_name())
         );
-        _dump_to_output(pki_contract_code, output_dir, pki_contract_file, true);
+        _dump_to_output(&pki_contract_code, output_dir, &pki_contract_file, true);
     }
 
     // Write library contract
     _dump_to_output(
-        library_contracts::get_verify_libs_code(),
+        &library_contracts::get_verify_libs_code(),
         output_dir,
         ProvingScheme::verify_libs_contract_filename,
         true,
@@ -155,11 +158,15 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Write public contract file
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
-    let solidity_code_output =
-        _dump_to_output(to_solidity(ast), output_dir, output_filename, false);
+    let solidity_code_output = _dump_to_output(
+        to_solidity(ast.get_ast()),
+        output_dir,
+        output_filename,
+        false,
+    );
 
     // Get all circuit helpers for the transformed contract
-    let circuits: Vec<_> = circuits.values().collect();
+    let circuits: Vec<_> = circuits.values().cloned().collect();
 
     // Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
     //    let  offchain_simulation_code = PythonOffchainVisitor::new(circuits).visit(ast);//TODO LS
@@ -167,14 +174,18 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Instantiate proving scheme and circuit generator
     let ps = proving_scheme_classes(
-        CFG.lock().unwrap().user_config.proving_scheme(),
-        if &CFG.lock().unwrap().user_config.proving_scheme() == "groth16" {
-            ProvingSchemeGroth16
-        } else {
-            ProvingSchemeGm17
-        },
+        &CFG.lock().unwrap().user_config.proving_scheme(),
+        // if &CFG.lock().unwrap().user_config.proving_scheme() == "groth16" {
+        //     ProvingSchemeGroth16
+        // } else {
+        //     ProvingSchemeGm17
+        // },
     );
-    let cg = generator_classes(CFG.lock().unwrap().snark_backend)(circuits, ps, output_dir);
+    let cg = generator_classes(CFG.lock().unwrap().user_config.snark_backend())(
+        circuits,
+        ps,
+        output_dir.to_string(),
+    );
     let mut kwargs = std::collections::HashMap::new();
     if let Some(v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
@@ -184,7 +195,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.code())
+            .map(|cc| cc.verifier_contract_type.unwrap().code().unwrap())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);

@@ -68,6 +68,6 @@ impl ContainsPrivVisitor {
         if self.contains_private {
             return;
         }
-        self.visit_children(ast)
+        self.visit_children(&ast);
     }
 }

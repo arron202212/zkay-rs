@@ -2,7 +2,7 @@ use crate::config::CFG;
 use std::collections::BTreeSet;
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, is_instances, ASTCode, ASTType, AssignmentStatement, BooleanLiteralType,
+    is_instance, is_instances, ASTCode, ASTCode, ASTType, AssignmentStatement, BooleanLiteralType,
     BuiltinFunction, ConstructorOrFunctionDefinition, Expression, FunctionCallExpr,
     FunctionTypeName, IfStatement, IndexExpr, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
     ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
@@ -180,10 +180,15 @@ impl CircuitComplianceChecker {
     }
     // @staticmethod
     pub fn should_evaluate_public_expr_in_circuit(expr: Expression) -> bool {
-        assert!(expr.annotated_type().is_some());
-        if CFG.lock().unwrap().opt_eval_constexpr_in_circuit() {
+        // assert!(expr.annotated_type());
+        if CFG
+            .lock()
+            .unwrap()
+            .user_config
+            .opt_eval_constexpr_in_circuit()
+        {
             if is_instances(
-                &expr.annotated_type().type_name,
+                &*expr.annotated_type().type_name,
                 vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
             ) {
                 //Expressions for which the value is known at compile time -> embed constant expression value into the circuit
@@ -192,7 +197,7 @@ impl CircuitComplianceChecker {
 
             if is_instance(&expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    expr.expr().annotated_type().type_name,
+                    &*expr.expr().annotated_type().type_name,
                     vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
                 )
             {
@@ -222,35 +227,33 @@ impl CircuitComplianceChecker {
             .evaluate_privately
         {
             assert!(ast.key.annotated_type().is_public());
-            self.priv_setter
-                .set_evaluation((Some(*ast.key), None), false);
+            self.priv_setter.set_evaluation((*ast.key).get_ast(), false);
         }
         self.visit_children(&ast.get_ast());
     }
 
     pub fn visitReclassifyExpr(self, ast: ReclassifyExpr) {
         if self.inside_privif_stmt
-            && !ast.statement().before_analysis.same_partition(
+            && !ast.statement().unwrap().before_analysis().same_partition(
                 ast.privacy().unwrap().privacy_annotation_label(),
                 Expression::me_expr(None),
             )
         {
             assert!(false,"Revealing information to other parties is not allowed inside private if statements {:?}", ast)
         }
-        if ast.expr().annotated_type().is_public() {
+        if ast.expr().unwrap().annotated_type().is_public() {
             let eval_in_public = false;
             // try
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
             // except TypeException
             //     eval_in_public = true
             if eval_in_public || !Self::should_evaluate_public_expr_in_circuit(ast.expr().unwrap())
             {
-                self.priv_setter.set_evaluation((ast.expr(), None), false);
+                self.priv_setter
+                    .set_evaluation(ast.expr().unwrap().get_ast(), false);
             }
         } else {
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
         self.visit(ast.expr().unwrap().get_ast());
     }
@@ -259,60 +262,63 @@ impl CircuitComplianceChecker {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
             && ast.func().unwrap().is_private()
         {
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
         } else if ast.is_cast() && ast.annotated_type().unwrap().is_private() {
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
         self.visit_children(&ast.get_ast());
     }
 
     pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) {
-        if ast.expr().annotated_type().is_private() {
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+        if ast.expr.annotated_type().is_private() {
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
         self.visit_children(&ast.get_ast());
     }
 
     pub fn visitIfStatement(self, ast: IfStatement) {
         let old_in_privif_stmt = &self.inside_privif_stmt;
-        if ast.condition.annotated_type.is_private() {
-            let mut mod_vals: BTreeSet<_> = ast
+        if ast.condition.annotated_type().is_private() {
+            let mut mod_vals = ast
                 .then_branch
                 .statement_list_base
                 .statement_base
                 .ast_base
                 .modified_values
-                .keys()
-                .collect();
+                .clone();
             if ast.else_branch.is_some() {
-                mod_vals = mod_vals.union(ast.else_branch.modified_values);
+                mod_vals = mod_vals
+                    .union(
+                        ast.else_branch
+                            .unwrap()
+                            .statement_list_base
+                            .statement_base
+                            .ast_base
+                            .modified_values,
+                    )
+                    .collect();
             }
             for val in mod_vals {
                 if !val
-                    .target
-                    .annotated_type
+                    .target()
+                    .annotated_type()
                     .zkay_type
                     .type_name
                     .is_primitive_type()
                 {
                     assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
                 }
-                if val.in_scope_at(ast)
-                    && !ast
-                        .statement_base
-                        .before_analysis
-                        .unwrap()
-                        .same_partition(val.privacy, Expression::me_expr(None))
+                if val.in_scope_at(ast.get_ast())
+                    && !ast.statement_base.before_analysis.unwrap().same_partition(
+                        val.privacy(),
+                        &PrivacyLabelExpr::Expression(Expression::me_expr(None)),
+                    )
                 {
                     assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
                 }
             }
             self.inside_privif_stmt = true;
-            self.priv_setter
-                .set_evaluation((Some(ast.to_expr()), None), true);
+            self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
         self.visit_children(&ast.get_ast());
         self.inside_privif_stmt = *old_in_privif_stmt;
@@ -377,12 +383,12 @@ impl PrivateSetter {
 
     pub fn visitExpression(self, ast: Expression) {
         assert!(self.evaluate_privately.is_some());
-        ast.set_evaluate_privately(self.evaluate_privately);
+        ast.set_evaluate_privately(self.evaluate_privately.unwrap());
         self.visit_children(&ast.get_ast());
     }
 }
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast: AST) {
-    NonstaticOrIncompatibilityDetector.visit(ast)
+    NonstaticOrIncompatibilityDetector.visit(ast);
 }
 
 // class NonstaticOrIncompatibilityDetector(FunctionVisitor)
@@ -418,14 +424,20 @@ impl NonstaticOrIncompatibilityDetector {
             if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
                 assert!(ast.func().unwrap().target().is_some());
                 assert!(is_instance(
-                    &ast.func().target().unwrap().annotated_type().type_name,
+                    &*ast
+                        .func()
+                        .unwrap()
+                        .target()
+                        .unwrap()
+                        .annotated_type()
+                        .type_name,
                     ASTType::FunctionTypeName
                 ));
                 has_nonstatic_call |= !ast.func().unwrap().target().unwrap().has_static_body();
-                can_be_private &= ast.func().unwrap().target().can_be_private();
-            } else if is_instance(&ast.func, ASTType::BuiltinFunction) {
+                can_be_private &= ast.func().unwrap().target().unwrap().can_be_private();
+            } else if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
                 can_be_private &= ast.func().unwrap().can_be_private()
-                    || ast.annotated_type().type_name.is_literal();
+                    || ast.annotated_type().unwrap().type_name.is_literal();
                 if ast.func().unwrap().is_eq() || ast.func().unwrap().is_ite() {
                     can_be_private &= ast.args()[1].annotated_type().type_name.can_be_private();
                 }

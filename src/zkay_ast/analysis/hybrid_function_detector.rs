@@ -61,7 +61,7 @@ impl DirectHybridFunctionDetectionVisitor {
         if ast.expr.evaluate_privately() {
             ast.statement.function.requires_verification = true;
         } else {
-            self.visitChildren(ast);
+            self.visit_children(&ast.get_ast());
         }
     }
 
@@ -69,24 +69,38 @@ impl DirectHybridFunctionDetectionVisitor {
     // pass
     {
     }
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func, ASTType::BuiltinFunction) && ast.func.is_private {
-            ast.statement.function.requires_verification = true;
-        } else if ast.is_cast && ast.evaluate_privately {
-            ast.statement.function.requires_verification = true;
+    pub fn visitFunctionCallExpr(self, ast: &mut FunctionCallExpr) {
+        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
+            && ast.func().unwrap().is_private()
+        {
+            ast.statement()
+                .unwrap()
+                .statement_mut()
+                .function
+                .requires_verification = true;
+        } else if ast.is_cast() && ast.evaluate_privately() {
+            ast.statement()
+                .unwrap()
+                .statement_mut()
+                .function
+                .requires_verification = true;
         } else {
-            self.visitChildren(ast);
+            self.visit_children(&ast.get_ast());
         }
     }
     pub fn visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition) {
-        self.visit(ast.body);
+        self.visit(ast.body.unwrap().get_ast());
 
-        if ast.can_be_external {
+        if ast.can_be_external() {
             if ast.requires_verification {
                 ast.requires_verification_when_external = true;
             } else {
                 for param in ast.parameters {
-                    if param.annotated_type.is_private() {
+                    if param
+                        .identifier_declaration_base
+                        .annotated_type
+                        .is_private()
+                    {
                         ast.requires_verification_when_external = true;
                         break;
                     }
@@ -126,7 +140,7 @@ impl IndirectHybridFunctionDetectionVisitor {
             for fct in ast.called_functions {
                 if fct.requires_verification {
                     ast.requires_verification = true;
-                    if ast.can_be_external {
+                    if ast.can_be_external() {
                         ast.requires_verification_when_external = true;
                     }
                     break;
@@ -162,15 +176,17 @@ impl AstVisitor for NonInlineableCallDetector {
 }
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
-        if !ast.is_cast && is_instance(&ast.func, ASTType::LocationExpr) {
-            if ast.func.target.requires_verification && ast.func.target.is_recursive {
+        if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
+            if ast.func().unwrap().target().unwrap().requires_verification
+                && ast.func().unwrap().target().unwrap().is_recursive()
+            {
                 assert!(
                     false,
                     "Non-inlineable call to recursive private function {:?}",
-                    ast.func
+                    ast.func()
                 )
             }
         }
-        self.visitChildren(ast);
+        self.visit_children(&ast.get_ast());
     }
 }
