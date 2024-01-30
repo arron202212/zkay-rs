@@ -2,7 +2,7 @@
 use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTChildren, ASTCode, ASTType, AssignmentStatement, BuiltinFunction,
     Expression, FunctionCallExpr, InstanceTarget, InstanceTargetExprUnion, LocationExpr, Parameter,
-    StateVariableDeclaration, Statement, TupleExpr, VariableDeclaration, AST,
+    StateVariableDeclaration, Statement, TupleExpr, VariableDeclaration, AST,TupleOrLocationExpr,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
@@ -100,8 +100,8 @@ impl AstVisitor for DirectModificationDetector {
 }
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
-        self.visitAST(ast);
-        self.collect_modified_values(ast.get_ast(), ast.lhs);
+        self.visitAST(&mut ast.get_ast());
+        self.collect_modified_values(&mut ast.get_ast(), ast.lhs().unwrap().into());
     }
 
     pub fn collect_modified_values(&self, target: &mut AST, expr: AST) {
@@ -118,8 +118,9 @@ impl DirectModificationDetector {
         }
     }
     pub fn visitLocationExpr(&self, ast: &mut LocationExpr) {
-        self.visitAST(ast);
-        if ast.to_expr().is_rvalue()
+        self.visitAST(&mut (*ast).get_ast());
+        let ast1: AST = (*ast.target().unwrap()).into();
+        if TupleOrLocationExpr::LocationExpr(*ast).is_rvalue()
             && is_instances(
                 &ast.target(),
                 vec![

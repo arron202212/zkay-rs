@@ -181,7 +181,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         //     ProvingSchemeGm17
         // },
     );
-    let cg = generator_classes(CFG.lock().unwrap().user_config.snark_backend())(
+    let cg = generator_classes(&CFG.lock().unwrap().user_config.snark_backend())(
         circuits,
         ps,
         output_dir.to_string(),

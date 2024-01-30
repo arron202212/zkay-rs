@@ -2,10 +2,10 @@ use crate::config::CFG;
 use std::collections::BTreeSet;
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, is_instances, ASTCode, ASTCode, ASTType, AssignmentStatement, BooleanLiteralType,
+    is_instance, is_instances, ASTCode, ASTType, AssignmentStatement, BooleanLiteralType,
     BuiltinFunction, ConstructorOrFunctionDefinition, Expression, FunctionCallExpr,
     FunctionTypeName, IfStatement, IndexExpr, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
-    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
+    PrivacyLabelExpr, ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 

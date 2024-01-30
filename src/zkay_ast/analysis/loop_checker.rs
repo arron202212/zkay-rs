@@ -1,6 +1,8 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::analysis::contains_private_checker::contains_private_expr;
-use crate::zkay_ast::ast::{DoWhileStatement, ForStatement, WhileStatement, AST};
+
+use crate::zkay_ast::ast::{ASTCode, DoWhileStatement, ForStatement, WhileStatement, AST};
+
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn check_loops(ast: AST) {

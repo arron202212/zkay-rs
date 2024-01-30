@@ -1,6 +1,6 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
+    is_instance, ASTCode, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
