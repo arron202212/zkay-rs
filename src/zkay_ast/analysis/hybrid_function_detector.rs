@@ -1,6 +1,6 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
+    is_instance, ASTCode, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
@@ -27,7 +27,7 @@ pub struct DirectHybridFunctionDetectionVisitor;
 impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
 impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -42,7 +42,7 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -52,14 +52,21 @@ impl DirectHybridFunctionDetectionVisitor {
             re.expression_base
                 .statement
                 .unwrap()
-                .function
+                .function()
+                .unwrap()
                 .requires_verification = true;
         }
     }
 
     pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) {
         if ast.expr.evaluate_privately() {
-            ast.statement.function.requires_verification = true;
+            ast.expression_base
+                .statement
+                .unwrap()
+                .statement_base_mut()
+                .function
+                .unwrap()
+                .requires_verification = true;
         } else {
             self.visit_children(&ast.get_ast());
         }
@@ -75,14 +82,16 @@ impl DirectHybridFunctionDetectionVisitor {
         {
             ast.statement()
                 .unwrap()
-                .statement_mut()
+                .statement_base_mut()
                 .function
+                .unwrap()
                 .requires_verification = true;
         } else if ast.is_cast() && ast.evaluate_privately() {
             ast.statement()
                 .unwrap()
-                .statement_mut()
+                .statement_base_mut()
                 .function
+                .unwrap()
                 .requires_verification = true;
         } else {
             self.visit_children(&ast.get_ast());
@@ -115,7 +124,7 @@ pub struct IndirectHybridFunctionDetectionVisitor;
 impl FunctionVisitor for IndirectHybridFunctionDetectionVisitor {}
 impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -130,7 +139,7 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -155,7 +164,7 @@ pub struct NonInlineableCallDetector;
 impl FunctionVisitor for NonInlineableCallDetector {}
 impl AstVisitor for NonInlineableCallDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -170,22 +179,26 @@ impl AstVisitor for NonInlineableCallDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
         if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
-            if ast.func().unwrap().target().unwrap().requires_verification
-                && ast.func().unwrap().target().unwrap().is_recursive()
-            {
-                assert!(
-                    false,
-                    "Non-inlineable call to recursive private function {:?}",
-                    ast.func()
-                )
-            }
+            let ast1: AST = (*ast.func().unwrap().target().unwrap()).into();
+            assert!(
+                !(ast1
+                    .constructor_or_function_definition()
+                    .unwrap()
+                    .requires_verification
+                    && ast1
+                        .constructor_or_function_definition()
+                        .unwrap()
+                        .is_recursive),
+                "Non-inlineable call to recursive private function {:?}",
+                ast.func()
+            )
         }
         self.visit_children(&ast.get_ast());
     }

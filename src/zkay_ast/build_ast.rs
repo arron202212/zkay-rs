@@ -2,7 +2,7 @@
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
 use crate::zkay_ast::ast::{
-    self, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
+    self, ASTCode, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
     AssignmentStatementBase, AssignmentStatementUnion, Block, BoolTypeName, BooleanLiteralExpr,
     BuiltinFunction, ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement,
     ElementaryTypeName, EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement,
@@ -301,7 +301,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         IdentifierDeclaration::StateVariableDeclaration(a),
                     ) = self.temp_result().clone()
                     {
-                        Some(a)
+                        Some(self.temp_result().clone())
                     } else {
                         None
                     }
@@ -1182,7 +1182,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     Block::default()
                 }
             } else if let ast::AST::Statement(expr) = self.temp_result().clone() {
-                Block::new(vec![expr], true)
+                Block::new(vec![expr.get_ast()], true)
             } else {
                 Block::default()
             }
@@ -1201,7 +1201,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         Block::default()
                     }
                 } else if let ast::AST::Statement(expr) = self.temp_result().clone() {
-                    Block::new(vec![expr], true)
+                    Block::new(vec![expr.get_ast()], true)
                 } else {
                     Block::default()
                 },
@@ -1242,7 +1242,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     Block::default()
                 }
             } else if let ast::AST::Statement(expr) = self.temp_result().clone() {
-                Block::new(vec![expr], true)
+                Block::new(vec![expr.get_ast()], true)
             } else {
                 Block::default()
             }
@@ -1269,7 +1269,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     Block::default()
                 }
             } else if let ast::AST::Statement(expr) = self.temp_result().clone() {
-                Block::new(vec![expr], true)
+                Block::new(vec![expr.get_ast()], true)
             } else {
                 Block::default()
             }
@@ -1348,7 +1348,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     Block::default()
                 }
             } else if let ast::AST::Statement(expr) = self.temp_result().clone() {
-                Block::new(vec![expr], true)
+                Block::new(vec![expr.get_ast()], true)
             } else {
                 Block::default()
             }

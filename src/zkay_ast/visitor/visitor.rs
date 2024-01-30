@@ -6,20 +6,20 @@
 use crate::zkay_ast::ast::{ASTChildren, AST};
 pub trait AstVisitor {
     type Return;
-    fn visit(&self, ast: AST) -> Option<Self::Return> {
+    fn visit(&self, ast: AST) -> Self::Return {
         self._visit_internal(ast)
     }
     fn log(&self) -> bool;
     fn traversal(&self) -> &'static str;
     fn has_attr(&self, name: &String) -> bool;
     fn get_attr(&self, name: &String) -> Option<String>;
-    fn temper_result(&self) -> Option<Self::Return>;
-    fn _visit_internal(&self, ast: AST) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return;
+    fn _visit_internal(&self, ast: AST) -> Self::Return {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
         }
-        let mut ret: std::option::Option<Self::Return> = None;
+        let mut ret = None;
         let mut ret_children = None;
 
         if self.traversal() == "post" {
@@ -44,7 +44,7 @@ pub trait AstVisitor {
         }
     }
 
-    fn try_call_visit_function(&self, c: &str, ast: &AST) -> Option<Self::Return>
+    fn try_call_visit_function(&self, c: &str, ast: &AST) -> Self::Return
 // std::any::type_name::<Option<String>>(),
     {
         let visitor_function = c.to_owned(); // String::from("visit") +
@@ -59,8 +59,8 @@ pub trait AstVisitor {
         }
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return>;
-    fn visit_children(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return;
+    fn visit_children(&self, ast: &AST) -> Self::Return {
         let mut ast = ast.clone();
         for c in ast.children() {
             self.visit(c);

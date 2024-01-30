@@ -25,7 +25,7 @@ struct DirectCalledFunctionDetector;
 impl FunctionVisitor for DirectCalledFunctionDetector {}
 impl AstVisitor for DirectCalledFunctionDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -40,7 +40,7 @@ impl AstVisitor for DirectCalledFunctionDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -78,7 +78,7 @@ struct IndirectCalledFunctionDetector;
 impl FunctionVisitor for IndirectCalledFunctionDetector {}
 impl AstVisitor for IndirectCalledFunctionDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -93,7 +93,7 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -136,7 +136,7 @@ pub struct IndirectDynamicBodyDetector;
 impl FunctionVisitor for IndirectDynamicBodyDetector {}
 impl AstVisitor for IndirectDynamicBodyDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -151,7 +151,7 @@ impl AstVisitor for IndirectDynamicBodyDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }

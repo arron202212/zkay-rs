@@ -103,6 +103,28 @@ pub struct DeepCopyVisitor {
     with_types: bool,
     with_analysis: bool,
 }
+
+impl AstVisitor for DeepCopyVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Self::Return {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+        None
+    }
+}
 impl DeepCopyVisitor {
     pub fn new(with_types: bool, with_analysis: bool) -> Self
 // super().__init__("node-or-children")
