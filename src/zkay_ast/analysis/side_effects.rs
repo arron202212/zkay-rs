@@ -104,7 +104,11 @@ impl AstVisitor for DirectModificationDetector {
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
         self.visitAST(&mut ast.get_ast());
+<<<<<<< Updated upstream
         self.collect_modified_values(&mut ast.get_ast(), ast.lhs().unwrap().into());
+=======
+        self.collect_modified_values(&mut ast.get_ast(), ast.lhs);
+>>>>>>> Stashed changes
     }
 
     pub fn collect_modified_values(&self, target: &mut AST, expr: AST) {
@@ -121,9 +125,14 @@ impl DirectModificationDetector {
         }
     }
     pub fn visitLocationExpr(&self, ast: &mut LocationExpr) {
+<<<<<<< Updated upstream
         self.visitAST(&mut (*ast).get_ast());
         let ast1: AST = (*ast.target().unwrap()).into();
         if TupleOrLocationExpr::LocationExpr(*ast).is_rvalue()
+=======
+        self.visitAST(&mut ast.get_ast());
+        if ast.to_expr().is_rvalue()
+>>>>>>> Stashed changes
             && is_instances(
                 &ast1,
                 vec![

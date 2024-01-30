@@ -6,7 +6,7 @@ use crate::zkay_ast::ast::{
     BuiltinFunction, ConstructorOrFunctionDefinition, Expression, FunctionCallExpr,
     FunctionTypeName, IfStatement, IndexExpr, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
     PrivacyLabelExpr, ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
-};
+                       };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn check_circuit_compliance(ast: AST) {

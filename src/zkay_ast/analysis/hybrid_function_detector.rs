@@ -1,7 +1,12 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
+<<<<<<< Updated upstream
     is_instance, ASTCode, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
+=======
+    is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
+    FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,ASTCode,
+>>>>>>> Stashed changes
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
