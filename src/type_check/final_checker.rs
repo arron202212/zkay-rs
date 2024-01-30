@@ -18,7 +18,7 @@ struct FinalVisitor {
 }
 impl AstVisitor for FinalVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -33,7 +33,7 @@ impl AstVisitor for FinalVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }

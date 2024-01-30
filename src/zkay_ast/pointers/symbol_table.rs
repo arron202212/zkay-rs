@@ -1,11 +1,11 @@
 // from typing import Tuple, Dict, Union
 use crate::zkay_ast::ast::{
-    is_instance, ASTChildren, ASTCode, ASTType, AnnotatedTypeName, Array, Block, Comment,
-    ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
-    ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr,
-    LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit,
-    Statement, StatementList, StructDefinition, TargetDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    ASTCode, AnnotatedTypeName, Array, Block, Comment, ConstructorOrFunctionDefinition,
+    ContractDefinition, EnumDefinition, EnumValue, Expression, ForStatement, Identifier,
+    IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr, LocationExpr, Mapping,
+    MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement, StatementList,
+    StructDefinition, TargetDefinition, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
+    VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -13,12 +13,12 @@ use serde::{Deserialize, Serialize};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn fill_symbol_table(ast: &AST) {
-    let v = SymbolTableFiller;
+    let v = SymbolTableFiller();
     v.visit(ast)
 }
 
 pub fn link_symbol_table(ast: &AST) {
-    let v = SymbolTableLinker;
+    let v = SymbolTableLinker();
     v.visit(ast);
 }
 
@@ -35,8 +35,8 @@ pub fn merge_dicts(dict_args: Vec<BTreeMap<String, Identifier>>) -> BTreeMap<Str
 {
     let mut result = BTreeMap::new();
     for dictionary in dict_args {
-        for (key, value) in dictionary {
-            if let Some(&v) = result.get(&key) {
+        for (key, value) in dictionary.items() {
+            if let Some(v) = result.get(&key) {
                 if v != value {
                     // raise ValueError("Conflicting definitions for", key)
                     assert!(false, "Conflicting definitions for {}", key);
@@ -71,14 +71,14 @@ pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, Identifier> {
 }
 
 pub fn get_builtin_globals() -> BTreeMap<String, Identifier> {
-    let sf = SymbolTableFiller;
+    let sf = SymbolTableFiller::new();
     sf.get_builtin_globals()
 }
 
 struct SymbolTableFiller;
 impl AstVisitor for SymbolTableFiller {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -93,7 +93,7 @@ impl AstVisitor for SymbolTableFiller {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -102,42 +102,27 @@ impl SymbolTableFiller {
     pub fn get_builtin_globals(&self) -> BTreeMap<String, Identifier> {
         let mut global_defs = GLOBAL_DEFS.vars();
         for d in global_defs.iter_mut() {
-            self.visit((*d).get_ast());
+            self.visit(d);
         }
         let global_defs = global_defs
             .iter()
-            .map(|d| {
-                (
-                    d.namespace_definition_base.idf.name.clone(),
-                    d.namespace_definition_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
         let global_vars = GLOBAL_VARS
             .vars()
             .into_iter()
-            .map(|d| {
-                (
-                    d.dentifier_declaration_base.idf.name.clone(),
-                    d.dentifier_declaration_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
-        merge_dicts(vec![global_defs, global_vars])
+        merge_dicts(global_defs, global_vars)
     }
 
     pub fn visitSourceUnit(&self, ast: &mut SourceUnit) {
-        ast.ast_base.names = ast
+        ast.names = ast
             .contracts
             .iter()
-            .map(|d| {
-                (
-                    d.namespace_definition_base.idf.name.clone(),
-                    d.namespace_definition_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
-        ast.ast_base.names.push(&mut self.get_builtin_globals());
+        ast.names.append(&mut self.get_builtin_globals());
     }
 
     pub fn visitContractDefinition(&self, ast: &mut ContractDefinition) {
@@ -145,7 +130,7 @@ impl SymbolTableFiller {
             .state_variable_declarations
             .iter()
             .filter_map(|d| {
-                if is_instance(d, ASTType::Comment) {
+                if d.is_comment() {
                     None
                 } else {
                     Some((d.idf.name.clone(), d.idf.clone()))
@@ -154,7 +139,7 @@ impl SymbolTableFiller {
             .collect();
         let mut funcs = BTreeMap::new();
         for f in ast.function_definitions {
-            if funcs.contains_key(&f.namespace_definition_base.idf.name) {
+            if funcs.contains_key(&f.idf.name) {
                 // raise UnknownIdentifierException(f"Zkay does not currently support method overloading.", f)
                 assert!(
                     false,
@@ -162,57 +147,38 @@ impl SymbolTableFiller {
                     f
                 );
             }
-            funcs.insert(
-                f.namespace_definition_base.idf.name,
-                f.namespace_definition_base.idf,
-            );
+            funcs.insert(f.idf.name, f.idf);
         }
         let structs = ast
             .struct_definitions
             .iter()
-            .map(|d| {
-                (
-                    d.namespace_definition_base.idf.name.clone(),
-                    d.namespace_definition_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
         let enums = ast
             .enum_definitions
             .iter()
-            .map(|d| {
-                (
-                    d.namespace_definition_base.idf.name.clone(),
-                    d.namespace_definition_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
-        ast.namespace_definition_base.ast_base.names =
-            merge_dicts(vec![state_vars, funcs, structs, enums]);
+        ast.names = merge_dicts(vec![state_vars, funcs, structs, enums]);
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        ast.namespace_definition_base.ast_base.names = ast
+        ast.names = ast
             .parameters
             .iter()
-            .map(|d| {
-                (
-                    d.identifier_declaration_base.idf.name.clone(),
-                    d.identifier_declaration_base.idf.clone(),
-                )
-            })
+            .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
     }
 
     pub fn visitStructDefinition(&self, ast: &mut StructDefinition) {
-        ast.namespace_definition_base.ast_base.names = ast
+        ast.names = ast
             .members
             .iter()
             .map(|d| (d.idf.name.clone(), d.idf.clone()))
             .collect();
     }
     pub fn visitEnumDefinition(&self, ast: EnumDefinition) {
-        ast.namespace_definition_base.ast_base.names = ast
+        ast.names = ast
             .values
             .iter()
             .map(|d| (d.idf.name.clone(), d.idf.clone()))
@@ -221,29 +187,25 @@ impl SymbolTableFiller {
     pub fn visitEnumValue(&self, ast: &mut EnumValue) {}
 
     pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) {
-        ast.names = BTreeMap::from([(
-            ast.identifier_declaration_base.idf.name,
-            ast.identifier_declaration_base.idf,
-        )]);
+        ast.names = BTreeMap::from([(ast.idf.name, ast.idf)]);
     }
 
     pub fn visitStatementList(&self, ast: &mut StatementList) {
-        ast.identifier_declaration_base.ast_base.names = collect_children_names(&mut ast.get_ast());
+        ast.names = collect_children_names(ast);
     }
 
     pub fn visitSimpleStatement(&self, ast: &mut SimpleStatement) {
-        ast.names = collect_children_names(&mut ast.get_ast());
+        ast.names = collect_children_names(ast);
     }
 
     pub fn visitForStatement(&self, ast: &mut ForStatement) {
-        ast.statement_base.ast_base.names = collect_children_names(&mut ast.get_ast());
+        ast.names = collect_children_names(ast);
     }
 
     pub fn visitMapping(&self, ast: &mut Mapping) {
-        ast.type_name_base.ast_base.names = BTreeMap::new();
-        if ast.key_label.unwrap().is_identifier() {
-            ast.type_name_base.ast_base.names =
-                BTreeMap::from([(ast.key_label.unwrap().name.clone(), ast.key_label.clone())]);
+        ast.names = BTreeMap::new();
+        if ast.key_label.is_identifier() {
+            ast.names = BTreeMap::from([(ast.key_label.name.clone(), ast.key_label.clone())]);
         }
     }
 }
@@ -252,7 +214,7 @@ pub struct SymbolTableLinker;
 // class SymbolTableLinker(AstVisitor)
 impl AstVisitor for SymbolTableLinker {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -267,7 +229,7 @@ impl AstVisitor for SymbolTableLinker {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -373,7 +335,10 @@ impl SymbolTableLinker {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
                     SymbolTableLinker::_find_lca(ast.clone(), decl.get_ast(), anc.get_ast());
-                if lca.statements().iter().find(|x| (*x).clone() == ref_anchor)
+                if lca
+                    .statements()
+                    .iter()
+                    .find(|x| AST::Statement((*x).clone()) == ref_anchor)
                     <= lca
                         .statements()
                         .iter()
@@ -393,11 +358,14 @@ impl SymbolTableLinker {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
                     SymbolTableLinker::_find_lca(ast.get_ast(), decl.get_ast(), anc.get_ast());
-                if lca.statements().iter().find(|x| (*x).clone() == ref_anchor)
+                if lca
+                    .statements()
+                    .iter()
+                    .find(|x| AST::Statement((*x).clone()) == ref_anchor)
                     <= lca
                         .statements()
                         .iter()
-                        .find(|x| (*x).clone() == decl_anchor)
+                        .find(|x| AST::Statement((*x).clone()) == decl_anchor)
                 {
                     ast = anc.get_ast();
                     continue;
@@ -413,7 +381,7 @@ impl SymbolTableLinker {
             if let Some(name) = _ancestor.names().get(&target_idf.name())
             // found name
             {
-                if name == target_idf {
+                if name == &target_idf {
                     return true;
                 }
             }
@@ -446,27 +414,27 @@ impl SymbolTableLinker {
         }
         ast = match ast {
             UserDefinedTypeName::EnumTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::EnumTypeName(ast)
             }
             UserDefinedTypeName::EnumValueTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::EnumValueTypeName(ast)
             }
             UserDefinedTypeName::StructTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::StructTypeName(ast)
             }
             UserDefinedTypeName::ContractTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::ContractTypeName(ast)
             }
             UserDefinedTypeName::AddressTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::AddressTypeName(ast)
             }
             UserDefinedTypeName::AddressPayableTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def));
                 UserDefinedTypeName::AddressPayableTypeName(ast)
             }
             _ => UserDefinedTypeName::default(),

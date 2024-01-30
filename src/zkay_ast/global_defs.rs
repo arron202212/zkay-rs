@@ -1,8 +1,8 @@
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::zkay_ast::ast::{
-    ASTCode, AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName,
-    Identifier, IdentifierBase, Parameter, StateVariableDeclaration, StructDefinition,
-    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
+    AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName, Identifier,
+    IdentifierBase, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName,
+    TypeName, UserDefinedTypeName, VariableDeclaration,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 
@@ -11,7 +11,7 @@ lazy_static! {
     pub static ref ARRAY_LENGTH_MEMBER: VariableDeclaration = VariableDeclaration::new(
         vec![],
         AnnotatedTypeName::uint_all(),
-        Identifier::identifier("length"),
+        Identifier::identifier(IdentifierBase::new(String::from("length"))),
         None
     );
     pub static ref GLOBAL_DEFS: GlobalDefs = GlobalDefs::new();
@@ -41,11 +41,9 @@ impl GlobalDefs {
                 vec![],
                 AnnotatedTypeName::uint_all(),
                 Identifier::identifier("balance"),
-                None,
-            )
-            .get_ast()],
+            )],
         );
-        set_parents(address_struct.get_ast());
+        set_parents(address_struct);
 
         let mut address_payable_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<address_payable>"),
@@ -54,122 +52,90 @@ impl GlobalDefs {
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("balance"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("send")),
                     Some(vec![Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
-                        Identifier::identifier(""),
+                        Identifier::identifier(String::new()),
                         None,
                     )]),
                     Some(vec![String::from("public")]),
                     Some(vec![Parameter::new(
                         vec![],
                         AnnotatedTypeName::bool_all(),
-                        Identifier::identifier(""),
+                        Identifier::identifier(String::new()),
                         None,
                     )]),
                     Some(Block::new(vec![], false)),
-                )
-                .get_ast(),
+                ),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("transfer")),
                     Some(vec![Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
-                        Identifier::identifier(""),
+                        Identifier::identifier(String::new()),
                         None,
                     )]),
                     Some(vec![String::from("public")]),
                     Some(vec![]),
                     Some(Block::new(vec![], false)),
-                )
-                .get_ast(),
+                ),
             ],
         );
-        address_payable_struct.members[1]
-            .constructor_or_function_definition()
-            .unwrap()
-            .can_be_private = false;
-        address_payable_struct.members[2]
-            .constructor_or_function_definition()
-            .unwrap()
-            .can_be_private = false;
-        set_parents(address_payable_struct.get_ast());
+        address_payable_struct.members[1].can_be_private = false;
+        address_payable_struct.members[2].can_be_private = false;
+        set_parents(address_payable_struct);
 
         let msg_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<msg>"),
             vec![
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
-                        None,
-                        String::from("NON_HOMOMORPHISM"),
-                    ),
+                    AnnotatedTypeName::new(TypeName::address_payable_type()),
                     Identifier::identifier("sender"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("value"),
-                    None,
-                )
-                .get_ast(),
+                ),
             ],
         );
-        set_parents(msg_struct.get_ast());
+        set_parents(msg_struct);
 
         let block_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<block>"),
             vec![
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
-                        None,
-                        String::from("NON_HOMOMORPHISM"),
-                    ),
+                    AnnotatedTypeName::new(TypeName::address_payable_type()),
                     Identifier::identifier("coinbase"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("difficulty"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("gaslimit"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("number"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("timestamp"),
-                    None,
-                )
-                .get_ast(),
+                ),
             ],
         );
-        set_parents(block_struct.get_ast());
+        set_parents(block_struct);
 
         let tx_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<tx>"),
@@ -178,23 +144,15 @@ impl GlobalDefs {
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("gasprice"),
-                    None,
-                )
-                .get_ast(),
+                ),
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
-                        None,
-                        String::from("NON_HOMOMORPHISM"),
-                    ),
+                    AnnotatedTypeName::new(TypeName::address_payable_type()),
                     Identifier::identifier("origin"),
-                    None,
-                )
-                .get_ast(),
+                ),
             ],
         );
-        set_parents(tx_struct.get_ast());
+        set_parents(tx_struct);
         Self {
             address_struct,
             address_payable_struct,
@@ -226,7 +184,7 @@ impl GlobalVars {
         let mut msg: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![GLOBAL_DEFS.msg_struct.namespace_definition_base.idf.clone()],
+                    vec![GLOBAL_DEFS.msg_struct.idf.clone()],
                     Some(GLOBAL_DEFS.msg_struct.to_namespace_definition()),
                 )
                 .to_type_name(),
@@ -235,17 +193,13 @@ impl GlobalVars {
             Identifier::identifier("msg"),
             None,
         );
-        msg.identifier_declaration_base.idf.parent = msg;
+        msg.idf.parent = msg;
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![GLOBAL_DEFS
-                        .block_struct
-                        .namespace_definition_base
-                        .idf
-                        .clone()],
-                    Some(GLOBAL_DEFS.block_struct.to_namespace_definition()),
+                    vec![GLOBAL_DEFS.block_struct.idf.clone()],
+                    GLOBAL_DEFS.block_struct.to_namespace_definition(),
                 )
                 .to_type_name(),
             ),
@@ -253,13 +207,13 @@ impl GlobalVars {
             Identifier::identifier("block"),
             None,
         );
-        block.identifier_declaration_base.idf.parent = block;
+        block.idf.parent = block;
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![GLOBAL_DEFS.tx_struct.namespace_definition_base.idf.clone()],
-                    Some(GLOBAL_DEFS.tx_struct.to_namespace_definition()),
+                    vec![GLOBAL_DEFS.tx_struct.idf.clone()],
+                    GLOBAL_DEFS.tx_struct.to_namespace_definition(),
                 )
                 .to_type_name(),
             ),
@@ -267,7 +221,7 @@ impl GlobalVars {
             Identifier::identifier("tx"),
             None,
         );
-        tx.identifier_declaration_base.idf.parent = tx;
+        tx.idf.parent = tx;
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
@@ -275,7 +229,7 @@ impl GlobalVars {
             Identifier::identifier("now"),
             None,
         );
-        now.identifier_declaration_base.idf.parent = now;
+        now.idf.parent = now;
         Self {
             msg,
             block,

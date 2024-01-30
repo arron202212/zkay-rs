@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
-    ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, NamespaceDefinition,
-    SourceUnit, Statement, AST,
+    ConstructorOrFunctionDefinition, Expression, Identifier, NamespaceDefinition, SourceUnit,
+    Statement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -10,7 +10,7 @@ struct ParentSetterVisitor {
 
 impl AstVisitor for ParentSetterVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -25,7 +25,7 @@ impl AstVisitor for ParentSetterVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -44,11 +44,11 @@ impl ParentSetterVisitor {
     //         super().__init__(traversal='pre')
 
     pub fn visitSourceUnit(&self, ast: &mut SourceUnit) {
-        ast.ast_base.namespace = vec![];
+        ast.namespace = [];
     }
 
     pub fn visitNamespaceDefinition(&self, ast: NamespaceDefinition) {
-        ast.ast_base.namespace = (if let Some(parent) = ast.parent() {
+        ast.namespace = (if let Some(parent) = ast.parent() {
             parent.namespace.clone()
         } else {
             vec![]
@@ -59,13 +59,13 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        ast.namespace_definition_base.ast_base.namespace = (if let Some(parent) = ast.parent {
+        ast.namespace = (if let Some(parent) = ast.parent() {
             parent.namespace.clone()
         } else {
             vec![]
         })
         .into_iter()
-        .chain([ast.namespace_definition_base.idf.clone()])
+        .chain([ast.idf.clone()])
         .collect();
     }
 
@@ -86,7 +86,7 @@ struct ExpressionToStatementVisitor;
 
 impl AstVisitor for ExpressionToStatementVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -101,7 +101,7 @@ impl AstVisitor for ExpressionToStatementVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -109,7 +109,7 @@ impl AstVisitor for ExpressionToStatementVisitor {
 
 impl ExpressionToStatementVisitor {
     pub fn visitExpression(&self, ast: &mut Expression) {
-        let parent = Some(ast.get_ast());
+        let parent = ast.clone();
         while let Some(p) = parent {
             if let AST::Statement(_) = p {
                 break;
@@ -122,12 +122,9 @@ impl ExpressionToStatementVisitor {
     }
 
     pub fn visitStatement(&self, ast: &mut Statement) {
-        let mut parent = Some(ast.get_ast());
+        let parent = ast.clone();
         while let Some(p) = parent {
-            if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
-                _,
-            )) = p
-            {
+            if let AST::ConstructorOrFunctionDefinition(_) = p {
                 break;
             }
             parent = p.parent();
@@ -139,8 +136,8 @@ impl ExpressionToStatementVisitor {
 }
 
 pub fn set_parents(ast: AST) {
-    let v = ParentSetterVisitor::new();
+    let v = ParentSetterVisitor::default();
     v.visit(ast);
-    let v = ExpressionToStatementVisitor;
+    let v = ExpressionToStatementVisitor::default();
     v.visit(ast);
 }

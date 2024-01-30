@@ -1,6 +1,6 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::analysis::contains_private_checker::contains_private_expr;
-use crate::zkay_ast::ast::{ASTCode, DoWhileStatement, ForStatement, WhileStatement, AST};
+use crate::zkay_ast::ast::{DoWhileStatement, ForStatement, WhileStatement, AST};
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn check_loops(ast: AST) {
@@ -17,7 +17,7 @@ pub struct LoopChecker;
 impl FunctionVisitor for LoopChecker {}
 impl AstVisitor for LoopChecker {
     type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
+    fn temper_result(&self) -> Option<Self::Return> {
         None
     }
     fn log(&self) -> bool {
@@ -32,7 +32,7 @@ impl AstVisitor for LoopChecker {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -48,7 +48,7 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.body
         );
-        self.visit_children(&ast.get_ast());
+        self.visit_children(ast);
     }
 
     pub fn visitDoWhileStatement(self, ast: DoWhileStatement) {
@@ -62,12 +62,12 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.body
         );
-        self.visit_children(&ast.get_ast());
+        self.visit_children(ast);
     }
 
     pub fn visitForStatement(self, ast: ForStatement) {
         assert!(
-            !contains_private_expr(Some(ast.condition.get_ast())),
+            !contains_private_expr(ast.condition.get_ast()),
             "Loop condition cannot contain private expressions {:?}",
             ast.condition
         );
@@ -81,6 +81,6 @@ impl LoopChecker {
             "Loop update statement cannot contain private expressions {:?}",
             ast.update
         );
-        self.visit_children(&ast.get_ast());
+        self.visit_children(ast);
     }
 }
