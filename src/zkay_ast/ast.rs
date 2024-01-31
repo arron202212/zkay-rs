@@ -299,6 +299,15 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn parameter(&self)->Option<&Parameter>{
+        None
+    }
+    pub fn variable_declaration(&self)->Option<&VariableDeclaration>{
+        None
+    }
+    pub fn source_unit(&self)->Option<&SourceUnit>{
+    None    
+    }
     pub fn statement_list_base(&self) -> StatementListBase {
         StatementListBase::default()
     }
@@ -810,6 +819,9 @@ impl ASTChildren for Expression {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl Expression {
+    pub fn expression_base_mut(&mut self)->&mut ExpressionBase{
+        &mut ExpressionBase::default()
+    }
     pub fn is_eq(&self) -> bool {
         false
     }
@@ -4155,6 +4167,9 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
+    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        &mut ASTBase::default()
+    }
     pub fn corresponding_priv_expression(&self) -> Option<Expression> {
         None
     }
@@ -4733,6 +4748,10 @@ impl ForStatement {
             body,
         }
     }
+ pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        &mut ASTBase::default()
+    }
+
     pub fn statements(&self) -> Vec<Statement> {
         vec![
             if let Some(init) = &self.init {
@@ -4883,6 +4902,11 @@ impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl SimpleStatement {
+ pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        &mut ASTBase::default()
+    }
+
+
     pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
     }
@@ -5030,7 +5054,6 @@ pub enum AssignmentStatement {
 }
 impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.condition.clone()));
     }
 }
 impl AssignmentStatement {
@@ -5253,6 +5276,9 @@ impl ASTCode for StatementList {
     }
 }
 impl StatementList {
+ pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        &mut ASTBase::default()
+    }
     pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
     }
@@ -8141,6 +8167,12 @@ pub enum NamespaceDefinition {
     None,
 }
 impl NamespaceDefinition {
+ pub fn ast_base_mut(&mut self) -> &mut ASTBase {
+        &mut ASTBase::default()
+    }
+    pub fn namespace_definition_base(&self)->&NamespaceDefinitionBase{
+        &NamespaceDefinitionBase::default()
+    }
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
     }
@@ -9141,6 +9173,11 @@ pub struct InstanceTarget {
         Option<Box<TargetDefinition>>,
         Option<IdentifierExpressionUnion>,
     ),
+}
+impl fmt::Display for InstanceTarget {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.target_key)
+    }
 }
 impl InstanceTarget {
     pub fn new(expr: InstanceTargetExprUnion) -> Self {

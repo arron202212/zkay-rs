@@ -5,7 +5,7 @@ use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: &AST) {
     let v = ReturnCheckVisitor;
-    v.visit(ast);
+    v.visit(ast.clone());
 }
 // class ReturnPositionException(AstException):
 

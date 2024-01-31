@@ -11,7 +11,7 @@ use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn alias_analysis(ast: &AST) {
     let v = AliasAnalysisVisitor::new();
-    v.cond_analyzer.visit(ast);
+    v.cond_analyzer.visit(ast.clone());
 }
 
 struct AliasAnalysisVisitor {

@@ -22,9 +22,11 @@ use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers as link;
 use bitflags::bitflags;
 use std::fmt;
-
+  #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct ASTFlags( u32 );
 bitflags! {
-    struct ASTFlags: u32 {
+    impl ASTFlags: u32 {
         const PARENTS           = 0b00000001;
         const LINK_IDENTIFIERS  = 0b00000010;
         const CHECK_RETURN      = 0b00000100;
@@ -42,28 +44,28 @@ bitflags! {
 
 impl ASTFlags {
     pub fn new(flag: Option<u32>) -> Self {
-        Self (Self::FLAG_ALL)
+        Self (flag.unwrap())
     }
     pub fn clear(&mut self) -> &mut ASTFlags {
         self
     }
     pub fn parents(&self) -> bool {
-        self.bits() & Self::PARENTS == Self::PARENTS
+        *self &Self::PARENTS == Self::PARENTS
     }
     pub fn link_identifiers(&self) -> bool {
-        self.bits() & Self::LINK_IDENTIFIERS == Self::LINK_IDENTIFIERS
+        *self &Self::LINK_IDENTIFIERS == Self::LINK_IDENTIFIERS
     }
     pub fn check_return(&self) -> bool {
-        self.bits() & Self::CHECK_RETURN == Self::CHECK_RETURN
+        *self &Self::CHECK_RETURN == Self::CHECK_RETURN
     }
     pub fn alias_analysis(&self) -> bool {
-        self.bits() & Self::ALIAS_ANALYSIS == Self::ALIAS_ANALYSIS
+        *self &Self::ALIAS_ANALYSIS == Self::ALIAS_ANALYSIS
     }
     pub fn type_check(&self) -> bool {
-        self.bits() & Self::TYPE_CHECK == Self::TYPE_CHECK
+        *self &Self::TYPE_CHECK == Self::TYPE_CHECK
     }
     pub fn solc_check(&self) -> bool {
-        self.bits() & Self::SOLC_CHECK == Self::SOLC_CHECK
+        *self & Self::SOLC_CHECK == Self::SOLC_CHECK
     }
 }
 
@@ -164,28 +166,28 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
     };
 
     let mut vc_names = vec![];
-    for contract in ast.contracts {
-        let cname = contract.idf.name;
-        let fcts = contract
+    for contract in ast.source_unit().unwrap().contracts {
+        let cname = contract.namespace_definition_base.idf.name();
+        let fcts:Vec<_> = contract
             .function_definitions
             .iter()
-            .chain(contract.constructor_definitions)
+            .chain(&contract.constructor_definitions)
             .filter_map(|fct| {
-                if fct.requires_verification_when_external && fct.has_side_effects {
+                if fct.requires_verification_when_external && fct.has_side_effects() {
                     Some(fct)
                 } else {
                     None
                 }
             })
             .collect();
-        vc_names += fcts
+        vc_names.extend(fcts
             .iter()
             .map(|fct| {
                 CFG.lock()
                     .unwrap()
-                    .get_verification_contract_name(cname, fct.name)
+                    .get_verification_contract_name(cname, fct.name())
             })
-            .collect();
+            .collect());
     }
     vc_names
 }

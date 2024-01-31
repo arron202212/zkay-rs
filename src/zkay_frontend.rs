@@ -37,7 +37,7 @@ use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
-fn proving_scheme_classes<T>(proving_scheme: &str) -> T {
+fn proving_scheme_classes<T>(proving_scheme: &str) -> &T{
     match proving_scheme {
         "groth16" => &ProvingSchemeGroth16,
         _ => &ProvingSchemeGm17, //"gm17"
@@ -135,7 +135,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Dump libraries
     print_step("Write library contract files");
     CFG.lock().unwrap().library_compilation_environment();
-    for crypto_params in ast.used_crypto_backends.unwrap() {
+    for crypto_params in ast.source_unit().unwrap().used_crypto_backends.unwrap() {
         // Write pki contract
         let pki_contract_code =
             library_contracts::get_pki_contract(&crypto_params);
@@ -152,7 +152,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     _dump_to_output(
         &library_contracts::get_verify_libs_code(),
         output_dir,
-        &ProvingScheme::verify_libs_contract_filename,
+        &ProvingScheme::verify_libs_contract_filename(),
         true,
     );
 
@@ -196,7 +196,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.unwrap().get_ast().code().unwrap())
+            .map(|cc| cc.verifier_contract_type.unwrap().get_ast().code())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);
@@ -208,7 +208,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         print_step("Writing manifest file");
         // Set crypto backends for unused homomorphisms to None
         for hom in Homomorphism::fields() {
-            if !ast.used_homomorphisms.unwrap().contains(&hom) {
+            if !ast.source_unit().unwrap().used_homomorphisms.unwrap().contains(&hom) {
                 CFG.lock()
                     .unwrap()
                     .user_config

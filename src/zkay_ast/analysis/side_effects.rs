@@ -332,13 +332,13 @@ impl EvalOrderUBChecker {
 
             for arg in &exprs {
                 let modset: BTreeSet<_> = arg.ast_base().modified_values.clone();
-                let other_args = exprs
+                let other_args: BTreeSet<_> = exprs
                     .iter()
                     .filter_map(|e| if e != arg { Some(e) } else { None })
                     .collect();
                 for arg2 in other_args {
                     let diffset: BTreeSet<_> =
-                        modset.intersection(arg2.ast_base().read_values).collect();
+                        modset.intersection(&arg2.ast_base().read_values).collect();
                     if !diffset.is_empty() {
                         let setstr = format!(
                             r#"{{{}}}"#,

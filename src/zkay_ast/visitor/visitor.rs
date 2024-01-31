@@ -7,7 +7,7 @@ use crate::zkay_ast::ast::{ASTChildren, AST};
 pub trait AstVisitor {
     type Return;
     fn visit(&self, ast: AST) -> Self::Return {
-        self._visit_internal(ast)
+        self._visit_internal(ast).unwrap()
     }
     fn log(&self) -> bool;
     fn traversal(&self) -> &'static str;
@@ -29,7 +29,7 @@ pub trait AstVisitor {
         if f.is_some() {
             ret = Some(f);
         } else if self.traversal() == "node-or-children" {
-            ret_children = self.visit_children(&ast);
+            ret_children =Some (self.visit_children(&ast));
         }
         if self.traversal() == "pre" {
             ret_children = Some(self.visit_children(&ast));

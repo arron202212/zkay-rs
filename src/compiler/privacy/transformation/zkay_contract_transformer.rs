@@ -32,9 +32,9 @@ use crate::zkay_ast::visitor::deep_copy::deep_copy;
 use crate::zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use std::collections::BTreeMap;
 pub fn transform_ast(
-    ast: SourceUnit,
+    ast: AST,
 ) -> (
-    SourceUnit,
+    AST,
     BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
 )
 // """
@@ -52,10 +52,10 @@ pub fn transform_ast(
     set_parents(new_ast);
     link_identifiers(&new_ast);
     (
-        if let AST::SourceUnit(su) = new_ast {
-            su
+        if let AST::SourceUnit(_) = new_ast {
+            new_ast
         } else {
-            SourceUnit::default()
+            AST::default()
         },
         zt.circuits,
     )
@@ -878,7 +878,7 @@ impl ZkayTransformer {
             original_params = original_params
                 .iter()
                 .map(|p| {
-                    deep_copy(p, true, false)
+                    deep_copy(p.get_ast(), true, false).parameter().unwrap()
                         .with_changed_storage(String::from("memory"), String::from("calldata"))
                 })
                 .collect();
@@ -1288,7 +1288,7 @@ impl ZkayTransformer {
                     .return_var_decls
                     .iter()
                     .map(|vd| {
-                        VariableDeclarationStatement::new(deep_copy(vd.clone(), false, false), None)
+                        VariableDeclarationStatement::new(deep_copy(vd.get_ast(), false, false).variable_declaration().unwrap().clone(), None)
                             .get_ast()
                     })
                     .collect(),

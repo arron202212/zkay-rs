@@ -48,13 +48,13 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitNamespaceDefinition(&self, ast: NamespaceDefinition) {
-        ast.ast_base.namespace = (if let Some(parent) = ast.parent() {
-            parent.namespace.clone()
+        ast.ast_base_mut().namespace = (if let Some(parent) = ast.parent() {
+            parent.ast_base().namespace.clone()
         } else {
-            vec![]
+            None
         })
         .into_iter()
-        .chain([ast.idf.clone()])
+        .chain([ast.namespace_definition_base().idf.clone()])
         .collect();
     }
 
@@ -62,18 +62,18 @@ impl ParentSetterVisitor {
         ast.namespace_definition_base.ast_base.namespace = (if let Some(parent) = ast.parent {
             parent.namespace_definition_base.ast_base.namespace.clone()
         } else {
-            vec![]
+            None
         })
         .into_iter()
-        .chain([ast.namespace_definition_base.idf.clone()])
+        .chain(vec![ast.namespace_definition_base.idf.clone()])
         .collect();
     }
 
     pub fn visitChildren(&self, ast: &mut AST) {
         for c in ast.children() {
             if AST::default()!=c {
-                c.parent = ast.clone();
-                c.namespace = ast.namespace.clone();
+                c.ast_base_mut().parent = Some(Box::new(ast.clone()));
+                c.ast_base_mut().namespace = ast.ast_base().namespace.clone();
                 self.visit(c);
             } else {
                 print!("{:?},{:?}, {:?}", c, ast, ast.children());
@@ -117,7 +117,7 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement = parent;
+            ast.expression_base_mut().statement = parent.map(|p|Box::new(p));
         }
     }
 
@@ -133,7 +133,7 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.function = parent;
+            ast.statement_base_mut().function = parent.map(|p|Box::new(p));
         }
     }
 }

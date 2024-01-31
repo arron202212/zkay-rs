@@ -235,7 +235,7 @@ impl GlobalVars {
             Identifier::identifier("msg"),
             None,
         );
-        msg.identifier_declaration_base.idf.parent = msg;
+        msg.identifier_declaration_base.idf.ast_base_mut().parent = Some(Box::new(msg.get_ast()));
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
@@ -253,7 +253,7 @@ impl GlobalVars {
             Identifier::identifier("block"),
             None,
         );
-        block.identifier_declaration_base.idf.parent = block;
+        block.identifier_declaration_base.idf.ast_base_mut().parent = Some(Box::new(block.get_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
@@ -267,7 +267,7 @@ impl GlobalVars {
             Identifier::identifier("tx"),
             None,
         );
-        tx.identifier_declaration_base.idf.parent = tx;
+        tx.identifier_declaration_base.idf.ast_base_mut().parent = Some(Box::new(tx.get_ast()));
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
@@ -275,7 +275,7 @@ impl GlobalVars {
             Identifier::identifier("now"),
             None,
         );
-        now.identifier_declaration_base.idf.parent = now;
+        now.identifier_declaration_base.idf.ast_base_mut().parent = Some(Box::new(now.get_ast()));
         Self {
             msg,
             block,

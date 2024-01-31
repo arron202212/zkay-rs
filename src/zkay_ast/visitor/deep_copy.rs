@@ -1,5 +1,5 @@
 use crate::transaction::crypto::params::CryptoParams;
-use crate::zkay_ast::ast::{Expression, Statement, UserDefinedTypeName, AST,ASTCode,};
+use crate::zkay_ast::ast::{Expression, Statement, UserDefinedTypeName, AST,ASTCode,AnnotatedTypeName,};
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -19,9 +19,9 @@ pub fn deep_copy(ast: AST, with_types: bool, with_analysis: bool) -> AST
     // assert!(isinstance(ast, AST));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
     let mut ast_copy = v.visit(ast);
-    ast_copy.parent = ast.parent;
+    ast_copy.ast_base_mut().parent = ast.parent().map(|p|Box::new(p));
     set_parents(ast_copy);
-    link_identifiers(ast_copy);
+    link_identifiers(&ast_copy);
     ast_copy
 }
 
@@ -34,7 +34,7 @@ pub fn replace_expr(
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
 {
-    _replace_ast(old_expr, &mut (*new_expr).get_ast());
+    _replace_ast(Some(old_expr.get_ast()), &mut (*new_expr).get_ast());
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
@@ -42,9 +42,9 @@ pub fn replace_expr(
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.parent = old_ast.unwrap().parent;
+    new_ast.ast_base_mut().parent = old_ast.unwrap().parent().map(|p|Box::new(p));
     DeepCopyVisitor::copy_ast_fields(old_ast.unwrap(), new_ast);
-    if old_ast.unwrap().parent.is_some() {
+    if old_ast.unwrap().parent().is_some() {
         set_parents(*new_ast);
         link_identifiers(new_ast);
     }
@@ -105,9 +105,9 @@ pub struct DeepCopyVisitor {
 }
 
 impl AstVisitor for DeepCopyVisitor {
-    type Return = Option<String>;
+    type Return = AST;
     fn temper_result(&self) -> Self::Return {
-        None
+         AST::None
     }
     fn log(&self) -> bool {
         false
@@ -122,7 +122,7 @@ impl AstVisitor for DeepCopyVisitor {
         None
     }
     fn call_visit_function(&self, ast: &AST) -> Self::Return {
-        None
+        AST::None
     }
 }
 impl DeepCopyVisitor {
@@ -188,7 +188,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitExpression(self, ast: Expression) -> AST {
-        let mut ast_copy = self.visitChildren(ast);
+        let mut ast_copy = self.visitChildren(ast.get_ast());
         if self.with_types && ast.annotated_type()!=AnnotatedTypeName::default() {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
