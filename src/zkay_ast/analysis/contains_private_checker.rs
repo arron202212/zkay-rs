@@ -1,4 +1,6 @@
-use crate::zkay_ast::ast::{is_instance, ASTType, Expression, FunctionCallExpr, LocationExpr, AST};
+use crate::zkay_ast::ast::{
+    is_instance, ASTCode, ASTType, Expression, FunctionCallExpr, LocationExpr, AST,
+};
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private_expr(ast: Option<AST>) -> bool {
@@ -20,7 +22,7 @@ pub struct ContainsPrivVisitor {
 
 impl AstVisitor for ContainsPrivVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -35,7 +37,7 @@ impl AstVisitor for ContainsPrivVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }

@@ -32,6 +32,7 @@ use crate::utils::progress_printer::print_step;
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
+use crate::zkay_ast::ast::ASTCode;
 use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;
@@ -137,12 +138,12 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     for crypto_params in ast.used_crypto_backends.unwrap() {
         // Write pki contract
         let pki_contract_code =
-            library_contracts::get_pki_contract(crypto_params.identifier_name());
+            library_contracts::get_pki_contract(&crypto_params);
         let pki_contract_file = format!(
             "{}.sol",
             CFG.lock()
                 .unwrap()
-                .get_pki_contract_name(crypto_params.identifier_name())
+                .get_pki_contract_name(&crypto_params.identifier_name())
         );
         _dump_to_output(&pki_contract_code, output_dir, &pki_contract_file, true);
     }
@@ -151,7 +152,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     _dump_to_output(
         &library_contracts::get_verify_libs_code(),
         output_dir,
-        ProvingScheme::verify_libs_contract_filename,
+        &ProvingScheme::verify_libs_contract_filename,
         true,
     );
 
@@ -159,7 +160,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
     let solidity_code_output = _dump_to_output(
-        to_solidity(ast.get_ast()),
+        &to_solidity(ast.get_ast()),
         output_dir,
         output_filename,
         false,
@@ -195,7 +196,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.unwrap().code().unwrap())
+            .map(|cc| cc.verifier_contract_type.unwrap().get_ast().code().unwrap())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);

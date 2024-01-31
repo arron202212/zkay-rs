@@ -159,14 +159,16 @@ impl Config {
     }
 
     //     @contextmanager
-    //     fn library_compilation_environment(&self) -> ContextManager:
-    //        Use this fixed configuration compiling libraries to get reproducible output.
-    //         old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
-    //         self.override_solc(self.library_solc_version)
-    //         self.opt_solc_optimizer_runs = 1000
-    //         yield
-    //         self.opt_solc_optimizer_runs = old_opt_runs
-    //         self.override_solc(old_solc)
+       pub fn library_compilation_environment(&self)
+        //    Use this fixed configuration compiling libraries to get reproducible output.
+          {  
+            // old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
+            // self.override_solc(self.library_solc_version)
+            // self.opt_solc_optimizer_runs = 1000
+            // yield
+            // self.opt_solc_optimizer_runs = old_opt_runs
+            // self.override_solc(old_solc)
+        }
 
     // Note: Changing this version breaks compatibility with already deployed library contracts
     pub fn library_solc_version(&self) -> String {

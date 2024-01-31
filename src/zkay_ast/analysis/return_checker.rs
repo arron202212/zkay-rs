@@ -1,7 +1,9 @@
-use crate::zkay_ast::ast::{Block, ConstructorOrFunctionDefinition, ReturnStatement, AST}; //, AstException
+use crate::zkay_ast::ast::{
+    is_instance, ASTCode, ASTType, Block, ConstructorOrFunctionDefinition, ReturnStatement, AST,
+}; //, AstException
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
-pub fn check_return(ast: AST) {
+pub fn check_return(ast: &AST) {
     let v = ReturnCheckVisitor;
     v.visit(ast);
 }
@@ -15,7 +17,7 @@ pub fn check_return(ast: AST) {
 struct ReturnCheckVisitor;
 impl AstVisitor for ReturnCheckVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -30,31 +32,42 @@ impl AstVisitor for ReturnCheckVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
 impl ReturnCheckVisitor {
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
-        let container = ast.statement_base.ast_base.parent;
-        assert!(container.is_block());
+        let container = ast.statement_base.ast_base.parent.unwrap();
+        // assert!(is_instance(&*container,ASTType::Block));
         let ok = true;
-        if container.statements.last().unwrap_or_default() != ast {
-            ok = false;
-        }
-        if !container.parent.is_constructor_or_function_definition()
-            || container.parent.is_constructor()
+        if container
+            .statement_list_base()
+            .statements
+            .last()
+            .map(|v| *v)
+            .unwrap_or_default()
+            != ast.get_ast()
         {
             ok = false;
         }
-        if !ok
+        if !is_instance(
+            &container.parent().unwrap(),
+            ASTType::ConstructorOrFunctionDefinition,
+        ) || container
+            .parent()
+            .unwrap()
+            .constructor_or_function_definition()
+            .unwrap()
+            .is_constructor()
+        {
+            ok = false;
+        }
         // raise ReturnPositionException(ast)}
-        {
-            assert!(
-                false,
-                "Return statements are only allowed at the end of a function. {:?}",
-                ast,
-            );
-        }
+        assert!(
+            ok,
+            "Return statements are only allowed at the end of a function. {:?}",
+            ast,
+        );
     }
 }

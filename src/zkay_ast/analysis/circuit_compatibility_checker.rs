@@ -30,7 +30,7 @@ pub struct DirectCanBePrivateDetector;
 impl FunctionVisitor for DirectCanBePrivateDetector {}
 impl AstVisitor for DirectCanBePrivateDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -45,7 +45,7 @@ impl AstVisitor for DirectCanBePrivateDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -108,7 +108,7 @@ pub struct IndirectCanBePrivateDetector;
 impl FunctionVisitor for IndirectCanBePrivateDetector {}
 impl AstVisitor for IndirectCanBePrivateDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -123,7 +123,7 @@ impl AstVisitor for IndirectCanBePrivateDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -148,7 +148,7 @@ pub struct CircuitComplianceChecker {
 impl FunctionVisitor for CircuitComplianceChecker {}
 impl AstVisitor for CircuitComplianceChecker {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -163,7 +163,7 @@ impl AstVisitor for CircuitComplianceChecker {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -233,14 +233,11 @@ impl CircuitComplianceChecker {
     }
 
     pub fn visitReclassifyExpr(self, ast: ReclassifyExpr) {
-        if self.inside_privif_stmt
-            && !ast.statement().unwrap().before_analysis().same_partition(
-                ast.privacy().unwrap().privacy_annotation_label(),
-                Expression::me_expr(None),
-            )
-        {
-            assert!(false,"Revealing information to other parties is not allowed inside private if statements {:?}", ast)
-        }
+        assert!(!self.inside_privif_stmt
+            || ast.statement().unwrap().before_analysis().unwrap().same_partition(
+                &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
+                &Expression::me_expr(None).into(),
+            ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast.expr().unwrap().annotated_type().is_public() {
             let eval_in_public = false;
             // try
@@ -289,30 +286,33 @@ impl CircuitComplianceChecker {
             if ast.else_branch.is_some() {
                 mod_vals = mod_vals
                     .union(
-                        ast.else_branch
+                        &ast.else_branch
                             .unwrap()
                             .statement_list_base
                             .statement_base
                             .ast_base
                             .modified_values,
                     )
+                    .cloned()
                     .collect();
             }
             for val in mod_vals {
                 if !val
                     .target()
+                    .unwrap()
                     .annotated_type()
-                    .zkay_type
+                    .zkay_type()
                     .type_name
                     .is_primitive_type()
                 {
                     assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
                 }
                 if val.in_scope_at(ast.get_ast())
-                    && !ast.statement_base.before_analysis.unwrap().same_partition(
-                        val.privacy(),
-                        &PrivacyLabelExpr::Expression(Expression::me_expr(None)),
-                    )
+                    && !ast
+                        .statement_base
+                        .before_analysis
+                        .unwrap()
+                        .same_partition(&val.privacy(), &Expression::me_expr(None).into())
                 {
                     assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
                 }
@@ -332,7 +332,7 @@ pub struct PrivateSetter {
 impl FunctionVisitor for PrivateSetter {}
 impl AstVisitor for PrivateSetter {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -347,7 +347,7 @@ impl AstVisitor for PrivateSetter {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -397,7 +397,7 @@ pub struct NonstaticOrIncompatibilityDetector;
 impl FunctionVisitor for NonstaticOrIncompatibilityDetector {}
 impl AstVisitor for NonstaticOrIncompatibilityDetector {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -412,7 +412,7 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }

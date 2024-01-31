@@ -88,7 +88,7 @@ impl Homomorphism {
         String::from("ADDITIVE")
     }
     pub fn fields() -> Vec<String> {
-        HOMOMORPHISM_STORE.keys().cloned().collect()
+        HOMOMORPHISM_STORE.lock().unwrap().keys().cloned().collect()
     }
 }
 use std::collections::BTreeMap;

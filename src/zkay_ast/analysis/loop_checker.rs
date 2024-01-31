@@ -19,7 +19,7 @@ pub struct LoopChecker;
 impl FunctionVisitor for LoopChecker {}
 impl AstVisitor for LoopChecker {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -34,7 +34,7 @@ impl AstVisitor for LoopChecker {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -50,7 +50,7 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.body
         );
-        self.visit_children(ast);
+        self.visit_children(&ast.get_ast());
     }
 
     pub fn visitDoWhileStatement(self, ast: DoWhileStatement) {
@@ -64,12 +64,12 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.body
         );
-        self.visit_children(ast);
+        self.visit_children(&ast.get_ast());
     }
 
     pub fn visitForStatement(self, ast: ForStatement) {
         assert!(
-            !contains_private_expr(ast.condition.get_ast()),
+            !contains_private_expr(Some(ast.condition.get_ast())),
             "Loop condition cannot contain private expressions {:?}",
             ast.condition
         );
@@ -83,6 +83,6 @@ impl LoopChecker {
             "Loop update statement cannot contain private expressions {:?}",
             ast.update
         );
-        self.visit_children(ast);
+        self.visit_children(&ast.get_ast());
     }
 }

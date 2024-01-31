@@ -332,7 +332,7 @@ impl ZkayTransformer {
     pub fn visitSourceUnit(&self, ast: SourceUnit) -> SourceUnit
 // Figure out which crypto backends were used
     {
-        UsedHomomorphismsVisitor::new().visit(ast.get_ast());
+        UsedHomomorphismsVisitor::new().visit(&mut ast.get_ast());
 
         for crypto_params in ast.clone().used_crypto_backends.unwrap() {
             Self::import_contract(
@@ -554,6 +554,7 @@ impl ZkayTransformer {
                                 Identifier::HybridArgumentIdf(idf.clone()),
                                 None,
                             )
+                            .get_ast()
                         })
                         .collect(),
                 );

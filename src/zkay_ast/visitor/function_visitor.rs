@@ -10,10 +10,10 @@ pub trait FunctionVisitor: AstVisitor {
     fn visitSourceUnit(&self, ast: SourceUnit) {
         for c in ast.contracts {
             for cd in c.constructor_definitions {
-                self.visit(cd);
+                self.visit(cd.get_ast());
             }
             for fd in c.function_definitions {
-                self.visit(fd);
+                self.visit(fd.get_ast());
             }
         }
     }

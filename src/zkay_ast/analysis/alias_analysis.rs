@@ -9,7 +9,7 @@ use crate::zkay_ast::ast::{
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
-pub fn alias_analysis(ast: AST) {
+pub fn alias_analysis(ast: &AST) {
     let v = AliasAnalysisVisitor::new();
     v.cond_analyzer.visit(ast);
 }
@@ -21,7 +21,7 @@ struct AliasAnalysisVisitor {
 
 impl AstVisitor for AliasAnalysisVisitor {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -36,7 +36,7 @@ impl AstVisitor for AliasAnalysisVisitor {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -443,7 +443,7 @@ pub struct GuardConditionAnalyzer {
 }
 impl AstVisitor for GuardConditionAnalyzer {
     type Return = Option<String>;
-    fn temper_result(&self) -> Option<Self::Return> {
+    fn temper_result(&self) -> Self::Return {
         None
     }
     fn log(&self) -> bool {
@@ -458,7 +458,7 @@ impl AstVisitor for GuardConditionAnalyzer {
     fn get_attr(&self, name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Option<Self::Return> {
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
         None
     }
 }

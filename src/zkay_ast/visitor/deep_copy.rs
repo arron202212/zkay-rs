@@ -1,12 +1,12 @@
 use crate::transaction::crypto::params::CryptoParams;
-use crate::zkay_ast::ast::{Expression, Statement, UserDefinedTypeName, AST};
+use crate::zkay_ast::ast::{Expression, Statement, UserDefinedTypeName, AST,ASTCode,};
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
 // T = TypeVar("T")
 
-pub fn deep_copy<T>(ast: T, with_types: bool, with_analysis: bool) -> T
+pub fn deep_copy(ast: AST, with_types: bool, with_analysis: bool) -> AST
 // """
 
     // :param ast
@@ -34,18 +34,18 @@ pub fn replace_expr(
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
 {
-    _replace_ast(old_expr, new_expr);
+    _replace_ast(old_expr, &mut (*new_expr).get_ast());
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
-    new_expr
+    *new_expr
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.parent = old_ast.parent;
-    DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
-    if old_ast.parent.is_some() {
-        set_parents(new_ast);
+    new_ast.parent = old_ast.unwrap().parent;
+    DeepCopyVisitor::copy_ast_fields(old_ast.unwrap(), new_ast);
+    if old_ast.unwrap().parent.is_some() {
+        set_parents(*new_ast);
         link_identifiers(new_ast);
     }
 }
@@ -103,6 +103,28 @@ pub struct DeepCopyVisitor {
     with_types: bool,
     with_analysis: bool,
 }
+
+impl AstVisitor for DeepCopyVisitor {
+    type Return = Option<String>;
+    fn temper_result(&self) -> Self::Return {
+        None
+    }
+    fn log(&self) -> bool {
+        false
+    }
+    fn traversal(&self) -> &'static str {
+        "node-or-children"
+    }
+    fn has_attr(&self, name: &String) -> bool {
+        self.get_attr(name).is_some()
+    }
+    fn get_attr(&self, name: &String) -> Option<String> {
+        None
+    }
+    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+        None
+    }
+}
 impl DeepCopyVisitor {
     pub fn new(with_types: bool, with_analysis: bool) -> Self
 // super().__init__("node-or-children")
@@ -153,7 +175,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> AST {
-        let mut ast_copy = self.visitChildren(ast);
+        let mut ast_copy = self.visitChildren(ast.get_ast());
         // ast_copy.target = ast.target;
         ast_copy
     }
@@ -167,7 +189,7 @@ impl DeepCopyVisitor {
 
     pub fn visitExpression(self, ast: Expression) -> AST {
         let mut ast_copy = self.visitChildren(ast);
-        if self.with_types && ast.annotated_type().is_some() {
+        if self.with_types && ast.annotated_type()!=AnnotatedTypeName::default() {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
         // ast_copy.evaluate_privately = ast.evaluate_privately();
