@@ -70,17 +70,17 @@ impl JsnarkVisitor
     {
         Self { phi }
     }
-    pub fn visit(self, _: AST) -> String {
+    pub fn visit(&self, _: AST) -> String {
         String::new()
     }
-    pub fn visitCircuit(self) -> Vec<String> {
+    pub fn visitCircuit(&self) -> Vec<String> {
         self.phi
             .iter()
             .map(|constr| self.visit(constr.get_ast()))
             .collect()
     }
 
-    pub fn visitCircComment(self, stmt: CircComment) -> String {
+    pub fn visitCircComment(&self, stmt: CircComment) -> String {
         if !stmt.text.is_empty() {
             format!(r#"// {}"#, stmt.text)
         } else {
@@ -88,7 +88,7 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitCircIndentBlock(self, stmt: CircIndentBlock) -> String {
+    pub fn visitCircIndentBlock(&self, stmt: CircIndentBlock) -> String {
         let stmts: Vec<_> = stmt
             .statements
             .iter()
@@ -105,11 +105,11 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitCircCall(self, stmt: CircCall) -> String {
+    pub fn visitCircCall(&self, stmt: CircCall) -> String {
         format!(r#"_{}();"#, stmt.fct.name())
     }
 
-    pub fn visitCircVarDecl(self, stmt: CircVarDecl) -> String {
+    pub fn visitCircVarDecl(&self, stmt: CircVarDecl) -> String {
         format!(
             r#"decl("{}", {});"#,
             stmt.lhs.identifier_base.name,
@@ -117,7 +117,7 @@ impl JsnarkVisitor
         )
     }
 
-    pub fn visitCircEqConstraint(self, stmt: CircEqConstraint) -> String {
+    pub fn visitCircEqConstraint(&self, stmt: CircEqConstraint) -> String {
         assert!(stmt.tgt.t.size_in_uints() == stmt.val.t.size_in_uints());
         format!(
             r#"checkEq("{}", "{}");"#,
@@ -125,7 +125,7 @@ impl JsnarkVisitor
         )
     }
 
-    pub fn visitCircEncConstraint(self, stmt: CircEncConstraint) -> String {
+    pub fn visitCircEncConstraint(&self, stmt: CircEncConstraint) -> String {
         assert!(stmt.cipher.t.is_cipher());
         assert!(stmt.pk.t.is_key());
         assert!(stmt.rnd.t.is_randomness());
@@ -144,7 +144,7 @@ impl JsnarkVisitor
             stmt.cipher.identifier_base.name
         )
     }
-    pub fn visitCircSymmEncConstraint(self, stmt: CircSymmEncConstraint) -> String {
+    pub fn visitCircSymmEncConstraint(&self, stmt: CircSymmEncConstraint) -> String {
         assert!(stmt.iv_cipher.t.is_cipher());
         assert!(stmt.other_pk.t.is_key());
         assert!(stmt.iv_cipher.t.crypto_params() == stmt.other_pk.t.crypto_params());
@@ -157,8 +157,8 @@ impl JsnarkVisitor
             stmt.iv_cipher.identifier_base.name
         )
     }
-    pub fn visitCircGuardModification(self, stmt: CircGuardModification) -> String {
-        if let Some(new_cond) = stmt.new_cond {
+    pub fn visitCircGuardModification(&self, stmt: CircGuardModification) -> String {
+        if let Some(new_cond) = &stmt.new_cond {
             format!(
                 r#"addGuard("{}", {});"#,
                 stmt.new_cond.unwrap().identifier_base.name,
@@ -170,11 +170,11 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitBooleanLiteralExpr(self, ast: BooleanLiteralExpr) -> String {
+    pub fn visitBooleanLiteralExpr(&self, ast: BooleanLiteralExpr) -> String {
         format!(r#"val({})"#, ast.value.to_string().to_ascii_lowercase())
     }
 
-    pub fn visitNumberLiteralExpr(self, ast: NumberLiteralExpr) -> String {
+    pub fn visitNumberLiteralExpr(&self, ast: NumberLiteralExpr) -> String {
         let t = _get_t((None, Some(ast.to_expr())));
         if ast.value < (1 << 31) {
             format!(r#"val({}, {t})"#, ast.value)
@@ -183,7 +183,7 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitIdentifierExpr(self, ast: IdentifierExpr) -> String {
+    pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) -> String {
         if is_instance(&*ast.idf, ASTType::HybridArgumentIdf) && ast.idf.t().unwrap().is_cipher() {
             format!(r#"getCipher("{}")"#, ast.idf.name())
         } else {
@@ -191,7 +191,7 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitMemberAccessExpr(self, ast: MemberAccessExpr) -> String {
+    pub fn visitMemberAccessExpr(&self, ast: MemberAccessExpr) -> String {
         assert!(is_instance(&*ast.member, ASTType::HybridArgumentIdf));
         if ast.member.t().unwrap().is_cipher() {
             format!(r#"getCipher("{}")"#, ast.member.name())
@@ -201,11 +201,11 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitIndexExpr(self, ast: IndexExpr) {
+    pub fn visitIndexExpr(&self, ast: IndexExpr) {
         unimplemented!();
     }
 
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) -> String {
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> String {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
             assert!(ast.func().unwrap().can_be_private());
             let mut args: Vec<_> = ast
@@ -298,11 +298,11 @@ impl JsnarkVisitor
         String::new()
     }
 
-    pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) -> String {
+    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) -> String {
         self.handle_cast(self.visit(ast.expr.get_ast()), *ast.elem_type)
     }
 
-    pub fn handle_cast(self, wire: String, t: TypeName) -> String {
+    pub fn handle_cast(&self, wire: String, t: TypeName) -> String {
         format!(r#"cast({wire}, {})"#, _get_t((Some(t), None)))
     }
 }
@@ -351,7 +351,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
         .iter()
         .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
-    for crypto_params in CFG.lock().unwrap().user_config.all_crypto_params() {
+    for crypto_params in &CFG.lock().unwrap().user_config.all_crypto_params() {
         let pk_name = CircuitHelper::get_glob_key_name(
             PrivacyLabelExpr::MeExpr(MeExpr::new()),
             crypto_params,
@@ -375,20 +375,22 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
 }
 
 // class JsnarkGenerator(CircuitGenerator)
-pub struct JsnarkGenerator<T, VK>
-where
-    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
-    VK: VerifyingKeyMeta<Output = VK>,
+pub struct JsnarkGenerator
+//<T, VK>
+// where
+//     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+//     VK: VerifyingKeyMeta<Output = VK>,
 {
-    pub circuit_generator_base: CircuitGeneratorBase<T, VK>,
+    pub circuit_generator_base: CircuitGeneratorBase, //<T, VK>,
 }
 
-impl<T, VK> JsnarkGenerator<T, VK>
-where
-    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
-    VK: VerifyingKeyMeta<Output = VK>,
+impl JsnarkGenerator
+//<T, VK>
+// where
+//     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+//     VK: VerifyingKeyMeta<Output = VK>,
 {
-    pub fn new(circuits: Vec<CircuitHelper>, proving_scheme: T, output_dir: String) -> Self {
+    pub fn new(circuits: Vec<CircuitHelper>, proving_scheme: String, output_dir: String) -> Self {
         Self {
             circuit_generator_base: CircuitGeneratorBase::new(
                 circuits,
@@ -399,17 +401,18 @@ where
         }
     }
 
-    pub fn _generate_zkcircuit(self, import_keys: bool, circuit: &CircuitHelper) -> bool
+    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &CircuitHelper) -> bool
 //Create output directory
     {
-        let output_dir = Path::new(&self.circuit_generator_base._get_circuit_output_dir(circuit));
+        let p = self.circuit_generator_base._get_circuit_output_dir(circuit);
+        let output_dir = Path::new(&p);
         if let Err(_) | Ok(false) = output_dir.try_exists() {
             std::fs::create_dir_all(output_dir).expect(output_dir.to_str().unwrap());
         }
 
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
-        for params in &circuit.fct.used_crypto_backends.unwrap() {
+        for params in &circuit.as_ref().fct.used_crypto_backends.clone().unwrap() {
             let init_stmt = format!(
                 r#"addCryptoBackend("{}", "{}", {});"#,
                 params.crypto_name,
@@ -502,14 +505,14 @@ where
             false
         }
     }
-    pub fn _generate_keys(self, circuit: &CircuitHelper)
+    pub fn _generate_keys(&self, circuit: &CircuitHelper)
     //Invoke the custom libsnark interface to generate keys
     {
         let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
         libsnark::generate_keys(
             &output_dir,
             &output_dir,
-            &self.circuit_generator_base.proving_scheme.name(),
+            &self.circuit_generator_base.proving_scheme,
         );
     }
 
@@ -522,10 +525,11 @@ where
     }
 
     pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> VerifyingKeyType {
-        let f = File::open(self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0]).expect("");
+        let p = self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
+        let f = File::open(&p).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
-        let data = &buf.lines();
+        let mut data = buf.lines();
         if self.circuit_generator_base.proving_scheme.type_id()
             == TypeId::of::<ProvingSchemeGroth16>()
         {
@@ -534,7 +538,7 @@ where
             let gamma = G2Point::from_it(data);
             let delta = G2Point::from_it(data);
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
-            let gamma_abc = vec![G1Point::default(); query_len];
+            let mut gamma_abc = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
                 gamma_abc.insert(idx, G1Point::from_it(data));
             }
@@ -552,7 +556,7 @@ where
             let g_gamma = G1Point::from_it(data);
             let h_gamma = G2Point::from_it(data);
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
-            let query = vec![G1Point::default(); query_len];
+            let mut query = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
                 query.insert(idx, G1Point::from_it(data));
             }
@@ -568,14 +572,14 @@ where
         VerifyingKeyType::None
     }
 
-    pub fn _get_prover_key_hash(self, circuit: &CircuitHelper) -> Vec<u8> {
+    pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {
         hash_file(
             &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
             0,
         )
     }
 
-    pub fn _get_primary_inputs(self, circuit: &CircuitHelper) -> Vec<String>
+    pub fn _get_primary_inputs(&self, circuit: &CircuitHelper) -> Vec<String>
 //Jsnark requires an additional public input with the value 1 as first input
     {
         [String::from("1")]

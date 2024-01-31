@@ -253,7 +253,8 @@ impl GlobalVars {
             Identifier::identifier("block"),
             None,
         );
-        block.identifier_declaration_base.idf.ast_base_mut().parent = Some(Box::new(block.get_ast()));
+        block.identifier_declaration_base.idf.ast_base_mut().parent =
+            Some(Box::new(block.get_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(

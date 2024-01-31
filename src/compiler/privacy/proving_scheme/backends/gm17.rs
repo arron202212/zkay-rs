@@ -53,7 +53,7 @@ impl VK for <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX
             p2.clone(),
             p1.clone(),
             p2.clone(),
-            vec![p1, p1],
+            vec![p1; 2],
         )
     }
 }
@@ -65,7 +65,6 @@ impl ProvingScheme for ProvingSchemeGm17 {
     type VerifyingKeyX = VerifyingKey<G1Point, G2Point>;
 
     fn generate_verification_contract(
-        &self,
         verification_key: <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX,
         circuit: &CircuitHelper,
         primary_inputs: Vec<String>,
@@ -81,7 +80,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
         assert!(query_length == primary_inputs.len() + 1);
 
         assert!(!primary_inputs.is_empty(), "No public inputs");
-        let first_pi = primary_inputs[0];
+        let first_pi = &primary_inputs[0];
         let potentially_overflowing_pi: Vec<_> = primary_inputs
             .iter()
             .filter_map(|pi| {
@@ -150,7 +149,7 @@ potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self a
                 format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),CFG.lock().unwrap().zk_in_name(),CFG.lock().unwrap().zk_out_name(),256 - BN128_SCALAR_FIELD_BITS) }).mul(
                 format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.query[1].scalar_mul({})",first_pi)}  else {String::from("vk.query[1]")})).mul(
                  primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!(
-    "lc = lc.add({}); ",format!("vk.query[{}]{}",idx+2,if pi != "1"{&format!(".scalar_mul({pi})")}else{""}))).collect::<Vec<_>>().concat()).mul(r#"
+    "lc = lc.add({}); ",format!("vk.query[{}]{}",idx+2,if pi != "1"{format!(".scalar_mul({pi})")}else{String::new()}))).collect::<Vec<_>>().concat()).mul(r#"
                 lc = lc.add(vk.query[0]);
 
                 // Verify proof

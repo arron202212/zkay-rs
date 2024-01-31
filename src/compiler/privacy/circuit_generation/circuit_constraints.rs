@@ -237,7 +237,7 @@ impl CircGuardModification {
 
     // @staticmethod
     // @contextmanager
-    pub fn guarded(phi: Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true: bool)
+    pub fn guarded(phi: &mut Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true: bool)
     // """
     // Return a context manager which manages the lifetime of a guarded scope.
 

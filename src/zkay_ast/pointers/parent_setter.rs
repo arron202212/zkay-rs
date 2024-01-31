@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
-    ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, NamespaceDefinition,
-    SourceUnit, Statement, AST,ASTCode,
+    ASTChildren, ASTCode, ConstructorOrFunctionDefinition, Expression, Identifier,
+    NamespaceDefinition, SourceUnit, Statement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -48,30 +48,37 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitNamespaceDefinition(&self, ast: NamespaceDefinition) {
-        ast.ast_base_mut().namespace = (if let Some(parent) = ast.parent() {
-            parent.ast_base().namespace.clone()
+        ast.ast_base_mut().namespace = Some(if let Some(parent) = ast.parent() {
+            parent
+                .ast_base()
+                .namespace
+                .unwrap()
+                .into_iter()
+                .chain([ast.namespace_definition_base().idf.clone()])
+                .collect()
         } else {
-            None
-        })
-        .into_iter()
-        .chain([ast.namespace_definition_base().idf.clone()])
-        .collect();
+            vec![ast.namespace_definition_base().idf.clone()]
+        });
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        ast.namespace_definition_base.ast_base.namespace = (if let Some(parent) = ast.parent {
-            parent.namespace_definition_base.ast_base.namespace.clone()
+        ast.namespace_definition_base.ast_base.namespace = Some(if let Some(parent) = ast.parent {
+            parent
+                .namespace_definition_base
+                .ast_base
+                .namespace
+                .unwrap()
+                .into_iter()
+                .chain([ast.namespace_definition_base.idf.clone()])
+                .collect()
         } else {
-            None
-        })
-        .into_iter()
-        .chain(vec![ast.namespace_definition_base.idf.clone()])
-        .collect();
+            vec![ast.namespace_definition_base.idf.clone()]
+        });
     }
 
     pub fn visitChildren(&self, ast: &mut AST) {
         for c in ast.children() {
-            if AST::default()!=c {
+            if AST::default() != c {
                 c.ast_base_mut().parent = Some(Box::new(ast.clone()));
                 c.ast_base_mut().namespace = ast.ast_base().namespace.clone();
                 self.visit(c);
@@ -117,7 +124,13 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.expression_base_mut().statement = parent.map(|p|Box::new(p));
+            ast.expression_base_mut().statement = parent.map(|p| {
+                Box::new(if let AST::Statement(a) = p {
+                    a
+                } else {
+                    Statement::default()
+                })
+            });
         }
     }
 
@@ -133,7 +146,18 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement_base_mut().function = parent.map(|p|Box::new(p));
+            ast.statement_base_mut().function = parent.map(|p| {
+                Box::new(
+                    if let AST::NamespaceDefinition(
+                        NamespaceDefinition::ConstructorOrFunctionDefinition(a),
+                    ) = p
+                    {
+                        a
+                    } else {
+                        ConstructorOrFunctionDefinition::default()
+                    },
+                )
+            });
         }
     }
 }

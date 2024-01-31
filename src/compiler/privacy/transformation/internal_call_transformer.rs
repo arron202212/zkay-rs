@@ -24,11 +24,11 @@ pub fn compute_transitive_circuit_io_sizes(
 // """
 {
     for fct in fcts_with_verification.iter_mut() {
-        let glob_keys = BTreeSet::new();
-        let called_fcts = BTreeSet::new();
-        let mut circuit = cgens.get_mut(&fct).unwrap();
+        let mut glob_keys = BTreeSet::new();
+        let mut called_fcts = BTreeSet::new();
         let (trans_in_size, trans_out_size, trans_priv_size) =
             _compute_transitive_circuit_io_sizes(cgens, fct, &mut glob_keys, &mut called_fcts);
+        let mut circuit = cgens.get_mut(&fct).unwrap();
         circuit.trans_in_size = trans_in_size;
         circuit.trans_out_size = trans_out_size;
         circuit.trans_priv_size = trans_priv_size;
@@ -67,10 +67,10 @@ pub fn _compute_transitive_circuit_io_sizes(
     }
 
     *gkeys = (*gkeys)
-        .union(&cgens[fct].requested_global_keys())
+        .union(&cgens[fct].as_ref().requested_global_keys())
         .cloned()
         .collect();
-    for call in cgens[fct].function_calls_with_verification {
+    for call in &cgens[fct].unction_calls_with_verification {
         if let Some(TargetDefinition::NamespaceDefinition(
             NamespaceDefinition::ConstructorOrFunctionDefinition(cofd),
         )) = call.func().unwrap().target().map(|t| *t)
@@ -83,7 +83,7 @@ pub fn _compute_transitive_circuit_io_sizes(
         (0, 0, 0)
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
-        for f in &circuit.function_calls_with_verification {
+        for f in &circuit.function_calls_with_verification.clone() {
             if let Some(TargetDefinition::NamespaceDefinition(
                 NamespaceDefinition::ConstructorOrFunctionDefinition(ref mut t),
             )) = f.func().unwrap().target().map(|t| *t)
@@ -121,11 +121,16 @@ pub fn transform_internal_calls(
 // """
 {
     for fct in fcts_with_verification {
-        let circuit = cgens[&fct].clone();
+        let mut circuit = cgens[&fct].clone();
+        let (priv_in_size, in_size, out_size) = (
+            circuit.priv_in_size(),
+            circuit.in_size(),
+            circuit.out_size(),
+        );
         let (mut i, mut o, mut p) = (0, 0, 0);
         for fc in circuit.function_calls_with_verification.iter_mut() {
             if let FunctionCallExpr::FunctionCallExpr(ref mut fc) = fc {
-                fc.sec_start_offset = Some(circuit.priv_in_size() + p);
+                fc.sec_start_offset = Some(priv_in_size + p);
                 fc.args.extend(vec![
                     IdentifierExpr::new(
                         IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
@@ -142,7 +147,7 @@ pub fn transform_internal_calls(
                     .to_expr()
                     .binop(
                         String::from("+"),
-                        NumberLiteralExpr::new(circuit.in_size() + i, false).to_expr(),
+                        NumberLiteralExpr::new(in_size + i, false).to_expr(),
                     )
                     .to_expr(),
                     IdentifierExpr::new(
@@ -160,7 +165,7 @@ pub fn transform_internal_calls(
                     .to_expr()
                     .binop(
                         String::from("+"),
-                        NumberLiteralExpr::new(circuit.out_size() + o, false).to_expr(),
+                        NumberLiteralExpr::new(out_size + o, false).to_expr(),
                     )
                     .to_expr(),
                 ]);

@@ -14,7 +14,7 @@ pub trait AstVisitor {
     fn has_attr(&self, name: &String) -> bool;
     fn get_attr(&self, name: &String) -> Option<String>;
     fn temper_result(&self) -> Self::Return;
-    fn _visit_internal(&self, ast: AST) -> Option<Self::Return >{
+    fn _visit_internal(&self, ast: AST) -> Option<Self::Return> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
@@ -29,7 +29,7 @@ pub trait AstVisitor {
         if f.is_some() {
             ret = Some(f);
         } else if self.traversal() == "node-or-children" {
-            ret_children =Some (self.visit_children(&ast));
+            ret_children = Some(self.visit_children(&ast));
         }
         if self.traversal() == "pre" {
             ret_children = Some(self.visit_children(&ast));

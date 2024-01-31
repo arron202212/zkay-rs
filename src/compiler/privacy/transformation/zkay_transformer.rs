@@ -66,7 +66,7 @@ impl ZkayVarDeclTransformer {
 
     pub fn visitAnnotatedTypeName(&self, ast: AnnotatedTypeName) -> AnnotatedTypeName {
         let t = if ast.is_private() {
-            TypeName::cipher_type(ast, ast.homomorphism)
+            TypeName::cipher_type(ast.clone(), ast.homomorphism.clone())
         } else {
             if let AST::TypeName(t) = self.visit((*ast.type_name).get_ast()) {
                 t
@@ -77,14 +77,14 @@ impl ZkayVarDeclTransformer {
         AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHISM"))
     }
 
-    pub fn visitVariableDeclaration(&self, ast: VariableDeclaration) -> AST {
+    pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) -> AST {
         if ast.identifier_declaration_base.annotated_type.is_private() {
             ast.identifier_declaration_base.storage_location = Some(String::from("memory"));
         }
         self.visit_children(ast.get_ast())
     }
 
-    pub fn visitParameter(&self, mut ast: Parameter) -> AST {
+    pub fn visitParameter(&self, mut ast: &mut Parameter) -> AST {
         if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(ast)) =
             self.visit_children(ast.get_ast())
         {
@@ -102,7 +102,7 @@ impl ZkayVarDeclTransformer {
         }
     }
 
-    pub fn visitStateVariableDeclaration(&self, ast: StateVariableDeclaration) -> AST {
+    pub fn visitStateVariableDeclaration(&self, ast: &mut StateVariableDeclaration) -> AST {
         ast.identifier_declaration_base.keywords = ast
             .identifier_declaration_base
             .keywords
@@ -169,12 +169,12 @@ impl ZkayStatementTransformer {
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
     pub fn new(current_gen: Option<Box<CircuitHelper>>) -> Self {
         Self {
-            gen: current_gen,
+            gen: current_gen.clone(),
             expr_trafo: ZkayExpressionTransformer::new(current_gen),
             var_decl_trafo: ZkayVarDeclTransformer::new(),
         }
     }
-    pub fn visitStatementList(&self, ast: StatementList) -> AST
+    pub fn visitStatementList(&self, ast: &mut StatementList) -> AST
 // """
     // Rule (1)
 
@@ -194,16 +194,15 @@ impl ZkayStatementTransformer {
             if transformed_stmt == AST::None {
                 continue;
             }
-
             let old_code_wo_annotations = Regex::new(r"(?=\b)me(?=\b)").unwrap().replace_all(
-                &Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
+                Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
                     .unwrap()
                     .replace_all(&old_code, ""),
                 "msg.sender",
             );
             let new_code_wo_annotation_comments = Regex::new(r"/\*.*?\*/")
                 .unwrap()
-                .replace_all(&transformed_stmt.code(), "");
+                .replace_all(transformed_stmt.code(), "");
             if old_code_wo_annotations == new_code_wo_annotation_comments {
                 new_statements.push(transformed_stmt)
             } else {
@@ -252,13 +251,13 @@ impl ZkayStatementTransformer {
         );
         let mut cb = ChildListBuilder::new();
         ast.process_children(&mut cb);
-        cb.children.iter().for_each(|c| {
+        cb.children.iter_mut().for_each(|c| {
             self.process_statement_child(c.clone());
         });
         ast.get_ast()
     }
 
-    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) -> AST
+    pub fn visitAssignmentStatement(&self, ast: &mut AssignmentStatement) -> AST
 // """Rule (2)"""
     {
         let a: AssignmentStatementUnion = self.expr_trafo.visit(ast.lhs().unwrap().into()).into();
@@ -317,6 +316,7 @@ impl ZkayStatementTransformer {
                 assert!(is_instance(&ridf, ASTType::HybridArgumentIdf));
                 if let Identifier::HybridArgumentIdf(ridf) = ridf {
                     self.gen
+                        .as_mut()
                         .unwrap()
                         ._remapper
                         .0
@@ -331,6 +331,7 @@ impl ZkayStatementTransformer {
             for val in modvals {
                 if val.key().is_none() {
                     self.gen
+                        .as_mut()
                         .unwrap()
                         .invalidate_idf(val.target().unwrap().idf());
                 }
@@ -339,7 +340,7 @@ impl ZkayStatementTransformer {
         ast.get_ast()
     }
 
-    pub fn visitIfStatement(&self, ast: IfStatement) -> Statement
+    pub fn visitIfStatement(&mut self, ast: &mut IfStatement) -> Statement
 // """
     // Rule (6) + additional support for private conditions
 
@@ -356,15 +357,24 @@ impl ZkayStatementTransformer {
                 || contains_private_expr(ast.else_branch.map(|v| v.get_ast()))
             {
                 let before_if_state = self.gen.unwrap()._remapper.0.get_state();
-                let guard_var = self.gen.unwrap().add_to_circuit_inputs(&mut ast.condition);
+                let guard_var = self
+                    .gen
+                    .as_mut()
+                    .unwrap()
+                    .add_to_circuit_inputs(&mut ast.condition);
                 ast.condition = guard_var.get_loc_expr(Some(ast.get_ast())).into();
-                self.gen.unwrap().guarded(guard_var, true);
+                self.gen.as_mut().unwrap().guarded(guard_varc.clone(), true);
                 {
                     ast.then_branch = self.visit(ast.then_branch.get_ast()).block().unwrap();
-                    self.gen.unwrap()._remapper.0.set_state(&before_if_state);
+                    self.gen
+                        .as_mut()
+                        .unwrap()
+                        ._remapper
+                        .0
+                        .set_state(&before_if_state);
                 }
                 if ast.else_branch.is_some() {
-                    self.gen.unwrap().guarded(guard_var, false);
+                    self.gen.as_mut().unwrap().guarded(guard_var, false);
 
                     ast.else_branch = self.visit(ast.else_branch.unwrap().get_ast()).block();
                     self.gen.unwrap()._remapper.0.set_state(&before_if_state);
@@ -388,6 +398,7 @@ impl ZkayStatementTransformer {
             ast.to_statement()
         } else {
             self.gen
+                .as_mut()
                 .unwrap()
                 .evaluate_stmt_in_circuit(ast.to_statement())
                 .to_statement()

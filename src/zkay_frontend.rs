@@ -29,26 +29,30 @@ use crate::config::CFG;
 use crate::utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use crate::utils::progress_printer::print_step;
 // use crate::utils::timer::time_measure
+use crate::zkay_ast::ast::ASTCode;
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
-use crate::zkay_ast::ast::ASTCode;
 use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
-fn proving_scheme_classes<T>(proving_scheme: &str) -> &T{
-    match proving_scheme {
-        "groth16" => &ProvingSchemeGroth16,
-        _ => &ProvingSchemeGm17, //"gm17"
-    }
-}
-fn generator_classes<T, VK>(
+// fn proving_scheme_classes<T,VK>(proving_scheme: &str) -> T
+// where
+//     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+//     VK: VerifyingKeyMeta<Output = VK>,
+// {
+//     match proving_scheme {
+//         "groth16" => &ProvingSchemeGroth16,
+//         _ => &ProvingSchemeGm17, //"gm17"
+//     }
+// }
+fn generator_classes(
     _snark_backend: &String,
-) -> impl FnOnce(Vec<CircuitHelper>, T, String) -> JsnarkGenerator<T, VK>
-where
-    T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
-    VK: VerifyingKeyMeta<Output = VK>,
+) -> impl FnOnce(Vec<CircuitHelper>, String, String) -> JsnarkGenerator //<T, VK>
+// where
+//     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+//     VK: VerifyingKeyMeta<Output = VK>,
 {
     JsnarkGenerator::new
 }
@@ -137,8 +141,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     CFG.lock().unwrap().library_compilation_environment();
     for crypto_params in ast.source_unit().unwrap().used_crypto_backends.unwrap() {
         // Write pki contract
-        let pki_contract_code =
-            library_contracts::get_pki_contract(&crypto_params);
+        let pki_contract_code = library_contracts::get_pki_contract(&crypto_params);
         let pki_contract_file = format!(
             "{}.sol",
             CFG.lock()
@@ -152,7 +155,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     _dump_to_output(
         &library_contracts::get_verify_libs_code(),
         output_dir,
-        &ProvingScheme::verify_libs_contract_filename(),
+        &<ProvingSchemeGm17 as ProvingScheme>::verify_libs_contract_filename(),
         true,
     );
 
@@ -174,17 +177,17 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");
 
     // Instantiate proving scheme and circuit generator
-    let ps = proving_scheme_classes(
-        &CFG.lock().unwrap().user_config.proving_scheme(),
-        // if &CFG.lock().unwrap().user_config.proving_scheme() == "groth16" {
-        //     ProvingSchemeGroth16
-        // } else {
-        //     ProvingSchemeGm17
-        // },
-    );
+    // let ps = proving_scheme_classes(
+    //     &CFG.lock().unwrap().user_config.proving_scheme(),
+    //     // if &CFG.lock().unwrap().user_config.proving_scheme() == "groth16" {
+    //     //     ProvingSchemeGroth16
+    //     // } else {
+    //     //     ProvingSchemeGm17
+    //     // },
+    // );
     let cg = generator_classes(&CFG.lock().unwrap().user_config.snark_backend())(
         circuits,
-        ps,
+        CFG.lock().unwrap().user_config.proving_scheme(),
         output_dir.to_string(),
     );
     let mut kwargs = std::collections::HashMap::new();
@@ -208,7 +211,13 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         print_step("Writing manifest file");
         // Set crypto backends for unused homomorphisms to None
         for hom in Homomorphism::fields() {
-            if !ast.source_unit().unwrap().used_homomorphisms.unwrap().contains(&hom) {
+            if !ast
+                .source_unit()
+                .unwrap()
+                .used_homomorphisms
+                .unwrap()
+                .contains(&hom)
+            {
                 CFG.lock()
                     .unwrap()
                     .user_config

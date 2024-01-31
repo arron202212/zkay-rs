@@ -1,11 +1,11 @@
 // from typing import Tuple, Dict, Union
 use crate::zkay_ast::ast::{
-    is_instance, is_instances, ASTChildren, ASTCode, ASTType, AnnotatedTypeName, Array, Block, Comment,
-    ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
-    ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr,
-    LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit,
-    Statement, StatementList, StructDefinition, TargetDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    is_instance, is_instances, ASTChildren, ASTCode, ASTType, AnnotatedTypeName, Array, Block,
+    Comment, ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue,
+    Expression, ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
+    IndexExpr, LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
+    SourceUnit, Statement, StatementList, StructDefinition, TargetDefinition, TupleOrLocationExpr,
+    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -49,23 +49,26 @@ pub fn merge_dicts(dict_args: Vec<BTreeMap<String, Identifier>>) -> BTreeMap<Str
 }
 
 pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, Identifier> {
-    let children:Vec<_> = ast
+    let children: Vec<_> = ast
         .children()
         .iter()
         .filter_map(|c| {
-            if is_instances(c,vec![ASTType::Block,ASTType::ForStatement]) {
+            if is_instances(c, vec![ASTType::Block, ASTType::ForStatement]) {
                 None
             } else {
                 Some(c)
             }
         })
         .collect();
-    let names: Vec<_> = children.iter().map(|c| c.names.clone()).collect();
+    let names: Vec<_> = children
+        .iter()
+        .map(|c| c.ast_base().names.clone())
+        .collect();
     let ret = merge_dicts(names);
     for c in children.iter_mut()
     //declared names are not available within the declaration statements
     {
-        c.names.clear();
+        c.ast_base_mut().names.clear();
     }
     ret
 }
@@ -173,7 +176,7 @@ impl SymbolTableFiller {
             .map(|d| {
                 (
                     d.namespace_definition_base.idf.name().clone(),
-                    *d.namespace_definition_base.idf.clone(),
+                    d.namespace_definition_base.idf.clone(),
                 )
             })
             .collect();
@@ -183,7 +186,7 @@ impl SymbolTableFiller {
             .map(|d| {
                 (
                     d.namespace_definition_base.idf.name().clone(),
-                    *d.namespace_definition_base.idf.clone(),
+                    d.namespace_definition_base.idf.clone(),
                 )
             })
             .collect();
@@ -215,7 +218,7 @@ impl SymbolTableFiller {
         ast.namespace_definition_base.ast_base.names = ast
             .values
             .iter()
-            .map(|d| (d.idf.unwrap().name().clone(), d.idf.clone()))
+            .map(|d| (d.idf.unwrap().name().clone(), d.idf.unwrap()))
             .collect();
     }
     pub fn visitEnumValue(&self, ast: &mut EnumValue) {}
@@ -241,9 +244,11 @@ impl SymbolTableFiller {
 
     pub fn visitMapping(&self, ast: &mut Mapping) {
         ast.type_name_base.ast_base.names = BTreeMap::new();
-        if is_instance(&ast.key_label.unwrap(),ASTType::Identifier) {
-            ast.type_name_base.ast_base.names =
-                BTreeMap::from([(ast.key_label.unwrap().name().clone(), ast.key_label.unwrap())]);
+        if is_instance(&ast.key_label.unwrap(), ASTType::Identifier) {
+            ast.type_name_base.ast_base.names = BTreeMap::from([(
+                ast.key_label.unwrap().name().clone(),
+                ast.key_label.unwrap(),
+            )]);
         }
     }
 }

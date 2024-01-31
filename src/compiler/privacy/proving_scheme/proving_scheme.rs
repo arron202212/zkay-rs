@@ -37,7 +37,7 @@ impl G1Point {
         if self.x == "0" && self.y == "0" {
             G1Point::default()
         } else {
-            G1Point::new(self.x, self.y) // hex(q - (int(self.y, 0) % q)) TODO
+            G1Point::new(self.x.clone(), self.y.clone()) // hex(q - (int(self.y, 0) % q)) TODO
         }
     }
 
@@ -49,12 +49,12 @@ impl G1Point {
         // """
     {
         assert!(seq.len() == 2);
-        return G1Point::new(seq[0], seq[1]);
+        G1Point::new(seq[0].clone(), seq[1].clone())
     }
 
     // @staticmethod
     pub fn from_it<T: Iterator<Item = Result<std::string::String, std::io::Error>>>(
-        it: &T,
+        it: &mut T,
     ) -> Self {
         G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
     }
@@ -103,12 +103,17 @@ impl G2Point {
         //
     {
         assert!(seq.len() == 4);
-        G2Point::new(seq[0], seq[1], seq[2], seq[3])
+        G2Point::new(
+            seq[0].clone(),
+            seq[1].clone(),
+            seq[2].clone(),
+            seq[3].clone(),
+        )
     }
 
     // @staticmethod
     pub fn from_it<T: Iterator<Item = Result<std::string::String, std::io::Error>>>(
-        it: &T,
+        it: &mut T,
     ) -> Self {
         G2Point::new(
             it.next().unwrap().unwrap(),
@@ -194,7 +199,6 @@ pub trait ProvingScheme {
     }
     // @abstractmethod
     fn generate_verification_contract(
-        &self,
         verification_key: Self::VerifyingKeyX,
         circuit: &CircuitHelper,
         primary_inputs: Vec<String>,

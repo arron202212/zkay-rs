@@ -48,7 +48,7 @@ impl Manifest {
             );
             CFG.lock()
                 .unwrap()
-                .import_compiler_settings(manifest[&Manifest::zkay_options.to_string()]);
+                .import_compiler_settings(manifest[&Manifest::zkay_options.to_string()].clone());
         }
     }
 
