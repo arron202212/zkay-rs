@@ -311,11 +311,11 @@ impl AST {
     pub fn statement_list_base(&self) -> StatementListBase {
         StatementListBase::default()
     }
-    pub fn ast_base(&mut self) -> &ASTBase {
-        &ASTBase::default()
+    pub fn ast_base(&self) -> Option<&ASTBase> {
+        None
     }
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
@@ -338,11 +338,11 @@ impl AST {
         None
     }
     pub fn set_func_idf_name(&mut self, name: String) {}
-    pub fn to_location_expr(&self) -> LocationExpr {
+    pub fn to_location_expr(&self) -> Option<LocationExpr> {
         // if let Self::LocationExpr(le) = self {
         //     le.clone()
         // } else {
-        LocationExpr::default()
+        None
         // }
     }
     pub fn init(&self) -> Option<SimpleStatement> {
@@ -418,15 +418,6 @@ impl AST {
     }
     pub fn idf(&self) -> Identifier {
         Identifier::default()
-    }
-    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
-        BTreeSet::new()
-    }
-    pub fn modified_values_mut(&mut self) -> &mut BTreeSet<InstanceTarget> {
-        &mut BTreeSet::new()
-    }
-    pub fn read_values_mut(&mut self) -> &mut BTreeSet<InstanceTarget> {
-        &mut BTreeSet::new()
     }
     pub fn requires_verification(&self) -> bool {
         false
@@ -819,8 +810,8 @@ impl ASTChildren for Expression {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl Expression {
-    pub fn expression_base_mut(&mut self) -> &mut ExpressionBase {
-        &mut ExpressionBase::default()
+    pub fn expression_base_mut(&mut self) -> Option<&mut ExpressionBase> {
+        None
     }
     pub fn is_eq(&self) -> bool {
         false
@@ -868,11 +859,11 @@ impl Expression {
         false
     }
     pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
-    pub fn to_location_expr(&self) -> LocationExpr {
+    pub fn to_location_expr(&self) -> Option<LocationExpr> {
         // if let Self::LocationExpr(le) = self {
         //     le.clone()
         // } else {
-        LocationExpr::default()
+        None
         // }
     }
     pub fn member(&self) -> Identifier {
@@ -2440,7 +2431,7 @@ impl NumberLiteralExpr {
         Self {
             literal_expr_base: Box::new(LiteralExprBase::new()),
             value: 0,
-            value_string: Some(value_string),
+            value_string: Some(value_string.clone()),
             was_hex: false,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
@@ -2723,7 +2714,7 @@ impl TupleOrLocationExpr {
                 if let Expression::TupleOrLocationExpr(parent) = ie {
                     if let TupleOrLocationExpr::LocationExpr(le) = parent {
                         if let LocationExpr::IndexExpr(ie) = le {
-                            if self == &TupleOrLocationExpr::LocationExpr(*ie.arr.clone()) {
+                            if self == &TupleOrLocationExpr::LocationExpr(**ie.arr.as_ref().unwrap()) {
                                 return parent.is_lvalue();
                             }
                         }
@@ -2734,7 +2725,7 @@ impl TupleOrLocationExpr {
                 if let Expression::TupleOrLocationExpr(parent) = ie {
                     if let TupleOrLocationExpr::LocationExpr(ie) = parent {
                         if let LocationExpr::MemberAccessExpr(ie) = ie {
-                            if self == &TupleOrLocationExpr::LocationExpr(*ie.expr.clone()) {
+                            if self == &TupleOrLocationExpr::LocationExpr(*ie.expr.clone().unwrap()) {
                                 return parent.is_lvalue();
                             }
                         }
@@ -2867,14 +2858,12 @@ impl ASTChildren for TupleExpr {
 
 //     def assign(self, val: Expression) -> AssignmentStatement:
 //         return AssignmentStatement(self, val)
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum LocationExpr {
     IdentifierExpr(IdentifierExpr),
     MemberAccessExpr(MemberAccessExpr),
     IndexExpr(IndexExpr),
     SliceExpr(SliceExpr),
-    #[default]
-    None,
 }
 
 impl ASTCode for LocationExpr {
@@ -2884,7 +2873,6 @@ impl ASTCode for LocationExpr {
             LocationExpr::MemberAccessExpr(ast) => ast.get_ast(),
             LocationExpr::IndexExpr(ast) => ast.get_ast(),
             LocationExpr::SliceExpr(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -2893,7 +2881,6 @@ impl ASTCode for LocationExpr {
             LocationExpr::MemberAccessExpr(ast) => ast.get_ast_type(),
             LocationExpr::IndexExpr(ast) => ast.get_ast_type(),
             LocationExpr::SliceExpr(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -2928,7 +2915,6 @@ impl LocationExpr {
                     .expression_base
                     .ast_base
             }
-            _ => &mut ASTBase::new(),
         }
     }
     pub fn statement(&self) -> Option<Box<Statement>> {
@@ -2978,7 +2964,7 @@ impl LocationExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
                 Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                    LocationExpr::MemberAccessExpr(MemberAccessExpr::new(self.clone(), member)),
+                    LocationExpr::MemberAccessExpr(MemberAccessExpr::new(Some(self.clone()), member)),
                 )),
                 args,
                 None,
@@ -2986,7 +2972,7 @@ impl LocationExpr {
             IdentifierExprUnion::String(member) => FunctionCallExprBase::new(
                 Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
                     LocationExpr::MemberAccessExpr(MemberAccessExpr::new(
-                        self.clone(),
+                        Some(self.clone()),
                         Identifier::Identifier(IdentifierBase::new(member)),
                     )),
                 )),
@@ -3003,9 +2989,9 @@ impl LocationExpr {
 
     pub fn dot(&self, member: IdentifierExprUnion) -> MemberAccessExpr {
         match member {
-            IdentifierExprUnion::Identifier(member) => MemberAccessExpr::new(self.clone(), member),
+            IdentifierExprUnion::Identifier(member) => MemberAccessExpr::new(Some(self.clone()), member),
             IdentifierExprUnion::String(member) => MemberAccessExpr::new(
-                self.clone(),
+                Some(self.clone()),
                 Identifier::Identifier(IdentifierBase::new(member)),
             ),
             _ => MemberAccessExpr::default(),
@@ -3077,7 +3063,7 @@ impl LocationExpr {
             _ => Expression::None,
         };
 
-        IndexExpr::new(self.clone(), item).as_type(value_type)
+        IndexExpr::new(Some(self.clone()), item).as_type(value_type)
     }
     pub fn assign(&self, val: Expression) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
@@ -3092,7 +3078,6 @@ impl LocationExpr {
             LocationExpr::MemberAccessExpr(ast) => LocationExpr::MemberAccessExpr(ast.as_type(t)),
             LocationExpr::IndexExpr(ast) => LocationExpr::IndexExpr(ast.as_type(t)),
             LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
-            _ => Self::default(),
         }
     }
     pub fn target(&self) -> Option<Box<TargetDefinition>> {
@@ -3191,7 +3176,7 @@ impl IdentifierExpr {
 
     pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
         SliceExpr::new(
-            LocationExpr::IdentifierExpr(self.clone()),
+            Some(LocationExpr::IdentifierExpr(self.clone())),
             base,
             offset,
             size,
@@ -3241,7 +3226,7 @@ impl ASTChildren for IdentifierExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MemberAccessExpr {
     pub location_expr_base: LocationExprBase,
-    pub expr: Box<LocationExpr>,
+    pub expr: Option<Box<LocationExpr>>,
     pub member: Box<Identifier>,
 }
 impl ASTCode for MemberAccessExpr {
@@ -3255,10 +3240,10 @@ impl ASTCode for MemberAccessExpr {
     }
 }
 impl MemberAccessExpr {
-    pub fn new(expr: LocationExpr, member: Identifier) -> Self {
+    pub fn new(expr: Option<LocationExpr>, member: Identifier) -> Self {
         Self {
             location_expr_base: LocationExprBase::new(),
-            expr: Box::new(expr),
+            expr: expr.map(|expr|Box::new(expr)),
             member: Box::new(member),
         }
     }
@@ -3288,7 +3273,7 @@ impl MemberAccessExpr {
 impl ASTChildren for MemberAccessExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::Expression(Expression::TupleOrLocationExpr(
-            TupleOrLocationExpr::LocationExpr(*self.expr.clone()),
+            TupleOrLocationExpr::LocationExpr(*self.expr.clone().unwrap()),
         )));
         cb.add_child(AST::Identifier(*self.member.clone()));
     }
@@ -3307,7 +3292,7 @@ impl ASTChildren for MemberAccessExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndexExpr {
     pub location_expr_base: LocationExprBase,
-    pub arr: Box<LocationExpr>,
+    pub arr: Option<Box<LocationExpr>>,
     pub key: Box<Expression>,
 }
 impl ASTCode for IndexExpr {
@@ -3321,10 +3306,10 @@ impl ASTCode for IndexExpr {
     }
 }
 impl IndexExpr {
-    pub fn new(arr: LocationExpr, key: Expression) -> Self {
+    pub fn new(arr: Option<LocationExpr>, key: Expression) -> Self {
         Self {
             location_expr_base: LocationExprBase::new(),
-            arr: Box::new(arr),
+            arr: arr.map(|a| Box::new(a)),
             key: Box::new(key),
         }
     }
@@ -3354,7 +3339,7 @@ impl IndexExpr {
 impl ASTChildren for IndexExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::Expression(Expression::TupleOrLocationExpr(
-            TupleOrLocationExpr::LocationExpr(*self.arr.clone()),
+            TupleOrLocationExpr::LocationExpr(*self.arr.clone().unwrap()),
         )));
         cb.add_child(AST::Expression(*self.key.clone()));
     }
@@ -3373,7 +3358,7 @@ impl ASTChildren for IndexExpr {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SliceExpr {
     pub location_expr_base: LocationExprBase,
-    pub arr: Box<LocationExpr>,
+    pub arr: Option<Box<LocationExpr>>,
     pub base: Option<Box<Expression>>,
     pub start_offset: i32,
     pub size: i32,
@@ -3389,10 +3374,15 @@ impl ASTCode for SliceExpr {
     }
 }
 impl SliceExpr {
-    pub fn new(arr: LocationExpr, base: Option<Expression>, start_offset: i32, size: i32) -> Self {
+    pub fn new(
+        arr: Option<LocationExpr>,
+        base: Option<Expression>,
+        start_offset: i32,
+        size: i32,
+    ) -> Self {
         Self {
             location_expr_base: LocationExprBase::new(),
-            arr: Box::new(arr),
+            arr: arr.map(|a| Box::new(a)),
             base: if let Some(base) = base {
                 Some(Box::new(base))
             } else {
@@ -3789,11 +3779,11 @@ impl From<LocationExprUnion> for AST {
     }
 }
 impl LocationExprUnion {
-    pub fn to_location_expr(&self) -> LocationExpr {
+    pub fn to_location_expr(&self) -> Option<LocationExpr> {
         if let Self::LocationExpr(le) = self {
-            le.clone()
+            Some(le.clone())
         } else {
-            LocationExpr::default()
+            None
         }
     }
     pub fn to_expr(&self) -> Expression {
@@ -3853,10 +3843,10 @@ impl HybridArgumentIdf {
             arg_type,
             corresponding_priv_expression,
             serialized_loc: SliceExpr::new(
-                LocationExpr::IdentifierExpr(IdentifierExpr::new(
+                Some(LocationExpr::IdentifierExpr(IdentifierExpr::new(
                     IdentifierExprUnion::String(String::new()),
                     None,
-                )),
+                ))),
                 None,
                 -1,
                 -1,
@@ -3982,10 +3972,10 @@ impl HybridArgumentIdf {
         start_offset: i32,
     ) {
         assert!(self.serialized_loc.start_offset == -1);
-        self.serialized_loc.arr = Box::new(LocationExpr::IdentifierExpr(IdentifierExpr::new(
+        self.serialized_loc.arr = Some(Box::new(LocationExpr::IdentifierExpr(IdentifierExpr::new(
             IdentifierExprUnion::String(idf),
             None,
-        )));
+        ))));
         self.serialized_loc.base = if let Some(base) = base {
             Some(Box::new(base))
         } else {
@@ -4012,15 +4002,15 @@ impl HybridArgumentIdf {
         if let TypeName::Array(a) = *self.t.clone() {
             SliceExpr::new(
                 if let LocationExprUnion::LocationExpr(le) = self.get_loc_expr(None) {
-                    le
+                    Some(le)
                 } else {
-                    LocationExpr::None
+                    None
                 },
                 None,
                 0,
                 self.t.size_in_uints(),
             )
-            .arr
+            .arr.unwrap()
             .assign(Expression::TupleOrLocationExpr(
                 TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(
                     self.serialized_loc.clone(),
@@ -4079,13 +4069,13 @@ impl HybridArgumentIdf {
         );
         if let TypeName::Array(t) = *self.t.clone() {
             self.serialized_loc
-                .arr
+                .arr.unwrap()
                 .assign(Expression::TupleOrLocationExpr(
                     TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(SliceExpr::new(
                         if let LocationExprUnion::LocationExpr(le) = self.get_loc_expr(None) {
-                            le
+                            Some(le)
                         } else {
-                            LocationExpr::default()
+                            None
                         },
                         None,
                         0,
@@ -4167,8 +4157,8 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
     pub fn corresponding_priv_expression(&self) -> Option<Expression> {
         None
@@ -4748,8 +4738,8 @@ impl ForStatement {
             body,
         }
     }
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
 
     pub fn statements(&self) -> Vec<Statement> {
@@ -4902,8 +4892,8 @@ impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl SimpleStatement {
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
 
     pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
@@ -5274,8 +5264,8 @@ impl ASTCode for StatementList {
     }
 }
 impl StatementList {
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
     pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
         None
@@ -8165,11 +8155,11 @@ pub enum NamespaceDefinition {
     None,
 }
 impl NamespaceDefinition {
-    pub fn ast_base_mut(&mut self) -> &mut ASTBase {
-        &mut ASTBase::default()
+    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+        None
     }
-    pub fn namespace_definition_base(&self) -> &NamespaceDefinitionBase {
-        &NamespaceDefinitionBase::default()
+    pub fn namespace_definition_base(&self) -> Option<&NamespaceDefinitionBase> {
+        None
     }
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
@@ -9704,7 +9694,7 @@ impl CodeVisitor {
         format!(
             "{}.{}",
             self.visit(&AST::Expression(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(*ast.expr)
+                TupleOrLocationExpr::LocationExpr(*ast.expr.unwrap())
             ))),
             self.visit(&AST::Identifier(*ast.member))
         )
@@ -9714,7 +9704,7 @@ impl CodeVisitor {
         format!(
             "{}[{}]",
             self.visit(&AST::Expression(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(*ast.arr)
+                TupleOrLocationExpr::LocationExpr(*ast.arr.clone().unwrap())
             ))),
             self.visit(&AST::Expression(*ast.key))
         )
@@ -9935,10 +9925,10 @@ impl CodeVisitor {
                     let mut s = String::new();
                     let (lexpr, rexpr) = (
                         self.visit(&AST::Expression(Expression::TupleOrLocationExpr(
-                            TupleOrLocationExpr::LocationExpr(*lhs.arr.clone()),
+                            TupleOrLocationExpr::LocationExpr(*lhs.arr.clone().unwrap()),
                         ))),
                         self.visit(&AST::Expression(Expression::TupleOrLocationExpr(
-                            TupleOrLocationExpr::LocationExpr(*rhs.arr.clone()),
+                            TupleOrLocationExpr::LocationExpr(*rhs.arr.clone().unwrap()),
                         ))),
                     );
                     let mut lbase = if let Some(base) = &lhs.base {
@@ -10386,11 +10376,17 @@ impl CodeVisitor {
         let (t1, t2) = if let (
             AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(v1)),
             AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(v2)),
-        ) = (*v1, *v2)
+        ) = (v1, v2)
         {
             (
-                v1.identifier_declaration_base.annotated_type.type_name,
-                v2.identifier_declaration_base.annotated_type.type_name,
+                v1.identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .clone(),
+                v2.identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .clone(),
             )
         } else {
             (Box::new(TypeName::default()), Box::new(TypeName::default()))

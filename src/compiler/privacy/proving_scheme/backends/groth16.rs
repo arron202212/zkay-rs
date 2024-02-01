@@ -135,7 +135,7 @@ potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self a
                 Vk memory vk = getVk();
 
                 // Compute linear combination of public inputs"#.to_string()).mul(if should_hash{String::new()}else{
-                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),CFG.lock().unwrap().zk_in_name(),CFG.lock().unwrap().zk_out_name(),256 - BN128_SCALAR_FIELD_BITS) }).mul(
+                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),CFG.lock().unwrap().zk_in_name(),CFG.lock().unwrap().zk_out_name(),256 - *BN128_SCALAR_FIELD_BITS) }).mul(
                 format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.gamma_abc[1].scalar_mul({})",first_pi)}  else {String::from("vk.gamma_abc[1]")})).mul( primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!(
     "lc = lc.add({}); ",format!("vk.gamma_abc[{}]{}",idx+2,if pi != "1"{format!(".scalar_mul({pi})")}else{String::new()}))).collect::<Vec<_>>().concat()).mul(r#"
                 lc = lc.add(vk.gamma_abc[0]);

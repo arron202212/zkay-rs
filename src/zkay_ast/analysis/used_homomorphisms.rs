@@ -37,7 +37,7 @@ impl UsedHomomorphismsVisitor {
     pub fn new() -> Self {
         Self {}
     }
-    pub fn visitChildren(self, ast: AST) -> BTreeSet<String> {
+    pub fn visitChildren(&self, mut ast: AST) -> BTreeSet<String> {
         let mut all_homs = BTreeSet::new();
         for c in ast.children() {
             all_homs = all_homs.union(&self.visit(&mut c)).cloned().collect();
@@ -45,7 +45,7 @@ impl UsedHomomorphismsVisitor {
         return all_homs;
     }
 
-    pub fn visitAnnotatedTypeName(self, ast: AnnotatedTypeName) -> BTreeSet<String> {
+    pub fn visitAnnotatedTypeName(&self, ast: AnnotatedTypeName) -> BTreeSet<String> {
         if ast.is_private() {
             BTreeSet::from([ast.homomorphism.clone()])
         } else {
@@ -53,7 +53,7 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitExpression(self, ast: Expression) -> BTreeSet<String> {
+    pub fn visitExpression(&self, ast: Expression) -> BTreeSet<String> {
         if ast.annotated_type() != AnnotatedTypeName::default() && ast.annotated_type().is_private()
         {
             BTreeSet::from([ast.annotated_type().homomorphism.clone()])
@@ -65,7 +65,7 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitIdentifierDeclaration(self, ast: IdentifierDeclaration) -> BTreeSet<String> {
+    pub fn visitIdentifierDeclaration(&self, ast: IdentifierDeclaration) -> BTreeSet<String> {
         self.visitChildren(ast.get_ast())
     } // Visits annotated type of identifier (and initial value expression)
 
@@ -76,26 +76,26 @@ impl UsedHomomorphismsVisitor {
         self.visitChildren(ast.get_ast())
     } // Parameter and return types are children; don"t bother with "function type"
 
-    pub fn visitEnumDefinition(self, ast: EnumDefinition) -> <Self as AstVisitor>::Return {
+    pub fn visitEnumDefinition(&self, ast: EnumDefinition) -> <Self as AstVisitor>::Return {
         BTreeSet::new()
     } // Neither the enum type nor the types of the enum values can be private
 
-    pub fn visitStructDefinition(self, ast: StructDefinition) -> <Self as AstVisitor>::Return {
+    pub fn visitStructDefinition(&self, ast: StructDefinition) -> <Self as AstVisitor>::Return {
         self.visitChildren(ast.get_ast())
     } // Struct types are never private, but they may have private members
 
-    pub fn visitSourceUnit(self, ast: SourceUnit) -> <Self as AstVisitor>::Return {
+    pub fn visitSourceUnit(&self, ast: SourceUnit) -> <Self as AstVisitor>::Return {
         let used_homs = self.visitChildren(ast.get_ast());
         // Now all constructors or functions have been visited and we can do some post-processing
         // If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
         // We have to do this for all transitively called functions g, being careful around recursive function calls
         let all_fcts = ast.contracts.iter().fold(vec![], |mut a, c| {
-            a.extend(c.constructor_definitions);
-            a.extend(c.function_definitions);
+            a.extend(c.constructor_definitions.clone());
+            a.extend(c.function_definitions.clone());
             a
         });
-        Self::compute_transitive_homomorphisms(all_fcts);
-        for f in all_fcts {
+        Self::compute_transitive_homomorphisms(all_fcts.clone());
+        for f in all_fcts.iter_mut() {
             f.used_crypto_backends =
                 Some(Self::used_crypto_backends(f.used_homomorphisms.unwrap()));
         }
@@ -105,11 +105,11 @@ impl UsedHomomorphismsVisitor {
     pub fn compute_transitive_homomorphisms(fcts: Vec<ConstructorOrFunctionDefinition>)
     // Invert called_functions relation
     {
-        let callers = BTreeMap::new(); //<ConstructorOrFunctionDefinition, Vec<ConstructorOrFunctionDefinition>> ;
-        for f in fcts {
-            callers.insert(f, vec![]);
+        let mut callers = BTreeMap::new(); //<ConstructorOrFunctionDefinition, Vec<ConstructorOrFunctionDefinition>> ;
+        for f in &fcts {
+            callers.insert(f.clone(), vec![]);
         }
-        for f in fcts {
+        for f in &fcts {
             for g in f.called_functions {
                 if g.used_homomorphisms.is_none()
                 // Called function not analyzed, (try to) make sure this is a built-in like transfer, send
@@ -120,16 +120,16 @@ impl UsedHomomorphismsVisitor {
                     );
                     continue;
                 }
-                callers.entry(g).or_insert(vec![]).push(f);
+                callers.entry(g).or_insert(vec![]).push(f.clone());
             }
         }
 
         // If a function uses any homomorphisms and gets called, propagate its homomorphisms to its callers
-        let dirty = fcts
+        let mut dirty = fcts
             .iter()
             .filter_map(|f| {
                 if f.used_homomorphisms.is_some() && !callers[f].is_empty() {
-                    Some(f)
+                    Some(f.clone())
                 } else {
                     None
                 }
@@ -139,25 +139,27 @@ impl UsedHomomorphismsVisitor {
             let f = dirty.pop_first().unwrap();
             // Add all of f"s used homomorphisms to all of its callers g.
             // If this added a new homomorphism to g, mark g as dirty (if not already) -> iterate to fixed point
-            for g in &callers[f] {
-                if f == g {
+            for g in callers.get_mut(&f).unwrap() {
+                if f == *g {
                     continue;
                 }
-                let old_len = g.used_homomorphisms.unwrap().len();
+                let old_len = g.used_homomorphisms.as_ref().unwrap().len();
                 g.used_homomorphisms = Some(
                     g.used_homomorphisms
+                        .as_ref()
                         .unwrap()
-                        .union(&f.used_homomorphisms.unwrap())
+                        .union(&f.used_homomorphisms.clone().unwrap())
                         .cloned()
                         .collect(),
                 );
-                if g.used_homomorphisms.unwrap().len() > old_len && !callers[g].is_empty() {
-                    dirty.insert(g);
+                if g.used_homomorphisms.as_ref().unwrap().len() > old_len && !callers[g].is_empty()
+                {
+                    dirty.insert(g.clone());
                 }
             }
         }
     }
-    pub fn visitAST(self, ast: AST) -> <Self as AstVisitor>::Return
+    pub fn visitAST(&self, ast: AST) -> <Self as AstVisitor>::Return
 // Base case, make sure we don"t miss any annotated types
     {
         assert!(
@@ -168,14 +170,14 @@ impl UsedHomomorphismsVisitor {
         self.visitChildren(ast)
     }
 
-    pub fn visit(self, ast: &mut AST) -> <Self as AstVisitor>::Return {
+    pub fn visit(&self, ast: &mut AST) -> <Self as AstVisitor>::Return {
         let all_homs = self.visit(ast); //TODO super()
-        if let Some(ast) = ast.constructor_or_function_definition() {
+        if let Some(mut ast) = ast.constructor_or_function_definition() {
             if let Some(_) = ast.used_homomorphisms {
                 ast.used_homomorphisms = Some(all_homs.clone());
             }
             if let Some(_) = ast.used_crypto_backends {
-                ast.used_crypto_backends = Some(Self::used_crypto_backends(all_homs));
+                ast.used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
             }
         }
         all_homs

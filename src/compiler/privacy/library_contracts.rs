@@ -237,10 +237,11 @@ library Pairing {
 //  - (g2 addition removed)
 // :License: MIT
 // """
-lazy_static! {
 use zkp_u256::Binary;
-pub static BN128_SCALAR_FIELD_BITS: usize =
-    BN128_SCALAR_FIELD.most_significant_bit().unwrap_or(1) - 1;
+
+lazy_static! {
+    pub static ref BN128_SCALAR_FIELD_BITS: usize =
+        BN128_SCALAR_FIELD.most_significant_bit().unwrap_or(1) - 1;
     pub static ref alt_bn128_pairing_lib: String = alt_bn128_pairing_lib_simple
         [..alt_bn128_pairing_lib_simple.rfind("}").unwrap_or(0)]
         .to_string()

@@ -139,7 +139,13 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Dump libraries
     print_step("Write library contract files");
     CFG.lock().unwrap().library_compilation_environment();
-    for crypto_params in ast.source_unit().unwrap().used_crypto_backends.unwrap() {
+    for crypto_params in ast
+        .source_unit()
+        .unwrap()
+        .used_crypto_backends
+        .clone()
+        .unwrap()
+    {
         // Write pki contract
         let pki_contract_code = library_contracts::get_pki_contract(&crypto_params);
         let pki_contract_file = format!(
@@ -199,7 +205,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.unwrap().get_ast().code())
+            .map(|cc| cc.verifier_contract_type.as_ref().unwrap().get_ast().code())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);
@@ -215,6 +221,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
                 .source_unit()
                 .unwrap()
                 .used_homomorphisms
+                .as_ref()
                 .unwrap()
                 .contains(&hom)
             {
@@ -244,9 +251,10 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     cg.circuit_generator_base.generate_circuits(import_keys);
 
     // Check that all verification contracts and the main contract compile
-    let main_solidity_files = cg
+    let fns = cg
         .circuit_generator_base
-        .get_verification_contract_filenames()
+        .get_verification_contract_filenames();
+    let main_solidity_files = fns
         .iter()
         .map(|v| PathBuf::from(v))
         .chain([PathBuf::from(output_dir).join(output_filename)]);

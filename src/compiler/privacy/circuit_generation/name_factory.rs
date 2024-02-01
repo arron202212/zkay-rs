@@ -61,7 +61,11 @@ impl NameFactory {
             idfs: vec![],
         }
     }
-    pub fn get_new_idf(&mut self, t: &TypeName, priv_expr: Option<Expression>) -> HybridArgumentIdf
+    pub fn get_new_idf(
+        &mut self,
+        t: &TypeName,
+        priv_expr: Option<Expression>,
+    ) -> HybridArgumentIdf
 // """Generate a new HybridArgumentIdf which references priv_expr and has transformed type t."""
     {
         let name = self.base_name_factory.get_new_name(t, true);

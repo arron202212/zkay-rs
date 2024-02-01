@@ -162,7 +162,7 @@ impl Remapper {
         stmt: IfStatement,
         true_cond_for_other_branch: IdentifierExpr,
         other_branch_state: RemapMapType,
-        create_val_for_name_and_expr_fct: impl Fn(String, Expression) -> HybridArgumentIdf,
+        create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
     )
     // """
     // Perform an SSA join for two branches.
@@ -197,7 +197,7 @@ impl Remapper {
             key: &Identifier,
             val: &HybridArgumentIdf,
             true_cond_for_other_branch: &IdentifierExpr,
-            create_val_for_name_and_expr_fct: impl Fn(String, Expression) -> HybridArgumentIdf,
+            create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
         ) -> HybridArgumentIdf
 // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         {

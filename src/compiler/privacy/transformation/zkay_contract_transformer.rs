@@ -258,7 +258,7 @@ impl ZkayTransformer {
     }
 
     pub fn include_verification_contracts(
-        &self,
+        &mut self,
         su: &mut SourceUnit,
         c: &ContractDefinition,
     ) -> Vec<StateVariableDeclaration>
@@ -289,7 +289,7 @@ impl ZkayTransformer {
                     c.namespace_definition_base.idf.name(),
                     f.name(),
                 );
-                Self::import_contract(&name, su, self.circuits.get(&f));
+                Self::import_contract(&name, su, self.circuits.get_mut(&f));
                 contract_var_decls.push(Self::create_contract_variable(&name));
             }
         }
@@ -343,11 +343,11 @@ impl ZkayTransformer {
                 None,
             );
         }
-        let mut contracts=ast.contracts.clone();
+        let mut contracts = ast.contracts.clone();
         for c in contracts.iter_mut() {
             self.transform_contract(ast, c);
         }
-        ast.contracts=contracts;
+        ast.contracts = contracts;
         ast.clone()
     }
 
@@ -373,7 +373,7 @@ impl ZkayTransformer {
         // :return: The contract itself
         // """
     {
-        let mut all_fcts:Vec<_> = c
+        let mut all_fcts: Vec<_> = c
             .constructor_definitions
             .iter()
             .chain(&c.function_definitions)
@@ -406,7 +406,7 @@ impl ZkayTransformer {
             .visit_list(c.state_variable_declarations.clone());
 
         // Split into functions which require verification and those which don"t need a circuit helper
-        let mut req_ext_fcts = BTreeMap::<ConstructorOrFunctionDefinition,Vec<Parameter>>::new();
+        let mut req_ext_fcts = BTreeMap::<ConstructorOrFunctionDefinition, Vec<Parameter>>::new();
         let (mut new_fcts, mut new_constr) = (vec![], vec![]);
         for fct in &all_fcts {
             assert!(is_instance(fct, ASTType::ConstructorOrFunctionDefinition));
@@ -448,22 +448,19 @@ impl ZkayTransformer {
             .into_iter()
             .map(|v| v.get_ast())
             .collect();
-        c.state_variable_declarations = [
+        let mut svd = vec![
             field_prime_decl.get_ast(),
             CommentBase::new(String::new()).get_ast(),
-        ]
-        .into_iter()
-        .chain(CommentBase::comment_list(
+        ];
+        svd.extend(CommentBase::comment_list(
             String::from("Helper Contracts"),
             contract_var_decls,
-        ))
-        .collect::<Vec<_>>()
-        .into_iter()
-        .chain([CommentBase::new(String::from("User state variables")).get_ast()])
-        .collect::<Vec<_>>()
-        .into_iter()
-        .chain(&c.state_variable_declarations)
-        .collect();
+        ));
+        svd.extend(vec![
+            CommentBase::new(String::from("User state variables")).get_ast()
+        ]);
+        svd.extend(c.state_variable_declarations.clone());
+        c.state_variable_declarations = svd;
 
         // Transform signatures
         for f in all_fcts.iter_mut() {
@@ -526,7 +523,8 @@ impl ZkayTransformer {
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
-        let mut fcts_with_verification: Vec<_> = all_fcts.iter()
+        let mut fcts_with_verification: Vec<_> = all_fcts
+            .iter()
             .filter_map(|fct| {
                 if fct.requires_verification {
                     Some(fct.clone())
@@ -571,11 +569,12 @@ impl ZkayTransformer {
 
         // Create external wrapper functions where necessary
         for (f, params) in req_ext_fcts.iter_mut() {
-            let mut f=f.clone();
+            let mut f = f.clone();
             let (ext_f, int_f) = self.split_into_external_and_internal_fct(
                 &mut f,
                 params,
-                global_owners.clone()
+                global_owners
+                    .clone()
                     .into_iter()
                     .map(Into::<PrivacyLabelExpr>::into)
                     .collect(),
@@ -787,6 +786,7 @@ impl ZkayTransformer {
                     LocationExpr::IndexExpr(
                         s.get_loc_expr(None)
                             .to_location_expr()
+                            .unwrap()
                             .index(ExprUnion::I32(cipher_payload_len)),
                     )
                     .assign(sender_key.to_expr()),
@@ -808,7 +808,14 @@ impl ZkayTransformer {
         }
 
         // Include original transformed function body
-        stmts.extend(ast.body.as_ref().unwrap().statement_list_base.statements.clone());
+        stmts.extend(
+            ast.body
+                .as_ref()
+                .unwrap()
+                .statement_list_base
+                .statements
+                .clone(),
+        );
 
         // Serialize in parameters to in array (if any)
         let mut serialize_stmts = vec![];
@@ -864,7 +871,7 @@ impl ZkayTransformer {
     pub fn split_into_external_and_internal_fct(
         &mut self,
         f: &mut ConstructorOrFunctionDefinition,
-        original_params:&mut Vec<Parameter>,
+        original_params: &mut Vec<Parameter>,
         global_owners: Vec<PrivacyLabelExpr>,
     ) -> (
         ConstructorOrFunctionDefinition,
@@ -886,10 +893,12 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    deep_copy(p.get_ast(), true, false)
-                        .parameter()
-                        .unwrap()
-                        .with_changed_storage(String::from("memory"), String::from("calldata"))
+                    let mut pp = deep_copy(p.get_ast(), true, false);
+                        let mut pp=pp.parameter()
+                        .as_mut()
+                        .unwrap();
+
+                    pp.with_changed_storage(String::from("memory"), String::from("calldata"))
                 })
                 .collect();
             crate::lc_vec_s!["external"]
@@ -1019,6 +1028,7 @@ impl ZkayTransformer {
         for crypto_params in &args_backends {
             assert!(int_fct
                 .used_crypto_backends
+                .as_ref()
                 .unwrap()
                 .contains(&crypto_params));
             // If there are any private arguments with homomorphism "hom", we need the public key for that crypto backend
@@ -1099,10 +1109,7 @@ impl ZkayTransformer {
                 let (idf, mut assignment) = ext_circuit.clone().request_public_key(
                     &crypto_params,
                     key_owner.clone(),
-                    &CircuitHelper::get_glob_key_name(
-                        &key_owner.clone().into(),
-                        &crypto_params,
-                    ),
+                    &CircuitHelper::get_glob_key_name(&key_owner.clone().into(), &crypto_params),
                 );
                 assignment.set_lhs(Some(AssignmentStatementUnion::LocationExpr(
                     LocationExpr::IdentifierExpr(IdentifierExpr::new(
@@ -1126,7 +1133,7 @@ impl ZkayTransformer {
                 key_req_stmts.push(
                     in_arr_var
                         .slice(offset, key_len, None)
-                        .arr
+                        .arr.unwrap()
                         .assign(
                             IdentifierExpr::new(
                                 IdentifierExprUnion::Identifier(Identifier::Identifier(
@@ -1158,7 +1165,7 @@ impl ZkayTransformer {
                     .cipher_payload_len();
                 let assign_stmt = in_arr_var
                     .slice(offset, cipher_payload_len, None)
-                    .arr
+                    .arr.unwrap()
                     .assign(
                         IdentifierExpr::new(
                             IdentifierExprUnion::Identifier(
@@ -1264,7 +1271,7 @@ impl ZkayTransformer {
         ));
 
         // Call internal function
-        let mut args = original_params
+        let mut args: Vec<_> = original_params
             .iter()
             .map(|param| {
                 IdentifierExpr::new(

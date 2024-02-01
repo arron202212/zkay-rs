@@ -2,8 +2,8 @@
 // from typing import List
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use std::fs::File;
-use std::io::{BufReader,BufRead};
 use std::io::Lines;
+use std::io::{BufRead, BufReader};
 #[derive(Clone)]
 pub struct G1Point {
     x: String,
@@ -53,7 +53,7 @@ impl G1Point {
         G1Point::new(seq[0].clone(), seq[1].clone())
     }
     // @staticmethod
-    pub fn from_it<B: BufRead>(it: &mut Lines<B> ) -> Self {
+    pub fn from_it<B: BufRead>(it: &mut Lines<B>) -> Self {
         G1Point::new(it.next().unwrap().unwrap(), it.next().unwrap().unwrap())
     }
 
@@ -110,8 +110,7 @@ impl G2Point {
     }
 
     // @staticmethod
-    pub fn from_it<B: BufRead>(it: &mut Lines<B>,
-    ) -> Self {
+    pub fn from_it<B: BufRead>(it: &mut Lines<B>) -> Self {
         G2Point::new(
             it.next().unwrap().unwrap(),
             it.next().unwrap().unwrap(),

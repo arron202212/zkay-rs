@@ -38,14 +38,14 @@ impl AstVisitor for ReturnCheckVisitor {
 }
 impl ReturnCheckVisitor {
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
-        let container = ast.statement_base.ast_base.parent.unwrap();
+        let container = ast.statement_base.ast_base.parent.clone().unwrap();
         // assert!(is_instance(&*container,ASTType::Block));
-        let ok = true;
+        let mut ok = true;
         if container
             .statement_list_base()
             .statements
             .last()
-            .map(|v| *v)
+            .map(|v| v.clone())
             .unwrap_or_default()
             != ast.get_ast()
         {

@@ -79,7 +79,7 @@ impl LoopChecker {
             ast.body
         );
         assert!(
-            ast.update.is_none() || contains_private_expr(ast.update.map(|u| u.get_ast())),
+            ast.update.is_none() || contains_private_expr(ast.update.as_ref().map(|u| u.get_ast())),
             "Loop update statement cannot contain private expressions {:?}",
             ast.update
         );

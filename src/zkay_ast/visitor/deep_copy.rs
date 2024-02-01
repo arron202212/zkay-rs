@@ -20,9 +20,9 @@ pub fn deep_copy(ast: AST, with_types: bool, with_analysis: bool) -> AST
 {
     // assert!(isinstance(ast, AST));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
-    let mut ast_copy = v.visit(ast);
-    ast_copy.ast_base_mut().parent = ast.parent().map(|p| Box::new(p));
-    set_parents(ast_copy);
+    let mut ast_copy = v.visit(ast.clone());
+    ast_copy.ast_base_mut().unwrap().parent = ast.parent().map(|p| Box::new(p));
+    set_parents(ast_copy.clone());
     link_identifiers(&ast_copy);
     ast_copy
 }
@@ -40,14 +40,15 @@ pub fn replace_expr(
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
-    *new_expr
+    new_expr.clone()
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.ast_base_mut().parent = old_ast.unwrap().parent().map(|p| Box::new(p));
-    DeepCopyVisitor::copy_ast_fields(old_ast.unwrap(), new_ast);
-    if old_ast.unwrap().parent().is_some() {
-        set_parents(*new_ast);
+    new_ast.ast_base_mut().unwrap().parent =
+        old_ast.as_ref().unwrap().parent().map(|p| Box::new(p));
+    DeepCopyVisitor::copy_ast_fields(old_ast.clone().unwrap(), &mut new_ast.clone());
+    if old_ast.as_ref().unwrap().parent().is_some() {
+        set_parents(new_ast.clone());
         link_identifiers(new_ast);
     }
 }

@@ -777,8 +777,8 @@ impl TypeCheckVisitor {
 
     pub fn visitMemberAccessExpr(&self, ast: MemberAccessExpr) {
         assert!(ast.location_expr_base.target.is_some());
-        if ast.expr.annotated_type().unwrap().is_address()
-            && ast.expr.annotated_type().unwrap().is_private()
+        if ast.expr.unwrap().annotated_type().unwrap().is_address()
+            && ast.expr.unwrap().annotated_type().unwrap().is_private()
         {
             assert!(
                 false,
@@ -983,7 +983,7 @@ impl TypeCheckVisitor {
         }
     }
     pub fn visitIndexExpr(&self, ast: IndexExpr) {
-        let arr = ast.arr;
+        let arr = ast.arr.unwrap();
         let index = ast.key;
         let map_t = arr.annotated_type().unwrap();
         //should have already been checked

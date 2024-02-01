@@ -47,43 +47,46 @@ impl ParentSetterVisitor {
         ast.ast_base.namespace = Some(vec![]);
     }
 
-    pub fn visitNamespaceDefinition(&self, ast: NamespaceDefinition) {
-        ast.ast_base_mut().namespace = Some(if let Some(parent) = ast.parent() {
+    pub fn visitNamespaceDefinition(&self, mut ast: NamespaceDefinition) {
+        ast.ast_base_mut().unwrap().namespace = Some(if let Some(mut parent) = ast.parent() {
             parent
-                .ast_base()
+                .ast_base().unwrap()
                 .namespace
+                .clone()
                 .unwrap()
                 .into_iter()
-                .chain([ast.namespace_definition_base().idf.clone()])
+                .chain([ast.namespace_definition_base().unwrap().idf.clone()])
                 .collect()
         } else {
-            vec![ast.namespace_definition_base().idf.clone()]
+            vec![ast.namespace_definition_base().unwrap().idf.clone()]
         });
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        ast.namespace_definition_base.ast_base.namespace = Some(if let Some(parent) = ast.parent {
-            parent
-                .namespace_definition_base
-                .ast_base
-                .namespace
-                .unwrap()
-                .into_iter()
-                .chain([ast.namespace_definition_base.idf.clone()])
-                .collect()
-        } else {
-            vec![ast.namespace_definition_base.idf.clone()]
-        });
+        ast.namespace_definition_base.ast_base.namespace =
+            Some(if let Some(parent) = &ast.parent {
+                parent
+                    .namespace_definition_base
+                    .ast_base
+                    .namespace
+                    .unwrap()
+                    .into_iter()
+                    .chain([ast.namespace_definition_base.idf.clone()])
+                    .collect()
+            } else {
+                vec![ast.namespace_definition_base.idf.clone()]
+            });
     }
 
     pub fn visitChildren(&self, ast: &mut AST) {
-        for c in ast.children() {
-            if AST::default() != c {
-                c.ast_base_mut().parent = Some(Box::new(ast.clone()));
-                c.ast_base_mut().namespace = ast.ast_base().namespace.clone();
-                self.visit(c);
+        for c in ast.children().iter_mut() {
+            if AST::default() != *c {
+                c.ast_base_mut().unwrap().parent = Some(Box::new(ast.clone()));
+                c.ast_base_mut().unwrap().namespace = ast.ast_base().unwrap().namespace.clone();
+                self.visit(c.clone());
             } else {
-                print!("{:?},{:?}, {:?}", c, ast, ast.children());
+                let children = ast.children();
+                print!("{:?},{:?}, {:?}", c, ast, children);
             }
         }
     }
@@ -116,15 +119,15 @@ impl AstVisitor for ExpressionToStatementVisitor {
 
 impl ExpressionToStatementVisitor {
     pub fn visitExpression(&self, ast: &mut Expression) {
-        let parent = Some(ast.get_ast());
-        while let Some(p) = parent {
+        let mut parent = Some(ast.get_ast());
+        while let Some(p) = &parent {
             if let AST::Statement(_) = p {
                 break;
             }
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.expression_base_mut().statement = parent.map(|p| {
+            ast.expression_base_mut().unwrap().statement = parent.map(|p| {
                 Box::new(if let AST::Statement(a) = p {
                     a
                 } else {
@@ -136,7 +139,7 @@ impl ExpressionToStatementVisitor {
 
     pub fn visitStatement(&self, ast: &mut Statement) {
         let mut parent = Some(ast.get_ast());
-        while let Some(p) = parent {
+        while let Some(p) = &parent {
             if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
                 _,
             )) = p
@@ -164,7 +167,7 @@ impl ExpressionToStatementVisitor {
 
 pub fn set_parents(ast: AST) {
     let v = ParentSetterVisitor::new();
-    v.visit(ast);
+    v.visit(ast.clone());
     let v = ExpressionToStatementVisitor;
     v.visit(ast);
 }

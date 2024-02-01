@@ -36,39 +36,39 @@ pub fn merge_dicts(dict_args: Vec<BTreeMap<String, Identifier>>) -> BTreeMap<Str
     let mut result = BTreeMap::new();
     for dictionary in dict_args {
         for (key, value) in dictionary {
-            if let Some(&v) = result.get(&key) {
-                if v != value {
+            if let Some(v) = result.get(&key) {
+                if *v != value {
                     // raise ValueError("Conflicting definitions for", key)
                     assert!(false, "Conflicting definitions for {}", key);
                 }
             }
-            result.insert(key, value);
+            result.insert(key.clone(), value.clone());
         }
     }
     result
 }
 
 pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, Identifier> {
-    let children: Vec<_> = ast
+    let mut children: Vec<_> = ast
         .children()
         .iter()
         .filter_map(|c| {
             if is_instances(c, vec![ASTType::Block, ASTType::ForStatement]) {
                 None
             } else {
-                Some(c)
+                Some(c.clone())
             }
         })
         .collect();
     let names: Vec<_> = children
         .iter()
-        .map(|c| c.ast_base().names.clone())
+        .map(|mut c| c.ast_base().unwrap().names.clone())
         .collect();
     let ret = merge_dicts(names);
     for c in children.iter_mut()
     //declared names are not available within the declaration statements
     {
-        c.ast_base_mut().names.clear();
+        c.ast_base_mut().unwrap().names.clear();
     }
     ret
 }
@@ -156,7 +156,7 @@ impl SymbolTableFiller {
             })
             .collect();
         let mut funcs = BTreeMap::new();
-        for f in ast.function_definitions {
+        for f in &ast.function_definitions {
             if funcs.contains_key(&f.namespace_definition_base.idf.name()) {
                 // raise UnknownIdentifierException(f"Zkay does not currently support method overloading.", f)
                 assert!(
@@ -167,7 +167,7 @@ impl SymbolTableFiller {
             }
             funcs.insert(
                 f.namespace_definition_base.idf.name(),
-                f.namespace_definition_base.idf,
+                f.namespace_definition_base.idf.clone(),
             );
         }
         let structs = ast
@@ -214,11 +214,16 @@ impl SymbolTableFiller {
             .map(|d| (d.idf().name().clone(), d.idf().clone()))
             .collect();
     }
-    pub fn visitEnumDefinition(&self, ast: EnumDefinition) {
+    pub fn visitEnumDefinition(&self, mut ast: EnumDefinition) {
         ast.namespace_definition_base.ast_base.names = ast
             .values
             .iter()
-            .map(|d| (d.idf.unwrap().name().clone(), d.idf.unwrap()))
+            .map(|d| {
+                (
+                    d.idf.as_ref().unwrap().name().clone(),
+                    d.idf.clone().unwrap(),
+                )
+            })
             .collect();
     }
     pub fn visitEnumValue(&self, ast: &mut EnumValue) {}
@@ -226,28 +231,28 @@ impl SymbolTableFiller {
     pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) {
         ast.identifier_declaration_base.ast_base.names = BTreeMap::from([(
             ast.identifier_declaration_base.idf.name(),
-            *ast.identifier_declaration_base.idf,
+            *ast.identifier_declaration_base.idf.clone(),
         )]);
     }
 
     pub fn visitStatementList(&self, ast: &mut StatementList) {
-        ast.ast_base_mut().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
     }
 
     pub fn visitSimpleStatement(&self, ast: &mut SimpleStatement) {
-        ast.ast_base_mut().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
     }
 
     pub fn visitForStatement(&self, ast: &mut ForStatement) {
-        ast.ast_base_mut().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
     }
 
     pub fn visitMapping(&self, ast: &mut Mapping) {
         ast.type_name_base.ast_base.names = BTreeMap::new();
-        if is_instance(&ast.key_label.unwrap(), ASTType::Identifier) {
+        if is_instance(ast.key_label.as_ref().unwrap(), ASTType::Identifier) {
             ast.type_name_base.ast_base.names = BTreeMap::from([(
-                ast.key_label.unwrap().name().clone(),
-                ast.key_label.unwrap(),
+                ast.key_label.clone().unwrap().name().clone(),
+                ast.key_label.clone().unwrap(),
             )]);
         }
     }
@@ -493,13 +498,13 @@ impl SymbolTableLinker {
         //     },
         //     "Function call return value member access not yet supported"
         // );
-        if let Some(TargetDefinition::NamespaceDefinition(target)) = ast.expr.target().map(|t| *t) {
+        if let Some(TargetDefinition::NamespaceDefinition(target)) = ast.expr.unwrap().target().map(|t| *t) {
             if let Some(idf) = target.names().get(&ast.member.name()) {
                 ast.location_expr_base.target = idf.parent().map(|t| Box::new(t.into()));
             }
         } else {
             let mut t = ast
-                .expr
+                .expr.unwrap()
                 .target()
                 .unwrap_or_default()
                 .annotated_type()
@@ -546,7 +551,7 @@ impl SymbolTableLinker {
         //     "Function call return value indexing not yet supported"
         // );
         let source_t = ast
-            .arr
+            .arr.unwrap()
             .target()
             .unwrap_or_default()
             .annotated_type()

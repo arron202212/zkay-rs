@@ -101,7 +101,7 @@ pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
 
     // Zkay preprocessing and type checking
     process_ast(
-        ast,
+        ast.clone(),
         flag.parents(),
         flag.link_identifiers(),
         flag.check_return(),
@@ -122,7 +122,7 @@ fn process_ast(
 ) {
     print_step("Preprocessing AST");
     if parents {
-        set_parents(ast);
+        set_parents(ast.clone());
     }
     if link_identifiers
     // try:
@@ -138,17 +138,17 @@ fn process_ast(
     if alias_analysis {
         a(&ast);
     }
-    call_graph_analysis(ast);
-    compute_modified_sets(ast);
-    check_for_undefined_behavior_due_to_eval_order(ast);
+    call_graph_analysis(ast.clone());
+    compute_modified_sets(ast.clone());
+    check_for_undefined_behavior_due_to_eval_order(ast.clone());
     // except AstException as e:
     //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
     if type_check {
         print_step("Zkay type checking");
         // try:
-        t(ast);
-        check_circuit_compliance(ast);
-        detect_hybrid_functions(ast);
+        t(ast.clone());
+        check_circuit_compliance(ast.clone());
+        detect_hybrid_functions(ast.clone());
         check_loops(ast);
         // except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
         //     raise TypeCheckException(f"\n\nCOMPILER ERROR: {e}")
@@ -166,7 +166,7 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
     };
 
     let mut vc_names = vec![];
-    for contract in ast.source_unit().unwrap().contracts {
+    for contract in &ast.source_unit().unwrap().contracts {
         let cname = contract.namespace_definition_base.idf.name();
         let fcts: Vec<_> = contract
             .function_definitions
@@ -185,7 +185,7 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
                 .map(|fct| {
                     CFG.lock()
                         .unwrap()
-                        .get_verification_contract_name(cname, fct.name())
+                        .get_verification_contract_name(cname.clone(), fct.name())
                 })
                 .collect::<Vec<_>>(),
         );

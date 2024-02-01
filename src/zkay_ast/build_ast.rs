@@ -110,7 +110,7 @@ pub fn build_ast_from_parse_tree(code: &str) -> ast::AST {
     // parser.add_error_listener(MyErrorListener{code:code.to_string()}));
     let mut v = BuildASTVisitor::new(code.to_string());
     root.accept(&mut v);
-    *v.temp_result()
+    v.temp_result().clone()
 }
 
 pub fn build_ast(code: &str) -> ast::AST {
@@ -804,21 +804,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return IndexExpr(arr, index)
         let arr = if let Some(arr) = &ctx.arr {
             arr.accept(self);
-            if let ast::AST::Expression(expr) = self.temp_result().clone() {
-                if let Expression::TupleOrLocationExpr(expr) = expr {
-                    if let TupleOrLocationExpr::LocationExpr(expr) = expr {
-                        expr
-                    } else {
-                        LocationExpr::default()
-                    }
-                } else {
-                    LocationExpr::default()
-                }
+            if let ast::AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(expr),
+            )) = self.temp_result().clone()
+            {
+                Some(expr)
             } else {
-                LocationExpr::default()
+                None
             }
         } else {
-            LocationExpr::default()
+            None
         };
         let index = if let Some(index) = &ctx.index {
             index.accept(self);
