@@ -252,7 +252,7 @@ impl CircuitGeneratorBase
             .iter()
             .map(|circuit| {
                 Path::new(&self.output_dir)
-                    .join(&circuit.verifier_contract_filename.unwrap())
+                    .join(&circuit.verifier_contract_filename.clone().unwrap())
                     .to_str()
                     .unwrap()
                     .to_string()

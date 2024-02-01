@@ -196,7 +196,7 @@ impl ZkayTransformer {
     pub fn import_contract(
         cname: &str,
         su: &mut SourceUnit,
-        corresponding_circuit: Option<&CircuitHelper>,
+        corresponding_circuit: Option<&mut CircuitHelper>,
     )
     // """
     // Import contract "vname" into the given source unit.
@@ -271,7 +271,7 @@ impl ZkayTransformer {
         // """
     {
         let mut contract_var_decls = vec![];
-        for crypto_params in &c.used_crypto_backends.as_ref().unwrap() {
+        for crypto_params in c.used_crypto_backends.clone().unwrap() {
             let contract_name = CFG
                 .lock()
                 .unwrap()
@@ -339,16 +339,16 @@ impl ZkayTransformer {
                 &CFG.lock()
                     .unwrap()
                     .get_pki_contract_name(&crypto_params.identifier_name()),
-                &mut ast,
+                ast,
                 None,
             );
         }
-
-        for c in ast.contracts.iter_mut() {
-            self.transform_contract(&mut ast, c);
+        let mut contracts=ast.contracts.clone();
+        for c in contracts.iter_mut() {
+            self.transform_contract(ast, c);
         }
-
-        ast
+        ast.contracts=contracts;
+        ast.clone()
     }
 
     pub fn transform_contract(
@@ -373,7 +373,7 @@ impl ZkayTransformer {
         // :return: The contract itself
         // """
     {
-        let all_fcts = c
+        let mut all_fcts:Vec<_> = c
             .constructor_definitions
             .iter()
             .chain(&c.function_definitions)
@@ -406,7 +406,7 @@ impl ZkayTransformer {
             .visit_list(c.state_variable_declarations.clone());
 
         // Split into functions which require verification and those which don"t need a circuit helper
-        let mut req_ext_fcts = BTreeMap::new();
+        let mut req_ext_fcts = BTreeMap::<ConstructorOrFunctionDefinition,Vec<Parameter>>::new();
         let (mut new_fcts, mut new_constr) = (vec![], vec![]);
         for fct in &all_fcts {
             assert!(is_instance(fct, ASTType::ConstructorOrFunctionDefinition));
@@ -426,7 +426,7 @@ impl ZkayTransformer {
             }
 
             if fct.requires_verification_when_external {
-                req_ext_fcts.insert(fct, fct.parameters.clone());
+                req_ext_fcts.insert(fct.clone(), fct.parameters.clone());
             } else if fct.is_constructor() {
                 new_constr.push(fct.clone());
             } else {
@@ -462,7 +462,7 @@ impl ZkayTransformer {
         .chain([CommentBase::new(String::from("User state variables")).get_ast()])
         .collect::<Vec<_>>()
         .into_iter()
-        .chain(c.state_variable_declarations)
+        .chain(&c.state_variable_declarations)
         .collect();
 
         // Transform signatures
@@ -516,7 +516,7 @@ impl ZkayTransformer {
             fct.body = Some(
                 if let AST::Statement(Statement::StatementList(StatementList::Block(b))) =
                     ZkayStatementTransformer::new(Some(Box::new(gen.unwrap().clone())))
-                        .visit(fct.body.unwrap().get_ast())
+                        .visit(fct.body.as_ref().unwrap().get_ast())
                 {
                     b
                 } else {
@@ -526,10 +526,10 @@ impl ZkayTransformer {
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
-        let fcts_with_verification: Vec<_> = all_fcts
+        let mut fcts_with_verification: Vec<_> = all_fcts.iter()
             .filter_map(|fct| {
                 if fct.requires_verification {
-                    Some(*fct.clone())
+                    Some(fct.clone())
                 } else {
                     None
                 }
@@ -537,8 +537,8 @@ impl ZkayTransformer {
             .collect();
         compute_transitive_circuit_io_sizes(&mut fcts_with_verification, &mut self.circuits);
         transform_internal_calls(&mut fcts_with_verification, &mut self.circuits);
-        for f in &fcts_with_verification {
-            let circuit = self.circuits[&f].clone();
+        for f in fcts_with_verification.iter_mut() {
+            let circuit = self.circuits[&*f].clone();
             assert!(circuit.requires_verification());
             if circuit.requires_zk_data_struct()
             // Add zk data struct for f to contract
@@ -570,11 +570,12 @@ impl ZkayTransformer {
         }
 
         // Create external wrapper functions where necessary
-        for (f, params) in req_ext_fcts {
+        for (f, params) in req_ext_fcts.iter_mut() {
+            let mut f=f.clone();
             let (ext_f, int_f) = self.split_into_external_and_internal_fct(
-                f,
+                &mut f,
                 params,
-                global_owners
+                global_owners.clone()
                     .into_iter()
                     .map(Into::<PrivacyLabelExpr>::into)
                     .collect(),
@@ -589,7 +590,7 @@ impl ZkayTransformer {
 
         c.constructor_definitions = new_constr;
         c.function_definitions = new_fcts;
-        *c.clone()
+        c.clone()
     }
 
     pub fn create_internal_verification_wrapper(&self, ast: &mut ConstructorOrFunctionDefinition)
@@ -754,8 +755,8 @@ impl ZkayTransformer {
         for (key_owner, crypto_params) in circuit.requested_global_keys() {
             if let (Some(_), None) = key_owner {
                 //== MeExpr::new()
-                assert!(!me_key_idx.contains_key(crypto_params));
-                me_key_idx.insert(crypto_params, offset);
+                assert!(!me_key_idx.contains_key(&crypto_params));
+                me_key_idx.insert(crypto_params.clone(), offset);
             }
             offset += crypto_params.key_len();
         }
@@ -807,12 +808,12 @@ impl ZkayTransformer {
         }
 
         // Include original transformed function body
-        stmts.extend(ast.body.as_ref().unwrap().statement_list_base.statements);
+        stmts.extend(ast.body.as_ref().unwrap().statement_list_base.statements.clone());
 
         // Serialize in parameters to in array (if any)
         let mut serialize_stmts = vec![];
         let mut offset = 0;
-        for s in circuit.input_idfs() {
+        for s in circuit.input_idfs().iter_mut() {
             serialize_stmts.extend(vec![s.serialize(
                 CFG.lock().unwrap().zk_in_name(),
                 Some(in_start_idx.to_expr()),
@@ -830,7 +831,7 @@ impl ZkayTransformer {
 
         // Add return statement at the end if necessary
         // (was previously replaced by assignment to return_var by ZkayStatementTransformer)
-        if circuit.as_ref().has_return_var {
+        if circuit.has_return_var {
             stmts.push(
                 ReturnStatement::new(
                     TupleExpr::new(
@@ -863,7 +864,7 @@ impl ZkayTransformer {
     pub fn split_into_external_and_internal_fct(
         &mut self,
         f: &mut ConstructorOrFunctionDefinition,
-        mut original_params: Vec<Parameter>,
+        original_params:&mut Vec<Parameter>,
         global_owners: Vec<PrivacyLabelExpr>,
     ) -> (
         ConstructorOrFunctionDefinition,
@@ -882,7 +883,7 @@ impl ZkayTransformer {
 
         // Create new empty function with same parameters as original -> external wrapper
         let mut new_modifiers = if f.is_function() {
-            original_params = original_params
+            *original_params = original_params
                 .iter()
                 .map(|p| {
                     deep_copy(p.get_ast(), true, false)
@@ -906,7 +907,7 @@ impl ZkayTransformer {
         }
         let mut new_f = ConstructorOrFunctionDefinition::new(
             Some(f.namespace_definition_base.idf.clone()),
-            Some(original_params),
+            Some(original_params.clone()),
             Some(new_modifiers),
             Some(f.return_parameters.clone()),
             Some(Block::new(vec![], false)),
@@ -980,7 +981,7 @@ impl ZkayTransformer {
 
     pub fn create_external_wrapper_body(
         int_fct: ConstructorOrFunctionDefinition,
-        ext_circuit: CircuitHelper,
+        mut ext_circuit: CircuitHelper,
         original_params: Vec<Parameter>,
         requires_proof: bool,
     ) -> Block
@@ -1023,7 +1024,7 @@ impl ZkayTransformer {
             // If there are any private arguments with homomorphism "hom", we need the public key for that crypto backend
             ext_circuit._require_public_key_for_label_at(
                 None,
-                Expression::me_expr(None).into(),
+                &Expression::me_expr(None).into(),
                 crypto_params,
             );
         }
@@ -1035,7 +1036,7 @@ impl ZkayTransformer {
                     || args_backends.contains(&crypto_params)
                 // Make sure msg.sender"s key pair is available in the circuit
                 {
-                    stmts.extend(ext_circuit.request_private_key(crypto_params));
+                    stmts.extend(ext_circuit.request_private_key(&crypto_params));
                 }
             }
         }
@@ -1074,10 +1075,10 @@ impl ZkayTransformer {
         let mut me_key_idx = BTreeMap::new();
         if !ext_circuit.clone().requested_global_keys().is_empty() {
             // Ensure that me public key is stored starting at in[0]
-            let keys = ext_circuit.as_ref().requested_global_keys();
+            let keys = ext_circuit.requested_global_keys();
 
             let mut tmp_keys = BTreeMap::new();
-            for crypto_params in int_fct.used_crypto_backends.as_ref().unwrap() {
+            for crypto_params in int_fct.used_crypto_backends.clone().unwrap() {
                 let tmp_key_var =
                     IdentifierBase::new(format!("_tmp_key_{}", crypto_params.identifier_name()));
 
@@ -1085,7 +1086,7 @@ impl ZkayTransformer {
                     tmp_key_var
                         .decl_var(
                             IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::key_type(
-                                crypto_params,
+                                crypto_params.clone(),
                             )),
                             None,
                         )
@@ -1096,11 +1097,11 @@ impl ZkayTransformer {
             for (key_owner, crypto_params) in keys {
                 let tmp_key_var = &tmp_keys[&crypto_params];
                 let (idf, mut assignment) = ext_circuit.clone().request_public_key(
-                    crypto_params.clone(),
-                    key_owner,
+                    &crypto_params,
+                    key_owner.clone(),
                     &CircuitHelper::get_glob_key_name(
-                        key_owner.clone().into(),
-                        crypto_params.clone(),
+                        &key_owner.clone().into(),
+                        &crypto_params,
                     ),
                 );
                 assignment.set_lhs(Some(AssignmentStatementUnion::LocationExpr(
@@ -1145,7 +1146,7 @@ impl ZkayTransformer {
 
         // Check encrypted parameters
         let mut param_stmts = vec![];
-        for p in original_params {
+        for p in &original_params {
             // """ * of T_e rule 8 """
             if p.identifier_declaration_base.annotated_type.is_cipher() {
                 let cipher_payload_len = p
@@ -1280,11 +1281,11 @@ impl ZkayTransformer {
         idf.location_expr_base.target = Some(Box::new(TargetDefinition::NamespaceDefinition(
             NamespaceDefinition::ConstructorOrFunctionDefinition(int_fct.clone()),
         )));
-        let mut internal_call = FunctionCallExprBase::new(idf.to_expr(), args, None);
+        let mut internal_call = FunctionCallExprBase::new(idf.to_expr(), args.clone(), None);
         internal_call.sec_start_offset = Some(ext_circuit.priv_in_size());
 
         if int_fct.requires_verification {
-            ext_circuit.call_function(FunctionCallExpr::FunctionCallExpr(internal_call.clone()));
+            ext_circuit.call_function(&FunctionCallExpr::FunctionCallExpr(internal_call.clone()));
             args.extend(vec![
                 in_arr_var.to_expr(),
                 NumberLiteralExpr::new(ext_circuit.in_size(), false).to_expr(),

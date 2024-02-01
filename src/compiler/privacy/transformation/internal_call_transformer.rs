@@ -67,10 +67,10 @@ pub fn _compute_transitive_circuit_io_sizes(
     }
 
     *gkeys = (*gkeys)
-        .union(&cgens[fct].as_ref().requested_global_keys())
+        .union(&cgens[fct].requested_global_keys())
         .cloned()
         .collect();
-    for call in &cgens[fct].unction_calls_with_verification {
+    for call in &cgens[fct].function_calls_with_verification {
         if let Some(TargetDefinition::NamespaceDefinition(
             NamespaceDefinition::ConstructorOrFunctionDefinition(cofd),
         )) = call.func().unwrap().target().map(|t| *t)

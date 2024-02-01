@@ -353,7 +353,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
         .collect();
     for crypto_params in &CFG.lock().unwrap().user_config.all_crypto_params() {
         let pk_name = CircuitHelper::get_glob_key_name(
-            PrivacyLabelExpr::MeExpr(MeExpr::new()),
+            &PrivacyLabelExpr::MeExpr(MeExpr::new()),
             crypto_params,
         );
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
@@ -412,7 +412,7 @@ impl JsnarkGenerator
 
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
-        for params in &circuit.as_ref().fct.used_crypto_backends.clone().unwrap() {
+        for params in &circuit.fct.used_crypto_backends.clone().unwrap() {
             let init_stmt = format!(
                 r#"addCryptoBackend("{}", "{}", {});"#,
                 params.crypto_name,
@@ -525,22 +525,22 @@ impl JsnarkGenerator
     }
 
     pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> VerifyingKeyType {
-        let p = self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
-        let f = File::open(&p).expect("");
+        let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
+        let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
         let mut data = buf.lines();
         if self.circuit_generator_base.proving_scheme.type_id()
             == TypeId::of::<ProvingSchemeGroth16>()
         {
-            let a = G1Point::from_it(data);
-            let b = G2Point::from_it(data);
-            let gamma = G2Point::from_it(data);
-            let delta = G2Point::from_it(data);
+            let a = G1Point::from_it(&mut data);
+            let b = G2Point::from_it(&mut data);
+            let gamma = G2Point::from_it(&mut data);
+            let delta = G2Point::from_it(&mut data);
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let mut gamma_abc = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
-                gamma_abc.insert(idx, G1Point::from_it(data));
+                gamma_abc.insert(idx, G1Point::from_it(&mut data));
             }
             return VerifyingKeyType::ProvingSchemeGroth16(
                 <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::new(
@@ -550,15 +550,15 @@ impl JsnarkGenerator
         } else if self.circuit_generator_base.proving_scheme.type_id()
             == TypeId::of::<ProvingSchemeGm17>()
         {
-            let h = G2Point::from_it(data);
-            let g_alpha = G1Point::from_it(data);
-            let h_beta = G2Point::from_it(data);
-            let g_gamma = G1Point::from_it(data);
-            let h_gamma = G2Point::from_it(data);
+            let h = G2Point::from_it(&mut data);
+            let g_alpha = G1Point::from_it(&mut data);
+            let h_beta = G2Point::from_it(&mut data);
+            let g_gamma = G1Point::from_it(&mut data);
+            let h_gamma = G2Point::from_it(&mut data);
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let mut query = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
-                query.insert(idx, G1Point::from_it(data));
+                query.insert(idx, G1Point::from_it(&mut data));
             }
             return VerifyingKeyType::ProvingSchemeGm17(
                 <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::new(

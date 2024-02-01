@@ -61,10 +61,10 @@ impl Remapper {
         self.rmap.clear();
     }
 
-    pub fn reset_key(&mut self, key: Identifier)
+    pub fn reset_key(&mut self, key: &Identifier)
     // """Invalidate remapping information for the given key (is_remapped returns false after this)."""
     {
-        self.rmap.remove(&key);
+        self.rmap.remove(key);
     }
 
     pub fn remap(&mut self, key: Identifier, value: HybridArgumentIdf)
@@ -110,8 +110,8 @@ impl Remapper {
         self.rmap = prev;
     }
 
-    pub fn is_remapped(&self, key: Identifier) -> bool {
-        self.rmap.contains_key(&key)
+    pub fn is_remapped(&self, key: &Identifier) -> bool {
+        self.rmap.contains_key(key)
     }
 
     pub fn get_current(

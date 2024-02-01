@@ -85,7 +85,7 @@ impl ZkayVarDeclTransformer {
     }
 
     pub fn visitParameter(&self, mut ast: &mut Parameter) -> AST {
-        if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(ast)) =
+        if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(mut ast)) =
             self.visit_children(ast.get_ast())
         {
             if !ast
@@ -115,7 +115,7 @@ impl ZkayVarDeclTransformer {
             .push(String::from("public"));
         ast.expr = Some(
             if let AST::Expression(expr) =
-                self.expr_trafo.unwrap().visit(ast.expr.unwrap().get_ast())
+                self.expr_trafo.as_ref().unwrap().visit(ast.expr.as_ref().unwrap().get_ast())
             {
                 expr
             } else {
@@ -125,7 +125,7 @@ impl ZkayVarDeclTransformer {
         self.visit_children(ast.get_ast())
     }
 
-    pub fn visitMapping(&self, ast: Mapping) -> AST {
+    pub fn visitMapping(&self, ast: &mut Mapping) -> AST {
         if ast.key_label.is_some() {
             ast.key_label = Some(Identifier::Identifier(IdentifierBase::new(
                 ast.key_label.unwrap().name(),
@@ -194,15 +194,16 @@ impl ZkayStatementTransformer {
             if transformed_stmt == AST::None {
                 continue;
             }
-            let old_code_wo_annotations = Regex::new(r"(?=\b)me(?=\b)").unwrap().replace_all(
-                Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
+            let r=Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
                     .unwrap()
-                    .replace_all(&old_code, ""),
+                    .replace_all(&old_code, "");
+            let old_code_wo_annotations = Regex::new(r"(?=\b)me(?=\b)").unwrap().replace_all(
+                &r,
                 "msg.sender",
             );
             let new_code_wo_annotation_comments = Regex::new(r"/\*.*?\*/")
                 .unwrap()
-                .replace_all(transformed_stmt.code(), "");
+                .replace_all(transformed_stmt.code().as_str(), "");
             if old_code_wo_annotations == new_code_wo_annotation_comments {
                 new_statements.push(transformed_stmt)
             } else {
@@ -238,7 +239,7 @@ impl ZkayStatementTransformer {
         AST::None
     }
 
-    pub fn visitStatement(&self, ast: Statement) -> AST
+    pub fn visitStatement(&self, ast:&mut  Statement) -> AST
 // """
     // Rules (3), (4)
 
@@ -333,7 +334,7 @@ impl ZkayStatementTransformer {
                     self.gen
                         .as_mut()
                         .unwrap()
-                        .invalidate_idf(val.target().unwrap().idf());
+                        .invalidate_idf(&val.target().unwrap().idf());
                 }
             }
         }
@@ -356,14 +357,14 @@ impl ZkayStatementTransformer {
             if contains_private_expr(Some(ast.then_branch.get_ast()))
                 || contains_private_expr(ast.else_branch.map(|v| v.get_ast()))
             {
-                let before_if_state = self.gen.unwrap()._remapper.0.get_state();
+                let before_if_state = self.gen.as_ref().unwrap()._remapper.0.get_state();
                 let guard_var = self
                     .gen
                     .as_mut()
                     .unwrap()
                     .add_to_circuit_inputs(&mut ast.condition);
                 ast.condition = guard_var.get_loc_expr(Some(ast.get_ast())).into();
-                self.gen.as_mut().unwrap().guarded(guard_varc.clone(), true);
+                self.gen.as_mut().unwrap().guarded(guard_var.clone(), true);
                 {
                     ast.then_branch = self.visit(ast.then_branch.get_ast()).block().unwrap();
                     self.gen
@@ -377,22 +378,22 @@ impl ZkayStatementTransformer {
                     self.gen.as_mut().unwrap().guarded(guard_var, false);
 
                     ast.else_branch = self.visit(ast.else_branch.unwrap().get_ast()).block();
-                    self.gen.unwrap()._remapper.0.set_state(&before_if_state);
+                    self.gen.as_mut().unwrap()._remapper.0.set_state(&before_if_state);
                 }
 
                 //Invalidate values modified in either branch
-                for val in ast.statement_base.ast_base.modified_values {
+                for val in &ast.statement_base.ast_base.modified_values {
                     if val.key().is_none() {
-                        self.gen
+                        self.gen.as_ref()
                             .unwrap()
-                            .invalidate_idf(val.target().unwrap().idf());
+                            .invalidate_idf(&val.target().unwrap().idf());
                     }
                 }
             } else {
                 ast.condition = self.expr_trafo.visit(ast.condition.get_ast()).expr();
                 ast.then_branch = self.visit(ast.then_branch.get_ast()).block().unwrap();
                 if ast.else_branch.is_some() {
-                    ast.else_branch = self.visit(ast.else_branch.unwrap().get_ast()).block();
+                    ast.else_branch = self.visit(ast.else_branch.as_ref().unwrap().get_ast()).block();
                 }
             }
             ast.to_statement()
@@ -420,7 +421,7 @@ impl ZkayStatementTransformer {
         ast
     }
 
-    pub fn visitForStatement(&self, ast: ForStatement) -> ForStatement {
+    pub fn visitForStatement(&self, ast:&mut ForStatement) -> ForStatement {
         if ast.init.is_some()
         //Init is the only part of a for loop which may contain private expressions
         {
@@ -430,9 +431,9 @@ impl ZkayStatementTransformer {
                 .extend(ast.init.unwrap().pre_statements());
         }
         assert!(!contains_private_expr(Some(ast.condition.get_ast())));
-        assert!(!ast.update.is_some() || !contains_private_expr(ast.update.map(|v| v.get_ast())));
+        assert!(!ast.update.is_some() || !contains_private_expr(ast.update.as_ref().map(|v| v.get_ast())));
         assert!(!contains_private_expr(Some(ast.body.get_ast()))); //OR fixed size loop -> static analysis can prove that loop terminates in fixed //iterations
-        ast
+        ast.clone()
     }
 
     pub fn visitContinueStatement(&self, ast: ContinueStatement) -> ContinueStatement {
@@ -443,7 +444,7 @@ impl ZkayStatementTransformer {
         ast
     }
 
-    pub fn visitReturnStatement(&self, ast: ReturnStatement) -> AST
+    pub fn visitReturnStatement(&self, ast:&mut ReturnStatement) -> AST
 // """
     // Handle return statement.
 
@@ -456,12 +457,12 @@ impl ZkayStatementTransformer {
             if ast.expr == Expression::None {
                 return AST::default();
             }
-            assert!(!self.gen.unwrap().has_return_var);
-            self.gen.unwrap().has_return_var = true;
+            assert!(!self.gen.as_ref().unwrap().has_return_var);
+            self.gen.as_mut().unwrap().has_return_var = true;
             let expr = self.expr_trafo.visit(ast.expr.get_ast());
             let ret_args = ast
                 .statement_base
-                .function
+                .function.as_ref()
                 .unwrap()
                 .return_var_decls
                 .iter()
@@ -608,7 +609,7 @@ impl ZkayExpressionTransformer {
     // The reclassified expression is evaluated in the circuit and its result is made available in solidity.
     // """
     {
-        self.gen.unwrap().evaluate_expr_in_circuit(
+        self.gen.as_mut().unwrap().evaluate_expr_in_circuit(
             &mut ast.expr().unwrap(),
             &ast.privacy()
                 .unwrap()
@@ -641,7 +642,7 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .privacy_annotation_label();
                 return self
-                    .gen
+                    .gen.as_mut()
                     .unwrap()
                     .evaluate_expr_in_circuit(
                         &mut ast.to_expr(),
@@ -666,22 +667,22 @@ impl ZkayExpressionTransformer {
                         .any(|arg| contains_private_expr(Some(arg.get_ast())))
                 {
                     let op = &ast.func().unwrap().op().unwrap();
-                    let guard_var = self.gen.unwrap().add_to_circuit_inputs(&mut args[0]);
+                    let guard_var = self.gen.as_mut().unwrap().add_to_circuit_inputs(&mut args[0]);
                     args[0] = guard_var.get_loc_expr(Some(ast.get_ast())).into();
                     if op == "ite" {
                         args[1] = self
-                            .visit_guarded_expression(guard_var, true, args[1])
+                            .visit_guarded_expression(guard_var.clone(), true, args[1].clone())
                             .expr();
                         args[2] = self
-                            .visit_guarded_expression(guard_var, false, args[2])
+                            .visit_guarded_expression(guard_var.clone(), false, args[2].clone())
                             .expr();
                     } else if op == "||" {
                         args[1] = self
-                            .visit_guarded_expression(guard_var, false, args[1])
+                            .visit_guarded_expression(guard_var.clone(), false, args[1].clone())
                             .expr();
                     } else if op == "&&" {
                         args[1] = self
-                            .visit_guarded_expression(guard_var, true, args[1])
+                            .visit_guarded_expression(guard_var.clone(), true, args[1].clone())
                             .expr();
                     }
                     ast.set_args(args);
@@ -708,7 +709,7 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .privacy_annotation_label();
                 return self
-                    .gen
+                    .gen.as_mut()
                     .unwrap()
                     .evaluate_expr_in_circuit(
                         &mut ast.to_expr(),
@@ -728,7 +729,7 @@ impl ZkayExpressionTransformer {
         // """
         {
             assert!(is_instance(&ast.func().unwrap(), ASTType::LocationExpr));
-            let ast = self.visit_children(ast.get_ast());
+            let mut ast = self.visit_children(ast.get_ast());
             if ast
                 .func()
                 .unwrap()
@@ -755,8 +756,8 @@ impl ZkayExpressionTransformer {
                 .requires_verification()
             //If the target function has an associated circuit, make this function"s circuit aware of the call.
             {
-                self.gen.unwrap().call_function(
-                    if let AST::Expression(Expression::FunctionCallExpr(fce)) = ast {
+                self.gen.as_mut().unwrap().call_function(
+                    &if let AST::Expression(Expression::FunctionCallExpr(fce)) = &ast {
                         fce
                     } else {
                         FunctionCallExpr::None
@@ -776,9 +777,9 @@ impl ZkayExpressionTransformer {
                             false
                         })
                     {
-                        self.gen
+                        self.gen.as_ref()
                             .unwrap()
-                            .invalidate_idf(val.target().unwrap().idf());
+                            .invalidate_idf(&val.target().unwrap().idf());
                     }
                 }
             }
@@ -791,12 +792,12 @@ impl ZkayExpressionTransformer {
         &self,
         guard_var: HybridArgumentIdf,
         if_true: bool,
-        expr: Expression,
+        expr:&mut Expression,
     ) -> AST {
         let prelen = expr.statement().unwrap().pre_statements().len();
 
         //Transform expression with guard condition in effect
-        self.gen.unwrap().guarded(guard_var, if_true);
+        self.gen.unwrap().guarded(guard_var.clone(), if_true);
         let ret = self.visit(expr.get_ast());
 
         //If new pre statements were added, they must be guarded using an if statement in the public solidity code
@@ -838,12 +839,12 @@ impl ZkayExpressionTransformer {
                 .privacy_annotation
                 .unwrap()
                 .privacy_annotation_label();
-            self.gen
+            self.gen.as_mut()
                 .unwrap()
                 .evaluate_expr_in_circuit(
                     &mut ast.to_expr(),
                     &(privacy_label.unwrap().into()),
-                    &ast.expression_base.annotated_type.unwrap().homomorphism,
+                    &ast.expression_base.annotated_type.as_ref().unwrap().homomorphism,
                 )
                 .get_ast()
         } else {
@@ -908,11 +909,11 @@ impl ZkayCircuitTransformer {
         self.transform_location(LocationExpr::IndexExpr(ast))
     }
 
-    pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) -> LocationExpr {
+    pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) -> LocationExpr {
         if !is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
         //If ast is not already transformed, get current SSA version
         {
-            ast = self.gen.unwrap().get_remapped_idf_expr(ast);
+            ast = self.gen.as_ref().unwrap().get_remapped_idf_expr(ast);
         }
         if is_instance(&ast, ASTType::IdentifierExpr)
             && is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
@@ -931,7 +932,7 @@ impl ZkayCircuitTransformer {
 // """Rule (14), move location into the circuit."""
     {
         LocationExpr::IdentifierExpr(
-            self.gen
+            self.gen.as_ref()
                 .unwrap()
                 .add_to_circuit_inputs(&mut loc.to_expr())
                 .get_idf_expr(&None),
@@ -950,7 +951,7 @@ impl ZkayCircuitTransformer {
                 .unwrap()
                 .privacy_annotation_label();
             let orig_homomorphism = orig_type.homomorphism;
-            self.gen
+            self.gen.as_ref()
                 .unwrap()
                 .evaluate_expr_in_circuit(
                     &mut ast.expr().unwrap(),
@@ -962,7 +963,7 @@ impl ZkayCircuitTransformer {
             self.visit(ast.expr().unwrap().get_ast())
         } else {
             assert!(ast.expr().unwrap().annotated_type().is_public());
-            self.gen
+            self.gen.as_mut()
                 .unwrap()
                 .add_to_circuit_inputs(&mut ast.expr().unwrap())
                 .get_idf_expr(&None)
@@ -976,7 +977,7 @@ impl ZkayCircuitTransformer {
         self.visit_children(ast.get_ast())
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> Expression {
+    pub fn visitFunctionCallExpr(&self, mut ast: FunctionCallExpr) -> Expression {
         let t = ast.annotated_type().unwrap().type_name;
 
         //Constant folding for literal types
@@ -1014,10 +1015,10 @@ impl ZkayCircuitTransformer {
                     .unwrap()
                     .privacy_annotation_label();
                 ast.set_public_key(Some(Box::new(
-                    self.gen.unwrap()._require_public_key_for_label_at(
-                        ast.statement().map(|s| &mut *s),
-                        recipient.unwrap().into(),
-                        crypto_params,
+                    self.gen.as_ref().unwrap()._require_public_key_for_label_at(
+                        ast.statement().map(|mut s| &mut *s),
+                        &recipient.unwrap().into(),
+                        &crypto_params,
                     ),
                 )));
 
@@ -1067,48 +1068,49 @@ impl ZkayCircuitTransformer {
 
         //Function call inside private expression -> entire body will be inlined into circuit.
         //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)
+        let mut fce=if let FunctionCallExpr::FunctionCallExpr(ref mut fce) = ast {
+                    fce.clone()
+                } else {
+                    FunctionCallExprBase::default()
+                };
         return self
-            .gen
+            .gen.as_ref()
             .unwrap()
             .inline_function_call_into_circuit(
-                if let FunctionCallExpr::FunctionCallExpr(ref mut fce) = ast {
-                    fce
-                } else {
-                    &mut FunctionCallExprBase::default()
-                },
+                &mut fce
             )
             .0
             .unwrap();
     }
 
-    pub fn visitReturnStatement(&self, ast: ReturnStatement) {
-        self.gen.unwrap().add_return_stmt_to_circuit(ast)
+    pub fn visitReturnStatement(&self, ast:&mut ReturnStatement) {
+        self.gen.as_mut().unwrap().add_return_stmt_to_circuit(ast)
     }
 
-    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
-        self.gen.unwrap().add_assignment_to_circuit(ast)
+    pub fn visitAssignmentStatement(&self, ast:&mut AssignmentStatement) {
+        self.gen.as_mut().unwrap().add_assignment_to_circuit(ast)
     }
 
-    pub fn visitVariableDeclarationStatement(&self, ast: VariableDeclarationStatement) {
-        self.gen.unwrap().add_var_decl_to_circuit(ast)
+    pub fn visitVariableDeclarationStatement(&mut self, ast:&mut VariableDeclarationStatement) {
+        self.gen.as_mut().unwrap().add_var_decl_to_circuit(ast)
     }
 
-    pub fn visitIfStatement(&self, ast: &mut IfStatement) {
-        self.gen.unwrap().add_if_statement_to_circuit(ast)
+    pub fn visitIfStatement(&mut self, ast: &mut IfStatement) {
+        self.gen.as_mut().unwrap().add_if_statement_to_circuit(ast)
     }
 
     pub fn visitBlock(
-        &self,
-        ast: Block,
+        &mut self,
+        ast:&mut  Block,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) {
-        self.gen
+        self.gen.as_mut()
             .unwrap()
             .add_block_to_circuit(ast, guard_cond, guard_val)
     }
 
-    pub fn visitStatement(&self, ast: Statement)
+    pub fn visitStatement(&mut self, ast: Statement)
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
     {
