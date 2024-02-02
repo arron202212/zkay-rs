@@ -89,17 +89,17 @@ fn compile_solidity_json(
           }}
    }}"#
     );
-
+    let mut cwd=cwd.to_string();
     if cwd.is_empty() {
         cwd = std::fs::canonicalize(solp)
             .unwrap()
             .parent()
             .unwrap()
             .to_str()
-            .unwrap();
+            .unwrap().to_string();
     }
     let old_cwd = std::env::current_dir().unwrap();
-    set_current_dir(cwd);
+    set_current_dir(&cwd);
     let ret = compile(&json_in);
     set_current_dir(old_cwd);
     ret
@@ -147,13 +147,14 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
 // :raise SolcException: raised if solc reports a compiler error
 // """
 {
-    let sol_name = PathBuf::from(filename).file_name().unwrap();
+    let p=PathBuf::from(filename);
+    let sol_name = p.file_name().unwrap().clone();
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();
     f.read_to_string(&mut code).unwrap();
 
     let display_code = if display_code.is_empty() {
-        code
+        code.clone()
     } else {
         String::from(display_code)
     };
@@ -169,9 +170,9 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
     //     if not show_errors:
     //         raise SolcException()
     // if solc reported any errors or warnings, print them and throw exception
-    if let Some(errors) = errors.unwrap().get(&String::from("errors")) {
+    if let Some(errors) = errors.unwrap().get_mut(&String::from("errors")) {
         zk_print!("");
-        if let Value::Array(mut errors) = errors {
+        if let Value::Array(errors) = errors {
             errors.sort_unstable_by_key(|x| get_error_order_key(x));
 
             let mut fatal_error_report = String::new();
@@ -280,7 +281,7 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
 
     let file_name = format!("{}.sol", Uuid::new_v4());
     println!("{}", file_name);
-    dir.push(file_name);
+    dir.push(file_name.clone());
 
     let mut file = File::create(dir).unwrap();
     write!(file, "{}", fake_solidity_code);

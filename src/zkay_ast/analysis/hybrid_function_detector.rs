@@ -12,10 +12,10 @@ pub fn detect_hybrid_functions(ast: AST)
 // """
 {
     let v = DirectHybridFunctionDetectionVisitor;
-    v.visit(ast);
+    v.visit(ast.clone());
 
     let v = IndirectHybridFunctionDetectionVisitor;
-    v.visit(ast);
+    v.visit(ast.clone());
 
     let v = NonInlineableCallDetector;
     v.visit(ast);
@@ -47,7 +47,7 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     }
 }
 impl DirectHybridFunctionDetectionVisitor {
-    pub fn visitReclassifyExpr(self, ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr) {
         if let ReclassifyExpr::ReclassifyExpr(re) = ast {
             re.expression_base
                 .statement
@@ -58,13 +58,13 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
 
-    pub fn visitPrimitiveCastExpr(self, ast: PrimitiveCastExpr) {
+    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) {
         if ast.expr.evaluate_privately() {
             ast.expression_base
-                .statement
+                .statement.as_mut()
                 .unwrap()
-                .statement_base_mut()
-                .function
+                .statement_base_mut().unwrap()
+                .function.as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else {
@@ -72,33 +72,33 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
 
-    pub fn visitAllExpr(self, ast: AllExpr)
+    pub fn visitAllExpr(&self, ast: AllExpr)
     // pass
     {
     }
-    pub fn visitFunctionCallExpr(self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &mut FunctionCallExpr) {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
             && ast.func().unwrap().is_private()
         {
-            ast.statement()
+            ast.statement().as_mut()
                 .unwrap()
-                .statement_base_mut()
-                .function
+                .statement_base_mut().unwrap()
+                .function.as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else if ast.is_cast() && ast.evaluate_privately() {
             ast.statement()
-                .unwrap()
-                .statement_base_mut()
-                .function
+                .unwrap().as_mut()
+                .statement_base_mut().unwrap()
+                .function.as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else {
             self.visit_children(&ast.get_ast());
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition) {
-        self.visit(ast.body.unwrap().get_ast());
+    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
+        self.visit(ast.body.as_ref().unwrap().get_ast());
 
         if ast.can_be_external() {
             if ast.requires_verification {
@@ -144,9 +144,9 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     }
 }
 impl IndirectHybridFunctionDetectionVisitor {
-    pub fn visitConstructorOrFunctionDefinition(self, ast: ConstructorOrFunctionDefinition) {
+    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
         if !ast.requires_verification {
-            for fct in ast.called_functions {
+            for fct in &ast.called_functions {
                 if fct.requires_verification {
                     ast.requires_verification = true;
                     if ast.can_be_external() {
@@ -184,7 +184,7 @@ impl AstVisitor for NonInlineableCallDetector {
     }
 }
 impl NonInlineableCallDetector {
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
             let ast1: AST = (*ast.func().unwrap().target().unwrap()).into();
             assert!(

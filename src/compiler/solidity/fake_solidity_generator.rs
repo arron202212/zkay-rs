@@ -94,7 +94,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
     }
 
     let pattern = Regex::new(&format!("[{open_sym}{close_sym}]")).unwrap();
-    let idx = open_parens_loc + 1;
+    let mut idx = open_parens_loc + 1;
     let mut open = 1;
     while open > 0 {
         let cstr = &code[idx as usize..];
@@ -114,7 +114,8 @@ pub fn strip_reveals(code: &str) -> String
 // """Replace reveal expressions by their inner expression, with whitespace padding."""
 {
     let mut code = code.to_owned();
-    let matches = REVEAL_START_PATTERN.find_iter(&code);
+    let c=code.clone();
+    let matches = REVEAL_START_PATTERN.find_iter(&c);
     for m in matches {
         let before_reveal_loc = m.start();
         let reveal_open_parens_loc = m.end();
@@ -206,11 +207,14 @@ pub fn replace_with_surrogate(
     let has_ph = replacement_fstr.is_empty();
     let mut replacement = replacement_fstr.to_owned();
     let mut search_idx = 0;
+    let mut c=code.clone();
     loop {
-        let matches = search_pattern.captures(&code[search_idx..]);
+ c=code.clone();
+        let matches = search_pattern.captures(&c[search_idx..]);
         if matches.is_none() {
             break;
         }
+        let end=matches.as_ref().unwrap().get(0).unwrap().end();
         if has_ph {
             let repl = matches
                 .and_then(|cap| cap.name("repl").map(|repl| repl.as_str()))
@@ -223,7 +227,7 @@ pub fn replace_with_surrogate(
                 &code[search_idx..],
                 keep_repl_pattern.to_owned() + &replacement,
             );
-        search_idx += matches.unwrap().get(0).unwrap().end() + 1
+        search_idx += end + 1;
     }
     code
 }

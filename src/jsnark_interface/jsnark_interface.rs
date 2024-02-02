@@ -4,7 +4,7 @@
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::utils::helpers::hash_file;
-use crate::utils::run_command::run_command;
+use crate::utils::run_command::{run_command,run_commands};
 use crate::zkay_ast::ast::indent;
 use lazy_static::lazy_static;
 use std::fs::File;
@@ -26,8 +26,8 @@ pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // """
 {
     let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
-    let jfile = Path::new(circuit_dir).join(class_name + ".java");
-    let f = File::open(jfile).expect("");
+    let jfile = Path::new(circuit_dir).join(class_name.clone() + ".java");
+    let mut f = File::open(jfile.clone()).expect("");
     f.write_all(javacode.as_bytes());
 
     compile_and_run_with_circuit_builder(
@@ -90,11 +90,11 @@ pub fn prepare_proof(
 {
     let serialized_arg_str: Vec<_> = serialized_args
         .iter()
-        .map(|arg| format!("{:x}", arg).as_str())
+        .map(|arg| format!("{:x}", arg))
         .collect();
 
     //Run jsnark to evaluate the circuit and compute prover inputs
-    run_command(
+    run_commands(
         [
             "java",
             "-Xms4096m",
@@ -104,7 +104,7 @@ pub fn prepare_proof(
             &CFG.lock().unwrap().jsnark_circuit_classname(),
             "prove",
         ]
-        .into_iter()
+        .into_iter().map(String::from)
         .chain(serialized_arg_str)
         .collect(),
         Some(output_dir),

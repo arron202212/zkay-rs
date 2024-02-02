@@ -50,17 +50,17 @@ impl FinalVisitor {
         self.state_vars_assigned = Some(BTreeMap::new());
         for v in &ast.state_variable_declarations {
             if v.is_final() && v.expr() != Expression::None {
-                self.state_vars_assigned.unwrap().insert(v.clone(), false);
+                self.state_vars_assigned.as_mut().unwrap().insert(v.clone(), false);
             }
         }
 
         if ast.constructor_definitions.len() > 0 {
             assert!(ast.constructor_definitions.len() == 1);
             let c = &ast.constructor_definitions[0];
-            self.visit(c.body.unwrap().get_ast());
+            self.visit(c.body.as_ref().unwrap().get_ast());
         }
 
-        for (sv, assigned) in &self.state_vars_assigned.unwrap() {
+        for (sv, assigned) in self.state_vars_assigned.as_ref().unwrap() {
             if !assigned {
                 assert!(false, "Did not set all final state variables {}", sv)
             }
@@ -72,51 +72,49 @@ impl FinalVisitor {
         assert!(ast.is_function());
     }
 
-    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+    pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
         self.visit(ast.rhs().unwrap().get_ast());
         if let Some(AssignmentStatementUnion::LocationExpr(LocationExpr::IdentifierExpr(le))) =
             ast.lhs()
         {
             let var: &AST = &(*le.location_expr_base.target.unwrap()).into();
-            if let Some(v) = self.state_vars_assigned.unwrap().get_mut(var) {
+            if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
                 assert!(!*v, "Tried to reassign final variable,{:?}", ast);
                 *v = true;
             }
         }
     }
 
-    pub fn visitIfStatement(&self, ast: IfStatement) {
+    pub fn visitIfStatement(&mut self, ast: IfStatement) {
         self.visit(ast.condition.get_ast());
-        let prev = self.state_vars_assigned.unwrap().clone();
+        let prev = self.state_vars_assigned.as_ref().unwrap().clone();
         self.visit(ast.then_branch.get_ast());
-        let then_b = self.state_vars_assigned.unwrap().clone();
+        let then_b = self.state_vars_assigned.as_ref().unwrap().clone();
         self.state_vars_assigned = Some(prev);
-        if let Some(else_branch) = ast.else_branch {
+        if let Some(else_branch) = &ast.else_branch {
             self.visit(else_branch.get_ast());
         }
 
         assert!(
             then_b.keys().collect::<Vec<_>>()
-                == self.state_vars_assigned.unwrap().keys().collect::<Vec<_>>()
+                == self.state_vars_assigned.as_ref().unwrap().keys().collect::<Vec<_>>()
         );
         for (var, flag) in &then_b {
-            if flag != self.state_vars_assigned.unwrap().get(var).unwrap() {
                 assert!(
-                    false,
+                    flag == self.state_vars_assigned.as_ref().unwrap().get(var).unwrap() ,
                     "Final value is not assigned in both branches,{:?}",
                     ast
                 );
-            }
         }
     }
     pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) {
-        if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ast)).is_rvalue()
+        if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ast.clone())).is_rvalue()
             && self.state_vars_assigned.is_some()
         {
             if let Some(&v) = self
-                .state_vars_assigned
+                .state_vars_assigned.as_ref()
                 .unwrap()
-                .get(&(*ast.location_expr_base.target.unwrap()).into())
+                .get(&(*ast.location_expr_base.target.clone().unwrap()).into())
             {
                 assert!(
                     v,

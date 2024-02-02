@@ -1235,7 +1235,8 @@ where
             ast.clone(),
             cond_idf_expr,
             then_remap,
-            |s: String, e: Expression| -> HybridArgumentIdf { selfs._create_temp_var(&s, e) },
+            // |s: String, e: Expression| -> HybridArgumentIdf { selfs._create_temp_var(&s, e) },
+            &mut selfs,
         );
     }
     pub fn add_block_to_circuit(

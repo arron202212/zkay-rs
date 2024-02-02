@@ -17,7 +17,7 @@ pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) 
     } else {
         PathBuf::from(filename)
     };
-    let mut f = File::create(target).expect("");
+    let mut f = File::create(target.clone()).expect("");
     write!(f, "{}", code).expect("");
     target.to_str().unwrap().to_string()
 }
@@ -49,7 +49,7 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
     //chunk_size: int = 1 << 27
     // let mut digest = hashlib.sha512();
     let mut digest = Sha512State::default().build_hasher();
-    let f = File::open(filename).expect("");
+    let mut f = File::open(filename).expect("");
     loop {
         // Hash prover key in 128mb chunks
         let mut data = vec![0; chunk_size as usize];

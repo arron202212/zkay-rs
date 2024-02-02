@@ -911,7 +911,7 @@ impl Expression {
     }
     pub fn explicitly_converted(&self, expected: TypeName) -> ExplicitlyConvertedUnion<Expression> {
         let mut ret = FunctionCallExprBase::default();
-        if expected == TypeName::bool_type() && !self.instanceof_data_type(TypeName::bool_type()) {
+        if expected == TypeName::bool_type() && !self.instanceof_data_type(&TypeName::bool_type()) {
             ret = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("!=")),
                 vec![
@@ -922,7 +922,7 @@ impl Expression {
                 ],
                 None,
             );
-        } else if expected.is_numeric() && self.instanceof_data_type(TypeName::bool_type()) {
+        } else if expected.is_numeric() && self.instanceof_data_type(&TypeName::bool_type()) {
             ret = FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("ite")),
                 vec![
@@ -1076,10 +1076,10 @@ impl Expression {
             None
         }
     }
-    pub fn instanceof_data_type(&self, expected: TypeName) -> bool {
+    pub fn instanceof_data_type(&self, expected: &TypeName) -> bool {
         self.annotated_type()
             .type_name
-            .implicitly_convertible_to(&expected)
+            .implicitly_convertible_to(expected)
     }
     pub fn unop(&self, op: String) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
@@ -1116,7 +1116,7 @@ impl Expression {
 
         let actual = self.annotated_type();
 
-        if !self.instanceof_data_type(*expected.type_name.clone()) {
+        if !self.instanceof_data_type(&*expected.type_name) {
             return String::from("false");
         }
 
@@ -1598,7 +1598,7 @@ impl BuiltinFunction {
             _ => format!("{} {op} {}", args[0], args[1]),
         }
     }
-    pub fn op_func(self, args: Vec<i32>) -> LiteralUnion {
+    pub fn op_func(&self, args: Vec<i32>) -> LiteralUnion {
         builtin_op_fct(&self.op, args)
     }
 
@@ -2714,7 +2714,7 @@ impl TupleOrLocationExpr {
                 if let Expression::TupleOrLocationExpr(parent) = ie {
                     if let TupleOrLocationExpr::LocationExpr(le) = parent {
                         if let LocationExpr::IndexExpr(ie) = le {
-                            if self == &TupleOrLocationExpr::LocationExpr(**ie.arr.as_ref().unwrap()) {
+                            if self == &TupleOrLocationExpr::LocationExpr(*ie.arr.clone().unwrap()) {
                                 return parent.is_lvalue();
                             }
                         }
@@ -4069,7 +4069,7 @@ impl HybridArgumentIdf {
         );
         if let TypeName::Array(t) = *self.t.clone() {
             self.serialized_loc
-                .arr.unwrap()
+                .arr.as_mut().unwrap()
                 .assign(Expression::TupleOrLocationExpr(
                     TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(SliceExpr::new(
                         if let LocationExprUnion::LocationExpr(le) = self.get_loc_expr(None) {
@@ -4341,11 +4341,11 @@ pub enum Statement {
     None,
 }
 impl Statement {
-    pub fn statement_base_mut(&mut self) -> &mut StatementBase {
-        &mut StatementBase::default()
+    pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
+        None
     }
-    pub fn statement_base(&self) -> &StatementBase {
-        &StatementBase::default()
+    pub fn statement_base(&self) -> Option<&StatementBase >{
+        None
     }
 
     pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {

@@ -68,10 +68,10 @@ impl ParentSetterVisitor {
                 parent
                     .namespace_definition_base
                     .ast_base
-                    .namespace
+                    .namespace.as_ref()
                     .unwrap()
                     .into_iter()
-                    .chain([ast.namespace_definition_base.idf.clone()])
+                    .chain([&ast.namespace_definition_base.idf.clone()]).cloned()
                     .collect()
             } else {
                 vec![ast.namespace_definition_base.idf.clone()]
@@ -149,7 +149,7 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement_base_mut().function = parent.map(|p| {
+            ast.statement_base_mut().unwrap().function = parent.map(|p| {
                 Box::new(
                     if let AST::NamespaceDefinition(
                         NamespaceDefinition::ConstructorOrFunctionDefinition(a),

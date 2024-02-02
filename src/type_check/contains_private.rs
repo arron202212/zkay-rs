@@ -41,7 +41,7 @@ impl ContainsPrivateVisitor {
             contains_private: false,
         }
     }
-    pub fn visitAST(self, ast: AST) {
+    pub fn visitAST(&mut self, ast: AST) {
         if let Some(t) = ast.annotated_type() {
             assert!(is_instance(&t, ASTType::AnnotatedTypeName));
 

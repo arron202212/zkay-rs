@@ -504,7 +504,7 @@ impl SymbolTableLinker {
             }
         } else {
             let mut t = ast
-                .expr.unwrap()
+                .expr.as_ref().unwrap()
                 .target()
                 .unwrap_or_default()
                 .annotated_type()
@@ -551,11 +551,11 @@ impl SymbolTableLinker {
         //     "Function call return value indexing not yet supported"
         // );
         let source_t = ast
-            .arr.unwrap()
+            .arr.as_ref().unwrap()
             .target()
             .unwrap_or_default()
             .annotated_type()
-            .type_name;
+            .type_name.clone();
         ast.location_expr_base.target = Some(Box::new(TargetDefinition::IdentifierDeclaration(
             IdentifierDeclaration::VariableDeclaration(VariableDeclaration::new(
                 vec![],

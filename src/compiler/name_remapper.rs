@@ -4,6 +4,7 @@ use crate::zkay_ast::ast::{
     IdentifierExpr, IdentifierExprUnion, IfStatement, VariableDeclarationStatement,
 };
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
+use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use std::any::Any;
 use std::collections::BTreeMap;
 // Identifier = TypeVar("Identifier")
@@ -162,7 +163,8 @@ impl Remapper {
         stmt: IfStatement,
         true_cond_for_other_branch: IdentifierExpr,
         other_branch_state: RemapMapType,
-        create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
+        // create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
+        ch:& mut CircuitHelper,
     )
     // """
     // Perform an SSA join for two branches.
@@ -197,7 +199,8 @@ impl Remapper {
             key: &Identifier,
             val: &HybridArgumentIdf,
             true_cond_for_other_branch: &IdentifierExpr,
-            create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
+            // create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
+            ch:& mut CircuitHelper,
         ) -> HybridArgumentIdf
 // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         {
@@ -211,7 +214,8 @@ impl Remapper {
                 None,
             ))
             .as_type(AsTypeUnion::TypeName((*val.t).clone()));
-            create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
+            // create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
+            ch._create_temp_var(&key.name(), rhs.to_expr())
         }
 
         for (key, val) in &true_state {
@@ -272,7 +276,8 @@ impl Remapper {
                             &key,
                             &val,
                             &true_cond_for_other_branch,
-                            &create_val_for_name_and_expr_fct,
+                            // &create_val_for_name_and_expr_fct,
+                            ch,
                         ),
                     );
                 }
@@ -288,7 +293,8 @@ impl Remapper {
                         &key,
                         &val,
                         &true_cond_for_other_branch,
-                        &create_val_for_name_and_expr_fct,
+                        // &create_val_for_name_and_expr_fct,
+ch,
                     ),
                 );
             }
@@ -343,7 +349,8 @@ impl Remapper {
                             &key,
                             &val,
                             &true_cond_for_other_branch,
-                            &create_val_for_name_and_expr_fct,
+                            // &create_val_for_name_and_expr_fct,
+ch,
                         ),
                     );
                 }

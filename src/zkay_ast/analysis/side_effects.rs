@@ -15,7 +15,7 @@ pub fn compute_modified_sets(ast: AST) {
     let v = DirectModificationDetector;
     v.visit(ast.clone());
 
-    let v = IndirectModificationDetector::new();
+    let mut v = IndirectModificationDetector::new();
     v.iterate_until_fixed_point(ast.clone());
 }
 
@@ -130,6 +130,7 @@ impl DirectModificationDetector {
         }
     }
     pub fn visitLocationExpr(&self, ast: &mut LocationExpr) {
+        let ast2:LocationExpr=ast.clone();
         self.visitAST(&mut (*ast).get_ast());
         let ast1: AST = (*ast.target().unwrap()).into();
         if TupleOrLocationExpr::LocationExpr(ast.clone()).is_rvalue()
@@ -143,7 +144,7 @@ impl DirectModificationDetector {
             )
         {
             ast.ast_base_mut().read_values.insert(InstanceTarget::new(
-                InstanceTargetExprUnion::LocationExpr(ast.clone()),
+                InstanceTargetExprUnion::LocationExpr(ast2),
             ));
         }
     }
@@ -325,8 +326,9 @@ impl EvalOrderUBChecker {
         if exprs.len() > 1 {
             let mut modset: BTreeSet<_> = exprs[0].ast_base().unwrap().modified_values.clone();
             for arg in &exprs[1..] {
+                let modified_values=arg.ast_base().unwrap().modified_values.clone();
                 let diffset: BTreeSet<_> = modset
-                    .intersection(&arg.ast_base().unwrap().modified_values.clone())
+                    .intersection(&modified_values)
                     .collect();
 
                 assert!(

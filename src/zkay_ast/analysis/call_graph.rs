@@ -11,10 +11,10 @@ pub fn call_graph_analysis(ast: AST)
 // """
 {
     let v = DirectCalledFunctionDetector;
-    v.visit(ast);
+    v.visit(ast.clone());
 
     let v = IndirectCalledFunctionDetector;
-    v.visit(ast);
+    v.visit(ast.clone());
 
     let v = IndirectDynamicBodyDetector;
     v.visit(ast);
@@ -64,12 +64,12 @@ impl DirectCalledFunctionDetector {
         }
         self.visit_children(&ast.get_ast());
     }
-    pub fn visitForStatement(&self, ast: ForStatement) {
-        ast.statement_base.function.unwrap().has_static_body = false;
+    pub fn visitForStatement(&self, mut ast: ForStatement) {
+        ast.statement_base.function.as_mut().unwrap().has_static_body = false;
         self.visit_children(&ast.get_ast());
     }
-    pub fn visitWhileStatement(&self, ast: WhileStatement) {
-        ast.statement_base.function.unwrap().has_static_body = false;
+    pub fn visitWhileStatement(&self, mut ast: WhileStatement) {
+        ast.statement_base.function.as_mut().unwrap().has_static_body = false;
         self.visit_children(&ast.get_ast());
     }
 }
@@ -98,7 +98,7 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     }
 }
 impl IndirectCalledFunctionDetector {
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition)
+    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition)
     //Fixed point iteration
     {
         let mut size = 0;
@@ -156,7 +156,7 @@ impl AstVisitor for IndirectDynamicBodyDetector {
     }
 }
 impl IndirectDynamicBodyDetector {
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition) {
+    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
         if !ast.has_static_body {
             return;
         }

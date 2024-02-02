@@ -893,12 +893,11 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let mut pp = deep_copy(p.get_ast(), true, false);
-                        let mut pp=pp.parameter()
-                        .as_mut()
-                        .unwrap();
-
-                    pp.with_changed_storage(String::from("memory"), String::from("calldata"))
+                    let pp=deep_copy(p.get_ast(), true, false);
+                    let pp=pp.parameter();
+                    let mut pp=pp.unwrap().clone();
+                     let  pp=  pp.with_changed_storage(String::from("memory"), String::from("calldata"));
+                         pp.clone()
                 })
                 .collect();
             crate::lc_vec_s!["external"]

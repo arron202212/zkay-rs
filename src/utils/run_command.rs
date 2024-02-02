@@ -9,6 +9,14 @@ pub fn run_command(
     cwd: Option<&str>,
     allow_verbose: bool,
 ) -> (Option<String>, Option<String>)
+{
+run_commands(cmd.into_iter().map(String::from).collect(),cwd,allow_verbose)
+}
+pub fn run_commands(
+    cmd: Vec<String>,
+    cwd: Option<&str>,
+    allow_verbose: bool,
+) -> (Option<String>, Option<String>)
 // """
     // Run arbitrary command.
 
@@ -20,9 +28,9 @@ pub fn run_command(
     //cwd=None, allow_verbose: bool = False
 {
     let cwd = if let Some(cwd) = cwd {
-        std::fs::canonicalize(cwd).unwrap().to_str().unwrap()
+        std::fs::canonicalize(cwd).unwrap().to_str().unwrap().to_string()
     } else {
-        ""
+        String::new()
     };
 
     let (output, error, process) = if allow_verbose
@@ -30,14 +38,14 @@ pub fn run_command(
         && !CFG.lock().unwrap().is_unit_test()
     {
         let process = Command::new(cmd.join(" "))
-            .current_dir(cwd)
+            .current_dir(cwd.clone())
             .output()
             .expect("");
-        (process.stdout, process.stderr, process)
+        (process.stdout.clone(), process.stderr.clone(), process)
     } else {
         //run
         let process = Command::new(cmd.join(" "))
-            .current_dir(cwd)
+            .current_dir(cwd.clone())
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
@@ -49,7 +57,7 @@ pub fn run_command(
         //decode output
         //     let output = output.decode("utf-8").rtrim();
         //    let  error = error.decode("utf-8").rtrim();
-        (process.stdout, process.stderr, process)
+        (process.stdout.clone(), process.stderr.clone(), process)
     };
 
     //check for error
@@ -71,8 +79,8 @@ pub fn run_command(
     )
 }
 
-pub fn get_command(cmd: Vec<&str>) -> String {
-    fn format_part(p: &str) -> String {
+pub fn get_command(cmd: Vec<String>) -> String {
+    fn format_part(p: &String) -> String {
         if p.contains(" ") {
             format!(r#""{p}""#)
         } else {
@@ -81,7 +89,7 @@ pub fn get_command(cmd: Vec<&str>) -> String {
     }
 
     cmd.iter()
-        .map(|p| format_part(p))
+        .map(format_part)
         .collect::<Vec<_>>()
         .join(" ")
 }

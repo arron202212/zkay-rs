@@ -39,8 +39,8 @@ impl UsedHomomorphismsVisitor {
     }
     pub fn visitChildren(&self, mut ast: AST) -> BTreeSet<String> {
         let mut all_homs = BTreeSet::new();
-        for c in ast.children() {
-            all_homs = all_homs.union(&self.visit(&mut c)).cloned().collect();
+        for c in ast.children().iter_mut() {
+            all_homs = all_homs.union(&self.visit(c)).cloned().collect();
         }
         return all_homs;
     }
@@ -89,7 +89,7 @@ impl UsedHomomorphismsVisitor {
         // Now all constructors or functions have been visited and we can do some post-processing
         // If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
         // We have to do this for all transitively called functions g, being careful around recursive function calls
-        let all_fcts = ast.contracts.iter().fold(vec![], |mut a, c| {
+        let mut all_fcts = ast.contracts.iter().fold(vec![], |mut a, c| {
             a.extend(c.constructor_definitions.clone());
             a.extend(c.function_definitions.clone());
             a
@@ -97,7 +97,7 @@ impl UsedHomomorphismsVisitor {
         Self::compute_transitive_homomorphisms(all_fcts.clone());
         for f in all_fcts.iter_mut() {
             f.used_crypto_backends =
-                Some(Self::used_crypto_backends(f.used_homomorphisms.unwrap()));
+                Some(Self::used_crypto_backends(f.used_homomorphisms.clone().unwrap()));
         }
         used_homs
     }
@@ -110,7 +110,7 @@ impl UsedHomomorphismsVisitor {
             callers.insert(f.clone(), vec![]);
         }
         for f in &fcts {
-            for g in f.called_functions {
+            for g in &f.called_functions {
                 if g.used_homomorphisms.is_none()
                 // Called function not analyzed, (try to) make sure this is a built-in like transfer, send
                 {
@@ -120,7 +120,7 @@ impl UsedHomomorphismsVisitor {
                     );
                     continue;
                 }
-                callers.entry(g).or_insert(vec![]).push(f.clone());
+                callers.entry(g.clone()).or_insert(vec![]).push(f.clone());
             }
         }
 
@@ -135,6 +135,7 @@ impl UsedHomomorphismsVisitor {
                 }
             })
             .collect::<BTreeSet<_>>();
+        let callerss=callers.clone();
         while !dirty.is_empty() {
             let f = dirty.pop_first().unwrap();
             // Add all of f"s used homomorphisms to all of its callers g.
@@ -152,7 +153,7 @@ impl UsedHomomorphismsVisitor {
                         .cloned()
                         .collect(),
                 );
-                if g.used_homomorphisms.as_ref().unwrap().len() > old_len && !callers[g].is_empty()
+                if g.used_homomorphisms.as_ref().unwrap().len() > old_len && !callerss[g].is_empty()
                 {
                     dirty.insert(g.clone());
                 }

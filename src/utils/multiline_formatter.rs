@@ -93,7 +93,7 @@ impl MultiLineFormatter {
         self.clone()
     }
 
-    pub fn dedent(&self) -> Self {
+    pub fn dedent(&mut self) -> Self {
         assert!(self.current_indent.len() >= self.indent_str.len());
         self.current_indent =
             self.current_indent[..self.current_indent.len() - self.indent_str.len()].to_string();

@@ -380,7 +380,7 @@ impl ZkayStatementTransformer {
                 if ast.else_branch.is_some() {
                     self.gen.as_mut().unwrap().guarded(guard_var, false);
 
-                    ast.else_branch = self.visit(ast.else_branch.unwrap().get_ast()).block();
+                    ast.else_branch = self.visit(ast.else_branch.as_ref().unwrap().get_ast()).block();
                     self.gen
                         .as_mut()
                         .unwrap()
@@ -439,7 +439,7 @@ impl ZkayStatementTransformer {
             ast.init = self.visit(ast.init.as_ref().unwrap().get_ast()).init();
             ast.statement_base
                 .pre_statements
-                .extend(ast.init.unwrap().pre_statements());
+                .extend(ast.init.as_ref().unwrap().pre_statements());
         }
         assert!(!contains_private_expr(Some(ast.condition.get_ast())));
         assert!(
@@ -458,7 +458,7 @@ impl ZkayStatementTransformer {
         ast
     }
 
-    pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) -> AST
+    pub fn visitReturnStatement(&mut self, ast: &mut ReturnStatement) -> AST
 // """
     // Handle return statement.
 
@@ -826,7 +826,7 @@ impl ZkayExpressionTransformer {
         }
     }
     pub fn visit_guarded_expression(
-        &self,
+        &mut self,
         guard_var: HybridArgumentIdf,
         if_true: bool,
         expr: &mut Expression,
@@ -877,7 +877,7 @@ impl ZkayExpressionTransformer {
                 .annotated_type
                 .as_ref()
                 .unwrap()
-                .privacy_annotation
+                .privacy_annotation.as_ref()
                 .unwrap()
                 .privacy_annotation_label();
             self.gen
@@ -951,11 +951,11 @@ impl ZkayCircuitTransformer {
         ast
     }
 
-    pub fn visitIndexExpr(&self, ast: IndexExpr) -> LocationExpr {
+    pub fn visitIndexExpr(&mut self, ast: IndexExpr) -> LocationExpr {
         self.transform_location(LocationExpr::IndexExpr(ast))
     }
 
-    pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) -> LocationExpr {
+    pub fn visitIdentifierExpr(&mut self, mut ast: IdentifierExpr) -> LocationExpr {
         if !is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
         //If ast is not already transformed, get current SSA version
         {

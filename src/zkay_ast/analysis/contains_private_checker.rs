@@ -47,7 +47,7 @@ impl ContainsPrivVisitor {
             contains_private: false,
         }
     }
-    pub fn visitFunctionCallExpr(self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) && !ast.is_cast() {
             self.contains_private |= ast
                 .func()
@@ -59,14 +59,14 @@ impl ContainsPrivVisitor {
         self.visitExpression(ast.to_expr())
     }
 
-    pub fn visitExpression(self, ast: Expression) {
+    pub fn visitExpression(&mut self, ast: Expression) {
         if ast.evaluate_privately() {
             self.contains_private = true;
         }
         self.visitAST(ast.get_ast())
     }
 
-    pub fn visitAST(self, ast: AST) {
+    pub fn visitAST(&self, ast: AST) {
         if self.contains_private {
             return;
         }
