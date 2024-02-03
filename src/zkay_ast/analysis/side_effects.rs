@@ -403,11 +403,11 @@ impl EvalOrderUBChecker {
         );
     }
 
-    pub fn visitExpression(&mut self, ast: Expression) {
+    pub fn visitExpression(&mut self, mut ast: Expression) {
         Self::visit_child_expressions(ast.get_ast(), ast.children());
     }
 
-    pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
+    pub fn visitAssignmentStatement(&mut self, mut ast: AssignmentStatement) {
         Self::visit_child_expressions(ast.get_ast(), ast.children());
     }
 }

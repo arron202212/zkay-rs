@@ -50,7 +50,7 @@ impl AstVisitor for DirectCanBePrivateDetector {
     }
 }
 impl DirectCanBePrivateDetector {
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
             if !ast.func().unwrap().is_private() {
                 let mut can_be_private = ast.func().unwrap().can_be_private();
@@ -67,37 +67,37 @@ impl DirectCanBePrivateDetector {
         }
     }
 
-    pub fn visitLocationExpr(&self, ast: LocationExpr) {
+    pub fn visitLocationExpr(&mut self, ast: LocationExpr) {
         let t = &ast.annotated_type().unwrap().type_name;
         ast.statement().unwrap().function().unwrap().can_be_private &= t.can_be_private();
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&mut self, ast: ReclassifyExpr) {
         self.visit(ast.expr().unwrap().get_ast());
     }
 
-    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+    pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitVariableDeclarationStatement(&self, ast: AssignmentStatement) {
+    pub fn visitVariableDeclarationStatement(&mut self, ast: AssignmentStatement) {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitReturnStatement(&self, ast: ReturnStatement) {
+    pub fn visitReturnStatement(&mut self, ast: ReturnStatement) {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitIfStatement(&self, ast: IfStatement) {
+    pub fn visitIfStatement(&mut self, ast: IfStatement) {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitStatementList(&self, ast: StatementList) {
+    pub fn visitStatementList(&mut self, ast: StatementList) {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitStatement(&self, ast: &mut Statement) {
+    pub fn visitStatement(&mut self, ast: &mut Statement) {
         //All other statement types are not supported inside circuit (for now)
         ast.function().unwrap().can_be_private = false;
     }
@@ -128,7 +128,7 @@ impl AstVisitor for IndirectCanBePrivateDetector {
     }
 }
 impl IndirectCanBePrivateDetector {
-    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
+    pub fn visitConstructorOrFunctionDefinition(&mut self, mut ast: ConstructorOrFunctionDefinition) {
         if ast.can_be_private {
             for fct in ast.called_functions {
                 if !fct.can_be_private {
@@ -232,7 +232,7 @@ impl CircuitComplianceChecker {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&mut self, ast: ReclassifyExpr) {
         assert!(!self.inside_privif_stmt
             || ast.statement().unwrap().before_analysis().unwrap().same_partition(
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
@@ -255,7 +255,7 @@ impl CircuitComplianceChecker {
         self.visit(ast.expr().unwrap().get_ast());
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
             && ast.func().unwrap().is_private()
         {
@@ -266,7 +266,7 @@ impl CircuitComplianceChecker {
         self.visit_children(&ast.get_ast());
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) {
+    pub fn visitPrimitiveCastExpr(&mut self, ast: PrimitiveCastExpr) {
         if ast.expr.annotated_type().is_private() {
             self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
@@ -274,7 +274,7 @@ impl CircuitComplianceChecker {
     }
 
     pub fn visitIfStatement(&mut self, ast: IfStatement) {
-        let old_in_privif_stmt = &self.inside_privif_stmt;
+        let old_in_privif_stmt = self.inside_privif_stmt.clone();
         if ast.condition.annotated_type().is_private() {
             let mut mod_vals = ast
                 .then_branch
@@ -321,7 +321,7 @@ impl CircuitComplianceChecker {
             self.priv_setter.set_evaluation(ast.get_ast(), true);
         }
         self.visit_children(&ast.get_ast());
-        self.inside_privif_stmt = *old_in_privif_stmt;
+        self.inside_privif_stmt = old_in_privif_stmt;
     }
 }
 // class PrivateSetter(FunctionVisitor)
@@ -366,7 +366,7 @@ impl PrivateSetter {
         self.evaluate_privately = None;
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if self.evaluate_privately.is_some()
             && is_instance(&ast.func().unwrap(), ASTType::LocationExpr)
             && !ast.is_cast()
@@ -381,7 +381,7 @@ impl PrivateSetter {
         self.visitExpression(ast.to_expr());
     }
 
-    pub fn visitExpression(&self, ast: Expression) {
+    pub fn visitExpression(&mut self, ast: Expression) {
         assert!(self.evaluate_privately.is_some());
         ast.set_evaluate_privately(self.evaluate_privately.unwrap());
         self.visit_children(&ast.get_ast());
@@ -417,7 +417,7 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     }
 }
 impl NonstaticOrIncompatibilityDetector {
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
         if ast.evaluate_privately() && !ast.is_cast() {

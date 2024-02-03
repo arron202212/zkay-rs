@@ -4068,11 +4068,12 @@ impl HybridArgumentIdf {
             )))),
         );
         if let TypeName::Array(t) = *self.t.clone() {
+            let loc=self.get_loc_expr(None);
             self.serialized_loc
                 .arr.as_mut().unwrap()
                 .assign(Expression::TupleOrLocationExpr(
                     TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(SliceExpr::new(
-                        if let LocationExprUnion::LocationExpr(le) = self.get_loc_expr(None) {
+                        if let LocationExprUnion::LocationExpr(le) = loc{
                             Some(le)
                         } else {
                             None

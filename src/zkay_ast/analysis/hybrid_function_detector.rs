@@ -58,7 +58,7 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) {
+    pub fn visitPrimitiveCastExpr(&self, mut ast: PrimitiveCastExpr) {
         if ast.expr.evaluate_privately() {
             ast.expression_base
                 .statement.as_mut()

@@ -358,7 +358,7 @@ impl AliasAnalysisVisitor {
         self.visit(ast.condition.get_ast());
 
         // state after require
-        let after = ast
+        let mut after = ast
             .simple_statement_base
             .statement_base
             .before_analysis

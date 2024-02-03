@@ -498,7 +498,7 @@ impl SymbolTableLinker {
         //     },
         //     "Function call return value member access not yet supported"
         // );
-        if let Some(TargetDefinition::NamespaceDefinition(target)) = ast.expr.unwrap().target().map(|t| *t) {
+        if let Some(TargetDefinition::NamespaceDefinition(target)) = ast.expr.as_ref().unwrap().target().map(|t| *t) {
             if let Some(idf) = target.names().get(&ast.member.name()) {
                 ast.location_expr_base.target = idf.parent().map(|t| Box::new(t.into()));
             }

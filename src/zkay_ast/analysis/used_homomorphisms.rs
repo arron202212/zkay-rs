@@ -116,7 +116,7 @@ impl UsedHomomorphismsVisitor {
                 {
                     assert!(
                         !g.requires_verification
-                            && !g.body.unwrap().statement_list_base.statements.is_empty()
+                            && !g.body.as_ref().unwrap().statement_list_base.statements.is_empty()
                     );
                     continue;
                 }

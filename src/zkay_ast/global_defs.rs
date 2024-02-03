@@ -214,7 +214,7 @@ impl GlobalDefs {
     }
 }
 
-struct GlobalVars {
+pub struct GlobalVars {
     msg: StateVariableDeclaration,
     block: StateVariableDeclaration,
     tx: StateVariableDeclaration,

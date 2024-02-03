@@ -958,13 +958,13 @@ impl TypeCheckVisitor {
     pub fn visitIndexExpr(&self, mut ast: IndexExpr) {
         let arr = ast.arr.clone().unwrap();
         let index = ast.key.clone();
-        let map_t = arr.annotated_type().unwrap();
+        let mut map_t = arr.annotated_type().unwrap();
         //should have already been checked
         assert!(map_t.privacy_annotation.as_ref().unwrap().is_all_expr());
 
         //do actual type checking
         if let TypeName::Mapping(ref mut type_name) = &mut *map_t.type_name {
-            let key_type = &type_name.key_type;
+            let key_type = type_name.key_type.clone();
             let expected = AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(key_type),
                 Some(Expression::all_expr()),
@@ -995,7 +995,7 @@ impl TypeCheckVisitor {
             ast.location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
-                .annotated_type = Some(*type_name.value_type);
+                .annotated_type = Some(*type_name.value_type.clone());
 
                 assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         } else if let TypeName::Array(type_name) = *map_t.type_name {
@@ -1091,7 +1091,7 @@ impl TypeCheckVisitor {
     }
 
     pub fn visitAnnotatedTypeName(&mut self, mut ast: AnnotatedTypeName) {
-        if let TypeName::UserDefinedTypeName(ref mut udtn) = &*ast.type_name {
+        if let TypeName::UserDefinedTypeName(ref mut udtn) = *ast.type_name {
             if let Some(NamespaceDefinition::EnumDefinition(ed)) = udtn.target() {
                 udtn.set_type_name(*ed.annotated_type.unwrap().type_name.clone());
             } else {
