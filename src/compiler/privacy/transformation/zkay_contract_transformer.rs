@@ -15,12 +15,12 @@ use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use crate::zkay_ast::ast::{
     is_instance, ASTCode, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
-    ArrayLiteralExprBase, AsTypeUnion, AssignmentStatement, AssignmentStatementBase,
-    AssignmentStatementUnion, BlankLine, Block, CipherText, Comment, CommentBase,
+    ArrayLiteralExprBase,  AssignmentStatement, AssignmentStatementBase,
+    BlankLine, Block, CipherText, Comment, CommentBase,
     ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
     ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier,
-    IdentifierBase, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IdentifierUnion,
-    IndexExpr, LocationExpr, LocationExprUnion, MeExpr, NamespaceDefinition, NewExpr,
+    IdentifierBase, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, 
+    IndexExpr, LocationExpr,  MeExpr, NamespaceDefinition, NewExpr,
     NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr, RequireStatement,
     ReturnStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
     StatementListBase, StructDefinition, StructTypeName, TargetDefinition, TupleExpr, TypeName,
@@ -619,7 +619,7 @@ impl ZkayTransformer {
 
         // Add additional params
         ast.add_param(
-            IdentifierUnion::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
+            AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
             )))),
@@ -627,12 +627,12 @@ impl ZkayTransformer {
             None,
         );
         ast.add_param(
-            IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::uint_all()),
+            AST::AnnotatedTypeName(AnnotatedTypeName::uint_all()),
             IdentifierExprUnion::String(format!("{}_start_idx", CFG.lock().unwrap().zk_in_name())),
             None,
         );
         ast.add_param(
-            IdentifierUnion::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
+            AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
             )))),
@@ -640,7 +640,7 @@ impl ZkayTransformer {
             None,
         );
         ast.add_param(
-            IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::uint_all()),
+            AST::AnnotatedTypeName(AnnotatedTypeName::uint_all()),
             IdentifierExprUnion::String(format!("{}_start_idx", CFG.lock().unwrap().zk_out_name())),
             None,
         );
@@ -671,7 +671,7 @@ impl ZkayTransformer {
                 IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
                 None,
             )
-            .as_type(AsTypeUnion::TypeName(TypeName::Array(Array::Array(
+            .as_type(AST::TypeName(TypeName::Array(Array::Array(
                 ArrayBase::new(AnnotatedTypeName::uint_all(), ExprUnion::None),
             )))),
         );
@@ -726,7 +726,7 @@ impl ZkayTransformer {
             );
             let mut idf = IdentifierBase::new(CFG.lock().unwrap().zk_data_var_name());
             idf.decl_var(
-                IdentifierUnion::TypeName(TypeName::UserDefinedTypeName(
+                AST::TypeName(TypeName::UserDefinedTypeName(
                     UserDefinedTypeName::StructTypeName(zk_struct_type),
                 )),
                 None,
@@ -964,7 +964,7 @@ impl ZkayTransformer {
             "memory"
         };
         new_f.add_param(
-            IdentifierUnion::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
+            AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 ExprUnion::None,
             )))),
@@ -976,7 +976,7 @@ impl ZkayTransformer {
 
         if requires_proof {
             new_f.add_param(
-                IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::proof_type()),
+                AST::AnnotatedTypeName(AnnotatedTypeName::proof_type()),
                 IdentifierExprUnion::Identifier(Identifier::Identifier(IdentifierBase::new(
                     CFG.lock().unwrap().proof_param_name(),
                 ))),
@@ -1074,7 +1074,7 @@ impl ZkayTransformer {
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
             None,
         )
-        .as_type(AsTypeUnion::TypeName(TypeName::Array(Array::Array(
+        .as_type(AST::TypeName(TypeName::Array(Array::Array(
             ArrayBase::new(AnnotatedTypeName::uint_all(), ExprUnion::None),
         ))));
 
@@ -1094,7 +1094,7 @@ impl ZkayTransformer {
                 key_req_stmts.push(
                     tmp_key_var
                         .decl_var(
-                            IdentifierUnion::AnnotatedTypeName(AnnotatedTypeName::key_type(
+                            AST::AnnotatedTypeName(AnnotatedTypeName::key_type(
                                 crypto_params.clone(),
                             )),
                             None,
@@ -1110,14 +1110,13 @@ impl ZkayTransformer {
                     key_owner.clone(),
                     &CircuitHelper::get_glob_key_name(&key_owner.clone().into(), &crypto_params),
                 );
-                assignment.set_lhs(Some(AssignmentStatementUnion::LocationExpr(
-                    LocationExpr::IdentifierExpr(IdentifierExpr::new(
+                assignment.set_lhs(Some(IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(Identifier::Identifier(
                             tmp_key_var.clone(),
                         )),
                         None,
-                    )),
-                )));
+                    ).get_ast()),
+                );
                 key_req_stmts.push(assignment.get_ast());
 
                 // Remember me-keys for later use in symmetrically encrypted keys
@@ -1200,7 +1199,7 @@ impl ZkayTransformer {
                         IdentifierExprUnion::Identifier(*p.identifier_declaration_base.idf.clone()),
                         None,
                     )
-                    .as_type(AsTypeUnion::AnnotatedTypeName(
+                    .as_type(AST::AnnotatedTypeName(
                         *p.identifier_declaration_base.annotated_type.clone(),
                     ));
                     let cipher_payload_len = CFG
@@ -1254,7 +1253,7 @@ impl ZkayTransformer {
         );
         let in_var_decl = (*in_arr_var.idf.clone())
             .decl_var(
-                IdentifierUnion::TypeName(TypeName::dyn_uint_array()),
+                AST::TypeName(TypeName::dyn_uint_array()),
                 Some(new_in_array_expr.to_expr()),
             )
             .get_ast();

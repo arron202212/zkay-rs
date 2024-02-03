@@ -5,8 +5,8 @@ use crate::zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPR
 
 use crate::zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTCode,
-    ASTType, AllExpr, AnnotatedTypeName, Array, AsTypeUnion, AssignmentStatement,
-    AssignmentStatementUnion, BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion,
+    ASTType, AllExpr, AnnotatedTypeName, Array,  AssignmentStatement,
+     BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion,
     ConstructorOrFunctionDefinition, ContractDefinition, ElementaryTypeName, EnumDefinition,
     EnumTypeName, EnumValue, EnumValueTypeName, Expression, ForStatement, FunctionCallExpr,
     FunctionTypeName, IdentifierDeclaration, IdentifierExpr, IfStatement, IndexExpr, LiteralUnion,
@@ -72,7 +72,7 @@ impl TypeCheckVisitor {
                 .map(|(e, a)| self.get_rhs(a, e))
                 .collect();
             return replace_expr(&rhs, &mut TupleExpr::new(exprs.clone()).to_expr(), false)
-                .as_type(AsTypeUnion::TypeName(TypeName::TupleType(TupleType::new(
+                .as_type(AST::TypeName(TypeName::TupleType(TupleType::new(
                     exprs.iter().map(|e| e.annotated_type().clone()).collect(),
                 ))))
                 .to_expr();
@@ -159,7 +159,7 @@ impl TypeCheckVisitor {
 
     pub fn visitAssignmentStatement(&self, mut ast: AssignmentStatement) {
         assert!(
-            ast.lhs().is_some() && AssignmentStatementUnion::None != ast.lhs().unwrap(),
+            ast.lhs().is_some(),
             "Assignment target is not a location {:?}",
             ast.lhs()
         );
@@ -171,9 +171,7 @@ impl TypeCheckVisitor {
 
         //prevent modifying final
         let f = *ast.function().unwrap();
-        if let Some(AssignmentStatementUnion::TupleExpr(_))
-        | Some(AssignmentStatementUnion::LocationExpr(LocationExpr::IdentifierExpr(_))) =
-            ast.lhs()
+        if is_instance(&ast.lhs().unwrap(), ASTType::TupleExpr) || is_instance(&ast.lhs().unwrap(), ASTType::LocationExpr) 
         {
             self.check_final(f, ast.lhs().unwrap().to_expr());
         }

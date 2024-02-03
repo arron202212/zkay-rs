@@ -3,7 +3,7 @@ use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
 use crate::zkay_ast::ast::{
     self, ASTCode, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
-    AssignmentStatementBase, AssignmentStatementUnion, Block, BoolTypeName, BooleanLiteralExpr,
+    AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr,
     BuiltinFunction, ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement,
     ElementaryTypeName, EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement,
     FunctionCallExpr, FunctionCallExprBase, Identifier, IdentifierBase, IdentifierDeclaration,
@@ -1426,17 +1426,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             // assert!(false);
             String::new()
         };
-        let lhs = if let Expression::TupleOrLocationExpr(expr) = lhs {
-            match expr {
-                TupleOrLocationExpr::TupleExpr(expr) => AssignmentStatementUnion::TupleExpr(expr),
-                TupleOrLocationExpr::LocationExpr(expr) => {
-                    AssignmentStatementUnion::LocationExpr(expr)
-                }
-                _ => AssignmentStatementUnion::None,
-            }
-        } else {
-            AssignmentStatementUnion::None
-        };
+        let lhs = lhs.get_ast();
 
         ast::AST::Statement(Statement::SimpleStatement(
             SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
@@ -1499,19 +1489,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.line = line;
             fce.expression_base.ast_base.column = column + 1;
 
-            let expr = if let Expression::TupleOrLocationExpr(expr) = expr {
-                match expr {
-                    TupleOrLocationExpr::TupleExpr(expr) => {
-                        AssignmentStatementUnion::TupleExpr(expr)
-                    }
-                    TupleOrLocationExpr::LocationExpr(expr) => {
-                        AssignmentStatementUnion::LocationExpr(expr)
-                    }
-                    _ => AssignmentStatementUnion::None,
-                }
-            } else {
-                AssignmentStatementUnion::None
-            };
+            let expr = expr.get_ast();
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
                     AssignmentStatementBase::new(
@@ -1563,19 +1541,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.line = line;
             fce.expression_base.ast_base.column = column + 1;
 
-            let expr = if let Expression::TupleOrLocationExpr(expr) = expr {
-                match expr {
-                    TupleOrLocationExpr::TupleExpr(expr) => {
-                        AssignmentStatementUnion::TupleExpr(expr)
-                    }
-                    TupleOrLocationExpr::LocationExpr(expr) => {
-                        AssignmentStatementUnion::LocationExpr(expr)
-                    }
-                    _ => AssignmentStatementUnion::None,
-                }
-            } else {
-                AssignmentStatementUnion::None
-            };
+            let expr = expr.get_ast();
             ast::AST::Statement(Statement::SimpleStatement(
                 SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
                     AssignmentStatementBase::new(

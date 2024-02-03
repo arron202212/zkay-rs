@@ -1,7 +1,7 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, AsTypeUnion, Block, BuiltinFunction, Expression,
+    is_instance, ASTCode, ASTType, Block, BuiltinFunction, Expression,
     FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier,
-    IdentifierExpr, IdentifierExprUnion, IfStatement, VariableDeclarationStatement,
+    IdentifierExpr, IdentifierExprUnion, IfStatement, VariableDeclarationStatement,AST,
 };
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
@@ -213,7 +213,7 @@ impl Remapper {
                 ],
                 None,
             ))
-            .as_type(AsTypeUnion::TypeName((*val.t).clone()));
+            .as_type(AST::TypeName((*val.t).clone()));
             // create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
             ch._create_temp_var(&key.name(), rhs.to_expr())
         }
@@ -248,7 +248,7 @@ impl Remapper {
                     assert!(key_decl.clone().unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
-                            .as_type(AsTypeUnion::AnnotatedTypeName(
+                            .as_type(AST::AnnotatedTypeName(
                                 key_decl
                                     .clone()
                                     .unwrap()
@@ -320,7 +320,7 @@ ch,
                     assert!(key_decl.clone().unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
-                            .as_type(AsTypeUnion::AnnotatedTypeName(
+                            .as_type(AST::AnnotatedTypeName(
                                 key_decl
                                     .clone()
                                     .unwrap()

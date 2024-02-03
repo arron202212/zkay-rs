@@ -10,13 +10,13 @@ use crate::type_check::type_checker::TypeCheckVisitor;
 use crate::zkay_ast::analysis::partition_state::PartitionState;
 use crate::zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, ASTCode, ASTType, AllExpr,
-    AnnotatedTypeName, AsTypeUnion, AssignmentStatement, AssignmentStatementBase,
-    AssignmentStatementUnion, Block, BooleanLiteralType, BuiltinFunction,
+    AnnotatedTypeName,  AssignmentStatement, AssignmentStatementBase,
+     Block, BooleanLiteralType, BuiltinFunction,
     CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
-    ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExplicitlyConvertedUnion,
+    ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, 
     ExprUnion, Expression, ExpressionStatement, FunctionCallExpr, FunctionCallExprBase,
     HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase, IdentifierExpr,
-    IdentifierExprUnion, IfStatement, IndexExpr, KeyLiteralExpr, LocationExpr, LocationExprUnion,
+    IdentifierExprUnion, IfStatement, IndexExpr, KeyLiteralExpr, LocationExpr, 
     MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
     PrivacyLabelExpr, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
     TargetDefinition, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
@@ -504,7 +504,7 @@ where
             if var.in_scope_at(ast.get_ast()) {
                 astmt = SimpleStatement::AssignmentStatement(
                     AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-                        AssignmentStatementUnion::None,
+                        AST::None,
                         Expression::None,
                         None,
                     )),
@@ -654,9 +654,9 @@ where
 
         //Create assignment statement
         if !ret_params.is_empty() {
-            astmt.set_lhs(AssignmentStatementUnion::TupleExpr(TupleExpr::new(
+            astmt.set_lhs(TupleExpr::new(
                 ret_params.iter().map(|r| r.to_expr()).collect(),
-            )));
+            ).get_ast());
             astmt.set_rhs(
                 TupleExpr::new(ret_arg_outs.iter().map(|r| r.to_expr()).collect()).to_expr(),
             );
@@ -728,7 +728,7 @@ where
             None,
         );
         let privacy_label_expr = get_privacy_expr_from_label(plabel.into());
-        let le = if let LocationExprUnion::LocationExpr(le) = idf.get_loc_expr(None) {
+        let le = if let Some(le) = idf.get_loc_expr(None).location_expr() {
             Some(le)
         } else {
             None
@@ -983,7 +983,7 @@ where
                         .ast_base
                         .parent,
                 )
-                .as_type(AsTypeUnion::AnnotatedTypeName(*idf.annotated_type.unwrap()))
+                .as_type(AST::AnnotatedTypeName(*idf.annotated_type.unwrap()))
         } else {
             idf
         }
@@ -1086,7 +1086,7 @@ where
                         IdentifierExprUnion::Identifier(Identifier::HybridArgumentIdf(idf.clone())),
                         None,
                     )
-                    .as_type(AsTypeUnion::TypeName((*idf.t).clone()))
+                    .as_type(AST::TypeName((*idf.t).clone()))
                     .to_expr()
                 })
                 .collect(),
@@ -1481,7 +1481,7 @@ where
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
         expr.add_pre_statement(CircuitComputationStatement::new(new_out_param).to_statement());
-        if let ExplicitlyConvertedUnion::Type(Expression::TupleOrLocationExpr(
+        if let AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(le),
         )) = out_var
         {
@@ -1760,8 +1760,8 @@ where
         let key_idf = self._in_name_factory.add_idf(name, key_t.clone(), None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(
-            if let LocationExprUnion::LocationExpr(le) =
-                cipher.get_loc_expr(Some((*stmt).get_ast()))
+            if let Some(le) =
+                cipher.get_loc_expr(Some((*stmt).get_ast())).location_expr()
             {
                 vec![le.index(ExprUnion::I32(cipher_payload_len)).to_expr()]
             } else {
@@ -1769,7 +1769,7 @@ where
             },
             crypto_params,
         )
-        .as_type(AsTypeUnion::TypeName(key_t));
+        .as_type(AST::TypeName(key_t));
         stmt.add_pre_statement(
             AssignmentStatementBase::new(
                 key_idf.get_loc_expr(None).into(),

@@ -1,6 +1,6 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, AssignmentStatement, AssignmentStatementUnion, Block,
+    is_instance, ASTCode, ASTType, AssignmentStatement,  Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierExpr, IfStatement,
     LocationExpr, StateVariableDeclaration, TupleOrLocationExpr, AST,
 };
@@ -74,10 +74,10 @@ impl FinalVisitor {
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
         self.visit(ast.rhs().unwrap().get_ast());
-        if let Some(AssignmentStatementUnion::LocationExpr(LocationExpr::IdentifierExpr(le))) =
-            ast.lhs()
+        if let Some(le) =
+            ast.lhs().map(|l|l.identifier_expr())
         {
-            let var: &AST = &(*le.location_expr_base.target.unwrap()).into();
+            let var: &AST = &(*le.unwrap().location_expr_base.target.unwrap()).into();
             if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
                 assert!(!*v, "Tried to reassign final variable,{:?}", ast);
                 *v = true;
