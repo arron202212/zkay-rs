@@ -4,7 +4,7 @@ use crate::zkay_ast::ast::{
     is_instance, ASTCode, ASTType, AllExpr, AssignmentStatement, Block, BreakStatement,
     BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement,
     ExpressionStatement, ForStatement, FunctionCallExpr, IfStatement, LocationExpr, MeExpr,
-    PrivacyLabelExpr, RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
+     RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
     VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -50,7 +50,7 @@ impl AliasAnalysisVisitor {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        let mut s: PartitionState<PrivacyLabelExpr> = PartitionState::new();
+        let mut s: PartitionState<AST> = PartitionState::new();
         s.insert(
             MeExpr::new()
                 .to_expr()
@@ -66,12 +66,12 @@ impl AliasAnalysisVisitor {
                 .into(),
         );
         for d in &ast.parent.as_ref().unwrap().state_variable_declarations {
-            s.insert(PrivacyLabelExpr::Identifier(d.idf()));
+            s.insert(d.idf().get_ast());
         }
         for p in &ast.parameters {
-            s.insert(PrivacyLabelExpr::Identifier(
-                *p.identifier_declaration_base.idf.clone(),
-            ));
+            s.insert(
+                p.identifier_declaration_base.idf.get_ast(),
+            );
         }
         ast.body.as_mut().unwrap().set_before_analysis(Some(s));
         self.visit(ast.body.as_ref().unwrap().get_ast());
@@ -80,8 +80,8 @@ impl AliasAnalysisVisitor {
     pub fn propagate(
         &self,
         mut statements: Vec<AST>,
-        before_analysis: PartitionState<PrivacyLabelExpr>,
-    ) -> PartitionState<PrivacyLabelExpr> {
+        before_analysis: PartitionState<AST>,
+    ) -> PartitionState<AST> {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements.iter_mut() {
@@ -114,7 +114,7 @@ impl AliasAnalysisVisitor {
             .names
             .values()
         {
-            last.insert(PrivacyLabelExpr::Identifier(name.clone()));
+            last.insert(name.get_ast());
         }
 
         ast.statement_list_base.statement_base.after_analysis =
@@ -132,7 +132,7 @@ impl AliasAnalysisVisitor {
                 .statement_base
                 .after_analysis.as_mut()
                 .unwrap()
-                .remove(&PrivacyLabelExpr::Identifier(name.clone()));
+                .remove(&name.get_ast());
         }
     }
     pub fn visitIfStatement(&mut self, mut ast: IfStatement) {
@@ -243,7 +243,7 @@ impl AliasAnalysisVisitor {
 
         // add names introduced in init
         for name in ast.statement_base.ast_base.names.values() {
-            last.insert(PrivacyLabelExpr::Identifier(name.clone()));
+            last.insert(name.get_ast());
         }
 
         if ast.init.is_some() {
@@ -302,7 +302,7 @@ impl AliasAnalysisVisitor {
             ast.statement_base
                 .after_analysis.as_mut()
                 .unwrap()
-                .remove(&PrivacyLabelExpr::Identifier(name.clone()));
+                .remove(&name.get_ast());
         }
     }
     pub fn visitVariableDeclarationStatement(&mut self,mut  ast: VariableDeclarationStatement) {
@@ -331,14 +331,14 @@ impl AliasAnalysisVisitor {
 
         // name of variable is already in list
         let name = ast.variable_declaration.identifier_declaration_base.idf;
-        assert!(after.as_ref().unwrap().has(&PrivacyLabelExpr::Identifier(*name.clone())));
+        assert!(after.as_ref().unwrap().has(&name.get_ast()));
 
         // make state more precise
         if let Some(e) = e {
             if let Some(pal) = e.privacy_annotation_label() {
                 after.clone()
                     .unwrap()
-                    .merge(&PrivacyLabelExpr::Identifier(*name.clone()), &pal.into());
+                    .merge(&name.get_ast(), &pal.into());
             }
         }
 
@@ -439,7 +439,7 @@ impl AliasAnalysisVisitor {
 }
 pub struct GuardConditionAnalyzer {
     _neg: bool,
-    _analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    _analysis: Option<PartitionState<AST>>,
 }
 impl AstVisitor for GuardConditionAnalyzer {
     type Return = Option<String>;
@@ -477,8 +477,8 @@ impl GuardConditionAnalyzer {
     pub fn analyze(
         &mut self,
         cond: AST,
-        before_analysis: PartitionState<PrivacyLabelExpr>,
-    ) -> PartitionState<PrivacyLabelExpr> {
+        before_analysis: PartitionState<AST>,
+    ) -> PartitionState<AST> {
         if has_side_effects(cond.clone()) {
             before_analysis.separate_all()
         } else {
@@ -521,7 +521,7 @@ impl GuardConditionAnalyzer {
 pub fn _recursive_update(
     lhs: AST,
     rhs: AST,
-    mut analysis: PartitionState<PrivacyLabelExpr>,
+    mut analysis: PartitionState<AST>,
     merge: bool,
 ) {
     if is_instance(&lhs, ASTType::TupleExpr) && is_instance(&rhs, ASTType::TupleExpr) {
@@ -542,10 +542,10 @@ pub fn _recursive_update(
         }
     }
 }
-pub fn recursive_merge(lhs: AST, rhs: AST, analysis: PartitionState<PrivacyLabelExpr>) {
+pub fn recursive_merge(lhs: AST, rhs: AST, analysis: PartitionState<AST>) {
     _recursive_update(lhs, rhs, analysis, true);
 }
 
-pub fn recursive_assign(lhs: AST, rhs: AST, analysis: PartitionState<PrivacyLabelExpr>) {
+pub fn recursive_assign(lhs: AST, rhs: AST, analysis: PartitionState<AST>) {
     _recursive_update(lhs, rhs, analysis, false);
 }

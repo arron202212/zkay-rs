@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
     is_instance, ASTCode, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
-    FunctionCallExpr, LocationExpr, NamespaceDefinition, TargetDefinition, WhileStatement, AST,
+    FunctionCallExpr, LocationExpr, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -48,11 +48,9 @@ impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if !is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&ast.func().unwrap(), ASTType::LocationExpr));
-            let fdef = ast.func().unwrap().target().unwrap();
-            assert!(fdef.is_function());
-            if let TargetDefinition::NamespaceDefinition(
-                NamespaceDefinition::ConstructorOrFunctionDefinition(cofd),
-            ) = *fdef
+            let fdef = *ast.func().unwrap().target().unwrap();
+            assert!(fdef.constructor_or_function_definition().unwrap().is_function());
+            if let Some(cofd) = fdef.constructor_or_function_definition()
             {
                 ast.statement()
                     .unwrap()

@@ -21,9 +21,9 @@ use crate::zkay_ast::ast::{
     ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier,
     IdentifierBase, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, 
     IndexExpr, LocationExpr,  MeExpr, NamespaceDefinition, NewExpr,
-    NumberLiteralExpr, Parameter, PrimitiveCastExpr, PrivacyLabelExpr, RequireStatement,
+    NumberLiteralExpr, Parameter, PrimitiveCastExpr,  RequireStatement,
     ReturnStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
-    StatementListBase, StructDefinition, StructTypeName, TargetDefinition, TupleExpr, TypeName,
+    StatementListBase, StructDefinition, StructTypeName,  TupleExpr, TypeName,
     UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
@@ -299,7 +299,7 @@ impl ZkayTransformer {
 
     pub fn create_circuit_helper(
         fct: &ConstructorOrFunctionDefinition,
-        global_owners: Vec<PrivacyLabelExpr>,
+        global_owners: Vec<AST>,
         internal_circ: Option<&mut CircuitHelper>,
     ) -> CircuitHelper
 // """
@@ -418,7 +418,7 @@ impl ZkayTransformer {
                         global_owners
                             .clone()
                             .into_iter()
-                            .map(Into::<PrivacyLabelExpr>::into)
+                            .map(|e|e.get_ast())
                             .collect(),
                         None,
                     ),
@@ -576,7 +576,7 @@ impl ZkayTransformer {
                 global_owners
                     .clone()
                     .into_iter()
-                    .map(Into::<PrivacyLabelExpr>::into)
+                    .map(|e|e.get_ast())
                     .collect(),
             );
             if ext_f.is_function() {
@@ -752,7 +752,7 @@ impl ZkayTransformer {
         let mut me_key_idx = BTreeMap::new();
         let mut offset = 0;
         for (key_owner, crypto_params) in circuit.requested_global_keys() {
-            if let (Some(_), None) = key_owner {
+            if is_instance( &key_owner.unwrap(),ASTType::MeExpr ){
                 //== MeExpr::new()
                 assert!(!me_key_idx.contains_key(&crypto_params));
                 me_key_idx.insert(crypto_params.clone(), offset);
@@ -852,9 +852,7 @@ impl ZkayTransformer {
                                     None,
                                 );
                                 idf.location_expr_base.target =
-                                    Some(Box::new(TargetDefinition::IdentifierDeclaration(
-                                        IdentifierDeclaration::VariableDeclaration(vd.clone()),
-                                    )));
+                                    Some(Box::new(vd.get_ast()));
                                 idf.to_expr()
                             })
                             .collect(),
@@ -872,7 +870,7 @@ impl ZkayTransformer {
         &mut self,
         f: &mut ConstructorOrFunctionDefinition,
         original_params: &mut Vec<Parameter>,
-        global_owners: Vec<PrivacyLabelExpr>,
+        global_owners: Vec<AST>,
     ) -> (
         ConstructorOrFunctionDefinition,
         ConstructorOrFunctionDefinition,
@@ -1033,7 +1031,7 @@ impl ZkayTransformer {
             // If there are any private arguments with homomorphism "hom", we need the public key for that crypto backend
             ext_circuit._require_public_key_for_label_at(
                 None,
-                &Expression::me_expr(None).into(),
+                &Expression::me_expr(None).get_ast(),
                 crypto_params,
             );
         }
@@ -1041,7 +1039,7 @@ impl ZkayTransformer {
             if crypto_params.is_symmetric_cipher() {
                 if ext_circuit
                     .requested_global_keys()
-                    .contains(&((Some(MeExpr::new()), None), crypto_params.clone()))
+                    .contains(&(Some(MeExpr::new().get_ast()), crypto_params.clone()))
                     || args_backends.contains(&crypto_params)
                 // Make sure msg.sender"s key pair is available in the circuit
                 {
@@ -1108,7 +1106,7 @@ impl ZkayTransformer {
                 let (idf, mut assignment) = ext_circuit.clone().request_public_key(
                     &crypto_params,
                     key_owner.clone(),
-                    &CircuitHelper::get_glob_key_name(&key_owner.clone().into(), &crypto_params),
+                    &CircuitHelper::get_glob_key_name(&key_owner.as_ref().unwrap(), &crypto_params),
                 );
                 assignment.set_lhs(Some(IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(Identifier::Identifier(
@@ -1120,7 +1118,7 @@ impl ZkayTransformer {
                 key_req_stmts.push(assignment.get_ast());
 
                 // Remember me-keys for later use in symmetrically encrypted keys
-                if let (Some(_), None) = &key_owner {
+                if is_instance( &key_owner.unwrap(),ASTType::MeExpr ){
                     //== MeExpr::new()
                     assert!(!me_key_idx.contains_key(&crypto_params));
                     me_key_idx.insert(crypto_params.clone(), offset);
@@ -1283,9 +1281,7 @@ impl ZkayTransformer {
             IdentifierExprUnion::Identifier(int_fct.namespace_definition_base.idf.clone()),
             None,
         );
-        idf.location_expr_base.target = Some(Box::new(TargetDefinition::NamespaceDefinition(
-            NamespaceDefinition::ConstructorOrFunctionDefinition(int_fct.clone()),
-        )));
+        idf.location_expr_base.target = Some(Box::new(int_fct.get_ast()));
         let mut internal_call = FunctionCallExprBase::new(idf.to_expr(), args.clone(), None);
         internal_call.sec_start_offset = Some(ext_circuit.priv_in_size());
 

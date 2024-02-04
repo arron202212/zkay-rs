@@ -5,7 +5,7 @@ use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTCode, ASTType, AssignmentStatement, BooleanLiteralType,
     BuiltinFunction, ConstructorOrFunctionDefinition, Expression, FunctionCallExpr,
     FunctionTypeName, IfStatement, IndexExpr, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
-    PrivacyLabelExpr, ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
+    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -236,7 +236,7 @@ impl CircuitComplianceChecker {
         assert!(!self.inside_privif_stmt
             || ast.statement().unwrap().before_analysis().unwrap().same_partition(
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
-                &Expression::me_expr(None).into(),
+                &Expression::me_expr(None).get_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast.expr().unwrap().annotated_type().is_public() {
             let eval_in_public = false;
@@ -300,7 +300,7 @@ impl CircuitComplianceChecker {
                 if !val
                     .target()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().unwrap()
                     .zkay_type()
                     .type_name
                     .is_primitive_type()
@@ -312,7 +312,7 @@ impl CircuitComplianceChecker {
                         .statement_base
                         .before_analysis.as_ref()
                         .unwrap()
-                        .same_partition(&val.privacy(), &Expression::me_expr(None).into())
+                        .same_partition(&val.privacy().unwrap(), &Expression::me_expr(None).get_ast())
                 {
                     assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
                 }
@@ -370,7 +370,7 @@ impl PrivateSetter {
         if self.evaluate_privately.is_some()
             && is_instance(&ast.func().unwrap(), ASTType::LocationExpr)
             && !ast.is_cast()
-            && ast.func().unwrap().target().unwrap().has_side_effects()
+            && (*ast.func().unwrap().target().unwrap()).constructor_or_function_definition().unwrap().has_side_effects()
         {
             assert!(
                 false,
@@ -429,12 +429,12 @@ impl NonstaticOrIncompatibilityDetector {
                         .unwrap()
                         .target()
                         .unwrap()
-                        .annotated_type()
+                        .annotated_type().unwrap()
                         .type_name,
                     ASTType::FunctionTypeName
                 ));
-                has_nonstatic_call |= !ast.func().unwrap().target().unwrap().has_static_body();
-                can_be_private &= ast.func().unwrap().target().unwrap().can_be_private();
+                has_nonstatic_call |= !(*ast.func().unwrap().target().unwrap()).constructor_or_function_definition().unwrap().has_static_body;
+                can_be_private &= (ast.func().unwrap().target().unwrap()).constructor_or_function_definition().unwrap().can_be_private;
             } else if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
                 can_be_private &= ast.func().unwrap().can_be_private()
                     || ast.annotated_type().unwrap().type_name.is_literal();

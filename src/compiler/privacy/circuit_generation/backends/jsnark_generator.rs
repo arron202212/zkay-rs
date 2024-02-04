@@ -25,7 +25,7 @@ use crate::utils::helpers::{read_file, save_to_file};
 use crate::zkay_ast::ast::{
     indent, is_instance, ASTCode, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition,
     Expression, FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, PrivacyLabelExpr, TypeName, AST,
+    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,  TypeName, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -39,14 +39,17 @@ use zkp_u256::Binary;
 pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
     TypeId::of::<S>() == s
 }
-pub fn _get_t(mut t: (Option<TypeName>, Option<Expression>)) -> String
+pub fn _get_t(mut t: Option<AST>) -> String
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
-    let t = if let (None, Some(t)) = &t {
-        t.annotated_type().type_name.clone()
+    let t=t.unwrap();
+    let t = if let Some(t) = t.expression() {
+        Some(*t.annotated_type().type_name)
     } else {
-        Box::new(TypeName::None)
+        t.type_name()
     };
+    assert!(t.is_some());
+    let t=t.unwrap();
     let bits = t.elem_bitwidth();
     if bits == 1 {
         return String::from("ZkBool");
@@ -175,7 +178,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitNumberLiteralExpr(&self, ast: NumberLiteralExpr) -> String {
-        let t = _get_t((None, Some(ast.to_expr())));
+        let t = _get_t(Some(ast.get_ast()));
         if ast.value < (1 << 31) {
             format!(r#"val({}, {t})"#, ast.value)
         } else {
@@ -303,7 +306,7 @@ impl JsnarkVisitor
     }
 
     pub fn handle_cast(&self, wire: String, t: TypeName) -> String {
-        format!(r#"cast({wire}, {})"#, _get_t((Some(t), None)))
+        format!(r#"cast({wire}, {})"#, _get_t(Some(t.get_ast())))
     }
 }
 
@@ -316,7 +319,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
             r#"addS("{}", {}, {});"#,
             sec_input.identifier_base.name,
             sec_input.t.size_in_uints(),
-            _get_t((Some(*sec_input.t), None))
+            _get_t(Some(sec_input.t.get_ast()))
         ));
     }
 
@@ -333,7 +336,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
                 r#"addIn("{}", {}, {});"#,
                 pub_input.identifier_base.name,
                 pub_input.t.size_in_uints(),
-                _get_t((Some(*pub_input.t), None))
+                _get_t(Some(pub_input.t.get_ast()))
             )
         });
     }
@@ -342,7 +345,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
             r#"addOut("{}", {}, {});"#,
             pub_output.identifier_base.name,
             pub_output.t.size_in_uints(),
-            _get_t((Some(*pub_output.t), None))
+            _get_t(Some(pub_output.t.get_ast()))
         ));
     }
 
@@ -353,7 +356,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
         .collect();
     for crypto_params in &CFG.lock().unwrap().user_config.all_crypto_params() {
         let pk_name = CircuitHelper::get_glob_key_name(
-            &PrivacyLabelExpr::MeExpr(MeExpr::new()),
+            &MeExpr::new().get_ast(),
             crypto_params,
         );
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);

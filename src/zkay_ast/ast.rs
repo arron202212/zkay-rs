@@ -60,14 +60,6 @@ impl ChildListBuilder {
         self.children.push(ast.clone());
     }
 }
-// class ChildListBuilder:
-//     def __init__(&self):
-//         self.children = []
-
-//     def add_child(self, ast: AST) -> AST:
-//         if ast is not None:
-//             self.children.append(ast)
-//         return ast
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 pub trait Immutable {
@@ -299,7 +291,22 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
-
+    pub fn location_expr_base(&self)->Option<LocationExprBase>{
+    None}
+    pub fn namespace_definition(&self)->Option<NamespaceDefinition>{
+    None}
+    pub fn identifier_declaration_base(&self)->Option<IdentifierDeclarationBase>{
+    None}
+    pub fn identifier_declaration(&self)->Option<IdentifierDeclaration>{
+    None}
+pub fn state_variable_declaration(&self)->Option<StateVariableDeclaration>{
+    None}
+    pub fn type_name(&self)->Option<TypeName>{
+    None}
+    pub fn identifier(&self)->Option<Identifier>{
+    None}
+    pub fn me_expr(&self)->Option<MeExpr>{
+    None}
 pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
     None}
     pub fn identifier_expr(&self)->Option<IdentifierExpr>{
@@ -335,12 +342,12 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
     }
-    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_before_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn privacy_annotation_label(&self) -> Option<AST> {
@@ -396,7 +403,7 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
         None
     }
 
-    pub fn target() -> Option<TargetDefinition> {
+    pub fn target() -> Option<AST> {
         None
     }
     pub fn parent(&self) -> Option<AST> {
@@ -487,62 +494,6 @@ impl ASTBase {
         &expected == &self
     }
 }
-// class AST:
-//     def __init__(&self):
-//         // set later by parent setter
-//         self.parent: Optional[AST] = None
-//         self.namespace: Optional[List[Identifier]] = None
-
-//         // Names accessible by AST nodes below this node.
-//         // Does not include names already listed by parents.
-//         // Maps strings (names) to Identifiers.
-//         //
-//         // set later by symbol table
-//         self.names: Dict[str, Identifier] = {}
-
-//         self.line = -1
-//         self.column = -1
-
-//         self.modified_values: OrderedDict[InstanceTarget, None] = OrderedDict()
-//         self.read_values: Set[InstanceTarget] = set()
-
-//     def children(&self) -> List[AST]:
-//         cb = ChildListBuilder()
-//         self.process_children(cb.add_child)
-//         return cb.children
-
-//     def is_parent_of(self, child: AST) -> bool:
-//         e = child
-//         while e != self and e.parent is not None:
-//             e = e.parent
-//         return e == self
-
-//     def override(self: T, **kwargs) -> T:
-//         for key, val in kwargs.items():
-//             if not hasattr(self, key):
-//                 raise ValueError(f'Class "{type(&self).__name__}" does not have property "{key}"')
-//             setattr(self, key, val)
-//         return self
-
-//     def process_children(self, f: Callable[[T], T]):
-//         pass
-
-//     def code(&self) -> str:
-//         v = CodeVisitor()
-//         s = v.visit(&self)
-//         return s
-
-//     @property
-//     def qualified_name(&self) -> List[Identifier]:
-//         if not hasattr(self, 'idf'):
-//             return []
-//         if self.namespace[-1] == self.idf:
-//             return self.namespace
-//         else:
-//             return self.namespace + [self.idf]
-
-//     def __str__(&self):
-//         return self.code()
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierBase {
@@ -612,24 +563,6 @@ impl fmt::Display for IdentifierBase {
         write!(f, "{}", self.name)
     }
 }
-// class Identifier(AST):
-//     def __init__(self, name: str):
-//         super().__init__()
-//         self.name = name
-
-//     @property
-//     def is_immutable(&self):
-//         return isinstance(self.parent, StateVariableDeclaration) and (self.parent.is_final or self.parent.is_constant)
-
-//     def clone(&self) -> Identifier:
-//         return Identifier(self.name)
-
-//     def decl_var(self, t: Union[TypeName, AnnotatedTypeName], expr: Optional[Expression] = None):
-//         if isinstance(t, TypeName):
-//             t = AnnotatedTypeName(t)
-//         storage_loc = '' if t.type_name.is_primitive_type() else 'memory'
-//         return VariableDeclarationStatement(VariableDeclaration([], t, self.clone(), storage_loc), expr)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum Comment {
@@ -718,25 +651,6 @@ impl CommentBase {
         }
     }
 }
-// class Comment(AST):
-
-//     def __init__(self, text: str = ''):
-//         super().__init__()
-//         self.text = text
-
-//     @staticmethod
-//     def comment_list(text: str, block: List[AST]) -> List[AST]:
-//         return block if not block else [Comment(text)] + block + [BlankLine()]
-
-//     @staticmethod
-//     def comment_wrap_block(text: str, block: List[AST]) -> List[AST]:
-//         if not block:
-//             return block
-//         return [Comment(f'{text}'), Comment('{'), IndentBlock(block), Comment('}'), BlankLine()]
-
-// class BlankLine(Comment):
-//     def __init__(&self):
-//         super().__init__()
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BlankLine {
     pub comment_base: CommentBase,
@@ -892,7 +806,7 @@ impl Expression {
     pub fn add_pre_statement(&mut self, statement: Statement) {}
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn set_statement(&mut self, statement: Statement) {}
-    pub fn target(&self) -> Option<Box<TargetDefinition>> {
+    pub fn target(&self) -> Option<Box<AST>> {
         None
     }
     pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
@@ -1023,59 +937,26 @@ impl Expression {
         }
     }
     pub fn privacy_annotation_label(&self) -> Option<AST> {
-        let get_target = |target: &Option<Box<TargetDefinition>>| {
+        let get_target = |target: &Option<Box<AST>>| {
             if let Some(t) = target {
-                if let TargetDefinition::IdentifierDeclaration(id) = *t.clone() {
-                    return id;
+                if let Some(id) = t.identifier_declaration() {
+                    return Some(id);
                 }
             }
-            IdentifierDeclaration::None
+            None
         };
-        if let Expression::TupleOrLocationExpr(tole) = &self {
-            if let TupleOrLocationExpr::LocationExpr(le) = tole {
-                if let LocationExpr::IdentifierExpr(ie) = le {
-                    if let IdentifierDeclaration::VariableDeclaration(id) =
-                        get_target(&ie.location_expr_base.target)
-                    {
+        if let Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ie) )) = &self {
+                    if let Some(id)= get_target(&ie.location_expr_base.target){
                         if let TypeName::Mapping(m) =
-                            *id.identifier_declaration_base.annotated_type.type_name
+                            *(*id.identifier_declaration_base().unwrap().annotated_type).type_name
                         {
                             if let Some(ik) = m.instantiated_key {
                                 return ik.privacy_annotation_label();
                             }
                         } else {
-                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
+                            return Some(AST::Identifier(*id.identifier_declaration_base().unwrap().idf));
                         }
                     }
-
-                    if let IdentifierDeclaration::Parameter(id) =
-                        get_target(&ie.location_expr_base.target)
-                    {
-                        if let TypeName::Mapping(m) =
-                            *id.identifier_declaration_base.annotated_type.type_name
-                        {
-                            if let Some(ik) = m.instantiated_key {
-                                return ik.privacy_annotation_label();
-                            }
-                        } else {
-                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
-                        }
-                    }
-                    if let IdentifierDeclaration::StateVariableDeclaration(id) =
-                        get_target(&ie.location_expr_base.target)
-                    {
-                        if let TypeName::Mapping(m) =
-                            *id.identifier_declaration_base.annotated_type.type_name
-                        {
-                            if let Some(ik) = m.instantiated_key {
-                                return ik.privacy_annotation_label();
-                            }
-                        } else {
-                            return Some(AST::Identifier(*id.identifier_declaration_base.idf));
-                        }
-                    }
-                }
-            }
         }
         if self.is_all_expr() || self.is_me_expr() {
             Some(AST::Expression(self.clone()))
@@ -1193,7 +1074,7 @@ impl Expression {
         }
     }
 
-    pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn analysis(&self) -> Option<PartitionState<AST>> {
         if let Some(statement) = self.statement() {
             statement.before_analysis().clone()
         } else {
@@ -1225,134 +1106,6 @@ impl ExpressionBase {
         }
     }
 }
-// class Expression(AST):
-
-//     @staticmethod
-//     def all_expr():
-//         return AllExpr()
-
-//     @staticmethod
-//     def me_expr(stmt: Optional[Statement] = None):
-//         me = MeExpr::new()
-//         me.statement = stmt
-//         return me
-
-//     def explicitly_converted(self: T, expected: TypeName) -> Union[T, FunctionCallExpr]:
-//         if expected == TypeName::bool_type() and not self.instanceof_data_type(TypeName::bool_type()):
-//             ret = FunctionCallExpr(BuiltinFunction('!='), [self, NumberLiteralExpr(0)])
-//         elif expected.is_numeric and self.instanceof_data_type(TypeName::bool_type()):
-//             ret = FunctionCallExpr(BuiltinFunction('ite'), [self, NumberLiteralExpr(1), NumberLiteralExpr(0)])
-//         else:
-//             t = self.annotated_type.type_name
-
-//             if t == expected:
-//                 return self
-
-//             // Explicit casts
-//             cast = False
-//             if isinstance(t, NumberTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName, AddressPayableTypeName, EnumTypeName)):
-//                 cast = True
-//             elif isinstance(t, AddressTypeName) and isinstance(expected, NumberTypeName):
-//                 cast = True
-//             elif isinstance(t, AddressPayableTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName)):
-//                 cast = True
-//             elif isinstance(t, EnumTypeName) and isinstance(expected, NumberTypeName):
-//                 cast = True
-
-//             assert cast
-//             return PrimitiveCastExpr(expected, self).as_type(expected)
-
-//         ret.annotated_type = AnnotatedTypeName(expected.clone(), self.annotated_type.privacy_annotation.clone(),
-//                                                self.annotated_type.homomorphism)
-//         return ret
-
-//     def __init__(&self):
-//         super().__init__()
-//         // set later by type checker
-//         self.annotated_type: Optional[AnnotatedTypeName] = None
-//         // set by expression to statement
-//         self.statement: Optional[Statement] = None
-
-//         self.evaluate_privately = False
-
-//     def is_all_expr(&self):
-//         return self == Expression.all_expr()
-
-//     def is_me_expr(&self):
-//         return self == Expression.me_expr()
-
-//     def privacy_annotation_label(&self):
-//         if isinstance(self, IdentifierExpr):
-//             if isinstance(self.target, Mapping):
-//                 return self.target.instantiated_key.privacy_annotation_label()
-//             else:
-//                 return self.target.idf
-//         elif self.is_all_expr():
-//             return self
-//         elif self.is_me_expr():
-//             return self
-//         else:
-//             return None
-
-//     def instanceof_data_type(self, expected: TypeName) -> bool:
-//         return self.annotated_type.type_name.implicitly_convertible_to(expected)
-
-//     def unop(self, op: str) -> FunctionCallExpr:
-//         return FunctionCallExpr(BuiltinFunction(op), [self])
-
-//     def binop(self, op: str, rhs: Expression) -> FunctionCallExpr:
-//         return FunctionCallExpr(BuiltinFunction(op), [self, rhs])
-
-//     def ite(self, e_true: Expression, e_false: Expression) -> FunctionCallExpr:
-//         return FunctionCallExpr(BuiltinFunction('ite').override(is_private=self.annotated_type.is_private), [self, e_true, e_false])
-
-//     def instance_of(self, expected):
-//         """
-
-//         :param expected:
-//         :return: True, False, or 'make-private'
-//         """
-//         assert (isinstance(expected, AnnotatedTypeName))
-
-//         actual = self.annotated_type
-
-//         if not self.instanceof_data_type(expected.type_name):
-//             return False
-
-//         // check privacy type and homomorphism
-//         combined_label = actual.combined_privacy(self.analysis, expected)
-//         if combined_label is None:
-//             return False
-//         elif isinstance(combined_label, List):
-//             assert isinstance(self.annotated_type.type_name, TupleType) and not isinstance(self, TupleExpr)
-//             return combined_label == [t.privacy_annotation for t in self.annotated_type.type_name.types]
-//         elif combined_label.privacy_annotation_label() == actual.privacy_annotation.privacy_annotation_label():
-//             return True
-//         else:
-//             return 'make-private'
-
-//     def as_type(self: T, t: Union[TypeName, AnnotatedTypeName]) -> T:
-//         return self.override(annotated_type=t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t))
-
-//     @property
-//     def analysis(&self):
-//         if self.statement is None:
-//             return None
-//         else:
-//             return self.statement.before_analysis
-
-// builtin_op_fct = {
-//     '+': operator.add, '-': operator.sub,
-//     '**': operator.pow, '*': operator.mul, '/': operator.floordiv, '%': operator.mod,
-//     'sign+': lambda a: a, 'sign-': operator.neg,
-//     '<<': operator.lshift, '>>': operator.rshift,
-//     '|': operator.or_, '&': operator.and_, '^': operator.xor, '~': operator.inv,
-//     '<': operator.lt, '>': operator.gt, '<=': operator.le, '>=': operator.ge,
-//     '==': operator.eq, '!=': operator.ne,
-//     '&&': lambda a, b: a and b, '||': lambda a, b: a or b, '!': operator.not_,
-//     'ite': lambda a, b, c: b if a else c,
-//     'parenthesis': lambda a: a
-// }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum LiteralUnion {
     Bool(bool),
@@ -1487,8 +1240,7 @@ lazy_static! {
     };
 }
 
-// @dataclass
-// class HomomorphicBuiltin:
+
 //     """
 //     Just a named tuple that describes an available homomorphic operation.
 //     """
@@ -1696,7 +1448,7 @@ impl BuiltinFunction {
     pub fn select_homomorphic_overload(
         &self,
         args: Vec<Expression>,
-        analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        analysis: Option<PartitionState<AST>>,
     ) -> Option<HomomorphicBuiltinFunction> {
         // """
         // Finds a homomorphic builtin that performs the correct operation and which can be applied
@@ -1791,150 +1543,6 @@ impl BuiltinFunction {
         selfs
     }
 }
-// class BuiltinFunction(Expression):
-
-//     def __init__(self, op: str):
-//         super().__init__()
-//         self.op = op
-
-//         // set later by type checker
-//         self.is_private: bool = False
-//         self.homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC
-
-//         // set later by transformation
-//         self.rerand_using: Optional['IdentifierExpr'] = None
-
-//         // input validation
-//         if op not in BUILTIN_FUNCTIONS:
-//             raise ValueError(f'{op} is not a known built-in function')
-
-//     def format_string(&self):
-//         return BUILTIN_FUNCTIONS[self.op]
-
-//     @property
-//     def op_func(&self):
-//         return builtin_op_fct[self.op]
-
-//     def is_arithmetic(&self):
-//         return self.op in arithmetic
-
-//     def is_neg_sign(&self):
-//         return self.op == 'sign-'
-
-//     def is_comp(&self):
-//         return self.op in comp
-
-//     def is_eq(&self):
-//         return self.op in eq
-
-//     def is_bop(&self):
-//         return self.op in bop
-
-//     def is_bitop(&self):
-//         return self.op in bitop
-
-//     def is_shiftop(&self):
-//         return self.op in shiftop
-
-//     def is_parenthesis(&self):
-//         return self.op == 'parenthesis'
-
-//     def is_ite(&self):
-//         return self.op == 'ite'
-
-//     def has_shortcircuiting(&self):
-//         return self.is_ite() or self.op == '&&' or self.op == '||'
-
-//     def arity(&self):
-//         return self.format_string().count('{}')
-
-//     def input_types(&self):
-//         """
-
-//         :return: None if the type is generic
-//         """
-//         if self.is_arithmetic():
-//             t = TypeName::number_type()
-//         elif self.is_comp():
-//             t = TypeName::number_type()
-//         elif self.is_bop():
-//             t = TypeName::bool_type()
-//         elif self.is_bitop():
-//             t = TypeName::number_type()
-//         elif self.is_shiftop():
-//             t = TypeName::number_type()
-//         else:
-//             // eq, parenthesis, ite
-//             return None
-
-//         return self.arity() * [t]
-
-//     def output_type(&self):
-//         """
-
-//         :return: None if the type is generic
-//         """
-//         if self.is_arithmetic():
-//             return TypeName::number_type()
-//         elif self.is_comp():
-//             return TypeName::bool_type()
-//         elif self.is_bop():
-//             return TypeName::bool_type()
-//         elif self.is_eq():
-//             return TypeName::bool_type()
-//         elif self.is_bitop():
-//             return TypeName::number_type()
-//         elif self.is_shiftop():
-//             return TypeName::number_type()
-//         else:
-//             // parenthesis, ite
-//             return None
-
-//     def can_be_private(&self) -> bool:
-//         """
-
-//         :return: true if operation itself can be run inside a circuit \
-//                  for equality and ite it must be checked separately whether the arguments are also supported inside circuits
-//         """
-//         return self.op != '**'
-
-//     def select_homomorphic_overload(self, args: List[Expression], analysis: PartitionState[PrivacyLabelExpr]):
-//         """
-//         Finds a homomorphic builtin that performs the correct operation and which can be applied
-//         on the arguments, if any exist.
-
-//         :return: A HomomorphicBuiltinFunction that can be used to query the required input types and
-//                  the resulting output type of the homomorphic operation, or None
-//         """
-
-//         // The first inaccessible (not @all, not @me) determines the output type
-//         // self.op and the public arguments determine which homomorphic builtin is selected
-//         // We may want to rethink this in the future if we also implement other homomorphisms (e.g. multiplicative)
-
-//         arg_types = list(map(lambda x: x.annotated_type, args))
-//         inaccessible_arg_types = list(filter(lambda x: not x.is_accessible(analysis), arg_types))
-//         if len(inaccessible_arg_types) == 0:  // Else we would not have selected a homomorphic operation
-//             raise ValueError('Cannot select proper homomorphic function if all arguments are public or @me-private')
-//         elem_type = reduce(lambda l, r: l.combined_type(r, True), map(lambda a: a.type_name, arg_types))
-//         base_type = AnnotatedTypeName(elem_type, inaccessible_arg_types[0].privacy_annotation)
-//         public_args = list(map(AnnotatedTypeName::is_public, arg_types))
-
-//         for hom in HOMOMORPHIC_BUILTIN_FUNCTIONS:
-//             // Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
-//             args_match = [(not h) or a for a, h in zip(public_args, hom.public_args)]
-//             if self.op == hom.op and all(args_match):
-//                 target_type = base_type.with_homomorphism(hom.homomorphism)
-//                 return HomomorphicBuiltinFunction(target_type, hom.public_args)
-//         if self.op == '*'\
-//             and not args[0].annotated_type.is_accessible(analysis)\
-//             and not args[1].annotated_type.is_accessible(analysis)\
-//             and (isinstance(args[0], ReclassifyExpr) and not isinstance(args[1], ReclassifyExpr)) \
-//                 or (isinstance(args[1], ReclassifyExpr) and not isinstance(args[0], ReclassifyExpr)):
-//             // special case: private scalar multiplication using additive homomorphism
-//             target_type = base_type.with_homomorphism(Homomorphism.ADDITIVE)
-//             return HomomorphicBuiltinFunction(target_type, [False, False])
-//         else:
-//             return None
 
 //     Describes the required input types and the resulting output type of a homomorphic execution of a BuiltinFunction.
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -1967,23 +1575,6 @@ impl HomomorphicBuiltinFunction {
         self.target_type.clone()
     }
 }
-// class HomomorphicBuiltinFunction:
-//     """
-//     Describes the required input types and the resulting output type of a homomorphic execution of a BuiltinFunction.
-//     """
-//     target_type: AnnotatedTypeName
-//     public_args: List[bool]
-
-//     def __init__(self, target_type, public_args):
-//         self.target_type = target_type
-//         self.public_args = public_args
-
-//     def input_types(&self):
-//         public_type = AnnotatedTypeName::all(self.target_type.type_name)  // same data type, but @all
-//         return [public_type if public else self.target_type for public in self.public_args]
-
-//     def output_type(&self):
-//         return self.target_type
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum FunctionCallExpr {
     FunctionCallExpr(FunctionCallExprBase),
@@ -1996,7 +1587,7 @@ impl FunctionCallExpr {
     pub fn evaluate_privately(&self) -> bool {
         false
     }
-    pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
@@ -2104,17 +1695,10 @@ impl FunctionCallExprBase {
                     LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
                     _ => None,
                 };
-                if let Some(target) = target {
-                    if let TargetDefinition::NamespaceDefinition(
-                        NamespaceDefinition::ContractDefinition(_),
-                    )
-                    | TargetDefinition::NamespaceDefinition(
-                        NamespaceDefinition::EnumDefinition(_),
-                    ) = *target.clone()
+                    if target.is_some() && is_instances(&*target.unwrap(),vec![ASTType::ContractDefinition,ASTType::EnumDefinition])
                     {
                         return true;
                     }
-                }
             }
         }
         false
@@ -2143,21 +1727,6 @@ impl ASTChildren for FunctionCallExprBase {
         });
     }
 }
-// class FunctionCallExprBase(Expression):
-
-//     def __init__(self, func: Expression, args: List[Expression], sec_start_offset: Optional[i32] = 0):
-//         super().__init__()
-//         self.func = func
-//         self.args = args
-//         self.sec_start_offset = sec_start_offset
-
-//     @property
-//     def is_cast(&self):
-//         return isinstance(self.func, LocationExpr) and isinstance(self.func.target, (ContractDefinition, EnumDefinition))
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.func = f(self.func)
-//         self.args[:] = map(f, self.args)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NewExpr {
@@ -2215,15 +1784,6 @@ impl ASTChildren for NewExpr {
         });
     }
 }
-// class NewExpr(FunctionCallExpr):
-//     def __init__(self, annotated_type: AnnotatedTypeName, args: List[Expression]):
-//         assert not isinstance(annotated_type, ElementaryTypeName)
-//         super().__init__(Identifier(f'new {annotated_type.code()}'), args)
-//         self.annotated_type = annotated_type
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.annotated_type = f(self.annotated_type)
-//         self.args[:] = map(f, self.args)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PrimitiveCastExpr {
@@ -2270,16 +1830,6 @@ impl ASTChildren for PrimitiveCastExpr {
         cb.add_child(AST::Expression(*self.expr.clone()));
     }
 }
-// class PrimitiveCastExpr(Expression):
-//     def __init__(self, elem_type: TypeName, expr: Expression, is_implicit=False):
-//         super().__init__()
-//         self.elem_type = elem_type
-//         self.expr = expr
-//         self.is_implicit = is_implicit
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.elem_type = f(self.elem_type)
-//         self.expr = f(self.expr)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -2334,8 +1884,7 @@ impl LiteralExprBase {
         }
     }
 }
-// class LiteralExpr(Expression):
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralExpr {
@@ -2382,13 +1931,6 @@ impl BooleanLiteralExpr {
         selfs
     }
 }
-// class BooleanLiteralExpr(LiteralExpr):
-
-//     def __init__(self, value: bool):
-//         super().__init__()
-//         self.value = value
-//         self.annotated_type = AnnotatedTypeName(BooleanLiteralType(self.value))
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberLiteralExpr {
     pub literal_expr_base: Box<LiteralExprBase>,
@@ -2464,14 +2006,6 @@ impl NumberLiteralExpr {
     }
 }
 
-// class NumberLiteralExpr(LiteralExpr):
-
-//     def __init__(self, value: i32, was_hex: bool = False):
-//         super().__init__()
-//         self.value = value
-//         self.annotated_type = AnnotatedTypeName(NumberLiteralType(self.value))
-//         self.was_hex = was_hex
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StringLiteralExpr {
     pub literal_expr_base: LiteralExprBase,
@@ -2509,11 +2043,6 @@ impl StringLiteralExpr {
         selfs
     }
 }
-// class StringLiteralExpr(LiteralExpr):
-
-//     def __init__(self, value: str):
-//         super().__init__()
-//         self.value = value
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -2600,14 +2129,6 @@ impl ASTChildren for ArrayLiteralExprBase {
         });
     }
 }
-// class ArrayLiteralExpr(LiteralExpr):
-
-//     def __init__(self, values: List[Expression]):
-//         super().__init__()
-//         self.values = values
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.values[:] = map(f, self.values)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct KeyLiteralExpr {
@@ -2654,11 +2175,6 @@ impl KeyLiteralExpr {
         selfs
     }
 }
-// class KeyLiteralExpr(ArrayLiteralExpr):
-
-//     def __init__(self, values: List[Expression], crypto_params: CryptoParams):
-//         super().__init__(values)
-//         self.crypto_params = crypto_params
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -2751,20 +2267,6 @@ impl TupleOrLocationExprBase {
     }
 }
 
-// class TupleOrLocationExpr(Expression):
-//     def is_lvalue(&self) -> bool:
-//         if isinstance(self.parent, AssignmentStatement):
-//             return self == self.parent.lhs
-//         if isinstance(self.parent, IndexExpr) and self == self.parent.arr:
-//             return self.parent.is_lvalue()
-//         if isinstance(self.parent, MemberAccessExpr) and self == self.parent.expr:
-//             return self.parent.is_lvalue()
-//         if isinstance(self.parent, TupleExpr):
-//             return self.parent.is_lvalue()
-//         return False
-
-//     def is_rvalue(&self) -> bool:
-//         return not self.is_lvalue()
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleExpr {
@@ -2823,16 +2325,6 @@ impl ASTChildren for TupleExpr {
         });
     }
 }
-// class TupleExpr(TupleOrLocationExpr):
-//     def __init__(self, elements: List[Expression]):
-//         super().__init__()
-//         self.elements = elements
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.elements[:] = map(f, self.elements)
-
-//     def assign(self, val: Expression) -> AssignmentStatement:
-//         return AssignmentStatement(self, val)
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum LocationExpr {
     IdentifierExpr(IdentifierExpr),
@@ -2860,6 +2352,15 @@ impl ASTCode for LocationExpr {
     }
 }
 impl LocationExpr {
+    pub fn location_expr_base(&self)->Option<LocationExprBase>{
+
+    None    }
+ pub fn member_access_expr(&self)->Option<MemberAccessExpr>{
+
+    None    }
+ pub fn index_expr(&self)->Option<IndexExpr>{
+
+    None    }
     pub fn ast_base_mut(&mut self) -> &mut ASTBase {
         match self {
             LocationExpr::IdentifierExpr(ast) => {
@@ -3055,14 +2556,14 @@ impl LocationExpr {
             LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
         }
     }
-    pub fn target(&self) -> Option<Box<TargetDefinition>> {
+    pub fn target(&self) -> Option<Box<AST>> {
         None
     }
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LocationExprBase {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
-    pub target: Option<Box<TargetDefinition>>,
+    pub target: Option<Box<AST>>,
 }
 
 impl LocationExprBase {
@@ -3073,31 +2574,6 @@ impl LocationExprBase {
         }
     }
 }
-// class LocationExpr(TupleOrLocationExpr):
-//     def __init__(&self):
-//         super().__init__()
-//         // set later by symbol table
-//         self.target: Optional[TargetDefinition] = None
-
-//     def call(self, member: Union[None, str, Identifier], args: List[Expression]) -> FunctionCallExpr:
-//         if member is None:
-//             return FunctionCallExpr(self, args)
-//         else:
-//             member = Identifier(member) if isinstance(member, str) else member.clone()
-//             return FunctionCallExpr(MemberAccessExpr(self, member), args)
-
-//     def dot(self, member: Union[str, Identifier]) -> MemberAccessExpr:
-//         member = Identifier(member) if isinstance(member, str) else member.clone()
-//         return MemberAccessExpr(self, member)
-
-//     def index(self, item: Union[i32, Expression]) -> IndexExpr:
-//         assert isinstance(self.annotated_type.type_name, (Array, Mapping))
-//         if isinstance(item, i32):
-//             item = NumberLiteralExpr(item)
-//         return IndexExpr(self, item).as_type(self.annotated_type.type_name.value_type)
-
-//     def assign(self, val: Expression) -> AssignmentStatement:
-//         return AssignmentStatement(self, val)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum IdentifierExprUnion {
@@ -3142,11 +2618,11 @@ impl IdentifierExpr {
         }
     }
 
-    pub fn annotated_type(&self) -> AnnotatedTypeName {
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         self.location_expr_base
             .target
             .clone()
-            .map_or(AnnotatedTypeName::default(), |t| t.annotated_type())
+            .map(|t| t.annotated_type().unwrap())
     }
 
     pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
@@ -3177,27 +2653,6 @@ impl ASTChildren for IdentifierExpr {
         cb.add_child(AST::Identifier(*self.idf.clone()));
     }
 }
-// class IdentifierExpr(LocationExpr):
-
-//     def __init__(self, idf: Union[str, Identifier], annotated_type: Optional[AnnotatedTypeName] = None):
-//         super().__init__()
-//         self.idf: Identifier = idf if isinstance(idf, Identifier) else Identifier(idf)
-//         self.annotated_type = annotated_type
-
-//     def annotated_type(&self):
-//         return self.target.annotated_type
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.idf = f(self.idf)
-
-//     def slice(self, offset: i32, size: i32, base: Optional[Expression] = None) -> SliceExpr:
-//         return SliceExpr(self.clone(), base, offset, size)
-
-//     def clone(&self) -> IdentifierExpr:
-//         idf = IdentifierExpr(self.idf.clone()).as_type(self.annotated_type)
-//         idf.target = self.target
-//         return idf
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MemberAccessExpr {
     pub location_expr_base: LocationExprBase,
@@ -3253,16 +2708,6 @@ impl ASTChildren for MemberAccessExpr {
         cb.add_child(AST::Identifier(*self.member.clone()));
     }
 }
-// class MemberAccessExpr(LocationExpr):
-//     def __init__(self, expr: LocationExpr, member: Identifier):
-//         super().__init__()
-//         assert isinstance(expr, LocationExpr)
-//         self.expr = expr
-//         self.member = member
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.expr = f(self.expr)
-//         self.member = f(self.member)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndexExpr {
@@ -3319,16 +2764,6 @@ impl ASTChildren for IndexExpr {
         cb.add_child(AST::Expression(*self.key.clone()));
     }
 }
-// class IndexExpr(LocationExpr):
-//     def __init__(self, arr: LocationExpr, key: Expression):
-//         super().__init__()
-//         assert isinstance(arr, LocationExpr)
-//         self.arr = arr
-//         self.key = key
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.arr = f(self.arr)
-//         self.key = f(self.key)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SliceExpr {
@@ -3390,13 +2825,6 @@ impl SliceExpr {
         selfs
     }
 }
-// class SliceExpr(LocationExpr):
-//     def __init__(self, arr: LocationExpr, base: Optional[Expression], start_offset: i32, size: i32):
-//         super().__init__()
-//         self.arr = arr
-//         self.base = base
-//         self.start_offset = start_offset
-//         self.size = size
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MeExpr {
@@ -3442,21 +2870,6 @@ impl Immutable for MeExpr {
         true
     }
 }
-// class MeExpr(Expression):
-//     name = 'me'
-
-//     @property
-//     def is_immutable(&self) -> bool:
-//         return True
-
-//     def clone(&self) -> MeExpr:
-//         return MeExpr::new()
-
-//     def __eq__(self, other):
-//         return isinstance(other, MeExpr)
-
-//     def __hash__(&self):
-//         return hash('me')
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AllExpr {
     pub expression_base: ExpressionBase,
@@ -3497,21 +2910,6 @@ impl Immutable for AllExpr {
         true
     }
 }
-// class AllExpr(Expression):
-//     name = 'all'
-
-//     @property
-//     def is_immutable(&self) -> bool:
-//         return True
-
-//     def clone(&self) -> AllExpr:
-//         return AllExpr()
-
-//     def __eq__(self, other):
-//         return isinstance(other, AllExpr)
-
-//     def __hash__(&self):
-//         return hash('all')
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -3528,7 +2926,7 @@ impl ReclassifyExpr {
         None
     }
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
-    pub fn analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_homomorphism(&mut self, homomorphism: String) {}
@@ -3626,20 +3024,6 @@ impl ASTChildren for ReclassifyExprBase {
         cb.add_child(AST::Expression(*self.privacy.clone()));
     }
 }
-// class ReclassifyExpr(Expression):
-
-//     def __init__(self, expr: Expression, privacy: Expression, homomorphism: Optional[Homomorphism]):
-//         super().__init__()
-//         self.expr = expr
-//         self.privacy = privacy
-//         self.homomorphism = homomorphism
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.expr = f(self.expr)
-//         self.privacy = f(self.privacy)
-
-//     def func_name(&self):
-//         return 'reveal'
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RehomExpr {
@@ -3687,13 +3071,6 @@ impl RehomExpr {
         selfs
     }
 }
-// class RehomExpr(ReclassifyExpr):
-
-//     def __init__(self, expr: Expression, homomorphism: Homomorphism):
-//         super().__init__(expr, MeExpr::new(), homomorphism)
-
-//     def func_name(&self):
-//         return self.homomorphism.rehom_expr_name
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum HybridArgType {
@@ -3703,11 +3080,6 @@ pub enum HybridArgType {
     PubContractVal,
     TmpCircuitVal,
 }
-// class HybridArgType(IntEnum):
-//     PrivCircuitVal = 0
-//     PubCircuitArg = 1
-//     PubContractVal = 2
-//     TmpCircuitVal = 3
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HybridArgumentIdf {
@@ -4096,78 +3468,6 @@ impl ASTCode for Identifier {
         }
     }
 }
-// class HybridArgumentIdf(Identifier):
-//     def __init__(self, name: str, t: TypeName, arg_type: HybridArgType, corresponding_priv_expression: Optional[Expression] = None):
-//         super().__init__(name)
-//         self.t = t  // transformed type of this idf
-//         if isinstance(t, BooleanLiteralType):
-//             self.t = TypeName::bool_type()
-//         elif isinstance(t, NumberLiteralType):
-//             self.t = t.to_abstract_type()
-//         elif isinstance(t, EnumValueTypeName):
-//             self.t = t.to_abstract_type()
-//         self.arg_type = arg_type
-//         self.corresponding_priv_expression = corresponding_priv_expression
-//         self.serialized_loc: SliceExpr = SliceExpr(IdentifierExpr(''), None, -1, -1)
-
-//     def get_loc_expr(self, parent=None) -> Union[LocationExpr, NumberLiteralExpr, BooleanLiteralExpr]:
-//         if self.arg_type == HybridArgType::TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, BooleanLiteralType):
-//             return BooleanLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
-//         elif self.arg_type == HybridArgType::TmpCircuitVal and isinstance(self.corresponding_priv_expression.annotated_type.type_name, NumberLiteralType):
-//             return NumberLiteralExpr(self.corresponding_priv_expression.annotated_type.type_name.value)
-//         else:
-//             assert self.arg_type == HybridArgType::PubCircuitArg
-//             ma = IdentifierExpr(cfg.zk_data_var_name).dot(&self).as_type(self.t)
-//             return ma.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
-
-//     def get_idf_expr(self, parent=None) -> IdentifierExpr:
-//         ie = IdentifierExpr(self.clone()).as_type(self.t)
-//         return ie.override(parent=parent, statement=parent if (parent is None or isinstance(parent, Statement)) else parent.statement)
-
-//     def clone(&self) -> HybridArgumentIdf:
-//         ha = HybridArgumentIdf(self.name, self.t, self.arg_type, self.corresponding_priv_expression)
-//         ha.serialized_loc = self.serialized_loc
-//         return ha
-
-//     def _set_serialized_loc(self, idf, base, start_offset):
-//         assert self.serialized_loc.start_offset == -1
-//         self.serialized_loc.arr = IdentifierExpr(idf)
-//         self.serialized_loc.base = base
-//         self.serialized_loc.start_offset = start_offset
-//         self.serialized_loc.size = self.t.size_in_uints
-
-//     def deserialize(self, source_idf: str, base: Optional[Expression], start_offset: i32) -> AssignmentStatement:
-//         self._set_serialized_loc(source_idf, base, start_offset)
-
-//         src = IdentifierExpr(source_idf).as_type(Array(AnnotatedTypeName::uint_all()))
-//         if isinstance(self.t, Array):
-//             return SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints).assign(self.serialized_loc)
-//         elif base is not None:
-//             return self.get_loc_expr().assign(src.index(base.binop('+', NumberLiteralExpr(start_offset))).explicitly_converted(self.t))
-//         else:
-//             return self.get_loc_expr().assign(src.index(start_offset).explicitly_converted(self.t))
-
-//     def serialize(self, target_idf: str, base: Optional[Expression], start_offset: i32) -> AssignmentStatement:
-//         self._set_serialized_loc(target_idf, base, start_offset)
-
-//         tgt = IdentifierExpr(target_idf).as_type(Array(AnnotatedTypeName::uint_all()))
-//         if isinstance(self.t, Array):
-//             return self.serialized_loc.assign(SliceExpr(self.get_loc_expr(), None, 0, self.t.size_in_uints))
-//         else:
-//             expr = self.get_loc_expr()
-//             if self.t.is_signed_numeric:
-//                 // Cast to same size uint to prevent sign extension
-//                 expr = expr.explicitly_converted(UintTypeName(f'uint{self.t.elem_bitwidth}'))
-//             elif self.t.is_numeric and self.t.elem_bitwidth == 256:
-//                 expr = expr.binop('%', IdentifierExpr(cfg.field_prime_var_name)).as_type(self.t)
-//             else:
-//                 expr = expr.explicitly_converted(TypeName::uint_type())
-
-//             if base is not None:
-//                 return tgt.clone().index(base.binop('+', NumberLiteralExpr(start_offset))).assign(expr)
-//             else:
-//                 return tgt.clone().index(start_offset).assign(expr)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EncryptionExpression {
     pub reclassify_expr_base: ReclassifyExprBase,
@@ -4184,17 +3484,8 @@ impl ASTCode for EncryptionExpression {
     }
 }
 impl EncryptionExpression {
-    pub fn new(expr: Expression, privacy: PrivacyLabelExpr, homomorphism: Option<String>) -> Self {
-        let privacy = match privacy {
-            PrivacyLabelExpr::Identifier(idf) => Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
-                    IdentifierExpr::new(IdentifierExprUnion::Identifier(idf), None),
-                )),
-            ),
-            PrivacyLabelExpr::MeExpr(idf) => Expression::MeExpr(idf),
-            PrivacyLabelExpr::AllExpr(idf) => Expression::AllExpr(idf),
-            _ => Expression::None,
-        };
+    pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
+        let privacy = privacy.expression().unwrap();
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
             expr.annotated_type().clone(),
             homomorphism.clone(),
@@ -4217,12 +3508,6 @@ impl EncryptionExpression {
         selfs
     }
 }
-// class EncryptionExpression(ReclassifyExpr):
-//     def __init__(self, expr: Expression, privacy: PrivacyLabelExpr, homomorphism: Homomorphism):
-//         if isinstance(privacy, Identifier):
-//             privacy = IdentifierExpr(privacy)
-//         super().__init__(expr, privacy, homomorphism)
-//         self.annotated_type = AnnotatedTypeName::cipher_type(expr.annotated_type, homomorphism)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Statement {
     CircuitDirectiveStatement(CircuitDirectiveStatement),
@@ -4246,12 +3531,12 @@ impl Statement {
         None
     }
 
-    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_before_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn pre_statements(&self) -> Vec<AST> {
@@ -4269,7 +3554,7 @@ impl Statement {
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
         None
     }
-    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn line(&self) -> i32 {
@@ -4334,8 +3619,8 @@ impl ASTChildren for Statement {
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: ASTBase,
-    pub before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
-    pub after_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+    pub before_analysis: Option<PartitionState<AST>>,
+    pub after_analysis: Option<PartitionState<AST>>,
     pub function: Option<Box<ConstructorOrFunctionDefinition>>,
     pub pre_statements: Vec<AST>,
 }
@@ -4350,20 +3635,7 @@ impl StatementBase {
         }
     }
 }
-// class Statement(AST):
 
-//     def __init__(&self):
-//         super().__init__()
-//         // set by alias analysis
-//         self.before_analysis: Optional[PartitionState[PrivacyLabelExpr]] = None
-//         self.after_analysis: Optional[PartitionState[PrivacyLabelExpr]] = None
-//         // set by parent setter
-//         self.function: Optional[ConstructorOrFunctionDefinition] = None
-
-//         // set by circuit helper
-//         self.pre_statements = []
-
-//     Invisible statement with instructions for offchain simulator
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CircuitDirectiveStatement {
     CircuitComputationStatement(CircuitComputationStatement),
@@ -4407,9 +3679,7 @@ impl CircuitDirectiveStatementBase {
         }
     }
 }
-// class CircuitDirectiveStatement(Statement):
-//     """Invisible statement with instructions for offchain simulator"""
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitComputationStatement {
@@ -4438,10 +3708,7 @@ impl CircuitComputationStatement {
         }
     }
 }
-// class CircuitComputationStatement(CircuitDirectiveStatement):
-//     def __init__(self, var: HybridArgumentIdf):
-//         super().__init__()
-//         self.idf = var.clone()
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnterPrivateKeyStatement {
@@ -4469,10 +3736,7 @@ impl EnterPrivateKeyStatement {
         }
     }
 }
-// class EnterPrivateKeyStatement(CircuitDirectiveStatement):
-//     def __init__(self, crypto_params: CryptoParams):
-//         super().__init__()
-//         self.crypto_params = crypto_params
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IfStatement {
@@ -4510,18 +3774,6 @@ impl ASTChildren for IfStatement {
         )));
     }
 }
-// class IfStatement(Statement):
-
-//     def __init__(self, condition: Expression, then_branch: Block, else_branch: Optional[Block]):
-//         super().__init__()
-//         self.condition = condition
-//         self.then_branch = then_branch
-//         self.else_branch = else_branch
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.condition = f(self.condition)
-//         self.then_branch = f(self.then_branch)
-//         self.else_branch = f(self.else_branch)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct WhileStatement {
@@ -4554,15 +3806,6 @@ impl ASTChildren for WhileStatement {
         )));
     }
 }
-// class WhileStatement(Statement):
-//     def __init__(self, condition: Expression, body: Block):
-//         super().__init__()
-//         self.condition = condition
-//         self.body = body
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.condition = f(self.condition)
-//         self.body = f(self.body)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DoWhileStatement {
@@ -4595,15 +3838,6 @@ impl ASTChildren for DoWhileStatement {
         cb.add_child(AST::Expression(self.condition.clone()));
     }
 }
-// class DoWhileStatement(Statement):
-//     def __init__(self, body: Block, condition: Expression):
-//         super().__init__()
-//         self.body = body
-//         self.condition = condition
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.body = f(self.body)
-//         self.condition = f(self.condition)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ForStatement {
@@ -4674,23 +3908,6 @@ impl ASTChildren for ForStatement {
         )));
     }
 }
-// class ForStatement(Statement):
-//     def __init__(self, init: Optional[SimpleStatement], condition: Expression, update: Optional[SimpleStatement], body: Block):
-//         super().__init__()
-//         self.init = init
-//         self.condition = condition
-//         self.update = update
-//         self.body = body
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.init = f(self.init)
-//         self.condition = f(self.condition)
-//         self.update = f(self.update)
-//         self.body = f(self.body)
-
-//     @property
-//     def statements(&self) -> List[Statement]:
-//         return [self.init, self.condition, self.body, self.update]
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BreakStatement {
@@ -4714,8 +3931,7 @@ impl BreakStatement {
         }
     }
 }
-// class BreakStatement(Statement):
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContinueStatement {
@@ -4739,8 +3955,7 @@ impl ContinueStatement {
         }
     }
 }
-// class ContinueStatement(Statement):
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReturnStatement {
@@ -4768,14 +3983,7 @@ impl ASTChildren for ReturnStatement {
         cb.add_child(AST::Expression(self.expr.clone()));
     }
 }
-// class ReturnStatement(Statement):
 
-//     def __init__(self, expr: Expression):
-//         super().__init__()
-//         self.expr = expr
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.expr = f(self.expr)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum SimpleStatement {
@@ -4794,15 +4002,15 @@ impl SimpleStatement {
         None
     }
 
-    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
-    pub fn after_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_after_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn pre_statements(&self) -> Vec<AST> {
@@ -4810,7 +4018,7 @@ impl SimpleStatement {
     }
     pub fn set_before_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn set_lhs(&mut self, lhs: AST) {}
@@ -4848,8 +4056,7 @@ impl SimpleStatementBase {
         }
     }
 }
-// class SimpleStatement(Statement):
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionStatement {
@@ -4879,14 +4086,7 @@ impl ASTChildren for ExpressionStatement {
         cb.add_child(AST::Expression(self.expr.clone()));
     }
 }
-// class ExpressionStatement(SimpleStatement):
 
-//     def __init__(self, expr: Expression):
-//         super().__init__()
-//         self.expr = expr
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.expr = f(self.expr)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RequireStatement {
@@ -4922,15 +4122,7 @@ impl ASTChildren for RequireStatement {
         cb.add_child(AST::Expression(self.condition.clone()));
     }
 }
-// class RequireStatement(SimpleStatement):
 
-//     def __init__(self, condition: Expression, unmodified_code: Optional[str] = None):
-//         super().__init__()
-//         self.condition = condition
-//         self.unmodified_code = self.code() if unmodified_code is None else unmodified_code
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.condition = f(self.condition)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum AssignmentStatement {
@@ -4943,17 +4135,17 @@ impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AssignmentStatement {
-    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_after_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn set_before_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
@@ -5066,8 +4258,7 @@ impl ASTChildren for CircuitInputStatement {
         cb.add_child(AST::Expression(self.assignment_statement_base.rhs.clone()));
     }
 }
-// class CircuitInputStatement(AssignmentStatement):
-//     pass
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum StatementList {
@@ -5101,12 +4292,12 @@ impl StatementList {
     pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
         None
     }
-    pub fn before_analysis(&self) -> Option<PartitionState<PrivacyLabelExpr>> {
+    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     pub fn set_after_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
     pub fn set_statements(&mut self, statements: Vec<AST>) {}
@@ -5177,37 +4368,6 @@ impl ASTChildren for StatementListBase {
         });
     }
 }
-// class StatementList(Statement):
-//     def __init__(self, statements: List[Statement], excluded_from_simulation: bool = False):
-//         super().__init__()
-//         self.statements = statements
-//         self.excluded_from_simulation = excluded_from_simulation
-
-//         // Special case, if processing a statement returns a list of statements,
-//         // all statements will be integrated into this block
-
-//     def process_children(self, f: Callable[[T], T]):
-//         new_stmts = []
-//         for idx, stmt in enumerate(self.statements):
-//             new_stmt = f(stmt)
-//             if new_stmt is not None:
-//                 if isinstance(new_stmt, List):
-//                     new_stmts += new_stmt
-//                 else:
-//                     new_stmts.append(new_stmt)
-//         self.statements = new_stmts
-
-//     def __getitem__(self, key: i32) -> Statement:
-//         return self.statements[key]
-
-//     def __contains__(self, stmt: Statement):
-//         if stmt in self.statements:
-//             return True
-//         for s in self.statements:
-//             if isinstance(s, StatementList) and stmt in s:
-//                 return True
-//         return False
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Block {
     pub statement_list_base: StatementListBase,
@@ -5230,14 +4390,10 @@ impl Block {
     }
     pub fn set_before_analysis(
         &mut self,
-        before_analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        before_analysis: Option<PartitionState<AST>>,
     ) {
     }
 }
-// class Block(StatementList):
-//     def __init__(self, statements: List[Statement], was_single_statement=False):
-//         super().__init__(statements)
-//         self.was_single_statement = was_single_statement
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndentBlock {
@@ -5260,9 +4416,7 @@ impl IndentBlock {
         }
     }
 }
-// class IndentBlock(StatementList):
-//     def __init__(self, statements: List[Statement]):
-//         super().__init__(statements)
+
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -5564,124 +4718,6 @@ impl TypeNameBase {
         true
     }
 }
-// class TypeName(AST):
-//     __metaclass__ = abc.ABCMeta
-
-//     @staticmethod
-//     def bool_type():
-//         return BoolTypeName()
-
-//     @staticmethod
-//     def uint_type():
-//         return UintTypeName()
-
-//     @staticmethod
-//     def number_type():
-//         return NumberTypeName.any()
-
-//     @staticmethod
-//     def address_type():
-//         return AddressTypeName()
-
-//     @staticmethod
-//     def address_payable_type():
-//         return AddressPayableTypeName()
-
-//     @staticmethod
-//     def cipher_type(plain_type: AnnotatedTypeName, hom: Homomorphism):
-//         crypto_params = cfg.get_crypto_params(hom)
-//         type = plain_type.clone()
-//         type.homomorphism = hom  // Just for display purposes
-//         return CipherText(type, crypto_params)
-
-//     @staticmethod
-//     def rnd_type(crypto_params: CryptoParams):
-//         return Randomness(crypto_params)
-
-//     @staticmethod
-//     def key_type(crypto_params: CryptoParams):
-//         return Key(crypto_params)
-
-//     @staticmethod
-//     def proof_type():
-//         return Proof()
-
-//     @staticmethod
-//     def dyn_uint_array():
-//         return Array(AnnotatedTypeName::uint_all())
-
-//     @property
-//     def size_in_uints(&self):
-//         """How many uints this type occupies when serialized."""
-//         return 1
-
-//     @property
-//     def elem_bitwidth(&self) -> i32:
-//         // Bitwidth, only defined for primitive types
-//         raise NotImplementedError()
-
-//     @property
-//     def is_literal(&self) -> bool:
-//         return isinstance(self, (NumberLiteralType, BooleanLiteralType, EnumValueTypeName))
-
-//     def is_address(&self) -> bool:
-//         return isinstance(self, (AddressTypeName, AddressPayableTypeName))
-
-//     def is_primitive_type(&self) -> bool:
-//         return isinstance(self, (ElementaryTypeName, EnumTypeName, EnumValueTypeName, AddressTypeName, AddressPayableTypeName))
-
-//     def is_cipher(&self) -> bool:
-//         return isinstance(self, CipherText)
-
-//     def is_key(&self) -> bool:
-//         return isinstance(self, Key)
-
-//     def is_randomness(&self) -> bool:
-//         return isinstance(self, Randomness)
-
-//     @property
-//     def is_numeric(&self) -> bool:
-//         return isinstance(self, NumberTypeName)
-
-//     @property
-//     def is_boolean(&self) -> bool:
-//         return isinstance(self, (BooleanLiteralType, BoolTypeName))
-
-//     @property
-//     def is_signed_numeric(&self) -> bool:
-//         return self.is_numeric and self.signed
-
-//     def can_be_private(&self) -> bool:
-//         return self.is_primitive_type() and not (self.is_signed_numeric and self.elem_bitwidth == 256)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         assert isinstance(expected, TypeName)
-//         return expected == self
-
-//     def compatible_with(self, other_type: TypeName) -> bool:
-//         assert isinstance(other_type, TypeName)
-//         return self.implicitly_convertible_to(other_type) or other_type.implicitly_convertible_to(&self)
-
-//     def combined_type(self, other_type: TypeName, convert_literals: bool):
-//         if other_type.implicitly_convertible_to(&self):
-//             return self
-//         elif self.implicitly_convertible_to(other_type):
-//             return other_type
-//         return None
-
-//     def annotate(self, privacy_annotation):
-//         return AnnotatedTypeName(self, privacy_annotation)
-
-//     def clone(&self) -> TypeName:
-//         raise NotImplementedError()
-
-//     def __eq__(self, other):
-//         raise NotImplementedError()
-
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// pub struct ElementaryTypeName {
-//     pub name: String,
-// }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ElementaryTypeName {
@@ -5735,18 +4771,6 @@ impl ElementaryTypeNameBase {
         }
     }
 }
-// class ElementaryTypeName(TypeName):
-
-//     def __init__(self, name: str):
-//         super().__init__()
-//         self.name = name
-
-//     def clone(&self) -> ElementaryTypeName:
-//         return ElementaryTypeName(self.name)
-
-//     def __eq__(self, other):
-//         return isinstance(other, ElementaryTypeName) and self.name == other.name
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BoolTypeName {
     pub elementary_type_name_base: ElementaryTypeNameBase,
@@ -5773,20 +4797,6 @@ impl BoolTypeName {
         1
     }
 }
-// class BoolTypeName(ElementaryTypeName):
-//     def __init__(self, name='bool'):
-//         super().__init__(name)
-
-//     def clone(&self) -> BoolTypeName:
-//         return BoolTypeName()
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 1
-
-//     def __eq__(self, other):
-//         return isinstance(other, BoolTypeName)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralType {
     pub elementary_type_name_base: ElementaryTypeNameBase,
@@ -5844,35 +4854,6 @@ impl BooleanLiteralType {
         TypeName::bool_type()
     }
 }
-// class BooleanLiteralType(ElementaryTypeName):
-//     def __init__(self, name: bool):
-//         super().__init__(str(name).lower())
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         return super().implicitly_convertible_to(expected) or isinstance(expected, BoolTypeName)
-
-//     def combined_type(self, other_type: TypeName, convert_literals: bool):
-//         if isinstance(other_type, BooleanLiteralType):
-//             return TypeName::bool_type() if convert_literals else 'lit'
-//         else:
-//             return super().combined_type(other_type, convert_literals)
-
-//     @property
-//     def value(&self):
-//         return self.name == 'true'
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 1
-
-//     def to_abstract_type(&self):
-//         return TypeName::bool_type()
-
-//     def clone(&self) -> BooleanLiteralType:
-//         return BooleanLiteralType(self.value)
-
-//     def __eq__(self, other):
-//         return isinstance(other, BooleanLiteralType)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -6009,36 +4990,6 @@ impl NumberTypeNameBase {
         lo <= value && value < hi
     }
 }
-// class NumberTypeName(ElementaryTypeName):
-//     def __init__(self, name: str, prefix: str, signed: bool, bitwidth=None):
-//         assert name.startswith(prefix)
-//         prefix_len = len(prefix)
-//         super().__init__(name)
-//         if bitwidth is None:
-//             self._size_in_bits = i32(name[prefix_len:]) if len(name) > prefix_len else 0
-//         else:
-//             self._size_in_bits = bitwidth
-//         self.signed = signed
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         return super().implicitly_convertible_to(expected) or type(expected) == NumberTypeName
-
-//     @staticmethod
-//     def any():
-//         return NumberTypeName('', '', True, 256)
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 256 if self._size_in_bits == 0 else self._size_in_bits
-
-//     def can_represent(self, value: i32):
-//         """Return true if value can be represented by this type"""
-//         lo = - (1 << self.elem_bitwidth - 1) if self.signed else 0
-//         hi = (1 << self.elem_bitwidth - 1) if self.signed else (1 << self.elem_bitwidth)
-//         return lo <= value < hi
-
-//     def __eq__(self, other):
-//         return isinstance(other, NumberTypeName) and self.name == other.name
 pub enum NumberLiteralTypeUnion {
     String(String),
     I32(i32),
@@ -6143,52 +5094,6 @@ impl NumberLiteralType {
             .unwrap()
     }
 }
-// class NumberLiteralType(NumberTypeName):
-//     def __init__(self, name: Union[str, i32]):
-//         name = i32(name) if isinstance(name, str) else name
-//         blen = name.bit_length()
-//         if name < 0:
-//             signed = True
-//             bitwidth = blen + 1 if name != -(1 << (blen-1)) else blen
-//         else:
-//             signed = False
-//             bitwidth = blen
-//         bitwidth = max(i32(math.ceil(bitwidth / 8.0)) * 8, 8)
-//         assert 8 <= bitwidth <= 256 and bitwidth % 8 == 0
-
-//         name = str(name)
-//         super().__init__(name, name, signed, bitwidth)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         if expected.is_numeric and not expected.is_literal:
-//             // Allow implicit conversion only if it fits
-//             return expected.can_represent(self.value)
-//         elif expected.is_address() and self.elem_bitwidth == 160 and not self.signed:
-//             // Address literal case (fake solidity check will catch the cases where this is too permissive)
-//             return True
-//         return super().implicitly_convertible_to(expected)
-
-//     def combined_type(self, other_type: TypeName, convert_literals: bool):
-//         if isinstance(other_type, NumberLiteralType):
-//             return self.to_abstract_type().combined_type(other_type.to_abstract_type(), convert_literals) if convert_literals else 'lit'
-//         else:
-//             return super().combined_type(other_type, convert_literals)
-
-//     def to_abstract_type(&self):
-//         if self.value < 0:
-//             return IntTypeName(f'i32{self.elem_bitwidth}')
-//         else:
-//             return UintTypeName(f'uint{self.elem_bitwidth}')
-
-//     @property
-//     def value(&self):
-//         return i32(self.name)
-
-//     def clone(&self) -> NumberLiteralType:
-//         return NumberLiteralType(self.value)
-
-//     def __eq__(self, other):
-//         return isinstance(other, NumberLiteralType)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IntTypeName {
@@ -6224,17 +5129,6 @@ impl IntTypeName {
             } && expected.elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
     }
 }
-// class IntTypeName(NumberTypeName):
-//     def __init__(self, name: str = 'i32'):
-//         super().__init__(name, 'i32', True)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         // Implicitly convert smaller i32 types to larger i32 types
-//         return super().implicitly_convertible_to(expected) or (
-//                 isinstance(expected, IntTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
-
-//     def clone(&self) -> IntTypeName:
-//         return IntTypeName(self.name)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UintTypeName {
@@ -6270,17 +5164,6 @@ impl UintTypeName {
             } && expected.elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
     }
 }
-// class UintTypeName(NumberTypeName):
-//     def __init__(self, name: str = 'uint'):
-//         super().__init__(name, 'uint', False)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         // Implicitly convert smaller uint types to larger uint types
-//         return super().implicitly_convertible_to(expected) or (
-//                 isinstance(expected, UintTypeName) and expected.elem_bitwidth >= self.elem_bitwidth)
-
-//     def clone(&self) -> UintTypeName:
-//         return UintTypeName(self.name)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -6409,18 +5292,6 @@ impl UserDefinedTypeNameBase {
         }
     }
 }
-// class UserDefinedTypeName(TypeName):
-//     def __init__(self, names: List[Identifier], target: Optional[NamespaceDefinition] = None):
-//         super().__init__()
-//         self.names = names
-//         self.target = target
-
-//     def clone(&self) -> UserDefinedTypeName:
-//         return UserDefinedTypeName(self.names.copy(), self.target)
-
-//     def __eq__(self, other):
-//         return isinstance(other, UserDefinedTypeName) and all(e[0].name == e[1].name for e in zip(self.target.qualified_name, other.target.qualified_name))
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
@@ -6448,13 +5319,6 @@ impl EnumTypeName {
         256
     }
 }
-// class EnumTypeName(UserDefinedTypeName):
-//     def clone(&self) -> EnumTypeName:
-//         return EnumTypeName(self.names.copy(), self.target)
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 256
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValueTypeName {
@@ -6518,20 +5382,6 @@ impl EnumValueTypeName {
                     .to_vec())
     }
 }
-// class EnumValueTypeName(UserDefinedTypeName):
-//     @property
-//     def elem_bitwidth(&self):
-//         return 256
-
-//     def clone(&self) -> EnumValueTypeName:
-//         return EnumValueTypeName(self.names.copy(), self.target)
-
-//     def to_abstract_type(&self):
-//         return EnumTypeName(self.names[:-1], self.target.parent)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         return super().implicitly_convertible_to(expected) or (isinstance(expected, EnumTypeName) and expected.names == self.names[:-1])
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
@@ -6559,10 +5409,6 @@ impl StructTypeName {
         TypeName::UserDefinedTypeName(UserDefinedTypeName::StructTypeName(self.clone()))
     }
 }
-// class StructTypeName(UserDefinedTypeName):
-//     def clone(&self) -> StructTypeName:
-//         return StructTypeName(self.names.copy(), self.target)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContractTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
@@ -6587,10 +5433,6 @@ impl ContractTypeName {
         }
     }
 }
-// class ContractTypeName(UserDefinedTypeName):
-//     def clone(&self) -> ContractTypeName:
-//         return ContractTypeName(self.names.copy(), self.target)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
@@ -6620,20 +5462,6 @@ impl AddressTypeName {
         160
     }
 }
-
-// class AddressTypeName(UserDefinedTypeName):
-//     def __init__(&self):
-//         super().__init__([Identifier('<address>')], None)
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 160
-
-//     def clone(&self) -> UserDefinedTypeName:
-//         return AddressTypeName()
-
-//     def __eq__(self, other):
-//         return isinstance(other, AddressTypeName)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressPayableTypeName {
@@ -6672,23 +5500,6 @@ impl AddressPayableTypeName {
         160
     }
 }
-// class AddressPayableTypeName(UserDefinedTypeName):
-//     def __init__(&self):
-//         super().__init__([Identifier('<address_payable>')], None)
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         // Implicit conversions
-//         return super().implicitly_convertible_to(expected) or expected == TypeName::address_type()
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return 160
-
-//     def clone(&self) -> UserDefinedTypeName:
-//         return AddressPayableTypeName()
-
-//     def __eq__(self, other):
-//         return isinstance(other, AddressPayableTypeName)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum KeyLabelUnion {
     String(String),
@@ -6741,35 +5552,6 @@ impl ASTChildren for Mapping {
         cb.add_child(AST::AnnotatedTypeName(*self.value_type.clone()));
     }
 }
-// class Mapping(TypeName):
-
-//     def __init__(self, key_type: ElementaryTypeName, key_label: Optional[Identifier], value_type: AnnotatedTypeName):
-//         super().__init__()
-//         self.key_type = key_type
-//         self.key_label: Union[str, Optional[Identifier]] = key_label
-//         self.value_type = value_type
-//         // set by type checker: instantiation of the key by IndexExpr
-//         self.instantiated_key: Optional[Expression] = None
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.key_type = f(self.key_type)
-//         if isinstance(self.key_label, Identifier):
-//             self.key_label = f(self.key_label)
-//         self.value_type = f(self.value_type)
-
-//     def clone(&self) -> Mapping:
-//         from zkay.zkay_ast.visitor.deep_copy import deep_copy
-//         return deep_copy(&self)
-
-//     @property
-//     def has_key_label(&self):
-//         return self.key_label is not None
-
-//     def __eq__(self, other):
-//         if isinstance(other, Mapping):
-//             return self.key_type == other.key_type and self.value_type == other.value_type
-//         else:
-//             return False
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ExprUnion {
     I32(i32),
@@ -6866,42 +5648,6 @@ impl ArrayBase {
     }
 }
 
-// class Array(TypeName):
-
-//     def __init__(self, value_type: AnnotatedTypeName, expr: Union[i32, Expression] = None):
-//         super().__init__()
-//         self.value_type = value_type
-//         self.expr = NumberLiteralExpr(expr) if isinstance(expr, i32) else expr
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.value_type = f(self.value_type)
-//         self.expr = f(self.expr)
-
-//     def clone(&self) -> Array:
-//         return Array(self.value_type.clone(), self.expr)
-
-//     @property
-//     def size_in_uints(&self):
-//         if self.expr is None or not isinstance(self.expr, NumberLiteralExpr):
-//             return -1
-//         else:
-//             return self.expr.value
-
-//     @property
-//     def elem_bitwidth(&self):
-//         return self.value_type.type_name.elem_bitwidth
-
-//     def __eq__(self, other):
-//         if not isinstance(other, Array):
-//             return False
-//         if self.value_type != other.value_type:
-//             return False
-//         if isinstance(self.expr, NumberLiteralExpr) and isinstance(other.expr, NumberLiteralExpr) and self.expr.value == other.expr.value:
-//             return True
-//         if self.expr is None and other.expr is None:
-//             return True
-//         return False
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CipherText {
     pub array_base: Box<ArrayBase>,
@@ -6934,25 +5680,6 @@ impl CipherText {
         self.crypto_params.cipher_payload_len()
     }
 }
-// class CipherText(Array):
-//     def __init__(self, plain_type: AnnotatedTypeName, crypto_params: CryptoParams):
-//         assert not plain_type.type_name.is_cipher()
-//         super().__init__(AnnotatedTypeName::uint_all(), NumberLiteralExpr(crypto_params.cipher_len))
-//         self.plain_type = plain_type
-//         self.crypto_params = crypto_params
-
-//     @property
-//     def size_in_uints(&self):
-//         return self.crypto_params.cipher_payload_len
-
-//     def clone(&self) -> CipherText:
-//         return CipherText(self.plain_type, self.crypto_params)
-
-//     def __eq__(self, other):
-//         return (isinstance(other, CipherText)
-//                 and (self.plain_type is None or self.plain_type == other.plain_type)
-//                 and self.crypto_params == other.crypto_params)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Randomness {
     pub array_base: Box<ArrayBase>,
@@ -6983,20 +5710,6 @@ impl Randomness {
         }
     }
 }
-// class Randomness(Array):
-//     def __init__(self, crypto_params: CryptoParams):
-//         if crypto_params.randomness_len is None:
-//             super().__init__(AnnotatedTypeName::uint_all(), None)
-//         else:
-//             super().__init__(AnnotatedTypeName::uint_all(), NumberLiteralExpr(crypto_params.randomness_len))
-//         self.crypto_params = crypto_params
-
-//     def clone(&self) -> Randomness:
-//         return Randomness(self.crypto_params)
-
-//     def __eq__(self, other):
-//         return isinstance(other, Randomness) and self.crypto_params == other.crypto_params
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Key {
     pub array_base: Box<ArrayBase>,
@@ -7023,17 +5736,6 @@ impl Key {
         }
     }
 }
-// class Key(Array):
-//     def __init__(self, crypto_params: CryptoParams):
-//         super().__init__(AnnotatedTypeName::uint_all(), NumberLiteralExpr(crypto_params.key_len))
-//         self.crypto_params = crypto_params
-
-//     def clone(&self) -> Key:
-//         return Key(self.crypto_params)
-
-//     def __eq__(self, other):
-//         return isinstance(other, Key) and self.crypto_params == other.crypto_params
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Proof {
     pub array_base: Box<ArrayBase>,
@@ -7058,15 +5760,6 @@ impl Proof {
         }
     }
 }
-// class Proof(Array):
-//     def __init__(&self):
-//         super().__init__(AnnotatedTypeName::uint_all(), NumberLiteralExpr(cfg.proof_len))
-
-//     def clone(&self) -> Proof:
-//         return Proof()
-
-//     def __eq__(self, other):
-//         return isinstance(other, Proof)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DummyAnnotation;
@@ -7084,8 +5777,6 @@ impl DummyAnnotation {
         Self {}
     }
 }
-// class DummyAnnotation:
-//     pass
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -7258,78 +5949,6 @@ impl TupleType {
         TupleType::new(vec![])
     }
 }
-// class TupleType(TypeName):
-//     """Does not appear in the syntax, but is necessary for type checking"""
-
-//     @staticmethod
-//     def ensure_tuple(t: AnnotatedTypeName):
-//         if t is None:
-//             return TupleType.empty()
-//         elif isinstance(t.type_name, TupleType):
-//             return t
-//         else:
-//             return TupleType([t])
-
-//     def __init__(self, types: List[AnnotatedTypeName]):
-//         super().__init__()
-//         self.types = types
-
-//     def __len__(&self):
-//         return len(self.types)
-
-//     def __iter__(&self):
-//         """Make this class iterable, by iterating over its types."""
-//         return self.types.__iter__()
-
-//     def __getitem__(self, i: i32):
-//         return self.types[i]
-
-//     def check_component_wise(self, other, f):
-//         if isinstance(other, TupleType):
-//             if len(&self) != len(other):
-//                 return False
-//             else:
-//                 for i in range(len(&self)):
-//                     if not f(self[i], other[i]):
-//                         return False
-//                 return True
-//         else:
-//             return False
-
-//     def implicitly_convertible_to(self, expected: TypeName) -> bool:
-//         return self.check_component_wise(expected, lambda x, y: x.type_name.implicitly_convertible_to(y.type_name))
-
-//     def compatible_with(self, other_type: TypeName) -> bool:
-//         return self.check_component_wise(other_type, lambda x, y: x.type_name.compatible_with(y.type_name))
-
-//     def combined_type(self, other_type: TupleType, convert_literals: bool):
-//         if not isinstance(other_type, TupleType) or len(self.types) != len(other_type.types):
-//             return None
-//         return TupleType([AnnotatedTypeName(e1.type_name.combined_type(e2.type_name, convert_literals), DummyAnnotation()) for e1, e2 in zip(self.types, other_type.types)])
-
-//     def annotate(self, privacy_annotation):
-//         if isinstance(privacy_annotation, Expression):
-//             return AnnotatedTypeName(TupleType([t.type_name.annotate(privacy_annotation) for t in self.types]))
-//         else:
-//             assert len(self.types) == len(privacy_annotation)
-//             return AnnotatedTypeName(TupleType([t.type_name.annotate(a) for t, a in zip(self.types, privacy_annotation)]))
-
-//     def perfect_privacy_match(self, other):
-//         def privacy_match(self: AnnotatedTypeName, other: AnnotatedTypeName):
-//             return self.privacy_annotation == other.privacy_annotation
-
-//         self.check_component_wise(other, privacy_match)
-
-//     def clone(&self) -> TupleType:
-//         return TupleType(list(map(AnnotatedTypeName::clone, self.types)))
-
-//     @staticmethod
-//     def empty() -> TupleType:
-//         return TupleType([])
-
-//     def __eq__(self, other):
-//         return self.check_component_wise(other, lambda x, y: x == y)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionTypeName {
     pub type_name_base: TypeNameBase,
@@ -7373,25 +5992,6 @@ impl ASTChildren for FunctionTypeName {
         });
     }
 }
-// class FunctionTypeName(TypeName):
-//     def __init__(self, parameters: List[Parameter], modifiers: Vec<String>, return_parameters: List[Parameter]):
-//         super().__init__()
-//         self.parameters = parameters
-//         self.modifiers = modifiers
-//         self.return_parameters = return_parameters
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.parameters[:] = map(f, self.parameters)
-//         self.return_parameters[:] = map(f, self.return_parameters)
-
-//     def clone(&self) -> FunctionTypeName:
-//         // TODO deep copy if required
-//         return FunctionTypeName(self.parameters, self.modifiers, self.return_parameters)
-
-//     def __eq__(self, other):
-//         return isinstance(other, FunctionTypeName) and self.parameters == other.parameters and \
-//                self.modifiers == other.modifiers and self.return_parameters == other.return_parameters
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
@@ -7448,7 +6048,7 @@ impl AnnotatedTypeName {
     }
     pub fn combined_privacy(
         &self,
-        analysis: Option<PartitionState<PrivacyLabelExpr>>,
+        analysis: Option<PartitionState<AST>>,
         other: AnnotatedTypeName,
     ) -> Option<CombinedPrivacyUnion> {
         if let (TypeName::TupleType(selfs), TypeName::TupleType(others)) =
@@ -7508,7 +6108,7 @@ impl AnnotatedTypeName {
     pub fn is_private(&self) -> bool {
         !self.is_public()
     }
-    pub fn is_private_at_me(&self, analysis: &Option<PartitionState<PrivacyLabelExpr>>) -> bool {
+    pub fn is_private_at_me(&self, analysis: &Option<PartitionState<AST>>) -> bool {
         if let Some(p) = &self.privacy_annotation {
             p.is_me_expr()
                 || (analysis.is_some()
@@ -7520,7 +6120,7 @@ impl AnnotatedTypeName {
             false
         }
     }
-    pub fn is_accessible(&self, analysis: &Option<PartitionState<PrivacyLabelExpr>>) -> bool {
+    pub fn is_accessible(&self, analysis: &Option<PartitionState<AST>>) -> bool {
         self.is_public() || self.is_private_at_me(analysis)
     }
 
@@ -7622,124 +6222,6 @@ impl ASTChildren for AnnotatedTypeName {
     }
 }
 
-// class AnnotatedTypeName(AST):
-//     def __init__(self, type_name: TypeName, privacy_annotation: Optional[Expression] = None,
-//                  homomorphism: Homomorphism = Homomorphism.NON_HOMOMORPHIC):
-//         super().__init__()
-//         self.type_name = type_name
-//         self.had_privacy_annotation = privacy_annotation is not None
-//         if self.had_privacy_annotation:
-//             self.privacy_annotation = privacy_annotation
-//         else:
-//             self.privacy_annotation = AllExpr()
-//         self.homomorphism = homomorphism
-//         if self.privacy_annotation == AllExpr() and homomorphism != Homomorphism.NON_HOMOMORPHIC:
-//             raise ValueError(f'Public type name cannot be homomorphic (got {homomorphism.type_annotation})')
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.type_name = f(self.type_name)
-//         self.privacy_annotation = f(self.privacy_annotation)
-
-//     def clone(&self) -> AnnotatedTypeName:
-//         assert self.privacy_annotation is not None
-//         at = AnnotatedTypeName(self.type_name.clone(), self.privacy_annotation.clone(), self.homomorphism)
-//         at.had_privacy_annotation = self.had_privacy_annotation
-//         return at
-
-//     @property
-//     def zkay_type(&self) -> AnnotatedTypeName:
-//         if isinstance(self.type_name, CipherText):
-//             return self.type_name.plain_type
-//         else:
-//             return self
-
-//     def __eq__(self, other):
-//         if isinstance(other, AnnotatedTypeName):
-//             return (self.type_name == other.type_name and
-//                     self.privacy_annotation == other.privacy_annotation and
-//                     self.homomorphism == other.homomorphism)
-//         else:
-//             return False
-
-//     def combined_privacy(self, analysis: PartitionState[PrivacyLabelExpr], other: AnnotatedTypeName):
-//         if isinstance(self.type_name, TupleType):
-//             assert isinstance(other.type_name, TupleType) and len(self.type_name.types) == len(other.type_name.types)
-//             return [e1.combined_privacy(analysis, e2) for e1, e2 in zip(self.type_name.types, other.type_name.types)]
-
-//         if self.homomorphism != other.homomorphism and not self.is_public():
-//             return None
-
-//         p_expected = other.privacy_annotation.privacy_annotation_label()
-//         p_actual = self.privacy_annotation.privacy_annotation_label()
-//         if p_expected and p_actual:
-//             if p_expected == p_actual or (analysis is not None and analysis.same_partition(p_expected, p_actual)):
-//                 return self.privacy_annotation.clone()
-//             elif self.privacy_annotation.is_all_expr():
-//                 return other.privacy_annotation.clone()
-//         else:
-//             return None
-
-//     def is_public(&self):
-//         return self.privacy_annotation.is_all_expr()
-
-//     def is_private(&self):
-//         return not self.is_public()
-
-//     def is_private_at_me(self, analysis: PartitionState[PrivacyLabelExpr]):
-//         p = self.privacy_annotation
-//         return p.is_me_expr() or (analysis is not None and analysis.same_partition(p.privacy_annotation_label(), MeExpr::new()))
-
-//     def is_accessible(self, analysis: PartitionState[PrivacyLabelExpr]):
-//         return self.is_public() or self.is_private_at_me(analysis)
-
-//     def is_address(&self) -> bool:
-//         return isinstance(self.type_name, (AddressTypeName, AddressPayableTypeName))
-
-//     def is_cipher(&self) -> bool:
-//         return isinstance(self.type_name, CipherText)
-
-//     def with_homomorphism(self, hom: Homomorphism):
-//         return AnnotatedTypeName(self.type_name, self.privacy_annotation, hom)
-
-//     @staticmethod
-//     def uint_all():
-//         return AnnotatedTypeName(TypeName::uint_type())
-
-//     @staticmethod
-//     def bool_all():
-//         return AnnotatedTypeName(TypeName::bool_type())
-
-//     @staticmethod
-//     def address_all():
-//         return AnnotatedTypeName(TypeName::address_type())
-
-//     @staticmethod
-//     def cipher_type(plain_type: AnnotatedTypeName, hom: Homomorphism):
-//         return AnnotatedTypeName(TypeName::cipher_type(plain_type, hom))
-
-//     @staticmethod
-//     def key_type(crypto_params: CryptoParams):
-//         return AnnotatedTypeName(TypeName::key_type(crypto_params))
-
-//     @staticmethod
-//     def proof_type():
-//         return AnnotatedTypeName(TypeName::proof_type())
-
-//     @staticmethod
-//     def all(type: TypeName):
-//         return AnnotatedTypeName(type, Expression.all_expr())
-
-//     @staticmethod
-//     def me(type: TypeName):
-//         return AnnotatedTypeName(type, Expression.me_expr())
-
-//     @staticmethod
-//     def array_all(value_type: AnnotatedTypeName, *length: i32):
-//         t = value_type
-//         for l in length:
-//             t = AnnotatedTypeName(Array(t, NumberLiteralExpr(l)))
-//         return t
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum IdentifierDeclaration {
@@ -7750,6 +6232,8 @@ pub enum IdentifierDeclaration {
     None,
 }
 impl IdentifierDeclaration {
+  pub fn identifier_declaration_base(&self)->Option<IdentifierDeclarationBase>{
+    None}
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
@@ -7809,26 +6293,6 @@ impl ASTChildren for IdentifierDeclarationBase {
     }
 }
 
-// class IdentifierDeclaration(AST):
-
-//     def __init__(self, keywords: Vec<String>, annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
-//         super().__init__()
-//         self.keywords = keywords
-//         self.annotated_type = annotated_type
-//         self.idf = idf
-//         self.storage_location = storage_location
-
-//     @property
-//     def is_final(&self) -> bool:
-//         return 'final' in self.keywords
-
-//     @property
-//     def is_constant(&self) -> bool:
-//         return 'constant' in self.keywords
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.annotated_type = f(self.annotated_type)
-//         self.idf = f(self.idf)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclaration {
@@ -7859,11 +6323,6 @@ impl VariableDeclaration {
         }
     }
 }
-// class VariableDeclaration(IdentifierDeclaration):
-
-//     def __init__(self, keywords: Vec<String>, annotated_type: AnnotatedTypeName, idf: Identifier, storage_location: Optional[str] = None):
-//         super().__init__(keywords, annotated_type, idf, storage_location)
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclarationStatement {
     pub simple_statement_base: SimpleStatementBase,
@@ -7903,21 +6362,6 @@ impl ASTChildren for VariableDeclarationStatement {
     }
 }
 
-// class VariableDeclarationStatement(SimpleStatement):
-
-//     def __init__(self, variable_declaration: VariableDeclaration, expr: Optional[Expression] = None):
-//         """
-
-//         :param variable_declaration:
-//         :param expr: can be None
-//         """
-//         super().__init__()
-//         self.variable_declaration = variable_declaration
-//         self.expr = expr
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.variable_declaration = f(self.variable_declaration)
-//         self.expr = f(self.expr)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Parameter {
@@ -7961,23 +6405,6 @@ impl Parameter {
         self.clone()
     }
 }
-// class Parameter(IdentifierDeclaration):
-
-//     def __init__(
-//             self,
-//             keywords: Vec<String>,
-//             annotated_type: AnnotatedTypeName,
-//             idf: Identifier,
-//             storage_location: Optional[str] = None):
-//         super().__init__(keywords, annotated_type, idf, storage_location)
-
-//     def copy(&self) -> Parameter:
-//         return Parameter(self.keywords, self.annotated_type.clone(), self.idf.clone() if self.idf else None, self.storage_location)
-
-//     def with_changed_storage(self, match_storage: str, new_storage: str) -> Parameter:
-//         if self.storage_location == match_storage:
-//             self.storage_location = new_storage
-//         return self
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum NamespaceDefinition {
@@ -8040,15 +6467,6 @@ impl ASTChildren for NamespaceDefinitionBase {
         cb.add_child(AST::Identifier(self.idf.clone()));
     }
 }
-// class NamespaceDefinition(AST):
-//     def __init__(self, idf: Identifier):
-//         super().__init__()
-//         self.idf = idf
-
-//     def process_children(self, f: Callable[[T], T]):
-//         oldidf = self.idf
-//         self.idf = f(self.idf)
-//         assert oldidf == self.idf // must be readonly
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
@@ -8285,98 +6703,6 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
         }
     }
 }
-// class ConstructorOrFunctionDefinition(NamespaceDefinition):
-
-//     def __init__(self, idf: Optional[Identifier], parameters: List[Parameter], modifiers: Vec<String>, return_parameters: Optional[List[Parameter]], body: Block):
-//         assert (idf is not None and idf.name != 'constructor') or not return_parameters
-//         if idf is None:
-//             idf = Identifier('constructor')
-//         super().__init__(idf)
-//         self.parameters = parameters
-//         self.modifiers = modifiers
-//         self.body = body
-//         self.return_parameters = [] if return_parameters is None else return_parameters
-
-//         self.return_var_decls: List[VariableDeclaration] = [
-//             VariableDeclaration([], rp.annotated_type, Identifier(f'{cfg.return_var_name}_{idx}'), rp.storage_location)
-//             for idx, rp in enumerate(self.return_parameters)
-//         ]
-//         for vd in self.return_var_decls:
-//             vd.idf.parent = vd
-
-//         // specify parent type
-//         self.parent: Optional[ContractDefinition] = None
-//         self.original_body: Optional[Block] = None
-
-//         // Set function type
-//         self.annotated_type = None
-//         self._update_fct_type()
-
-//         // Analysis properties
-//         self.called_functions: OrderedDict[ConstructorOrFunctionDefinition, None] = OrderedDict()
-//         self.is_recursive = False
-//         self.has_static_body = True
-//         self.can_be_private = True
-//         self.used_homomorphisms: Optional[Set[Homomorphism]] = None
-//         self.used_crypto_backends: Optional[List[CryptoParams]] = None
-
-//         // True if this function contains private expressions
-//         self.requires_verification = False
-
-//         // True if this function is public and either requires verification or has private arguments
-//         self.requires_verification_when_external = False
-
-//     @property
-//     def has_side_effects(&self) -> bool:
-//         return not ('pure' in self.modifiers or 'view' in self.modifiers)
-
-//     @property
-//     def can_be_external(&self) -> bool:
-//         return not ('private' in self.modifiers or 'internal' in self.modifiers)
-
-//     @property
-//     def is_external(&self) -> bool:
-//         return 'external' in self.modifiers
-
-//     @property
-//     def is_payable(&self) -> bool:
-//         return 'payable' in self.modifiers
-
-//     @property
-//     def name(&self) -> str:
-//         return self.idf.name
-
-//     @property
-//     def return_type(&self) -> TupleType:
-//         return TupleType([p.annotated_type for p in self.return_parameters])
-
-//     @property
-//     def parameter_types(&self) -> TupleType:
-//         return TupleType([p.annotated_type for p in self.parameters])
-
-//     @property
-//     def is_constructor(&self) -> bool:
-//         return self.idf.name == 'constructor'
-
-//     @property
-//     def is_function(&self) -> bool:
-//         return not self.is_constructor
-
-//     def _update_fct_type(&self):
-//         self.annotated_type = AnnotatedTypeName(FunctionTypeName(self.parameters, self.modifiers, self.return_parameters))
-
-//     def process_children(self, f: Callable[[T], T]):
-//         super().process_children(f)
-//         self.parameters[:] = map(f, self.parameters)
-//         self.return_parameters[:] = map(f, self.return_parameters)
-//         self.body = f(self.body)
-
-//     def add_param(self, t: Union[TypeName, AnnotatedTypeName], idf: Union[str, Identifier], ref_storage_loc: str = 'memory'):
-//         t = t if isinstance(t, AnnotatedTypeName) else AnnotatedTypeName(t)
-//         idf = Identifier(idf) if isinstance(idf, str) else idf.clone()
-//         storage_loc = '' if t.type_name.is_primitive_type() else ref_storage_loc
-//         self.parameters.append(Parameter([], t, idf, storage_loc))
-//         self._update_fct_type()
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
     pub identifier_declaration_base: IdentifierDeclarationBase,
@@ -8428,15 +6754,6 @@ impl ASTChildren for StateVariableDeclaration {
         }
     }
 }
-// class StateVariableDeclaration(IdentifierDeclaration):
-
-//     def __init__(self, annotated_type: AnnotatedTypeName, keywords: Vec<String>, idf: Identifier, expr: Optional[Expression]):
-//         super().__init__(keywords, annotated_type, idf)
-//         self.expr = expr
-
-//     def process_children(self, f: Callable[[T], T]):
-//         super().process_children(f)
-//         self.expr = f(self.expr)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
@@ -8471,14 +6788,6 @@ impl ASTChildren for EnumValue {
         }
     }
 }
-// class EnumValue(AST):
-//     def __init__(self, idf: Identifier):
-//         super().__init__()
-//         self.idf = idf
-//         self.annotated_type: Optional[AnnotatedTypeName] = None
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.idf = f(self.idf)
 
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
@@ -8515,16 +6824,7 @@ impl ASTChildren for EnumDefinition {
         });
     }
 }
-// class EnumDefinition(NamespaceDefinition):
-//     def __init__(self, idf: Identifier, values: List[EnumValue]):
-//         super().__init__(idf)
-//         self.values = values
 
-//         self.annotated_type: Optional[AnnotatedTypeName] = None
-
-//     def process_children(self, f: Callable[[T], T]):
-//         super().process_children(f)
-//         self.values[:] = map(f, self.values)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
@@ -8558,14 +6858,6 @@ impl ASTChildren for StructDefinition {
     }
 }
 
-// class StructDefinition(NamespaceDefinition):
-//     def __init__(self, idf: Identifier, members: List[VariableDeclaration]):
-//         super().__init__(idf)
-//         self.members = members
-
-//     def process_children(self, f: Callable[[T], T]):
-//         super().process_children(f)
-//         self.members[:] = map(f, self.members)
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
@@ -8650,47 +6942,6 @@ impl ASTChildren for ContractDefinition {
             });
     }
 }
-// class ContractDefinition(NamespaceDefinition):
-
-//     def __init__(
-//             self,
-//             idf: Identifier,
-//             state_variable_declarations: List[StateVariableDeclaration],
-//             constructor_definitions: List[ConstructorOrFunctionDefinition],
-//             function_definitions: List[ConstructorOrFunctionDefinition],
-//             enum_definitions: List[EnumDefinition],
-//             struct_definitions: Optional[List[StructDefinition]] = None):
-//         super().__init__(idf)
-//         self.state_variable_declarations = state_variable_declarations
-//         self.constructor_definitions = constructor_definitions
-//         self.function_definitions = function_definitions
-//         self.enum_definitions = enum_definitions
-//         self.struct_definitions = [] if struct_definitions is None else struct_definitions
-//         self.used_crypto_backends: Optional[List[CryptoParams]] = None
-
-//     def process_children(self, f: Callable[[T], T]):
-//         super().process_children(f)
-//         self.enum_definitions[:] = map(f, self.enum_definitions)
-//         self.struct_definitions[:] = map(f, self.struct_definitions)
-//         self.state_variable_declarations[:] = map(f, self.state_variable_declarations)
-//         self.constructor_definitions[:] = map(f, self.constructor_definitions)
-//         self.function_definitions[:] = map(f, self.function_definitions)
-
-//     def __getitem__(self, key: str):
-//         if key == 'constructor':
-//             if len(self.constructor_definitions) == 0:
-//                 // return empty constructor
-//                 c = ConstructorOrFunctionDefinition(None, [], [], None, Block([]))
-//                 c.parent = self
-//                 return c
-//             elif len(self.constructor_definitions) == 1:
-//                 return self.constructor_definitions[0]
-//             else:
-//                 raise ValueError('Multiple constructors exist')
-//         else:
-//             d_identifier = self.names[key]
-//             return d_identifier.parent
-
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
@@ -8751,250 +7002,34 @@ impl ASTChildren for SourceUnit {
         });
     }
 }
-// class SourceUnit(AST):
-
-//     def __init__(self, pragma_directive: str, contracts: List[ContractDefinition], used_contracts: Optional[Vec<String>] = None):
-//         super().__init__()
-//         self.pragma_directive = pragma_directive
-//         self.contracts = contracts
-//         self.used_contracts = [] if used_contracts is None else used_contracts
-//         self.used_homomorphisms: Optional[Set[Homomorphism]] = None
-//         self.used_crypto_backends: Optional[List[CryptoParams]] = None
-
-//         self.original_code: Vec<String> = []
-
-//     def process_children(self, f: Callable[[T], T]):
-//         self.contracts[:] = map(f, self.contracts)
-
-//     def __getitem__(self, key: str):
-//         c_identifier = self.names[key]
-//         c = c_identifier.parent
-//         assert (isinstance(c, ContractDefinition))
-//         return c
-
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum PrivacyLabelExpr {
-    MeExpr(MeExpr),
-    AllExpr(AllExpr),
-    Identifier(Identifier),
-    #[default]
-    None,
-}
-impl PrivacyLabelExpr {
-    pub fn name(&self) -> String {
-        String::new()
-    }
-}
-impl From<(Option<MeExpr>, Option<Identifier>)> for PrivacyLabelExpr {
-    fn from(v: (Option<MeExpr>, Option<Identifier>)) -> Self {
-        match v {
-            (Some(me), None) => Self::MeExpr(me),
-            (None, Some(le)) => Self::Identifier(le),
-            _ => Self::default(),
-        }
-    }
-}
-impl From<PrivacyLabelExpr> for (Option<MeExpr>, Option<Identifier>) {
-    fn from(v: PrivacyLabelExpr) -> Self {
-        match v {
-            PrivacyLabelExpr::MeExpr(me) => (Some(me), None),
-            PrivacyLabelExpr::Identifier(le) => (None, Some(le)),
-            _ => (None, None),
-        }
-    }
-}
-impl From<Expression> for PrivacyLabelExpr {
-    fn from(v: Expression) -> Self {
-        match v {
-            Expression::MeExpr(me) => Self::MeExpr(me),
-            Expression::AllExpr(le) => Self::AllExpr(le),
-            _ => Self::None,
-        }
-    }
-}
-impl From<PrivacyLabelExpr> for Expression {
-    fn from(v: PrivacyLabelExpr) -> Self {
-        match v {
-            PrivacyLabelExpr::MeExpr(me) => Self::MeExpr(me),
-            PrivacyLabelExpr::AllExpr(le) => Self::AllExpr(le),
-            _ => Self::None,
-        }
-    }
-}
-impl From<AST> for PrivacyLabelExpr {
-    fn from(v: AST) -> Self {
-        match v {
-            AST::Expression(Expression::MeExpr(me)) => Self::MeExpr(me),
-            AST::Expression(Expression::AllExpr(le)) => Self::AllExpr(le),
-            AST::Identifier(idf) => Self::Identifier(idf),
-            _ => Self::None,
-        }
-    }
-}
-
-impl From<&PrivacyLabelExpr> for AST {
-    fn from(v: &PrivacyLabelExpr) -> Self {
-        match v {
-            PrivacyLabelExpr::MeExpr(me) => AST::Expression(Expression::MeExpr(me.clone())),
-            PrivacyLabelExpr::AllExpr(le) => AST::Expression(Expression::AllExpr(le.clone())),
-            PrivacyLabelExpr::Identifier(idf) => AST::Identifier(idf.clone()),
-            _ => Self::None,
-        }
-    }
-}
-impl fmt::Display for PrivacyLabelExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-impl Immutable for PrivacyLabelExpr {
-    fn is_immutable(&self) -> bool {
-        true
-    }
-}
-// PrivacyLabelExpr = Union[MeExpr, AllExpr, Identifier]
-// TargetDefinition = Union[IdentifierDeclaration, NamespaceDefinition]
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum TargetDefinition {
-    IdentifierDeclaration(IdentifierDeclaration),
-    NamespaceDefinition(NamespaceDefinition),
-    #[default]
-    None,
-}
-
-impl From<AST> for TargetDefinition {
-    fn from(v: AST) -> Self {
-        match v {
-            AST::IdentifierDeclaration(id) => Self::IdentifierDeclaration(id),
-            AST::NamespaceDefinition(nd) => Self::NamespaceDefinition(nd),
-            _ => Self::None,
-        }
-    }
-}
-impl From<TargetDefinition> for AST {
-    fn from(v: TargetDefinition) -> Self {
-        match v {
-            TargetDefinition::IdentifierDeclaration(id) => Self::IdentifierDeclaration(id),
-            TargetDefinition::NamespaceDefinition(nd) => Self::NamespaceDefinition(nd),
-            _ => Self::None,
-        }
-    }
-}
-impl ConstructorOrFunctionDefinitionAttr for TargetDefinition {
+impl ConstructorOrFunctionDefinitionAttr for AST {
     fn get_requires_verification_when_external(&self) -> bool {
-        self.requires_verification_when_external()
+        if let Some(c)=self.constructor_or_function_definition()
+       { c.requires_verification_when_external}else{false}
     }
     fn get_name(&self) -> String {
         String::new()
     }
+
 }
-impl TargetDefinition {
-    pub fn can_be_private(&self) -> bool {
-        false
-    }
-    pub fn is_constant(&self) -> bool {
-        false
-    }
-    pub fn is_final(&self) -> bool {
-        false
-    }
-    pub fn has_side_effects(&self) -> bool {
-        false
-    }
-    pub fn has_static_body(&self) -> bool {
-        false
-    }
-    pub fn return_parameters(&self) -> Vec<Parameter> {
-        vec![]
-    }
-    pub fn is_function(&self) -> bool {
-        false
-    }
-    pub fn requires_verification(&self) -> bool {
-        false
-    }
-    pub fn requires_verification_when_external(&self) -> bool {
-        false
-    }
-    pub fn annotated_type(&self) -> AnnotatedTypeName {
-        AnnotatedTypeName::default()
-    }
-    pub fn idf(&self) -> Identifier {
-        Identifier::default()
-    }
-    pub fn body(&self) -> Block {
-        Block::default()
-    }
-    pub fn original_body(&self) -> Block {
-        Block::default()
-    }
-    pub fn parameters(&self) -> Vec<Parameter> {
-        vec![]
-    }
-    pub fn return_var_decls(&self) -> Vec<VariableDeclaration> {
-        vec![]
-    }
-}
-pub fn get_privacy_expr_from_label(plabel: PrivacyLabelExpr) -> Expression
+pub fn get_privacy_expr_from_label(plabel: AST) -> Expression
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
 {
-    match plabel {
-        PrivacyLabelExpr::Identifier(plabel) => {
+        if let Some(idf) =plabel.identifier() {
             let mut ie = IdentifierExpr::new(
-                IdentifierExprUnion::Identifier(plabel.clone()),
+                IdentifierExprUnion::Identifier(idf.clone()),
                 Some(Box::new(AnnotatedTypeName::address_all())),
             );
-            ie.location_expr_base.target = plabel.parent().map(|p| Box::new((p).into()));
-            Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                LocationExpr::IdentifierExpr(ie),
-            ))
+            ie.location_expr_base.target = idf.parent().map(|p| Box::new((p).into()));
+           ie.to_expr()
+        }else{
+plabel.expression().unwrap()
         }
-        PrivacyLabelExpr::MeExpr(plabel) => Expression::MeExpr(plabel.clone()),
-        PrivacyLabelExpr::AllExpr(plabel) => Expression::AllExpr(plabel.clone()),
-        _ => Expression::None,
-    }
-}
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum InstanceTargetExprUnion {
-    Tuple(InstanceTarget),
-    VariableDeclaration(VariableDeclaration),
-    LocationExpr(LocationExpr),
-    #[default]
-    None,
-}
-
-impl From<AST> for InstanceTargetExprUnion {
-    fn from(v: AST) -> Self {
-        match v {
-            AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(id)) => {
-                Self::VariableDeclaration(id)
-            }
-            AST::Expression(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(nd),
-            )) => Self::LocationExpr(nd),
-            _ => Self::default(),
-        }
-    }
-}
-impl From<InstanceTargetExprUnion> for AST {
-    fn from(v: InstanceTargetExprUnion) -> Self {
-        match v {
-            InstanceTargetExprUnion::VariableDeclaration(id) => {
-                Self::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(id))
-            }
-            InstanceTargetExprUnion::LocationExpr(nd) => Self::Expression(
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(nd)),
-            ),
-            _ => Self::default(),
-        }
-    }
+       
 }
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct InstanceTarget {
-    pub target_key: (
-        Option<Box<TargetDefinition>>,
-        Option<IdentifierExpressionUnion>,
-    ),
+    pub target_key: Vec<Option<Box<AST>>>,
 }
 impl fmt::Display for InstanceTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -9002,92 +7037,79 @@ impl fmt::Display for InstanceTarget {
     }
 }
 impl InstanceTarget {
-    pub fn new(expr: InstanceTargetExprUnion) -> Self {
-        let target_key = if let InstanceTargetExprUnion::Tuple(expr) = expr {
-            expr.target_key.clone()
+    pub fn new(expr: Vec<Option<Box<AST>>>) -> Self {
+        let target_key = if  expr.len()==2 {
+            expr
         } else {
-            if let InstanceTargetExprUnion::VariableDeclaration(expr) = expr {
-                (
-                    Some(Box::new(TargetDefinition::IdentifierDeclaration(
-                        IdentifierDeclaration::VariableDeclaration(expr),
-                    ))),
-                    None,
-                )
-            } else if let InstanceTargetExprUnion::LocationExpr(expr) = expr {
-                match expr {
-                    LocationExpr::IdentifierExpr(expr) => {
-                        (expr.location_expr_base.target.clone(), None)
-                    }
-                    LocationExpr::MemberAccessExpr(expr) => (
-                        expr.location_expr_base.target.clone(),
-                        Some(IdentifierExpressionUnion::Identifier(*expr.member)),
-                    ),
-                    LocationExpr::IndexExpr(expr) => (
-                        expr.location_expr_base.target.clone(),
-                        Some(IdentifierExpressionUnion::Expression(*expr.key)),
-                    ),
-                    _ => (None, None),
+            let v=expr[0].clone().map(|e|*e).unwrap();
+            if is_instance(&v,ASTType::VariableDeclaration) {
+                   vec![expr[0].clone(),None]
+            } else if  is_instance(&v,ASTType::LocationExpr){
+                let v=v.location_expr().unwrap();
+                match v.get_ast_type() {
+                    ASTType::IdentifierExpr => 
+                        vec![v.location_expr_base().unwrap().target.clone(), None],
+                    
+                    ASTType::MemberAccessExpr => 
+                        vec![v.location_expr_base().unwrap().target.clone(),
+                        Some(Box::new(AST::Identifier(*v.member_access_expr().unwrap().member)))]
+                    ,
+                    ASTType::IndexExpr=> 
+                        vec![v.location_expr_base().unwrap().target.clone(),
+                        Some(Box::new(AST::Expression(*v.index_expr().unwrap().key)))]
+                    ,
+                    _ => vec![None;2]
                 }
             } else {
-                (None, None)
+                vec![None;2]
             }
         };
-        assert!(if let Some(TargetDefinition::IdentifierDeclaration(
-            IdentifierDeclaration::VariableDeclaration(_),
-        ))
-        | Some(TargetDefinition::IdentifierDeclaration(
-            IdentifierDeclaration::Parameter(_),
-        ))
-        | Some(TargetDefinition::IdentifierDeclaration(
-            IdentifierDeclaration::StateVariableDeclaration(_),
-        )) = target_key.0.clone().map(|k| *k)
-        {
-            true
-        } else {
-            false
-        });
+        assert!(is_instances(&target_key[0].clone().map(|k| *k).unwrap(),vec![ASTType::VariableDeclaration,ASTType::Parameter,ASTType::StateVariableDeclaration]));
         Self { target_key }
     }
 
-    pub fn target(&self) -> Option<Box<TargetDefinition>> {
-        self.target_key.0.clone()
+    pub fn target(&self) -> Option<Box<AST>> {
+        if   !self.target_key.is_empty()
+        {self.target_key[0].clone()}else{None}
     }
 
-    pub fn key(&self) -> Option<IdentifierExpressionUnion> {
-        self.target_key.1.clone()
+    pub fn key(&self) -> Option<AST> {
+            if self.target_key.len()>1{
+self.target_key[1].clone().map(|t|*t)
+            }else{None}
     }
 
-    pub fn privacy(&self) -> PrivacyLabelExpr {
-        if let TypeName::Mapping(_) = *self.target().unwrap().annotated_type().type_name {
+    pub fn privacy(&self) ->Option<AST> {
+        if let TypeName::Mapping(_) = *self.target().unwrap().annotated_type().unwrap().type_name {
             let t = self
                 .target()
                 .unwrap()
-                .annotated_type()
+                .annotated_type().unwrap()
                 .zkay_type()
                 .type_name;
             if t.has_key_label() {
                 self.key()
                     .unwrap()
                     .privacy_annotation_label()
-                    .map_or(PrivacyLabelExpr::None, |x| x.into())
+                    .map( |x| x.get_ast())
             } else {
                 t.value_type()
                     .privacy_annotation
                     .unwrap_or_default()
                     .privacy_annotation_label()
-                    .map_or(PrivacyLabelExpr::None, |x| x.into())
+                      .map( |x| x.get_ast())
             }
         } else if self.key().is_none() {
             self.target()
                 .unwrap()
-                .annotated_type()
+                .annotated_type().unwrap()
                 .zkay_type()
                 .privacy_annotation
                 .unwrap_or_default()
                 .privacy_annotation_label()
-                .map_or(PrivacyLabelExpr::None, |x| x.into())
+                .map( |x| x.get_ast())
         } else {
-            PrivacyLabelExpr::None
+            None
         }
     }
 
@@ -9098,70 +7120,6 @@ impl InstanceTarget {
         )
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum IdentifierExpressionUnion {
-    Expression(Expression),
-    Identifier(Identifier),
-    #[default]
-    None,
-}
-impl IdentifierExpressionUnion {
-    pub fn privacy_annotation_label(&self) -> Option<AST> {
-        None
-    }
-}
-// class InstanceTarget(tuple):
-//     def __new__(cls, expr: Union[tuple, VariableDeclaration, LocationExpr]):
-//         if isinstance(expr, tuple):
-//             // copy constructor
-//             target_key = expr[:]
-//         else:
-//             target_key = [None, None]
-//             if isinstance(expr, VariableDeclaration):
-//                 target_key[0] = expr
-//             elif isinstance(expr, IdentifierExpr):
-//                 target_key[0] = expr.target
-//             elif isinstance(expr, MemberAccessExpr):
-//                 target_key[0] = expr.expr.target
-//                 target_key[1] = expr.member.clone()
-//             else:
-//                 assert isinstance(expr, IndexExpr)
-//                 target_key[0] = expr.arr.target
-//                 target_key[1] = expr.key
-
-//         assert isinstance(target_key[0], (VariableDeclaration, Parameter, StateVariableDeclaration))
-//         return super(InstanceTarget, cls).__new__(cls, target_key)
-
-//     def __eq__(self, other):
-//         return isinstance(other, type(&self)) and super().__eq__(other)
-
-//     def __hash__(&self):
-//         return hash(self[:])
-
-//     @property
-//     def target(&self) -> IdentifierDeclaration:
-//         return self[0]
-
-//     @property
-//     def key(&self) -> Optional[Union[Identifier, Expression]]:
-//         return self[1]
-
-//     @property
-//     def privacy(&self) -> PrivacyLabelExpr:
-//         if self.key is None or not isinstance(self.target.annotated_type.type_name, Mapping):
-//             return self.target.annotated_type.zkay_type.privacy_annotation.privacy_annotation_label()
-//         else:
-//             t = self.target.annotated_type.zkay_type.type_name
-//             assert isinstance(t, Mapping)
-//             if t.has_key_label:
-//                 return self.key.privacy_annotation_label()
-//             else:
-//                 t.value_type.privacy_annotation.privacy_annotation_label()
-
-//     def in_scope_at(self, ast: AST) -> bool:
-//         from zkay.zkay_ast.pointers.symbol_table import SymbolTableLinker
-//         return SymbolTableLinker.in_scope_at(self.target.idf, ast)
-
 // // UTIL FUNCTIONS
 
 pub fn indent(s: String) -> String {
@@ -9322,11 +7280,6 @@ impl AstException {
         Self(get_ast_exception_msg(ast, msg))
     }
 }
-// class AstException(Exception):
-// """Generic exception for errors in an AST"""
-
-// def __init__(self, msg, ast):
-//     super().__init__(get_ast_exception_msg(ast, msg))
 
 // // CODE GENERATION
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -9373,11 +7326,6 @@ impl AstVisitor for CodeVisitor {
         None
     }
 }
-// class CodeVisitor(AstVisitor):
-
-//     def __init__(self, display_final=True):
-//         super().__init__('node-or-children')
-//         self.display_final = display_final
 type CodeVisitorReturn = String;
 impl CodeVisitor {
     pub fn new(display_final: bool) -> Self {

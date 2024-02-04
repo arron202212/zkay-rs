@@ -18,8 +18,8 @@ use crate::zkay_ast::ast::{
     HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase, IdentifierExpr,
     IdentifierExprUnion, IfStatement, IndexExpr, KeyLiteralExpr, LocationExpr, 
     MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
-    PrivacyLabelExpr, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
-    TargetDefinition, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
+     ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
+    TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
     VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
@@ -60,14 +60,14 @@ where
     pub _out_name_factory: NameFactory,
     //For a given owner label (idf or me), stores the corresponding assignment of the requested key to the corresponding in variable
     // List of all statically known privacy labels for the contract of which this circuit is part of
-    pub static_owner_labels: Vec<PrivacyLabelExpr>,
+    pub static_owner_labels: Vec<AST>,
     // For each statement, cache the generated variable holding the requested public key of a given
     // not-statically-known identifier, to prevent requesting the same key over and over again
     pub _requested_dynamic_pks: BTreeMap<Statement, BTreeMap<Identifier, HybridArgumentIdf>>,
     // The crypto backends for which msg.sender"s secret key must be added to the private circuit inputs
     pub _needed_secret_key: BTreeSet<CryptoParams>,
     // Set of statically known privacy labels (OrderedDict is used to ensure deterministic iteration order)
-    pub _global_keys: BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>,
+    pub _global_keys: BTreeSet<(Option<AST>, CryptoParams)>,
     // List of all (non-transitive) calls in let fct"s body to functions which require verification, in AST visiting order
     // This is internally used to compute transitive in/out/privin sizes, but may also be useful when implementing a new
     // circuit generator backend.
@@ -87,7 +87,7 @@ where
 {
     pub fn new(
         fct: ConstructorOrFunctionDefinition,
-        static_owner_labels: Vec<PrivacyLabelExpr>,
+        static_owner_labels: Vec<AST>,
         expr_trafo_constructor: impl FnOnce(&Self) -> Option<Box<dyn TransformerVisitorEx>>,
         circ_trafo_constructor: impl FnOnce(&Self) -> Option<Box<dyn TransformerVisitorEx>>,
         internal_circuit: Option<&mut Self>,
@@ -315,7 +315,7 @@ where
 
     pub fn requested_global_keys(
         &self,
-    ) -> BTreeSet<((Option<MeExpr>, Option<Identifier>), CryptoParams)>
+    ) -> BTreeSet<(Option<AST>, CryptoParams)>
 // """Statically known keys required by this circuit"""
     {
         self._global_keys.clone()
@@ -361,7 +361,7 @@ where
         CircGuardModification::guarded(&mut self.phi(), guard_idf, is_true);
     }
 
-    pub fn get_glob_key_name(label: &PrivacyLabelExpr, crypto_params: &CryptoParams) -> String
+    pub fn get_glob_key_name(label: &AST, crypto_params: &CryptoParams) -> String
 // """Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label."""
     {
         // assert!(is_instances(
@@ -369,11 +369,10 @@ where
         //     vec![ASTType::MeExpr, ASTType::Identifier]
         // ));
 
-        let name = match label {
-            PrivacyLabelExpr::MeExpr(label) => label.name.clone(),
-            PrivacyLabelExpr::Identifier(label) => label.name(),
-            _ => String::new(),
-        };
+        let name = if  let Some(me_expr)=label.me_expr(){
+            label.me_expr().unwrap().name.clone()}else{
+            label.identifier().unwrap().name()}
+            ;
         format!("glob_key_{}__{}", crypto_params.identifier_name(), name)
     }
 
@@ -432,11 +431,7 @@ where
         self._ensure_encryption(
             insert_loc_stmt,
             plain_idf,
-            if let Expression::MeExpr(me) = Expression::me_expr(None) {
-                PrivacyLabelExpr::MeExpr(me)
-            } else {
-                PrivacyLabelExpr::None
-            },
+            Expression::me_expr(None).get_ast(),
             param
                 .identifier_declaration_base
                 .annotated_type
@@ -463,7 +458,7 @@ where
     pub fn evaluate_expr_in_circuit(
         &mut self,
         expr: &mut Expression,
-        new_privacy: &PrivacyLabelExpr,
+        new_privacy: &AST,
         homomorphism: &String,
     ) -> LocationExpr
 // """
@@ -523,10 +518,9 @@ where
                 assert!(ast
                     .before_analysis()
                     .unwrap()
-                    .same_partition(&var.privacy(), &Expression::me_expr(None).into()));
+                    .same_partition(&var.privacy().unwrap(), &Expression::me_expr(None).get_ast()));
                 assert!(is_instances(
-                    &var.target()
-                        .map(|t| <TargetDefinition as Into<AST>>::into(*t))
+                    &*var.target()
                         .unwrap(),
                     vec![
                         ASTType::Parameter,
@@ -536,7 +530,6 @@ where
                 ));
                 let t = var
                     .target()
-                    .map(|t| <TargetDefinition as Into<AST>>::into(*t))
                     .unwrap()
                     .annotated_type()
                     .unwrap()
@@ -554,7 +547,6 @@ where
                 let mut idf = IdentifierExpr::new(
                     IdentifierExprUnion::Identifier(
                         var.target()
-                            .map(|t| <TargetDefinition as Into<AST>>::into(*t))
                             .unwrap()
                             .idf()
                             .clone(),
@@ -589,7 +581,6 @@ where
                             ret.location_expr_base
                                 .target
                                 .clone()
-                                .map(|t| <TargetDefinition as Into<AST>>::into(*t))
                                 .unwrap()
                                 .idf(),
                             None,
@@ -645,7 +636,7 @@ where
             .map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
-                    &Expression::me_expr(None).into(),
+                    &Expression::me_expr(None).get_ast(),
                     &ret_param.annotated_type.clone().unwrap().homomorphism,
                 )
                 .unwrap()
@@ -683,7 +674,6 @@ where
             .func()
             .unwrap()
             .target()
-            .map(|t| <TargetDefinition as Into<AST>>::into(*t))
             .unwrap()
             .requires_verification());
         self.function_calls_with_verification.push(ast.clone());
@@ -691,7 +681,6 @@ where
             ast.func()
                 .unwrap()
                 .target()
-                .map(|t| <TargetDefinition as Into<AST>>::into(*t))
                 .unwrap()
                 .constructor_or_function_definition()
                 .unwrap(),
@@ -701,7 +690,7 @@ where
     pub fn request_public_key(
         &mut self,
         crypto_params: &CryptoParams,
-        plabel: (Option<MeExpr>, Option<Identifier>),
+        plabel: Option<AST>,
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) //(Identifier,CircuitInputStatement)
     // """
@@ -727,7 +716,7 @@ where
             ),
             None,
         );
-        let privacy_label_expr = get_privacy_expr_from_label(plabel.into());
+        let privacy_label_expr = get_privacy_expr_from_label(plabel.unwrap());
         let le = if let Some(le) = idf.get_loc_expr(None).location_expr() {
             Some(le)
         } else {
@@ -931,7 +920,7 @@ where
             self._ensure_encryption(
                 &mut statement,
                 locally_decrypted_idf.clone().unwrap(),
-                Expression::me_expr(None).into(),
+                Expression::me_expr(None).get_ast(),
                 crypto_params,
                 input_idf,
                 false,
@@ -1017,7 +1006,7 @@ where
         //with
         self._remapper
             .0
-            .remap_scope(Some(fcall.func.target().unwrap().body()));
+            .remap_scope(Some((*fcall.func.target().unwrap()).constructor_or_function_definition().unwrap().body.unwrap()));
 
         //with
         if fcall.func.target().unwrap().idf().name() == "<stmt_fct>" {
@@ -1027,7 +1016,7 @@ where
         }
 
         //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
-        for (param, arg) in fdef.as_ref().unwrap().parameters().iter().zip(&fcall.args) {
+        for (param, arg) in fdef.as_ref().unwrap().constructor_or_function_definition().unwrap().parameters.iter().zip(&fcall.args) {
             self._phi
                 .push(CircuitStatement::CircComment(CircComment::new(format!(
                     "ARG {}: {}",
@@ -1045,11 +1034,11 @@ where
         }
 
         //Visit the untransformed target function body to include all statements in this circuit
-        let inlined_body = fdef.as_ref().unwrap().original_body().clone(); //deep_copy(fdef.original_body, true, true);
+        let inlined_body = fdef.as_ref().unwrap().constructor_or_function_definition().unwrap().original_body.clone(); //deep_copy(fdef.original_body, true, true);
         self._circ_trafo
             .as_ref()
             .unwrap()
-            .visit(inlined_body.get_ast());
+            .visit(inlined_body.as_ref().unwrap().get_ast());
 
         fcall
             .expression_base
@@ -1057,7 +1046,7 @@ where
             .as_mut()
             .unwrap()
             .extend_pre_statements(
-                inlined_body
+                inlined_body.unwrap()
                     .statement_list_base
                     .statement_base
                     .pre_statements
@@ -1067,10 +1056,10 @@ where
             );
 
         //Create TupleExpr with location expressions corresponding to the function return values as elements
-        let ret_idfs: Vec<_> = fdef
+        let ret_idfs: Vec<_> = (*fdef
             .as_ref()
-            .unwrap()
-            .return_var_decls()
+            .unwrap()).constructor_or_function_definition().unwrap()
+            .return_var_decls
             .iter()
             .map(|vd| {
                 self._remapper
@@ -1302,9 +1291,9 @@ where
 
     pub fn _get_canonical_privacy_label(
         &self,
-        analysis: &PartitionState<PrivacyLabelExpr>,
-        privacy: &PrivacyLabelExpr,
-    ) -> PrivacyLabelExpr
+        analysis: &PartitionState<AST>,
+        privacy: &AST,
+    ) -> AST
 // """
     // If privacy is equivalent to a static privacy label -> Return the corresponding static label, otherwise itself.
 
@@ -1364,7 +1353,7 @@ where
     pub fn _get_circuit_output_for_private_expression(
         &mut self,
         expr: &mut Expression,
-        new_privacy: &PrivacyLabelExpr,
+        new_privacy: &AST,
         homomorphism: &String,
     ) -> Option<LocationExpr>
 // """
@@ -1407,11 +1396,7 @@ where
             t_suffix += &format!("_{}", (*expr).idf().name());
         }
 
-        let (out_var, new_out_param) = if (if let PrivacyLabelExpr::AllExpr(_) = new_privacy {
-            true
-        } else {
-            false
-        }) || expr.annotated_type().type_name.is_cipher()
+        let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)  || expr.annotated_type().type_name.is_cipher()
         //If the result is public, add an equality constraint to ensure that the user supplied public output
         //is equal to the circuit evaluation result
         {
@@ -1455,7 +1440,7 @@ where
             );
             let enc_expr = EncryptionExpression::new(
                 private_expr.to_expr(),
-                privacy_label_expr.into(),
+                privacy_label_expr.get_ast(),
                 Some(homomorphism.clone()),
             );
             let new_out_param =
@@ -1551,7 +1536,7 @@ where
         &mut self,
         stmt: &mut Statement,
         plain: HybridArgumentIdf,
-        new_privacy: PrivacyLabelExpr,
+        new_privacy: AST,
         crypto_params: CryptoParams,
         cipher: HybridArgumentIdf,
         is_param: bool,
@@ -1578,13 +1563,13 @@ where
             self._require_secret_key(&crypto_params);
             let my_pk = self._require_public_key_for_label_at(
                 Some(stmt),
-                &Expression::me_expr(None).into(),
+                &Expression::me_expr(None).get_ast(),
                 &crypto_params,
             );
             let other_pk = if is_dec {
                 self._get_public_key_in_sender_field(stmt, cipher.clone(), crypto_params)
             } else {
-                if new_privacy == Expression::me_expr(None).into() {
+                if new_privacy == Expression::me_expr(None).get_ast() {
                     my_pk
                 } else {
                     self._require_public_key_for_label_at(Some(stmt), &new_privacy, &crypto_params)
@@ -1646,7 +1631,7 @@ where
     pub fn _require_public_key_for_label_at(
         &mut self,
         mut stmt: Option<&mut Statement>,
-        privacy: &PrivacyLabelExpr,
+        privacy: &AST,
         crypto_params: &CryptoParams,
     ) -> HybridArgumentIdf
 // """
@@ -1681,21 +1666,13 @@ where
         }
 
         //privacy cannot be MeExpr (is in _static_owner_labels) or AllExpr (has no public key)
-        assert!(if let PrivacyLabelExpr::Identifier(_) = privacy {
-            true
-        } else {
-            false
-        });
+        assert!(is_instance(privacy,ASTType::Identifier));
 
         if let Some(requested_dynamic_pks) =
             self._requested_dynamic_pks.get(&*stmt.as_ref().unwrap())
         {
             if let Some(v) =
-                requested_dynamic_pks.get(&if let PrivacyLabelExpr::Identifier(idf) = &privacy {
-                    idf.clone()
-                } else {
-                    Identifier::None
-                })
+                requested_dynamic_pks.get(&privacy.identifier().unwrap())
             {
                 return v.clone();
             }
@@ -1722,11 +1699,7 @@ where
             .get_mut(&*stmt.as_ref().unwrap())
         {
             requested_dynamic_pks.insert(
-                if let PrivacyLabelExpr::Identifier(idf) = privacy {
-                    idf.clone()
-                } else {
-                    Identifier::None
-                },
+                privacy.identifier().unwrap(),
                 idf.clone(),
             );
         }

@@ -16,7 +16,7 @@ use crate::zkay_ast::ast::{
     IdentifierExprUnion, IfStatement, IndexExpr, LiteralExpr, LocationExpr, 
     Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
     NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement,
-    StateVariableDeclaration, Statement, StatementList, TargetDefinition, TupleExpr, TypeName,
+    StateVariableDeclaration, Statement, StatementList,  TupleExpr, TypeName,
     VariableDeclaration, VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
@@ -488,9 +488,7 @@ impl ZkayStatementTransformer {
                         None,
                     );
                     idf.location_expr_base.target =
-                        Some(Box::new(TargetDefinition::IdentifierDeclaration(
-                            IdentifierDeclaration::VariableDeclaration(vd.clone()),
-                        )));
+                        Some(Box::new(vd.get_ast()));
                     idf.to_expr()
                 })
                 .collect();
@@ -722,14 +720,7 @@ impl ZkayExpressionTransformer {
         } else if ast.is_cast()
         // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
         {
-            assert!(if let Some(TargetDefinition::NamespaceDefinition(
-                NamespaceDefinition::EnumDefinition(_),
-            )) = ast.func().unwrap().target().map(|t| *t)
-            {
-                true
-            } else {
-                false
-            });
+            assert!( is_instance(&ast.func().unwrap().target().map(|t| *t).unwrap(),ASTType::EnumDefinition));
             if ast.args()[0].evaluate_privately() {
                 let privacy_label = ast
                     .annotated_type()
@@ -764,8 +755,8 @@ impl ZkayExpressionTransformer {
                 .func()
                 .unwrap()
                 .target()
-                .unwrap()
-                .requires_verification_when_external()
+                .unwrap().constructor_or_function_definition().unwrap()
+                .requires_verification_when_external
             //Reroute the function call to the corresponding internal function if the called function was split into external/internal.
             {
                 if !is_instance(&ast.func().unwrap(), ASTType::IdentifierExpr) {
@@ -792,19 +783,12 @@ impl ZkayExpressionTransformer {
                     FunctionCallExpr::None
                 };
                 self.gen.as_mut().unwrap().call_function(&cf);
-            } else if ast.func().unwrap().target().unwrap().has_side_effects() && self.gen.is_some()
+            } else if ast.func().unwrap().target().unwrap().constructor_or_function_definition().unwrap().has_side_effects() && self.gen.is_some()
             //Invalidate modified state variables for the current circuit
             {
                 for val in &ast.ast_base().unwrap().modified_values {
                     if val.key().is_none()
-                        && (if let Some(TargetDefinition::IdentifierDeclaration(
-                            IdentifierDeclaration::StateVariableDeclaration(_),
-                        )) = val.target().map(|t| *t)
-                        {
-                            true
-                        } else {
-                            false
-                        })
+                        && is_instance(&val.target().map(|t| *t).unwrap(),ASTType::StateVariableDeclaration)
                     {
                         self.gen
                             .as_mut()
@@ -1107,10 +1091,10 @@ impl ZkayCircuitTransformer {
             return self.visit_children(ast.get_ast()).expr();
         }
 
-        let fdef = &ast.func().unwrap().target().unwrap();
-        assert!(fdef.is_function());
-        assert!(!fdef.return_parameters().is_empty());
-        assert!(fdef.has_static_body());
+        let fdef = &*ast.func().unwrap().target().unwrap();
+        assert!(fdef.constructor_or_function_definition().unwrap().is_function());
+        assert!(!fdef.constructor_or_function_definition().unwrap().return_parameters.is_empty());
+        assert!(fdef.constructor_or_function_definition().unwrap().has_static_body);
 
         //Function call inside private expression -> entire body will be inlined into circuit.
         //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)

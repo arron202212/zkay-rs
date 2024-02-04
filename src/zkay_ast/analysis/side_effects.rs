@@ -1,8 +1,8 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTChildren, ASTCode, ASTType, AssignmentStatement, BuiltinFunction,
-    Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, InstanceTargetExprUnion,
-    LocationExpr, Parameter, StateVariableDeclaration, Statement, TargetDefinition, TupleExpr,
+    Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, 
+    LocationExpr, Parameter, StateVariableDeclaration, Statement,  TupleExpr,
     TupleOrLocationExpr, VariableDeclaration, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
@@ -51,7 +51,7 @@ impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
         if is_instance(&ast.func().unwrap(), ASTType::LocationExpr)
             && !ast.is_cast()
-            && ast.func().unwrap().target().unwrap().has_side_effects()
+            && (*ast.func().unwrap().target().unwrap()).constructor_or_function_definition().unwrap().has_side_effects()
         {
             true
         } else {
@@ -113,7 +113,7 @@ impl DirectModificationDetector {
                 self.collect_modified_values(target, elem.get_ast());
             }
         } else {
-            let mod_value = InstanceTarget::new(expr.clone().into());
+            let mod_value = InstanceTarget::new(vec![Some(Box::new(expr.get_ast()))]);
             if target
                 .ast_base()
                 .unwrap()
@@ -144,7 +144,7 @@ impl DirectModificationDetector {
             )
         {
             ast.ast_base_mut().read_values.insert(InstanceTarget::new(
-                InstanceTargetExprUnion::LocationExpr(ast2),
+               vec![ Some(Box::new(ast2.get_ast()))]
             ));
         }
     }
@@ -153,7 +153,7 @@ impl DirectModificationDetector {
             .ast_base
             .modified_values
             .insert(InstanceTarget::new(
-                InstanceTargetExprUnion::VariableDeclaration(ast.clone()),
+                vec![Some(Box::new(ast.get_ast()))]
             ));
     }
 
@@ -240,9 +240,7 @@ impl IndirectModificationDetector {
                         .read_values
                         .iter()
                         .filter_map(|v| {
-                            if let Some(TargetDefinition::IdentifierDeclaration(
-                                IdentifierDeclaration::StateVariableDeclaration(_),
-                            )) = v.target().map(|t| *t)
+                            if  v.target().is_some() && is_instance(&v.target().map(|t| *t).unwrap(),ASTType::StateVariableDeclaration)
                             {
                                 Some(v)
                             } else {
@@ -259,9 +257,7 @@ impl IndirectModificationDetector {
             //update modified values if any
             let mlen = ast.ast_base().unwrap().modified_values.len();
             for v in &fdef.ast_base().unwrap().modified_values {
-                if let Some(TargetDefinition::IdentifierDeclaration(
-                    IdentifierDeclaration::StateVariableDeclaration(_),
-                )) = v.target().map(|t| *t)
+                if is_instance(&v.target().map(|t| *t).unwrap(),ASTType::StateVariableDeclaration)
                 {
                     ast.ast_base_mut()
                         .unwrap()
@@ -364,12 +360,12 @@ impl EvalOrderUBChecker {
                             diffset
                                 .iter()
                                 .map(
-                                    |InstanceTarget {
-                                         target_key: (val, member),
-                                     }| format!(
+                                    |
+                                         it,
+                                     | format!(
                                         "{:?}{}",
-                                        val.as_ref().unwrap(),
-                                        if let Some(member) = member {
+                                        it.target_key[0].as_ref().unwrap(),
+                                        if let Some(member) = it.target_key[1].clone().map(|t|*t) {
                                             format!(".{:?}", member)
                                         } else {
                                             String::new()

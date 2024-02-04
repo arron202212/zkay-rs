@@ -13,7 +13,7 @@ use crate::zkay_ast::ast::{
     LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NewExpr,
     NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr, ReclassifyExpr,
     ReclassifyExprBase, RehomExpr, RequireStatement, ReturnStatement, StateVariableDeclaration,
-    TargetDefinition, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
+    TupleExpr, TupleType, TypeName, UserDefinedTypeName,
     VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::deep_copy::replace_expr;
@@ -130,9 +130,7 @@ impl TypeCheckVisitor {
     }
     pub fn check_final(&self, fct: ConstructorOrFunctionDefinition, ast: Expression) {
         if is_instance(&ast, ASTType::IdentifierExpr) {
-            if let Some(TargetDefinition::IdentifierDeclaration(
-                IdentifierDeclaration::StateVariableDeclaration(target),
-            )) = ast.target().map(|t| *t)
+            if let Some(target) = ast.target().map(|t| *t).unwrap().state_variable_declaration()
             {
                 if target
                     .identifier_declaration_base
@@ -673,14 +671,8 @@ impl TypeCheckVisitor {
             );
         } else if ast.is_cast() {
             assert!(
-                if let Some(TargetDefinition::NamespaceDefinition(
-                    NamespaceDefinition::EnumDefinition(_),
-                )) = ast.func().unwrap().target().map(|t| *t)
-                {
-                    true
-                } else {
-                    false
-                },
+                is_instance(&ast.func().unwrap().target().map(|t| *t).unwrap(),ASTType::EnumDefinition)
+                ,
                 "User type casts only implemented for enums"
             );
             ast.set_annotated_type(
@@ -690,7 +682,7 @@ impl TypeCheckVisitor {
                         .unwrap()
                         .target()
                         .unwrap()
-                        .annotated_type()
+                        .annotated_type().unwrap()
                         .type_name,
                 ),
             );
@@ -783,7 +775,7 @@ impl TypeCheckVisitor {
         ast.location_expr_base
             .tuple_or_location_expr_base
             .expression_base
-            .annotated_type = Some(ast.location_expr_base.target.unwrap().annotated_type());
+            .annotated_type = ast.location_expr_base.target.unwrap().annotated_type();
     }
 
     pub fn visitReclassifyExpr(&self, mut ast: ReclassifyExpr) {
@@ -935,20 +927,13 @@ impl TypeCheckVisitor {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
         let target = ast.location_expr_base.target.clone().map(|t| *t);
-        if Some(TargetDefinition::None) != target {
-            assert!(
-                if let Some(TargetDefinition::NamespaceDefinition(
-                    NamespaceDefinition::ContractDefinition(_),
-                )) = target
-                {
-                    false
-                } else {
-                    true
-                },
+        if let Some(target) = target {
+            assert!(is_instance(&target,ASTType::ContractDefinition)
+                ,
                 "Unsupported use of contract type in expression{:?}",
                 ast
             );
-            ast.annotated_type = Some(Box::new(target.unwrap().annotated_type()));
+            ast.annotated_type = target.annotated_type().map(|t|Box::new(t));
 
             assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         }
@@ -1120,17 +1105,17 @@ impl TypeCheckVisitor {
         }
         let p = *ast.privacy_annotation.unwrap();
         if is_instance(&p, ASTType::IdentifierExpr) {
-            let t=p.target().unwrap();
-            if TargetDefinition::None != *t{
+            let t=p.target().map(|t|*t);
+            if let Some(t) = t{
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass
                     assert!(
-                        t.is_final() ||t.is_constant(),
+                        t.is_final() ||t.identifier_declaration_base().unwrap().is_constant(),
                         r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}"#,
                         p
                     );
                     assert!(
-                         t.annotated_type() == AnnotatedTypeName::address_all(),
+                         t.annotated_type() == Some(AnnotatedTypeName::address_all()),
                         r#"Privacy type is not a public address, but {:?},{:?}"#,
                         t.annotated_type(),
                         p
