@@ -80,14 +80,9 @@ impl ParentSetterVisitor {
 
     pub fn visitChildren(&self, ast: &mut AST) {
         for c in ast.children().iter_mut() {
-            if AST::default() != *c {
                 c.ast_base_mut().unwrap().parent = Some(Box::new(ast.clone()));
                 c.ast_base_mut().unwrap().namespace = ast.ast_base().unwrap().namespace.clone();
                 self.visit(c.clone());
-            } else {
-                let children = ast.children();
-                print!("{:?},{:?}, {:?}", c, ast, children);
-            }
         }
     }
 }
@@ -127,12 +122,8 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.expression_base_mut().unwrap().statement = parent.map(|p| {
-                Box::new(if let AST::Statement(a) = p {
-                    a
-                } else {
-                    Statement::default()
-                })
+            ast.expression_base_mut().unwrap().statement = parent.map(|AST::Statement(p)| {
+                Box::new(p)
             });
         }
     }
@@ -149,17 +140,9 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement_base_mut().unwrap().function = parent.map(|p| {
-                Box::new(
-                    if let AST::NamespaceDefinition(
-                        NamespaceDefinition::ConstructorOrFunctionDefinition(a),
-                    ) = p
-                    {
-                        a
-                    } else {
-                        ConstructorOrFunctionDefinition::default()
-                    },
-                )
+            ast.statement_base_mut().unwrap().function = parent.map(|AST::NamespaceDefinition(
+                        NamespaceDefinition::ConstructorOrFunctionDefinition(p))| {
+                Box::new(p)
             });
         }
     }

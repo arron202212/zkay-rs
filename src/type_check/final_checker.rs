@@ -49,7 +49,7 @@ impl FinalVisitor {
     pub fn visitContractDefinition(&mut self, ast: ContractDefinition) {
         self.state_vars_assigned = Some(BTreeMap::new());
         for v in &ast.state_variable_declarations {
-            if v.is_final() && v.expr() != Expression::None {
+            if v.is_final() && v.expr().is_some(){
                 self.state_vars_assigned.as_mut().unwrap().insert(v.clone(), false);
             }
         }

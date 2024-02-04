@@ -53,8 +53,8 @@ impl ChildListBuilder {
     pub fn new() -> Self {
         Self { children: vec![] }
     }
-    pub fn add_child(&mut self, ast: AST) {
-        if let AST::None = ast {
+    pub fn add_child(&mut self, ast: Option<AST>) {
+        if  ast.is_none() {
             return;
         }
         self.children.push(ast.clone());
@@ -80,7 +80,7 @@ pub fn is_instances<T: ASTCode>(var: &T, ast_types: Vec<ASTType>) -> bool {
 //     };
 // }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ASTType {
     Identifier,
@@ -182,8 +182,6 @@ pub enum ASTType {
     CircEncConstraint,
     CircSymmEncConstraint,
     CircEqConstraint,
-    #[default]
-    None,
 }
 
 pub trait ASTChildren {
@@ -197,11 +195,11 @@ pub trait ASTChildren {
 }
 
 pub trait ASTCode {
-    fn to_statement(&self) -> Statement {
-        Statement::None
+    fn to_statement(&self) -> Option<Statement> {
+        None
     }
-    fn to_expr(&self) -> Expression {
-        Expression::None
+    fn to_expr(&self) -> Option<Expression> {
+        None
     }
     fn get_ast(&self) -> AST;
     fn get_ast_type(&self) -> ASTType;
@@ -226,7 +224,7 @@ trait ASTProperty {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum AST {
     Identifier(Identifier),
@@ -244,8 +242,6 @@ pub enum AST {
     Modifier(String),
     Homomorphism(String),
     CircuitStatement(CircuitStatement),
-    #[default]
-    None,
 }
 impl ASTCode for AST {
     fn get_ast(&self) -> AST {
@@ -264,7 +260,6 @@ impl ASTCode for AST {
             AST::VersionPragma(_) => self.clone(),
             AST::Modifier(_) => self.clone(),
             AST::Homomorphism(_) => self.clone(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -283,7 +278,6 @@ impl ASTCode for AST {
             AST::VersionPragma(_) => ASTType::VersionPragma,
             AST::Modifier(_) => ASTType::Modifier,
             AST::Homomorphism(_) => ASTType::Homomorphism,
-            _ => ASTType::None,
         }
     }
 }
@@ -291,6 +285,8 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn builtin_function(&self)->Option<BuiltinFunction>{
+    None}
     pub fn location_expr_base(&self)->Option<LocationExprBase>{
     None}
     pub fn namespace_definition(&self)->Option<NamespaceDefinition>{
@@ -317,10 +313,6 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
    pub fn tuple_expr(&self)->Option<TupleExpr>{
         None
     }
-
-    pub fn expression(&self)->Option<Expression>{
-        None
-    }
     pub fn parameter(&self) -> Option<&Parameter> {
         None
     }
@@ -330,8 +322,8 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
     pub fn source_unit(&self) -> Option<&SourceUnit> {
         None
     }
-    pub fn statement_list_base(&self) -> StatementListBase {
-        StatementListBase::default()
+    pub fn statement_list_base(&self) -> Option<StatementListBase> {
+        None
     }
     pub fn ast_base(&self) -> Option<&ASTBase> {
         None
@@ -370,11 +362,11 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
     pub fn init(&self) -> Option<SimpleStatement> {
         None
     }
-    pub fn expr(&self) -> Expression {
+    pub fn expr(&self) -> Option<Expression> {
         if let Self::Expression(expr) = self {
             expr.clone()
         } else {
-            Expression::None
+            None
         }
     }
     pub fn pre_statements(&self) -> Vec<AST> {
@@ -438,8 +430,8 @@ pub fn tuple_or_location_expr(&self)->Option<TupleOrLocationExpr>{
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
     }
-    pub fn idf(&self) -> Identifier {
-        Identifier::default()
+    pub fn idf(&self) -> Option<Identifier> {
+        None
     }
     pub fn requires_verification(&self) -> bool {
         false
@@ -468,7 +460,7 @@ impl Immutable for AST {
 //         true
 //     }
 // }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ASTBase {
     pub parent: Option<Box<AST>>,
     pub namespace: Option<Vec<Identifier>>,
@@ -495,7 +487,7 @@ impl ASTBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierBase {
     pub ast_base: ASTBase,
     pub name: String,
@@ -519,12 +511,13 @@ impl IdentifierBase {
 
     pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Statement {
         let t = match t {
-            AST::TypeName(t) => {
-                AnnotatedTypeName::new(t, None, Homomorphism::non_homomorphic())
-            }
-            AST::AnnotatedTypeName(t) => t,
-            _ => AnnotatedTypeName::default(),
+            AST::TypeName(t) => 
+                Some(AnnotatedTypeName::new(t, None, Homomorphism::non_homomorphic())),
+            AST::AnnotatedTypeName(t) => Some(t),
+            _ => None,
         };
+        assert!(t.is_some());
+        let t=t.unwrap();
         let storage_loc = if t.type_name.is_primitive_type() {
             String::new()
         } else {
@@ -563,13 +556,11 @@ impl fmt::Display for IdentifierBase {
         write!(f, "{}", self.name)
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum Comment {
     Comment(CommentBase),
     BlankLine(BlankLine),
-    #[default]
-    None,
 }
 impl Comment {
     pub fn text(&self) -> String {
@@ -581,18 +572,16 @@ impl ASTCode for Comment {
         match self {
             Comment::Comment(ast) => ast.get_ast(),
             Comment::BlankLine(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             Comment::Comment(ast) => ast.get_ast_type(),
             Comment::BlankLine(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CommentBase {
     pub ast_base: ASTBase,
     pub text: String,
@@ -651,7 +640,7 @@ impl CommentBase {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BlankLine {
     pub comment_base: CommentBase,
 }
@@ -671,16 +660,7 @@ impl BlankLine {
     }
 }
 
-// #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-// #[serde(untagged)]
-// pub enum ExplicitlyConvertedUnion<T> {
-//     Type(T),
-//     FunctionCallExpr(FunctionCallExpr),
-//     #[serde(rename_all = "camelCase")]
-//     #[default]
-//     None,
-// }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum Expression {
     BuiltinFunction(BuiltinFunction),
@@ -692,9 +672,6 @@ pub enum Expression {
     AllExpr(AllExpr),
     ReclassifyExpr(ReclassifyExpr),
     DummyAnnotation(DummyAnnotation),
-    #[serde(rename_all = "camelCase")]
-    #[default]
-    None,
 }
 
 impl ASTCode for Expression {
@@ -709,7 +686,6 @@ impl ASTCode for Expression {
             Expression::AllExpr(ast) => ast.get_ast(),
             Expression::ReclassifyExpr(ast) => ast.get_ast(),
             Expression::DummyAnnotation(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -723,7 +699,6 @@ impl ASTCode for Expression {
             Expression::AllExpr(ast) => ast.get_ast_type(),
             Expression::ReclassifyExpr(ast) => ast.get_ast_type(),
             Expression::DummyAnnotation(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -745,8 +720,8 @@ impl Expression {
     pub fn parent(&self) -> Option<Box<AST>> {
         None
     }
-    pub fn privacy(&self) -> Expression {
-        Expression::None
+    pub fn privacy(&self) -> Option<Expression> {
+        None
     }
     pub fn line(&self) -> i32 {
         -1
@@ -764,8 +739,8 @@ impl Expression {
         String::new()
     }
     pub fn set_expr(&mut self, expr: Expression) {}
-    pub fn expr(&self) -> Expression {
-        Expression::None
+    pub fn expr(&self) -> Option<Expression> {
+        None
     }
     pub fn set_args(&mut self, args: Vec<Expression>) {}
     pub fn args(&self) -> Vec<Expression> {
@@ -787,14 +762,14 @@ impl Expression {
         None
         // }
     }
-    pub fn member(&self) -> Identifier {
-        Identifier::None
+    pub fn member(&self) -> Option<Identifier> {
+        None
     }
     pub fn func(&self) -> Option<Expression> {
         None
     }
-    pub fn idf(&self) -> Identifier {
-        Identifier::default()
+    pub fn idf(&self) -> Option<Identifier> {
+        None
     }
     pub fn evaluate_privately(&self) -> bool {
         false
@@ -831,9 +806,9 @@ impl Expression {
         Expression::MeExpr(me_expr)
     }
     pub fn explicitly_converted(&self, expected: TypeName) -> AST{
-        let mut ret = FunctionCallExprBase::default();
+        let mut ret = None;
         if expected == TypeName::bool_type() && !self.instanceof_data_type(&TypeName::bool_type()) {
-            ret = FunctionCallExprBase::new(
+            ret = Some(FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("!=")),
                 vec![
                     self.clone(),
@@ -842,9 +817,9 @@ impl Expression {
                     )),
                 ],
                 None,
-            );
+            ));
         } else if expected.is_numeric() && self.instanceof_data_type(&TypeName::bool_type()) {
-            ret = FunctionCallExprBase::new(
+            ret = Some(FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("ite")),
                 vec![
                     self.clone(),
@@ -856,7 +831,7 @@ impl Expression {
                     )),
                 ],
                 None,
-            );
+            ));
         } else {
             let t = self.annotated_type().type_name;
 
@@ -865,40 +840,11 @@ impl Expression {
             }
 
             // Explicit casts
-            // let cast =
-            // if isinstance(t, NumberTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName, AddressPayableTypeName, EnumTypeName))
-            //     cast = True
-            // else if isinstance(t, AddressTypeName) and isinstance(expected, NumberTypeName)
-            //     cast = True
-            // else if isinstance(t, AddressPayableTypeName) and isinstance(expected, (NumberTypeName, AddressTypeName))
-            //     cast = True
-            // else if isinstance(t, EnumTypeName) and isinstance(expected, NumberTypeName)
-            //     cast = True
-            let cast = if let (
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)),
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_))
-                | TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(_))
-                | TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(_))
-                | TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(_)),
-            )
-            | (
-                TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(_)),
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)),
-            )
-            | (
-                TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(_)),
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_))
-                | TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(_)),
-            )
-            | (
-                TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(_)),
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)),
-            ) = (*t, &expected)
-            {
-                true
-            } else {
-                false
-            };
+            let cast =
+            is_instance(&t, ASTType::NumberTypeName) && is_instances(&expected, vec![ASTType::NumberTypeName, ASTType::AddressTypeName, ASTType::AddressPayableTypeName, ASTType::EnumTypeName])
+                || is_instance(&t, ASTType::AddressTypeName) && is_instance(&expected, ASTType::NumberTypeName)
+            || is_instance(&t, ASTType::AddressPayableTypeName) && is_instances(&expected, vec![ASTType::NumberTypeName, ASTType::AddressTypeName])
+            || is_instance(&t, ASTType::EnumTypeName) && is_instance(&expected, ASTType::NumberTypeName);
             assert!(cast);
             return
                 Expression::PrimitiveCastExpr(PrimitiveCastExpr::new(
@@ -909,7 +855,8 @@ impl Expression {
                 .as_type(AST::TypeName(expected)).get_ast()
            
         }
-
+        assert!(ret.is_some());
+        let ret=ret.unwrap();
         ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             expected.clone(),
             if let Some(privacy_annotation) = self.annotated_type().privacy_annotation {
@@ -1044,7 +991,7 @@ impl Expression {
                         })
                         .collect::<Vec<_>>())
                 .to_string()
-            } else if combined_label.expression().privacy_annotation_label()
+            } else if combined_label.expr().privacy_annotation_label()
                 == actual
                     .privacy_annotation
                     .unwrap()
@@ -1069,8 +1016,7 @@ impl Expression {
             Expression::MeExpr(ast) => Expression::MeExpr(ast.as_type(t)),
             Expression::AllExpr(ast) => Expression::AllExpr(ast.as_type(t)),
             Expression::ReclassifyExpr(ast) => Expression::ReclassifyExpr(ast.as_type(t)),
-            Expression::DummyAnnotation(ast) => Self::default(),
-            _ => Self::default(),
+            Expression::DummyAnnotation(ast) => Expression::DummyAnnotation(ast),
         }
     }
 
@@ -1081,15 +1027,15 @@ impl Expression {
             None
         }
     }
-    pub fn annotated_type(&self) -> AnnotatedTypeName {
-        AnnotatedTypeName::default()
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
     }
     pub fn statement(&self) -> Option<Box<Statement>> {
         None
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionBase {
     pub ast_base: ASTBase,
     pub annotated_type: Option<AnnotatedTypeName>,
@@ -1106,12 +1052,10 @@ impl ExpressionBase {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum LiteralUnion {
     Bool(bool),
     Number(i32),
-    #[default]
-    None,
 }
 pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralUnion {
     match op {
@@ -1250,7 +1194,7 @@ lazy_static! {
 //     """
 //     A list that describes what arguments are required to be public to be able to use this homomorphic function.
 //     """
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HomomorphicBuiltin {
     pub op: String,
     pub homomorphism: String,
@@ -1303,7 +1247,7 @@ lazy_static! {
         homomorphic_builtin_functions_internal
     };
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BuiltinFunction {
     pub expression_base: Box<ExpressionBase>,
     pub op: String,
@@ -1398,44 +1342,44 @@ impl BuiltinFunction {
     pub fn arity(&self) -> i32 {
         BUILTIN_FUNCTIONS[&self.op].matches("{}").count() as i32
     }
-    pub fn input_types(&self) -> Vec<TypeName> {
+    pub fn input_types(&self) -> Vec<Option<TypeName>> {
         // :return: None if the type is generic
         let t = if self.is_arithmetic() {
-            TypeName::number_type()
+            Some(TypeName::number_type())
         } else if self.is_comp() {
-            TypeName::number_type()
+            Some(TypeName::number_type())
         } else if self.is_bop() {
-            TypeName::bool_type()
+           Some( TypeName::bool_type())
         } else if self.is_bitop() {
-            TypeName::number_type()
+            Some(TypeName::number_type())
         } else if self.is_shiftop() {
-            TypeName::number_type()
+            Some(TypeName::number_type())
         } else
         // eq, parenthesis, ite
         {
-            TypeName::None
+            None
         };
 
         vec![t; self.arity() as usize]
     }
-    pub fn output_type(&self) -> TypeName {
+    pub fn output_type(&self) -> Option<TypeName> {
         // :return: None if the type is generic
         if self.is_arithmetic() {
-            TypeName::number_type()
+            Some(TypeName::number_type())
         } else if self.is_comp() {
-            TypeName::bool_type()
+            Some(TypeName::bool_type())
         } else if self.is_bop() {
-            TypeName::bool_type()
+           Some( TypeName::bool_type())
         } else if self.is_eq() {
-            TypeName::bool_type()
+           Some( TypeName::bool_type())
         } else if self.is_bitop() {
-            TypeName::number_type()
+         Some(   TypeName::number_type())
         } else if self.is_shiftop() {
-            TypeName::number_type()
+          Some ( TypeName::number_type())
         } else
         // parenthesis, ite
         {
-            TypeName::None
+            None
         }
     }
     pub fn can_be_private(&self) -> bool
@@ -1545,7 +1489,7 @@ impl BuiltinFunction {
 }
 
 //     Describes the required input types and the resulting output type of a homomorphic execution of a BuiltinFunction.
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HomomorphicBuiltinFunction {
     pub target_type: AnnotatedTypeName,
     pub public_args: Vec<bool>,
@@ -1575,12 +1519,10 @@ impl HomomorphicBuiltinFunction {
         self.target_type.clone()
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum FunctionCallExpr {
     FunctionCallExpr(FunctionCallExprBase),
     NewExpr(NewExpr),
-    #[default]
-    None,
 }
 
 impl FunctionCallExpr {
@@ -1624,7 +1566,6 @@ impl FunctionCallExpr {
                 FunctionCallExpr::FunctionCallExpr(ast.as_type(t))
             }
             FunctionCallExpr::NewExpr(ast) => FunctionCallExpr::NewExpr(ast.as_type(t)),
-            _ => Self::default(),
         }
     }
 }
@@ -1633,7 +1574,6 @@ impl ASTCode for FunctionCallExpr {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => ast.to_expr(),
             FunctionCallExpr::NewExpr(ast) => ast.to_expr(),
-            _ => Expression::default(),
         }
     }
 
@@ -1641,18 +1581,16 @@ impl ASTCode for FunctionCallExpr {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => ast.get_ast(),
             FunctionCallExpr::NewExpr(ast) => ast.get_ast(),
-            _ => AST::default(),
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => ast.get_ast_type(),
             FunctionCallExpr::NewExpr(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionCallExprBase {
     pub expression_base: Box<ExpressionBase>,
     pub func: Box<Expression>,
@@ -1728,7 +1666,7 @@ impl ASTChildren for FunctionCallExprBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NewExpr {
     pub function_call_expr_base: FunctionCallExprBase,
     pub annotated_type: AnnotatedTypeName,
@@ -1785,7 +1723,7 @@ impl ASTChildren for NewExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PrimitiveCastExpr {
     pub expression_base: Box<ExpressionBase>,
     pub elem_type: Box<TypeName>,
@@ -1831,16 +1769,13 @@ impl ASTChildren for PrimitiveCastExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum LiteralExpr {
     BooleanLiteralExpr(BooleanLiteralExpr),
     NumberLiteralExpr(NumberLiteralExpr),
     StringLiteralExpr(StringLiteralExpr),
     ArrayLiteralExpr(ArrayLiteralExpr),
-    #[serde(rename_all = "camelCase")]
-    #[default]
-    None,
 }
 impl LiteralExpr {
     pub fn as_type(&self, t: AST) -> Self {
@@ -1849,7 +1784,6 @@ impl LiteralExpr {
             LiteralExpr::NumberLiteralExpr(ast) => LiteralExpr::NumberLiteralExpr(ast.as_type(t)),
             LiteralExpr::StringLiteralExpr(ast) => LiteralExpr::StringLiteralExpr(ast.as_type(t)),
             LiteralExpr::ArrayLiteralExpr(ast) => LiteralExpr::ArrayLiteralExpr(ast.as_type(t)),
-            _ => Self::default(),
         }
     }
 }
@@ -1860,7 +1794,6 @@ impl ASTCode for LiteralExpr {
             LiteralExpr::NumberLiteralExpr(ast) => ast.get_ast(),
             LiteralExpr::StringLiteralExpr(ast) => ast.get_ast(),
             LiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -1869,11 +1802,10 @@ impl ASTCode for LiteralExpr {
             LiteralExpr::NumberLiteralExpr(ast) => ast.get_ast_type(),
             LiteralExpr::StringLiteralExpr(ast) => ast.get_ast_type(),
             LiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LiteralExprBase {
     pub expression_base: ExpressionBase,
 }
@@ -1886,7 +1818,7 @@ impl LiteralExprBase {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralExpr {
     pub literal_expr_base: Box<LiteralExprBase>,
     pub value: bool,
@@ -1931,7 +1863,7 @@ impl BooleanLiteralExpr {
         selfs
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberLiteralExpr {
     pub literal_expr_base: Box<LiteralExprBase>,
     pub value: i32,
@@ -2006,7 +1938,7 @@ impl NumberLiteralExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StringLiteralExpr {
     pub literal_expr_base: LiteralExprBase,
     pub value: String,
@@ -2044,14 +1976,11 @@ impl StringLiteralExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ArrayLiteralExpr {
     ArrayLiteralExpr(ArrayLiteralExprBase),
     KeyLiteralExpr(KeyLiteralExpr),
-    #[serde(rename_all = "camelCase")]
-    #[default]
-    None,
 }
 impl ArrayLiteralExpr {
     pub fn values(&self) -> Vec<Expression> {
@@ -2059,13 +1988,10 @@ impl ArrayLiteralExpr {
     }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
-            ArrayLiteralExpr::ArrayLiteralExpr(ast) => {
-                ArrayLiteralExpr::ArrayLiteralExpr(ast.as_type(t))
-            }
-            ArrayLiteralExpr::KeyLiteralExpr(ast) => {
-                ArrayLiteralExpr::KeyLiteralExpr(ast.as_type(t))
-            }
-            _ => Self::default(),
+            ArrayLiteralExpr::ArrayLiteralExpr(ast) => 
+                ArrayLiteralExpr::ArrayLiteralExpr(ast.as_type(t)),
+            ArrayLiteralExpr::KeyLiteralExpr(ast) => 
+                ArrayLiteralExpr::KeyLiteralExpr(ast.as_type(t)),
         }
     }
 }
@@ -2074,18 +2000,16 @@ impl ASTCode for ArrayLiteralExpr {
         match self {
             ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast(),
             ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.get_ast(),
-            _ => AST::None,
-        }
+         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast_type(),
             ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ArrayLiteralExprBase {
     pub literal_expr_base: Box<LiteralExprBase>,
     pub values: Vec<Expression>,
@@ -2130,7 +2054,7 @@ impl ASTChildren for ArrayLiteralExprBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct KeyLiteralExpr {
     pub array_literal_expr_base: ArrayLiteralExprBase,
     pub crypto_params: CryptoParams,
@@ -2176,13 +2100,11 @@ impl KeyLiteralExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum TupleOrLocationExpr {
     TupleExpr(TupleExpr),
     LocationExpr(LocationExpr),
-    #[default]
-    None,
 }
 
 impl ASTCode for TupleOrLocationExpr {
@@ -2190,14 +2112,12 @@ impl ASTCode for TupleOrLocationExpr {
         match self {
             TupleOrLocationExpr::TupleExpr(ast) => ast.get_ast(),
             TupleOrLocationExpr::LocationExpr(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             TupleOrLocationExpr::TupleExpr(ast) => ast.get_ast_type(),
             TupleOrLocationExpr::LocationExpr(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -2248,14 +2168,12 @@ impl TupleOrLocationExpr {
     pub fn as_type(&self, t: AST) -> Self {
         match self {
             TupleOrLocationExpr::TupleExpr(ast) => TupleOrLocationExpr::TupleExpr(ast.as_type(t)),
-            TupleOrLocationExpr::LocationExpr(ast) => {
-                TupleOrLocationExpr::LocationExpr(ast.as_type(t))
-            }
-            _ => Self::default(),
+            TupleOrLocationExpr::LocationExpr(ast) => 
+                TupleOrLocationExpr::LocationExpr(ast.as_type(t)),
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleOrLocationExprBase {
     pub expression_base: ExpressionBase,
 }
@@ -2268,7 +2186,7 @@ impl TupleOrLocationExprBase {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleExpr {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     pub elements: Vec<Expression>,
@@ -2470,7 +2388,6 @@ impl LocationExpr {
                 Some(self.clone()),
                 Identifier::Identifier(IdentifierBase::new(member)),
             ),
-            _ => MemberAccessExpr::default(),
         }
     }
 
@@ -2522,21 +2439,19 @@ impl LocationExpr {
             _ => None,
         };
         let value_type = if let Some(type_name) = type_name {
-            match *type_name {
+           Some( match *type_name {
                 TypeName::Array(a) => AST::AnnotatedTypeName(a.value_type()),
                 TypeName::Mapping(a) => AST::AnnotatedTypeName(*a.value_type),
-                _ => AST::None,
-            }
+            })
         } else {
-            AST::None
+            None
         };
-        assert!(value_type != AST::None);
+        assert!(value_type.is_some());
         let item = match item {
             ExprUnion::I32(item) => Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                 NumberLiteralExpr::new(item, false),
             )),
             ExprUnion::Expression(item) => item,
-            _ => Expression::None,
         };
 
         IndexExpr::new(Some(self.clone()), item).as_type(value_type)
@@ -2560,7 +2475,7 @@ impl LocationExpr {
         None
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LocationExprBase {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     pub target: Option<Box<AST>>,
@@ -2575,14 +2490,12 @@ impl LocationExprBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum IdentifierExprUnion {
     String(String),
     Identifier(Identifier),
-    #[default]
-    None,
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierExpr {
     pub location_expr_base: LocationExprBase,
     pub idf: Box<Identifier>,
@@ -2653,7 +2566,7 @@ impl ASTChildren for IdentifierExpr {
         cb.add_child(AST::Identifier(*self.idf.clone()));
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MemberAccessExpr {
     pub location_expr_base: LocationExprBase,
     pub expr: Option<Box<LocationExpr>>,
@@ -2709,7 +2622,7 @@ impl ASTChildren for MemberAccessExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndexExpr {
     pub location_expr_base: LocationExprBase,
     pub arr: Option<Box<LocationExpr>>,
@@ -2765,7 +2678,7 @@ impl ASTChildren for IndexExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SliceExpr {
     pub location_expr_base: LocationExprBase,
     pub arr: Option<Box<LocationExpr>>,
@@ -2826,7 +2739,7 @@ impl SliceExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct MeExpr {
     pub expression_base: ExpressionBase,
     pub name: String,
@@ -2870,7 +2783,7 @@ impl Immutable for MeExpr {
         true
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AllExpr {
     pub expression_base: ExpressionBase,
     pub name: String,
@@ -2911,14 +2824,12 @@ impl Immutable for AllExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ReclassifyExpr {
     ReclassifyExpr(ReclassifyExprBase),
     RehomExpr(RehomExpr),
     EncryptionExpression(EncryptionExpression),
-    #[default]
-    None,
 }
 
 impl ReclassifyExpr {
@@ -2930,8 +2841,8 @@ impl ReclassifyExpr {
         None
     }
     pub fn set_homomorphism(&mut self, homomorphism: String) {}
-    pub fn annotated_type(&self) -> AnnotatedTypeName {
-        AnnotatedTypeName::default()
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        None
     }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
@@ -2940,7 +2851,6 @@ impl ReclassifyExpr {
             ReclassifyExpr::EncryptionExpression(ast) => {
                 ReclassifyExpr::EncryptionExpression(ast.as_type(t))
             }
-            _ => Self::default(),
         }
     }
     pub fn expr(&self) -> Option<Expression> {
@@ -2962,7 +2872,6 @@ impl ASTCode for ReclassifyExpr {
             ReclassifyExpr::ReclassifyExpr(ast) => ast.get_ast(),
             ReclassifyExpr::RehomExpr(ast) => ast.get_ast(),
             ReclassifyExpr::EncryptionExpression(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -2970,11 +2879,10 @@ impl ASTCode for ReclassifyExpr {
             ReclassifyExpr::ReclassifyExpr(ast) => ast.get_ast_type(),
             ReclassifyExpr::RehomExpr(ast) => ast.get_ast_type(),
             ReclassifyExpr::EncryptionExpression(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReclassifyExprBase {
     pub expression_base: ExpressionBase,
     pub expr: Box<Expression>,
@@ -3025,7 +2933,7 @@ impl ASTChildren for ReclassifyExprBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RehomExpr {
     pub reclassify_expr_base: ReclassifyExprBase,
 }
@@ -3072,16 +2980,15 @@ impl RehomExpr {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum HybridArgType {
-    #[default]
     PrivCircuitVal,
     PubCircuitArg,
     PubContractVal,
     TmpCircuitVal,
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct HybridArgumentIdf {
     pub identifier_base: IdentifierBase,
     pub t: Box<TypeName>,
@@ -3203,13 +3110,11 @@ impl HybridArgumentIdf {
                 .statement = if let Some(AST::Expression(e)) = &parent {
                 e.statement().clone()
             } else {
-                parent.map(|p| {
-                    Box::new(if let AST::Statement(s) = p {
-                        s
+                    if let Some(AST::Statement(s)) = parent {
+                         Some(Box::new(s))
                     } else {
-                        Statement::default()
-                    })
-                })
+                        None
+                    }
             };
             LocationExpr::MemberAccessExpr(ma).get_ast()
         }
@@ -3273,10 +3178,10 @@ impl HybridArgumentIdf {
         self._set_serialized_loc(source_idf.clone(), base.clone(), start_offset);
 
         let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None).as_type(
-            AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
+            ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::None,
-            )))),
+                None,
+            ).get_ast()
         );
         if let TypeName::Array(a) = *self.t.clone() {
             SliceExpr::new(
@@ -3286,45 +3191,27 @@ impl HybridArgumentIdf {
                 self.t.size_in_uints(),
             )
             .arr.unwrap()
-            .assign(Expression::TupleOrLocationExpr(
-                TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(
-                    self.serialized_loc.clone(),
-                )),
-            ))
-        } else if let Some(base) = &base {
-            self.get_loc_expr(None).location_expr().unwrap().assign(
-                if let AST::Expression(expr) =
-                    Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                        LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(src).index(
-                            ExprUnion::Expression(Expression::FunctionCallExpr(base.binop(
-                                String::from("+"),
-                                Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
-                                    NumberLiteralExpr::new(start_offset, false),
-                                )),
-                            ))),
-                        )),
-                    ))
-                    .explicitly_converted(*self.t.clone())
-                {
-                    expr
-                } else {
-                    Expression::default()
-                },
+            .assign(
+                    self.serialized_loc.to_expr()
             )
+        } else if let Some(base) = &base {
+                    self.get_loc_expr(None).location_expr().unwrap().assign(
+                    LocationExpr::IdentifierExpr(src).index(
+                            ExprUnion::Expression(base.binop(
+                                String::from("+"),
+                                    NumberLiteralExpr::new(start_offset, false).to_expr(),
+                            ).to_expr()),
+                        ).to_expr()
+                    .explicitly_converted(*self.t.clone()))
         } else {
             self.get_loc_expr(None).location_expr().unwrap().assign(
-                if let AST::Expression(expr) = Expression::TupleOrLocationExpr(
+                Expression::TupleOrLocationExpr(
                     TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(
                         LocationExpr::IdentifierExpr(src).index(ExprUnion::I32(start_offset)),
                     )),
                 )
-                .explicitly_converted(*self.t.clone())
-                {
-                    expr
-                } else {
-                    Expression::default()
-                },
-            )
+                .explicitly_converted(*self.t.clone()).expr().unwrap()
+           )
         }
     }
 
@@ -3339,26 +3226,24 @@ impl HybridArgumentIdf {
         let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None).as_type(
             AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::None,
+                None,
             )))),
         );
         if let TypeName::Array(t) = *self.t.clone() {
             let loc=self.get_loc_expr(None).location_expr();
             self.serialized_loc
                 .arr.as_mut().unwrap()
-                .assign(Expression::TupleOrLocationExpr(
-                    TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(SliceExpr::new(
+                .assign(SliceExpr::new(
                         loc,
                         None,
                         0,
                         self.t.size_in_uints(),
-                    ))),
-                ))
+                    ).to_expr())
         } else {
             let expr = self.get_loc_expr(None);
             let expr = if self.t.is_signed_numeric() {
                 // Cast to same size uint to prevent sign extension
-                expr.expression().unwrap().explicitly_converted(
+                expr.expr().unwrap().explicitly_converted(
                     TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
                         NumberTypeName::UintTypeName(UintTypeName::new(format!(
                             "uint{}",
@@ -3367,7 +3252,7 @@ impl HybridArgumentIdf {
                     )),
                 )
             } else if self.t.is_numeric() && self.t.elem_bitwidth() == 256 {
-                    expr.expression().unwrap()
+                    expr.expr().unwrap()
                         .binop(
                             String::from("%"),
                             Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
@@ -3381,45 +3266,33 @@ impl HybridArgumentIdf {
                         )
                         .as_type(AST::TypeName(*self.t.clone())).get_ast()
             } else {
-                expr.expression().unwrap()
+                expr.expr().unwrap()
                     .explicitly_converted(TypeName::uint_type())
                 //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
             };
 
             if let Some(base) = &base {
                 LocationExpr::IndexExpr(LocationExpr::IdentifierExpr(tgt.clone()).index(
-                    ExprUnion::Expression(Expression::FunctionCallExpr(base.binop(
+                    ExprUnion::Expression(base.binop(
                         String::from("+"),
-                        Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
-                            NumberLiteralExpr::new(start_offset, false),
-                        )),
-                    ))),
+                        NumberLiteralExpr::new(start_offset, false).to_expr(),
+                    ).to_expr()),
                 ))
-                .assign(if let AST::Expression(expr) = expr {
-                    expr
-                } else {
-                    Expression::default()
-                })
+                .assign( expr.expr().unwrap() )
             } else {
                 LocationExpr::IndexExpr(
                     LocationExpr::IdentifierExpr(tgt.clone()).index(ExprUnion::I32(start_offset)),
                 )
-                .assign(if let AST::Expression(expr) = expr {
-                    expr
-                } else {
-                    Expression::default()
-                })
+                .assign(expr.expr().unwrap())
             }
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum Identifier {
     Identifier(IdentifierBase),
     HybridArgumentIdf(HybridArgumentIdf),
-    #[default]
-    None,
 }
 impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -3433,8 +3306,8 @@ impl Identifier {
     pub fn corresponding_priv_expression(&self) -> Option<Expression> {
         None
     }
-    pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> AST {
-        AST::default()
+    pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Option<AST> {
+        None
     }
     pub fn arg_type(&self) -> HybridArgType {
         HybridArgType::PubContractVal
@@ -3457,18 +3330,16 @@ impl ASTCode for Identifier {
         match self {
             Identifier::Identifier(ast) => ast.get_ast(),
             Identifier::HybridArgumentIdf(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             Identifier::Identifier(ast) => ast.get_ast_type(),
             Identifier::HybridArgumentIdf(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EncryptionExpression {
     pub reclassify_expr_base: ReclassifyExprBase,
     pub annotated_type: Option<AnnotatedTypeName>,
@@ -3485,7 +3356,7 @@ impl ASTCode for EncryptionExpression {
 }
 impl EncryptionExpression {
     pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
-        let privacy = privacy.expression().unwrap();
+        let privacy = privacy.expr().unwrap();
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
             expr.annotated_type().clone(),
             homomorphism.clone(),
@@ -3508,7 +3379,7 @@ impl EncryptionExpression {
         selfs
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Statement {
     CircuitDirectiveStatement(CircuitDirectiveStatement),
     IfStatement(IfStatement),
@@ -3520,8 +3391,6 @@ pub enum Statement {
     ReturnStatement(ReturnStatement),
     SimpleStatement(SimpleStatement),
     StatementList(StatementList),
-    #[default]
-    None,
 }
 impl Statement {
     pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
@@ -3580,7 +3449,6 @@ impl ASTCode for Statement {
             Statement::ReturnStatement(ast) => ast.get_ast(),
             Statement::SimpleStatement(ast) => ast.get_ast(),
             Statement::StatementList(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -3595,7 +3463,6 @@ impl ASTCode for Statement {
             Statement::ReturnStatement(ast) => ast.get_ast_type(),
             Statement::SimpleStatement(ast) => ast.get_ast_type(),
             Statement::StatementList(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -3612,11 +3479,10 @@ impl ASTChildren for Statement {
             Statement::ReturnStatement(ast) => ast.process_children(cb),
             Statement::SimpleStatement(ast) => ast.process_children(cb),
             Statement::StatementList(ast) => ast.process_children(cb),
-            _ => {}
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: ASTBase,
     pub before_analysis: Option<PartitionState<AST>>,
@@ -3636,12 +3502,10 @@ impl StatementBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CircuitDirectiveStatement {
     CircuitComputationStatement(CircuitComputationStatement),
     EnterPrivateKeyStatement(EnterPrivateKeyStatement),
-    #[default]
-    None,
 }
 impl ASTChildren for CircuitDirectiveStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -3657,18 +3521,16 @@ impl ASTCode for CircuitDirectiveStatement {
         match self {
             CircuitDirectiveStatement::CircuitComputationStatement(ast) => ast.get_ast(),
             CircuitDirectiveStatement::EnterPrivateKeyStatement(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             CircuitDirectiveStatement::CircuitComputationStatement(ast) => ast.get_ast_type(),
             CircuitDirectiveStatement::EnterPrivateKeyStatement(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitDirectiveStatementBase {
     pub statement_base: StatementBase,
 }
@@ -3681,7 +3543,7 @@ impl CircuitDirectiveStatementBase {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitComputationStatement {
     pub circuit_directive_statement_base: CircuitDirectiveStatementBase,
     pub idf: HybridArgumentIdf,
@@ -3710,7 +3572,7 @@ impl CircuitComputationStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnterPrivateKeyStatement {
     pub circuit_directive_statement_base: CircuitDirectiveStatementBase,
     pub crypto_params: CryptoParams,
@@ -3738,7 +3600,7 @@ impl EnterPrivateKeyStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IfStatement {
     pub statement_base: StatementBase,
     pub condition: Expression,
@@ -3775,7 +3637,7 @@ impl ASTChildren for IfStatement {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct WhileStatement {
     pub statement_base: StatementBase,
     pub condition: Expression,
@@ -3807,7 +3669,7 @@ impl ASTChildren for WhileStatement {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DoWhileStatement {
     pub statement_base: StatementBase,
     pub body: Block,
@@ -3839,7 +3701,7 @@ impl ASTChildren for DoWhileStatement {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ForStatement {
     pub statement_base: StatementBase,
     pub init: Option<Box<SimpleStatement>>,
@@ -3876,20 +3738,10 @@ impl ForStatement {
 
     pub fn statements(&self) -> Vec<Statement> {
         vec![
-            if let Some(init) = &self.init {
-                Statement::SimpleStatement(*init.clone())
-            } else {
-                Statement::None
-            },
-            Statement::SimpleStatement(SimpleStatement::ExpressionStatement(
-                ExpressionStatement::new(self.condition.clone()),
-            )),
-            if let Some(update) = &self.update {
-                Statement::SimpleStatement(*update.clone())
-            } else {
-                Statement::None
-            },
-            Statement::StatementList(StatementList::Block(self.body.clone())),
+            self.init.map(|i|i.to_statement()),
+            self.condition.to_statement(),
+            self.update.map(|u|u.to_statement()),
+            self.body.to_statement(),
         ]
     }
 }
@@ -3909,7 +3761,7 @@ impl ASTChildren for ForStatement {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BreakStatement {
     pub statement_base: StatementBase,
 }
@@ -3933,7 +3785,7 @@ impl BreakStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContinueStatement {
     pub statement_base: StatementBase,
 }
@@ -3957,10 +3809,10 @@ impl ContinueStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ReturnStatement {
     pub statement_base: StatementBase,
-    pub expr: Expression,
+    pub expr: Option<Expression>,
 }
 impl ASTCode for ReturnStatement {
     fn get_ast(&self) -> AST {
@@ -3971,7 +3823,7 @@ impl ASTCode for ReturnStatement {
     }
 }
 impl ReturnStatement {
-    pub fn new(expr: Expression) -> Self {
+    pub fn new(expr: Option<Expression>) -> Self {
         Self {
             statement_base: StatementBase::new(),
             expr,
@@ -3980,19 +3832,17 @@ impl ReturnStatement {
 }
 impl ASTChildren for ReturnStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.expr.clone()));
+        cb.add_child(AST::Expression(self.expr.clone().unwrap()));
     }
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum SimpleStatement {
     ExpressionStatement(ExpressionStatement),
     RequireStatement(RequireStatement),
     AssignmentStatement(AssignmentStatement),
     VariableDeclarationStatement(VariableDeclarationStatement),
-    #[default]
-    None,
 }
 impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
@@ -4031,7 +3881,6 @@ impl ASTCode for SimpleStatement {
             SimpleStatement::RequireStatement(ast) => ast.get_ast(),
             SimpleStatement::AssignmentStatement(ast) => ast.get_ast(),
             SimpleStatement::VariableDeclarationStatement(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -4040,11 +3889,10 @@ impl ASTCode for SimpleStatement {
             SimpleStatement::RequireStatement(ast) => ast.get_ast_type(),
             SimpleStatement::AssignmentStatement(ast) => ast.get_ast_type(),
             SimpleStatement::VariableDeclarationStatement(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SimpleStatementBase {
     pub statement_base: StatementBase,
 }
@@ -4058,7 +3906,7 @@ impl SimpleStatementBase {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub expr: Expression,
@@ -4088,7 +3936,7 @@ impl ASTChildren for ExpressionStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RequireStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub condition: Expression,
@@ -4124,12 +3972,10 @@ impl ASTChildren for RequireStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum AssignmentStatement {
     AssignmentStatement(AssignmentStatementBase),
     CircuitInputStatement(CircuitInputStatement),
-    #[default]
-    None,
 }
 impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
@@ -4172,22 +4018,20 @@ impl ASTCode for AssignmentStatement {
         match self {
             AssignmentStatement::AssignmentStatement(ast) => ast.get_ast(),
             AssignmentStatement::CircuitInputStatement(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             AssignmentStatement::AssignmentStatement(ast) => ast.get_ast_type(),
             AssignmentStatement::CircuitInputStatement(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AssignmentStatementBase {
     pub simple_statement_base: SimpleStatementBase,
-    pub lhs: Box<AST>,
-    pub rhs: Expression,
+    pub lhs: Option<Box<AST>>,
+    pub rhs: Option<Expression>,
     pub op: String,
 }
 impl ASTCode for AssignmentStatementBase {
@@ -4203,7 +4047,7 @@ impl ASTCode for AssignmentStatementBase {
     }
 }
 impl AssignmentStatementBase {
-    pub fn new(lhs: AST, rhs: Expression, op: Option<String>) -> Self {
+    pub fn new(lhs: Option<AST>, rhs: Option<Expression>, op: Option<String>) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
             lhs:Box::new(lhs),
@@ -4224,7 +4068,7 @@ impl ASTChildren for AssignmentStatementBase {
         cb.add_child(self.rhs.get_ast());
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
     pub assignment_statement_base: AssignmentStatementBase,
 }
@@ -4260,13 +4104,11 @@ impl ASTChildren for CircuitInputStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum StatementList {
     Block(Block),
     IndentBlock(IndentBlock),
     StatementList(StatementListBase),
-    #[default]
-    None,
 }
 
 impl ASTChildren for StatementList {
@@ -4277,14 +4119,12 @@ impl ASTCode for StatementList {
         match self {
             StatementList::Block(ast) => ast.get_ast(),
             StatementList::IndentBlock(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
             StatementList::Block(ast) => ast.get_ast_type(),
             StatementList::IndentBlock(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -4314,7 +4154,6 @@ impl StatementList {
                 assert!(self.statements().len() > key as usize);
                 self.statements()[key as usize].clone()
             }
-            _ => AST::default(),
         }
     }
 
@@ -4338,7 +4177,7 @@ impl StatementList {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementListBase {
     pub statement_base: StatementBase,
     pub statements: Vec<AST>,
@@ -4368,7 +4207,7 @@ impl ASTChildren for StatementListBase {
         });
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Block {
     pub statement_list_base: StatementListBase,
     pub was_single_statement: bool,
@@ -4395,7 +4234,7 @@ impl Block {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IndentBlock {
     pub statement_list_base: StatementListBase,
 }
@@ -4418,7 +4257,7 @@ impl IndentBlock {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum TypeName {
     ElementaryTypeName(ElementaryTypeName),
@@ -4428,8 +4267,6 @@ pub enum TypeName {
     TupleType(TupleType),
     FunctionTypeName(FunctionTypeName),
     Literal(String),
-    #[default]
-    None,
 }
 
 impl ASTCode for TypeName {
@@ -4442,7 +4279,6 @@ impl ASTCode for TypeName {
             TypeName::TupleType(ast) => ast.get_ast(),
             TypeName::FunctionTypeName(ast) => ast.get_ast(),
             TypeName::Literal(ast) => AST::TypeName(self.clone()),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -4454,11 +4290,13 @@ impl ASTCode for TypeName {
             TypeName::TupleType(ast) => ast.get_ast_type(),
             TypeName::FunctionTypeName(ast) => ast.get_ast_type(),
             TypeName::Literal(ast) => ASTType::Literal,
-            _ => ASTType::None,
         }
     }
 }
 impl TypeName {
+    pub fn tuple_type(&self)->Option<TupleType>{
+        None
+    }
     pub fn parameters(&self) -> Vec<Parameter> {
         vec![]
     }
@@ -4469,8 +4307,8 @@ impl TypeName {
     pub fn has_key_label(&self) -> bool {
         false
     }
-    pub fn value_type(&self) -> AnnotatedTypeName {
-        AnnotatedTypeName::default()
+    pub fn value_type(&self) -> Option<AnnotatedTypeName> {
+        None
     }
     pub fn names(&self) -> Vec<Identifier> {
         vec![]
@@ -4564,7 +4402,7 @@ impl TypeName {
     pub fn dyn_uint_array() -> Self {
         TypeName::Array(Array::Array(ArrayBase::new(
             AnnotatedTypeName::uint_all(),
-            ExprUnion::None,
+            None,
         )))
     }
 
@@ -4668,16 +4506,15 @@ impl TypeName {
         &expected == &self
     }
     pub fn compatible_with(self, other_type: &TypeName) -> bool {
-        assert!(other_type == &TypeName::None);
         self.implicitly_convertible_to(&other_type) || other_type.implicitly_convertible_to(&self)
     }
-    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> Self {
+    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> Option<Self> {
         if other_type.implicitly_convertible_to(&self) {
-            self.clone()
+            Some(self.clone())
         } else if self.implicitly_convertible_to(&other_type) {
-            other_type
+            Some(other_type)
         } else {
-            TypeName::None
+            None
         }
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> AnnotatedTypeName {
@@ -4685,11 +4522,7 @@ impl TypeName {
             self.clone(),
             if let CombinedPrivacyUnion::AST(expr) = privacy_annotation {
                 expr.map(|ast| {
-                    if let AST::Expression(expr) = ast {
-                        expr
-                    } else {
-                        Expression::None
-                    }
+                    ast.expr().unwrap()
                 })
             } else {
                 None
@@ -4704,7 +4537,7 @@ impl TypeName {
         None
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TypeNameBase {
     pub ast_base: ASTBase,
 }
@@ -4718,14 +4551,12 @@ impl TypeNameBase {
         true
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum ElementaryTypeName {
     NumberTypeName(NumberTypeName),
     BoolTypeName(BoolTypeName),
     BooleanLiteralType(BooleanLiteralType),
-    #[default]
-    None,
 }
 
 impl ASTCode for ElementaryTypeName {
@@ -4734,7 +4565,6 @@ impl ASTCode for ElementaryTypeName {
             ElementaryTypeName::NumberTypeName(ast) => ast.get_ast(),
             ElementaryTypeName::BoolTypeName(ast) => ast.get_ast(),
             ElementaryTypeName::BooleanLiteralType(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -4742,11 +4572,10 @@ impl ASTCode for ElementaryTypeName {
             ElementaryTypeName::NumberTypeName(ast) => ast.get_ast_type(),
             ElementaryTypeName::BoolTypeName(ast) => ast.get_ast_type(),
             ElementaryTypeName::BooleanLiteralType(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ElementaryTypeNameBase {
     pub type_name_base: TypeNameBase,
     pub name: String,
@@ -4761,17 +4590,11 @@ impl ElementaryTypeNameBase {
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
         true
     }
-    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
-        if other_type.implicitly_convertible_to(&TypeName::None) {
-            TypeName::None
-        } else if self.implicitly_convertible_to(&other_type) {
-            other_type
-        } else {
-            TypeName::None
-        }
+    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> Option<TypeName> {
+        None
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BoolTypeName {
     pub elementary_type_name_base: ElementaryTypeNameBase,
 }
@@ -4797,7 +4620,7 @@ impl BoolTypeName {
         1
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BooleanLiteralType {
     pub elementary_type_name_base: ElementaryTypeNameBase,
 }
@@ -4855,15 +4678,13 @@ impl BooleanLiteralType {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum NumberTypeName {
     NumberLiteralType(NumberLiteralType),
     IntTypeName(IntTypeName),
     UintTypeName(UintTypeName),
     NumberTypeNameBase(NumberTypeNameBase),
-    #[default]
-    None,
 }
 
 impl ASTCode for NumberTypeName {
@@ -4873,7 +4694,6 @@ impl ASTCode for NumberTypeName {
             NumberTypeName::IntTypeName(ast) => ast.get_ast(),
             NumberTypeName::UintTypeName(ast) => ast.get_ast(),
             NumberTypeName::NumberTypeNameBase(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -4882,7 +4702,6 @@ impl ASTCode for NumberTypeName {
             NumberTypeName::IntTypeName(ast) => ast.get_ast_type(),
             NumberTypeName::UintTypeName(ast) => ast.get_ast_type(),
             NumberTypeName::NumberTypeNameBase(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -4913,7 +4732,7 @@ impl NumberTypeName {
         true
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberTypeNameBase {
     pub elementary_type_name_base: ElementaryTypeNameBase,
     pub prefix: String,
@@ -4995,7 +4814,7 @@ pub enum NumberLiteralTypeUnion {
     I32(i32),
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NumberLiteralType {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -5095,7 +4914,7 @@ impl NumberLiteralType {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IntTypeName {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -5130,7 +4949,7 @@ impl IntTypeName {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UintTypeName {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -5165,7 +4984,7 @@ impl UintTypeName {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum UserDefinedTypeName {
     EnumTypeName(EnumTypeName),
@@ -5174,8 +4993,6 @@ pub enum UserDefinedTypeName {
     ContractTypeName(ContractTypeName),
     AddressTypeName(AddressTypeName),
     AddressPayableTypeName(AddressPayableTypeName),
-    #[default]
-    None,
 }
 impl UserDefinedTypeName {
     pub fn set_type_name(&mut self, type_name: TypeName) {}
@@ -5220,7 +5037,7 @@ impl UserDefinedTypeName {
                     .ast_base
                     .parent = parent.map(|p| Box::new(p));
             } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-            _ => {} //UserDefinedTypeName::default()},
+            // _ => {} //UserDefinedTypeName::default()},
         };
     }
     pub fn target(&self) -> Option<NamespaceDefinition> {
@@ -5246,7 +5063,7 @@ impl UserDefinedTypeName {
             UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
                 ast.user_defined_type_name_base.target = Some(Box::new(type_def.get_ast()));
             } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-            _ => {} //UserDefinedTypeName::default(),
+            // _ => {} //UserDefinedTypeName::default(),
         };
     }
     pub fn names(&self) -> Vec<Identifier> {
@@ -5262,7 +5079,6 @@ impl ASTCode for UserDefinedTypeName {
             UserDefinedTypeName::ContractTypeName(ast) => ast.get_ast(),
             UserDefinedTypeName::AddressTypeName(ast) => ast.get_ast(),
             UserDefinedTypeName::AddressPayableTypeName(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -5273,11 +5089,10 @@ impl ASTCode for UserDefinedTypeName {
             UserDefinedTypeName::ContractTypeName(ast) => ast.get_ast_type(),
             UserDefinedTypeName::AddressTypeName(ast) => ast.get_ast_type(),
             UserDefinedTypeName::AddressPayableTypeName(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UserDefinedTypeNameBase {
     pub type_name_base: TypeNameBase,
     pub names: Vec<Identifier>,
@@ -5292,7 +5107,7 @@ impl UserDefinedTypeNameBase {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5320,7 +5135,7 @@ impl EnumTypeName {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValueTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5357,11 +5172,7 @@ impl EnumValueTypeName {
                 .unwrap_or_default()
                 .parent()
                 .map(|p| {
-                    if let AST::NamespaceDefinition(p) = p {
-                        p
-                    } else {
-                        NamespaceDefinition::default()
-                    }
+                    p.namespace_definition().unwrap()
                 }),
         )))
     }
@@ -5382,7 +5193,7 @@ impl EnumValueTypeName {
                     .to_vec())
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5409,7 +5220,7 @@ impl StructTypeName {
         TypeName::UserDefinedTypeName(UserDefinedTypeName::StructTypeName(self.clone()))
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ContractTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5433,7 +5244,7 @@ impl ContractTypeName {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5463,7 +5274,7 @@ impl AddressTypeName {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AddressPayableTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5500,14 +5311,12 @@ impl AddressPayableTypeName {
         160
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum KeyLabelUnion {
     String(String),
     Identifier(Option<Identifier>),
-    #[default]
-    None,
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Mapping {
     pub type_name_base: TypeNameBase,
     pub key_type: ElementaryTypeName,
@@ -5552,15 +5361,13 @@ impl ASTChildren for Mapping {
         cb.add_child(AST::AnnotatedTypeName(*self.value_type.clone()));
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ExprUnion {
     I32(i32),
     Expression(Expression),
-    #[default]
-    None,
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum Array {
     CipherText(CipherText),
@@ -5568,12 +5375,10 @@ pub enum Array {
     Key(Key),
     Proof(Proof),
     Array(ArrayBase),
-    #[default]
-    None,
 }
 impl Array {
-    pub fn value_type(&self) -> AnnotatedTypeName {
-        AnnotatedTypeName::default()
+    pub fn value_type(&self) -> Option<AnnotatedTypeName> {
+        None
     }
 }
 impl ASTCode for Array {
@@ -5584,7 +5389,6 @@ impl ASTCode for Array {
             Array::Key(ast) => ast.get_ast(),
             Array::Proof(ast) => ast.get_ast(),
             Array::Array(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -5594,7 +5398,6 @@ impl ASTCode for Array {
             Array::Key(ast) => ast.get_ast_type(),
             Array::Proof(ast) => ast.get_ast_type(),
             Array::Array(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
@@ -5606,11 +5409,11 @@ impl ASTChildren for ArrayBase {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ArrayBase {
     pub type_name_base: TypeNameBase,
     pub value_type: AnnotatedTypeName,
-    pub expr: ExprUnion,
+    pub expr: Option<ExprUnion>,
 }
 impl ASTCode for ArrayBase {
     fn get_ast(&self) -> AST {
@@ -5621,14 +5424,14 @@ impl ASTCode for ArrayBase {
     }
 }
 impl ArrayBase {
-    pub fn new(value_type: AnnotatedTypeName, expr: ExprUnion) -> Self {
+    pub fn new(value_type: AnnotatedTypeName, expr: Option<ExprUnion>) -> Self {
         Self {
             type_name_base: TypeNameBase::new(),
             value_type,
-            expr: if let ExprUnion::I32(expr) = expr {
-                ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
-                    NumberLiteralExpr::new(expr, false),
-                )))
+            expr: if let Some(ExprUnion::I32(expr) )= expr {
+                ExprUnion::Expression(
+                    NumberLiteralExpr::new(expr, false).to_expr(),
+                )
             } else {
                 expr
             },
@@ -5648,7 +5451,7 @@ impl ArrayBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CipherText {
     pub array_base: Box<ArrayBase>,
     pub plain_type: AnnotatedTypeName,
@@ -5680,7 +5483,7 @@ impl CipherText {
         self.crypto_params.cipher_payload_len()
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Randomness {
     pub array_base: Box<ArrayBase>,
     pub crypto_params: CryptoParams,
@@ -5699,18 +5502,18 @@ impl Randomness {
             array_base: Box::new(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 if let Some(randomness_len) = crypto_params.randomness_len() {
-                    ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
+                   Some( ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(randomness_len, false),
-                    )))
+                    ))))
                 } else {
-                    ExprUnion::None
+                    None
                 },
             )),
             crypto_params,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Key {
     pub array_base: Box<ArrayBase>,
     pub crypto_params: CryptoParams,
@@ -5736,7 +5539,7 @@ impl Key {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Proof {
     pub array_base: Box<ArrayBase>,
 }
@@ -5761,7 +5564,7 @@ impl Proof {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DummyAnnotation;
 
 impl ASTCode for DummyAnnotation {
@@ -5778,26 +5581,22 @@ impl DummyAnnotation {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum CombinedPrivacyUnion {
     Vec(Vec<CombinedPrivacyUnion>),
     AST(Option<AST>),
-    #[default]
-    None,
 }
 impl CombinedPrivacyUnion {
-    pub fn expression(&self) -> Expression {
+    pub fn expr(&self) -> Option<Expression> {
         if let CombinedPrivacyUnion::AST(expr) = &self {
-            if let Some(AST::Expression(expr)) = expr {
-                return expr.clone();
-            }
+                return expr.clone().map(|AST::Expression(expr)|expr);
         }
-        Expression::None
+        None
     }
 }
 //     """Does not appear in the syntax, but is necessary for type checking"""
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleType {
     pub type_name_base: TypeNameBase,
     pub types: Vec<AnnotatedTypeName>,
@@ -5888,16 +5687,8 @@ impl TupleType {
                     .zip(&other_type.types)
                     .map(|(e1, e2)| {
                         AnnotatedTypeName::new(
-                            TypeName::TupleType(
-                                if let TypeName::TupleType(tt) = e1
-                                    .type_name
-                                    .combined_type(*e2.type_name.clone(), convert_literals)
-                                {
-                                    tt
-                                } else {
-                                    TupleType::default()
-                                },
-                            ),
+                          e1.type_name.combined_type(*e2.type_name.clone(), convert_literals).tuple_type().unwrap()
+                            ,
                             Some(Expression::DummyAnnotation(DummyAnnotation::new())),
                             String::from("NON_HOMOMORPHIC"),
                         )
@@ -5907,9 +5698,9 @@ impl TupleType {
         }
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> CombinedPrivacyUnion {
-        CombinedPrivacyUnion::AST(Some(AST::AnnotatedTypeName(
+        CombinedPrivacyUnion::AST(
             if let CombinedPrivacyUnion::AST(_) = &privacy_annotation {
-                AnnotatedTypeName::new(
+                Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
                     TypeName::TupleType(TupleType::new(
                         self.types
                             .iter()
@@ -5918,10 +5709,10 @@ impl TupleType {
                     )),
                     None,
                     String::from("NON_HOMOMORPHIC"),
-                )
+                )))
             } else if let CombinedPrivacyUnion::Vec(privacy_annotation) = &privacy_annotation {
                 assert!(self.types.len() == privacy_annotation.len());
-                AnnotatedTypeName::new(
+                Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
                     TypeName::TupleType(TupleType::new(
                         self.types
                             .iter()
@@ -5931,11 +5722,11 @@ impl TupleType {
                     )),
                     None,
                     String::from("NON_HOMOMORPHIC"),
-                )
+                )))
             } else {
-                AnnotatedTypeName::default()
+                None
             },
-        )))
+        )
     }
     pub fn perfect_privacy_match(&self, other: &Self) -> bool {
         fn privacy_match(selfs: AnnotatedTypeName, other: AnnotatedTypeName) -> bool {
@@ -5949,7 +5740,7 @@ impl TupleType {
         TupleType::new(vec![])
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionTypeName {
     pub type_name_base: TypeNameBase,
     pub parameters: Vec<Parameter>,
@@ -5992,7 +5783,7 @@ impl ASTChildren for FunctionTypeName {
         });
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
     pub type_name: Box<TypeName>,
@@ -6222,14 +6013,12 @@ impl ASTChildren for AnnotatedTypeName {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum IdentifierDeclaration {
     VariableDeclaration(VariableDeclaration),
     Parameter(Parameter),
     StateVariableDeclaration(StateVariableDeclaration),
-    #[default]
-    None,
 }
 impl IdentifierDeclaration {
   pub fn identifier_declaration_base(&self)->Option<IdentifierDeclarationBase>{
@@ -6244,7 +6033,6 @@ impl ASTCode for IdentifierDeclaration {
             IdentifierDeclaration::VariableDeclaration(ast) => ast.get_ast(),
             IdentifierDeclaration::Parameter(ast) => ast.get_ast(),
             IdentifierDeclaration::StateVariableDeclaration(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -6252,11 +6040,10 @@ impl ASTCode for IdentifierDeclaration {
             IdentifierDeclaration::VariableDeclaration(ast) => ast.get_ast_type(),
             IdentifierDeclaration::Parameter(ast) => ast.get_ast_type(),
             IdentifierDeclaration::StateVariableDeclaration(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierDeclarationBase {
     pub ast_base: ASTBase,
     pub keywords: Vec<String>,
@@ -6294,7 +6081,7 @@ impl ASTChildren for IdentifierDeclarationBase {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclaration {
     pub identifier_declaration_base: Box<IdentifierDeclarationBase>,
 }
@@ -6323,7 +6110,7 @@ impl VariableDeclaration {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct VariableDeclarationStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub variable_declaration: VariableDeclaration,
@@ -6363,7 +6150,7 @@ impl ASTChildren for VariableDeclarationStatement {
 }
 
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Parameter {
     pub identifier_declaration_base: Box<IdentifierDeclarationBase>,
 }
@@ -6375,12 +6162,10 @@ impl ASTCode for Parameter {
         ASTType::Parameter
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ParameterUnion {
     Parameter(Parameter),
     String(String),
-    #[default]
-    None,
 }
 impl Parameter {
     pub fn new(
@@ -6405,15 +6190,13 @@ impl Parameter {
         self.clone()
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum NamespaceDefinition {
     ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
     EnumDefinition(EnumDefinition),
     StructDefinition(StructDefinition),
     ContractDefinition(ContractDefinition),
-    #[default]
-    None,
 }
 impl NamespaceDefinition {
     pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
@@ -6436,7 +6219,6 @@ impl ASTCode for NamespaceDefinition {
             NamespaceDefinition::EnumDefinition(ast) => ast.get_ast(),
             NamespaceDefinition::StructDefinition(ast) => ast.get_ast(),
             NamespaceDefinition::ContractDefinition(ast) => ast.get_ast(),
-            _ => AST::None,
         }
     }
     fn get_ast_type(&self) -> ASTType {
@@ -6445,11 +6227,10 @@ impl ASTCode for NamespaceDefinition {
             NamespaceDefinition::EnumDefinition(ast) => ast.get_ast_type(),
             NamespaceDefinition::StructDefinition(ast) => ast.get_ast_type(),
             NamespaceDefinition::ContractDefinition(ast) => ast.get_ast_type(),
-            _ => ASTType::None,
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NamespaceDefinitionBase {
     pub ast_base: ASTBase,
     pub idf: Identifier,
@@ -6468,7 +6249,7 @@ impl ASTChildren for NamespaceDefinitionBase {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub parameters: Vec<Parameter>,
@@ -6648,26 +6429,26 @@ impl ConstructorOrFunctionDefinition {
     ) {
         let ref_storage_loc = ref_storage_loc.unwrap_or(String::from("memory"));
         let t = if let AST::AnnotatedTypeName(t) = t {
-            t
+            Some(t)
         } else if let AST::TypeName(t) = t {
-            AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHIC"))
+           Some( AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHIC")))
         } else {
-            AnnotatedTypeName::default()
+            None
         };
         let idf = if let IdentifierExprUnion::String(idf) = idf {
-            Identifier::Identifier(IdentifierBase::new(idf))
+            Some(Identifier::Identifier(IdentifierBase::new(idf)))
         } else if let IdentifierExprUnion::Identifier(idf) = idf {
-            idf.clone()
+            Some(idf.clone())
         } else {
-            Identifier::default()
+            None
         };
-        let storage_loc = Some(if t.type_name.is_primitive_type() {
-            String::new()
+        let storage_loc = if t.type_name.is_primitive_type() {
+            None
         } else {
-            ref_storage_loc
-        });
+            Some(ref_storage_loc)
+        };
         self.parameters
-            .push(Parameter::new(vec![], t, idf, storage_loc));
+            .push(Parameter::new(vec![], t.unwrap(), idf.unwrap(), storage_loc));
         self._update_fct_type();
     }
 }
@@ -6703,7 +6484,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
         }
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
     pub identifier_declaration_base: IdentifierDeclarationBase,
     pub expr: Option<Expression>,
@@ -6755,7 +6536,7 @@ impl ASTChildren for StateVariableDeclaration {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
     pub ast_base: ASTBase,
     pub idf: Option<Identifier>,
@@ -6789,7 +6570,7 @@ impl ASTChildren for EnumValue {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub values: Vec<EnumValue>,
@@ -6825,7 +6606,7 @@ impl ASTChildren for EnumDefinition {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub members: Vec<AST>,
@@ -6858,7 +6639,7 @@ impl ASTChildren for StructDefinition {
     }
 }
 
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
@@ -6942,7 +6723,7 @@ impl ASTChildren for ContractDefinition {
             });
     }
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
     pub ast_base: ASTBase,
@@ -7023,11 +6804,11 @@ pub fn get_privacy_expr_from_label(plabel: AST) -> Expression
             ie.location_expr_base.target = idf.parent().map(|p| Box::new((p).into()));
            ie.to_expr()
         }else{
-plabel.expression().unwrap()
+plabel.expr().unwrap()
         }
        
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct InstanceTarget {
     pub target_key: Vec<Option<Box<AST>>>,
 }
@@ -7180,21 +6961,19 @@ pub fn get_code_error_msg(
 pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get surrounding statement
     let stmt = if let AST::Expression(ast) = &ast {
-        ast.statement()
+        Some(ast.statement())
     } else if let AST::Statement(ast) = &ast {
         Some(Box::new(ast.clone()))
     } else {
-        Some(Box::new(Statement::None))
+        None
     };
 
     // Get surrounding function
     let fct = if let Some(stmt) = &stmt {
         stmt.function().map(|f| {
-            AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(*f))
+            f.get_ast()
         })
-    } else if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
-        _,
-    )) = &ast
+    } else if is_instance(&ast,ASTType::ConstructorOrFunctionDefinition)
     {
         Some(ast.clone())
     } else {
@@ -7202,17 +6981,9 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     };
 
     // Get surrounding contract
-    let mut ctr = if let Some(fct) = &fct {
-        fct.clone()
-    } else {
-        ast.clone()
-    };
-    while ctr != AST::None
-        && !(if let AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(_)) = &ctr {
-            true
-        } else {
-            false
-        })
+    let mut ctr = fct.clone().or( ast.clone());
+    while ctr.is_some()
+        && !is_instance(&ctr.unwrap(),ASTType::ContractDefinition)
     {
         if let Some(p) = ctr.parent() {
             ctr = p;
@@ -7222,24 +6993,14 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     }
 
     // Get source root
-    let mut root = if AST::None != ctr {
-        ctr.clone()
-    } else {
-        ast.clone()
-    };
-    while root != AST::None
-        && !(if let AST::SourceUnit(_) = &root {
-            true
-        } else {
-            false
-        })
+    let mut root = ctr.clone().or( ast.clone()) ;
+    while root.is_some()
+        && !is_instance(&root,ASTType::SourceUnit) 
     {
-        if let Some(p) = root.parent() {
-            root = p;
-        }
+            root = root.parent() ;
     }
 
-    let error_msg = if root != AST::None {
+    let error_msg = if root.is_some() {
         String::from("error")
     } else {
         get_code_error_msg(
@@ -7248,14 +7009,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
             root.original_code(),
             ctr.contract_definition(),
             fct.clone().map(|f| {
-                if let AST::NamespaceDefinition(
-                    NamespaceDefinition::ConstructorOrFunctionDefinition(f),
-                ) = f
-                {
-                    f
-                } else {
-                    ConstructorOrFunctionDefinition::default()
-                }
+                f.constructor_or_function_definition().unwrap()
             }),
             stmt.clone().map(|s| *s),
         )
@@ -7282,20 +7036,16 @@ impl AstException {
 }
 
 // // CODE GENERATION
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ListUnion {
     AST(AST),
     String(String),
-    #[default]
-    None,
 }
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive( Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum SingleOrListUnion {
     Vec(Vec<ListUnion>),
     AST(AST),
     String(String),
-    #[default]
-    None,
 }
 pub struct CodeVisitor {
     pub display_final: bool,
@@ -7603,10 +7353,10 @@ impl CodeVisitor {
     }
 
     pub fn visit_ReturnStatement(&self, ast: ReturnStatement) -> CodeVisitorReturn {
-        if let Expression::None = ast.expr {
+        if ast.expr.is_none() {
             String::from("return;")
         } else {
-            let e = self.visit(&AST::Expression(ast.expr));
+            let e = self.visit(&AST::Expression(ast.expr.unwrap()));
             format!("return {e};")
         }
     }
@@ -7671,11 +7421,7 @@ impl CodeVisitor {
         }
    
         let rhs = if !op.is_empty() {
-            if let Some(Expression::FunctionCallExpr(fce)) = ast.rhs() {
-                fce.args()[1].clone()
-            } else {
-                Expression::default()
-            }
+           ast.rhs().map(|Some(Expression::FunctionCallExpr(fce))| fce.args()[1].clone()) 
         } else {
             ast.rhs().unwrap_or_default()
         };
@@ -7936,23 +7682,20 @@ impl CodeVisitor {
     }
 
     pub fn visit_Array(&self, ast: Array) -> CodeVisitorReturn {
-        let dat = AnnotatedTypeName::default();
+        let dat = None;
         let value_type = match &ast {
             Array::CipherText(ast) => &ast.array_base.value_type,
             Array::Randomness(ast) => &ast.array_base.value_type,
             Array::Key(ast) => &ast.array_base.value_type,
             Array::Proof(ast) => &ast.array_base.value_type,
             Array::Array(ast) => &ast.value_type,
-            _ => &dat,
         };
-        let et = ExprUnion::default();
         let expr = match &ast {
             Array::CipherText(ast) => &ast.array_base.expr,
             Array::Randomness(ast) => &ast.array_base.expr,
             Array::Key(ast) => &ast.array_base.expr,
             Array::Proof(ast) => &ast.array_base.expr,
             Array::Array(ast) => &ast.expr,
-            _ => &et,
         };
         let t = self.visit(&AST::AnnotatedTypeName(value_type.clone()));
         let e = if let ExprUnion::Expression(expr) = &expr {
@@ -8153,18 +7896,23 @@ impl CodeVisitor {
         ) = (v1, v2)
         {
             (
-                v1.identifier_declaration_base
+                Some(v1.identifier_declaration_base
                     .annotated_type
                     .type_name
-                    .clone(),
-                v2.identifier_declaration_base
+                    .clone()),
+                Some(v2.identifier_declaration_base
                     .annotated_type
                     .type_name
-                    .clone(),
+                    .clone()),
             )
         } else {
-            (Box::new(TypeName::default()), Box::new(TypeName::default()))
+            (None, None)
         };
+        if t1.is_none()||t2.is_none(){
+            println!("{},{}",t1,t2);
+            return Ordering::Equal
+        } 
+        let (t1,t2)=(t1.unwrap(),t2.unwrap);
         let mut cmp = if t1.size_in_uints() > t2.size_in_uints() {
             1
         } else {

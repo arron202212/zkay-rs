@@ -49,7 +49,7 @@ impl AstVisitor for TypeCheckVisitor {
     }
 }
 impl TypeCheckVisitor {
-    pub fn get_rhs(&self,mut rhs: Expression, expected_type: &AnnotatedTypeName) -> Expression {
+    pub fn get_rhs(&self,mut rhs: Expression, expected_type: &AnnotatedTypeName) -> Option<Expression> {
         if is_instance(&rhs, ASTType::TupleExpr) {
             if !is_instance(&rhs, ASTType::TupleExpr)
                 || !is_instance(&*expected_type.type_name, ASTType::TupleType)
@@ -113,7 +113,7 @@ impl TypeCheckVisitor {
                 return rhs;
             }
         }
-        Expression::None
+        None
     }
     //@staticmethod
     pub fn check_for_invalid_private_type(ast: AST) {
@@ -320,7 +320,6 @@ impl TypeCheckVisitor {
                         )),
                     ))
                 }
-                _ => TypeName::None,
             };
             if func.is_eq() {
                 arg_t = t1
@@ -335,8 +334,8 @@ impl TypeCheckVisitor {
         };
 
         assert!(
-            arg_t != TypeName::None
-                && (arg_t != TypeName::Literal(String::from("lit")) || !func.is_eq())
+            arg_t.is_some()
+                && (arg_t != Some(TypeName::Literal(String::from("lit"))) || !func.is_eq())
         );
         let mut p = None;
         let private_args = args.iter().any(|arg| Self::has_private_type(arg));
@@ -663,11 +662,7 @@ impl TypeCheckVisitor {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
             self.handle_builtin_function_call(
                 ast.clone(),
-                if let Some(Expression::BuiltinFunction(bf)) = ast.func() {
-                    bf
-                } else {
-                    BuiltinFunction::default()
-                },
+                ast.func().unwrap().builtin_function().unwrap(),
             );
         } else if ast.is_cast() {
             assert!(
@@ -896,7 +891,7 @@ impl TypeCheckVisitor {
             None,
             String::from("NON_HOMOMORPHISM"),
         );
-        if ast.expr != Expression::None {
+        if ast.expr.is_some() {
             self.get_rhs(TupleExpr::new(vec![]).to_expr(), &rt);
         } else if !is_instance(&ast.expr, ASTType::TupleExpr) {
             ast.expr = self.get_rhs(TupleExpr::new(vec![ast.expr.clone()]).to_expr(), &rt);

@@ -334,12 +334,8 @@ impl SymbolTableLinker {
                 });
                 return (
                     ast2.clone()
-                        .map(|a| {
-                            if let AST::Statement(Statement::StatementList(a)) = a {
-                                a
-                            } else {
-                                StatementList::default()
-                            }
+                        .map(|AST::Statement(Statement::StatementList(a))| {
+                             a
                         })
                         .unwrap_or_default(),
                     ast2v.clone(),
@@ -460,7 +456,6 @@ impl SymbolTableLinker {
                 ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
                 UserDefinedTypeName::AddressPayableTypeName(ast)
             }
-            _ => UserDefinedTypeName::default(),
         };
 
         // except UnknownIdentifierException:

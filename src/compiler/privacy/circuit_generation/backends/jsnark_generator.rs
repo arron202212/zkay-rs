@@ -43,7 +43,7 @@ pub fn _get_t(mut t: Option<AST>) -> String
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
     let t=t.unwrap();
-    let t = if let Some(t) = t.expression() {
+    let t = if let Some(t) = t.expr() {
         Some(*t.annotated_type().type_name)
     } else {
         t.type_name()
@@ -527,7 +527,7 @@ impl JsnarkGenerator
             .collect()
     }
 
-    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> VerifyingKeyType {
+    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) ->Option<VerifyingKeyType> {
         let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
         let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
@@ -545,11 +545,11 @@ impl JsnarkGenerator
             for idx in 0..query_len {
                 gamma_abc.insert(idx, G1Point::from_it(&mut data));
             }
-            return VerifyingKeyType::ProvingSchemeGroth16(
+            return Some(VerifyingKeyType::ProvingSchemeGroth16(
                 <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::new(
                     a, b, gamma, delta, gamma_abc,
                 ),
-            );
+            ));
         } else if self.circuit_generator_base.proving_scheme.type_id()
             == TypeId::of::<ProvingSchemeGm17>()
         {
@@ -563,16 +563,16 @@ impl JsnarkGenerator
             for idx in 0..query_len {
                 query.insert(idx, G1Point::from_it(&mut data));
             }
-            return VerifyingKeyType::ProvingSchemeGm17(
+            return Some(VerifyingKeyType::ProvingSchemeGm17(
                 <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::new(
                     h, g_alpha, h_beta, g_gamma, h_gamma, query,
                 ),
-            );
+            ));
         }
         // else {
         //     unimplemented!()
         // }
-        VerifyingKeyType::None
+       None
     }
 
     pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {

@@ -54,7 +54,7 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visitExpression(&self, ast: Expression) -> BTreeSet<String> {
-        if ast.annotated_type() != AnnotatedTypeName::default() && ast.annotated_type().is_private()
+        if ast.annotated_type().is_some() && ast.annotated_type().unwrap().is_private()
         {
             BTreeSet::from([ast.annotated_type().homomorphism.clone()])
                 .union(&self.visitChildren(ast.get_ast()))

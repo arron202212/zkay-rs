@@ -25,14 +25,14 @@ pub trait AstTransformerVisitor {
             .filter_map(|a| Some(self.visit(a.clone())))
             .collect()
     }
-    fn visit_children(&self, mut ast: AST) -> AST {
+    fn visit_children(&self, mut ast: AST) -> Option<AST> {
         // ast.process_children(self.visit);
         // ast
-        AST::None
+        None
     }
 
-    fn _visit_internal(&self, ast: AST) -> AST {
-        AST::None
+    fn _visit_internal(&self, ast: AST) -> Option<AST> {
+        None
     }
 }
 // class AstTransformerVisitor
@@ -54,8 +54,8 @@ impl AstTransformerVisitorBase {
         ast
     }
 
-    pub fn _visit_internal(&self, ast: AST) -> AST {
-        if ast == AST::None {
+    pub fn _visit_internal(&self, ast: Option<AST>) ->Option<AST> {
+        if ast.is_none() {
             return ast;
         }
 

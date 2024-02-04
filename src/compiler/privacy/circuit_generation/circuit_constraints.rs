@@ -42,40 +42,26 @@ pub enum CircuitStatement {
 impl ASTCode for CircuitStatement {
     fn get_ast(&self) -> AST {
         match self {
-            // AST::Identifier(ast) => ast.get_ast(),
-            // AST::Comment(ast) => ast.get_ast(),
-            // AST::Expression(ast) => ast.get_ast(),
-            // AST::Statement(ast) => ast.get_ast(),
-            // AST::TypeName(ast) => ast.get_ast(),
-            // AST::AnnotatedTypeName(ast) => ast.get_ast(),
-            // AST::IdentifierDeclaration(ast) => ast.get_ast(),
-            // AST::NamespaceDefinition(ast) => ast.get_ast(),
-            // AST::EnumValue(ast) => ast.get_ast(),
-            // AST::SourceUnit(ast) => ast.get_ast(),
-            // AST::Pragma(_) => self.clone(),
-            // AST::VersionPragma(_) => self.clone(),
-            // AST::Modifier(_) => self.clone(),
-            // AST::Homomorphism(_) => self.clone(),
-            _ => AST::None,
+            Self::CircComment(ast) => ast.get_ast(),
+            Self::CircIndentBlock(ast) => ast.get_ast(),
+            Self::CircCall(ast) => ast.get_ast(),
+            Self::CircVarDecl(ast) => ast.get_ast(),
+            Self::CircGuardModification(ast) => ast.get_ast(),
+            Self::CircEncConstraint(ast) => ast.get_ast(),
+            Self::CircSymmEncConstraint(ast) => ast.get_ast(),
+            Self::CircEqConstraint(ast) => ast.get_ast(),
         }
     }
     fn get_ast_type(&self) -> ASTType {
         match self {
-            // AST::Identifier(ast) => ast.get_ast_type(),
-            // AST::Comment(ast) => ast.get_ast_type(),
-            // AST::Expression(ast) => ast.get_ast_type(),
-            // AST::Statement(ast) => ast.get_ast_type(),
-            // AST::TypeName(ast) => ast.get_ast_type(),
-            // AST::AnnotatedTypeName(ast) => ast.get_ast_type(),
-            // AST::IdentifierDeclaration(ast) => ast.get_ast_type(),
-            // AST::NamespaceDefinition(ast) => ast.get_ast_type(),
-            // AST::EnumValue(ast) => ast.get_ast_type(),
-            // AST::SourceUnit(ast) => ast.get_ast_type(),
-            // AST::Pragma(_) => ASTType::Pragma,
-            // AST::VersionPragma(_) => ASTType::VersionPragma,
-            // AST::Modifier(_) => ASTType::Modifier,
-            // AST::Homomorphism(_) => ASTType::Homomorphism,
-            _ => ASTType::None,
+             Self::CircComment(ast) => ast.get_ast_type(),
+            Self::CircIndentBlock(ast) => ast.get_ast_type(),
+            Self::CircCall(ast) => ast.get_ast_type(),
+            Self::CircVarDecl(ast) => ast.get_ast_type(),
+            Self::CircGuardModification(ast) => ast.get_ast_type(),
+            Self::CircEncConstraint(ast) => ast.get_ast_type(),
+            Self::CircSymmEncConstraint(ast) => ast.get_ast_type(),
+            Self::CircEqConstraint(ast) => ast.get_ast_type(),
         }
     }
 }

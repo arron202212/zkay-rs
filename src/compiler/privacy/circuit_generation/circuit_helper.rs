@@ -184,11 +184,11 @@ where
         import_filename: &str,
     ) {
         self.verifier_contract_type =
-            Some(if let TypeName::UserDefinedTypeName(v) = contract_type {
-                v
+            if let TypeName::UserDefinedTypeName(v) = contract_type {
+                Some(v)
             } else {
-                UserDefinedTypeName::None
-            });
+                None
+            };
         self.verifier_contract_filename = Some(import_filename.to_string());
     }
 
@@ -265,11 +265,11 @@ where
         self._out_name_factory
             .idfs
             .iter()
-            .map(|v| {
+            .filter_map(|v| {
                 if let Identifier::HybridArgumentIdf(h) = v {
-                    h.clone()
+                   Some( h.clone())
                 } else {
-                    HybridArgumentIdf::default()
+                    None
                 }
             })
             .collect()
@@ -281,11 +281,11 @@ where
         self._in_name_factory
             .idfs
             .iter()
-            .map(|v| {
+            .filter_map(|v| {
                 if let Identifier::HybridArgumentIdf(h) = v {
-                    h.clone()
+                   Some( h.clone())
                 } else {
-                    HybridArgumentIdf::default()
+                    None
                 }
             })
             .collect()
@@ -297,11 +297,11 @@ where
         self._secret_input_name_factory
             .idfs
             .iter()
-            .map(|v| {
+            .filter_map(|v| {
                 if let Identifier::HybridArgumentIdf(h) = v {
-                    h.clone()
+                    Some(h.clone())
                 } else {
-                    HybridArgumentIdf::default()
+                    None
                 }
             })
             .collect()
@@ -499,8 +499,8 @@ where
             if var.in_scope_at(ast.get_ast()) {
                 astmt = SimpleStatement::AssignmentStatement(
                     AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-                        AST::None,
-                        Expression::None,
+                        None,
+                        None,
                         None,
                     )),
                 );
@@ -623,9 +623,9 @@ where
         let mut ret_args = if let (Some(expr), None) = ret_args {
             TupleExpr::new(vec![expr])
         } else if let (None, Some(ret_args)) = ret_args {
-            ret_args
+            Some(ret_args)
         } else {
-            TupleExpr::default()
+            None
         };
         for ret_arg in ret_args.elements.iter_mut() {
             ret_arg.set_statement(astmt.to_statement());
@@ -728,16 +728,16 @@ where
                 LocationExpr::IdentifierExpr(pki)
                     .call(
                         IdentifierExprUnion::String(String::from("getPk")),
-                        vec![if let AST::Expression(expr) = self
+                       if let AST::Expression(expr) = self
                             ._expr_trafo
                             .as_ref()
                             .unwrap()
                             .visit(privacy_label_expr.get_ast())
                         {
-                            expr
+                             vec![expr]
                         } else {
-                            Expression::None
-                        }],
+                             vec![]
+                        },
                     )
                     .to_expr(),
             ),
@@ -807,9 +807,9 @@ where
         let input_expr = if let AST::Expression(expr) =
             self._expr_trafo.as_ref().unwrap().visit(expr.get_ast())
         {
-            expr
+            Some(expr)
         } else {
-            Expression::None
+            None
         };
         let t = input_expr.annotated_type().type_name;
         let mut locally_decrypted_idf = None;
@@ -993,7 +993,7 @@ where
     pub fn inline_function_call_into_circuit(
         &mut self,
         fcall: &mut FunctionCallExprBase,
-    ) -> (Option<Expression>, Option<TupleExpr>)
+    ) -> Option<AST>
 // """
         // Inline an entire function call into the current circuit.
 
@@ -1009,9 +1009,7 @@ where
             .remap_scope(Some((*fcall.func.target().unwrap()).constructor_or_function_definition().unwrap().body.unwrap()));
 
         //with
-        if fcall.func.target().unwrap().idf().name() == "<stmt_fct>" {
-            {}
-        } else {
+        if fcall.func.target().unwrap().idf().name() != "<stmt_fct>" {
             self.circ_indent_block(&format!("INLINED {}", fcall.get_ast().code()));
         }
 
@@ -1081,14 +1079,14 @@ where
                 .collect(),
         );
 
-        if ret.elements.len() == 1
+       Some( if ret.elements.len() == 1
         //Unpack 1-length tuple
         {
             // ret = if let Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(ret))=&ret.elements[0]{ret.clone()}else{TupleExpr::default()};
-            (Some(ret.elements[0].clone()), None)
+            ret.elements[0]
         } else {
-            (None, Some(ret))
-        }
+           ret
+        }.get_ast())
     }
     pub fn add_assignment_to_circuit(&mut self, ast: &mut AssignmentStatement)
     // """Include private assignment statement in this circuit."""
@@ -1137,7 +1135,7 @@ where
             .push(CircuitStatement::CircComment(CircComment::new(
                 ast.get_ast().code(),
             )));
-        assert!(ast.expr != Expression::None);
+        assert!(ast.expr.is_some());
         if !is_instance(&ast.expr, ASTType::TupleExpr) {
             ast.expr = TupleExpr::new(vec![ast.expr.clone()]).to_expr();
         }
@@ -1479,7 +1477,7 @@ where
         &mut self,
         expr: Expression,
         tmp_idf_suffix: &str,
-    ) -> HybridArgumentIdf
+    ) -> Option<HybridArgumentIdf>
 // """
         // Evaluate expr in the circuit (if not already done) and store result in a new temporary circuit variable.
 
@@ -1498,9 +1496,9 @@ where
         //Already evaluated in circuit
         {
             return if let Identifier::HybridArgumentIdf(hai) = expr.idf() {
-                hai
+               Some( hai)
             } else {
-                HybridArgumentIdf::default()
+                None
             };
         }
 
@@ -1522,11 +1520,7 @@ where
         );
         let stmt = CircVarDecl::new(
             tmp_circ_var_idf.clone(),
-            if let AST::Expression(expr) = &priv_expr {
-                expr.clone()
-            } else {
-                Expression::None
-            },
+            priv_expr.expr().unwrap(),
         );
         self._phi.push(CircuitStatement::CircVarDecl(stmt));
         tmp_circ_var_idf

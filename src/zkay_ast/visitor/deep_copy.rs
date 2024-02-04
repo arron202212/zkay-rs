@@ -108,9 +108,9 @@ pub struct DeepCopyVisitor {
 }
 
 impl AstVisitor for DeepCopyVisitor {
-    type Return = AST;
+    type Return = Option<AST>;
     fn temper_result(&self) -> Self::Return {
-        AST::None
+        None
     }
     fn log(&self) -> bool {
         false
@@ -125,7 +125,7 @@ impl AstVisitor for DeepCopyVisitor {
         None
     }
     fn call_visit_function(&self, ast: &AST) -> Self::Return {
-        AST::None
+        None
     }
 }
 impl DeepCopyVisitor {
@@ -148,7 +148,7 @@ impl DeepCopyVisitor {
         // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, ast: AST) -> AST {
+    pub fn visitChildren(&self, ast: AST) -> Option<AST> {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();
@@ -168,7 +168,7 @@ impl DeepCopyVisitor {
         // let mut ast_copy = c(new_fields);
         // self.copy_ast_fields(ast, ast_copy);
         // ast_copy
-        AST::None
+        None
     }
 
     pub fn visitAnnotatedTypeName(self, ast: AST) -> AST {
@@ -192,7 +192,7 @@ impl DeepCopyVisitor {
 
     pub fn visitExpression(self, ast: Expression) -> AST {
         let mut ast_copy = self.visitChildren(ast.get_ast());
-        if self.with_types && ast.annotated_type() != AnnotatedTypeName::default() {
+        if self.with_types && ast.annotated_type().is_some() {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
         // ast_copy.evaluate_privately = ast.evaluate_privately();

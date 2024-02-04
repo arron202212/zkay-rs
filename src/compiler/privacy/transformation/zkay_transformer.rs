@@ -45,18 +45,18 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
         Self::new()
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         // self._visit_internal(ast)
-        AST::None
+        None
     }
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         // self.visit_children(ast)
-        AST::None
+        None
     }
 }
 impl ZkayVarDeclTransformer {
@@ -66,12 +66,12 @@ impl ZkayVarDeclTransformer {
 
     pub fn visitAnnotatedTypeName(&self, ast: AnnotatedTypeName) -> AnnotatedTypeName {
         let t = if ast.is_private() {
-            TypeName::cipher_type(ast.clone(), ast.homomorphism.clone())
+            Some(TypeName::cipher_type(ast.clone(), ast.homomorphism.clone()))
         } else {
             if let AST::TypeName(t) = self.visit((*ast.type_name).get_ast()) {
-                t
+                Some(t)
             } else {
-                TypeName::None
+                None
             }
         };
         AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHISM"))
@@ -84,7 +84,7 @@ impl ZkayVarDeclTransformer {
         self.visit_children(ast.get_ast())
     }
 
-    pub fn visitParameter(&self, mut ast: &mut Parameter) -> AST {
+    pub fn visitParameter(&self, mut ast: &mut Parameter) -> Option<AST> {
         if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(mut ast)) =
             self.visit_children(ast.get_ast())
         {
@@ -96,9 +96,9 @@ impl ZkayVarDeclTransformer {
             {
                 ast.identifier_declaration_base.storage_location = Some(String::from("memory"));
             }
-            ast.get_ast()
+            Some(ast.get_ast())
         } else {
-            AST::None
+            None
         }
     }
 
@@ -113,18 +113,18 @@ impl ZkayVarDeclTransformer {
         ast.identifier_declaration_base
             .keywords
             .push(String::from("public"));
-        ast.expr = Some(
+        ast.expr = 
             if let AST::Expression(expr) = self
                 .expr_trafo
                 .as_ref()
                 .unwrap()
                 .visit(ast.expr.as_ref().unwrap().get_ast())
             {
-                expr
+                Some(expr)
             } else {
-                Expression::None
-            },
-        );
+                None
+            }
+        ;
         self.visit_children(ast.get_ast())
     }
 
@@ -150,18 +150,18 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         // self._visit_internal(ast)
-        AST::None
+        None
     }
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         // self.visit_children(ast)
-        AST::None
+        None
     }
 }
 impl ZkayStatementTransformer {
@@ -194,7 +194,7 @@ impl ZkayStatementTransformer {
         for (idx, stmt) in ast.statements().iter().enumerate() {
             let old_code = stmt.get_ast().code();
             let transformed_stmt = self.visit(stmt.get_ast());
-            if transformed_stmt == AST::None {
+            if transformed_stmt.is_none() {
                 continue;
             }
             let r = Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
@@ -230,16 +230,16 @@ impl ZkayStatementTransformer {
         ast.get_ast()
     }
 
-    pub fn process_statement_child(&self, child: AST) -> AST
+    pub fn process_statement_child(&self, child: AST) -> Option<AST>
 // """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
     {
         if is_instance(&child, ASTType::Expression) {
             return self.expr_trafo.visit(child);
-        } else if child != AST::None {
+        } else if let Some(child)=child{
             assert!(is_instance(&child, ASTType::VariableDeclaration));
             return self.var_decl_trafo.visit(child);
         }
-        AST::None
+        None
     }
 
     pub fn visitStatement(&self, ast: &mut Statement) -> AST
@@ -359,7 +359,7 @@ impl ZkayStatementTransformer {
                     .as_mut()
                     .unwrap()
                     .add_to_circuit_inputs(&mut ast.condition);
-                ast.condition = guard_var.get_loc_expr(Some(ast.get_ast())).expression().unwrap();
+                ast.condition = guard_var.get_loc_expr(Some(ast.get_ast())).expr().unwrap();
                 self.gen.as_mut().unwrap().guarded(guard_var.clone(), true);
                 {
                     ast.then_branch = self.visit(ast.then_branch.get_ast()).block().unwrap();
@@ -451,7 +451,7 @@ impl ZkayStatementTransformer {
         ast
     }
 
-    pub fn visitReturnStatement(&mut self, ast: &mut ReturnStatement) -> AST
+    pub fn visitReturnStatement(&mut self, ast: &mut ReturnStatement) -> Option<AST>
 // """
     // Handle return statement.
 
@@ -467,8 +467,8 @@ impl ZkayStatementTransformer {
             .unwrap()
             .requires_verification
         {
-            if ast.expr == Expression::None {
-                return AST::default();
+            if ast.expr.is_none() {
+                return None;
             }
             assert!(!self.gen.as_ref().unwrap().has_return_var);
             self.gen.as_mut().unwrap().has_return_var = true;
@@ -492,18 +492,14 @@ impl ZkayStatementTransformer {
                     idf.to_expr()
                 })
                 .collect();
-            let mut te = TupleExpr::new(ret_args).assign(if let AST::Expression(expr) = expr {
-                expr
-            } else {
-                Expression::None
-            });
+            let mut te = TupleExpr::new(ret_args).assign(expr.expr().unwrap());
             te.set_pre_statements(ast.statement_base.pre_statements.clone());
             te.get_ast()
         } else {
             ast.expr = if let AST::Expression(expr) = self.expr_trafo.visit(ast.expr.get_ast()) {
-                expr
+                Some(expr)
             } else {
-                Expression::None
+                None
             };
             ast.get_ast()
         }
@@ -533,18 +529,18 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         // self._visit_internal(ast)
-        AST::None
+        None
     }
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         // self.visit_children(ast)
-        AST::None
+        None
     }
 }
 impl ZkayExpressionTransformer {
@@ -687,7 +683,7 @@ impl ZkayExpressionTransformer {
                         .as_mut()
                         .unwrap()
                         .add_to_circuit_inputs(&mut args[0]);
-                    args[0] = guard_var.get_loc_expr(Some(ast.get_ast())).expression().unwrap();
+                    args[0] = guard_var.get_loc_expr(Some(ast.get_ast())).expr().unwrap();
                     if op == "ite" {
                         args[1] = self
                             .visit_guarded_expression(guard_var.clone(), true, &mut args[1].clone())
@@ -778,9 +774,9 @@ impl ZkayExpressionTransformer {
             //If the target function has an associated circuit, make this function"s circuit aware of the call.
             {
                 let cf = if let AST::Expression(Expression::FunctionCallExpr(fce)) = &ast {
-                    fce.clone()
+                    Some(fce.clone())
                 } else {
-                    FunctionCallExpr::None
+                    None
                 };
                 self.gen.as_mut().unwrap().call_function(&cf);
             } else if ast.func().unwrap().target().unwrap().constructor_or_function_definition().unwrap().has_side_effects() && self.gen.is_some()
@@ -899,18 +895,18 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         // self._visit_internal(ast)
-        AST::None
+        None
     }
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         // self.visit_children(ast)
-        AST::None
+        None
     }
 }
 impl ZkayCircuitTransformer {
@@ -1099,15 +1095,15 @@ impl ZkayCircuitTransformer {
         //Function call inside private expression -> entire body will be inlined into circuit.
         //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)
         let mut fce = if let FunctionCallExpr::FunctionCallExpr(ref mut fce) = ast {
-            fce.clone()
+            Some(fce.clone())
         } else {
-            FunctionCallExprBase::default()
+            None
         };
         return self
             .gen
             .as_mut()
             .unwrap()
-            .inline_function_call_into_circuit(&mut fce)
+            .inline_function_call_into_circuit(&mut fce.unwrap())
             .0
             .unwrap();
     }

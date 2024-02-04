@@ -52,11 +52,7 @@ pub fn transform_ast(
     set_parents(new_ast.clone());
     link_identifiers(&new_ast);
     (
-        if let AST::SourceUnit(_) = new_ast {
-            new_ast
-        } else {
-            AST::default()
-        },
+        new_ast,
         zt.circuits,
     )
 }
@@ -164,18 +160,18 @@ impl AstTransformerVisitor for ZkayTransformer {
         Self::new()
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         // self._visit_internal(ast)
-        AST::None
+        None
     }
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         // self.visit_children(ast)
-        AST::None
+        None
     }
 }
 impl ZkayTransformer {
@@ -468,11 +464,11 @@ impl ZkayTransformer {
                 .var_decl_trafo
                 .visit_list(f.parameters.iter().map(|p| p.get_ast()).collect())
                 .into_iter()
-                .map(|p| {
+                .filter_map(|p| {
                     if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(p)) = p {
-                        p
+                        Some(p)
                     } else {
-                        Parameter::default()
+                        None
                     }
                 })
                 .collect();
@@ -484,9 +480,9 @@ impl ZkayTransformer {
                 .into_iter()
                 .map(|p| {
                     if let AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(p)) = p {
-                        p
+                        Some(p)
                     } else {
-                        Parameter::default()
+                        None
                     }
                 })
                 .collect();
@@ -494,15 +490,8 @@ impl ZkayTransformer {
                 .var_decl_trafo
                 .visit_list(f.return_var_decls.iter().map(|p| p.get_ast()).collect())
                 .into_iter()
-                .map(|p| {
-                    if let AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(
-                        p,
-                    )) = p
-                    {
-                        p
-                    } else {
-                        VariableDeclaration::default()
-                    }
+                .filter_map(|p| {
+                    p.variable_declaration()
                 })
                 .collect();
         }
@@ -510,16 +499,16 @@ impl ZkayTransformer {
         // Transform bodies
         for fct in all_fcts.iter_mut() {
             let gen = self.circuits.get(fct);
-            fct.body = Some(
+            fct.body = 
                 if let AST::Statement(Statement::StatementList(StatementList::Block(b))) =
                     ZkayStatementTransformer::new(Some(Box::new(gen.unwrap().clone())))
                         .visit(fct.body.as_ref().unwrap().get_ast())
                 {
-                    b
+                    Some(b)
                 } else {
-                    Block::default()
-                },
-            );
+                   None
+                }
+            ;
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
@@ -621,7 +610,7 @@ impl ZkayTransformer {
         ast.add_param(
             AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::None,
+                None,
             )))),
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
             None,
@@ -634,7 +623,7 @@ impl ZkayTransformer {
         ast.add_param(
             AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::None,
+                None,
             )))),
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
             None,
@@ -672,7 +661,7 @@ impl ZkayTransformer {
                 None,
             )
             .as_type(AST::TypeName(TypeName::Array(Array::Array(
-                ArrayBase::new(AnnotatedTypeName::uint_all(), ExprUnion::None),
+                ArrayBase::new(AnnotatedTypeName::uint_all(), None),
             )))),
         );
         stmts.push(
@@ -964,7 +953,7 @@ impl ZkayTransformer {
         new_f.add_param(
             AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::None,
+                None,
             )))),
             IdentifierExprUnion::Identifier(Identifier::Identifier(IdentifierBase::new(
                 CFG.lock().unwrap().zk_out_name(),
@@ -1073,7 +1062,7 @@ impl ZkayTransformer {
             None,
         )
         .as_type(AST::TypeName(TypeName::Array(Array::Array(
-            ArrayBase::new(AnnotatedTypeName::uint_all(), ExprUnion::None),
+            ArrayBase::new(AnnotatedTypeName::uint_all(), None),
         ))));
 
         // Request static public keys
