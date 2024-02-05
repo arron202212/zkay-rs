@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, Block, ConstructorOrFunctionDefinition, ReturnStatement, AST,
+    is_instance, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, AST,
 }; //, AstException
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -42,12 +42,12 @@ impl ReturnCheckVisitor {
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;
         if container
-            .statement_list_base()
+            .statement_list_base().unwrap()
             .statements
             .last()
             .map(|v| v.clone())
             .unwrap_or_default()
-            != ast.get_ast()
+            != ast.to_ast()
         {
             ok = false;
         }

@@ -2,8 +2,8 @@ use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::ast::{
-    ASTCode, ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
-    IdentifierExprUnion, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,
+    ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
+    IdentifierExprUnion, IntoAST, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,IntoExpression,IntoStatement,
 };
 use std::collections::{BTreeMap, BTreeSet};
 pub fn compute_transitive_circuit_io_sizes(
@@ -71,8 +71,13 @@ pub fn _compute_transitive_circuit_io_sizes(
         .cloned()
         .collect();
     for call in &cgens[fct].function_calls_with_verification {
-        if let Some(cofd
-        ) = call.func().unwrap().target().map(|t| *t).unwrap().constructor_or_function_definition()
+        if let Some(cofd) = call
+            .func()
+            .unwrap()
+            .target()
+            .map(|t| *t)
+            .unwrap()
+            .constructor_or_function_definition()
         {
             called_fcts.insert(cofd.clone());
         }
@@ -83,7 +88,13 @@ pub fn _compute_transitive_circuit_io_sizes(
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
         for f in &circuit.function_calls_with_verification.clone() {
-            if let Some(ref mut t) = f.func().unwrap().target().map(|t| *t).unwrap().constructor_or_function_definition()
+            if let Some(ref mut t) = f
+                .func()
+                .unwrap()
+                .target()
+                .map(|t| *t)
+                .unwrap()
+                .constructor_or_function_definition()
             {
                 let (i, o, p) = _compute_transitive_circuit_io_sizes(cgens, t, gkeys, called_fcts);
                 if let Some(target_circuit) = cgens.get(&*t) {
@@ -166,7 +177,12 @@ pub fn transform_internal_calls(
                     )
                     .to_expr(),
                 ]);
-                if let Some(t) = fc.func.target().map(|t| *t).unwrap().constructor_or_function_definition()
+                if let Some(t) = fc
+                    .func
+                    .target()
+                    .map(|t| *t)
+                    .unwrap()
+                    .constructor_or_function_definition()
                 {
                     if let Some(cg) = cgens.get(&t) {
                         i += cg.in_size_trans();

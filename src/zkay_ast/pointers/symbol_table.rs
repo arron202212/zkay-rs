@@ -1,11 +1,11 @@
 // from typing import Tuple, Dict, Union
 use crate::zkay_ast::ast::{
-    is_instance, is_instances, ASTChildren, ASTCode, ASTType, AnnotatedTypeName, Array, Block,
-    Comment, ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue,
-    Expression, ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
-    IndexExpr, LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
-    SourceUnit, Statement, StatementList, StructDefinition,  TupleOrLocationExpr,
-    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    is_instance, is_instances, ASTChildren, ASTType, AnnotatedTypeName, Array, Block, Comment,
+    ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
+    ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr,
+    IntoAST, LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
+    SourceUnit, Statement, StatementList, StructDefinition, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::zkay_ast::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -105,7 +105,7 @@ impl SymbolTableFiller {
     pub fn get_builtin_globals(&self) -> BTreeMap<String, Identifier> {
         let mut global_defs = GLOBAL_DEFS.vars();
         for d in global_defs.iter_mut() {
-            self.visit((*d).get_ast());
+            self.visit((*d).to_ast());
         }
         let global_defs = global_defs
             .iter()
@@ -236,15 +236,15 @@ impl SymbolTableFiller {
     }
 
     pub fn visitStatementList(&self, ast: &mut StatementList) {
-        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.to_ast());
     }
 
     pub fn visitSimpleStatement(&self, ast: &mut SimpleStatement) {
-        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.to_ast());
     }
 
     pub fn visitForStatement(&self, ast: &mut ForStatement) {
-        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.get_ast());
+        ast.ast_base_mut().unwrap().names = collect_children_names(&mut ast.to_ast());
     }
 
     pub fn visitMapping(&self, ast: &mut Mapping) {
@@ -287,8 +287,10 @@ impl SymbolTableLinker {
         while let Some(_ancestor) = ancestor {
             if let Some(nameo) = _ancestor.names().get(&name) {
                 let decl = nameo.parent();
-                if !is_instance(&decl.clone().unwrap_or_default().parent().unwrap(),ASTType::VariableDeclarationStatement)
-                 || !decl
+                if !is_instance(
+                    &decl.clone().unwrap_or_default().parent().unwrap(),
+                    ASTType::VariableDeclarationStatement,
+                ) || !decl
                     .clone()
                     .unwrap_or_default()
                     .parent()
@@ -334,9 +336,7 @@ impl SymbolTableLinker {
                 });
                 return (
                     ast2.clone()
-                        .map(|AST::Statement(Statement::StatementList(a))| {
-                             a
-                        })
+                        .map(|AST::Statement(Statement::StatementList(a))| a)
                         .unwrap_or_default(),
                     ast2v.clone(),
                     old_ast,
@@ -349,29 +349,30 @@ impl SymbolTableLinker {
         SymbolTableLinker::_find_next_decl(
             AST::TypeName(TypeName::UserDefinedTypeName(t.clone())),
             t.names()[0].name(),
-        ).1.unwrap().namespace_definition()
+        )
+        .1
+        .unwrap()
+        .namespace_definition()
     }
 
     pub fn find_identifier_declaration(&self, mut ast: &IdentifierExpr) -> AST {
-        let mut ast = ast.get_ast();
+        let mut ast = ast.to_ast();
         let name = ast.idf().name();
         loop {
             let (anc, decl) = SymbolTableLinker::_find_next_decl(ast.clone(), name.clone());
-            if let (
-                Some(AST::Statement(Statement::ForStatement(anc))),
-                    Some(decl),
-            ) = (&anc, &decl.as_ref().unwrap().variable_declaration())
+            if let (Some(AST::Statement(Statement::ForStatement(anc))), Some(decl)) =
+                (&anc, &decl.as_ref().unwrap().variable_declaration())
             {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
-                    SymbolTableLinker::_find_lca(ast.clone(), decl.get_ast(), anc.get_ast());
+                    SymbolTableLinker::_find_lca(ast.clone(), decl.to_ast(), anc.to_ast());
                 if lca.statements().iter().find(|x| (*x).clone() == ref_anchor)
                     <= lca
                         .statements()
                         .iter()
                         .find(|x| (*x).clone() == decl_anchor)
                 {
-                    ast = anc.get_ast();
+                    ast = anc.to_ast();
                     continue;
                 }
             }
@@ -382,18 +383,18 @@ impl SymbolTableLinker {
             {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
-                    SymbolTableLinker::_find_lca(ast.get_ast(), decl.get_ast(), anc.get_ast());
+                    SymbolTableLinker::_find_lca(ast.to_ast(), decl.to_ast(), anc.to_ast());
                 if lca.statements().iter().find(|x| (*x).clone() == ref_anchor)
                     <= lca
                         .statements()
                         .iter()
                         .find(|x| (*x).clone() == decl_anchor)
                 {
-                    ast = anc.get_ast();
+                    ast = anc.to_ast();
                     continue;
                 }
             }
-            return decl.unwrap()
+            return decl.unwrap();
         }
     }
 
@@ -414,7 +415,7 @@ impl SymbolTableLinker {
 
     pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) -> IdentifierExpr {
         let decl = self.find_identifier_declaration(&ast);
-        ast.location_expr_base.target = Some(Box::new(decl.get_ast()));
+        ast.location_expr_base.target = Some(Box::new(decl.to_ast()));
         assert!(ast.location_expr_base.target.as_ref().is_some());
         ast
     }
@@ -433,27 +434,27 @@ impl SymbolTableLinker {
         }
         ast = match ast {
             UserDefinedTypeName::EnumTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::EnumTypeName(ast)
             }
             UserDefinedTypeName::EnumValueTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::EnumValueTypeName(ast)
             }
             UserDefinedTypeName::StructTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::StructTypeName(ast)
             }
             UserDefinedTypeName::ContractTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::ContractTypeName(ast)
             }
             UserDefinedTypeName::AddressTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::AddressTypeName(ast)
             }
             UserDefinedTypeName::AddressPayableTypeName(mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().get_ast()));
+                ast.user_defined_type_name_base.target = Some(Box::new(type_def.unwrap().to_ast()));
                 UserDefinedTypeName::AddressPayableTypeName(ast)
             }
         };
@@ -474,21 +475,31 @@ impl SymbolTableLinker {
         //     },
         //     "Function call return value member access not yet supported"
         // );
-        if let Some(target) = ast.expr.as_ref().unwrap().target().map(|t| *t).unwrap().namespace_definition() {
+        if let Some(target) = ast
+            .expr
+            .as_ref()
+            .unwrap()
+            .target()
+            .map(|t| *t)
+            .unwrap()
+            .namespace_definition()
+        {
             if let Some(idf) = target.names().get(&ast.member.name()) {
                 ast.location_expr_base.target = idf.parent().map(|t| Box::new(t.into()));
             }
         } else {
             let mut t = ast
-                .expr.as_ref().unwrap()
+                .expr
+                .as_ref()
+                .unwrap()
                 .target()
                 .unwrap_or_default()
-                .annotated_type().unwrap()
+                .annotated_type()
+                .unwrap()
                 .type_name;
             if let TypeName::Array(_) = *t {
                 assert!(ast.member.name() == "length");
-                ast.location_expr_base.target =
-                    Some(Box::new(ARRAY_LENGTH_MEMBER.get_ast()));
+                ast.location_expr_base.target = Some(Box::new(ARRAY_LENGTH_MEMBER.to_ast()));
             } else if let TypeName::UserDefinedTypeName(mut t) = *t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
@@ -497,8 +508,8 @@ impl SymbolTableLinker {
                     }
                 } else {
                     t = t.clone();
-                    t.set_parent(Some(ast.get_ast()));
-                    self.visit(t.get_ast());
+                    t.set_parent(Some(ast.to_ast()));
+                    self.visit(t.to_ast());
                 }
             } else {
                 assert!(false);
@@ -525,20 +536,24 @@ impl SymbolTableLinker {
         //     "Function call return value indexing not yet supported"
         // );
         let source_t = ast
-            .arr.as_ref().unwrap()
+            .arr
+            .as_ref()
+            .unwrap()
             .target()
             .unwrap_or_default()
-            .annotated_type().unwrap()
-            .type_name.clone();
-        ast.location_expr_base.target = Some(Box::new(VariableDeclaration::new(
+            .annotated_type()
+            .unwrap()
+            .type_name
+            .clone();
+        ast.location_expr_base.target = Some(Box::new(
+            VariableDeclaration::new(
                 vec![],
                 source_t.value_type(),
                 Identifier::Identifier(IdentifierBase::new(String::new())),
                 None,
-            ).get_ast()),
-        );
+            )
+            .to_ast(),
+        ));
         ast
     }
 }
-
-

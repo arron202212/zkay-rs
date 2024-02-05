@@ -29,7 +29,7 @@ use crate::config::CFG;
 use crate::utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use crate::utils::progress_printer::print_step;
 // use crate::utils::timer::time_measure
-use crate::zkay_ast::ast::ASTCode;
+use crate::zkay_ast::ast::IntoAST;
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
 use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
@@ -134,7 +134,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(zkay_ast.get_ast());
+    let (ast, circuits) = transform_ast(zkay_ast.to_ast());
 
     // Dump libraries
     print_step("Write library contract files");
@@ -169,7 +169,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
     let solidity_code_output = _dump_to_output(
-        &to_solidity(ast.get_ast()),
+        &to_solidity(ast.to_ast()),
         output_dir,
         output_filename,
         false,
@@ -205,7 +205,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.as_ref().unwrap().get_ast().code())
+            .map(|cc| cc.verifier_contract_type.as_ref().unwrap().to_ast().code())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);

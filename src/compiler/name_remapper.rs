@@ -1,10 +1,10 @@
-use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, Block, BuiltinFunction, Expression,
-    FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier,
-    IdentifierExpr, IdentifierExprUnion, IfStatement, VariableDeclarationStatement,AST,
-};
-use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
+use crate::zkay_ast::ast::{
+    is_instance, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
+    FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
+    IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, VariableDeclarationStatement, AST,IntoStatement
+,};
+use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
 use std::any::Any;
 use std::collections::BTreeMap;
 // Identifier = TypeVar("Identifier")
@@ -99,7 +99,7 @@ impl Remapper {
                     .clone()
                     .into_iter()
                     .filter_map(|(key, val)| {
-                        if SymbolTableLinker::in_scope_at(&key, scope_stmt.get_ast()) {
+                        if SymbolTableLinker::in_scope_at(&key, scope_stmt.to_ast()) {
                             Some((key, val))
                         } else {
                             None
@@ -164,7 +164,7 @@ impl Remapper {
         true_cond_for_other_branch: IdentifierExpr,
         other_branch_state: RemapMapType,
         // create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
-        ch:& mut CircuitHelper,
+        ch: &mut CircuitHelper,
     )
     // """
     // Perform an SSA join for two branches.
@@ -200,7 +200,7 @@ impl Remapper {
             val: &HybridArgumentIdf,
             true_cond_for_other_branch: &IdentifierExpr,
             // create_val_for_name_and_expr_fct: impl FnMut(String, Expression) -> HybridArgumentIdf,
-            ch:& mut CircuitHelper,
+            ch: &mut CircuitHelper,
         ) -> HybridArgumentIdf
 // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         {
@@ -219,7 +219,7 @@ impl Remapper {
         }
 
         for (key, val) in &true_state {
-            if !SymbolTableLinker::in_scope_at(key, stmt.get_ast())
+            if !SymbolTableLinker::in_scope_at(key, stmt.to_ast())
             // Don"t keep local values
             {
                 continue;
@@ -262,7 +262,7 @@ impl Remapper {
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent = Some(Box::new(stmt.get_ast()));
+                        .parent = Some(Box::new(stmt.to_ast()));
                     prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base
@@ -271,7 +271,7 @@ impl Remapper {
                     self.rmap.insert(
                         key.clone(),
                         join(
-                            &true_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                            &true_state[&key].get_idf_expr(&Some(Box::new(stmt.to_ast()))),
                             &prev_val,
                             &key,
                             &val,
@@ -288,19 +288,19 @@ impl Remapper {
                 self.rmap.insert(
                     key.clone(),
                     join(
-                        &true_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
-                        &false_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                        &true_state[&key].get_idf_expr(&Some(Box::new(stmt.to_ast()))),
+                        &false_state[&key].get_idf_expr(&Some(Box::new(stmt.to_ast()))),
                         &key,
                         &val,
                         &true_cond_for_other_branch,
                         // &create_val_for_name_and_expr_fct,
-ch,
+                        ch,
                     ),
                 );
             }
         }
         for (key, val) in &false_state {
-            if !SymbolTableLinker::in_scope_at(key, stmt.get_ast())
+            if !SymbolTableLinker::in_scope_at(key, stmt.to_ast())
             // Don"t keep local values
             {
                 continue;
@@ -335,7 +335,7 @@ ch,
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent = Some(Box::new(stmt.get_ast()));
+                        .parent = Some(Box::new(stmt.to_ast()));
                     prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base
@@ -345,12 +345,12 @@ ch,
                         key.clone(),
                         join(
                             &prev_val,
-                            &false_state[&key].get_idf_expr(&Some(Box::new(stmt.get_ast()))),
+                            &false_state[&key].get_idf_expr(&Some(Box::new(stmt.to_ast()))),
                             &key,
                             &val,
                             &true_cond_for_other_branch,
                             // &create_val_for_name_and_expr_fct,
-ch,
+                            ch,
                         ),
                     );
                 }

@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{
-    ASTChildren, ASTCode, ConstructorOrFunctionDefinition, Expression, Identifier,
+    ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
     NamespaceDefinition, SourceUnit, Statement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -50,7 +50,8 @@ impl ParentSetterVisitor {
     pub fn visitNamespaceDefinition(&self, mut ast: NamespaceDefinition) {
         ast.ast_base_mut().unwrap().namespace = Some(if let Some(mut parent) = ast.parent() {
             parent
-                .ast_base().unwrap()
+                .ast_base()
+                .unwrap()
                 .namespace
                 .clone()
                 .unwrap()
@@ -68,10 +69,12 @@ impl ParentSetterVisitor {
                 parent
                     .namespace_definition_base
                     .ast_base
-                    .namespace.as_ref()
+                    .namespace
+                    .as_ref()
                     .unwrap()
                     .into_iter()
-                    .chain([&ast.namespace_definition_base.idf.clone()]).cloned()
+                    .chain([&ast.namespace_definition_base.idf.clone()])
+                    .cloned()
                     .collect()
             } else {
                 vec![ast.namespace_definition_base.idf.clone()]
@@ -80,9 +83,9 @@ impl ParentSetterVisitor {
 
     pub fn visitChildren(&self, ast: &mut AST) {
         for c in ast.children().iter_mut() {
-                c.ast_base_mut().unwrap().parent = Some(Box::new(ast.clone()));
-                c.ast_base_mut().unwrap().namespace = ast.ast_base().unwrap().namespace.clone();
-                self.visit(c.clone());
+            c.ast_base_mut().unwrap().parent = Some(Box::new(ast.clone()));
+            c.ast_base_mut().unwrap().namespace = ast.ast_base().unwrap().namespace.clone();
+            self.visit(c.clone());
         }
     }
 }
@@ -114,7 +117,7 @@ impl AstVisitor for ExpressionToStatementVisitor {
 
 impl ExpressionToStatementVisitor {
     pub fn visitExpression(&self, ast: &mut Expression) {
-        let mut parent = Some(ast.get_ast());
+        let mut parent = Some(ast.to_ast());
         while let Some(p) = &parent {
             if let AST::Statement(_) = p {
                 break;
@@ -122,14 +125,13 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.expression_base_mut().unwrap().statement = parent.map(|AST::Statement(p)| {
-                Box::new(p)
-            });
+            ast.expression_base_mut().unwrap().statement =
+                parent.map(|AST::Statement(p)| Box::new(p));
         }
     }
 
     pub fn visitStatement(&self, ast: &mut Statement) {
-        let mut parent = Some(ast.get_ast());
+        let mut parent = Some(ast.to_ast());
         while let Some(p) = &parent {
             if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
                 _,
@@ -140,10 +142,11 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement_base_mut().unwrap().function = parent.map(|AST::NamespaceDefinition(
-                        NamespaceDefinition::ConstructorOrFunctionDefinition(p))| {
-                Box::new(p)
-            });
+            ast.statement_base_mut().unwrap().function = parent.map(
+                |AST::NamespaceDefinition(
+                    NamespaceDefinition::ConstructorOrFunctionDefinition(p),
+                )| { Box::new(p) },
+            );
         }
     }
 }

@@ -23,9 +23,9 @@ use crate::jsnark_interface::libsnark_interface as libsnark;
 use crate::utils::helpers::{hash_file, hash_string};
 use crate::utils::helpers::{read_file, save_to_file};
 use crate::zkay_ast::ast::{
-    indent, is_instance, ASTCode, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition,
-    Expression, FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,  TypeName, AST,
+    indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
+    FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, IntoAST, MeExpr,
+    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -42,14 +42,14 @@ pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
 pub fn _get_t(mut t: Option<AST>) -> String
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
-    let t=t.unwrap();
+    let t = t.unwrap();
     let t = if let Some(t) = t.expr() {
-        Some(*t.annotated_type().type_name)
+        Some(*t.annotated_type().unwrap().type_name)
     } else {
         t.type_name()
     };
     assert!(t.is_some());
-    let t=t.unwrap();
+    let t = t.unwrap();
     let bits = t.elem_bitwidth();
     if bits == 1 {
         return String::from("ZkBool");
@@ -79,7 +79,7 @@ impl JsnarkVisitor
     pub fn visitCircuit(&self) -> Vec<String> {
         self.phi
             .iter()
-            .map(|constr| self.visit(constr.get_ast()))
+            .map(|constr| self.visit(constr.to_ast()))
             .collect()
     }
 
@@ -95,7 +95,7 @@ impl JsnarkVisitor
         let stmts: Vec<_> = stmt
             .statements
             .iter()
-            .map(|s| self.visit(s.get_ast()))
+            .map(|s| self.visit(s.to_ast()))
             .collect();
         if !stmt.name.is_empty() {
             format!(
@@ -116,7 +116,7 @@ impl JsnarkVisitor
         format!(
             r#"decl("{}", {});"#,
             stmt.lhs.identifier_base.name,
-            self.visit(stmt.expr.get_ast())
+            self.visit(stmt.expr.to_ast())
         )
     }
 
@@ -178,7 +178,7 @@ impl JsnarkVisitor
     }
 
     pub fn visitNumberLiteralExpr(&self, ast: NumberLiteralExpr) -> String {
-        let t = _get_t(Some(ast.get_ast()));
+        let t = _get_t(Some(ast.to_ast()));
         if ast.value < (1 << 31) {
             format!(r#"val({}, {t})"#, ast.value)
         } else {
@@ -214,11 +214,20 @@ impl JsnarkVisitor
             let mut args: Vec<_> = ast
                 .args()
                 .iter()
-                .map(|arg| self.visit(arg.get_ast()))
+                .map(|arg| self.visit(arg.to_ast()))
                 .collect();
             if ast.func().unwrap().is_shiftop() {
-                assert!(ast.args()[1].annotated_type().type_name.is_literal());
-                args[1] = ast.args()[1].annotated_type().type_name.value().to_string()
+                assert!(ast.args()[1]
+                    .annotated_type()
+                    .unwrap()
+                    .type_name
+                    .is_literal());
+                args[1] = ast.args()[1]
+                    .annotated_type()
+                    .unwrap()
+                    .type_name
+                    .value()
+                    .to_string()
             }
 
             let mut op = &ast.func().unwrap().op().unwrap();
@@ -269,7 +278,7 @@ impl JsnarkVisitor
                     assert!(args.len() == 2);
                     if op == "*" && ast.func().unwrap().rerand_using().is_some() {
                         // re-randomize homomorphic scalar multiplication
-                        let rnd = self.visit(ast.func().unwrap().rerand_using().unwrap().get_ast());
+                        let rnd = self.visit(ast.func().unwrap().rerand_using().unwrap().to_ast());
                         format!(
                             r#"o_rerand({f_start}{{{}}}, {o}, {{{}}}), "{crypto_backend}", "{public_key_name}", {rnd})"#,
                             args[0], args[1]
@@ -290,7 +299,7 @@ impl JsnarkVisitor
             )
         {
             assert!(ast.annotated_type().unwrap().type_name.elem_bitwidth() == 256);
-            return self.handle_cast(self.visit(ast.args()[0].get_ast()), TypeName::uint_type());
+            return self.handle_cast(self.visit(ast.args()[0].to_ast()), TypeName::uint_type());
         }
 
         // assert!(
@@ -302,11 +311,11 @@ impl JsnarkVisitor
     }
 
     pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) -> String {
-        self.handle_cast(self.visit(ast.expr.get_ast()), *ast.elem_type)
+        self.handle_cast(self.visit(ast.expr.to_ast()), *ast.elem_type)
     }
 
     pub fn handle_cast(&self, wire: String, t: TypeName) -> String {
-        format!(r#"cast({wire}, {})"#, _get_t(Some(t.get_ast())))
+        format!(r#"cast({wire}, {})"#, _get_t(Some(t.to_ast())))
     }
 }
 
@@ -319,7 +328,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
             r#"addS("{}", {}, {});"#,
             sec_input.identifier_base.name,
             sec_input.t.size_in_uints(),
-            _get_t(Some(sec_input.t.get_ast()))
+            _get_t(Some(sec_input.t.to_ast()))
         ));
     }
 
@@ -336,7 +345,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
                 r#"addIn("{}", {}, {});"#,
                 pub_input.identifier_base.name,
                 pub_input.t.size_in_uints(),
-                _get_t(Some(pub_input.t.get_ast()))
+                _get_t(Some(pub_input.t.to_ast()))
             )
         });
     }
@@ -345,7 +354,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
             r#"addOut("{}", {}, {});"#,
             pub_output.identifier_base.name,
             pub_output.t.size_in_uints(),
-            _get_t(Some(pub_output.t.get_ast()))
+            _get_t(Some(pub_output.t.to_ast()))
         ));
     }
 
@@ -355,10 +364,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
         .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
     for crypto_params in &CFG.lock().unwrap().user_config.all_crypto_params() {
-        let pk_name = CircuitHelper::get_glob_key_name(
-            &MeExpr::new().get_ast(),
-            crypto_params,
-        );
+        let pk_name = CircuitHelper::get_glob_key_name(&MeExpr::new().to_ast(), crypto_params);
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
@@ -527,7 +533,7 @@ impl JsnarkGenerator
             .collect()
     }
 
-    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) ->Option<VerifyingKeyType> {
+    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> Option<VerifyingKeyType> {
         let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
         let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
@@ -572,7 +578,7 @@ impl JsnarkGenerator
         // else {
         //     unimplemented!()
         // }
-       None
+        None
     }
 
     pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {

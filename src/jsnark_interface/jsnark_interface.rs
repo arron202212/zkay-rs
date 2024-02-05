@@ -4,7 +4,7 @@
 use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::config::CFG;
 use crate::utils::helpers::hash_file;
-use crate::utils::run_command::{run_command,run_commands};
+use crate::utils::run_command::{run_command, run_commands};
 use crate::zkay_ast::ast::indent;
 use lazy_static::lazy_static;
 use std::fs::File;
@@ -104,7 +104,8 @@ pub fn prepare_proof(
             &CFG.lock().unwrap().jsnark_circuit_classname(),
             "prove",
         ]
-        .into_iter().map(String::from)
+        .into_iter()
+        .map(String::from)
         .chain(serialized_arg_str)
         .collect(),
         Some(output_dir),

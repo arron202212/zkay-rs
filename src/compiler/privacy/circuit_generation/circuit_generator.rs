@@ -10,8 +10,8 @@ use crate::compiler::privacy::proving_scheme::backends::{
 use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use crate::utils::progress_printer::print_step;
 use crate::utils::timer::time_measure;
-use crate::zkay_ast::ast::ASTCode;
 use crate::zkay_ast::ast::ConstructorOrFunctionDefinition;
+use crate::zkay_ast::ast::IntoAST;
 use crate::{config::CFG, zk_print};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
@@ -24,7 +24,6 @@ use std::sync::Mutex;
 pub enum VerifyingKeyType {
     ProvingSchemeGroth16(<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX),
     ProvingSchemeGm17(<ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX),
-    None,
 }
 lazy_static! {
     pub static ref finish_counter: Mutex<i32> = Mutex::new(0);
@@ -276,7 +275,7 @@ impl CircuitGeneratorBase
                 .verifier_contract_type
                 .as_ref()
                 .unwrap()
-                .get_ast()
+                .to_ast()
                 .code(),
             finish_counter.lock().unwrap(),
             c_count.lock().unwrap()

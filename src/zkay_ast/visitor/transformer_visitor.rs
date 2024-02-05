@@ -7,22 +7,20 @@ pub struct AstTransformerVisitorBase {
     log: bool,
 }
 pub trait AstTransformerVisitor {
-    // type Return ;
-    // type AST;
     fn default() -> Self
     where
         Self: Sized;
-    fn visit(&self, ast: AST) -> AST;
+    fn visit(&self, ast: AST) -> Option<AST>;
     fn visitBlock(
         &self,
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST;
-    fn visit_list(&self, ast_list: Vec<AST>) -> Vec<AST> {
+    ) -> Option<AST>;
+    fn visit_list(&self, ast_list: Vec<AST>) -> Vec<Option<AST>> {
         ast_list
             .iter()
-            .filter_map(|a| Some(self.visit(a.clone())))
+            .filter_map(|a| self.visit(a.clone()))
             .collect()
     }
     fn visit_children(&self, mut ast: AST) -> Option<AST> {
@@ -54,7 +52,7 @@ impl AstTransformerVisitorBase {
         ast
     }
 
-    pub fn _visit_internal(&self, ast: Option<AST>) ->Option<AST> {
+    pub fn _visit_internal(&self, ast: Option<AST>) -> Option<AST> {
         if ast.is_none() {
             return ast;
         }
@@ -90,7 +88,7 @@ impl AstTransformerVisitor for AstTransformerVisitorBase {
         Self::new(false)
     }
 
-    fn visit(&self, ast: AST) -> AST {
+    fn visit(&self, ast: AST) -> Option<AST> {
         self._visit_internal(ast)
     }
     fn visitBlock(
@@ -98,7 +96,7 @@ impl AstTransformerVisitor for AstTransformerVisitorBase {
         ast: AST,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> AST {
+    ) -> Option<AST> {
         self.visit_children(ast)
     }
 }

@@ -1,7 +1,7 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
-    FunctionCallExpr, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
+    is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
+    FunctionCallExpr, IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -61,14 +61,17 @@ impl DirectHybridFunctionDetectionVisitor {
     pub fn visitPrimitiveCastExpr(&self, mut ast: PrimitiveCastExpr) {
         if ast.expr.evaluate_privately() {
             ast.expression_base
-                .statement.as_mut()
+                .statement
+                .as_mut()
                 .unwrap()
-                .statement_base_mut().unwrap()
-                .function.as_mut()
+                .statement_base_mut()
+                .unwrap()
+                .function
+                .as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else {
-            self.visit_children(&ast.get_ast());
+            self.visit_children(&ast.to_ast());
         }
     }
 
@@ -80,25 +83,31 @@ impl DirectHybridFunctionDetectionVisitor {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
             && ast.func().unwrap().is_private()
         {
-            ast.statement().as_mut()
+            ast.statement()
+                .as_mut()
                 .unwrap()
-                .statement_base_mut().unwrap()
-                .function.as_mut()
+                .statement_base_mut()
+                .unwrap()
+                .function
+                .as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else if ast.is_cast() && ast.evaluate_privately() {
             ast.statement()
-                .unwrap().as_mut()
-                .statement_base_mut().unwrap()
-                .function.as_mut()
+                .unwrap()
+                .as_mut()
+                .statement_base_mut()
+                .unwrap()
+                .function
+                .as_mut()
                 .unwrap()
                 .requires_verification = true;
         } else {
-            self.visit_children(&ast.get_ast());
+            self.visit_children(&ast.to_ast());
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
-        self.visit(ast.body.as_ref().unwrap().get_ast());
+        self.visit(ast.body.as_ref().unwrap().to_ast());
 
         if ast.can_be_external() {
             if ast.requires_verification {
@@ -200,6 +209,6 @@ impl NonInlineableCallDetector {
                 ast.func()
             )
         }
-        self.visit_children(&ast.get_ast());
+        self.visit_children(&ast.to_ast());
     }
 }

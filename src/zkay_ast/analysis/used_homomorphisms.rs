@@ -1,8 +1,8 @@
 use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::ast::{
-    ASTChildren, ASTCode, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition,
-    Expression, IdentifierDeclaration, SourceUnit, StructDefinition, AST,
+    ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
+    IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
 };
 use crate::zkay_ast::homomorphism::Homomorphism;
 use crate::zkay_ast::visitor::visitor::AstVisitor;
@@ -54,26 +54,25 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visitExpression(&self, ast: Expression) -> BTreeSet<String> {
-        if ast.annotated_type().is_some() && ast.annotated_type().unwrap().is_private()
-        {
-            BTreeSet::from([ast.annotated_type().homomorphism.clone()])
-                .union(&self.visitChildren(ast.get_ast()))
+        if ast.annotated_type().is_some() && ast.annotated_type().unwrap().is_private() {
+            BTreeSet::from([ast.annotated_type().unwrap().homomorphism.clone()])
+                .union(&self.visitChildren(ast.to_ast()))
                 .cloned()
                 .collect()
         } else {
-            self.visitChildren(ast.get_ast())
+            self.visitChildren(ast.to_ast())
         }
     }
 
     pub fn visitIdentifierDeclaration(&self, ast: IdentifierDeclaration) -> BTreeSet<String> {
-        self.visitChildren(ast.get_ast())
+        self.visitChildren(ast.to_ast())
     } // Visits annotated type of identifier (and initial value expression)
 
     pub fn visitConstructorOrFunctionDefinition(
         self,
         ast: ConstructorOrFunctionDefinition,
     ) -> BTreeSet<String> {
-        self.visitChildren(ast.get_ast())
+        self.visitChildren(ast.to_ast())
     } // Parameter and return types are children; don"t bother with "function type"
 
     pub fn visitEnumDefinition(&self, ast: EnumDefinition) -> <Self as AstVisitor>::Return {
@@ -81,11 +80,11 @@ impl UsedHomomorphismsVisitor {
     } // Neither the enum type nor the types of the enum values can be private
 
     pub fn visitStructDefinition(&self, ast: StructDefinition) -> <Self as AstVisitor>::Return {
-        self.visitChildren(ast.get_ast())
+        self.visitChildren(ast.to_ast())
     } // Struct types are never private, but they may have private members
 
     pub fn visitSourceUnit(&self, ast: SourceUnit) -> <Self as AstVisitor>::Return {
-        let used_homs = self.visitChildren(ast.get_ast());
+        let used_homs = self.visitChildren(ast.to_ast());
         // Now all constructors or functions have been visited and we can do some post-processing
         // If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
         // We have to do this for all transitively called functions g, being careful around recursive function calls
@@ -96,8 +95,9 @@ impl UsedHomomorphismsVisitor {
         });
         Self::compute_transitive_homomorphisms(all_fcts.clone());
         for f in all_fcts.iter_mut() {
-            f.used_crypto_backends =
-                Some(Self::used_crypto_backends(f.used_homomorphisms.clone().unwrap()));
+            f.used_crypto_backends = Some(Self::used_crypto_backends(
+                f.used_homomorphisms.clone().unwrap(),
+            ));
         }
         used_homs
     }
@@ -116,7 +116,13 @@ impl UsedHomomorphismsVisitor {
                 {
                     assert!(
                         !g.requires_verification
-                            && !g.body.as_ref().unwrap().statement_list_base.statements.is_empty()
+                            && !g
+                                .body
+                                .as_ref()
+                                .unwrap()
+                                .statement_list_base
+                                .statements
+                                .is_empty()
                     );
                     continue;
                 }
@@ -135,7 +141,7 @@ impl UsedHomomorphismsVisitor {
                 }
             })
             .collect::<BTreeSet<_>>();
-        let callerss=callers.clone();
+        let callerss = callers.clone();
         while !dirty.is_empty() {
             let f = dirty.pop_first().unwrap();
             // Add all of f"s used homomorphisms to all of its callers g.

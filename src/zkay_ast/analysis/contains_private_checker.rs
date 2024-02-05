@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, Expression, FunctionCallExpr, LocationExpr, AST,
+    is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, LocationExpr, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -63,7 +63,7 @@ impl ContainsPrivVisitor {
         if ast.evaluate_privately() {
             self.contains_private = true;
         }
-        self.visitAST(ast.get_ast())
+        self.visitAST(ast.to_ast())
     }
 
     pub fn visitAST(&self, ast: AST) {

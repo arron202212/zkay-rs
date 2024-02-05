@@ -8,9 +8,12 @@ pub fn run_command(
     cmd: Vec<&str>,
     cwd: Option<&str>,
     allow_verbose: bool,
-) -> (Option<String>, Option<String>)
-{
-run_commands(cmd.into_iter().map(String::from).collect(),cwd,allow_verbose)
+) -> (Option<String>, Option<String>) {
+    run_commands(
+        cmd.into_iter().map(String::from).collect(),
+        cwd,
+        allow_verbose,
+    )
 }
 pub fn run_commands(
     cmd: Vec<String>,
@@ -28,7 +31,11 @@ pub fn run_commands(
     //cwd=None, allow_verbose: bool = False
 {
     let cwd = if let Some(cwd) = cwd {
-        std::fs::canonicalize(cwd).unwrap().to_str().unwrap().to_string()
+        std::fs::canonicalize(cwd)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string()
     } else {
         String::new()
     };
@@ -88,8 +95,5 @@ pub fn get_command(cmd: Vec<String>) -> String {
         }
     }
 
-    cmd.iter()
-        .map(format_part)
-        .collect::<Vec<_>>()
-        .join(" ")
+    cmd.iter().map(format_part).collect::<Vec<_>>().join(" ")
 }

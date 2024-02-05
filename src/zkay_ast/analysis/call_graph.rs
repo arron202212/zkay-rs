@@ -1,6 +1,6 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
-    FunctionCallExpr, LocationExpr, NamespaceDefinition, WhileStatement, AST,
+    is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
+    FunctionCallExpr, IntoAST, LocationExpr, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -49,9 +49,11 @@ impl DirectCalledFunctionDetector {
         if !is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&ast.func().unwrap(), ASTType::LocationExpr));
             let fdef = *ast.func().unwrap().target().unwrap();
-            assert!(fdef.constructor_or_function_definition().unwrap().is_function());
-            if let Some(cofd) = fdef.constructor_or_function_definition()
-            {
+            assert!(fdef
+                .constructor_or_function_definition()
+                .unwrap()
+                .is_function());
+            if let Some(cofd) = fdef.constructor_or_function_definition() {
                 ast.statement()
                     .unwrap()
                     .function()
@@ -60,15 +62,23 @@ impl DirectCalledFunctionDetector {
                     .insert(cofd.clone());
             }
         }
-        self.visit_children(&ast.get_ast());
+        self.visit_children(&ast.to_ast());
     }
     pub fn visitForStatement(&self, mut ast: ForStatement) {
-        ast.statement_base.function.as_mut().unwrap().has_static_body = false;
-        self.visit_children(&ast.get_ast());
+        ast.statement_base
+            .function
+            .as_mut()
+            .unwrap()
+            .has_static_body = false;
+        self.visit_children(&ast.to_ast());
     }
     pub fn visitWhileStatement(&self, mut ast: WhileStatement) {
-        ast.statement_base.function.as_mut().unwrap().has_static_body = false;
-        self.visit_children(&ast.get_ast());
+        ast.statement_base
+            .function
+            .as_mut()
+            .unwrap()
+            .has_static_body = false;
+        self.visit_children(&ast.to_ast());
     }
 }
 // class IndirectCalledFunctionDetector(FunctionVisitor)

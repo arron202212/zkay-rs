@@ -1,6 +1,6 @@
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::ast::{
-    ASTCode, AnnotatedTypeName, Expression, Statement, UserDefinedTypeName, AST,
+    AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 use crate::zkay_ast::pointers::symbol_table::link_identifiers;
@@ -36,7 +36,7 @@ pub fn replace_expr(
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
 {
-    _replace_ast(Some(old_expr.get_ast()), &mut (*new_expr).get_ast());
+    _replace_ast(Some(old_expr.to_ast()), &mut (*new_expr).to_ast());
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
@@ -178,7 +178,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> AST {
-        let mut ast_copy = self.visitChildren(ast.get_ast());
+        let mut ast_copy = self.visitChildren(ast.to_ast());
         // ast_copy.target = ast.target;
         ast_copy
     }
@@ -191,7 +191,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitExpression(self, ast: Expression) -> AST {
-        let mut ast_copy = self.visitChildren(ast.get_ast());
+        let mut ast_copy = self.visitChildren(ast.to_ast());
         if self.with_types && ast.annotated_type().is_some() {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
@@ -200,7 +200,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitStatement(self, ast: Statement) -> AST {
-        let mut ast_copy = self.visitChildren(ast.get_ast());
+        let mut ast_copy = self.visitChildren(ast.to_ast());
         if self.with_analysis {
             // ast_copy.before_analysis = ast.before_analysis();
         }

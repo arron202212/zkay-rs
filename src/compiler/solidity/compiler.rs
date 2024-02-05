@@ -89,14 +89,15 @@ fn compile_solidity_json(
           }}
    }}"#
     );
-    let mut cwd=cwd.to_string();
+    let mut cwd = cwd.to_string();
     if cwd.is_empty() {
         cwd = std::fs::canonicalize(solp)
             .unwrap()
             .parent()
             .unwrap()
             .to_str()
-            .unwrap().to_string();
+            .unwrap()
+            .to_string();
     }
     let old_cwd = std::env::current_dir().unwrap();
     set_current_dir(&cwd);
@@ -147,7 +148,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
 // :raise SolcException: raised if solc reports a compiler error
 // """
 {
-    let p=PathBuf::from(filename);
+    let p = PathBuf::from(filename);
     let sol_name = p.file_name().unwrap().clone();
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();

@@ -158,11 +158,11 @@ fn process_ast(
 pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>)) -> Vec<String> {
     let ast = if let (Some(code), None) = code_or_ast {
         Some(get_processed_ast(&code, None))
-    } else  {
+    } else {
         code_or_ast.1.clone()
     };
-     assert!(ast.is_some(), "Invalid AST (no source unit at root)");
-    let ast=ast.unwrap();
+    assert!(ast.is_some(), "Invalid AST (no source unit at root)");
+    let ast = ast.unwrap();
     let mut vc_names = vec![];
     for contract in &ast.source_unit().unwrap().contracts {
         let cname = contract.namespace_definition_base.idf.name();

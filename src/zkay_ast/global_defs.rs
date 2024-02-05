@@ -1,8 +1,8 @@
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::zkay_ast::ast::{
-    ASTCode, AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName,
-    Identifier, IdentifierBase, Parameter, StateVariableDeclaration, StructDefinition,
-    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
+    AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName, Identifier,
+    IdentifierBase, IntoAST, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName,
+    TypeName, UserDefinedTypeName, VariableDeclaration,
 };
 use crate::zkay_ast::pointers::parent_setter::set_parents;
 
@@ -43,9 +43,9 @@ impl GlobalDefs {
                 Identifier::identifier("balance"),
                 None,
             )
-            .get_ast()],
+            .to_ast()],
         );
-        set_parents(address_struct.get_ast());
+        set_parents(address_struct.to_ast());
 
         let mut address_payable_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<address_payable>"),
@@ -56,7 +56,7 @@ impl GlobalDefs {
                     Identifier::identifier("balance"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("send")),
                     Some(vec![Parameter::new(
@@ -74,7 +74,7 @@ impl GlobalDefs {
                     )]),
                     Some(Block::new(vec![], false)),
                 )
-                .get_ast(),
+                .to_ast(),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("transfer")),
                     Some(vec![Parameter::new(
@@ -87,7 +87,7 @@ impl GlobalDefs {
                     Some(vec![]),
                     Some(Block::new(vec![], false)),
                 )
-                .get_ast(),
+                .to_ast(),
             ],
         );
         address_payable_struct.members[1]
@@ -98,7 +98,7 @@ impl GlobalDefs {
             .constructor_or_function_definition()
             .unwrap()
             .can_be_private = false;
-        set_parents(address_payable_struct.get_ast());
+        set_parents(address_payable_struct.to_ast());
 
         let msg_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<msg>"),
@@ -113,17 +113,17 @@ impl GlobalDefs {
                     Identifier::identifier("sender"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("value"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
             ],
         );
-        set_parents(msg_struct.get_ast());
+        set_parents(msg_struct.to_ast());
 
         let block_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<block>"),
@@ -138,38 +138,38 @@ impl GlobalDefs {
                     Identifier::identifier("coinbase"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("difficulty"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("gaslimit"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("number"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("timestamp"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
             ],
         );
-        set_parents(block_struct.get_ast());
+        set_parents(block_struct.to_ast());
 
         let tx_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<tx>"),
@@ -180,7 +180,7 @@ impl GlobalDefs {
                     Identifier::identifier("gasprice"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::new(
@@ -191,10 +191,10 @@ impl GlobalDefs {
                     Identifier::identifier("origin"),
                     None,
                 )
-                .get_ast(),
+                .to_ast(),
             ],
         );
-        set_parents(tx_struct.get_ast());
+        set_parents(tx_struct.to_ast());
         Self {
             address_struct,
             address_payable_struct,
@@ -239,7 +239,7 @@ impl GlobalVars {
             .idf
             .ast_base_mut()
             .unwrap()
-            .parent = Some(Box::new(msg.get_ast()));
+            .parent = Some(Box::new(msg.to_ast()));
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
@@ -262,7 +262,7 @@ impl GlobalVars {
             .idf
             .ast_base_mut()
             .unwrap()
-            .parent = Some(Box::new(block.get_ast()));
+            .parent = Some(Box::new(block.to_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
@@ -280,7 +280,7 @@ impl GlobalVars {
             .idf
             .ast_base_mut()
             .unwrap()
-            .parent = Some(Box::new(tx.get_ast()));
+            .parent = Some(Box::new(tx.to_ast()));
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
@@ -292,7 +292,7 @@ impl GlobalVars {
             .idf
             .ast_base_mut()
             .unwrap()
-            .parent = Some(Box::new(now.get_ast()));
+            .parent = Some(Box::new(now.to_ast()));
         Self {
             msg,
             block,

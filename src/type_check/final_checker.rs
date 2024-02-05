@@ -1,8 +1,8 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
-    is_instance, ASTCode, ASTType, AssignmentStatement,  Block,
-    ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierExpr, IfStatement,
-    LocationExpr, StateVariableDeclaration, TupleOrLocationExpr, AST,
+    is_instance, ASTType, AssignmentStatement, Block, ConstructorOrFunctionDefinition,
+    ContractDefinition, Expression, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
+    StateVariableDeclaration, TupleOrLocationExpr, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
@@ -49,15 +49,18 @@ impl FinalVisitor {
     pub fn visitContractDefinition(&mut self, ast: ContractDefinition) {
         self.state_vars_assigned = Some(BTreeMap::new());
         for v in &ast.state_variable_declarations {
-            if v.is_final() && v.expr().is_some(){
-                self.state_vars_assigned.as_mut().unwrap().insert(v.clone(), false);
+            if v.is_final() && v.expr().is_some() {
+                self.state_vars_assigned
+                    .as_mut()
+                    .unwrap()
+                    .insert(v.clone(), false);
             }
         }
 
         if ast.constructor_definitions.len() > 0 {
             assert!(ast.constructor_definitions.len() == 1);
             let c = &ast.constructor_definitions[0];
-            self.visit(c.body.as_ref().unwrap().get_ast());
+            self.visit(c.body.as_ref().unwrap().to_ast());
         }
 
         for (sv, assigned) in self.state_vars_assigned.as_ref().unwrap() {
@@ -73,10 +76,8 @@ impl FinalVisitor {
     }
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
-        self.visit(ast.rhs().unwrap().get_ast());
-        if let Some(le) =
-            ast.lhs().map(|l|l.identifier_expr())
-        {
+        self.visit(ast.rhs().unwrap().to_ast());
+        if let Some(le) = ast.lhs().map(|l| l.identifier_expr()) {
             let var: &AST = &(*le.unwrap().location_expr_base.target.unwrap()).into();
             if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
                 assert!(!*v, "Tried to reassign final variable,{:?}", ast);
@@ -86,25 +87,30 @@ impl FinalVisitor {
     }
 
     pub fn visitIfStatement(&mut self, ast: IfStatement) {
-        self.visit(ast.condition.get_ast());
+        self.visit(ast.condition.to_ast());
         let prev = self.state_vars_assigned.as_ref().unwrap().clone();
-        self.visit(ast.then_branch.get_ast());
+        self.visit(ast.then_branch.to_ast());
         let then_b = self.state_vars_assigned.as_ref().unwrap().clone();
         self.state_vars_assigned = Some(prev);
         if let Some(else_branch) = &ast.else_branch {
-            self.visit(else_branch.get_ast());
+            self.visit(else_branch.to_ast());
         }
 
         assert!(
             then_b.keys().collect::<Vec<_>>()
-                == self.state_vars_assigned.as_ref().unwrap().keys().collect::<Vec<_>>()
+                == self
+                    .state_vars_assigned
+                    .as_ref()
+                    .unwrap()
+                    .keys()
+                    .collect::<Vec<_>>()
         );
         for (var, flag) in &then_b {
-                assert!(
-                    flag == self.state_vars_assigned.as_ref().unwrap().get(var).unwrap() ,
-                    "Final value is not assigned in both branches,{:?}",
-                    ast
-                );
+            assert!(
+                flag == self.state_vars_assigned.as_ref().unwrap().get(var).unwrap(),
+                "Final value is not assigned in both branches,{:?}",
+                ast
+            );
         }
     }
     pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) {
@@ -112,7 +118,8 @@ impl FinalVisitor {
             && self.state_vars_assigned.is_some()
         {
             if let Some(&v) = self
-                .state_vars_assigned.as_ref()
+                .state_vars_assigned
+                .as_ref()
                 .unwrap()
                 .get(&(*ast.location_expr_base.target.clone().unwrap()).into())
             {

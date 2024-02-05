@@ -114,7 +114,7 @@ pub fn strip_reveals(code: &str) -> String
 // """Replace reveal expressions by their inner expression, with whitespace padding."""
 {
     let mut code = code.to_owned();
-    let c=code.clone();
+    let c = code.clone();
     let matches = REVEAL_START_PATTERN.find_iter(&c);
     for m in matches {
         let before_reveal_loc = m.start();
@@ -207,14 +207,14 @@ pub fn replace_with_surrogate(
     let has_ph = replacement_fstr.is_empty();
     let mut replacement = replacement_fstr.to_owned();
     let mut search_idx = 0;
-    let mut c=code.clone();
+    let mut c = code.clone();
     loop {
- c=code.clone();
+        c = code.clone();
         let matches = search_pattern.captures(&c[search_idx..]);
         if matches.is_none() {
             break;
         }
-        let end=matches.as_ref().unwrap().get(0).unwrap().end();
+        let end = matches.as_ref().unwrap().get(0).unwrap().end();
         if has_ph {
             let repl = matches
                 .and_then(|cap| cap.name("repl").map(|repl| repl.as_str()))

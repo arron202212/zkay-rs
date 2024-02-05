@@ -19,13 +19,14 @@
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
 use crate::zkay_ast::ast::{
-    ASTCode, ASTType, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, AST,
+    ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf,
+    IntoAST, AST,
 };
 use serde::{Deserialize, Serialize};
 
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum CircuitStatement {
     CircComment(CircComment),
@@ -36,25 +37,25 @@ pub enum CircuitStatement {
     CircEncConstraint(CircEncConstraint),
     CircSymmEncConstraint(CircSymmEncConstraint),
     CircEqConstraint(CircEqConstraint),
-    #[default]
-    None,
 }
-impl ASTCode for CircuitStatement {
-    fn get_ast(&self) -> AST {
+impl IntoAST for CircuitStatement {
+    fn into_ast(self) -> AST {
         match self {
-            Self::CircComment(ast) => ast.get_ast(),
-            Self::CircIndentBlock(ast) => ast.get_ast(),
-            Self::CircCall(ast) => ast.get_ast(),
-            Self::CircVarDecl(ast) => ast.get_ast(),
-            Self::CircGuardModification(ast) => ast.get_ast(),
-            Self::CircEncConstraint(ast) => ast.get_ast(),
-            Self::CircSymmEncConstraint(ast) => ast.get_ast(),
-            Self::CircEqConstraint(ast) => ast.get_ast(),
+            Self::CircComment(ast) => ast.to_ast(),
+            Self::CircIndentBlock(ast) => ast.to_ast(),
+            Self::CircCall(ast) => ast.to_ast(),
+            Self::CircVarDecl(ast) => ast.to_ast(),
+            Self::CircGuardModification(ast) => ast.to_ast(),
+            Self::CircEncConstraint(ast) => ast.to_ast(),
+            Self::CircSymmEncConstraint(ast) => ast.to_ast(),
+            Self::CircEqConstraint(ast) => ast.to_ast(),
         }
     }
+}
+impl ASTInstanceOf for CircuitStatement {
     fn get_ast_type(&self) -> ASTType {
         match self {
-             Self::CircComment(ast) => ast.get_ast_type(),
+            Self::CircComment(ast) => ast.get_ast_type(),
             Self::CircIndentBlock(ast) => ast.get_ast_type(),
             Self::CircCall(ast) => ast.get_ast_type(),
             Self::CircVarDecl(ast) => ast.get_ast_type(),
@@ -75,9 +76,19 @@ impl ASTCode for CircuitStatement {
 // def __init__(self, text: str)
 //     super().__init__()
 //     self.text = text
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircComment {
     pub text: String,
+}
+impl IntoAST for CircComment {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircComment(self))
+    }
+}
+impl ASTInstanceOf for CircComment {
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircComment
+    }
 }
 impl CircComment {
     pub fn new(text: String) -> Self {
@@ -97,10 +108,20 @@ impl CircComment {
 //     super().__init__()
 //     self.name = name
 //     self.statements = statements
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircIndentBlock {
     pub name: String,
     pub statements: Vec<CircuitStatement>,
+}
+impl IntoAST for CircIndentBlock {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircIndentBlock(self))
+    }
+}
+impl ASTInstanceOf for CircIndentBlock {
+    fn get_ast_type(&self) -> ASTType {
+        ASTType::CircIndentBlock
+    }
 }
 impl CircIndentBlock {
     pub fn new(name: String, statements: Vec<CircuitStatement>) -> Self {
@@ -134,14 +155,17 @@ impl CircIndentBlock {
 // def __init__(self, fct: ConstructorOrFunctionDefinition)
 //     super().__init__()
 //     self.fct = fct
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircCall {
     pub fct: ConstructorOrFunctionDefinition,
 }
-impl ASTCode for CircCall {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircCall(self.clone()))
+impl IntoAST for CircCall {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircCall(self))
     }
+}
+
+impl ASTInstanceOf for CircCall {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircCall
     }
@@ -164,15 +188,18 @@ impl CircCall {
 //     super().__init__()
 //     self.lhs = lhs
 //     self.expr = expr
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircVarDecl {
     pub lhs: HybridArgumentIdf,
     pub expr: Expression,
 }
-impl ASTCode for CircVarDecl {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircVarDecl(self.clone()))
+
+impl IntoAST for CircVarDecl {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircVarDecl(self))
     }
+}
+impl ASTInstanceOf for CircVarDecl {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircVarDecl
     }
@@ -203,15 +230,17 @@ impl CircVarDecl {
 //     super().__init__()
 //     self.new_cond = new_cond
 //     self.is_true = is_true
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircGuardModification {
     pub new_cond: Option<HybridArgumentIdf>,
     pub is_true: Option<bool>,
 }
-impl ASTCode for CircGuardModification {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircGuardModification(self.clone()))
+impl IntoAST for CircGuardModification {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircGuardModification(self))
     }
+}
+impl ASTInstanceOf for CircGuardModification {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircGuardModification
     }
@@ -266,7 +295,7 @@ impl CircGuardModification {
 //     self.pk = pk
 //     self.cipher = cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEncConstraint {
     pub plain: HybridArgumentIdf,
     pub rnd: HybridArgumentIdf,
@@ -274,10 +303,12 @@ pub struct CircEncConstraint {
     pub cipher: HybridArgumentIdf,
     pub is_dec: bool,
 }
-impl ASTCode for CircEncConstraint {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircEncConstraint(self.clone()))
+impl IntoAST for CircEncConstraint {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircEncConstraint(self))
     }
+}
+impl ASTInstanceOf for CircEncConstraint {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircEncConstraint
     }
@@ -316,17 +347,19 @@ impl CircEncConstraint {
 //     self.other_pk = other_pk
 //     self.iv_cipher = iv_cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircSymmEncConstraint {
     pub plain: HybridArgumentIdf,
     pub other_pk: HybridArgumentIdf,
     pub iv_cipher: HybridArgumentIdf,
     pub is_dec: bool,
 }
-impl ASTCode for CircSymmEncConstraint {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircSymmEncConstraint(self.clone()))
+impl IntoAST for CircSymmEncConstraint {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircSymmEncConstraint(self))
     }
+}
+impl ASTInstanceOf for CircSymmEncConstraint {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircSymmEncConstraint
     }
@@ -356,15 +389,17 @@ impl CircSymmEncConstraint {
 //     super().__init__()
 //     self.tgt = tgt
 //     self.val = val
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEqConstraint {
     pub tgt: HybridArgumentIdf,
     pub val: HybridArgumentIdf,
 }
-impl ASTCode for CircEqConstraint {
-    fn get_ast(&self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircEqConstraint(self.clone()))
+impl IntoAST for CircEqConstraint {
+    fn into_ast(self) -> AST {
+        AST::CircuitStatement(CircuitStatement::CircEqConstraint(self))
     }
+}
+impl ASTInstanceOf for CircEqConstraint {
     fn get_ast_type(&self) -> ASTType {
         ASTType::CircEqConstraint
     }
