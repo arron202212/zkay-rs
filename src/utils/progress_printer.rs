@@ -31,7 +31,6 @@ impl TermColor {
             Self::ENDC => "\033[0m",
             Self::BOLD => "\033[1m",
             Self::UNDERLINE => "\033[4m",
-            _ => "",
         }
     }
 }

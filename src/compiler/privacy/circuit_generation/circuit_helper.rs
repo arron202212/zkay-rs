@@ -442,7 +442,7 @@ where
 
     pub fn get_randomness_for_rerand(&mut self, expr: Expression) -> IdentifierExpr {
         let idf = self._secret_input_name_factory.get_new_idf(
-            &TypeName::rnd_type(expr.annotated_type().type_name.unwrap().crypto_params().unwrap()),
+            &TypeName::rnd_type(expr.annotated_type().unwrap().type_name.crypto_params().unwrap()),
             None,
         );
         IdentifierExpr::new(
@@ -570,7 +570,7 @@ where
                 vec![
                     ast.to_ast(),
                     ReturnStatement::new(
-                        TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_expr(),
+                        Some(TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_expr()),
                     )
                     .to_ast(),
                 ],
@@ -600,16 +600,16 @@ where
         let mut ret_args=ret_args.unwrap();
         //Move all return values out of the circuit
         let mut ret_args = if !is_instance(&ret_args,ASTType::TupleExpr) {
-            TupleExpr::new(vec![ret_args])
+            TupleExpr::new(vec![ret_args.expr().unwrap()]).into_ast()
         } else {
             ret_args
         } ;
-        for ret_arg in ret_args.elements.iter_mut() {
+        for ret_arg in ret_args.tuple_expr_mut().unwrap().elements.iter_mut() {
             ret_arg.set_statement(astmt.to_statement());
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
-            .zip(ret_args.elements.iter_mut())
+            .zip(ret_args.tuple_expr_mut().unwrap().elements.iter_mut())
             .map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
@@ -708,7 +708,7 @@ where
                             ._expr_trafo
                             .as_ref()
                             .unwrap()
-                            .visit(privacy_label_expr.to_ast())
+                            .visit(Some(privacy_label_expr.to_ast()))
                         {
                             vec![expr]
                         } else {
@@ -781,24 +781,24 @@ where
 
         let expr_text = expr.code();
         let input_expr = if let Some(AST::Expression(expr)) =
-            self._expr_trafo.as_ref().unwrap().visit(expr.to_ast())
+            self._expr_trafo.as_ref().unwrap().visit(Some(expr.to_ast()))
         {
             Some(expr)
         } else {
             None
         };
-        let t = input_expr.unwrap().annotated_type().unwrap().type_name;
+        let t = input_expr.as_ref().unwrap().annotated_type().unwrap().type_name;
         let mut locally_decrypted_idf = None;
 
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
         //rather than introducing an unnecessary public circuit input (expensive)
         if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = *t {
-            return self._evaluate_private_expression(input_expr.unwrap(), &t.value().to_string());
+            return self._evaluate_private_expression(input_expr.unwrap(), &t.value().to_string()).unwrap();
         } else if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
             NumberTypeName::NumberLiteralType(t),
         )) = *t
         {
-            return self._evaluate_private_expression(input_expr, &t.value().to_string()).unwrap();
+            return self._evaluate_private_expression(input_expr.unwrap(), &t.value().to_string()).unwrap();
         }
 
         let mut t_suffix = String::new();
@@ -847,7 +847,7 @@ where
             );
             let return_idf = locally_decrypted_idf.clone();
             let cipher_t = TypeName::cipher_type(
-                input_expr.unwrap().annotated_type().unwrap(),
+                input_expr.as_ref().unwrap().annotated_type().unwrap(),
                 expr.annotated_type().unwrap().homomorphism,
             );
             let tname = format!(
@@ -1030,7 +1030,7 @@ where
         self._circ_trafo
             .as_ref()
             .unwrap()
-            .visit(inlined_body.as_ref().unwrap().to_ast());
+            .visit(Some(inlined_body.as_ref().unwrap().to_ast()));
 
         fcall
             .expression_base
@@ -1133,7 +1133,7 @@ where
                 ast.to_ast().code(),
             )));
         assert!(ast.expr.is_some());
-        if !is_instance(&ast.expr.unwrap(), ASTType::TupleExpr) {
+        if !is_instance(ast.expr.as_ref().unwrap(), ASTType::TupleExpr) {
             ast.expr = Some(TupleExpr::new(vec![ast.expr.clone().unwrap()]).to_expr());
         }
 
@@ -1144,7 +1144,7 @@ where
             .unwrap()
             .return_var_decls
             .iter()
-            .zip(&ast.expr.unwrap().elements())
+            .zip(&ast.expr.as_ref().unwrap().elements())
         {
             //Assign return value to new version of return variable
             self.create_new_idf_version_from_value(
@@ -1164,9 +1164,9 @@ where
         self._phi
             .push(CircuitStatement::CircComment(comment.clone()));
         let cond = self._evaluate_private_expression(ast.condition.clone(), "");
-        comment.text += &format!(" [{}]", cond.unwrap().identifier_base.name);
+        comment.text += &format!(" [{}]", cond.as_ref().unwrap().identifier_base.name);
         self._circ_trafo.as_ref().unwrap().visitBlock(
-            ast.then_branch.to_ast(),
+            Some(ast.then_branch.to_ast()),
             Some(cond.clone().unwrap()),
             Some(true),
         );
@@ -1188,10 +1188,10 @@ where
             self._phi
                 .push(CircuitStatement::CircComment(CircComment::new(format!(
                     "else [{}]",
-                    cond.unwrap().identifier_base.name
+                    cond.as_ref().unwrap().identifier_base.name
                 ))));
             self._circ_trafo.as_ref().unwrap().visitBlock(
-                ast.else_branch.as_ref().unwrap().to_ast(),
+                Some(ast.else_branch.as_ref().unwrap().to_ast()),
                 Some(cond.clone().unwrap()),
                 Some(false),
             );
@@ -1211,7 +1211,7 @@ where
 
         //SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
         // with
-        self.circ_indent_block(&format!("JOIN [{}]", cond.unwrap().identifier_base.name));
+        self.circ_indent_block(&format!("JOIN [{}]", cond.as_ref().unwrap().identifier_base.name));
         let cond_idf_expr = cond.unwrap().get_idf_expr(&Some(Box::new(ast.to_ast())));
         assert!(is_instance(&cond_idf_expr, ASTType::IdentifierExpr));
         let mut selfs = self.clone();
@@ -1265,7 +1265,7 @@ where
         let mut statements = vec![];
         for stmt in ast.statement_list_base.statements.iter_mut() {
             if let AST::Statement(ref mut stmt) = stmt {
-                self._circ_trafo.as_ref().unwrap().visit((*stmt).to_ast());
+                self._circ_trafo.as_ref().unwrap().visit(Some((*stmt).to_ast()));
                 //Bubble up nested pre statements
                 statements.append(&mut stmt.drain_pre_statements());
             }
@@ -1330,7 +1330,7 @@ where
             assert!(is_instance(&lhs, ASTType::TupleExpr));
             if is_instance(&*rhs, ASTType::FunctionCallExpr) {
                 if let Some(AST::Expression(expr)) =
-                    self._circ_trafo.as_ref().unwrap().visit(rhs.to_ast())
+                    self._circ_trafo.as_ref().unwrap().visit(Some(rhs.to_ast()))
                 {
                     *rhs = expr;
                 }
@@ -1416,7 +1416,7 @@ where
                 new_out_param
                     .clone()
                     .get_loc_expr(None)
-                    .expr()
+                    .expr().unwrap()
                     .explicitly_converted(*expr.annotated_type().unwrap().type_name),
                 new_out_param,
             )
@@ -1486,7 +1486,7 @@ where
     {
         assert!(
             !(is_instance(&expr, ASTType::MemberAccessExpr)
-                && is_instance(&expr.member(), ASTType::HybridArgumentIdf))
+                && is_instance(&expr.member().unwrap(), ASTType::HybridArgumentIdf))
         );
         if is_instance(&expr, ASTType::IdentifierExpr)
             && is_instance(&expr.idf().unwrap(), ASTType::HybridArgumentIdf)
@@ -1500,16 +1500,16 @@ where
             };
         }
 
-        let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr.to_ast());
+        let priv_expr = self._circ_trafo.as_ref().unwrap().visit(Some(expr.to_ast()));
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory
                 .base_name_factory
-                .get_new_name(&*priv_expr.annotated_type().unwrap().type_name, false)
+                .get_new_name(&*priv_expr.as_ref().unwrap().annotated_type().unwrap().type_name, false)
         );
         let tmp_circ_var_idf = self._circ_temp_name_factory.add_idf(
             tname,
-            *priv_expr.unwrap().annotated_type().unwrap().type_name,
+            *priv_expr.as_ref().unwrap().annotated_type().unwrap().type_name,
             if let Some(AST::Expression(expr)) = &priv_expr {
                 Some(expr.clone())
             } else {
@@ -1728,7 +1728,7 @@ where
         stmt.add_pre_statement(
             AssignmentStatementBase::new(
                 key_idf.get_loc_expr(None).into(),
-                key_expr.to_expr(),
+                Some(key_expr.to_expr()),
                 None,
             )
             .to_statement(),

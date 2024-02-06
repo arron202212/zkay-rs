@@ -126,7 +126,7 @@ impl ExpressionToStatementVisitor {
         }
         if parent.is_some() {
             ast.expression_base_mut().unwrap().statement =
-                parent.map(|AST::Statement(p)| Box::new(p));
+                parent.map(|p| Box::new(p.statement().unwrap()));
         }
     }
 
@@ -143,9 +143,8 @@ impl ExpressionToStatementVisitor {
         }
         if parent.is_some() {
             ast.statement_base_mut().unwrap().function = parent.map(
-                |AST::NamespaceDefinition(
-                    NamespaceDefinition::ConstructorOrFunctionDefinition(p),
-                )| { Box::new(p) },
+                |p
+                | { Box::new(p.constructor_or_function_definition().unwrap()) },
             );
         }
     }

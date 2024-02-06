@@ -74,49 +74,45 @@ impl TypeCheckVisitor {
                 .zip(rhs.elements())
                 .map(|(e, a)| self.get_rhs(a, e).unwrap())
                 .collect();
-            return replace_expr(&rhs, &mut TupleExpr::new(exprs.clone()).to_expr(), false)
+            return Some(replace_expr(&rhs, &mut TupleExpr::new(exprs.clone()).to_expr(), false)
                 .as_type(AST::TypeName(TypeName::TupleType(TupleType::new(
                     exprs.iter().map(|e| e.annotated_type().clone().unwrap()).collect(),
-                ))))
+                )))))
                 ;
         }
 
         let mut require_rehom = false;
         let mut instance = rhs.instance_of(expected_type);
-        let trues = String::from("true");
-        if trues != instance {
+        if instance.is_none() {
             require_rehom = true;
             let expected_matching_hom =
                 expected_type.with_homomorphism(rhs.annotated_type().unwrap().homomorphism);
             instance = rhs.instance_of(&expected_matching_hom);
         }
 
-        if trues != instance {
             assert!(
-                false,
+                instance.is_some(),
                 "{:?},{:?}, {:?}",
                 expected_type,
                 rhs.annotated_type(),
                 rhs
-            )
-        } else {
+            );
             if rhs.annotated_type().unwrap().type_name != expected_type.type_name {
                 rhs = Self::implicitly_converted_to(rhs, &*expected_type.type_name);
             }
 
-            if instance == String::from("make-private") {
-                return Self::make_private(
+            Some(if instance == Some(String::from("make-private")) {
+                Self::make_private(
                     rhs,
                     &*expected_type.privacy_annotation.as_ref().unwrap(),
                     &expected_type.homomorphism,
-                );
+                )
             } else if require_rehom {
-                return Self::try_rehom(rhs, expected_type);
+                Self::try_rehom(rhs, expected_type)
             } else {
-                return rhs;
-            }
-        }
-        None
+                rhs
+            })
+        
     }
     //@staticmethod
     pub fn check_for_invalid_private_type(ast: AST) {
@@ -179,7 +175,7 @@ impl TypeCheckVisitor {
         if is_instance(&ast.lhs().unwrap(), ASTType::TupleExpr)
             || is_instance(&ast.lhs().unwrap(), ASTType::LocationExpr)
         {
-            self.check_final(f, ast.lhs().unwrap().expr());
+            self.check_final(f, ast.lhs().unwrap().expr().unwrap());
         }
     }
 
@@ -242,12 +238,12 @@ impl TypeCheckVisitor {
 
             //Ensure that condition is boolean
             assert!(
-                cond_t.unwrap()
+                cond_t.as_ref().unwrap()
                     .type_name
                     .implicitly_convertible_to(&TypeName::bool_type()),
                 "{:?}, {:?}, {:?}",
                 TypeName::bool_type(),
-                cond_t.unwrap().type_name,
+                cond_t.as_ref().unwrap().type_name,
                 args[0]
             );
 
@@ -256,11 +252,11 @@ impl TypeCheckVisitor {
                 .type_name
                 .combined_type(*args[2].annotated_type().unwrap().type_name, true);
 
-            let a = if cond_t.unwrap().is_private()
+            let a = if cond_t.as_ref().unwrap().is_private()
             //Everything is turned private
             {
                 func.is_private = true;
-                res_t.annotate(CombinedPrivacyUnion::AST(Some(
+                res_t.unwrap().annotate(CombinedPrivacyUnion::AST(Some(
                     Expression::me_expr(None).to_ast(),
                 )))
             } else {
@@ -270,7 +266,7 @@ impl TypeCheckVisitor {
                 let p = true_type
                     .combined_privacy(ast.analysis(), false_type)
                     .unwrap();
-                res_t.annotate(p).with_homomorphism(hom)
+                res_t.unwrap().annotate(p).with_homomorphism(hom)
             };
             args[1] = self.get_rhs(args[1].clone(), &a).unwrap();
             args[2] = self.get_rhs(args[2].clone(), &a).unwrap();
@@ -283,7 +279,7 @@ impl TypeCheckVisitor {
         let parameter_types = func.input_types();
         if !func.is_eq() {
             for (arg, t) in args.iter().zip(&parameter_types) {
-                if !arg.instanceof_data_type(t.unwrap()) {
+                if !arg.instanceof_data_type(t.as_ref().unwrap()) {
                     assert!(
                         false,
                         "{:?},{:?}, {:?}",
@@ -303,18 +299,18 @@ impl TypeCheckVisitor {
         };
 
         let mut arg_t = if args.len() == 1 {
-            if args[0].annotated_type().unwrap().type_name.is_literal() {
+            Some(if args[0].annotated_type().unwrap().type_name.is_literal() {
                 TypeName::Literal(String::from("lit"))
             } else {
                 t1.clone()
-            }
+            })
         } else {
             assert!(args.len() == 2);
             let is_eq_with_tuples = func.is_eq() && is_instance(&t1, ASTType::TupleType);
             t1.combined_type(t2.clone().unwrap(), is_eq_with_tuples)
         };
         //Infer argument and output types
-        let out_t = if arg_t == TypeName::Literal(String::from("lit")) {
+        let out_t = if arg_t == Some(TypeName::Literal(String::from("lit")) ){
             let res = func.op_func(
                 args.iter()
                     .map(|arg| arg.annotated_type().unwrap().type_name.value())
@@ -341,9 +337,9 @@ impl TypeCheckVisitor {
                     .to_abstract_type()
                     .combined_type(t2.unwrap().to_abstract_type(), true);
             }
-            out_t
+            Some(out_t)
         } else if func.output_type() ==Some (TypeName::bool_type()) {
-            TypeName::bool_type()
+            Some(TypeName::bool_type())
         } else {
             arg_t.clone()
         };
@@ -355,7 +351,7 @@ impl TypeCheckVisitor {
         let mut p = None;
         let private_args = args.iter().any(|arg| Self::has_private_type(arg));
         if private_args {
-            assert!(arg_t != TypeName::Literal(String::from("lit")));
+            assert!(arg_t != Some(TypeName::Literal(String::from("lit"))));
             if func.can_be_private() {
                 if func.is_shiftop() {
                     if !args[1].annotated_type().unwrap().type_name.is_literal() {
@@ -416,9 +412,9 @@ impl TypeCheckVisitor {
             }
         }
 
-        if arg_t != TypeName::Literal(String::from("lit")) {
+        if arg_t != Some(TypeName::Literal(String::from("lit")) ){
             //Add implicit casts for arguments
-            let arg_pt = arg_t.annotate(CombinedPrivacyUnion::AST(Some(
+            let arg_pt = arg_t.unwrap().annotate(CombinedPrivacyUnion::AST(Some(
                 p.as_ref().unwrap().to_ast(),
             )));
             if func.is_shiftop() && p.is_some() {
@@ -434,7 +430,7 @@ impl TypeCheckVisitor {
         }
 
         ast.set_annotated_type(
-            out_t.annotate(CombinedPrivacyUnion::AST(Some(p.unwrap().to_ast()))),
+            out_t.unwrap().annotate(CombinedPrivacyUnion::AST(Some(p.unwrap().to_ast()))),
         );
     }
     pub fn handle_homomorphic_builtin_function_call(
@@ -445,7 +441,7 @@ impl TypeCheckVisitor {
         //First - same as non-homomorphic - check that argument types conform to op signature
         if !func.is_eq() {
             for (arg, t) in ast.args().iter().zip(&func.input_types()) {
-                if !arg.instanceof_data_type(t.unwrap()) {
+                if !arg.instanceof_data_type(t.as_ref().unwrap()) {
                     assert!(
                         false,
                         "{:?},{:?}, {:?}",
@@ -491,7 +487,7 @@ impl TypeCheckVisitor {
     }
     //@staticmethod
     pub fn combine_homomorphism(lhs: Expression, rhs: Expression) -> String {
-        if lhs.annotated_type().homomorphism == rhs.annotated_type().homomorphism {
+        if lhs.annotated_type().unwrap().homomorphism == rhs.annotated_type().unwrap().homomorphism {
             lhs.annotated_type().unwrap().homomorphism.clone()
         } else if Self::can_rehom(&lhs) {
             rhs.annotated_type().unwrap().homomorphism.clone()
@@ -639,7 +635,7 @@ impl TypeCheckVisitor {
         //set parents
         target.set_parent(source.parent().clone());
         let mut annotated_type = target.annotated_type();
-        annotated_type.ast_base.parent = Some(Box::new((*target).to_ast()));
+        annotated_type.as_mut().unwrap().ast_base.parent = Some(Box::new((*target).to_ast()));
         target.set_annotated_type(annotated_type.unwrap());
         source.set_parent(Some(Box::new(target.clone().to_ast())));
 
@@ -654,7 +650,7 @@ impl TypeCheckVisitor {
             //Cast the argument of the ReclassifyExpr instead
             expr.set_expr(Self::implicitly_converted_to(expr.expr().unwrap(), t));
             let mut expr_annotated_type = expr.annotated_type();
-            expr_annotated_type.unwrap().type_name = expr.expr().annotated_type().unwrap().type_name;
+            expr_annotated_type.as_mut().unwrap().type_name = expr.expr().unwrap().annotated_type().unwrap().type_name;
             expr.set_annotated_type(expr_annotated_type.unwrap());
             return expr;
         }
@@ -685,7 +681,7 @@ impl TypeCheckVisitor {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
             self.handle_builtin_function_call(
                 ast.clone(),
-                ast.func().unwrap().get_ast().builtin_function().unwrap(),
+                ast.func().unwrap().to_ast().builtin_function().unwrap(),
             );
         } else if ast.is_cast() {
             assert!(
@@ -708,7 +704,7 @@ impl TypeCheckVisitor {
                 ),
             );
         } else if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
-            let ft = ast.func().unwrap().annotated_type().type_name;
+            let ft = ast.func().unwrap().annotated_type().unwrap().type_name;
             assert!(is_instance(&*ft, ASTType::FunctionTypeName));
 
             assert!(
@@ -765,7 +761,7 @@ impl TypeCheckVisitor {
                 Some(Expression::me_expr(None)),
                 String::from("NON_HOMOMORPHISM"),
             );
-            if String::from("true") == expr.instance_of(&expected) {
+            if Some(String::from("true")) == expr.instance_of(&expected) {
                 assert!(
                     false,
                     "{:?}, {:?}, {:?}",
@@ -874,10 +870,10 @@ impl TypeCheckVisitor {
         ));
 
         assert!(
-            String::from("true")
+            Some(String::from("true"))
                 != ast
                     .to_expr()
-                    .instance_of(&ast.expr().unwrap().annotated_type()),
+                    .instance_of(&ast.expr().unwrap().annotated_type().unwrap()),
             r#"Redundant "{}": Expression is already @{}{homomorphism}"{:?}"#,
             ast.func_name(),
             ast.privacy().unwrap().code(),
@@ -902,7 +898,7 @@ impl TypeCheckVisitor {
                 String::from("NON_HOMOMORPHISM"),
             );
             assert!(
-                String::from("true") == b.instance_of(&expected),
+                Some(String::from("true") )== b.instance_of(&expected),
                 "{:?}, {:?} ,{:?}",
                 expected,
                 b.annotated_type(),
@@ -913,7 +909,7 @@ impl TypeCheckVisitor {
 
     pub fn visitWhileStatement(&self, ast: WhileStatement) {
         assert!(
-            String::from("true") == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
+           Some( String::from("true")) == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
             AnnotatedTypeName::bool_all(),
             ast.condition.annotated_type(),
@@ -924,7 +920,7 @@ impl TypeCheckVisitor {
 
     pub fn visitForStatement(&self, ast: ForStatement) {
         assert!(
-            String::from("true") == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
+            Some(String::from("true") )== ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
             AnnotatedTypeName::bool_all(),
             ast.condition.annotated_type(),
@@ -941,7 +937,7 @@ impl TypeCheckVisitor {
         );
         if ast.expr.is_some() {
             self.get_rhs(TupleExpr::new(vec![]).to_expr(), &rt);
-        } else if !is_instance(&ast.expr.unwrap(), ASTType::TupleExpr) {
+        } else if !is_instance(ast.expr.as_ref().unwrap(), ASTType::TupleExpr) {
             ast.expr = self.get_rhs(TupleExpr::new(vec![ast.expr.clone().unwrap()]).to_expr(), &rt);
         } else {
             ast.expr = self.get_rhs(ast.expr.clone().unwrap(), &rt);
@@ -998,7 +994,7 @@ impl TypeCheckVisitor {
             );
             let instance = index.instance_of(&expected);
             assert!(
-                String::from("true") == instance,
+                Some(String::from("true") )== instance,
                 "{:?}, {:?} ,{:?}",
                 expected,
                 index.annotated_type(),

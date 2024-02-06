@@ -57,7 +57,7 @@ impl ChildListBuilder {
         // if ast.is_none() {
         //     return;
         // }
-        self.children.push(ast.clone().unwrap());
+        self.children.push(ast.clone());
     }
 }
 
@@ -194,19 +194,29 @@ pub trait ASTChildren {
     fn process_children(&mut self, cb: &mut ChildListBuilder);
 }
 
-pub trait IntoStatement {
+pub trait IntoStatement:Clone {
     fn into_statement(self) -> Statement;
     fn to_statement(&self) -> Statement {
         self.clone().into_statement()
     }
 }
-pub trait IntoExpression {
+pub trait IntoExpression:Clone {
     fn into_expr(self) -> Expression;
     fn to_expr(&self) -> Expression {
         self.clone().into_expr()
     }
 }
-pub trait IntoAST {
+impl<T:IntoAST+Clone> IntoExpression for  T{
+    fn into_expr(self) -> Expression{
+        self.into_ast().expr().unwrap()
+    }
+}
+impl<T:IntoAST+Clone> IntoStatement for  T{
+    fn into_statement(self) -> Statement{
+        self.into_ast().statement().unwrap()
+    }
+}
+pub trait IntoAST:Clone {
     fn to_ast(&self) -> AST {
         self.clone().into_ast()
     }
@@ -283,6 +293,7 @@ impl ASTInstanceOf for AST {
             AST::NamespaceDefinition(ast) => ast.get_ast_type(),
             AST::EnumValue(ast) => ast.get_ast_type(),
             AST::SourceUnit(ast) => ast.get_ast_type(),
+            AST::CircuitStatement(ast) => ast.get_ast_type(),
             AST::Pragma(_) => ASTType::Pragma,
             AST::VersionPragma(_) => ASTType::VersionPragma,
             AST::Modifier(_) => ASTType::Modifier,
@@ -294,6 +305,8 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 impl AST {
+    pub fn statement(&self)->Option<Statement>{
+    None}
     pub fn builtin_function(&self) -> Option<BuiltinFunction> {
         None
     }
@@ -333,6 +346,9 @@ impl AST {
     pub fn tuple_expr(&self) -> Option<TupleExpr> {
         None
     }
+   pub fn tuple_expr_mut(&mut self) -> Option<&mut TupleExpr> {
+        None
+    }
     pub fn parameter(&self) -> Option<&Parameter> {
         None
     }
@@ -343,6 +359,9 @@ impl AST {
         None
     }
     pub fn statement_list_base(&self) -> Option<StatementListBase> {
+        None
+    }
+ pub fn statement_list(&self) -> Option<StatementList> {
         None
     }
     pub fn ast_base(&self) -> Option<&ASTBase> {
@@ -743,7 +762,7 @@ impl Expression {
     }
     pub fn code(&self) -> String {
         let v = CodeVisitor::new(true);
-        v.visit(&self.into_ast())
+        v.visit(&self.to_ast())
     }
     pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
     pub fn parent(&self) -> Option<Box<AST>> {
@@ -865,11 +884,11 @@ impl Expression {
             let t = self.annotated_type().unwrap().type_name;
 
             if *t == expected {
-                return self.into_ast();
+                return self.clone().into_ast();
             }
 
             // Explicit casts
-            let cast = is_instance(&t, ASTType::NumberTypeName)
+            let cast = is_instance(&*t, ASTType::NumberTypeName)
                 && is_instances(
                     &expected,
                     vec![
@@ -879,14 +898,14 @@ impl Expression {
                         ASTType::EnumTypeName,
                     ],
                 )
-                || is_instance(&t, ASTType::AddressTypeName)
+                || is_instance(&*t, ASTType::AddressTypeName)
                     && is_instance(&expected, ASTType::NumberTypeName)
-                || is_instance(&t, ASTType::AddressPayableTypeName)
+                || is_instance(&*t, ASTType::AddressPayableTypeName)
                     && is_instances(
                         &expected,
                         vec![ASTType::NumberTypeName, ASTType::AddressTypeName],
                     )
-                || is_instance(&t, ASTType::EnumTypeName)
+                || is_instance(&*t, ASTType::EnumTypeName)
                     && is_instance(&expected, ASTType::NumberTypeName);
             assert!(cast);
             return Expression::PrimitiveCastExpr(PrimitiveCastExpr::new(
@@ -898,7 +917,7 @@ impl Expression {
             .into_ast();
         }
         assert!(ret.is_some());
-        let ret = ret.unwrap();
+        let mut ret = ret.unwrap();
         ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             expected.clone(),
             if let Some(privacy_annotation) = self.annotated_type().unwrap().privacy_annotation {
@@ -989,7 +1008,7 @@ impl Expression {
         ))
     }
 
-    pub fn instance_of(&self, expected: &AnnotatedTypeName) -> String {
+    pub fn instance_of(&self, expected: &AnnotatedTypeName) -> Option<String> {
         // """
         // :param expected:
         // :return: true, false, or "make-private"
@@ -999,11 +1018,11 @@ impl Expression {
         let actual = self.annotated_type();
 
         if !self.instanceof_data_type(&*expected.type_name) {
-            return String::from("false");
+            return Some(String::from("false"));
         }
 
         // check privacy type and homomorphism
-        let combined_label = actual.unwrap().combined_privacy(self.analysis(), expected.clone());
+        let combined_label = actual.as_ref().unwrap().combined_privacy(self.analysis(), expected.clone());
         if let Some(combined_label) = combined_label {
             if let CombinedPrivacyUnion::Vec(combined_label) = combined_label {
                 assert!(
@@ -1021,12 +1040,12 @@ impl Expression {
                         true
                     }
                 );
-                (combined_label
+                Some((combined_label
                     == self
                         .annotated_type().unwrap()
                         .type_name
                         .types()
-                        .unwrap_or_default()
+                        .unwrap()
                         .iter()
                         .map(|t| {
                             CombinedPrivacyUnion::AST(
@@ -1037,19 +1056,19 @@ impl Expression {
                             )
                         })
                         .collect::<Vec<_>>())
-                .to_string()
+                .to_string())
             } else if combined_label.expr().unwrap().privacy_annotation_label()
                 == actual.unwrap()
                     .privacy_annotation
                     .unwrap()
                     .privacy_annotation_label()
             {
-                String::from("true")
+                Some(String::from("true"))
             } else {
-                String::from("make-private")
+               Some( String::from("make-private"))
             }
         } else {
-            String::from("false")
+            Some(String::from("false"))
         }
     }
 
@@ -1301,11 +1320,11 @@ pub struct BuiltinFunction {
     pub homomorphism: String,
     pub rerand_using: Option<Box<IdentifierExpr>>,
 }
-impl IntoExpression for BuiltinFunction {
-    fn into_expr(self) -> Expression {
-        Expression::BuiltinFunction(self)
-    }
-}
+// impl IntoExpression for BuiltinFunction {
+//     fn into_expr(self) -> Expression {
+//         Expression::BuiltinFunction(self)
+//     }
+// }
 impl IntoAST for BuiltinFunction {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::BuiltinFunction(self))
@@ -1462,7 +1481,7 @@ impl BuiltinFunction {
         let arg_types: Vec<_> = args.iter().map(|x| x.annotated_type()).collect();
         let inaccessible_arg_types: Vec<_> = arg_types
             .iter()
-            .filter(|x| !x.unwrap().is_accessible(&analysis))
+            .filter(|x| !x.as_ref().unwrap().is_accessible(&analysis))
             .collect();
         if inaccessible_arg_types.is_empty()
         // Else we would not have selected a homomorphic operation
@@ -1472,8 +1491,8 @@ impl BuiltinFunction {
         }
         let elem_type = *arg_types
             .iter()
-            .map(|a| a.unwrap().type_name.clone())
-            .reduce(|l, r| Box::new(l.combined_type(*r, true)))
+            .map(|a| a.as_ref().unwrap().type_name.clone())
+            .reduce(|l, r| Box::new(l.combined_type(*r, true).unwrap()))
             .unwrap();
         let base_type = AnnotatedTypeName::new(
             elem_type,
@@ -1483,7 +1502,7 @@ impl BuiltinFunction {
                 .map(|pr| *pr),
             String::from("NON_HOMOMORPHIC"),
         );
-        let public_args: Vec<_> = arg_types.iter().map(|a| a.unwrap().is_public()).collect();
+        let public_args: Vec<_> = arg_types.iter().map(|a| a.as_ref().unwrap().is_public()).collect();
 
         for hom in HOMOMORPHIC_BUILTIN_FUNCTIONS.iter() {
             // Can have more public arguments, but not fewer (hom.public_args[i] implies public_args[i])
@@ -1622,14 +1641,14 @@ impl FunctionCallExpr {
         }
     }
 }
-impl IntoExpression for FunctionCallExpr {
-    fn into_expr(self) -> Expression {
-        match self {
-            FunctionCallExpr::FunctionCallExpr(ast) => ast.to_expr(),
-            FunctionCallExpr::NewExpr(ast) => ast.to_expr(),
-        }
-    }
-}
+// impl IntoExpression for FunctionCallExpr {
+//     fn into_expr(self) -> Expression {
+//         match self {
+//             FunctionCallExpr::FunctionCallExpr(ast) => ast.to_expr(),
+//             FunctionCallExpr::NewExpr(ast) => ast.to_expr(),
+//         }
+//     }
+// }
 impl IntoAST for FunctionCallExpr {
     fn into_ast(self) -> AST {
         match self {
@@ -1654,11 +1673,11 @@ pub struct FunctionCallExprBase {
     pub sec_start_offset: Option<i32>,
     pub public_key: Option<Box<HybridArgumentIdf>>,
 }
-impl IntoExpression for FunctionCallExprBase {
-    fn into_expr(self) -> Expression {
-        Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(self))
-    }
-}
+// impl IntoExpression for FunctionCallExprBase {
+//     fn into_expr(self) -> Expression {
+//         Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(self))
+//     }
+// }
 impl IntoAST for FunctionCallExprBase {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::FunctionCallExpr(
@@ -1756,7 +1775,7 @@ impl NewExpr {
                     LocationExpr::IdentifierExpr(IdentifierExpr::new(
                         IdentifierExprUnion::String(format!(
                             "new {}",
-                            annotated_type.into_ast().code()
+                            annotated_type.to_ast().code()
                         )),
                         None,
                     )),
@@ -1942,11 +1961,11 @@ pub struct NumberLiteralExpr {
     pub was_hex: bool,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
-impl IntoExpression for NumberLiteralExpr {
-    fn into_expr(self) -> Expression {
-        Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(self))
-    }
-}
+// impl IntoExpression for NumberLiteralExpr {
+//     fn into_expr(self) -> Expression {
+//         Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(self))
+//     }
+// }
 impl IntoAST for NumberLiteralExpr {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
@@ -2219,13 +2238,12 @@ impl TupleOrLocationExpr {
                 .clone()
                 .map(|p| *p),
             TupleOrLocationExpr::LocationExpr(te) => te.parent(),
-            _ => None,
         };
         if let Some(AST::Statement(Statement::SimpleStatement(
             SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(a)),
         ))) = &parent
         {
-            return self == &(*a.lhs.unwrap()).tuple_or_location_expr().unwrap();
+            return self == &(*a.lhs.as_ref().unwrap()).tuple_or_location_expr().unwrap();
         }
         if let Some(AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(ie)),
@@ -2311,13 +2329,13 @@ pub struct TupleExpr {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     pub elements: Vec<Expression>,
 }
-impl IntoExpression for TupleExpr {
-    fn into_expr(self) -> Expression {
-        Expression::TupleOrLocationExpr(
-            TupleOrLocationExpr::TupleExpr(self),
-        )
-    }
-}
+// impl IntoExpression for TupleExpr {
+//     fn into_expr(self) -> Expression {
+//         Expression::TupleOrLocationExpr(
+//             TupleOrLocationExpr::TupleExpr(self),
+//         )
+//     }
+// }
 impl IntoAST for TupleExpr {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::TupleOrLocationExpr(
@@ -2482,7 +2500,6 @@ impl LocationExpr {
                 .ast_base
                 .parent
                 .map(|p| *p),
-            _ => None,
         }
     }
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
@@ -2507,11 +2524,11 @@ impl LocationExpr {
                 args,
                 None,
             ),
-            _ => FunctionCallExprBase::new(
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(self.clone())),
-                args,
-                None,
-            ),
+            // _ => FunctionCallExprBase::new(
+            //     Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(self.clone())),
+            //     args,
+            //     None,
+            // ),
         })
     }
 
@@ -2572,13 +2589,13 @@ impl LocationExpr {
                     None
                 }
             }
-            _ => None,
         };
         let value_type = if let Some(type_name) = type_name {
-            Some(match *type_name {
-                TypeName::Array(a) => AST::AnnotatedTypeName(a.value_type().unwrap()),
-                TypeName::Mapping(a) => AST::AnnotatedTypeName(*a.value_type),
-            })
+            match *type_name {
+                TypeName::Array(a) => a.value_type().map(|v|v.to_ast()),
+                TypeName::Mapping(a) => Some(AST::AnnotatedTypeName(*a.value_type)),
+                _=>None
+            }
         } else {
             None
         };
@@ -2590,11 +2607,11 @@ impl LocationExpr {
             ExprUnion::Expression(item) => item,
         };
 
-        IndexExpr::new(Some(self.clone()), item).as_type(value_type).unwrap()
+        IndexExpr::new(Some(self.clone()), item).as_type(value_type.unwrap())
     }
     pub fn assign(&self, val: Expression) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(self.into_ast()),
+            Some(self.clone().into_ast()),
             Some(val),
             None,
         ))
@@ -2637,13 +2654,13 @@ pub struct IdentifierExpr {
     pub idf: Box<Identifier>,
     pub annotated_type: Option<Box<AnnotatedTypeName>>,
 }
-impl IntoExpression for IdentifierExpr {
-    fn into_expr(self) -> Expression {
-        Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-            LocationExpr::IdentifierExpr(self),
-        ))
-    }
-}
+// impl IntoExpression for IdentifierExpr {
+//     fn into_expr(self) -> Expression {
+//         Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
+//             LocationExpr::IdentifierExpr(self),
+//         ))
+//     }
+// }
 impl IntoAST for IdentifierExpr {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::TupleOrLocationExpr(
@@ -2665,7 +2682,7 @@ impl IdentifierExpr {
                 IdentifierExprUnion::String(idf) => {
                     Identifier::Identifier(IdentifierBase::new(idf))
                 }
-                _ => Identifier::Identifier(IdentifierBase::new(String::new())),
+                // _ => Identifier::Identifier(IdentifierBase::new(String::new())),
             }),
             annotated_type,
         }
@@ -2890,11 +2907,11 @@ pub struct MeExpr {
     pub expression_base: ExpressionBase,
     pub name: String,
 }
-impl IntoExpression for MeExpr {
-    fn into_expr(self) -> Expression {
-        Expression::MeExpr(self)
-    }
-}
+// impl IntoExpression for MeExpr {
+//     fn into_expr(self) -> Expression {
+//         Expression::MeExpr(self)
+//     }
+// }
 impl IntoAST for MeExpr {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::MeExpr(self))
@@ -3218,7 +3235,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().unwrap()
                     .type_name
                     .bool_value(),
             )
@@ -3231,7 +3248,7 @@ impl HybridArgumentIdf {
                 .corresponding_priv_expression
                 .as_ref()
                 .unwrap()
-                .annotated_type()
+                .annotated_type().unwrap()
                 .type_name
             {
                 true
@@ -3243,7 +3260,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().unwrap()
                     .type_name
                     .value(),
                 false,
@@ -3359,7 +3376,7 @@ impl HybridArgumentIdf {
                         .to_expr(),
                     ))
                     .to_expr()
-                    .explicitly_converted(*self.t.clone()),
+                    .explicitly_converted(*self.t.clone()).expr().unwrap(),
             )
         } else {
             self.get_loc_expr(None).location_expr().unwrap().assign(
@@ -3458,7 +3475,7 @@ pub enum Identifier {
 }
 impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.into_ast().code())
+        write!(f, "{}", self.clone().into_ast().code())
     }
 }
 impl Identifier {
@@ -3524,7 +3541,7 @@ impl EncryptionExpression {
     pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
         let privacy = privacy.expr().unwrap();
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
-            expr.annotated_type().clone(),
+            expr.annotated_type().unwrap(),
             homomorphism.clone(),
         ));
         Self {
@@ -3774,11 +3791,11 @@ pub struct IfStatement {
     pub then_branch: Block,
     pub else_branch: Option<Block>,
 }
-impl IntoStatement for IfStatement {
-    fn into_statement(self) -> Statement {
-        Statement::IfStatement(self)
-    }
-}
+// impl IntoStatement for IfStatement {
+//     fn into_statement(self) -> Statement {
+//         Statement::IfStatement(self)
+//     }
+// }
 impl IntoAST for IfStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::IfStatement(self))
@@ -3918,9 +3935,9 @@ impl ForStatement {
 
     pub fn statements(&self) -> Vec<Statement> {
         vec![
-            self.init.map(|i| i.to_statement()),
+            self.init.clone().map(|i| i.to_statement()).unwrap(),
             self.condition.to_statement(),
-            self.update.map(|u| u.to_statement()),
+            self.update.clone().map(|u| u.to_statement()).unwrap(),
             self.body.to_statement(),
         ]
     }
@@ -4027,16 +4044,16 @@ pub enum SimpleStatement {
     AssignmentStatement(AssignmentStatement),
     VariableDeclarationStatement(VariableDeclarationStatement),
 }
-impl IntoStatement for SimpleStatement {
-    fn into_statement(self) -> Statement {
-        match self {
-            SimpleStatement::ExpressionStatement(ast) => ast.into_statement(),
-            SimpleStatement::RequireStatement(ast) => ast.into_statement(),
-            SimpleStatement::AssignmentStatement(ast) => ast.into_statement(),
-            SimpleStatement::VariableDeclarationStatement(ast) => ast.into_statement(),
-        }
-    }
-}
+// impl IntoStatement for SimpleStatement {
+//     fn into_statement(self) -> Statement {
+//         match self {
+//             SimpleStatement::ExpressionStatement(ast) => ast.into_statement(),
+//             SimpleStatement::RequireStatement(ast) => ast.into_statement(),
+//             SimpleStatement::AssignmentStatement(ast) => ast.into_statement(),
+//             SimpleStatement::VariableDeclarationStatement(ast) => ast.into_statement(),
+//         }
+//     }
+// }
 impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
@@ -4097,11 +4114,11 @@ pub struct ExpressionStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub expr: Expression,
 }
-impl IntoStatement for ExpressionStatement {
-    fn into_statement(self) -> Statement {
-        Statement::SimpleStatement(SimpleStatement::ExpressionStatement(self))
-    }
-}
+// impl IntoStatement for ExpressionStatement {
+//     fn into_statement(self) -> Statement {
+//         Statement::SimpleStatement(SimpleStatement::ExpressionStatement(self))
+//     }
+// }
 impl IntoAST for ExpressionStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::SimpleStatement(
@@ -4134,11 +4151,11 @@ pub struct RequireStatement {
     pub condition: Expression,
     pub unmodified_code: String,
 }
-impl IntoStatement for RequireStatement {
-    fn into_statement(self) -> Statement {
-        Statement::SimpleStatement(SimpleStatement::RequireStatement(self))
-    }
-}
+// impl IntoStatement for RequireStatement {
+//     fn into_statement(self) -> Statement {
+//         Statement::SimpleStatement(SimpleStatement::RequireStatement(self))
+//     }
+// }
 impl IntoAST for RequireStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::SimpleStatement(
@@ -4175,14 +4192,14 @@ pub enum AssignmentStatement {
     AssignmentStatement(AssignmentStatementBase),
     CircuitInputStatement(CircuitInputStatement),
 }
-impl IntoStatement for AssignmentStatement {
-    fn into_statement(self) -> Statement {
-        match self {
-            Self::AssignmentStatement(ast) => ast.into_statement(),
-            Self::CircuitInputStatement(ast) => ast.into_statement(),
-        }
-    }
-}
+// impl IntoStatement for AssignmentStatement {
+//     fn into_statement(self) -> Statement {
+//         match self {
+//             Self::AssignmentStatement(ast) => ast.into_statement(),
+//             Self::CircuitInputStatement(ast) => ast.into_statement(),
+//         }
+//     }
+// }
 impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
@@ -4234,13 +4251,13 @@ pub struct AssignmentStatementBase {
     pub rhs: Option<Expression>,
     pub op: String,
 }
-impl IntoStatement for AssignmentStatementBase {
-    fn into_statement(self) -> Statement {
-        Statement::SimpleStatement(SimpleStatement::AssignmentStatement(
-            AssignmentStatement::AssignmentStatement(self),
-        ))
-    }
-}
+// impl IntoStatement for AssignmentStatementBase {
+//     fn into_statement(self) -> Statement {
+//         Statement::SimpleStatement(SimpleStatement::AssignmentStatement(
+//             AssignmentStatement::AssignmentStatement(self),
+//         ))
+//     }
+// }
 impl IntoAST for AssignmentStatementBase {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::SimpleStatement(
@@ -4257,7 +4274,7 @@ impl AssignmentStatementBase {
     pub fn new(lhs: Option<AST>, rhs: Option<Expression>, op: Option<String>) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
-            lhs: Box::new(lhs),
+            lhs: lhs.map(|l|Box::new(l)),
             rhs,
             op: if let Some(op) = op { op } else { String::new() },
         }
@@ -4265,27 +4282,27 @@ impl AssignmentStatementBase {
 }
 impl ASTChildren for AssignmentStatementBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(te) = self.lhs.tuple_expr() {
+        if let Some(te) = self.lhs.clone().unwrap().tuple_expr() {
             cb.add_child(te.into_ast());
         }
-        if let Some(le) = self.lhs.location_expr() {
+        if let Some(le) = self.lhs.clone().unwrap().location_expr() {
             cb.add_child(le.into_ast());
         }
 
-        cb.add_child(self.rhs.into_ast());
+        cb.add_child(self.rhs.clone().unwrap().into_ast());
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
     pub assignment_statement_base: AssignmentStatementBase,
 }
-impl IntoStatement for CircuitInputStatement {
-    fn into_statement(self) -> Statement {
-        Statement::SimpleStatement(SimpleStatement::AssignmentStatement(
-            AssignmentStatement::CircuitInputStatement(self),
-        ))
-    }
-}
+// impl IntoStatement for CircuitInputStatement {
+//     fn into_statement(self) -> Statement {
+//         Statement::SimpleStatement(SimpleStatement::AssignmentStatement(
+//             AssignmentStatement::CircuitInputStatement(self),
+//         ))
+//     }
+// }
 impl IntoAST for CircuitInputStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::SimpleStatement(
@@ -4301,19 +4318,19 @@ impl ASTInstanceOf for CircuitInputStatement {
 impl CircuitInputStatement {
     pub fn new(lhs: AST, rhs: Expression, op: Option<String>) -> Self {
         Self {
-            assignment_statement_base: AssignmentStatementBase::new(lhs, rhs, op),
+            assignment_statement_base: AssignmentStatementBase::new(Some(lhs),Some (rhs), op),
         }
     }
 }
 impl ASTChildren for CircuitInputStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(te) = self.assignment_statement_base.lhs.tuple_expr() {
+        if let Some(te) = self.assignment_statement_base.lhs.clone().unwrap().tuple_expr() {
             cb.add_child(te.into_ast());
         }
-        if let Some(le) = self.assignment_statement_base.lhs.location_expr() {
+        if let Some(le) = self.assignment_statement_base.lhs.clone().unwrap().location_expr() {
             cb.add_child(le.into_ast());
         }
-        cb.add_child(AST::Expression(self.assignment_statement_base.rhs.clone()));
+        cb.add_child(AST::Expression(self.assignment_statement_base.rhs.clone().unwrap()));
     }
 }
 
@@ -4332,6 +4349,7 @@ impl IntoAST for StatementList {
         match self {
             StatementList::Block(ast) => ast.into_ast(),
             StatementList::IndentBlock(ast) => ast.into_ast(),
+            StatementList::StatementList(ast) => ast.into_ast(),
         }
     }
 }
@@ -4340,6 +4358,7 @@ impl ASTInstanceOf for StatementList {
         match self {
             StatementList::Block(ast) => ast.get_ast_type(),
             StatementList::IndentBlock(ast) => ast.get_ast_type(),
+            StatementList::StatementList(ast) => ast.get_ast_type(),
         }
     }
 }
@@ -4362,6 +4381,10 @@ impl StatementList {
                 self.statements()[key as usize].clone()
             }
             StatementList::IndentBlock(sl) => {
+                assert!(self.statements().len() > key as usize);
+                self.statements()[key as usize].clone()
+            }
+            StatementList::StatementList(sl) => {
                 assert!(self.statements().len() > key as usize);
                 self.statements()[key as usize].clone()
             }
@@ -4488,7 +4511,7 @@ impl IntoAST for TypeName {
             TypeName::Array(ast) => ast.into_ast(),
             TypeName::TupleType(ast) => ast.into_ast(),
             TypeName::FunctionTypeName(ast) => ast.into_ast(),
-            TypeName::Literal(ast) => AST::TypeName(self),
+            other => AST::TypeName(other),
         }
     }
 }
@@ -4878,7 +4901,7 @@ impl BooleanLiteralType {
             }
         } else {
             self.elementary_type_name_base
-                .combined_type(other_type, convert_literals)
+                .combined_type(other_type, convert_literals).unwrap()
         }
     }
     pub fn value(&self) -> bool {
@@ -5100,14 +5123,14 @@ impl NumberLiteralType {
         {
             if convert_literals {
                 self.to_abstract_type()
-                    .combined_type(other_type.to_abstract_type(), convert_literals)
+                    .combined_type(other_type.to_abstract_type(), convert_literals).unwrap()
             } else {
                 TypeName::Literal(String::from("lit"))
             }
         } else {
             self.number_type_name_base
                 .elementary_type_name_base
-                .combined_type(other_type, convert_literals)
+                .combined_type(other_type, convert_literals).unwrap()
         }
     }
     pub fn to_abstract_type(&self) -> TypeName {
@@ -5401,7 +5424,7 @@ impl EnumValueTypeName {
             self.user_defined_type_name_base
                 .target
                 .clone()
-                .unwrap_or_default()
+                .unwrap()
                 .parent()
                 .map(|p| p.namespace_definition().unwrap()),
         )))
@@ -5646,7 +5669,7 @@ impl ASTInstanceOf for Array {
 impl ASTChildren for ArrayBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::AnnotatedTypeName(self.value_type.clone()));
-        if let ExprUnion::Expression(expr) = &self.expr {
+        if let Some(ExprUnion::Expression(expr)) = &self.expr {
             cb.add_child(AST::Expression(expr.clone()));
         }
     }
@@ -5673,14 +5696,14 @@ impl ArrayBase {
             type_name_base: TypeNameBase::new(),
             value_type,
             expr: if let Some(ExprUnion::I32(expr)) = expr {
-                ExprUnion::Expression(NumberLiteralExpr::new(expr, false).to_expr())
+                Some(ExprUnion::Expression(NumberLiteralExpr::new(expr, false).to_expr()))
             } else {
                 expr
             },
         }
     }
     pub fn size_in_uints(&self) -> i32 {
-        if let ExprUnion::Expression(Expression::LiteralExpr(le)) = &self.expr {
+        if let Some(ExprUnion::Expression(Expression::LiteralExpr(le))) = &self.expr {
             if let LiteralExpr::NumberLiteralExpr(expr) = le.clone() {
                 return expr.value.clone();
             }
@@ -5715,9 +5738,9 @@ impl CipherText {
         Self {
             array_base: Box::new(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
+                Some(ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                     NumberLiteralExpr::new(crypto_params.cipher_len(), false),
-                ))),
+                )))),
             )),
             plain_type,
             crypto_params,
@@ -5782,9 +5805,9 @@ impl Key {
         Self {
             array_base: Box::new(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
+                Some(ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                     NumberLiteralExpr::new(crypto_params.key_len(), false),
-                ))),
+                )))),
             )),
             crypto_params,
         }
@@ -5809,9 +5832,9 @@ impl Proof {
         Self {
             array_base: Box::new(ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
+                Some(ExprUnion::Expression(Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                     NumberLiteralExpr::new(CFG.lock().unwrap().proof_len(), false),
-                ))),
+                )))),
             )),
         }
     }
@@ -5845,7 +5868,7 @@ pub enum CombinedPrivacyUnion {
 impl CombinedPrivacyUnion {
     pub fn expr(&self) -> Option<Expression> {
         if let CombinedPrivacyUnion::AST(expr) = &self {
-            return expr.clone().map(|AST::Expression(expr)| expr);
+            return expr.clone().map(|expr| expr.expr().unwrap());
         }
         None
     }
@@ -5945,9 +5968,9 @@ impl TupleType {
                     .map(|(e1, e2)| {
                         AnnotatedTypeName::new(
                             e1.type_name
-                                .combined_type(*e2.type_name.clone(), convert_literals)
+                                .combined_type(*e2.type_name.clone(), convert_literals).unwrap()
                                 .tuple_type()
-                                .unwrap(),
+                                .unwrap().into_ast().type_name().unwrap(),
                             Some(Expression::DummyAnnotation(DummyAnnotation::new())),
                             String::from("NON_HOMOMORPHIC"),
                         )
@@ -6165,7 +6188,7 @@ impl AnnotatedTypeName {
             p.is_me_expr()
                 || (analysis.is_some()
                     && analysis.clone().unwrap().same_partition(
-                        &p.privacy_annotation_label().unwrap_or_default().into(),
+                        &p.privacy_annotation_label().unwrap().into(),
                         &AST::Expression(Expression::MeExpr(MeExpr::new())).into(),
                     ))
         } else {
@@ -6218,7 +6241,7 @@ impl AnnotatedTypeName {
 
     pub fn cipher_type(plain_type: AnnotatedTypeName, hom: Option<String>) -> Self {
         AnnotatedTypeName::new(
-            TypeName::cipher_type(plain_type, hom.unwrap_or_default()),
+            TypeName::cipher_type(plain_type, hom.unwrap()),
             None,
             String::from("NON_HOMOMORPHIC"),
         )
@@ -6257,7 +6280,7 @@ impl AnnotatedTypeName {
         let mut t = value_type;
         for &l in &length {
             t = AnnotatedTypeName::new(
-                TypeName::Array(Array::Array(ArrayBase::new(t, ExprUnion::I32(l)))),
+                TypeName::Array(Array::Array(ArrayBase::new(t, Some(ExprUnion::I32(l))))),
                 None,
                 String::from("NON_HOMOMORPHIC"),
             );
@@ -6381,11 +6404,11 @@ pub struct VariableDeclarationStatement {
     pub variable_declaration: VariableDeclaration,
     pub expr: Option<Expression>,
 }
-impl IntoStatement for VariableDeclarationStatement {
-    fn into_statement(self) -> Statement {
-        Statement::SimpleStatement(SimpleStatement::VariableDeclarationStatement(self))
-    }
-}
+// impl IntoStatement for VariableDeclarationStatement {
+//     fn into_statement(self) -> Statement {
+//         Statement::SimpleStatement(SimpleStatement::VariableDeclarationStatement(self))
+//     }
+// }
 impl IntoAST for VariableDeclarationStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::SimpleStatement(
@@ -6715,7 +6738,7 @@ impl ConstructorOrFunctionDefinition {
         } else {
             None
         };
-        let storage_loc = if t.type_name.is_primitive_type() {
+        let storage_loc = if t.as_ref().unwrap().type_name.is_primitive_type() {
             None
         } else {
             Some(ref_storage_loc)
@@ -6870,7 +6893,7 @@ impl ASTInstanceOf for EnumDefinition {
 impl EnumDefinition {
     pub fn new(idf: Option<Identifier>, values: Vec<EnumValue>) -> Self {
         Self {
-            namespace_definition_base: NamespaceDefinitionBase::new(idf.unwrap_or_default()),
+            namespace_definition_base: NamespaceDefinitionBase::new(idf.unwrap()),
             values,
             annotated_type: None,
         }
@@ -6956,7 +6979,7 @@ impl ContractDefinition {
         used_crypto_backends: Option<Vec<CryptoParams>>,
     ) -> Self {
         Self {
-            namespace_definition_base: NamespaceDefinitionBase::new(idf.unwrap_or_default()),
+            namespace_definition_base: NamespaceDefinitionBase::new(idf.unwrap()),
             state_variable_declarations,
             constructor_definitions,
             function_definitions,
@@ -7180,9 +7203,9 @@ impl InstanceTarget {
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             } else {
-                t.value_type()
+                t.value_type().unwrap()
                     .privacy_annotation
-                    .unwrap_or_default()
+                    .unwrap()
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             }
@@ -7193,7 +7216,7 @@ impl InstanceTarget {
                 .unwrap()
                 .zkay_type()
                 .privacy_annotation
-                .unwrap_or_default()
+                .unwrap()
                 .privacy_annotation_label()
                 .map(|x| x.into_ast())
         } else {
@@ -7203,7 +7226,7 @@ impl InstanceTarget {
 
     pub fn in_scope_at(&self, ast: AST) -> bool {
         crate::zkay_ast::pointers::symbol_table::SymbolTableLinker::in_scope_at(
-            &self.target().unwrap().idf(),
+            &self.target().unwrap().idf().unwrap(),
             ast,
         )
     }
@@ -7268,7 +7291,7 @@ pub fn get_code_error_msg(
 pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get surrounding statement
     let stmt = if let AST::Expression(ast) = &ast {
-        Some(ast.statement())
+        ast.statement()
     } else if let AST::Statement(ast) = &ast {
         Some(Box::new(ast.clone()))
     } else {
@@ -7285,29 +7308,29 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     };
 
     // Get surrounding contract
-    let mut ctr = fct.clone().or(ast.clone());
-    while ctr.is_some() && !is_instance(&ctr.unwrap(), ASTType::ContractDefinition) {
-        if let Some(p) = ctr.parent() {
-            ctr = p;
+    let mut ctr = fct.clone().or(Some(ast.clone()));
+    while ctr.is_some() && !is_instance(ctr.as_ref().unwrap(), ASTType::ContractDefinition) {
+        if let Some(p) = ctr.as_ref().unwrap().parent() {
+            ctr = Some(p);
         } else {
             break;
         }
     }
 
     // Get source root
-    let mut root = ctr.clone().or(ast.clone());
-    while root.is_some() && !is_instance(&root, ASTType::SourceUnit) {
-        root = root.parent();
+    let mut root = ctr.clone().or(Some(ast.clone()));
+    while root.is_some() && !is_instance(root.as_ref().unwrap(), ASTType::SourceUnit) {
+        root = root.unwrap().parent();
     }
 
-    let error_msg = if root.is_some() {
+    let error_msg = if root.is_none() {
         String::from("error")
     } else {
         get_code_error_msg(
             ast.line(),
             ast.column(),
-            root.original_code(),
-            ctr.contract_definition(),
+            root.unwrap().original_code(),
+            ctr.unwrap().contract_definition(),
             fct.clone()
                 .map(|f| f.constructor_or_function_definition().unwrap()),
             stmt.clone().map(|s| *s),
@@ -7418,7 +7441,7 @@ impl CodeVisitor {
             SingleOrListUnion::Vec(v) => self.visit_list(v, sep),
             SingleOrListUnion::String(v) => v,
             SingleOrListUnion::AST(v) => self.visit(&v),
-            _ => String::new(),
+            // _ => String::new(),
         }
     }
 
@@ -7451,7 +7474,7 @@ impl CodeVisitor {
                 .collect();
             func.format_string(&args)
         } else {
-            let f = self.visit(&AST::Expression(ast.func().unwrap_or_default()));
+            let f = self.visit(&AST::Expression(ast.func().unwrap()));
             let a = self.visit_list(
                 ast.args()
                     .iter()
@@ -7550,12 +7573,12 @@ impl CodeVisitor {
     }
 
     pub fn visit_ReclassifyExpr(&self, ast: ReclassifyExpr) -> CodeVisitorReturn {
-        let e = self.visit(&AST::Expression(ast.expr().unwrap_or_default()));
-        let p = self.visit(&AST::Expression(ast.privacy().unwrap_or_default()));
+        let e = self.visit(&AST::Expression(ast.expr().unwrap()));
+        let p = self.visit(&AST::Expression(ast.privacy().unwrap()));
         let h = HOMOMORPHISM_STORE
             .lock()
             .unwrap()
-            .get(&ast.homomorphism().unwrap_or_default())
+            .get(&ast.homomorphism().unwrap())
             .unwrap()
             .clone();
         format!("reveal{h:?}({e}, {p})")
@@ -7670,8 +7693,8 @@ impl CodeVisitor {
     }
 
     pub fn visit_AssignmentStatement(&self, ast: AssignmentStatement) -> CodeVisitorReturn {
-        let lhs = ast.lhs().unwrap_or_default();
-        let mut op = ast.op().unwrap_or_default();
+        let lhs = ast.lhs().unwrap();
+        let mut op = ast.op().unwrap();
         if let Some(asu) = lhs.tuple_expr() {
             if let Some(at) = &asu
                 .tuple_or_location_expr_base
@@ -7710,7 +7733,6 @@ impl CodeVisitor {
                     .expression_base
                     .annotated_type
                     .clone(),
-                _ => None,
             };
             if let Some(at) = annotated_type {
                 if at.is_private() {
@@ -7721,9 +7743,9 @@ impl CodeVisitor {
 
         let rhs = if !op.is_empty() {
             ast.rhs()
-                .map(|Some(Expression::FunctionCallExpr(fce))| fce.args()[1].clone())
+                .map(|fce| fce.args()[1].clone().expr().unwrap())
         } else {
-            ast.rhs().unwrap_or_default()
+            ast.rhs()
         };
 
         let fstr = if op.starts_with("pre") {
@@ -7740,11 +7762,7 @@ impl CodeVisitor {
             "{0}{1};" => format!("{0}{1};", ls, rs),
             _ => format!("{} {}= {};", ls, op, rs),
         };
-        if let (lhs, Expression::TupleOrLocationExpr(rhs)) = (&lhs, &rhs) {
-            if let (Some(lhs), TupleOrLocationExpr::LocationExpr(rhs)) =
-                (lhs.location_expr(), rhs.clone())
-            {
-                if let (LocationExpr::SliceExpr(lhs), LocationExpr::SliceExpr(rhs)) = (&lhs, &rhs) {
+        if let (Some(LocationExpr::SliceExpr(lhs)), Some(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(LocationExpr::SliceExpr(rhs))))) = (lhs.location_expr(), &rhs) {
                     assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
                     let mut s = String::new();
                     let (lexpr, rexpr) = (
@@ -7790,15 +7808,9 @@ impl CodeVisitor {
                         s += "}\n";
                     }
                     s[..s.len() - 1].to_string()
-                } else {
-                    String::new()
-                }
-            } else {
-                String::new()
-            }
         } else {
             let to_ast = |hs| self.visit(hs);
-            format_string(to_ast(&lhs), self.visit(&AST::Expression(rhs)))
+            format_string(to_ast(&lhs), self.visit(&AST::Expression(rhs.unwrap())))
         }
     }
     pub fn visit_CircuitDirectiveStatement(
@@ -7978,7 +7990,6 @@ impl CodeVisitor {
     }
 
     pub fn visit_Array(&self, ast: Array) -> CodeVisitorReturn {
-        let dat = None;
         let value_type = match &ast {
             Array::CipherText(ast) => &ast.array_base.value_type,
             Array::Randomness(ast) => &ast.array_base.value_type,
@@ -7994,9 +8005,9 @@ impl CodeVisitor {
             Array::Array(ast) => &ast.expr,
         };
         let t = self.visit(&AST::AnnotatedTypeName(value_type.clone()));
-        let e = if let ExprUnion::Expression(expr) = &expr {
+        let e = if let Some(ExprUnion::Expression(expr)) = &expr {
             self.visit(&AST::Expression(expr.clone()))
-        } else if let ExprUnion::I32(expr) = &expr {
+        } else if let Some(ExprUnion::I32(expr)) = &expr {
             expr.to_string()
         } else {
             String::new()
@@ -8209,10 +8220,9 @@ impl CodeVisitor {
             (None, None)
         };
         if t1.is_none() || t2.is_none() {
-            println!("{},{}", t1, t2);
             return Ordering::Equal;
         }
-        let (t1, t2) = (t1.unwrap(), t2.unwrap);
+        let (t1, t2) = (t1.unwrap(), t2.unwrap());
         let mut cmp = if t1.size_in_uints() > t2.size_in_uints() {
             1
         } else {

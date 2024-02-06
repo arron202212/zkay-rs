@@ -151,7 +151,7 @@ impl SymbolTableFiller {
                 if is_instance(d, ASTType::Comment) {
                     None
                 } else {
-                    Some((d.idf().name().clone(), d.idf().clone()))
+                    Some((d.idf().unwrap().name().clone(), d.idf().unwrap().clone()))
                 }
             })
             .collect();
@@ -211,7 +211,7 @@ impl SymbolTableFiller {
         ast.namespace_definition_base.ast_base.names = ast
             .members
             .iter()
-            .map(|d| (d.idf().name().clone(), d.idf().clone()))
+            .map(|d| (d.idf().unwrap().name().clone(), d.idf().unwrap().clone()))
             .collect();
     }
     pub fn visitEnumDefinition(&self, mut ast: EnumDefinition) {
@@ -288,13 +288,13 @@ impl SymbolTableLinker {
             if let Some(nameo) = _ancestor.names().get(&name) {
                 let decl = nameo.parent();
                 if !is_instance(
-                    &decl.clone().unwrap_or_default().parent().unwrap(),
+                    &decl.clone().unwrap().parent().unwrap(),
                     ASTType::VariableDeclarationStatement,
                 ) || !decl
                     .clone()
-                    .unwrap_or_default()
+                    .unwrap()
                     .parent()
-                    .unwrap_or_default()
+                    .unwrap()
                     .is_parent_of(&ast)
                 {
                     return (Some(_ancestor), decl);
@@ -315,7 +315,7 @@ impl SymbolTableLinker {
         loop {
             assert!(ast1.parent().is_some());
             ancs.insert(ast1.parent().unwrap(), ast1.clone());
-            ast1 = ast1.parent().unwrap_or_default();
+            ast1 = ast1.parent().unwrap();
             if ast1 == root {
                 break;
             }
@@ -326,7 +326,7 @@ impl SymbolTableLinker {
             assert!(ast2.parent().is_some());
             let old_ast = ast2.clone();
             let ast2 = ast2.parent();
-            if let Some(ast2v) = ancs.get(&ast2.clone().unwrap_or_default()) {
+            if let Some(ast2v) = ancs.get(&ast2.clone().unwrap()) {
                 assert!(if let Some(AST::Statement(Statement::ForStatement(_)))
                 | Some(AST::Statement(Statement::StatementList(_))) = &ast2
                 {
@@ -336,8 +336,8 @@ impl SymbolTableLinker {
                 });
                 return (
                     ast2.clone()
-                        .map(|AST::Statement(Statement::StatementList(a))| a)
-                        .unwrap_or_default(),
+                        .map(|a| a.statement_list().unwrap())
+                        .unwrap(),
                     ast2v.clone(),
                     old_ast,
                 );
@@ -357,7 +357,7 @@ impl SymbolTableLinker {
 
     pub fn find_identifier_declaration(&self, mut ast: &IdentifierExpr) -> AST {
         let mut ast = ast.to_ast();
-        let name = ast.idf().name();
+        let name = ast.idf().unwrap().name();
         loop {
             let (anc, decl) = SymbolTableLinker::_find_next_decl(ast.clone(), name.clone());
             if let (Some(AST::Statement(Statement::ForStatement(anc))), Some(decl)) =
@@ -493,7 +493,7 @@ impl SymbolTableLinker {
                 .as_ref()
                 .unwrap()
                 .target()
-                .unwrap_or_default()
+                .unwrap()
                 .annotated_type()
                 .unwrap()
                 .type_name;
@@ -540,7 +540,7 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .target()
-            .unwrap_or_default()
+            .unwrap()
             .annotated_type()
             .unwrap()
             .type_name
@@ -548,7 +548,7 @@ impl SymbolTableLinker {
         ast.location_expr_base.target = Some(Box::new(
             VariableDeclaration::new(
                 vec![],
-                source_t.value_type(),
+                source_t.value_type().unwrap(),
                 Identifier::Identifier(IdentifierBase::new(String::new())),
                 None,
             )

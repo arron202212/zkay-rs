@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, LocationExpr, AST,
+    is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, LocationExpr, AST,IntoExpression,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 

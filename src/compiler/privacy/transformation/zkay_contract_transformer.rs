@@ -31,7 +31,7 @@ use crate::zkay_ast::visitor::deep_copy::deep_copy;
 use crate::zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use std::collections::BTreeMap;
 pub fn transform_ast(
-    ast: AST,
+    ast: Option<AST>,
 ) -> (
     AST,
     BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
@@ -45,11 +45,11 @@ pub fn transform_ast(
     // """
 {
     let zt = ZkayTransformer::new();
-    let new_ast = zt.visit(ast.to_ast());
+    let new_ast = zt.visit(Some(ast.unwrap().to_ast()));
 
     // restore all parent pointers and identifier targets
     set_parents(new_ast.clone().unwrap());
-    link_identifiers(&new_ast.unwrap());
+    link_identifiers(&new_ast.as_ref().unwrap());
     (new_ast.unwrap(), zt.circuits)
 }
 
@@ -156,13 +156,13 @@ impl AstTransformerVisitor for ZkayTransformer {
         Self::new()
     }
 
-    fn visit(&self, ast: AST) -> Option<AST> {
+    fn visit(&self, ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: AST,
+        ast: Option<AST>,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> Option<AST> {
@@ -395,7 +395,7 @@ impl ZkayTransformer {
         // Transform types of normal state variables
         c.state_variable_declarations = self
             .var_decl_trafo
-            .visit_list(c.state_variable_declarations.clone()).map(|a|a.unwrap()).collect();
+            .visit_list(c.state_variable_declarations.clone()).into_iter().filter_map(|a|a).collect();
 
         // Split into functions which require verification and those which don"t need a circuit helper
         let mut req_ext_fcts = BTreeMap::<ConstructorOrFunctionDefinition, Vec<Parameter>>::new();
@@ -486,7 +486,7 @@ impl ZkayTransformer {
                 .var_decl_trafo
                 .visit_list(f.return_var_decls.iter().map(|p| p.to_ast()).collect())
                 .into_iter()
-                .filter_map(|p| p.unwrap().variable_declaration())
+                .filter_map(|p| p.map(|v|v.variable_declaration().unwrap().clone()))
                 .collect();
         }
 
@@ -495,7 +495,7 @@ impl ZkayTransformer {
             let gen = self.circuits.get(fct);
             fct.body = if let Some(AST::Statement(Statement::StatementList(StatementList::Block(b)))) =
                 ZkayStatementTransformer::new(Some(Box::new(gen.unwrap().clone())))
-                    .visit(fct.body.as_ref().unwrap().to_ast())
+                    .visit(Some(fct.body.as_ref().unwrap().to_ast()))
             {
                 Some(b)
             } else {
@@ -822,7 +822,7 @@ impl ZkayTransformer {
         if circuit.has_return_var {
             stmts.push(
                 ReturnStatement::new(
-                    TupleExpr::new(
+                    Some(TupleExpr::new(
                         ast.return_var_decls
                             .iter()
                             .map(|vd| {
@@ -837,7 +837,7 @@ impl ZkayTransformer {
                             })
                             .collect(),
                     )
-                    .to_expr(),
+                    .to_expr()),
                 )
                 .to_ast(),
             );
@@ -871,7 +871,8 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let pp = deep_copy(p.to_ast(), true, false);
+                    let pp = deep_copy(Some(p.to_ast()), true, false);
+                    let pp = pp.unwrap();
                     let pp = pp.parameter();
                     let mut pp = pp.unwrap().clone();
                     let pp =
@@ -1291,7 +1292,7 @@ impl ZkayTransformer {
                     .iter()
                     .map(|vd| {
                         VariableDeclarationStatement::new(
-                            deep_copy(vd.to_ast(), false, false)
+                            deep_copy(Some(vd.to_ast()), false, false).unwrap()
                                 .variable_declaration()
                                 .unwrap()
                                 .clone(),
@@ -1383,7 +1384,7 @@ impl ZkayTransformer {
         if !int_fct.return_parameters.is_empty() {
             stmts.push(
                 ReturnStatement::new(
-                    TupleExpr::new(
+                    Some(TupleExpr::new(
                         int_fct
                             .return_var_decls
                             .iter()
@@ -1398,7 +1399,7 @@ impl ZkayTransformer {
                             })
                             .collect(),
                     )
-                    .to_expr(),
+                    .to_expr()),
                 )
                 .to_ast(),
             );

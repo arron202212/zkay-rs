@@ -5,7 +5,7 @@ use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
     ForStatement, FunctionCallExpr, IfStatement, IntoAST, LocationExpr, MeExpr, RequireStatement,
     ReturnStatement, Statement, StatementList, TupleExpr, VariableDeclarationStatement,
-    WhileStatement, AST,
+    WhileStatement, AST,IntoExpression,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 

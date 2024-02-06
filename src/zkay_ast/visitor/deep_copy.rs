@@ -8,7 +8,7 @@ use crate::zkay_ast::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
 // T = TypeVar("T")
 
-pub fn deep_copy(ast: AST, with_types: bool, with_analysis: bool) -> AST
+pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Option<AST>
 // """
 
     // :param ast
@@ -20,10 +20,10 @@ pub fn deep_copy(ast: AST, with_types: bool, with_analysis: bool) -> AST
 {
     // assert!(isinstance(ast, AST));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
-    let mut ast_copy = v.visit(ast.clone());
-    ast_copy.ast_base_mut().unwrap().parent = ast.parent().map(|p| Box::new(p));
-    set_parents(ast_copy.clone());
-    link_identifiers(&ast_copy);
+    let mut ast_copy = v.visit(ast.clone().unwrap());
+    ast_copy.as_mut().unwrap().ast_base_mut().unwrap().parent = ast.unwrap().parent().map(|p| Box::new(p));
+    set_parents(ast_copy.clone().unwrap());
+    link_identifiers(ast_copy.as_ref().unwrap());
     ast_copy
 }
 
@@ -46,7 +46,7 @@ pub fn replace_expr(
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
     new_ast.ast_base_mut().unwrap().parent =
         old_ast.as_ref().unwrap().parent().map(|p| Box::new(p));
-    DeepCopyVisitor::copy_ast_fields(old_ast.clone().unwrap(), &mut new_ast.clone());
+    DeepCopyVisitor::copy_ast_fields(old_ast.clone(), &mut new_ast.clone());
     if old_ast.as_ref().unwrap().parent().is_some() {
         set_parents(new_ast.clone());
         link_identifiers(new_ast);
@@ -141,14 +141,14 @@ impl DeepCopyVisitor {
     }
 
     // @staticmethod
-    pub fn copy_ast_fields(ast: AST, ast_copy: &mut AST) {
+    pub fn copy_ast_fields(ast: Option<AST>, ast_copy: &mut AST) {
         // ast_copy.line = ast.line;
         // ast_copy.column = ast.column;
         // ast_copy.modified_values = ast.modified_values;
         // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, ast: AST) -> Option<AST> {
+    pub fn visitChildren(&self, ast: Option<AST>) -> Option<AST> {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();
@@ -171,27 +171,27 @@ impl DeepCopyVisitor {
         None
     }
 
-    pub fn visitAnnotatedTypeName(self, ast: AST) -> AST {
+    pub fn visitAnnotatedTypeName(self, ast: Option<AST>) -> Option<AST> {
         let mut ast_copy = self.visitChildren(ast);
         // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
         ast_copy
     }
 
-    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> AST {
-        let mut ast_copy = self.visitChildren(ast.to_ast());
+    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> Option<AST> {
+        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
         // ast_copy.target = ast.target;
         ast_copy
     }
 
-    pub fn visitBuiltinFunction(self, ast: AST) -> AST {
+    pub fn visitBuiltinFunction(self, ast: Option<AST>) -> Option<AST> {
         let mut ast_copy = self.visitChildren(ast);
         // ast_copy.is_private = ast.is_private;
         // ast_copy.homomorphism = ast.homomorphism;
         ast_copy
     }
 
-    pub fn visitExpression(self, ast: Expression) -> AST {
-        let mut ast_copy = self.visitChildren(ast.to_ast());
+    pub fn visitExpression(self, ast: Expression) -> Option<AST> {
+        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
         if self.with_types && ast.annotated_type().is_some() {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
@@ -199,15 +199,15 @@ impl DeepCopyVisitor {
         ast_copy
     }
 
-    pub fn visitStatement(self, ast: Statement) -> AST {
-        let mut ast_copy = self.visitChildren(ast.to_ast());
+    pub fn visitStatement(self, ast: Statement) -> Option<AST> {
+        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
         if self.with_analysis {
             // ast_copy.before_analysis = ast.before_analysis();
         }
         ast_copy
     }
 
-    pub fn copy_field(self, field: AST) -> AST {
+    pub fn copy_field(self, field: Option<AST>) -> Option<AST> {
         // if field.is_none() {
         //     None
         // } else if isinstance(field, str)

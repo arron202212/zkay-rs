@@ -46,7 +46,7 @@ impl ReturnCheckVisitor {
             .statements
             .last()
             .map(|v| v.clone())
-            .unwrap_or_default()
+            .unwrap()
             != ast.to_ast()
         {
             ok = false;

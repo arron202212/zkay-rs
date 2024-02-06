@@ -134,7 +134,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(zkay_ast.to_ast());
+    let (ast, circuits) = transform_ast(Some(zkay_ast.to_ast()));
 
     // Dump libraries
     print_step("Write library contract files");

@@ -10,26 +10,26 @@ pub trait AstTransformerVisitor {
     fn default() -> Self
     where
         Self: Sized;
-    fn visit(&self, ast: AST) -> Option<AST>;
+    fn visit(&self, ast: Option<AST>) -> Option<AST>;
     fn visitBlock(
         &self,
-        ast: AST,
+        ast: Option<AST>,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> Option<AST>;
     fn visit_list(&self, ast_list: Vec<AST>) -> Vec<Option<AST>> {
         ast_list
             .iter()
-            .filter_map(|a| self.visit(a.clone()))
+            .map(|a| self.visit(Some(a.clone())))
             .collect()
     }
-    fn visit_children(&self, mut ast: AST) -> Option<AST> {
+    fn visit_children(&self, mut ast: Option<AST>) -> Option<AST> {
         // ast.process_children(self.visit);
         // ast
         None
     }
 
-    fn _visit_internal(&self, ast: AST) -> Option<AST> {
+    fn _visit_internal(&self, ast: Option<AST>) -> Option<AST> {
         None
     }
 }
@@ -63,7 +63,7 @@ impl AstTransformerVisitorBase {
         self.get_visit_function(ast)
     }
 
-    pub fn get_visit_function(&self, c: AST) -> AST {
+    pub fn get_visit_function(&self, c: Option<AST>) -> Option<AST>{
         // let visitor_function = "visit" + c.name();
         // if hasattr(&self, visitor_function) {
         //     return getattr(&self, visitor_function);
@@ -79,7 +79,7 @@ impl AstTransformerVisitorBase {
         c
     }
 
-    pub fn visitAST(&self, ast: AST) -> AST {
+    pub fn visitAST(&self, ast: Option<AST>) -> Option<AST>{
         self.visit_children(ast)
     }
 }
@@ -88,12 +88,12 @@ impl AstTransformerVisitor for AstTransformerVisitorBase {
         Self::new(false)
     }
 
-    fn visit(&self, ast: AST) -> Option<AST> {
+    fn visit(&self, ast: Option<AST>) -> Option<AST> {
         self._visit_internal(ast)
     }
     fn visitBlock(
         &self,
-        ast: AST,
+        ast: Option<AST>,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> Option<AST> {

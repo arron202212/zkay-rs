@@ -5,7 +5,7 @@ use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, FunctionCallExpr, FunctionTypeName, IfStatement,
     IndexExpr, IntoAST, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReturnStatement, Statement, StatementList, AST,
+    ReturnStatement, Statement, StatementList, AST,IntoExpression,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -241,7 +241,7 @@ impl CircuitComplianceChecker {
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
                 &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
-        if ast.expr().unwrap().annotated_type().is_public() {
+        if ast.expr().unwrap().annotated_type().unwrap().is_public() {
             let eval_in_public = false;
             // try
             self.priv_setter.set_evaluation(ast.to_ast(), true);
@@ -278,7 +278,7 @@ impl CircuitComplianceChecker {
 
     pub fn visitIfStatement(&mut self, ast: IfStatement) {
         let old_in_privif_stmt = self.inside_privif_stmt.clone();
-        if ast.condition.annotated_type().is_private() {
+        if ast.condition.annotated_type().unwrap().is_private() {
             let mut mod_vals = ast
                 .then_branch
                 .statement_list_base
