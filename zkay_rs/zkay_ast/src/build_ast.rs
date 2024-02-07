@@ -1,7 +1,7 @@
 // use antlr_rust::token::{Token,CommonToken};
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
-use crate::zkay_ast::ast::{
+use crate::ast::{
     self, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
     AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
@@ -15,8 +15,8 @@ use crate::zkay_ast::ast::{
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
-// use  crate::solidity_parser::parse::SyntaxException;
-use crate::solidity_parser::{
+// use  solidity_parser::parse::SyntaxException;
+use solidity_parser::{
     emit::Emitter,
     generated::{
         soliditylexer::SolidityLexer,
@@ -40,17 +40,17 @@ use crate::solidity_parser::{
 };
 
 use antlr_rust::tree::ParseTree;
-// use  crate::solidity_parser::generated::solidityvisitor::SolidityVisitor;
-// use crate::solidity_parser::parse::MyParser;
-// use  crate::zkay_ast::ast::StateVariableDeclaration, ContractDefinition, NumberLiteralExpr,
+// use  solidity_parser::generated::solidityvisitor::SolidityVisitor;
+// use solidity_parser::parse::MyParser;
+// use  zkay_ast::ast::StateVariableDeclaration, ContractDefinition, NumberLiteralExpr,
 //     BooleanLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr,
 //     ReclassifyExpr, RehomExpr, BuiltinFunction, IndexExpr;
-use crate::zkay_ast::homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use zkay_ast::homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 // use antlr_rust::common_token_stream::CommonTokenStream;
 use antlr_rust::input_stream::InputStream;
-// use crate::solidity_parser::generated::solidityparser::{SourceUnitContextAll} ;
+// use solidity_parser::generated::solidityparser::{SourceUnitContextAll} ;
 // use antlr_rust::parser_rule_context::ParserRuleContext;
-use crate::solidity_parser::parse::MyErrorListener;
+use solidity_parser::parse::MyErrorListener;
 // use antlr_rust::tree::ParseTreeVisitor;
 use antlr_rust::tree::Visitable;
 #[macro_export]
@@ -149,7 +149,7 @@ pub fn is_instance<S: ?Sized + Any, T: ?Sized + Any>(_s: &T) -> bool {
 pub fn print_type_of<T>(_: &T) -> String {
     format!("{}", std::any::type_name::<T>())
 }
-use crate::solidity_parser::generated::solidityvisitor::SolidityVisitorCompat;
+use solidity_parser::generated::solidityvisitor::SolidityVisitorCompat;
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::tree::ParseTreeVisitorCompat;
@@ -642,7 +642,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
     fn visit_TupleExpr(&mut self, ctx: &TupleExprContext<'input>) -> Self::Return {
         let mut contents = if let Some(e) = &ctx.expr {
-            use crate::solidity_parser::generated::solidityparser::TupleExpressionContextAttrs;
+            use solidity_parser::generated::solidityparser::TupleExpressionContextAttrs;
             e.expression_all()
         } else {
             vec![]
@@ -1527,7 +1527,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // use crate::zkay_ast::AST;
+    // use zkay_ast::AST;
 
     #[test]
     pub fn test_build_ast() {

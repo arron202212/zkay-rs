@@ -1,9 +1,9 @@
-use crate::type_check::contains_private::contains_private;
-use crate::type_check::final_checker::check_final;
-// use crate::type_check::type_exceptions::{TypeMismatchException, TypeException};
-use crate::zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use type_check::contains_private::contains_private;
+use type_check::final_checker::check_final;
+// use type_check::type_exceptions::{TypeMismatchException, TypeException};
+use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTType,
     AllExpr, AnnotatedTypeName, Array, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     CombinedPrivacyUnion, ConstructorOrFunctionDefinition, ContractDefinition, ElementaryTypeName,
@@ -15,8 +15,8 @@ use crate::zkay_ast::ast::{
     RequireStatement, ReturnStatement, StateVariableDeclaration, TupleExpr, TupleType, TypeName,
     UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,
 };
-use crate::zkay_ast::visitor::deep_copy::replace_expr;
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::deep_copy::replace_expr;
+use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn type_check(ast: AST) {
     check_final(ast.clone());

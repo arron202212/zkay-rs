@@ -5,8 +5,8 @@
 // from logging import addLevelName
 
 // # current time
-use crate::config::CFG;
-use crate::my_logging::log_context::FULL_LOG_CONTEXT;
+use zkay_config::config::CFG;
+use crate::log_context::FULL_LOG_CONTEXT;
 
 // timestamp = "{:%Y-%m-%d_%H-%M-%S}".format(datetime.datetime.now())
 

@@ -13,26 +13,26 @@
 // from copy::deepcopy
 // from typing::Tuple, List, Type, Dict, Optional, Any, ContextManager
 
-// use crate::my_logging
-use crate::compiler::privacy::circuit_generation::backends::jsnark_generator::JsnarkGenerator;
-use crate::compiler::privacy::circuit_generation::circuit_generator::CircuitGenerator;
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::library_contracts;
-use crate::compiler::privacy::manifest::Manifest;
-// use crate::compiler::privacy::offchain_compiler::PythonOffchainVisitor
-use crate::compiler::privacy::proving_scheme::backends::gm17::ProvingSchemeGm17;
-use crate::compiler::privacy::proving_scheme::backends::groth16::ProvingSchemeGroth16;
-use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use crate::compiler::privacy::transformation::zkay_contract_transformer::transform_ast;
-use crate::compiler::solidity::compiler::check_compilation;
-use crate::config::CFG;
-use crate::utils::helpers::{lines_of_code, read_file}; //, without_extension};
-use crate::utils::progress_printer::print_step;
-// use crate::utils::timer::time_measure
-use crate::zkay_ast::ast::IntoAST;
-use crate::zkay_ast::homomorphism::Homomorphism;
-use crate::zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
-use crate::zkay_ast::visitor::solidity_visitor::to_solidity;
+// use my_logging
+use circuit_generation_backends::jsnark_generator::JsnarkGenerator;
+use circuit_generator::CircuitGenerator;
+use circuit_generation::circuit_helper::CircuitHelper;
+use privacy::library_contracts;
+use privacy::manifest::Manifest;
+// use privacy::offchain_compiler::PythonOffchainVisitor
+use proving_scheme_backends::gm17::ProvingSchemeGm17;
+use proving_scheme_backends::groth16::ProvingSchemeGroth16;
+use proving_scheme::{ProvingScheme, VerifyingKeyMeta};
+use transformation::zkay_contract_transformer::transform_ast;
+use solidity::compiler::check_compilation;
+use zkay_config::config::CFG;
+use zkay_utils::helpers::{lines_of_code, read_file}; //, without_extension};
+use zkay_utils::progress_printer::print_step;
+// use zkay_utils::timer::time_measure
+use zkay_ast::ast::IntoAST;
+use zkay_ast::homomorphism::Homomorphism;
+use zkay_ast::process_ast::{get_processed_ast, get_verification_contract_names};
+use zkay_ast::visitor::solidity_visitor::to_solidity;
 use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;

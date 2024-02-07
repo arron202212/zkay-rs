@@ -1,8 +1,8 @@
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
     FunctionCallExpr, IntoAST, LocationExpr, NamespaceDefinition, WhileStatement, AST,
 };
-use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
+use zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn call_graph_analysis(ast: AST)
 // """

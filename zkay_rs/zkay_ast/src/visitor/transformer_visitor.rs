@@ -1,4 +1,4 @@
-use crate::zkay_ast::ast::{Block, HybridArgumentIdf, AST};
+use crate::ast::{Block, HybridArgumentIdf, AST};
 use dyn_clone::DynClone;
 // T = TypeVar("T")
 pub trait TransformerVisitorEx: DynClone + std::marker::Sync + AstTransformerVisitor {}

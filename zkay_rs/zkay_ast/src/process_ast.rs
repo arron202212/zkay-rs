@@ -1,25 +1,25 @@
-use crate::compiler::solidity::compiler::check_for_zkay_solc_errors;
+use solidity::compiler::check_for_zkay_solc_errors;
 //, SolcException;
-use crate::config::CFG;
+use zkay_config::config::CFG;
 // use crate::errors::exceptions::ZkayCompilerError, PreprocessAstException, TypeCheckException, AnalysisException,ZkaySyntaxError;
-// use crate::solidity_parser::parse::SyntaxException;
-use crate::type_check::type_checker::type_check as t;
-// use crate::type_check::type_exceptions::TypeMismatchException, TypeException, RequireException, ReclassifyException;
-use crate::utils::progress_printer::print_step;
-use crate::zkay_ast::analysis::alias_analysis::alias_analysis as a;
-use crate::zkay_ast::analysis::call_graph::call_graph_analysis;
-use crate::zkay_ast::analysis::circuit_compatibility_checker::check_circuit_compliance;
-use crate::zkay_ast::analysis::hybrid_function_detector::detect_hybrid_functions;
-use crate::zkay_ast::analysis::loop_checker::check_loops;
-use crate::zkay_ast::analysis::return_checker::check_return as r;
-use crate::zkay_ast::analysis::side_effects::{
+// use solidity_parser::parse::SyntaxException;
+use type_check::type_checker::type_check as t;
+// use type_check::type_exceptions::TypeMismatchException, TypeException, RequireException, ReclassifyException;
+use zkay_utils::progress_printer::print_step;
+use crate::analysis::alias_analysis::alias_analysis as a;
+use crate::analysis::call_graph::call_graph_analysis;
+use crate::analysis::circuit_compatibility_checker::check_circuit_compliance;
+use crate::analysis::hybrid_function_detector::detect_hybrid_functions;
+use crate::analysis::loop_checker::check_loops;
+use crate::analysis::return_checker::check_return as r;
+use crate::analysis::side_effects::{
     check_for_undefined_behavior_due_to_eval_order, compute_modified_sets,
 };
-use crate::zkay_ast::ast::{SourceUnit, AST}; //, AstException;
-use crate::zkay_ast::build_ast::build_ast;
-use crate::zkay_ast::pointers::parent_setter::set_parents;
-// use crate::zkay_ast::pointers::pointer_exceptions::UnknownIdentifierException;
-use crate::zkay_ast::pointers::symbol_table::link_identifiers as link;
+use crate::ast::{SourceUnit, AST}; //, AstException;
+use crate::build_ast::build_ast;
+use crate::pointers::parent_setter::set_parents;
+// use crate::pointers::pointer_exceptions::UnknownIdentifierException;
+use crate::pointers::symbol_table::link_identifiers as link;
 use bitflags::bitflags;
 use std::fmt;
 #[repr(transparent)]
@@ -80,7 +80,7 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
     // except SyntaxException as e:
     //     raise ZkaySyntaxError(f"\n\nSYNTAX ERROR: {e}")
 
-    let fake_code = crate::compiler::solidity::fake_solidity_generator::fake_solidity_code(code);
+    let fake_code = solidity::fake_solidity_generator::fake_solidity_code(code);
     if solc_check {
         // Solc type checking
         print_step("Type checking with solc");

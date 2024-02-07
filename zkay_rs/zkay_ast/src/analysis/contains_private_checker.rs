@@ -1,7 +1,7 @@
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, IntoExpression, LocationExpr, AST,
 };
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private_expr(ast: Option<AST>) -> bool {
     if ast.is_none() {

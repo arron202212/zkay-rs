@@ -1,10 +1,10 @@
 // # BUILTIN SPECIAL TYPE DEFINITIONS
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName, Identifier,
     IdentifierBase, IntoAST, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName,
     TypeName, UserDefinedTypeName, VariableDeclaration,
 };
-use crate::zkay_ast::pointers::parent_setter::set_parents;
+use zkay_ast::pointers::parent_setter::set_parents;
 
 use lazy_static::lazy_static;
 lazy_static! {

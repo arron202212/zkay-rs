@@ -1,22 +1,17 @@
-use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::token::{Token, TOKEN_EOF, TOKEN_HIDDEN_CHANNEL};
-use antlr_rust::tree::{ParseTreeVisitorCompat, TerminalNode, Visitable};
+use antlr_rust::{InputStream,char_stream::InputData,common_token_stream::CommonTokenStream,token::{Token, TOKEN_EOF, TOKEN_HIDDEN_CHANNEL},tree::{ParseTree,ParseTreeVisitorCompat, TerminalNode, Visitable},parser::ParserNodeType,token_stream::TokenStream};
 // use crate::tree::{ErrorNode, Listenable, ParseTreeListener, TerminalNode};
 // use antlr_rust::TokenSource;
-// use  crate::solidity_parser::generated::solidityvisitor::{SolidityVisitor};
-// use  crate::solidity_parser::parse::get_parse_tree;
-use crate::solidity_parser::generated::solidityparser::SolidityParserContextType;
+// use  generated::solidityvisitor::{SolidityVisitor};
+// use  parse::get_parse_tree;
+
 //  use antlr_rust::parser_rule_context::ParserRuleContext;
-use antlr_rust::parser::ParserNodeType;
-use antlr_rust::token_stream::TokenStream;
-use antlr_rust::tree::ParseTree;
+
+use crate::generated::{solidityparser::SolidityParserContextType,solidityvisitor::SolidityVisitorCompat,soliditylexer::SolidityLexer};
+use crate::parse::MyErrorListener;
 // use std::borrow::Borrow;
 // use std::borrow::Cow;
-use crate::solidity_parser::generated::soliditylexer::SolidityLexer;
-use crate::solidity_parser::parse::MyErrorListener;
-use antlr_rust::char_stream::InputData;
+
 // use antlr_rust::token::GenericToken;
-use antlr_rust::InputStream;
 
 pub struct Emitter {
     code: Option<String>,
@@ -68,7 +63,7 @@ impl<'input> Emitter {
         ret
     }
 }
-use crate::solidity_parser::generated::solidityvisitor::SolidityVisitorCompat;
+
 impl<'input> SolidityVisitorCompat<'input> for Emitter {}
 
 impl<'input> ParseTreeVisitorCompat<'input> for Emitter {

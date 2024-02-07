@@ -1,19 +1,19 @@
 // """
 // This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits
 // """
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::library_contracts::BN128_SCALAR_FIELD;
-use crate::compiler::privacy::transformation::internal_call_transformer::{
+use circuit_generation::circuit_helper::CircuitHelper;
+use privacy::library_contracts::BN128_SCALAR_FIELD;
+use transformation::internal_call_transformer::{
     compute_transitive_circuit_io_sizes, transform_internal_calls,
 };
-use crate::compiler::privacy::transformation::zkay_transformer::{
+use transformation::zkay_transformer::{
     ZkayCircuitTransformer, ZkayExpressionTransformer, ZkayStatementTransformer,
     ZkayVarDeclTransformer,
 };
-use crate::config::CFG;
-use crate::transaction::crypto::params::CryptoParams;
-use crate::zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
-use crate::zkay_ast::ast::{
+use zkay_config::config::CFG;
+use zkay_transaction::crypto::params::CryptoParams;
+use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
+use zkay_ast::ast::{
     is_instance, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
     ArrayLiteralExprBase, AssignmentStatement, AssignmentStatementBase, BlankLine, Block,
     CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
@@ -25,10 +25,10 @@ use crate::zkay_ast::ast::{
     Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
     TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
-use crate::zkay_ast::pointers::parent_setter::set_parents;
-use crate::zkay_ast::pointers::symbol_table::link_identifiers;
-use crate::zkay_ast::visitor::deep_copy::deep_copy;
-use crate::zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
+use zkay_ast::pointers::parent_setter::set_parents;
+use zkay_ast::pointers::symbol_table::link_identifiers;
+use zkay_ast::visitor::deep_copy::deep_copy;
+use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use std::collections::BTreeMap;
 pub fn transform_ast(
     ast: Option<AST>,
@@ -243,7 +243,7 @@ impl ZkayTransformer {
                 None,
                 String::from("NON_HOMOMORPHIC"),
             ),
-            crate::lc_vec_s!["public", "constant"],
+            zkay_config::lc_vec_s!["public", "constant"],
             inst_idf.clone(),
             Some(cast_0_to_c.to_expr()),
         )
@@ -432,7 +432,7 @@ impl ZkayTransformer {
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
-            crate::lc_vec_s!["public", "constant"],
+            zkay_config::lc_vec_s!["public", "constant"],
             Identifier::Identifier(IdentifierBase::new(
                 CFG.lock().unwrap().field_prime_var_name(),
             )),
@@ -886,9 +886,9 @@ impl ZkayTransformer {
                     pp.clone()
                 })
                 .collect();
-            crate::lc_vec_s!["external"]
+            zkay_config::lc_vec_s!["external"]
         } else {
-            crate::lc_vec_s!["public"]
+            zkay_config::lc_vec_s!["public"]
         };
         if f.is_payable() {
             new_modifiers.push(String::from("payable"));

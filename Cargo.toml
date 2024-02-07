@@ -4,7 +4,7 @@ resolver = "2"
 members = [
    "zkay_rs",
    "zkay-derive",
-"zkay_rs/compiler/privacy/circuit_generation/backends",
+"zkay_rs/compiler/privacy/circuit_generation/circuit_helper",
 "zkay_rs/compiler/privacy/circuit_generation",
 "zkay_rs/compiler/privacy/proving_scheme/backends",
 "zkay_rs/compiler/privacy/proving_scheme",
@@ -12,6 +12,7 @@ members = [
 "zkay_rs/compiler/privacy",
 "zkay_rs/compiler/solidity",
 "zkay_rs/compiler",
+"zkay_rs/config",
 "zkay_rs/errors",
 "zkay_rs/examples",
 "zkay_rs/jsnark_interface",
@@ -41,7 +42,7 @@ rust-version = "1.64"
 # proc-macro = true
 [workspace.dependencies]
 zkay-derive={path="zkay-derive"}
- circuit_generation_backends={path="zkay_rs/compiler/privacy/circuit_generation/backends"}
+ circuit_helper={path="zkay_rs/compiler/privacy/circuit_generation/circuit_helper"}
  circuit_generation={path="zkay_rs/compiler/privacy/circuit_generation"}
  proving_scheme_backends={path="zkay_rs/compiler/privacy/proving_scheme/backends"}
  proving_scheme={path="zkay_rs/compiler/privacy/proving_scheme"}
@@ -49,9 +50,10 @@ zkay-derive={path="zkay-derive"}
  privacy={path="zkay_rs/compiler/privacy"}
  solidity={path="zkay_rs/compiler/solidity"}
  zkay-compiler={path="zkay_rs/compiler"}
+ zkay-config={path="zkay_rs/config"}
  zkay-errors={path="zkay_rs/errors"}
  zkay-examples={path="zkay_rs/examples"}
- zkay_jsnark_interface={path="zkay_rs/snark_interface"}
+ jsnark_interface={path="zkay_rs/jsnark_interface"}
  my_logging={path="zkay_rs/my_logging"}
  solidity_parser={path="zkay_rs/solidity_parser"}
  zkay-blockchain={path="zkay_rs/transaction/blockchain"}

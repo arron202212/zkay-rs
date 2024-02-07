@@ -1,7 +1,7 @@
 // import math
 // import re
 
-use crate::transaction::crypto::meta::CRYPTOPARAMS;
+use crate::meta::CRYPTOPARAMS;
 use serde::{Deserialize, Serialize};
 #[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CryptoParams {

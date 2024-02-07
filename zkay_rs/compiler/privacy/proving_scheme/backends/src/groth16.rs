@@ -7,14 +7,14 @@
 
 // from typing import List
 
-use crate::config::CFG;
+use zkay_config::config::CFG;
 
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
-use crate::compiler::privacy::proving_scheme::proving_scheme::{
+use circuit_generation::circuit_helper::CircuitHelper;
+use privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
+use proving_scheme::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK,
 };
-use crate::utils::multiline_formatter::MultiLineFormatter;
+use zkay_utils::multiline_formatter::MultiLineFormatter;
 
 pub struct VerifyingKey<G1: Default, G2: Default> {
     a: G1,

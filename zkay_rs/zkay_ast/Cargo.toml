@@ -12,3 +12,54 @@ rust-version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 [dependencies]
+zkay-derive = { workspace = true }
+# circuit_helper={workspace=true}
+# proving_scheme_backends={workspace=true}
+ circuit_generation={workspace = true }
+#  proving_scheme={workspace = true }
+#  transformation={workspace = true }
+#  privacy={workspace = true }
+#  solidity={workspace = true }
+#  zkay-compiler={workspace = true }
+ zkay-config={workspace = true }
+#  zkay-errors={workspace = true }
+#  zkay-examples={workspace = true }
+#  jsnark_interface={workspace = true }
+ my_logging={workspace = true }
+#  solidity_parser={workspace = true }
+#  zkay-blockchain={workspace = true }
+#  zkay-crypto={workspace = true }
+#  zkay-keystore={workspace = true }
+#  prover={workspace = true }
+ zkay-transaction={workspace = true }
+ type_check={workspace = true }
+ zkay-utils={workspace = true }
+#  zkay_ast={workspace = true }
+#  zkay_rs={workspace = true }
+
+clap = { workspace = true }
+lazy_static = { workspace = true }
+antlr-rust = { workspace = true }
+anyhow = { workspace = true }
+path-absolutize = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+regex ={ workspace = true }
+semver_rs = { workspace = true }
+app_dirs2 = { workspace = true }
+zkp-u256 = { workspace = true }
+textwrap={ workspace = true }
+eyre ={ workspace = true }
+num_cpus={ workspace = true }
+rayon={ workspace = true }
+once_cell={ workspace = true }
+tiny-keccak = { workspace = true }
+hex={ workspace = true }
+rs_sha512={ workspace = true }
+log={ workspace = true }
+env_logger={ workspace = true }
+chrono={ workspace = true }
+bitflags={ workspace = true }
+dyn-clone ={ workspace = true }
+uuid={ workspace = true }

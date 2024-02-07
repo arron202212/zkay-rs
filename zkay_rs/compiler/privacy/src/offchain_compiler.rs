@@ -3,10 +3,10 @@
 // use  textwrap import dedent
 // // from typing::Dict, List, Optional, ContextManager, Set
 
-// use crate::compiler::privacy::circuit_generation::circuit_helper::{CircuitHelper, HybridArgumentIdf};
-// use crate::config::CFG;
-// use crate::utils::multiline_formatter::MultiLineFormatter;
-// use crate::zkay_ast::ast::{ContractDefinition, IntTypeName, SourceUnit, ConstructorOrFunctionDefinition,
+// use circuit_generation::circuit_helper::{CircuitHelper, HybridArgumentIdf};
+// use zkay_config::config::CFG;
+// use zkay_utils::multiline_formatter::MultiLineFormatter;
+// use zkay_ast::ast::{ContractDefinition, IntTypeName, SourceUnit, ConstructorOrFunctionDefinition,
 //     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction,
 //     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier,
 //     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Array,
@@ -15,11 +15,11 @@
 //     PrimitiveCastExpr, EnumDefinition, EnumTypeName, UintTypeName,
 //     StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr,
 //     BoolTypeName};
-// use crate::zkay_ast::homomorphism::Homomorphism;
-// use crate::zkay_ast::visitor::python_visitor::PythonCodeVisitor;
+// use zkay_ast::homomorphism::Homomorphism;
+// use zkay_ast::visitor::python_visitor::PythonCodeVisitor;
 
 // pub fn api(name: &str, invoker: &str = "self") -> String
-//    { use crate::transaction::offchain::ApiWrapper;
+//    { use zkay_transaction::offchain::ApiWrapper;
 //     assert! (name in dir(ApiWrapper));
 //      format!("{invoker}.api.{name}")}
 

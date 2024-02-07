@@ -1,11 +1,11 @@
 //::os
 // from typing::List
 
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::config::CFG;
-use crate::utils::helpers::hash_file;
-use crate::utils::run_command::{run_command, run_commands};
-use crate::zkay_ast::ast::indent;
+use circuit_generation::circuit_helper::CircuitHelper;
+use zkay_config::config::CFG;
+use zkay_utils::helpers::hash_file;
+use zkay_utils::run_command::{run_command, run_commands};
+use zkay_ast::ast::indent;
 use lazy_static::lazy_static;
 use std::fs::File;
 use std::io::Write;

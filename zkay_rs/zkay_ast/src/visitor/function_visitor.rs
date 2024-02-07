@@ -1,5 +1,5 @@
-use crate::zkay_ast::ast::{IntoAST, Parameter, SourceUnit};
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::ast::{IntoAST, Parameter, SourceUnit};
+use zkay_ast::visitor::visitor::AstVisitor;
 // class FunctionVisitor(AstVisitor)
 pub trait FunctionVisitor: AstVisitor {
     // pub fn __init__(self)

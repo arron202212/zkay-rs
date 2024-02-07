@@ -346,10 +346,10 @@ fn main() {
 
     //     from pathlib import Path
 
-    use zkay_rs::zkay_frontend as frontend;
+    use crate::zkay_frontend as frontend;
     //     from zkay import my_logging
     //     from zkay.config import cfg
-    //     use crate::utils::helpers::{read_file, save_to_file};
+    //     use zkay_utils::helpers::{read_file, save_to_file};
     //     from zkay.errors.exceptions import ZkayCompilerError
     //     from zkay.my_logging.log_context import log_context
     //     from zkay.utils.progress_printer import fail_print, success_print

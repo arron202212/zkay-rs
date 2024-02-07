@@ -3,8 +3,8 @@
 // from contextlib::contextmanager
 // from typing::ContextManager
 
-use crate::config::CFG;
-use crate::utils::progress_printer::warn_print;
+use zkay_config::config::CFG;
+use zkay_utils::progress_printer::warn_print;
 use serde_json::{Map, Result, Value};
 use std::fs::File;
 use std::io::Read;

@@ -1,5 +1,5 @@
 [package]
-name = "zkay_jsnark_interface"
+name = "jsnark_interface"
 version = "0.1.0"
 edition.workspace = true
 authors.workspace = true
@@ -12,3 +12,27 @@ rust-version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 [dependencies]
+# circuit_generation_backends={workspace=true}
+# proving_scheme_backends={workspace=true}
+ circuit_generation={workspace = true }
+#  proving_scheme={workspace = true }
+#  transformation={workspace = true }
+#  privacy={workspace = true }
+#  solidity={workspace = true }
+#  zkay-compiler={workspace = true }
+ zkay-config={workspace = true }
+#  zkay-errors={workspace = true }
+#  zkay-examples={workspace = true }
+#  jsnark_interface={workspace = true }
+#  my_logging={workspace = true }
+#  solidity_parser={workspace = true }
+#  zkay-blockchain={workspace = true }
+#  zkay-crypto={workspace = true }
+#  zkay-keystore={workspace = true }
+#  prover={workspace = true }
+#  zkay-transaction={workspace = true }
+#  type_check={workspace = true }
+ zkay-utils={workspace = true }
+ zkay_ast={workspace = true }
+#  zkay_rs={workspace = true }
+lazy_static = { workspace = true }

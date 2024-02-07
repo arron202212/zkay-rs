@@ -1,8 +1,8 @@
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
     NamespaceDefinition, SourceUnit, Statement, AST,
 };
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::AstVisitor;
 
 struct ParentSetterVisitor {
     traversal: String,

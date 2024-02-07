@@ -23,7 +23,7 @@ impl<
             + std::hash::Hash
             + std::cmp::Eq
             + std::cmp::Ord
-            + crate::zkay_ast::ast::Immutable,
+            + crate::ast::Immutable,
     > PartitionState<T>
 {
     pub fn new() -> Self {

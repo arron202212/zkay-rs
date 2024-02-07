@@ -3,16 +3,16 @@
 // from abc import ABCMeta, abstractmethod
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::privacy::proving_scheme::backends::{
+use circuit_generation::circuit_helper::CircuitHelper;
+use proving_scheme_backends::{
     gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
 };
-use crate::compiler::privacy::proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use crate::utils::progress_printer::print_step;
-use crate::utils::timer::time_measure;
-use crate::zkay_ast::ast::ConstructorOrFunctionDefinition;
-use crate::zkay_ast::ast::IntoAST;
-use crate::{config::CFG, zk_print};
+use proving_scheme::{ProvingScheme, VerifyingKeyMeta};
+use zkay_utils::progress_printer::print_step;
+use zkay_utils::timer::time_measure;
+use zkay_ast::ast::ConstructorOrFunctionDefinition;
+use zkay_ast::ast::IntoAST;
+use zkay_config::{config::CFG, zk_print};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 extern crate num_cpus;

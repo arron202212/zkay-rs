@@ -4,12 +4,12 @@
 // use  typing::Dict, Any, ContextManager, List;
 // use  semantic_version::NpmSpec;
 
-use crate::compiler::privacy::proving_scheme::meta::PROVINGSCHEMEPARAMS;
+use crate::meta::PROVINGSCHEMEPARAMS;
 // use  crate::config_user::UserConfig;
 use crate::config_version::Versions;
-use crate::transaction::crypto::params::CryptoParams;
-// use crate::zkay_ast::homomorphism::String;
-// use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
+// use zkay_transaction::crypto::params::CryptoParams;
+// use zkay_ast::homomorphism::String;
+// use circuit_generation::circuit_helper::CircuitHelper;
 use crate::config_user::UserConfig;
 use crate::lc_vec_s;
 use app_dirs2::*;
@@ -48,7 +48,10 @@ pub fn zk_print_banner(title: String) {
     let l = "#".repeat(title.len() + 4);
     zk_print!("{}\n// {title} #\n{}\n", l, l);
 }
-
+pub trait ConstructorOrFunctionDefinitionAttr {
+    fn get_requires_verification_when_external(&self) -> bool;
+    fn get_name(&self) -> String;
+}
 // Versions::set_solc_version("latest")
 pub struct Config {
     pub user_config: UserConfig,
@@ -244,7 +247,7 @@ impl Config {
 
     pub fn get_internal_name(
         &self,
-        fct: &impl crate::zkay_ast::ast::ConstructorOrFunctionDefinitionAttr,
+        fct: &impl ConstructorOrFunctionDefinitionAttr,
     ) -> String {
         if fct.get_requires_verification_when_external() {
             format!("_{}{}", self.reserved_name_prefix(), fct.get_name())

@@ -3,7 +3,7 @@
 //     def __init__(self, traversal='post', log=False):
 //         self.traversal = traversal
 //         self.log = log
-use crate::zkay_ast::ast::{ASTChildren, AST};
+use crate::ast::{ASTChildren, AST};
 pub trait AstVisitor {
     type Return;
     fn visit(&self, ast: AST) -> Self::Return {

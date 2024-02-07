@@ -5,13 +5,13 @@ use antlr_rust::errors::ANTLRError;
 use antlr_rust::recognizer::Recognizer;
 use antlr_rust::token_factory::TokenFactory;
 // use antlr_rust::BaseParser;
-// use crate::solidity_parser::generated::solidityparser::SolidityParserExt;
+// use solidity_parser::generated::solidityparser::SolidityParserExt;
 // from zkay.errors.exceptions import ZkaySyntaxError
-// use  crate::solidity_parser::generated::soliditylexer::SolidityLexer ;
-// use crate::solidity_parser::generated::solidityparser::{SolidityParser,LocalTokenFactory,SourceUnitContextAll} ;
+// use  solidity_parser::generated::soliditylexer::SolidityLexer ;
+// use solidity_parser::generated::solidityparser::{SolidityParser,LocalTokenFactory,SourceUnitContextAll} ;
 //  use std::rc::Rc;
-// use crate::solidity_parser::generated::solidityparser::SolidityParserContextType;
-// use crate::solidity_parser::generated::soliditylistener::SolidityListener;
+// use solidity_parser::generated::solidityparser::SolidityParserContextType;
+// use solidity_parser::generated::soliditylistener::SolidityListener;
 // use antlr_rust::TidAble;
 // class SyntaxException(ZkaySyntaxError):
 //     """
@@ -41,7 +41,7 @@ impl<'a, T: Recognizer<'a>> ErrorListener<'a, T> for MyErrorListener {
     ) {
         eprintln!("line {}:{} {}", line, column, msg);
         //import get_code_error_msg
-        // let  _report = format!("{}\n{msg}",crate::zkay_ast::ast::get_code_error_msg(line, column + 1, str(self.code).splitlines()));
+        // let  _report = format!("{}\n{msg}",zkay_ast::ast::get_code_error_msg(line, column + 1, str(self.code).splitlines()));
     }
 }
 // class MyErrorListener(ErrorListener):

@@ -4,7 +4,7 @@
 // import re
 use lazy_static::lazy_static;
 
-use crate::config::CFG;
+use zkay_config::config::CFG;
 use regex::{Regex, RegexSet, RegexSetBuilder};
 // // Declaration for me which is injected into each contract
 pub const ME_DECL: &str = " address private me = msg.sender;";

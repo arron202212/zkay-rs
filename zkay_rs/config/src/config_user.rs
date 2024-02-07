@@ -9,8 +9,8 @@
 // from appdirs import AppDirs
 use app_dirs2::*; // or app_dirs::* if you've used package alias in Cargo.toml
 
-use crate::transaction::crypto::params::CryptoParams;
-// use crate::zkay_ast::homomorphism::String;
+use zkay_crypto::params::CryptoParams;
+// use zkay_ast::homomorphism::String;
 use std::collections::BTreeMap;
 #[macro_export]
 macro_rules! lc_vec_s {

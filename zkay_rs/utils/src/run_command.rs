@@ -1,6 +1,6 @@
 // import os
 // import subprocess
-use crate::config::CFG;
+use zkay_config::config::CFG;
 use std::process::{Command, Stdio};
 // from typing import List, Optional, Tuple
 use std::path::PathBuf;

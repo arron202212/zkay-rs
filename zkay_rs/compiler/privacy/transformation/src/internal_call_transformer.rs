@@ -1,7 +1,7 @@
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::config::CFG;
-use crate::transaction::crypto::params::CryptoParams;
-use crate::zkay_ast::ast::{
+use circuit_generation::circuit_helper::CircuitHelper;
+use zkay_config::config::CFG;
+use zkay_transaction::crypto::params::CryptoParams;
+use zkay_ast::ast::{
     ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
     IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition,
     NumberLiteralExpr, AST,

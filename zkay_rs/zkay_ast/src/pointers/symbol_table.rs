@@ -1,5 +1,5 @@
 // from typing import Tuple, Dict, Union
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     is_instance, is_instances, ASTChildren, ASTType, AnnotatedTypeName, Array, Block, Comment,
     ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
     ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr,
@@ -7,10 +7,10 @@ use crate::zkay_ast::ast::{
     SourceUnit, Statement, StatementList, StructDefinition, TupleOrLocationExpr, TypeName,
     UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
-use crate::zkay_ast::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
+use zkay_ast::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
 // from zkay::zkay_ast::pointers::pointer_exceptions import UnknownIdentifierException
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn fill_symbol_table(ast: &AST) {
     let v = SymbolTableFiller;

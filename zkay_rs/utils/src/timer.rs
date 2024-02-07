@@ -1,8 +1,8 @@
 // import contextlib
 // import time
-use crate::config::CFG;
-use crate::my_logging::logger;
-use crate::zk_print;
+use zkay_config::config::CFG;
+use my_logging::logger;
+use zkay_config::zk_print;
 use std::time::{Duration, Instant};
 // @contextlib.contextmanager
 pub fn time_measure(key: &str, should_print: bool, skip: bool) {

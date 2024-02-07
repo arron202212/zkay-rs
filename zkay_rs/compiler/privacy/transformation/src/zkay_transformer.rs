@@ -2,11 +2,11 @@
 // This module defines zkay->solidity transformers for the smaller contract elements (statements, expressions, state variables).
 // """
 
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
-use crate::compiler::solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
-use crate::config::CFG;
-use crate::zkay_ast::analysis::contains_private_checker::contains_private_expr;
-use crate::zkay_ast::ast::{
+use circuit_generation::circuit_helper::CircuitHelper;
+use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
+use zkay_config::config::CFG;
+use zkay_ast::analysis::contains_private_checker::contains_private_expr;
+use zkay_ast::ast::{
     is_instance, ASTChildren, ASTType, AnnotatedTypeName, AssignmentStatement, BlankLine, Block,
     BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction, ChildListBuilder,
     Comment, CommentBase, ContinueStatement, DoWhileStatement, ElementaryTypeName,
@@ -19,9 +19,9 @@ use crate::zkay_ast::ast::{
     Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
     VariableDeclarationStatement, WhileStatement, AST,
 };
-use crate::zkay_ast::homomorphism::Homomorphism;
-use crate::zkay_ast::visitor::deep_copy::replace_expr;
-use crate::zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
+use zkay_ast::homomorphism::Homomorphism;
+use zkay_ast::visitor::deep_copy::replace_expr;
+use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use regex::Regex;
 use regex::RegexSetBuilder;
 

@@ -1,7 +1,7 @@
 // import os
 
-use crate::config::CFG;
-use crate::utils::run_command::run_command;
+use zkay_config::config::CFG;
+use zkay_utils::run_command::run_command;
 
 const libsnark_runner: &str = "run_snark";
 use lazy_static::lazy_static;

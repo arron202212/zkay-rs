@@ -1,9 +1,9 @@
-// use crate::type_check::type_exceptions::TypeException
-use crate::zkay_ast::ast::{
+// use type_check::type_exceptions::TypeException
+use zkay_ast::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     FunctionCallExpr, IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
-use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
+use zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn detect_hybrid_functions(ast: AST)
 // """

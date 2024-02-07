@@ -1,5 +1,5 @@
-use crate::zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, AST};
-use crate::zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, AST};
+use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private(ast: AST) -> bool {
     let v = ContainsPrivateVisitor::new();

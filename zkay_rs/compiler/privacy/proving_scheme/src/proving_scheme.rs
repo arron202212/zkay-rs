@@ -1,6 +1,6 @@
 // from abc import ABCMeta, abstractmethod
 // from typing import List
-use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
+use circuit_helper::CircuitHelper;
 use std::fs::File;
 use std::io::Lines;
 use std::io::{BufRead, BufReader};

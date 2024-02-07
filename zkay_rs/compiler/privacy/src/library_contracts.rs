@@ -3,9 +3,9 @@
 // """
 // import os
 // from textwrap import dedent
-use crate::config::CFG;
-use crate::transaction::crypto::params::CryptoParams;
-use crate::utils::helpers::read_file;
+use zkay_config::config::CFG;
+use zkay_transaction::crypto::params::CryptoParams;
+use zkay_utils::helpers::read_file;
 use lazy_static::lazy_static;
 use textwrap::dedent;
 pub fn get_verify_libs_code() -> String

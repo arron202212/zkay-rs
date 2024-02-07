@@ -18,7 +18,7 @@
 // Additionally, abstract circuits use static-single assignment, which means that any HybridArgumentIdf can be regarded as a final variable.
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
-use crate::zkay_ast::ast::{
+use zkay_ast::ast::{
     ASTChildren, ASTInstanceOf, ASTType, ChildListBuilder, ConstructorOrFunctionDefinition,
     Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };

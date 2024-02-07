@@ -13,13 +13,13 @@ const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
-use crate::compiler::privacy::circuit_generation::circuit_constraints::CircuitStatement;
-use crate::transaction::crypto::params::CryptoParams;
-use crate::utils::progress_printer::warn_print;
-use crate::zkay_ast::analysis::partition_state::PartitionState;
-use crate::zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
-use crate::zkay_ast::visitor::visitor::AstVisitor;
-use crate::{config::CFG, zk_print};
+use circuit_generation::circuit_constraints::CircuitStatement;
+use zkay_transaction::crypto::params::CryptoParams;
+use zkay_utils::progress_printer::warn_print;
+use crate::analysis::partition_state::PartitionState;
+use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use crate::visitor::visitor::AstVisitor;
+use zkay_config::{config::{CFG,ConstructorOrFunctionDefinitionAttr}, zk_print};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
@@ -6791,10 +6791,7 @@ impl ConstructorOrFunctionDefinition {
         self._update_fct_type();
     }
 }
-pub trait ConstructorOrFunctionDefinitionAttr {
-    fn get_requires_verification_when_external(&self) -> bool;
-    fn get_name(&self) -> String;
-}
+
 impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition {
     fn get_requires_verification_when_external(&self) -> bool {
         self.requires_verification_when_external
@@ -7265,7 +7262,7 @@ impl InstanceTarget {
     }
 
     pub fn in_scope_at(&self, ast: AST) -> bool {
-        crate::zkay_ast::pointers::symbol_table::SymbolTableLinker::in_scope_at(
+        crate::pointers::symbol_table::SymbolTableLinker::in_scope_at(
             &self.target().unwrap().idf().unwrap(),
             ast,
         )

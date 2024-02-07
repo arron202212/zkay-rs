@@ -8,8 +8,8 @@
 // from solcx import compile_standard
 // from solcx.exceptions import SolcError
 
-use crate::zkay_ast::ast::get_code_error_msg;
-use crate::{config::CFG, zk_print};
+use zkay_ast::ast::get_code_error_msg;
+use zkay_config::{config::CFG, zk_print};
 use serde_json::{Map, Result, Value};
 use std::io::Read;
 use std::path::PathBuf;
@@ -182,7 +182,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
                     continue;
                 }
                 let error = error.as_object().unwrap();
-                use crate::utils::progress_printer::{colored_print, TermColor};
+                use zkay_utils::progress_printer::{colored_print, TermColor};
                 let is_error = error.get(&String::from("severity"))
                     == Some(&Value::String(String::from("error")));
 
