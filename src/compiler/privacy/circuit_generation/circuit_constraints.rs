@@ -19,8 +19,8 @@
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
 use crate::zkay_ast::ast::{
-    ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf,
-    IntoAST, AST,
+    ASTChildren, ASTInstanceOf, ASTType, ChildListBuilder, ConstructorOrFunctionDefinition,
+    Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use serde::{Deserialize, Serialize};
 
@@ -66,6 +66,9 @@ impl ASTInstanceOf for CircuitStatement {
         }
     }
 }
+impl ASTChildren for CircuitStatement {
+    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
+}
 // class CircComment(CircuitStatement)
 // """
 // A textual comment, has no impact on circuit semantics (meta statement)
@@ -82,7 +85,9 @@ pub struct CircComment {
 }
 impl IntoAST for CircComment {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircComment(self))
+        AST::Statement(Statement::CircuitStatement(CircuitStatement::CircComment(
+            self,
+        )))
     }
 }
 impl ASTInstanceOf for CircComment {
@@ -115,7 +120,9 @@ pub struct CircIndentBlock {
 }
 impl IntoAST for CircIndentBlock {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircIndentBlock(self))
+        AST::Statement(Statement::CircuitStatement(
+            CircuitStatement::CircIndentBlock(self),
+        ))
     }
 }
 impl ASTInstanceOf for CircIndentBlock {
@@ -161,7 +168,9 @@ pub struct CircCall {
 }
 impl IntoAST for CircCall {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircCall(self))
+        AST::Statement(Statement::CircuitStatement(CircuitStatement::CircCall(
+            self,
+        )))
     }
 }
 
@@ -196,7 +205,9 @@ pub struct CircVarDecl {
 
 impl IntoAST for CircVarDecl {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircVarDecl(self))
+        AST::Statement(Statement::CircuitStatement(CircuitStatement::CircVarDecl(
+            self,
+        )))
     }
 }
 impl ASTInstanceOf for CircVarDecl {
@@ -237,7 +248,9 @@ pub struct CircGuardModification {
 }
 impl IntoAST for CircGuardModification {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircGuardModification(self))
+        AST::Statement(Statement::CircuitStatement(
+            CircuitStatement::CircGuardModification(self),
+        ))
     }
 }
 impl ASTInstanceOf for CircGuardModification {
@@ -305,7 +318,9 @@ pub struct CircEncConstraint {
 }
 impl IntoAST for CircEncConstraint {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircEncConstraint(self))
+        AST::Statement(Statement::CircuitStatement(
+            CircuitStatement::CircEncConstraint(self),
+        ))
     }
 }
 impl ASTInstanceOf for CircEncConstraint {
@@ -356,7 +371,9 @@ pub struct CircSymmEncConstraint {
 }
 impl IntoAST for CircSymmEncConstraint {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircSymmEncConstraint(self))
+        AST::Statement(Statement::CircuitStatement(
+            CircuitStatement::CircSymmEncConstraint(self),
+        ))
     }
 }
 impl ASTInstanceOf for CircSymmEncConstraint {
@@ -396,7 +413,9 @@ pub struct CircEqConstraint {
 }
 impl IntoAST for CircEqConstraint {
     fn into_ast(self) -> AST {
-        AST::CircuitStatement(CircuitStatement::CircEqConstraint(self))
+        AST::Statement(Statement::CircuitStatement(
+            CircuitStatement::CircEqConstraint(self),
+        ))
     }
 }
 impl ASTInstanceOf for CircEqConstraint {

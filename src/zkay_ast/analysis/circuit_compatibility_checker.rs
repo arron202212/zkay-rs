@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, FunctionCallExpr, FunctionTypeName, IfStatement,
-    IndexExpr, IntoAST, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReturnStatement, Statement, StatementList, AST,IntoExpression,
+    IndexExpr, IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
+    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -55,7 +55,11 @@ impl DirectCanBePrivateDetector {
             if !ast.func().unwrap().is_private() {
                 let mut can_be_private = ast.func().unwrap().can_be_private();
                 if ast.func().unwrap().is_eq() || ast.func().unwrap().is_ite() {
-                    can_be_private &= ast.args()[1].annotated_type().unwrap().type_name.can_be_private();
+                    can_be_private &= ast.args()[1]
+                        .annotated_type()
+                        .unwrap()
+                        .type_name
+                        .can_be_private();
                 }
                 ast.statement().unwrap().function().unwrap().can_be_private &= can_be_private;
                 //TODO to relax this for public expressions,
@@ -377,7 +381,7 @@ impl PrivateSetter {
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if self.evaluate_privately.is_some()
-            && is_instance(&ast.func().unwrap(), ASTType::LocationExpr)
+            && is_instance(&ast.func().unwrap(), ASTType::LocationExprBase)
             && !ast.is_cast()
             && (*ast.func().unwrap().target().unwrap())
                 .constructor_or_function_definition()
@@ -433,7 +437,7 @@ impl NonstaticOrIncompatibilityDetector {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
         if ast.evaluate_privately() && !ast.is_cast() {
-            if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
+            if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
                 assert!(ast.func().unwrap().target().is_some());
                 assert!(is_instance(
                     &*ast
@@ -458,7 +462,11 @@ impl NonstaticOrIncompatibilityDetector {
                 can_be_private &= ast.func().unwrap().can_be_private()
                     || ast.annotated_type().unwrap().type_name.is_literal();
                 if ast.func().unwrap().is_eq() || ast.func().unwrap().is_ite() {
-                    can_be_private &= ast.args()[1].annotated_type().unwrap().type_name.can_be_private();
+                    can_be_private &= ast.args()[1]
+                        .annotated_type()
+                        .unwrap()
+                        .type_name
+                        .can_be_private();
                 }
             }
         }

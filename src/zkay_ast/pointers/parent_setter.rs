@@ -142,10 +142,8 @@ impl ExpressionToStatementVisitor {
             parent = p.parent();
         }
         if parent.is_some() {
-            ast.statement_base_mut().unwrap().function = parent.map(
-                |p
-                | { Box::new(p.constructor_or_function_definition().unwrap()) },
-            );
+            ast.statement_base_mut().unwrap().function =
+                parent.map(|p| Box::new(p.constructor_or_function_definition().unwrap()));
         }
     }
 }

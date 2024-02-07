@@ -63,7 +63,7 @@ impl AstTransformerVisitorBase {
         self.get_visit_function(ast)
     }
 
-    pub fn get_visit_function(&self, c: Option<AST>) -> Option<AST>{
+    pub fn get_visit_function(&self, c: Option<AST>) -> Option<AST> {
         // let visitor_function = "visit" + c.name();
         // if hasattr(&self, visitor_function) {
         //     return getattr(&self, visitor_function);
@@ -79,7 +79,7 @@ impl AstTransformerVisitorBase {
         c
     }
 
-    pub fn visitAST(&self, ast: Option<AST>) -> Option<AST>{
+    pub fn visitAST(&self, ast: Option<AST>) -> Option<AST> {
         self.visit_children(ast)
     }
 }

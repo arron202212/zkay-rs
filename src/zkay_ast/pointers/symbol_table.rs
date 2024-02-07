@@ -148,7 +148,7 @@ impl SymbolTableFiller {
             .state_variable_declarations
             .iter()
             .filter_map(|d| {
-                if is_instance(d, ASTType::Comment) {
+                if is_instance(d, ASTType::CommentBase) {
                     None
                 } else {
                     Some((d.idf().unwrap().name().clone(), d.idf().unwrap().clone()))
@@ -249,7 +249,7 @@ impl SymbolTableFiller {
 
     pub fn visitMapping(&self, ast: &mut Mapping) {
         ast.type_name_base.ast_base.names = BTreeMap::new();
-        if is_instance(ast.key_label.as_ref().unwrap(), ASTType::Identifier) {
+        if is_instance(ast.key_label.as_ref().unwrap(), ASTType::IdentifierBase) {
             ast.type_name_base.ast_base.names = BTreeMap::from([(
                 ast.key_label.clone().unwrap().name().clone(),
                 ast.key_label.clone().unwrap(),
@@ -290,12 +290,7 @@ impl SymbolTableLinker {
                 if !is_instance(
                     &decl.clone().unwrap().parent().unwrap(),
                     ASTType::VariableDeclarationStatement,
-                ) || !decl
-                    .clone()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .is_parent_of(&ast)
+                ) || !decl.clone().unwrap().parent().unwrap().is_parent_of(&ast)
                 {
                     return (Some(_ancestor), decl);
                 }
@@ -335,9 +330,7 @@ impl SymbolTableLinker {
                     false
                 });
                 return (
-                    ast2.clone()
-                        .map(|a| a.statement_list().unwrap())
-                        .unwrap(),
+                    ast2.clone().map(|a| a.statement_list().unwrap()).unwrap(),
                     ast2v.clone(),
                     old_ast,
                 );

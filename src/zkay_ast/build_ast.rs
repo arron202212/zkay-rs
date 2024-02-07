@@ -7,10 +7,11 @@ use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
     EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
     FunctionCallExprBase, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
-    IfStatement, IndexExpr, IntTypeName, IntoAST, LiteralExpr, LocationExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
-    RequireStatement, SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr,
-    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,IntoExpression,
+    IfStatement, IndexExpr, IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr,
+    NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr,
+    ReclassifyExprBase, RehomExpr, RequireStatement, SimpleStatement, Statement, StatementList,
+    StringLiteralExpr, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName,
+    WhileStatement, AST,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -81,11 +82,14 @@ macro_rules! _visit_binary_expr {
         } else {
             None
         };
-        Some(FunctionCallExprBase::new(
+        Some(
+            FunctionCallExprBase::new(
                 Expression::BuiltinFunction(f),
                 vec![lhs.unwrap(), rhs.unwrap()],
                 Some(0),
-            ).into_ast())
+            )
+            .into_ast(),
+        )
     }};
 }
 
@@ -114,7 +118,10 @@ pub fn build_ast(code: &str) -> AST {
     let mut full_ast = build_ast_from_parse_tree(code);
     assert!(full_ast.is_some());
     // assert isinstance(full_ast, ast.SourceUnit)
-    full_ast.as_mut().unwrap().set_original_code(code.split("\n").map(String::from).collect());
+    full_ast
+        .as_mut()
+        .unwrap()
+        .set_original_code(code.split("\n").map(String::from).collect());
     full_ast.unwrap()
 }
 
@@ -234,9 +241,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // elif name.endswith(cfg.reserved_conflict_resolution_suffix){
         //     raise SyntaxException(f"Identifiers must not end with reserved suffix {cfg.reserved_name_prefix}", ctx, self.code)
         // return ast.Identifier(name)
-       Some(IdentifierBase::new(
-            name.to_string(),
-        ).into_ast())
+        Some(IdentifierBase::new(name.to_string()).into_ast())
     }
 
     fn visit_pragmaDirective(&mut self, ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
@@ -365,15 +370,21 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             })
             .collect();
 
-            Some(ContractDefinition::new(
+        Some(
+            ContractDefinition::new(
                 idf,
-                state_variable_declarations.into_iter().filter_map(|a|a).collect(),
+                state_variable_declarations
+                    .into_iter()
+                    .filter_map(|a| a)
+                    .collect(),
                 constructor_definitions,
                 function_definitions,
                 enum_definitions,
                 None,
                 None,
-            ).into_ast())
+            )
+            .into_ast(),
+        )
     }
 
     // fn  handle_fdef(self, ctx){
@@ -393,7 +404,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // self.handle_fdef(ctx)
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let Some(AST::Identifier(a) )= self.temp_result().clone() {
+            if let Some(AST::Identifier(a)) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -428,7 +439,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .iter()
                 .filter_map(|param| {
                     param.accept(self);
-                    if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a)) )=
+                    if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
                         self.temp_result().clone()
                     {
                         Some(a)
@@ -467,13 +478,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-            Some(ConstructorOrFunctionDefinition::new(
+        Some(
+            ConstructorOrFunctionDefinition::new(
                 idf,
                 parameters,
                 modifiers,
                 return_parameters,
                 body,
-            ).into_ast())
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_constructorDefinition(
@@ -505,7 +519,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .iter()
                 .map(|modifier| {
                     modifier.accept(self);
-                    if let Some(AST::Modifier(a) )= self.temp_result().clone() {
+                    if let Some(AST::Modifier(a)) = self.temp_result().clone() {
                         Some(a)
                     } else {
                         None
@@ -527,13 +541,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-            Some(ConstructorOrFunctionDefinition::new(
+        Some(
+            ConstructorOrFunctionDefinition::new(
                 idf,
                 parameters,
                 modifiers,
                 return_parameters,
                 body,
-            ).into_ast())
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_enumDefinition(&mut self, ctx: &EnumDefinitionContext<'input>) -> Self::Return {
@@ -544,7 +561,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return ast.EnumDefinition(idf, values)
         let idf = if let Some(idf) = &ctx.idf {
             idf.accept(self);
-            if let Some(AST::Identifier(a) )= self.temp_result().clone() {
+            if let Some(AST::Identifier(a)) = self.temp_result().clone() {
                 Some(a)
             } else {
                 None
@@ -564,9 +581,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 }
             })
             .collect();
-       Some(EnumDefinition::new(
-            idf, values,
-        ).into_ast())
+        Some(EnumDefinition::new(idf, values).into_ast())
     }
 
     fn visit_enumValue(&mut self, ctx: &EnumValueContext<'input>) -> Self::Return {
@@ -593,7 +608,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return NumberLiteralExpr(v, ctx.getText().startswith(("0x", "0X")))
         let s = ctx.get_text();
         let v = s.replace("_", "").parse().unwrap_or(0);
-           Some( NumberLiteralExpr::new(v, s.starts_with("0x") || s.starts_with("0X")).into_ast())
+        Some(NumberLiteralExpr::new(v, s.starts_with("0x") || s.starts_with("0X")).into_ast())
     }
 
     // Visit a parse tree produced by SolidityParser#BooleanLiteralExpr.
@@ -603,7 +618,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     ) -> Self::Return {
         //   b = ctx.getText() == "true"
         // return BooleanLiteralExpr(b)
-            Some(BooleanLiteralExpr::new(ctx.get_text() == String::from("true")).into_ast())
+        Some(BooleanLiteralExpr::new(ctx.get_text() == String::from("true")).into_ast())
     }
 
     fn visit_StringLiteralExpr(&mut self, ctx: &StringLiteralExprContext<'input>) -> Self::Return {
@@ -622,7 +637,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         );
         // // raise SyntaxException("Use of unsupported string literal expression", ctx, self.code)
         // return StringLiteralExpr(s)
-           Some( StringLiteralExpr::new(s).into_ast())
+        Some(StringLiteralExpr::new(s).into_ast())
     }
 
     fn visit_TupleExpr(&mut self, ctx: &TupleExprContext<'input>) -> Self::Return {
@@ -647,12 +662,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // for idx in range(0, len(contents), 2){
         //     elements.append(self.visit(contents[idx]))
         // return ast.TupleExpr(elements)
-            Some(TupleExpr::new(elements).into_ast())
+        Some(TupleExpr::new(elements).into_ast())
     }
 
     fn visit_modifier(&mut self, ctx: &ModifierContext<'input>) -> Self::Return {
         //  ctx.getText()
-       Some( AST::Modifier(ctx.get_text()))
+        Some(AST::Modifier(ctx.get_text()))
     }
 
     fn visit_annotatedTypeName(&mut self, ctx: &AnnotatedTypeNameContext<'input>) -> Self::Return {
@@ -695,11 +710,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(AnnotatedTypeName::new(
-            type_name.unwrap(),
-            privacy_annotation,
-            homomorphism,
-        ).into_ast())
+        Some(
+            AnnotatedTypeName::new(type_name.unwrap(), privacy_annotation, homomorphism).into_ast(),
+        )
     }
 
     fn visit_homomorphismAnnotation(
@@ -739,9 +752,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             "address" => Some(AddressTypeName::new().into_ast()),
             "address payable" => Some(AddressPayableTypeName::new().into_ast()),
             "bool" => Some(BoolTypeName::new().into_ast()),
-            ts if t.starts_with("int") => Some(IntTypeName::new(
-                    t,
-                ).into_ast()),
+            ts if t.starts_with("int") => Some(IntTypeName::new(t).into_ast()),
             ts if t.starts_with("uint") => Some(UintTypeName::new(t).into_ast()),
             "var" => {
                 assert!(
@@ -812,7 +823,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0)).into_ast())
+        Some(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
+                .into_ast(),
+        )
     }
 
     fn visit_SignExpr(&mut self, ctx: &SignExprContext<'input>) -> Self::Return {
@@ -835,7 +849,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0)).into_ast())
+        Some(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
+                .into_ast(),
+        )
     }
 
     fn visit_NotExpr(&mut self, ctx: &NotExprContext<'input>) -> Self::Return {
@@ -855,7 +872,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0)).into_ast())
+        Some(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
+                .into_ast(),
+        )
     }
 
     fn visit_BitwiseNotExpr(&mut self, ctx: &BitwiseNotExprContext<'input>) -> Self::Return {
@@ -875,7 +895,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0)).into_ast())
+        Some(
+            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
+                .into_ast(),
+        )
     }
 
     //     fn  _visitBinaryExpr(self, ctx){
@@ -982,12 +1005,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-       Some( FunctionCallExprBase::new(
-            Expression::BuiltinFunction(f),
-            vec![cond.unwrap(), then_expr.unwrap(), else_expr.unwrap()],
-            Some(0),
+        Some(
+            FunctionCallExprBase::new(
+                Expression::BuiltinFunction(f),
+                vec![cond.unwrap(), then_expr.unwrap(), else_expr.unwrap()],
+                Some(0),
+            )
+            .into_ast(),
         )
-        .into_ast())
     }
 
     // rehom_expressions = {}
@@ -1071,7 +1096,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_ifStatement(&mut self, ctx: &IfStatementContext<'input>) -> Self::Return {
-     
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -1102,7 +1126,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             {
                 Some(expr)
-            } else if let Some(AST::Statement(expr) )= self.temp_result().clone() {
+            } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
                 Some(Block::new(vec![expr.to_ast()], true))
             } else {
                 None
@@ -1131,7 +1155,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         let body = if let Some(expr) = &ctx.body {
             expr.accept(self);
-            if let Some(AST::Statement(Statement::StatementList(StatementList::Block(expr))))=
+            if let Some(AST::Statement(Statement::StatementList(StatementList::Block(expr)))) =
                 self.temp_result().clone()
             {
                 Some(expr)
@@ -1205,7 +1229,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         let cond = if let Some(expr) = &ctx.condition {
             expr.accept(self);
-            if let Some(AST::Expression(expr) )= self.temp_result().clone() {
+            if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
                 None
@@ -1311,18 +1335,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 );
                 fce.expression_base.ast_base.line = line;
                 fce.expression_base.ast_base.column = column + 1;
-                rhs = Some(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce)));
+                rhs = Some(Expression::FunctionCallExpr(
+                    FunctionCallExpr::FunctionCallExpr(fce),
+                ));
             }
             op
         } else {
             // assert!(false);
             String::new()
         };
-        let lhs = lhs.map(|l|l.into_ast());
+        let lhs = lhs.map(|l| l.into_ast());
 
-        Some(
-                AssignmentStatementBase::new(lhs, rhs, Some(op)).into_ast()
-            )
+        Some(AssignmentStatementBase::new(lhs, rhs, Some(op)).into_ast())
     }
 
     //     fn  _handle_crement_expr(self, ctx, kind: str){
@@ -1379,14 +1403,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.line = line;
             fce.expression_base.ast_base.column = column + 1;
 
-            let expr = expr.map(|e|e.to_ast());
+            let expr = expr.map(|e| e.to_ast());
 
-            Some(AssignmentStatementBase::new(
-                expr,
-                Some(Expression::FunctionCallExpr(FunctionCallExpr::FunctionCallExpr(fce))),
-                Some(format!("{kind}{}", op.text)),
+            Some(
+                AssignmentStatementBase::new(
+                    expr,
+                    Some(Expression::FunctionCallExpr(
+                        FunctionCallExpr::FunctionCallExpr(fce),
+                    )),
+                    Some(format!("{kind}{}", op.text)),
+                )
+                .into_ast(),
             )
-            .into_ast())
         } else {
             None
         }
@@ -1429,14 +1457,15 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.line = line;
             fce.expression_base.ast_base.column = column + 1;
 
-            let expr = expr.map(|e|e.into_ast());
+            let expr = expr.map(|e| e.into_ast());
             Some(
-                    AssignmentStatementBase::new(
-                        expr,
-                        Some(fce.to_expr()),
-                        Some(format!("{kind}{}", op.text)),
-                    ).into_ast()
+                AssignmentStatementBase::new(
+                    expr,
+                    Some(fce.to_expr()),
+                    Some(format!("{kind}{}", op.text)),
                 )
+                .into_ast(),
+            )
         } else {
             None
         }
@@ -1465,7 +1494,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     return ExpressionStatement(e)}
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
-            if let Some(AST::Expression(expr) )= self.temp_result().clone() {
+            if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
                 None

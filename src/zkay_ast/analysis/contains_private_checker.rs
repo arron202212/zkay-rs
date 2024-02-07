@@ -1,5 +1,5 @@
 use crate::zkay_ast::ast::{
-    is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, LocationExpr, AST,IntoExpression,
+    is_instance, ASTType, Expression, FunctionCallExpr, IntoAST, IntoExpression, LocationExpr, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -48,7 +48,7 @@ impl ContainsPrivVisitor {
         }
     }
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) && !ast.is_cast() {
+        if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) && !ast.is_cast() {
             self.contains_private |= ast
                 .func()
                 .unwrap()

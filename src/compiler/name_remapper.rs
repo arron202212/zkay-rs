@@ -2,8 +2,9 @@ use crate::compiler::privacy::circuit_generation::circuit_helper::CircuitHelper;
 use crate::zkay_ast::ast::{
     is_instance, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
-    IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, VariableDeclarationStatement, AST,IntoStatement
-,};
+    IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
+    VariableDeclarationStatement, AST,
+};
 use crate::zkay_ast::pointers::symbol_table::SymbolTableLinker;
 use std::any::Any;
 use std::collections::BTreeMap;

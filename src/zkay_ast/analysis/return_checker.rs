@@ -42,7 +42,8 @@ impl ReturnCheckVisitor {
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;
         if container
-            .statement_list_base().unwrap()
+            .statement_list_base()
+            .unwrap()
             .statements
             .last()
             .map(|v| v.clone())

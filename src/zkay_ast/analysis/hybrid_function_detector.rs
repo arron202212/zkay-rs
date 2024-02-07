@@ -194,7 +194,7 @@ impl AstVisitor for NonInlineableCallDetector {
 }
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
+        if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
             let ast1: AST = (*ast.func().unwrap().target().unwrap()).into();
             assert!(
                 !(ast1

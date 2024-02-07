@@ -3,7 +3,8 @@ use crate::config::CFG;
 use crate::transaction::crypto::params::CryptoParams;
 use crate::zkay_ast::ast::{
     ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
-    IdentifierExprUnion, IntoAST, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,IntoExpression,IntoStatement,
+    IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition,
+    NumberLiteralExpr, AST,
 };
 use std::collections::{BTreeMap, BTreeSet};
 pub fn compute_transitive_circuit_io_sizes(

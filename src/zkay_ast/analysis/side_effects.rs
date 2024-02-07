@@ -1,9 +1,9 @@
 // use crate::type_check::type_exceptions::TypeException
 use crate::zkay_ast::ast::{
     is_instance, is_instances, ASTChildren, ASTType, AssignmentStatement, BuiltinFunction,
-    Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, IntoAST, LocationExpr,
-    Parameter, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr,
-    VariableDeclaration, AST,IntoExpression,IntoStatement,
+    Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
+    IntoStatement, LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr,
+    TupleOrLocationExpr, VariableDeclaration, AST,
 };
 use crate::zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
@@ -49,7 +49,7 @@ impl AstVisitor for SideEffectsDetector {
 }
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
-        if is_instance(&ast.func().unwrap(), ASTType::LocationExpr)
+        if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase)
             && !ast.is_cast()
             && (*ast.func().unwrap().target().unwrap())
                 .constructor_or_function_definition()
@@ -225,7 +225,7 @@ impl IndirectModificationDetector {
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         self.visitAST(ast.to_ast());
-        if is_instance(&ast.func().unwrap(), ASTType::LocationExpr) {
+        if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
             //for now no reference types -> only state could have been modified
             let mut fdef: AST = (*ast.func().unwrap().target().unwrap()).into();
             let mut ast = ast.to_ast();

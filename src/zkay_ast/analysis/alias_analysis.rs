@@ -3,9 +3,9 @@ use crate::zkay_ast::analysis::side_effects::has_side_effects;
 use crate::zkay_ast::ast::{
     is_instance, ASTType, AllExpr, AssignmentStatement, Block, BreakStatement, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
-    ForStatement, FunctionCallExpr, IfStatement, IntoAST, LocationExpr, MeExpr, RequireStatement,
-    ReturnStatement, Statement, StatementList, TupleExpr, VariableDeclarationStatement,
-    WhileStatement, AST,IntoExpression,
+    ForStatement, FunctionCallExpr, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
+    RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::zkay_ast::visitor::visitor::AstVisitor;
 
@@ -377,7 +377,7 @@ impl AliasAnalysisVisitor {
 
         // make state more precise
         let c = ast.condition;
-        if is_instance(&c, ASTType::FunctionCallExpr)
+        if is_instance(&c, ASTType::FunctionCallExprBase)
             && is_instance(&c.func().unwrap(), ASTType::BuiltinFunction)
             && &c.func().unwrap().op().unwrap() == "=="
         {
