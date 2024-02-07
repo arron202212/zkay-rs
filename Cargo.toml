@@ -1,12 +1,73 @@
-[package]
-name = "zkay_rs"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
 
+members = [
+   "zkay_rs",
+   "zkay-derive",
+"zkay_rs/compiler/privacy/circuit_generation/backends",
+"zkay_rs/compiler/privacy/circuit_generation",
+"zkay_rs/compiler/privacy/proving_scheme/backends",
+"zkay_rs/compiler/privacy/proving_scheme",
+"zkay_rs/compiler/privacy/transformation",
+"zkay_rs/compiler/privacy",
+"zkay_rs/compiler/solidity",
+"zkay_rs/compiler",
+"zkay_rs/errors",
+"zkay_rs/examples",
+"zkay_rs/jsnark_interface",
+"zkay_rs/my_logging",
+"zkay_rs/solidity_parser",
+"zkay_rs/transaction/blockchain",
+"zkay_rs/transaction/crypto",
+"zkay_rs/transaction/keystore",
+"zkay_rs/transaction/prover",
+"zkay_rs/transaction",
+"zkay_rs/type_check",
+"zkay_rs/utils",
+"zkay_rs/zkay_ast",
+]
+
+exclude = []
+[workspace.package]
+edition = "2021"
+authors = ["Sam Lee <arron202212@gmail.com>"]
+homepage = "https://github.com/arron202212"
+license = "MIT"
+publish = false
+repository = "https://github.com/arron202212/zkay-rs.git"
+rust-version = "1.64"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 # [lib]
 # proc-macro = true
-[dependencies]
+[workspace.dependencies]
+zkay-derive={path="zkay-derive"}
+ circuit_generation_backends={path="zkay_rs/compiler/privacy/circuit_generation/backends"}
+ circuit_generation={path="zkay_rs/compiler/privacy/circuit_generation"}
+ proving_scheme_backends={path="zkay_rs/compiler/privacy/proving_scheme/backends"}
+ proving_scheme={path="zkay_rs/compiler/privacy/proving_scheme"}
+ transformation={path="zkay_rs/compiler/privacy/transformation"}
+ privacy={path="zkay_rs/compiler/privacy"}
+ solidity={path="zkay_rs/compiler/solidity"}
+ zkay-compiler={path="zkay_rs/compiler"}
+ zkay-errors={path="zkay_rs/errors"}
+ zkay-examples={path="zkay_rs/examples"}
+ zkay_jsnark_interface={path="zkay_rs/snark_interface"}
+ my_logging={path="zkay_rs/my_logging"}
+ solidity_parser={path="zkay_rs/solidity_parser"}
+ zkay-blockchain={path="zkay_rs/transaction/blockchain"}
+ zkay-crypto={path="zkay_rs/transaction/crypto"}
+ zkay-keystore={path="zkay_rs/transaction/keystore"}
+ prover={path="zkay_rs/transaction/prover"}
+ zkay-transaction={path="zkay_rs/transaction"}
+ type_check={path="zkay_rs/type_check"}
+ zkay-utils={path="zkay_rs/utils"}
+ zkay_ast={path="zkay_rs/zkay_ast"}
+ zkay_rs={path="zkay_rs"}
+
+
+
+
+
 clap = { version = "4.4.10", features = ["derive", "string"] }
 lazy_static = "1.4.0"
 antlr-rust = { version = "0.3.0-beta" }
@@ -34,7 +95,7 @@ env_logger="0.10.1"
 chrono="0.4.31"
 bitflags="2.4.2"
 dyn-clone = "1.0.16"
-[dependencies.uuid]
+[workspace.dependencies.uuid]
 version = "1.6.1"
 features = [
     "v4",                # Lets you generate random UUIDs
