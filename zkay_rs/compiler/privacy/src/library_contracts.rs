@@ -4,7 +4,7 @@
 // import os
 // from textwrap import dedent
 use zkay_config::config::CFG;
-use zkay_transaction::crypto::params::CryptoParams;
+use zkay_crypto::params::CryptoParams;
 use zkay_utils::helpers::read_file;
 use lazy_static::lazy_static;
 use textwrap::dedent;

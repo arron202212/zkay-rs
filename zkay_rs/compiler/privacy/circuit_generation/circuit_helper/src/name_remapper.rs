@@ -1,4 +1,4 @@
-use circuit_helper::CircuitHelper;
+use crate::circuit_helper::CircuitHelper;
 use zkay_ast::ast::{
     is_instance, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,

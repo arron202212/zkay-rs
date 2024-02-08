@@ -23,7 +23,7 @@ circuit_helper={workspace=true}
  zkay-config={workspace = true }
 #  zkay-errors={workspace = true }
 #  zkay-examples={workspace = true }
-#  jsnark_interface={workspace = true }
+ jsnark_interface={workspace = true }
 #  my_logging={workspace = true }
 #  solidity_parser={workspace = true }
 #  zkay-blockchain={workspace = true }
@@ -37,3 +37,6 @@ circuit_helper={workspace=true}
 #  zkay_rs={workspace = true }
 rayon={ workspace = true }
 lazy_static = { workspace = true }
+hex={workspace=true}
+num_cpus={ workspace = true }
+zkp-u256 = { workspace = true }

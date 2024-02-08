@@ -2,7 +2,7 @@
 // This module defines zkay->solidity transformers for the smaller contract elements (statements, expressions, state variables).
 // """
 
-use circuit_generation::circuit_helper::CircuitHelper;
+use circuit_helper::circuit_helper::CircuitHelper;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use zkay_config::config::CFG;
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;

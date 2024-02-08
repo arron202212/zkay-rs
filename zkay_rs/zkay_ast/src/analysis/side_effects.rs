@@ -1,11 +1,11 @@
 // use type_check::type_exceptions::TypeException
-use zkay_ast::ast::{
+use crate::ast::{
     is_instance, is_instances, ASTChildren, ASTType, AssignmentStatement, BuiltinFunction,
     Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
     IntoStatement, LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr,
     TupleOrLocationExpr, VariableDeclaration, AST,
 };
-use zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
+use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
 pub fn has_side_effects(ast: AST) -> bool {
     SideEffectsDetector.visit(ast).is_some()

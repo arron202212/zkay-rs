@@ -3,18 +3,18 @@
 // import os
 // from typing import List, Optional, Union, Tuple
 
-use circuit_generation::circuit_constraints::{
+use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use circuit_generation::circuit_generator::{
+use crate::circuit_generator::{
     CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType,
 };
-use circuit_generation::circuit_helper::CircuitHelper;
-use proving_scheme_backends::{
+use circuit_helper::circuit_helper::CircuitHelper;
+use proving_scheme::backends::{
     gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
 };
-use proving_scheme::{
+use proving_scheme::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta,
 };
 

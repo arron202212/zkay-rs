@@ -1,10 +1,10 @@
-use zkay_transaction::crypto::params::CryptoParams;
-use zkay_ast::ast::{
+use zkay_crypto::params::CryptoParams;
+use crate::ast::{
     AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST,
 };
-use zkay_ast::pointers::parent_setter::set_parents;
-use zkay_ast::pointers::symbol_table::link_identifiers;
-use zkay_ast::visitor::visitor::AstVisitor;
+use crate::pointers::parent_setter::set_parents;
+use crate::pointers::symbol_table::link_identifiers;
+use crate::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
 // T = TypeVar("T")
 

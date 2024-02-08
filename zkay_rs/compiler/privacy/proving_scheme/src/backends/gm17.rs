@@ -9,9 +9,9 @@
 
 use zkay_config::config::CFG;
 
-use circuit_generation::circuit_helper::CircuitHelper;
+use circuit_helper::circuit_helper::CircuitHelper;
 use privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
-use proving_scheme::proving_scheme::{
+use crate::proving_scheme::{
     G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK,
 };
 use zkay_utils::multiline_formatter::MultiLineFormatter;

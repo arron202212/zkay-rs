@@ -6,6 +6,7 @@
 // from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 
 // from zkay.config_user import UserConfig
+pub mod zkay_frontend;
 #[macro_use]
 extern crate lazy_static;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};

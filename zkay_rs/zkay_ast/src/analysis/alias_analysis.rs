@@ -1,13 +1,13 @@
-use zkay_ast::analysis::partition_state::PartitionState;
-use zkay_ast::analysis::side_effects::has_side_effects;
-use zkay_ast::ast::{
+use crate::analysis::partition_state::PartitionState;
+use crate::analysis::side_effects::has_side_effects;
+use crate::ast::{
     is_instance, ASTType, AllExpr, AssignmentStatement, Block, BreakStatement, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
     ForStatement, FunctionCallExpr, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
     VariableDeclarationStatement, WhileStatement, AST,
 };
-use zkay_ast::visitor::visitor::AstVisitor;
+use crate::visitor::visitor::AstVisitor;
 
 pub fn alias_analysis(ast: &AST) {
     let v = AliasAnalysisVisitor::new();

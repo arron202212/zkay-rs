@@ -3,11 +3,11 @@
 // from abc import ABCMeta, abstractmethod
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
-use circuit_generation::circuit_helper::CircuitHelper;
-use proving_scheme_backends::{
+use circuit_helper::circuit_helper::CircuitHelper;
+use proving_scheme::backends::{
     gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
 };
-use proving_scheme::{ProvingScheme, VerifyingKeyMeta};
+use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use zkay_utils::progress_printer::print_step;
 use zkay_utils::timer::time_measure;
 use zkay_ast::ast::ConstructorOrFunctionDefinition;

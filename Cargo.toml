@@ -6,7 +6,7 @@ members = [
    "zkay-derive",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper",
 "zkay_rs/compiler/privacy/circuit_generation",
-"zkay_rs/compiler/privacy/proving_scheme/backends",
+# "zkay_rs/compiler/privacy/proving_scheme/backends",
 "zkay_rs/compiler/privacy/proving_scheme",
 "zkay_rs/compiler/privacy/transformation",
 "zkay_rs/compiler/privacy",
@@ -26,6 +26,7 @@ members = [
 "zkay_rs/type_check",
 "zkay_rs/utils",
 "zkay_rs/zkay_ast",
+"zkay_rs/ast-builder",
 ]
 
 exclude = []
@@ -44,7 +45,7 @@ rust-version = "1.64"
 zkay-derive={path="zkay-derive"}
  circuit_helper={path="zkay_rs/compiler/privacy/circuit_generation/circuit_helper"}
  circuit_generation={path="zkay_rs/compiler/privacy/circuit_generation"}
- proving_scheme_backends={path="zkay_rs/compiler/privacy/proving_scheme/backends"}
+#  proving_scheme_backends={path="zkay_rs/compiler/privacy/proving_scheme/backends"}
  proving_scheme={path="zkay_rs/compiler/privacy/proving_scheme"}
  transformation={path="zkay_rs/compiler/privacy/transformation"}
  privacy={path="zkay_rs/compiler/privacy"}
@@ -64,6 +65,7 @@ zkay-derive={path="zkay-derive"}
  type_check={path="zkay_rs/type_check"}
  zkay-utils={path="zkay_rs/utils"}
  zkay_ast={path="zkay_rs/zkay_ast"}
+ ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
 
 

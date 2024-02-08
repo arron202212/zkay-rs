@@ -12,9 +12,9 @@ rust-version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 [dependencies]
-# circuit_generation_backends={workspace=true}
+circuit_helper={workspace=true}
 # proving_scheme_backends={workspace=true}
- circuit_generation={workspace = true }
+#  circuit_generation={workspace = true }
 #  proving_scheme={workspace = true }
 #  transformation={workspace = true }
  privacy={workspace = true }
@@ -27,7 +27,7 @@ rust-version.workspace = true
 #  my_logging={workspace = true }
 #  solidity_parser={workspace = true }
 #  zkay-blockchain={workspace = true }
-#  zkay-crypto={workspace = true }
+ zkay-crypto={workspace = true }
 #  zkay-keystore={workspace = true }
 #  prover={workspace = true }
  zkay-transaction={workspace = true }

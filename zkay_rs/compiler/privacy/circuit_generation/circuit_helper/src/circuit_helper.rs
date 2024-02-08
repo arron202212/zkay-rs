@@ -1,11 +1,11 @@
-use circuit_helper::name_remapper::CircVarRemapper;
+use crate::name_remapper::CircVarRemapper;
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use name_factory::NameFactory;
+use crate::name_factory::NameFactory;
 use zkay_config::config::CFG;
-use zkay_transaction::crypto::params::CryptoParams;
+use zkay_crypto::params::CryptoParams;
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{

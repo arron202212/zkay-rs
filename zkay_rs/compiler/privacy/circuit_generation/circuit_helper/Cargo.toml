@@ -27,7 +27,7 @@ rust-version.workspace = true
 #  my_logging={workspace = true }
 #  solidity_parser={workspace = true }
 #  zkay-blockchain={workspace = true }
-#  zkay-crypto={workspace = true }
+ zkay-crypto={workspace = true }
 #  zkay-keystore={workspace = true }
 #  prover={workspace = true }
  zkay-transaction={workspace = true }

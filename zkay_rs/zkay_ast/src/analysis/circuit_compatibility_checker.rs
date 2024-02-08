@@ -1,13 +1,13 @@
 use zkay_config::config::CFG;
 use std::collections::BTreeSet;
 // use type_check::type_exceptions::TypeException
-use zkay_ast::ast::{
+use crate::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, FunctionCallExpr, FunctionTypeName, IfStatement,
     IndexExpr, IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
     ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
 };
-use zkay_ast::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
+use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
 pub fn check_circuit_compliance(ast: AST) {
     // """

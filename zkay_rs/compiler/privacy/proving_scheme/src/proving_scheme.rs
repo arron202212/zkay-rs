@@ -1,6 +1,6 @@
 // from abc import ABCMeta, abstractmethod
 // from typing import List
-use circuit_helper::CircuitHelper;
+use circuit_helper::circuit_helper::CircuitHelper;
 use std::fs::File;
 use std::io::Lines;
 use std::io::{BufRead, BufReader};

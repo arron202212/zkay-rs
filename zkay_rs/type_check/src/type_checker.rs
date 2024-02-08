@@ -1,6 +1,6 @@
-use type_check::contains_private::contains_private;
-use type_check::final_checker::check_final;
-// use type_check::type_exceptions::{TypeMismatchException, TypeException};
+use crate::contains_private::contains_private;
+use crate::final_checker::check_final;
+// use crate::type_exceptions::{TypeMismatchException, TypeException};
 use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 
 use zkay_ast::ast::{

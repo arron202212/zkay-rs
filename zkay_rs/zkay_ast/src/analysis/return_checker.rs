@@ -1,7 +1,7 @@
-use zkay_ast::ast::{
+use crate::ast::{
     is_instance, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, AST,
 }; //, AstException
-use zkay_ast::visitor::visitor::AstVisitor;
+use crate::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: &AST) {
     let v = ReturnCheckVisitor;

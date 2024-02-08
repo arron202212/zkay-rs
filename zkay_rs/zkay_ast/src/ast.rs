@@ -13,8 +13,8 @@ const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
-use circuit_generation::circuit_constraints::CircuitStatement;
-use zkay_transaction::crypto::params::CryptoParams;
+use crate::circuit_constraints::CircuitStatement;
+use zkay_crypto::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
 use crate::analysis::partition_state::PartitionState;
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};

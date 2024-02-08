@@ -1,7 +1,7 @@
 //::os
 // from typing::List
 
-use circuit_generation::circuit_helper::CircuitHelper;
+use circuit_helper::circuit_helper::CircuitHelper;
 use zkay_config::config::CFG;
 use zkay_utils::helpers::hash_file;
 use zkay_utils::run_command::{run_command, run_commands};

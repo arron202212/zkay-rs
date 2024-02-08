@@ -1,7 +1,7 @@
 // use antlr_rust::token::{Token,CommonToken};
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
-use crate::ast::{
+use zkay_ast::ast::{
     self, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
     AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
