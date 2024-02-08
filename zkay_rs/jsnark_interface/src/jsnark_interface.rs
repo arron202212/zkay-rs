@@ -2,14 +2,14 @@
 // from typing::List
 
 use circuit_helper::circuit_helper::CircuitHelper;
-use zkay_config::config::CFG;
-use zkay_utils::helpers::hash_file;
-use zkay_utils::run_command::{run_command, run_commands};
-use zkay_ast::ast::indent;
 use lazy_static::lazy_static;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use zkay_ast::ast::indent;
+use zkay_config::config::CFG;
+use zkay_utils::helpers::hash_file;
+use zkay_utils::run_command::{run_command, run_commands};
 //path to jsnark interface jar
 const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {

@@ -1,5 +1,5 @@
-use zkay_config::config::CFG;
 use crate::ast::{AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
+use zkay_config::config::CFG;
 
 pub fn to_solidity(ast: AST) -> String {
     SolidityVisitor::new().code_visitor_base.visit(&ast)

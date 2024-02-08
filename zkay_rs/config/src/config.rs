@@ -245,10 +245,7 @@ impl Config {
         String::from("_zalt")
     }
 
-    pub fn get_internal_name(
-        &self,
-        fct: &impl ConstructorOrFunctionDefinitionAttr,
-    ) -> String {
+    pub fn get_internal_name(&self, fct: &impl ConstructorOrFunctionDefinitionAttr) -> String {
         if fct.get_requires_verification_when_external() {
             format!("_{}{}", self.reserved_name_prefix(), fct.get_name())
         } else {

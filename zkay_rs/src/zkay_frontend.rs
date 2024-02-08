@@ -23,20 +23,20 @@ use privacy::manifest::Manifest;
 use proving_scheme::backends::gm17::ProvingSchemeGm17;
 use proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use transformation::zkay_contract_transformer::transform_ast;
 use solidity::compiler::check_compilation;
+use transformation::zkay_contract_transformer::transform_ast;
 use zkay_config::config::CFG;
 use zkay_utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use zkay_utils::progress_printer::print_step;
 // use zkay_utils::timer::time_measure
-use zkay_ast::ast::IntoAST;
-use zkay_ast::homomorphism::Homomorphism;
 use ast_builder::process_ast::{get_processed_ast, get_verification_contract_names};
-use zkay_ast::visitor::solidity_visitor::to_solidity;
 use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use zkay_ast::ast::IntoAST;
+use zkay_ast::homomorphism::Homomorphism;
+use zkay_ast::visitor::solidity_visitor::to_solidity;
 // fn proving_scheme_classes<T,VK>(proving_scheme: &str) -> T
 // where
 //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,

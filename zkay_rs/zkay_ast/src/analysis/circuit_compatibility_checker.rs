@@ -1,5 +1,5 @@
-use zkay_config::config::CFG;
 use std::collections::BTreeSet;
+use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,

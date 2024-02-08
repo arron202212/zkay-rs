@@ -3,25 +3,21 @@
 // import os
 // from typing import List, Optional, Union, Tuple
 
+use crate::circuit_generator::{CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType};
+use circuit_helper::circuit_helper::CircuitHelper;
+use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
+use proving_scheme::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta};
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use crate::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType,
-};
-use circuit_helper::circuit_helper::CircuitHelper;
-use proving_scheme::backends::{
-    gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
-};
-use proving_scheme::proving_scheme::{
-    G1Point, G2Point, ProvingScheme, VerifyingKeyMeta,
-};
 
 use jsnark_interface::jsnark_interface as jsnark;
 use jsnark_interface::libsnark_interface as libsnark;
-use zkay_utils::helpers::{hash_file, hash_string};
-use zkay_utils::helpers::{read_file, save_to_file};
+use std::any::{Any, TypeId};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Error, Write};
+use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
     FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, IntoAST, MeExpr,
@@ -30,10 +26,8 @@ use zkay_ast::ast::{
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;
 use zkay_config::{config::CFG, zk_print};
-use std::any::{Any, TypeId};
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error, Write};
-use std::path::Path;
+use zkay_utils::helpers::{hash_file, hash_string};
+use zkay_utils::helpers::{read_file, save_to_file};
 use zkp_u256::Binary;
 
 pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {

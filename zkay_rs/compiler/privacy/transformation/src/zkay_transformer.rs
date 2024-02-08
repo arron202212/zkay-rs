@@ -3,8 +3,9 @@
 // """
 
 use circuit_helper::circuit_helper::CircuitHelper;
+use regex::Regex;
+use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
-use zkay_config::config::CFG;
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;
 use zkay_ast::ast::{
     is_instance, ASTChildren, ASTType, AnnotatedTypeName, AssignmentStatement, BlankLine, Block,
@@ -22,8 +23,7 @@ use zkay_ast::ast::{
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
-use regex::Regex;
-use regex::RegexSetBuilder;
+use zkay_config::config::CFG;
 
 // class ZkayVarDeclTransformer(AstTransformerVisitor)
 // """

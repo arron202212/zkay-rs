@@ -1,9 +1,9 @@
 // import contextlib
 // import time
-use zkay_config::config::CFG;
 use my_logging::logger;
-use zkay_config::zk_print;
 use std::time::{Duration, Instant};
+use zkay_config::config::CFG;
+use zkay_config::zk_print;
 // @contextlib.contextmanager
 pub fn time_measure(key: &str, should_print: bool, skip: bool) {
     let start = Instant::now();

@@ -1,7 +1,7 @@
 // import os
 // import subprocess
-use zkay_config::config::CFG;
 use std::process::{Command, Stdio};
+use zkay_config::config::CFG;
 // from typing import List, Optional, Tuple
 use std::path::PathBuf;
 pub fn run_command(

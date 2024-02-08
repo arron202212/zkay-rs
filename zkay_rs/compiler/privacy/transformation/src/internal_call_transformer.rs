@@ -1,12 +1,12 @@
 use circuit_helper::circuit_helper::CircuitHelper;
-use zkay_config::config::CFG;
-use zkay_crypto::params::CryptoParams;
+use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
     ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
     IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition,
     NumberLiteralExpr, AST,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use zkay_config::config::CFG;
+use zkay_crypto::params::CryptoParams;
 pub fn compute_transitive_circuit_io_sizes(
     fcts_with_verification: &mut Vec<ConstructorOrFunctionDefinition>,
     cgens: &mut BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,

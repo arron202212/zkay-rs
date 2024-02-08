@@ -4,17 +4,15 @@
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
 use circuit_helper::circuit_helper::CircuitHelper;
-use proving_scheme::backends::{
-    gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16,
-};
+use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
-use zkay_utils::progress_printer::print_step;
-use zkay_utils::timer::time_measure;
+use rayon::prelude::*;
+use std::path::{Path, PathBuf};
 use zkay_ast::ast::ConstructorOrFunctionDefinition;
 use zkay_ast::ast::IntoAST;
 use zkay_config::{config::CFG, zk_print};
-use rayon::prelude::*;
-use std::path::{Path, PathBuf};
+use zkay_utils::progress_printer::print_step;
+use zkay_utils::timer::time_measure;
 extern crate num_cpus;
 use lazy_static::lazy_static;
 use std::collections::BTreeMap;

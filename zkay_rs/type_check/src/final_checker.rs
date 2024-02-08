@@ -1,11 +1,11 @@
 // use type_check::type_exceptions::TypeException
+use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTType, AssignmentStatement, Block, ConstructorOrFunctionDefinition,
     ContractDefinition, Expression, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
     StateVariableDeclaration, TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitor::visitor::AstVisitor;
-use std::collections::BTreeMap;
 
 pub fn check_final(ast: AST) {
     let v = FinalVisitor::new();

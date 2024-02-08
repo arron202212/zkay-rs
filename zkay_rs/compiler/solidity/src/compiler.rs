@@ -8,11 +8,11 @@
 // from solcx import compile_standard
 // from solcx.exceptions import SolcError
 
-use zkay_ast::ast::get_code_error_msg;
-use zkay_config::{config::CFG, zk_print};
 use serde_json::{Map, Result, Value};
 use std::io::Read;
 use std::path::PathBuf;
+use zkay_ast::ast::get_code_error_msg;
+use zkay_config::{config::CFG, zk_print};
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass

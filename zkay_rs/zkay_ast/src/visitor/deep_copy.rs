@@ -1,11 +1,9 @@
-use zkay_crypto::params::CryptoParams;
-use crate::ast::{
-    AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST,
-};
+use crate::ast::{AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
 use crate::visitor::visitor::AstVisitor;
 use std::collections::BTreeMap;
+use zkay_crypto::params::CryptoParams;
 // T = TypeVar("T")
 
 pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Option<AST>

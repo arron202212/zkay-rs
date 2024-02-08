@@ -1,4 +1,6 @@
 use crate::circuit_helper::CircuitHelper;
+use std::any::Any;
+use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
@@ -6,8 +8,6 @@ use zkay_ast::ast::{
     VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
-use std::any::Any;
-use std::collections::BTreeMap;
 // Identifier = TypeVar("Identifier")
 // HybridArgumentIdf = TypeVar("HybridArgumentIdf")
 // class Remapper(Generic[Identifier, HybridArgumentIdf]):

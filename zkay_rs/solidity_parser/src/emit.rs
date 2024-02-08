@@ -1,4 +1,12 @@
-use antlr_rust::{InputStream,char_stream::InputData,common_token_stream::CommonTokenStream,token::{Token, TOKEN_EOF, TOKEN_HIDDEN_CHANNEL},tree::{ParseTree,ParseTreeVisitorCompat, TerminalNode, Visitable},parser::ParserNodeType,token_stream::TokenStream};
+use antlr_rust::{
+    char_stream::InputData,
+    common_token_stream::CommonTokenStream,
+    parser::ParserNodeType,
+    token::{Token, TOKEN_EOF, TOKEN_HIDDEN_CHANNEL},
+    token_stream::TokenStream,
+    tree::{ParseTree, ParseTreeVisitorCompat, TerminalNode, Visitable},
+    InputStream,
+};
 // use crate::tree::{ErrorNode, Listenable, ParseTreeListener, TerminalNode};
 // use antlr_rust::TokenSource;
 // use  generated::solidityvisitor::{SolidityVisitor};
@@ -6,7 +14,10 @@ use antlr_rust::{InputStream,char_stream::InputData,common_token_stream::CommonT
 
 //  use antlr_rust::parser_rule_context::ParserRuleContext;
 
-use crate::generated::{solidityparser::SolidityParserContextType,solidityvisitor::SolidityVisitorCompat,soliditylexer::SolidityLexer};
+use crate::generated::{
+    soliditylexer::SolidityLexer, solidityparser::SolidityParserContextType,
+    solidityvisitor::SolidityVisitorCompat,
+};
 use crate::parse::MyErrorListener;
 // use std::borrow::Borrow;
 // use std::borrow::Cow;

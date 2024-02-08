@@ -68,10 +68,6 @@ zkay-derive={path="zkay-derive"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
 
-
-
-
-
 clap = { version = "4.4.10", features = ["derive", "string"] }
 lazy_static = "1.4.0"
 antlr-rust = { version = "0.3.0-beta" }

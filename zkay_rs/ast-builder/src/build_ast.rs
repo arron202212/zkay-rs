@@ -149,10 +149,10 @@ pub fn is_instance<S: ?Sized + Any, T: ?Sized + Any>(_s: &T) -> bool {
 pub fn print_type_of<T>(_: &T) -> String {
     format!("{}", std::any::type_name::<T>())
 }
-use solidity_parser::generated::solidityvisitor::SolidityVisitorCompat;
 use antlr_rust::parser::ParserNodeType;
 use antlr_rust::parser_rule_context::ParserRuleContext;
 use antlr_rust::tree::ParseTreeVisitorCompat;
+use solidity_parser::generated::solidityvisitor::SolidityVisitorCompat;
 // impl<'input> SolidityVisitor<'input> for BuildASTVisitor {
 // }
 impl<'input> ParseTreeVisitorCompat<'input> for BuildASTVisitor {

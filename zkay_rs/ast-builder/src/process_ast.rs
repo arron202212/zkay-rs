@@ -5,14 +5,19 @@ use zkay_config::config::CFG;
 // use solidity_parser::parse::SyntaxException;
 use type_check::type_checker::type_check as t;
 // use type_check::type_exceptions::TypeMismatchException, TypeException, RequireException, ReclassifyException;
-use zkay_utils::progress_printer::print_step;
-use zkay_ast::analysis::{alias_analysis::alias_analysis as a,call_graph::call_graph_analysis,circuit_compatibility_checker::check_circuit_compliance,hybrid_function_detector::detect_hybrid_functions,loop_checker::check_loops,return_checker::check_return as r
-,side_effects::{
-    check_for_undefined_behavior_due_to_eval_order, compute_modified_sets,
-}};
-use zkay_ast::ast::{SourceUnit, AST}; //, AstException;
 use crate::build_ast::build_ast;
-use zkay_ast::pointers::{parent_setter::set_parents,symbol_table::link_identifiers as link};
+use zkay_ast::analysis::{
+    alias_analysis::alias_analysis as a,
+    call_graph::call_graph_analysis,
+    circuit_compatibility_checker::check_circuit_compliance,
+    hybrid_function_detector::detect_hybrid_functions,
+    loop_checker::check_loops,
+    return_checker::check_return as r,
+    side_effects::{check_for_undefined_behavior_due_to_eval_order, compute_modified_sets},
+};
+use zkay_ast::ast::{SourceUnit, AST}; //, AstException;
+use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers as link};
+use zkay_utils::progress_printer::print_step;
 // use crate::pointers::pointer_exceptions::UnknownIdentifierException;
 
 use bitflags::bitflags;

@@ -1,8 +1,6 @@
 // """
 // This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits
 // """
-use circuit_helper::circuit_helper::CircuitHelper;
-use privacy::library_contracts::BN128_SCALAR_FIELD;
 use crate::internal_call_transformer::{
     compute_transitive_circuit_io_sizes, transform_internal_calls,
 };
@@ -10,8 +8,9 @@ use crate::zkay_transformer::{
     ZkayCircuitTransformer, ZkayExpressionTransformer, ZkayStatementTransformer,
     ZkayVarDeclTransformer,
 };
-use zkay_config::config::CFG;
-use zkay_crypto::params::CryptoParams;
+use circuit_helper::circuit_helper::CircuitHelper;
+use privacy::library_contracts::BN128_SCALAR_FIELD;
+use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
     is_instance, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
@@ -29,7 +28,8 @@ use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::pointers::symbol_table::link_identifiers;
 use zkay_ast::visitor::deep_copy::deep_copy;
 use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
-use std::collections::BTreeMap;
+use zkay_config::config::CFG;
+use zkay_crypto::params::CryptoParams;
 pub fn transform_ast(
     ast: Option<AST>,
 ) -> (

@@ -1,5 +1,3 @@
-use zkay_config::config::CFG;
-use zkay_crypto::params::CryptoParams;
 use crate::ast::{
     ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
     IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
@@ -7,6 +5,8 @@ use crate::ast::{
 use crate::homomorphism::Homomorphism;
 use crate::visitor::visitor::AstVisitor;
 use std::collections::{BTreeMap, BTreeSet};
+use zkay_config::config::CFG;
+use zkay_crypto::params::CryptoParams;
 // class UsedHomomorphismsVisitor(AstVisitor)
 pub struct UsedHomomorphismsVisitor;
 
