@@ -29,6 +29,27 @@ use zkay_utils::progress_printer::warn_print;
 // T = TypeVar('T')
 use zkay_derive::ASTKind;
 
+#[macro_export]
+macro_rules! struct_mut_ref {
+    ($struct_name: ident,$name: ident,$name_mut: ident,$name_type: ident) => {
+        impl $struct_name {
+            pub fn $name(&self) -> Option<&$name_type> {
+                if let Self::$name_type(v) = self {
+                    Some(v)
+                } else {
+                    None
+                }
+            }
+            pub fn $name_mut(&mut self) -> Option<&mut $name_type> {
+                if let Self::$name_type(v) = self {
+                    Some(v)
+                } else {
+                    None
+                }
+            }
+        }
+    };
+}
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
 }
@@ -55,7 +76,6 @@ pub fn is_instance<T: ASTInstanceOf>(var: &T, ast_type: ASTType) -> bool {
 pub fn is_instances<T: ASTInstanceOf>(var: &T, ast_types: Vec<ASTType>) -> bool {
     ast_types.iter().any(|t| t == &var.get_ast_type())
 }
-// #[mac
 // #[macro_export]
 // macro_rules! is_instance {
 //     ($var: expr,$typ:expr) => {
@@ -284,7 +304,19 @@ impl ASTInstanceOf for AST {
 impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
+
+struct_mut_ref!(AST, comment, comment_mut, Comment);
 impl AST {
+    pub fn identifier(&self) -> Option<Identifier> {
+        if let Self::Identifier(idf) = self {
+            Some(idf.clone())
+        } else {
+            None
+        }
+    }
+    pub fn identifier_mut(&mut self) -> Option<&mut Identifier> {
+        None
+    }
     pub fn statement(&self) -> Option<Statement> {
         None
     }
@@ -309,9 +341,7 @@ impl AST {
     pub fn type_name(&self) -> Option<TypeName> {
         None
     }
-    pub fn identifier(&self) -> Option<Identifier> {
-        None
-    }
+
     pub fn me_expr(&self) -> Option<MeExpr> {
         None
     }
@@ -467,6 +497,41 @@ impl Immutable for AST {
     }
 }
 
+pub trait ASTBaseRef {
+    fn ast_base_instance(&self)->&ASTBase;
+}
+pub trait ASTBaseProperty {
+    fn parent(&self)->&Option<Box<AST>>;
+    fn namespace(&self)->&Option<Vec<Identifier>>;
+    fn names(&self)->&BTreeMap<String, Identifier>;
+    fn line(&self)->&i32;
+    fn column(&self)->&i32;
+    fn modified_values(&self)->&BTreeSet<InstanceTarget>;
+    fn read_values(&self)->&BTreeSet<InstanceTarget>;
+}
+impl<T:ASTBaseRef> ASTBaseProperty for T{
+    fn parent(&self)->&Option<Box<AST>>{
+        &self.ast_base_instance().parent
+    }
+    fn namespace(&self)->&Option<Vec<Identifier>>{
+        &self.ast_base_instance().namespace
+    }
+    fn names(&self)->&BTreeMap<String, Identifier>{
+        &self.ast_base_instance().names
+    }
+    fn line(&self)->&i32{
+        &self.ast_base_instance().line
+    }
+    fn column(&self)->&i32{
+        &self.ast_base_instance().column
+    }
+    fn modified_values(&self)->&BTreeSet<InstanceTarget>{
+        &self.ast_base_instance().modified_values
+    }
+    fn read_values(&self)->&BTreeSet<InstanceTarget>{
+        &self.ast_base_instance().read_values
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ASTBase {
     pub parent: Option<Box<AST>>,
@@ -493,7 +558,17 @@ impl ASTBase {
         &expected == &self
     }
 }
-
+pub trait IdentifierBaseRef{
+    fn identifier_base_ref(&self)->&IdentifierBase;
+}
+pub trait IdentifierBaseProperty{
+    fn name(&self)->&String;
+}
+impl<T:IdentifierBaseRef> IdentifierBaseProperty for T{
+    fn name(&self)->&String{
+        &self.identifier_base_ref().name
+    }
+}
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierBase {
     pub ast_base: ASTBase,
@@ -588,6 +663,17 @@ impl ASTInstanceOf for Comment {
             Comment::Comment(ast) => ast.get_ast_type(),
             Comment::BlankLine(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait CommentBaseRef{
+    fn comment_base_ref(&self)->&CommentBase;
+}
+pub trait CommentBaseProperty{
+    fn text(&self)->&String;
+}
+impl<T:CommentBaseRef> CommentBaseProperty for T{
+    fn text(&self)->&String{
+        &self.comment_base_ref().text
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -1068,6 +1154,25 @@ impl Expression {
     }
 }
 
+pub trait ExpressionBaseRef{
+    fn expression_base_ref(&self)->&ExpressionBase;
+}
+pub trait ExpressionBaseProperty {
+    fn annotated_type(&self)->& Option<AnnotatedTypeName>;
+    fn statement(&self)->& Option<Box<Statement>>;
+    fn evaluate_privately(&self)->& bool;
+}
+impl<T:ExpressionBaseRef> ExpressionBaseProperty  for T{
+    fn annotated_type(&self)->& Option<AnnotatedTypeName>{
+        &self.expression_base_ref().annotated_type
+    }
+    fn statement(&self)->& Option<Box<Statement>>{
+        &self.expression_base_ref().statement
+    }
+    fn evaluate_privately(&self)->&bool{
+        &self.expression_base_ref().evaluate_privately
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionBase {
     pub ast_base: ASTBase,
@@ -1627,6 +1732,29 @@ impl ASTInstanceOf for FunctionCallExpr {
             FunctionCallExpr::FunctionCallExpr(ast) => ast.get_ast_type(),
             FunctionCallExpr::NewExpr(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait FunctionCallExprBaseRef{
+    fn function_call_expr_base_ref(&self)->&FunctionCallExprBase;
+}
+pub trait FunctionCallExprBaseProperty {
+    fn func(&self)->& Box<Expression>;
+    fn args(&self)->& Vec<Expression>;
+    fn sec_start_offset(&self)->& Option<i32>;
+    fn public_key(&self)->& Option<Box<HybridArgumentIdf>>;
+}
+impl<T:FunctionCallExprBaseRef> FunctionCallExprBaseProperty for T {
+    fn func(&self)->& Box<Expression>{
+        &self.function_call_expr_base_ref().func
+    }
+    fn args(&self)->& Vec<Expression>{
+        &self.function_call_expr_base_ref().args
+    }
+    fn sec_start_offset(&self)->& Option<i32>{
+        &self.function_call_expr_base_ref().sec_start_offset
+    }
+    fn public_key(&self)->& Option<Box<HybridArgumentIdf>>{
+        &self.function_call_expr_base_ref().public_key
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
