@@ -498,38 +498,38 @@ impl Immutable for AST {
 }
 
 pub trait ASTBaseRef {
-    fn ast_base_instance(&self)->&ASTBase;
+    fn ast_base_ref(&self) -> &ASTBase;
 }
 pub trait ASTBaseProperty {
-    fn parent(&self)->&Option<Box<AST>>;
-    fn namespace(&self)->&Option<Vec<Identifier>>;
-    fn names(&self)->&BTreeMap<String, Identifier>;
-    fn line(&self)->&i32;
-    fn column(&self)->&i32;
-    fn modified_values(&self)->&BTreeSet<InstanceTarget>;
-    fn read_values(&self)->&BTreeSet<InstanceTarget>;
+    fn parent(&self) -> &Option<Box<AST>>;
+    fn namespace(&self) -> &Option<Vec<Identifier>>;
+    fn names(&self) -> &BTreeMap<String, Identifier>;
+    fn line(&self) -> i32;
+    fn column(&self) -> i32;
+    fn modified_values(&self) -> &BTreeSet<InstanceTarget>;
+    fn read_values(&self) -> &BTreeSet<InstanceTarget>;
 }
-impl<T:ASTBaseRef> ASTBaseProperty for T{
-    fn parent(&self)->&Option<Box<AST>>{
-        &self.ast_base_instance().parent
+impl<T: ASTBaseRef> ASTBaseProperty for T {
+    fn parent(&self) -> &Option<Box<AST>> {
+        &self.ast_base_ref().parent
     }
-    fn namespace(&self)->&Option<Vec<Identifier>>{
-        &self.ast_base_instance().namespace
+    fn namespace(&self) -> &Option<Vec<Identifier>> {
+        &self.ast_base_ref().namespace
     }
-    fn names(&self)->&BTreeMap<String, Identifier>{
-        &self.ast_base_instance().names
+    fn names(&self) -> &BTreeMap<String, Identifier> {
+        &self.ast_base_ref().names
     }
-    fn line(&self)->&i32{
-        &self.ast_base_instance().line
+    fn line(&self) -> i32 {
+        self.ast_base_ref().line
     }
-    fn column(&self)->&i32{
-        &self.ast_base_instance().column
+    fn column(&self) -> i32 {
+        self.ast_base_ref().column
     }
-    fn modified_values(&self)->&BTreeSet<InstanceTarget>{
-        &self.ast_base_instance().modified_values
+    fn modified_values(&self) -> &BTreeSet<InstanceTarget> {
+        &self.ast_base_ref().modified_values
     }
-    fn read_values(&self)->&BTreeSet<InstanceTarget>{
-        &self.ast_base_instance().read_values
+    fn read_values(&self) -> &BTreeSet<InstanceTarget> {
+        &self.ast_base_ref().read_values
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -558,15 +558,20 @@ impl ASTBase {
         &expected == &self
     }
 }
-pub trait IdentifierBaseRef{
-    fn identifier_base_ref(&self)->&IdentifierBase;
+pub trait IdentifierBaseRef: ASTBaseRef {
+    fn identifier_base_ref(&self) -> &IdentifierBase;
 }
-pub trait IdentifierBaseProperty{
-    fn name(&self)->&String;
+pub trait IdentifierBaseProperty {
+    fn name(&self) -> &String;
 }
-impl<T:IdentifierBaseRef> IdentifierBaseProperty for T{
-    fn name(&self)->&String{
+impl<T: IdentifierBaseRef> IdentifierBaseProperty for T {
+    fn name(&self) -> &String {
         &self.identifier_base_ref().name
+    }
+}
+impl<T: IdentifierBaseRef> ASTBaseRef for T {
+    fn ast_base_ref(&self) -> &ASTBase {
+        &self.identifier_base_ref().ast_base
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -665,17 +670,22 @@ impl ASTInstanceOf for Comment {
         }
     }
 }
-pub trait CommentBaseRef{
-    fn comment_base_ref(&self)->&CommentBase;
+pub trait CommentBaseRef: ASTBaseRef {
+    fn comment_base_ref(&self) -> &CommentBase;
 }
-pub trait CommentBaseProperty{
-    fn text(&self)->&String;
+pub trait CommentBaseProperty {
+    fn text(&self) -> &String;
 }
-impl<T:CommentBaseRef> CommentBaseProperty for T{
-    fn text(&self)->&String{
+impl<T: CommentBaseRef> CommentBaseProperty for T {
+    fn text(&self) -> &String {
         &self.comment_base_ref().text
     }
 }
+// impl<T: CommentBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.comment_base_ref().ast_base
+//     }
+// }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CommentBase {
     pub ast_base: ASTBase,
@@ -1154,25 +1164,30 @@ impl Expression {
     }
 }
 
-pub trait ExpressionBaseRef{
-    fn expression_base_ref(&self)->&ExpressionBase;
+pub trait ExpressionBaseRef: ASTBaseRef {
+    fn expression_base_ref(&self) -> &ExpressionBase;
 }
 pub trait ExpressionBaseProperty {
-    fn annotated_type(&self)->& Option<AnnotatedTypeName>;
-    fn statement(&self)->& Option<Box<Statement>>;
-    fn evaluate_privately(&self)->& bool;
+    fn annotated_type(&self) -> &Option<AnnotatedTypeName>;
+    fn statement(&self) -> &Option<Box<Statement>>;
+    fn evaluate_privately(&self) -> &bool;
 }
-impl<T:ExpressionBaseRef> ExpressionBaseProperty  for T{
-    fn annotated_type(&self)->& Option<AnnotatedTypeName>{
+impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
+    fn annotated_type(&self) -> &Option<AnnotatedTypeName> {
         &self.expression_base_ref().annotated_type
     }
-    fn statement(&self)->& Option<Box<Statement>>{
+    fn statement(&self) -> &Option<Box<Statement>> {
         &self.expression_base_ref().statement
     }
-    fn evaluate_privately(&self)->&bool{
+    fn evaluate_privately(&self) -> &bool {
         &self.expression_base_ref().evaluate_privately
     }
 }
+// impl<T: ExpressionBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.expression_base_ref().ast_base
+//     }
+// }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionBase {
     pub ast_base: ASTBase,
@@ -1386,7 +1401,7 @@ lazy_static! {
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct BuiltinFunction {
-    pub expression_base: Box<ExpressionBase>,
+    pub expression_base: ExpressionBase,
     pub op: String,
     pub is_private: bool,
     pub homomorphism: String,
@@ -1407,7 +1422,7 @@ impl BuiltinFunction {
             "{op} is not a known built-in function"
         );
         Self {
-            expression_base: Box::new(ExpressionBase::new()),
+            expression_base: ExpressionBase::new(),
             op,
             is_private: false,
             homomorphism: String::from("NON_HOMOMORPHIC"),
@@ -1734,32 +1749,32 @@ impl ASTInstanceOf for FunctionCallExpr {
         }
     }
 }
-pub trait FunctionCallExprBaseRef{
-    fn function_call_expr_base_ref(&self)->&FunctionCallExprBase;
+pub trait FunctionCallExprBaseRef: ExpressionBaseRef {
+    fn function_call_expr_base_ref(&self) -> &FunctionCallExprBase;
 }
 pub trait FunctionCallExprBaseProperty {
-    fn func(&self)->& Box<Expression>;
-    fn args(&self)->& Vec<Expression>;
-    fn sec_start_offset(&self)->& Option<i32>;
-    fn public_key(&self)->& Option<Box<HybridArgumentIdf>>;
+    fn func(&self) -> &Box<Expression>;
+    fn args(&self) -> &Vec<Expression>;
+    fn sec_start_offset(&self) -> &Option<i32>;
+    fn public_key(&self) -> &Option<Box<HybridArgumentIdf>>;
 }
-impl<T:FunctionCallExprBaseRef> FunctionCallExprBaseProperty for T {
-    fn func(&self)->& Box<Expression>{
+impl<T: FunctionCallExprBaseRef> FunctionCallExprBaseProperty for T {
+    fn func(&self) -> &Box<Expression> {
         &self.function_call_expr_base_ref().func
     }
-    fn args(&self)->& Vec<Expression>{
+    fn args(&self) -> &Vec<Expression> {
         &self.function_call_expr_base_ref().args
     }
-    fn sec_start_offset(&self)->& Option<i32>{
+    fn sec_start_offset(&self) -> &Option<i32> {
         &self.function_call_expr_base_ref().sec_start_offset
     }
-    fn public_key(&self)->& Option<Box<HybridArgumentIdf>>{
+    fn public_key(&self) -> &Option<Box<HybridArgumentIdf>> {
         &self.function_call_expr_base_ref().public_key
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct FunctionCallExprBase {
-    pub expression_base: Box<ExpressionBase>,
+    pub expression_base: ExpressionBase,
     pub func: Box<Expression>,
     pub args: Vec<Expression>,
     pub sec_start_offset: Option<i32>,
@@ -1777,7 +1792,7 @@ impl IntoAST for FunctionCallExprBase {
 impl FunctionCallExprBase {
     pub fn new(func: Expression, args: Vec<Expression>, sec_start_offset: Option<i32>) -> Self {
         Self {
-            expression_base: Box::new(ExpressionBase::new()),
+            expression_base: ExpressionBase::new(),
             func: Box::new(func),
             args,
             sec_start_offset,
@@ -1890,7 +1905,7 @@ impl ASTChildren for NewExpr {
 
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PrimitiveCastExpr {
-    pub expression_base: Box<ExpressionBase>,
+    pub expression_base: ExpressionBase,
     pub elem_type: Box<TypeName>,
     pub expr: Box<Expression>,
     pub is_implicit: bool,
@@ -1904,7 +1919,7 @@ impl IntoAST for PrimitiveCastExpr {
 impl PrimitiveCastExpr {
     pub fn new(elem_type: TypeName, expr: Expression, is_implicit: bool) -> Self {
         Self {
-            expression_base: Box::new(ExpressionBase::new()),
+            expression_base: ExpressionBase::new(),
             elem_type: Box::new(elem_type),
             expr: Box::new(expr),
             is_implicit,
@@ -1970,6 +1985,10 @@ impl ASTInstanceOf for LiteralExpr {
         }
     }
 }
+pub trait LiteralExprBaseRef: ExpressionBaseRef {
+    fn literal_expr_base_ref(&self) -> &LiteralExprBase;
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LiteralExprBase {
     pub expression_base: ExpressionBase,
@@ -2169,9 +2188,20 @@ impl ASTInstanceOf for ArrayLiteralExpr {
         }
     }
 }
+pub trait ArrayLiteralExprBaseRef: LiteralExprBaseRef {
+    fn array_literal_expr_base_ref(&self) -> &ArrayLiteralExprBase;
+}
+pub trait ArrayLiteralExprBaseProperty {
+    fn values(&self) -> &Vec<Expression>;
+}
+impl<T: ArrayLiteralExprBaseRef> ArrayLiteralExprBaseProperty for T {
+    fn values(&self) -> &Vec<Expression> {
+        &self.array_literal_expr_base_ref().values
+    }
+}
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ArrayLiteralExprBase {
-    pub literal_expr_base: Box<LiteralExprBase>,
+    pub literal_expr_base: LiteralExprBase,
     pub values: Vec<Expression>,
 }
 impl IntoAST for ArrayLiteralExprBase {
@@ -2185,7 +2215,7 @@ impl IntoAST for ArrayLiteralExprBase {
 impl ArrayLiteralExprBase {
     pub fn new(values: Vec<Expression>) -> Self {
         Self {
-            literal_expr_base: Box::new(LiteralExprBase::new()),
+            literal_expr_base: LiteralExprBase::new(),
             values,
         }
     }
@@ -2363,6 +2393,9 @@ impl TupleOrLocationExpr {
             }
         }
     }
+}
+pub trait TupleOrLocationExprBaseRef: ExpressionBaseRef {
+    fn TupleOrLocationExprBaseRef(&self) -> &TupleOrLocationExprBase;
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TupleOrLocationExprBase {
@@ -2668,6 +2701,17 @@ impl LocationExpr {
     }
     pub fn target(&self) -> Option<Box<AST>> {
         None
+    }
+}
+pub trait LocationExprBaseRef: TupleOrLocationExprBaseRef {
+    fn location_expr_base_ref(&self) -> &LocationExprBase;
+}
+pub trait LocationExprBaseProperty {
+    fn target(&self) -> &Option<Box<AST>>;
+}
+impl<T: LocationExprBaseRef> LocationExprBaseProperty for T {
+    fn target(&self) -> &Option<Box<AST>> {
+        &self.location_expr_base_ref().target
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -3058,6 +3102,25 @@ impl ASTInstanceOf for ReclassifyExpr {
             ReclassifyExpr::RehomExpr(ast) => ast.get_ast_type(),
             ReclassifyExpr::EncryptionExpression(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait ReclassifyExprBaseRef: ExpressionBaseRef {
+    fn reclassify_expr_base_ref(&self) -> &ReclassifyExprBase;
+}
+pub trait ReclassifyExprBaseProperty {
+    fn expr(&self) -> &Box<Expression>;
+    fn privacy(&self) -> &Box<Expression>;
+    fn homomorphism(&self) -> &Option<String>;
+}
+impl<T: ReclassifyExprBaseRef> ReclassifyExprBaseProperty for T {
+    fn expr(&self) -> &Box<Expression> {
+        &self.reclassify_expr_base_ref().expr
+    }
+    fn privacy(&self) -> &Box<Expression> {
+        &self.reclassify_expr_base_ref().privacy
+    }
+    fn homomorphism(&self) -> &Option<String> {
+        &self.reclassify_expr_base_ref().homomorphism
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -3664,6 +3727,35 @@ impl ASTChildren for Statement {
         }
     }
 }
+pub trait StatementBaseRef: ASTBaseRef {
+    fn statement_base_ref(&self) -> &StatementBase;
+}
+pub trait StatementBaseProperty {
+    fn before_analysis(&self) -> &Option<PartitionState<AST>>;
+    fn after_analysis(&self) -> &Option<PartitionState<AST>>;
+    fn function(&self) -> &Option<Box<ConstructorOrFunctionDefinition>>;
+    fn pre_statements(&self) -> &Vec<AST>;
+}
+impl<T: StatementBaseRef> StatementBaseProperty for T {
+    fn before_analysis(&self) -> &Option<PartitionState<AST>> {
+        &self.statement_base_ref().before_analysis
+    }
+    fn after_analysis(&self) -> &Option<PartitionState<AST>> {
+        &self.statement_base_ref().after_analysis
+    }
+    fn function(&self) -> &Option<Box<ConstructorOrFunctionDefinition>> {
+        &self.statement_base_ref().function
+    }
+    fn pre_statements(&self) -> &Vec<AST> {
+        &self.statement_base_ref().pre_statements
+    }
+}
+// impl<T: StatementBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.statement_base_ref().ast_base
+//     }
+// }
+
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: ASTBase,
@@ -3712,6 +3804,14 @@ impl ASTInstanceOf for CircuitDirectiveStatement {
             CircuitDirectiveStatement::CircuitComputationStatement(ast) => ast.get_ast_type(),
             CircuitDirectiveStatement::EnterPrivateKeyStatement(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait CircuitDirectiveStatementBaseRef: StatementBaseRef {
+    fn circuit_directive_statement_base_ref(&self) -> &CircuitDirectiveStatementBase;
+}
+impl<T: CircuitDirectiveStatementBaseRef> StatementBaseRef for T {
+    fn statement_base_ref(&self) -> &StatementBase {
+        &self.circuit_directive_statement_base_ref().statement_base
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -4048,6 +4148,9 @@ impl ASTInstanceOf for SimpleStatement {
         }
     }
 }
+pub trait SimpleStatementBaseRef: StatementBaseRef {
+    fn simple_statement_base_ref(&self) -> &SimpleStatementBase;
+}
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SimpleStatementBase {
     pub statement_base: StatementBase,
@@ -4171,6 +4274,25 @@ impl ASTInstanceOf for AssignmentStatement {
             AssignmentStatement::AssignmentStatement(ast) => ast.get_ast_type(),
             AssignmentStatement::CircuitInputStatement(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait AssignmentStatementBaseRef: SimpleStatementBaseRef {
+    fn assignment_statement_base_ref(&self) -> &AssignmentStatementBase;
+}
+pub trait AssignmentStatementBaseProperty {
+    fn lhs(&self) -> &Option<Box<AST>>;
+    fn rhs(&self) -> &Option<Expression>;
+    fn op(&self) -> &String;
+}
+impl<T: AssignmentStatementBaseRef> AssignmentStatementBaseProperty for T {
+    fn lhs(&self) -> &Option<Box<AST>> {
+        &self.assignment_statement_base_ref().lhs
+    }
+    fn rhs(&self) -> &Option<Expression> {
+        &self.assignment_statement_base_ref().rhs
+    }
+    fn op(&self) -> &String {
+        &self.assignment_statement_base_ref().op
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -4333,7 +4455,21 @@ impl StatementList {
         false
     }
 }
-
+pub trait StatementListBaseRef: StatementBaseRef {
+    fn statement_list_base_ref(&self) -> &StatementListBase;
+}
+pub trait StatementListBaseProperty {
+    fn statements(&self) -> &Vec<AST>;
+    fn excluded_from_simulation(&self) -> bool;
+}
+impl<T: StatementListBaseRef> StatementListBaseProperty for T {
+    fn statements(&self) -> &Vec<AST> {
+        &self.statement_list_base_ref().statements
+    }
+    fn excluded_from_simulation(&self) -> bool {
+        self.statement_list_base_ref().excluded_from_simulation
+    }
+}
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementListBase {
     pub statement_base: StatementBase,
@@ -4681,6 +4817,14 @@ impl TypeName {
         None
     }
 }
+pub trait TypeNameBaseRef: ASTBaseRef {
+    fn type_name_base_ref(&self) -> &TypeNameBase;
+}
+// impl<T: TypeNameBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.type_name_base_ref().ast_base
+//     }
+// }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct TypeNameBase {
     pub ast_base: ASTBase,
@@ -4719,6 +4863,17 @@ impl ASTInstanceOf for ElementaryTypeName {
             ElementaryTypeName::BoolTypeName(ast) => ast.get_ast_type(),
             ElementaryTypeName::BooleanLiteralType(ast) => ast.get_ast_type(),
         }
+    }
+}
+pub trait ElementaryTypeNameBaseRef: TypeNameBaseRef {
+    fn elementary_type_name_base_ref(&self) -> &ElementaryTypeNameBase;
+}
+pub trait ElementaryTypeNameBaseProperty {
+    fn name(&self) -> &String;
+}
+impl<T: ElementaryTypeNameBaseRef> ElementaryTypeNameBaseProperty for T {
+    fn name(&self) -> &String {
+        &self.elementary_type_name_base_ref().name
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -4875,6 +5030,29 @@ impl NumberTypeName {
         // };
         // lo <= value && value < hi
         true
+    }
+}
+pub trait NumberTypeNameBaseRef: ElementaryTypeNameBaseRef {
+    fn number_type_name_base_ref(&self) -> &NumberTypeNameBase;
+}
+pub trait NumberTypeNameBaseProperty {
+    fn prefix(&self) -> &String;
+    fn signed(&self) -> bool;
+    fn bitwidth(&self) -> Option<i32>;
+    fn _size_in_bits(&self) -> i32;
+}
+impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
+    fn prefix(&self) -> &String {
+        &self.number_type_name_base_ref().prefix
+    }
+    fn signed(&self) -> bool {
+        self.number_type_name_base_ref().signed
+    }
+    fn bitwidth(&self) -> Option<i32> {
+        self.number_type_name_base_ref().bitwidth
+    }
+    fn _size_in_bits(&self) -> i32 {
+        self.number_type_name_base_ref()._size_in_bits
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -5233,6 +5411,21 @@ impl ASTInstanceOf for UserDefinedTypeName {
         }
     }
 }
+pub trait UserDefinedTypeNameBaseRef: TypeNameBaseRef {
+    fn user_defined_type_name_base_ref(&self) -> &UserDefinedTypeNameBase;
+}
+pub trait UserDefinedTypeNameBaseProperty {
+    fn names(&self) -> &Vec<Identifier>;
+    fn target(&self) -> &Option<Box<AST>>;
+}
+impl<T: UserDefinedTypeNameBaseRef> UserDefinedTypeNameBaseProperty for T {
+    fn names(&self) -> &Vec<Identifier> {
+        &self.user_defined_type_name_base_ref().names
+    }
+    fn target(&self) -> &Option<Box<AST>> {
+        &self.user_defined_type_name_base_ref().target
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct UserDefinedTypeNameBase {
     pub type_name_base: TypeNameBase,
@@ -5534,6 +5727,21 @@ impl ASTChildren for ArrayBase {
         if let Some(ExprUnion::Expression(expr)) = &self.expr {
             cb.add_child(AST::Expression(expr.clone()));
         }
+    }
+}
+pub trait ArrayBaseRef: TypeNameBaseRef {
+    fn array_base_ref(&self) -> &ArrayBase;
+}
+pub trait ArrayBaseProperty {
+    fn value_type(&self) -> &AnnotatedTypeName;
+    fn expr(&self) -> &Option<ExprUnion>;
+}
+impl<T: ArrayBaseRef> ArrayBaseProperty for T {
+    fn value_type(&self) -> &AnnotatedTypeName {
+        &self.array_base_ref().value_type
+    }
+    fn expr(&self) -> &Option<ExprUnion> {
+        &self.array_base_ref().expr
     }
 }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -5910,6 +6118,14 @@ impl ASTChildren for FunctionTypeName {
         });
     }
 }
+pub trait AnnotatedTypeNameRef {
+    fn annotated_type_name_ref(&self) -> &AnnotatedTypeName;
+}
+// impl<T: AnnotatedTypeNameRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.annotated_type_name_ref().ast_base
+//     }
+// }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
@@ -6171,6 +6387,34 @@ impl ASTInstanceOf for IdentifierDeclaration {
         }
     }
 }
+pub trait IdentifierDeclarationBaseRef: ASTBaseRef {
+    fn identifier_declaration_base_ref(&self) -> &IdentifierDeclarationBase;
+}
+pub trait IdentifierDeclarationBaseProperty {
+    fn keywords(&self) -> &Vec<String>;
+    fn annotated_type(&self) -> &Box<AnnotatedTypeName>;
+    fn idf(&self) -> &Box<Identifier>;
+    fn storage_location(&self) -> &Option<String>;
+}
+impl<T: IdentifierDeclarationBaseRef> IdentifierDeclarationBaseProperty for T {
+    fn keywords(&self) -> &Vec<String> {
+        &self.identifier_declaration_base_ref().keywords
+    }
+    fn annotated_type(&self) -> &Box<AnnotatedTypeName> {
+        &self.identifier_declaration_base_ref().annotated_type
+    }
+    fn idf(&self) -> &Box<Identifier> {
+        &self.identifier_declaration_base_ref().idf
+    }
+    fn storage_location(&self) -> &Option<String> {
+        &self.identifier_declaration_base_ref().storage_location
+    }
+}
+// impl<T: IdentifierDeclarationBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.identifier_declaration_base_ref().ast_base
+//     }
+// }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct IdentifierDeclarationBase {
     pub ast_base: ASTBase,
@@ -6350,6 +6594,22 @@ impl ASTInstanceOf for NamespaceDefinition {
         }
     }
 }
+pub trait NamespaceDefinitionBaseRef: ASTBaseRef {
+    fn namespace_definition_base_ref(&self) -> &NamespaceDefinitionBase;
+}
+pub trait NamespaceDefinitionBaseProperty {
+    fn idf(&self) -> &Identifier;
+}
+impl<T: NamespaceDefinitionBaseRef> NamespaceDefinitionBaseProperty for T {
+    fn idf(&self) -> &Identifier {
+        &self.namespace_definition_base_ref().idf
+    }
+}
+// impl<T: NamespaceDefinitionBaseRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.namespace_definition_base_ref().ast_base
+//     }
+// }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NamespaceDefinitionBase {
     pub ast_base: ASTBase,
@@ -6651,7 +6911,14 @@ impl ASTChildren for StateVariableDeclaration {
         }
     }
 }
-
+pub trait EnumValueRef {
+    fn enum_value_ref(&self) -> &EnumValue;
+}
+// impl<T: EnumValueRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.enum_value_ref().ast_base
+//     }
+// }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
     pub ast_base: ASTBase,
@@ -6831,6 +7098,14 @@ impl ASTChildren for ContractDefinition {
             });
     }
 }
+pub trait SourceUnitRef {
+    fn source_unit_ref(&self) -> &SourceUnit;
+}
+// impl<T: SourceUnitRef> ASTBaseRef for T {
+//     fn ast_base_ref(&self) -> &ASTBase{
+//         &self.source_unit_ref().ast_base
+//     }
+// }
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
