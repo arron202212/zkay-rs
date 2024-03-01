@@ -13,3 +13,9 @@ rust-version.workspace = true
 [lib]
 proc-macro = true
 [dependencies]
+zkay-derive-core={workspace=true}
+syn={workspace=true}
+proc-macro2={workspace=true}
+convert_case={workspace=true}
+quote={ workspace = true }
+heck={ workspace = true }
