@@ -30,6 +30,7 @@ impl ASTInstanceOf for {} {{
     }
     panic!("no ident found")
 }
+
 //                         r#"
 // impl {} for {} {{
 //     fn ast_base_ref(&self) -> &ASTBase2{{
@@ -39,7 +40,7 @@ impl ASTInstanceOf for {} {{
 //                     "#,
 
 struct Args {
-    vars: Set<Ident>,
+    vars: Vec<Ident>,
 }
 impl Parse for Args {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -49,6 +50,46 @@ impl Parse for Args {
         })
     }
 }
+#[proc_macro_attribute]
+pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args=attr.clone() ;
+   let mut args = parse_macro_input!(args as Args);
+    let mut struct_name =String::new();
+    let items=item.to_string();
+     let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    struct_name= it.next().unwrap().to_string();
+                    break
+                }
+            }
+            _ => {}
+        }
+    }
+    if struct_name.is_empty(){
+     panic!("no ident found")
+    }
+
+    let mut at = args.vars.iter();
+    let mut impls=items + "\n";
+    let mut struct_vairent=String::from("self");
+    while let Some(base_struct_name)= at.next(){
+        let base_struct_name = base_struct_name.to_string();
+        let fn_name=base_struct_name.to_snake_case();
+            struct_vairent+=".";   
+            struct_vairent+=&fn_name;   
+            
+            let s=format!("impl {}Ref for {} {{
+        fn {}_ref(&self)->&{}{{
+        &{} }}
+    }}\n",base_struct_name,struct_name,fn_name,base_struct_name,struct_vairent);
+        impls+=&s;
+    }
+    impls.parse().unwrap()
+}
+
 #[proc_macro_attribute]
 pub fn impl_trait(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args=attr.clone() ;

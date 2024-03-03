@@ -28,29 +28,39 @@ use zkay_crypto::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
 // T = TypeVar('T')
 use strum_macros::{EnumIs, EnumTryAs};
-use zkay_derive::ASTKind;
-
+use zkay_derive::{ASTKind,impl_trait};
 #[macro_export]
-macro_rules! struct_mut_ref {
-    ($struct_name: ident,$name: ident,$name_mut: ident,$name_type: ident) => {
-        impl $struct_name {
-            pub fn $name(&self) -> Option<&$name_type> {
-                if let Self::$name_type(v) = self {
-                    Some(v)
-                } else {
-                    None
-                }
-            }
-            pub fn $name_mut(&mut self) -> Option<&mut $name_type> {
-                if let Self::$name_type(v) = self {
-                    Some(v)
-                } else {
-                    None
-                }
+macro_rules! literal_expr_base_refs {
+    ($struct_name: ident) => {
+        impl LiteralExprBaseRef for $struct_name {
+             fn literal_expr_base_ref(&self) -> &LiteralExprBase {
+        &self.array_literal_expr_base.literal_expr_base
             }
         }
     };
 }
+macro_rules! expression_base_refs {
+    ($struct_name: ident) => {
+        impl ExpressionBaseRef for $struct_name {
+             fn expression_base_ref(&self) -> &ExpressionBase{
+        &self.array_literal_expr_base.literal_expr_base.expression_base
+            }
+        }
+    };
+}
+macro_rules! ast_base_refs {
+    ($struct_name: ident) => {
+        impl ASTBaseRef for $struct_name {
+             fn ast_base_ref(&self) -> &ASTBase{
+        &self.array_literal_expr_base.literal_expr_base.expression_base.ast_base
+            }
+        }
+    };
+}
+// expression_base_refs!(KeyLiteralExpr);
+// literal_expr_base_refs!(KeyLiteralExpr);
+// ast_base_refs!(KeyLiteralExpr);
+
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
 }
@@ -308,7 +318,6 @@ impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {}
 }
 
-struct_mut_ref!(AST, comment, comment_mut, Comment);
 impl AST {
     pub fn identifier(&self) -> Option<Identifier> {
         if let Self::Identifier(idf) = self {
@@ -1170,9 +1179,6 @@ impl Expression {
 }
 
 pub trait ExpressionBaseRef: ASTBaseRef {
-    fn ast_base_ref(&self) -> &ASTBase {
-        &self.expression_base_ref().ast_base
-    }
     fn expression_base_ref(&self) -> &ExpressionBase;
 }
 pub trait ExpressionBaseProperty {
@@ -1996,9 +2002,6 @@ impl ASTInstanceOf for LiteralExpr {
     }
 }
 pub trait LiteralExprBaseRef: ExpressionBaseRef {
-    fn expression_base_ref(&self) -> &ExpressionBase {
-        &self.literal_expr_base_ref().expression_base
-    }
     fn literal_expr_base_ref(&self) -> &LiteralExprBase;
 }
 
@@ -2203,12 +2206,15 @@ impl ASTInstanceOf for ArrayLiteralExpr {
         }
     }
 }
+// #[impl_trait(KeyLiteralExpr)]
 pub trait ArrayLiteralExprBaseRef: LiteralExprBaseRef {
-    fn literal_expr_base_ref(&self) -> &LiteralExprBase {
-        &self.array_literal_expr_base_ref().literal_expr_base
-    }
     fn array_literal_expr_base_ref(&self) -> &ArrayLiteralExprBase;
 }
+// impl LiteralExprBaseRef for KeyLiteralExpr{
+//     fn literal_expr_base_ref(&self) -> &LiteralExprBase {
+//         &self.literal_expr_base
+//     }
+// }
 pub trait ArrayLiteralExprBaseProperty {
     fn values(&self) -> &Vec<Expression>;
 }
