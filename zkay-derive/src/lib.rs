@@ -1,8 +1,13 @@
+use heck::ToSnakeCase;
 use proc_macro::{TokenStream, TokenTree};
 use proc_macro2::TokenStream as TokenStream2;
 use std::collections::HashSet as Set;
-use syn::{parse_macro_input, Data, DeriveInput, Error, Fields,Ident,Token,punctuated::Punctuated,parse::{Parse,ParseStream,Result}};
-use heck::ToSnakeCase;
+use syn::{
+    parse::{Parse, ParseStream, Result},
+    parse_macro_input,
+    punctuated::Punctuated,
+    Data, DeriveInput, Error, Fields, Ident, Token,
+};
 #[proc_macro_derive(ASTKind)]
 pub fn derive_get_ast_type(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter();
@@ -20,6 +25,33 @@ impl ASTInstanceOf for {} {{
 }}
                     "#,
                         struct_name, struct_name
+                    )
+                    .parse()
+                    .unwrap();
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("no ident found")
+}
+
+#[proc_macro_derive(ImplBaseTrait)]
+pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    let struct_name = it.next().unwrap().to_string();
+                    let fn_name = struct_name.to_snake_case();
+                    return format!(
+                        r#"
+impl {}Ref for {} {{
+        fn {}_ref(&self)->&{}{{
+        self }}
+    }}                    "#,
+                        struct_name, struct_name,fn_name,struct_name
                     )
                     .parse()
                     .unwrap();
@@ -52,76 +84,91 @@ impl Parse for Args {
 }
 #[proc_macro_attribute]
 pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args=attr.clone() ;
-   let mut args = parse_macro_input!(args as Args);
-    let mut struct_name =String::new();
-    let items=item.to_string();
-     let mut it = item.into_iter();
+    let args = attr.clone();
+    let mut args = parse_macro_input!(args as Args);
+    let mut struct_name = String::new();
+    let items = item.to_string();
+    let mut it = item.into_iter();
     while let Some(tt) = it.next() {
         match tt {
             TokenTree::Ident(id) => {
                 if id.to_string() == "struct" {
-                    struct_name= it.next().unwrap().to_string();
-                    break
+                    struct_name = it.next().unwrap().to_string();
+                    break;
                 }
             }
             _ => {}
         }
     }
-    if struct_name.is_empty(){
-     panic!("no ident found")
+    if struct_name.is_empty() {
+        panic!("no ident found")
     }
 
     let mut at = args.vars.iter();
-    let mut impls=items + "\n";
-    let mut struct_vairent=String::from("self");
-    while let Some(base_struct_name)= at.next(){
+    let mut impls = items + "\n";
+    let mut struct_vairent = String::from("self");
+    while let Some(base_struct_name) = at.next() {
         let base_struct_name = base_struct_name.to_string();
-        let fn_name=base_struct_name.to_snake_case();
-            struct_vairent+=".";   
-            struct_vairent+=&fn_name;   
-            
-            let s=format!("impl {}Ref for {} {{
+        let fn_name = base_struct_name.to_snake_case();
+        struct_vairent += ".";
+        struct_vairent += &fn_name;
+
+        let s = format!(
+            "impl {}Ref for {} {{
         fn {}_ref(&self)->&{}{{
         &{} }}
-    }}\n",base_struct_name,struct_name,fn_name,base_struct_name,struct_vairent);
-        impls+=&s;
+    }}\n",
+            base_struct_name, struct_name, fn_name, base_struct_name, struct_vairent
+        );
+        impls += &s;
     }
     impls.parse().unwrap()
 }
 
+
 #[proc_macro_attribute]
 pub fn impl_trait(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args=attr.clone() ;
-   let mut args = parse_macro_input!(args as Args);
-    let mut trait_name =String::new();
-    let items=item.to_string();
-     let mut it = item.into_iter();
+    let args = attr.clone();
+    let mut args = parse_macro_input!(args as Args);
+    let mut trait_name = String::new();
+    let items = item.to_string();
+    let mut it = item.into_iter();
     while let Some(tt) = it.next() {
         match tt {
             TokenTree::Ident(id) => {
                 if id.to_string() == "trait" {
-                    trait_name= it.next().unwrap().to_string();
-                    break
+                    trait_name = it.next().unwrap().to_string();
+                    break;
                 }
             }
             _ => {}
         }
     }
-    let fn_name=trait_name.to_snake_case();
-    let struct_ref=if trait_name.len()<3 {&trait_name}else{&trait_name[..trait_name.len()-3]};
-    let struct_vairent=if fn_name.len()<4 {&fn_name}else{&fn_name[..fn_name.len()-4]};
-       let mut at = args.vars.iter();
+    let fn_name = trait_name.to_snake_case();
+    let struct_ref = if trait_name.len() < 3 {
+        &trait_name
+    } else {
+        &trait_name[..trait_name.len() - 3]
+    };
+    let struct_vairent = if fn_name.len() < 4 {
+        &fn_name
+    } else {
+        &fn_name[..fn_name.len() - 4]
+    };
+    let mut at = args.vars.iter();
     // let mut at = at.trim_matches('"');
     // let mut at = at.split(",");
-    let mut impls=items + "\n";
-    while let Some(struct_name)= at.next(){
+    let mut impls = items + "\n";
+    while let Some(struct_name) = at.next() {
         let struct_name = struct_name.to_string();
-            let s=format!("impl {} for {} {{
+        let s = format!(
+            "impl {} for {} {{
         fn {}(&self)->&{}{{
         &self.{} }}
-    }}\n",trait_name,struct_name,fn_name,struct_ref,struct_vairent);
-        impls+=&s;
+    }}\n",
+            trait_name, struct_name, fn_name, struct_ref, struct_vairent
+        );
+        impls += &s;
     }
     impls.parse().unwrap()
 }

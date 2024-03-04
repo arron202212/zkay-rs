@@ -9,7 +9,9 @@
 extern crate zkay_derive;
 // extern crate diff;
 
-use zkay_derive::{impl_trait,impl_traits};
+use zkay_derive::{impl_trait, impl_traits,ImplBaseTrait};
+
+#[derive(ImplBaseTrait)]
 pub struct ASTBase2 {
     a: i32,
 }
@@ -19,7 +21,7 @@ pub struct TestStruct2 {
 pub struct TestStruct3 {
     ast_base2: ASTBase2,
 }
-#[impl_trait(TestStruct2,TestStruct3)]
+#[impl_trait(TestStruct2, TestStruct3)]
 pub trait ASTBase2Ref {
     fn ast_base2_ref(&self) -> &ASTBase2;
 }
@@ -41,7 +43,7 @@ pub struct LiteralExprBase2 {
 pub struct ArrayLiteralExprBase2 {
     pub literal_expr_base2: LiteralExprBase2,
 }
-#[impl_traits(ArrayLiteralExprBase2,LiteralExprBase2,ExpressionBase2,ASTBase2)]
+#[impl_traits(ArrayLiteralExprBase2, LiteralExprBase2, ExpressionBase2, ASTBase2)]
 pub struct KeyLiteralExpr2 {
     pub array_literal_expr_base2: ArrayLiteralExprBase2,
 }
@@ -60,8 +62,18 @@ fn test_impl_trait() {
 #[test]
 fn test_impl_traits() {
     let x = KeyLiteralExpr2 {
-     array_literal_expr_base2: ArrayLiteralExprBase2{literal_expr_base2:LiteralExprBase2{expression_base2: ExpressionBase2{ast_base2: ASTBase2 { a: 2 }}}},
+        array_literal_expr_base2: ArrayLiteralExprBase2 {
+            literal_expr_base2: LiteralExprBase2 {
+                expression_base2: ExpressionBase2 {
+                    ast_base2: ASTBase2 { a: 2 },
+                },
+            },
+        },
     };
     assert!(x.ast_base2_ref().a == 2);
-
+}
+#[test]
+fn test_impl_base_trait() {
+    let x =  ASTBase2 { a: 2 };
+    assert!(x.ast_base2_ref().a == 2);
 }
