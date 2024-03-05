@@ -126,7 +126,7 @@ impl ExpressionToStatementVisitor {
         }
         if parent.is_some() {
             ast.expression_base_mut().unwrap().statement =
-                parent.map(|p| Box::new(p.statement().unwrap()));
+                parent.map(|p| Box::new(p.try_as_statement().unwrap()));
         }
     }
 

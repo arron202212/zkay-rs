@@ -18,7 +18,7 @@ use zkay_ast::ast::{
     NamespaceDefinition, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
     PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement, StateVariableDeclaration,
     Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, WhileStatement, AST,
+    VariableDeclarationStatement, WhileStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
@@ -865,7 +865,7 @@ impl ZkayExpressionTransformer {
         if_true: bool,
         expr: &mut Expression,
     ) -> AST {
-        let prelen = expr.statement().unwrap().pre_statements().len();
+        let prelen = expr.statement().as_ref().unwrap().pre_statements().len();
 
         //Transform expression with guard condition in effect
         self.gen
@@ -875,7 +875,7 @@ impl ZkayExpressionTransformer {
         let ret = self.visit(Some(expr.to_ast()));
 
         //If new pre statements were added, they must be guarded using an if statement in the public solidity code
-        let new_pre_stmts = expr.statement().unwrap().pre_statements()[prelen..].to_vec();
+        let new_pre_stmts = expr.statement().as_ref().unwrap().pre_statements()[prelen..].to_vec();
         if !new_pre_stmts.is_empty() {
             let mut cond_expr: AST = guard_var.get_loc_expr(None).into();
             if let AST::Expression(Expression::LiteralExpr(LiteralExpr::BooleanLiteralExpr(
@@ -886,8 +886,7 @@ impl ZkayExpressionTransformer {
             } else if !if_true {
                 cond_expr = cond_expr.expr().unwrap().unop(String::from("!")).to_ast();
             }
-            expr.set_statement_pre_statements(
-                expr.statement().unwrap().pre_statements()[..prelen]
+            let ps=expr.statement().as_ref().unwrap().pre_statements()[..prelen]
                     .iter()
                     .cloned()
                     .chain([IfStatement::new(
@@ -896,8 +895,8 @@ impl ZkayExpressionTransformer {
                         None,
                     )
                     .to_ast()])
-                    .collect(),
-            );
+                    .collect();
+            expr.expression_base_mut_ref().statement.as_mut().unwrap().statement_base_mut_ref().unwrap().pre_statements=ps;
         }
         ret.unwrap()
     }
@@ -1098,7 +1097,7 @@ impl ZkayCircuitTransformer {
                     .privacy_annotation
                     .unwrap()
                     .privacy_annotation_label();
-                let mut s = ast.statement().unwrap();
+                let mut s = ast.statement().as_ref().unwrap().clone();
                 ast.set_public_key(Some(Box::new(
                     self.gen.as_mut().unwrap()._require_public_key_for_label_at(
                         Some(&mut s),

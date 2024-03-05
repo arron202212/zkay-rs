@@ -19,3 +19,4 @@ proc-macro2={workspace=true}
 convert_case={workspace=true}
 quote={ workspace = true }
 heck={ workspace = true }
+enum_dispatch={ workspace = true }

@@ -23,9 +23,12 @@ use crate::ast::{
     Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use serde::{Deserialize, Serialize};
-
+use enum_dispatch::enum_dispatch;
+use strum_macros::{EnumIs, EnumTryAs};
+use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
+#[enum_dispatch(IntoAST,ASTInstanceOf)]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum CircuitStatement {
@@ -38,34 +41,34 @@ pub enum CircuitStatement {
     CircSymmEncConstraint(CircSymmEncConstraint),
     CircEqConstraint(CircEqConstraint),
 }
-impl IntoAST for CircuitStatement {
-    fn into_ast(self) -> AST {
-        match self {
-            Self::CircComment(ast) => ast.to_ast(),
-            Self::CircIndentBlock(ast) => ast.to_ast(),
-            Self::CircCall(ast) => ast.to_ast(),
-            Self::CircVarDecl(ast) => ast.to_ast(),
-            Self::CircGuardModification(ast) => ast.to_ast(),
-            Self::CircEncConstraint(ast) => ast.to_ast(),
-            Self::CircSymmEncConstraint(ast) => ast.to_ast(),
-            Self::CircEqConstraint(ast) => ast.to_ast(),
-        }
-    }
-}
-impl ASTInstanceOf for CircuitStatement {
-    fn get_ast_type(&self) -> ASTType {
-        match self {
-            Self::CircComment(ast) => ast.get_ast_type(),
-            Self::CircIndentBlock(ast) => ast.get_ast_type(),
-            Self::CircCall(ast) => ast.get_ast_type(),
-            Self::CircVarDecl(ast) => ast.get_ast_type(),
-            Self::CircGuardModification(ast) => ast.get_ast_type(),
-            Self::CircEncConstraint(ast) => ast.get_ast_type(),
-            Self::CircSymmEncConstraint(ast) => ast.get_ast_type(),
-            Self::CircEqConstraint(ast) => ast.get_ast_type(),
-        }
-    }
-}
+// impl IntoAST for CircuitStatement {
+//     fn into_ast(self) -> AST {
+//         match self {
+//             Self::CircComment(ast) => ast.to_ast(),
+//             Self::CircIndentBlock(ast) => ast.to_ast(),
+//             Self::CircCall(ast) => ast.to_ast(),
+//             Self::CircVarDecl(ast) => ast.to_ast(),
+//             Self::CircGuardModification(ast) => ast.to_ast(),
+//             Self::CircEncConstraint(ast) => ast.to_ast(),
+//             Self::CircSymmEncConstraint(ast) => ast.to_ast(),
+//             Self::CircEqConstraint(ast) => ast.to_ast(),
+//         }
+//     }
+// }
+// impl ASTInstanceOf for CircuitStatement {
+//     fn get_ast_type(&self) -> ASTType {
+//         match self {
+//             Self::CircComment(ast) => ast.get_ast_type(),
+//             Self::CircIndentBlock(ast) => ast.get_ast_type(),
+//             Self::CircCall(ast) => ast.get_ast_type(),
+//             Self::CircVarDecl(ast) => ast.get_ast_type(),
+//             Self::CircGuardModification(ast) => ast.get_ast_type(),
+//             Self::CircEncConstraint(ast) => ast.get_ast_type(),
+//             Self::CircSymmEncConstraint(ast) => ast.get_ast_type(),
+//             Self::CircEqConstraint(ast) => ast.get_ast_type(),
+//         }
+//     }
+// }
 impl ASTChildren for CircuitStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }

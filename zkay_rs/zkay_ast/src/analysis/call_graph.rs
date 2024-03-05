@@ -1,6 +1,6 @@
 use crate::ast::{
     is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ForStatement,
-    FunctionCallExpr, IntoAST, LocationExpr, NamespaceDefinition, WhileStatement, AST,
+    FunctionCallExpr, IntoAST, LocationExpr, NamespaceDefinition, WhileStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -45,7 +45,7 @@ impl AstVisitor for DirectCalledFunctionDetector {
     }
 }
 impl DirectCalledFunctionDetector {
-    pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, mut ast: FunctionCallExpr) {
         if !is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&ast.func().unwrap(), ASTType::LocationExprBase));
             let fdef = *ast.func().unwrap().target().unwrap();
@@ -54,7 +54,7 @@ impl DirectCalledFunctionDetector {
                 .unwrap()
                 .is_function());
             if let Some(cofd) = fdef.constructor_or_function_definition() {
-                ast.statement()
+                ast.expression_base_mut_ref().statement.as_mut()
                     .unwrap()
                     .function()
                     .unwrap()

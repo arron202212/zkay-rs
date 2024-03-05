@@ -13,7 +13,7 @@ use zkay_ast::ast::{
     IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -367,7 +367,7 @@ where
         let name = if let Some(me_expr) = label.me_expr() {
             label.me_expr().unwrap().name.clone()
         } else {
-            label.identifier().unwrap().name()
+            label.try_as_identifier_ref().unwrap().name()
         };
         format!("glob_key_{}__{}", crypto_params.identifier_name(), name)
     }
@@ -925,7 +925,7 @@ where
                     locally_decrypted_idf.clone().unwrap(),
                     input_idf.identifier_base.name
                 ))));
-            let mut statement = *expr.statement().unwrap();
+            let mut statement = *expr.expression_base_mut_ref().statement.clone().unwrap();
             self._ensure_encryption(
                 &mut statement,
                 locally_decrypted_idf.clone().unwrap(),
@@ -1079,7 +1079,7 @@ where
                     .statement_base
                     .pre_statements
                     .iter()
-                    .map(|ps| ps.statement().unwrap())
+                    .map(|ps| ps.try_as_statement_ref().unwrap().clone())
                     .collect(),
             );
 
@@ -1497,7 +1497,7 @@ where
                 .user_config
                 .get_crypto_params(homomorphism);
             self._ensure_encryption(
-                &mut *(*expr).statement().unwrap(),
+                expr.expression_base_mut_ref().statement.as_mut().unwrap(),
                 priv_result_idf,
                 new_privacy,
                 crypto_params,
@@ -1724,7 +1724,7 @@ where
         if let Some(requested_dynamic_pks) =
             self._requested_dynamic_pks.get(&*stmt.as_ref().unwrap())
         {
-            if let Some(v) = requested_dynamic_pks.get(&privacy.identifier().unwrap()) {
+            if let Some(v) = requested_dynamic_pks.get(&privacy.try_as_identifier_ref().unwrap()) {
                 return v.clone();
             }
         } else {
@@ -1749,7 +1749,7 @@ where
             ._requested_dynamic_pks
             .get_mut(&*stmt.as_ref().unwrap())
         {
-            requested_dynamic_pks.insert(privacy.identifier().unwrap(), idf.clone());
+            requested_dynamic_pks.insert(privacy.clone().try_as_identifier().unwrap(), idf.clone());
         }
 
         idf.clone()

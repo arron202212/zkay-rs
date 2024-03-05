@@ -1,7 +1,7 @@
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
-    FunctionCallExpr, IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
+    FunctionCallExpr, IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -83,7 +83,7 @@ impl DirectHybridFunctionDetectionVisitor {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
             && ast.func().unwrap().is_private()
         {
-            ast.statement()
+            ast.expression_base_mut_ref().statement
                 .as_mut()
                 .unwrap()
                 .statement_base_mut()
@@ -93,7 +93,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .requires_verification = true;
         } else if ast.is_cast() && ast.evaluate_privately() {
-            ast.statement()
+            ast.expression_base_mut_ref().statement.as_mut()
                 .unwrap()
                 .as_mut()
                 .statement_base_mut()

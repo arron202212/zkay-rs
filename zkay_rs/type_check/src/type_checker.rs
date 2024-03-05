@@ -13,7 +13,7 @@ use zkay_ast::ast::{
     MemberAccessExpr, NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion,
     NumberTypeName, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
     RequireStatement, ReturnStatement, StateVariableDeclaration, TupleExpr, TupleType, TypeName,
-    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,
+    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -653,7 +653,7 @@ impl TypeCheckVisitor {
     //@staticmethod
     pub fn assign_location(target: &mut Expression, source: &mut Expression) {
         //set statement
-        target.set_statement(*source.statement().unwrap());
+        target.expression_base_mut_ref().statement=source.statement().clone();
 
         //set parents
         target.set_parent(source.parent().clone());
@@ -682,7 +682,7 @@ impl TypeCheckVisitor {
         assert!(expr.annotated_type().unwrap().type_name.is_primitive_type());
         let mut cast = PrimitiveCastExpr::new(t.clone(), expr.clone(), true);
         cast.expression_base.ast_base.parent = expr.parent();
-        cast.expression_base.statement = expr.statement();
+        cast.expression_base.statement = expr.statement().clone();
         cast.expression_base.ast_base.line = expr.line();
         cast.expression_base.ast_base.column = expr.column();
         cast.elem_type.set_parent(Some(Box::new(cast.to_ast())));

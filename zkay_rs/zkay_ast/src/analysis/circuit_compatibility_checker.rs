@@ -5,7 +5,7 @@ use crate::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, FunctionCallExpr, FunctionTypeName, IfStatement,
     IndexExpr, IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
-    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,
+    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -50,7 +50,7 @@ impl AstVisitor for DirectCanBePrivateDetector {
     }
 }
 impl DirectCanBePrivateDetector {
-    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
         if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
             if !ast.func().unwrap().is_private() {
                 let mut can_be_private = ast.func().unwrap().can_be_private();
@@ -61,7 +61,7 @@ impl DirectCanBePrivateDetector {
                         .type_name
                         .can_be_private();
                 }
-                ast.statement().unwrap().function().unwrap().can_be_private &= can_be_private;
+                ast.expression_base_mut_ref().statement.as_mut().unwrap().function().unwrap().can_be_private &= can_be_private;
                 //TODO to relax this for public expressions,
                 // public identifiers must use SSA remapped values (since the function is inlined)
             }
@@ -71,9 +71,9 @@ impl DirectCanBePrivateDetector {
         }
     }
 
-    pub fn visitLocationExpr(&mut self, ast: LocationExpr) {
+    pub fn visitLocationExpr(&mut self, mut ast: LocationExpr) {
         let t = &ast.annotated_type().unwrap().type_name;
-        ast.statement().unwrap().function().unwrap().can_be_private &= t.can_be_private();
+        ast.expression_base_mut_ref().statement.as_mut().unwrap().function().unwrap().can_be_private &= t.can_be_private();
         self.visit_children(&ast.to_ast());
     }
 
@@ -239,9 +239,9 @@ impl CircuitComplianceChecker {
         self.visit_children(&ast.to_ast());
     }
 
-    pub fn visitReclassifyExpr(&mut self, ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&mut self,mut  ast: ReclassifyExpr) {
         assert!(!self.inside_privif_stmt
-            || ast.statement().unwrap().before_analysis().unwrap().same_partition(
+            || ast.expression_base_mut_ref().statement.as_mut().unwrap().before_analysis().unwrap().same_partition(
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
                 &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
