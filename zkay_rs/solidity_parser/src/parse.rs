@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use antlr_rust::input_stream::InputStream;
 use antlr_rust::error_listener::ErrorListener;

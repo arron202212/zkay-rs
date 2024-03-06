@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // """
 // This module exposes functionality to compile and package zkay code
 // """
@@ -83,7 +91,7 @@ pub fn compile_zkay_file(
     // m = re.search(r'\/\/ Domain: (.*)', code)
     // if m:
     //     my_logging.data('domain', m.group(1))
-    let filename = std::path::Path::new(input_file_path)
+    let _filename = std::path::Path::new(input_file_path)
         .file_name()
         .unwrap()
         .to_str();
@@ -168,7 +176,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Write public contract file
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
-    let solidity_code_output = _dump_to_output(
+    let _solidity_code_output = _dump_to_output(
         &to_solidity(ast.to_ast()),
         output_dir,
         output_filename,
@@ -197,7 +205,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         output_dir.to_string(),
     );
     let mut kwargs = std::collections::HashMap::new();
-    if let Some(v) = kwargs.get("verifier_names") {
+    if let Some(_v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
         let mut verifier_names = get_verification_contract_names((None, Some(zkay_ast)));
         verifier_names.sort_unstable();
@@ -453,7 +461,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 // :raise SolcException: if dryrun_solc is true and there are compilation errors
 // :return: dumped content as string
 // """
-fn _dump_to_output(content: &str, output_dir: &str, filename: &str, dryrun_solc: bool) -> String {
+fn _dump_to_output(content: &str, output_dir: &str, filename: &str, _dryrun_solc: bool) -> String {
     use std::io::Write;
     let path = std::path::Path::new(output_dir).join(filename);
     let mut f = std::fs::File::create(path).expect("create file {path} fail");

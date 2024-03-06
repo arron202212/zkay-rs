@@ -3,6 +3,13 @@
 // import logging.config
 // import os
 // from logging import addLevelName
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 
 // # current time
 use crate::log_context::FULL_LOG_CONTEXT;

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 //::json
 //::os
 // from contextlib::contextmanager
@@ -12,9 +20,9 @@ use zkay_utils::progress_printer::warn_print;
 pub struct Manifest;
 impl Manifest {
     // """Static class, which holds the string keys of all supported zkay manifest keys """
-    pub const zkay_version: &str = "zkay-version";
-    pub const solc_version: &str = "solc-version";
-    pub const zkay_options: &str = "zkay-options";
+    pub const zkay_version: &'static str = "zkay-version";
+    pub const solc_version: &'static str = "solc-version";
+    pub const zkay_options: &'static str = "zkay-options";
 
     // @staticmethod
     pub fn load(project_dir: &str) -> Value

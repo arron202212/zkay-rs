@@ -11,10 +11,10 @@ use zkay_config::config::CFG;
 use zkay_utils::helpers::hash_file;
 use zkay_utils::run_command::{run_command, run_commands};
 //path to jsnark interface jar
-const circuit_builder_jar: &str = "JsnarkCircuitBuilder.jar";
+const CIRCUIT_BUILDER_JAR: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
     pub static ref CIRCUIT_BUILDER_JAR_HASH: String =
-        hex::encode(hash_file(circuit_builder_jar, 0));
+        hex::encode(hash_file(CIRCUIT_BUILDER_JAR, 0));
 }
 pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // """
@@ -28,7 +28,7 @@ pub fn compile_circuit(circuit_dir: &str, javacode: &str)
     let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let jfile = Path::new(circuit_dir).join(class_name.clone() + ".java");
     let mut f = File::open(jfile.clone()).expect("");
-    f.write_all(javacode.as_bytes());
+    let _ = f.write_all(javacode.as_bytes());
 
     compile_and_run_with_circuit_builder(
         circuit_dir,
@@ -50,7 +50,7 @@ pub fn compile_and_run_with_circuit_builder(
         vec![
             "javac",
             "-cp",
-            &format!("{circuit_builder_jar}"),
+            &format!("{CIRCUIT_BUILDER_JAR}"),
             java_file_name,
         ],
         Some(working_dir),
@@ -63,7 +63,7 @@ pub fn compile_and_run_with_circuit_builder(
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
-            &format!("{circuit_builder_jar}:{working_dir}"),
+            &format!("{CIRCUIT_BUILDER_JAR}:{working_dir}"),
             class_name,
         ]
         .into_iter()
@@ -100,7 +100,7 @@ pub fn prepare_proof(
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
-            &format!("{circuit_builder_jar}:{circuit_dir}"),
+            &format!("{CIRCUIT_BUILDER_JAR}:{circuit_dir}"),
             &CFG.lock().unwrap().jsnark_circuit_classname(),
             "prove",
         ]

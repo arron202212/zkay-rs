@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // from abc import ABCMeta, abstractmethod
 // from typing import List
 use circuit_helper::circuit_helper::CircuitHelper;
@@ -34,7 +42,7 @@ impl G1Point {
     }
 
     pub fn negated(&self) -> Self {
-        let q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+        let _q = "21888242871839275222246405745257275088696311157297823662689037894645226208583";
         if self.x == "0" && self.y == "0" {
             G1Point::default()
         } else {

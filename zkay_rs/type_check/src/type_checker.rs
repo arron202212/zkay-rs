@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::contains_private::contains_private;
 use crate::final_checker::check_final;
 // use crate::type_exceptions::{TypeMismatchException, TypeException};
@@ -42,10 +50,10 @@ impl AstVisitor for TypeCheckVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -499,10 +507,10 @@ impl TypeCheckVisitor {
         );
     }
     //@staticmethod
-    pub fn is_accessible_by_invoker(ast: &Expression) -> bool {
+    pub fn is_accessible_by_invoker(_ast: &Expression) -> bool {
         // return ast.annotated_type.is_public() || ast.is_lvalue() || \
         //     ast.instance_of(AnnotatedTypeName(ast.annotated_type.type_name, Expression::me_expr(None)))
-        return true;
+        true
     }
     //@staticmethod
     pub fn combine_homomorphism(lhs: Expression, rhs: Expression) -> String {
@@ -828,8 +836,8 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitNewExpr(&self, ast: NewExpr) { //already has correct type
-                                               // pass
+    pub fn visitNewExpr(&self, _ast: NewExpr) { //already has correct type
+                                                // pass
     }
 
     pub fn visitMemberAccessExpr(&self, mut ast: MemberAccessExpr) {

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // import json
 // import os
 // import pathlib
@@ -100,13 +108,13 @@ fn compile_solidity_json(
             .to_string();
     }
     let old_cwd = std::env::current_dir().unwrap();
-    set_current_dir(&cwd);
+    let _ = set_current_dir(&cwd);
     let ret = compile(&json_in);
-    set_current_dir(old_cwd);
+    let _ = set_current_dir(old_cwd);
     ret
 }
 //TODO
-fn compile(input: &str) -> Option<Map<String, Value>> {
+fn compile(_input: &str) -> Option<Map<String, Value>> {
     let output = "{}"; //solc::compile(&input);
     assert_ne!(output.len(), 0);
     let v: Value = serde_json::from_str(output).unwrap();
@@ -149,7 +157,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
 // """
 {
     let p = PathBuf::from(filename);
-    let sol_name = p.file_name().unwrap().clone();
+    let sol_name = p.file_name().unwrap();
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();
     f.read_to_string(&mut code).unwrap();
@@ -285,7 +293,7 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
     dir.push(file_name.clone());
 
     let mut file = File::create(dir).unwrap();
-    write!(file, "{}", fake_solidity_code);
+    write!(file, "{}", fake_solidity_code).expect("write file failed");
     // dump fake solidity code into temporary file
     // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
     //     f.write(fake_solidity_code)

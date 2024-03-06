@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 //Modified based on https://github.com/fitzgen/derive_is_enum_variant
 extern crate heck;
 extern crate proc_macro;
@@ -75,7 +83,7 @@ impl<'a> From<&'a Vec<syn::Attribute>> for PredicateConfig {
     fn from(attrs: &'a Vec<syn::Attribute>) -> Self {
         let our_attr = attrs.iter().find(|a| a.path().is_ident("is_enum_variant"));
         our_attr.map_or(PredicateConfig::None, |attr| match attr.meta {
-            syn::Meta::List(ref metas) => {
+            syn::Meta::List(_) => {
                 let nested = attr
                     .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)
                     .unwrap();

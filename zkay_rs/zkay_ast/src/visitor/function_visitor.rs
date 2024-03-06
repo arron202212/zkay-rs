@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::ast::{IntoAST, Parameter, SourceUnit};
 use crate::visitor::visitor::AstVisitor;
 // class FunctionVisitor(AstVisitor)
@@ -18,5 +26,5 @@ pub trait FunctionVisitor: AstVisitor {
         }
     }
 
-    fn visitParameter(&self, ast: Parameter) {}
+    fn visitParameter(&self, _ast: Parameter) {}
 }

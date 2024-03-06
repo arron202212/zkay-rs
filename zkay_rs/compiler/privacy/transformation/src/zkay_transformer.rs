@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // """
 // This module defines zkay->solidity transformers for the smaller contract elements (statements, expressions, state variables).
 // """
@@ -8,18 +16,18 @@ use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;
 use zkay_ast::ast::{
-    is_instance, ASTChildren, ASTType, AnnotatedTypeName, AssignmentStatement, BlankLine, Block,
-    BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction, ChildListBuilder,
-    Comment, CommentBase, ContinueStatement, DoWhileStatement, ElementaryTypeName,
-    EncryptionExpression, EnumDefinition, ExprUnion, Expression, ExpressionBaseMutRef,
-    ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgType,
-    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
-    IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement,
-    LiteralExpr, LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr,
-    ReclassifyExpr, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
-    StatementList, TupleExpr, TypeName, VariableDeclaration, VariableDeclarationStatement,
-    WhileStatement, AST,FunctionCallExprBaseProperty,AssignmentStatementBaseProperty,ASTBaseRef,
+    is_instance, ASTBaseRef, ASTChildren, ASTType, AnnotatedTypeName, AssignmentStatement,
+    AssignmentStatementBaseProperty, BlankLine, Block, BooleanLiteralExpr, BooleanLiteralType,
+    BreakStatement, BuiltinFunction, ChildListBuilder, Comment, CommentBase, ContinueStatement,
+    DoWhileStatement, ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion,
+    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf,
+    Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
+    Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
+    NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
@@ -46,15 +54,15 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
         Self::new()
     }
 
-    fn visit(&self, ast: Option<AST>) -> Option<AST> {
+    fn visit(&self, _ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _ast: Option<AST>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         // self.visit_children(ast)
         None
@@ -149,15 +157,15 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: Option<AST>) -> Option<AST> {
+    fn visit(&self, _ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _ast: Option<AST>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         // self.visit_children(ast)
         None
@@ -190,7 +198,7 @@ impl ZkayStatementTransformer {
     // """
     {
         let mut new_statements = vec![];
-        for (idx, stmt) in ast.statements().iter().enumerate() {
+        for (_idx, stmt) in ast.statements().iter().enumerate() {
             let old_code = stmt.to_ast().code();
             let transformed_stmt = self.visit(Some(stmt.to_ast()));
             if transformed_stmt.is_none() {
@@ -264,7 +272,10 @@ impl ZkayStatementTransformer {
     pub fn visitAssignmentStatement(&mut self, ast: &mut AssignmentStatement) -> AST
 // """Rule (2)"""
     {
-        let a: AST = self.expr_trafo.visit(ast.lhs().clone().map(|l|*l)).unwrap();
+        let a: AST = self
+            .expr_trafo
+            .visit(ast.lhs().clone().map(|l| *l))
+            .unwrap();
         ast.set_lhs(Some(a));
         ast.set_rhs(
             self.expr_trafo
@@ -281,12 +292,25 @@ impl ZkayStatementTransformer {
             if is_instance(
                 &ast.rhs().as_ref().unwrap().member().unwrap(),
                 ASTType::HybridArgumentIdf,
-            ) && ast.rhs().as_ref().unwrap().member().unwrap().arg_type() == HybridArgType::PubCircuitArg
+            ) && ast.rhs().as_ref().unwrap().member().unwrap().arg_type()
+                == HybridArgType::PubCircuitArg
             {
                 modvals = modvals
                     .iter()
                     .filter_map(|mv| {
-                        if mv.target() != ast.lhs().as_ref().unwrap().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target() {
+                        if mv.target()
+                            != ast
+                                .lhs()
+                                .as_ref()
+                                .unwrap()
+                                .try_as_expression_ref()
+                                .unwrap()
+                                .try_as_tuple_or_location_expr_ref()
+                                .unwrap()
+                                .try_as_location_expr_ref()
+                                .unwrap()
+                                .target()
+                        {
                             Some(mv.clone())
                         } else {
                             None
@@ -294,7 +318,8 @@ impl ZkayStatementTransformer {
                     })
                     .collect();
                 let ridf = if is_instance(
-                    &ast.rhs().as_ref()
+                    &ast.rhs()
+                        .as_ref()
                         .unwrap()
                         .member()
                         .unwrap()
@@ -302,7 +327,8 @@ impl ZkayStatementTransformer {
                         .unwrap(),
                     ASTType::EncryptionExpression,
                 ) {
-                    ast.rhs().as_ref()
+                    ast.rhs()
+                        .as_ref()
                         .unwrap()
                         .member()
                         .unwrap()
@@ -310,7 +336,8 @@ impl ZkayStatementTransformer {
                         .unwrap()
                         .idf()
                 } else {
-                    ast.rhs().as_ref()
+                    ast.rhs()
+                        .as_ref()
                         .unwrap()
                         .member()
                         .unwrap()
@@ -324,8 +351,13 @@ impl ZkayStatementTransformer {
                 ));
                 if let Some(Identifier::HybridArgumentIdf(ridf)) = ridf {
                     self.gen.as_mut().unwrap()._remapper.0.remap(
-                        ast.lhs().as_ref()
-                            .unwrap().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap()
+                        ast.lhs()
+                            .as_ref()
+                            .unwrap()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
                             .try_as_location_expr_ref()
                             .unwrap()
                             .target()
@@ -569,15 +601,15 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: Option<AST>) -> Option<AST> {
+    fn visit(&self, _ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _ast: Option<AST>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         // self.visit_children(ast)
         None
@@ -795,7 +827,13 @@ impl ZkayExpressionTransformer {
         // """
         {
             assert!(is_instance(&**ast.func(), ASTType::LocationExprBase));
-            let mut ast = self.visit_children(Some(ast.to_ast())).unwrap().try_as_expression().unwrap().try_as_function_call_expr().unwrap();
+            let mut ast = self
+                .visit_children(Some(ast.to_ast()))
+                .unwrap()
+                .try_as_expression()
+                .unwrap()
+                .try_as_function_call_expr()
+                .unwrap();
             if ast
                 .func()
                 .target()
@@ -815,11 +853,7 @@ impl ZkayExpressionTransformer {
                 );
             }
 
-            if ast
-                .func()
-                .target()
-                .unwrap()
-                .requires_verification()
+            if ast.func().target().unwrap().requires_verification()
             //If the target function has an associated circuit, make this function"s circuit aware of the call.
             {
                 // let cf = if let AST::Expression(Expression::FunctionCallExpr(fce)) = &ast {
@@ -863,7 +897,7 @@ impl ZkayExpressionTransformer {
         if_true: bool,
         expr: &mut Expression,
     ) -> AST {
-        let prelen = expr.statement().as_ref().unwrap().pre_statements().len();
+        let prelen = expr.statement().as_ref().unwrap().statement_base_ref().unwrap().pre_statements.len();
 
         //Transform expression with guard condition in effect
         self.gen
@@ -873,7 +907,7 @@ impl ZkayExpressionTransformer {
         let ret = self.visit(Some(expr.to_ast()));
 
         //If new pre statements were added, they must be guarded using an if statement in the public solidity code
-        let new_pre_stmts = expr.statement().as_ref().unwrap().pre_statements()[prelen..].to_vec();
+        let new_pre_stmts = expr.statement().as_ref().unwrap().statement_base_ref().unwrap().pre_statements[prelen..].to_vec();
         if !new_pre_stmts.is_empty() {
             let mut cond_expr: AST = guard_var.get_loc_expr(None).into();
             if let AST::Expression(Expression::LiteralExpr(LiteralExpr::BooleanLiteralExpr(
@@ -884,7 +918,7 @@ impl ZkayExpressionTransformer {
             } else if !if_true {
                 cond_expr = cond_expr.expr().unwrap().unop(String::from("!")).to_ast();
             }
-            let ps = expr.statement().as_ref().unwrap().pre_statements()[..prelen]
+            let ps = expr.statement().as_ref().unwrap().statement_base_ref().unwrap().pre_statements[..prelen]
                 .iter()
                 .cloned()
                 .chain([IfStatement::new(
@@ -936,7 +970,7 @@ impl ZkayExpressionTransformer {
         }
     }
 
-    pub fn visitExpression(&self, ast: Expression) {
+    pub fn visitExpression(&self, _ast: Expression) {
         // raise NotImplementedError()
         unimplemented!();
     }
@@ -960,15 +994,15 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         Self::new(None)
     }
 
-    fn visit(&self, ast: Option<AST>) -> Option<AST> {
+    fn visit(&self, _ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _ast: Option<AST>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         // self.visit_children(ast)
         None
@@ -1217,7 +1251,7 @@ impl ZkayCircuitTransformer {
             .add_block_to_circuit(ast, guard_cond, guard_val)
     }
 
-    pub fn visitStatement(&mut self, ast: Statement)
+    pub fn visitStatement(&mut self, _ast: Statement)
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
     {

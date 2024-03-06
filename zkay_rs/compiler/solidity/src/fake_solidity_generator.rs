@@ -207,7 +207,7 @@ pub fn replace_with_surrogate(
     let has_ph = replacement_fstr.is_empty();
     let mut replacement = replacement_fstr.to_owned();
     let mut search_idx = 0;
-    let mut c = code.clone();
+    let mut c;
     loop {
         c = code.clone();
         let matches = search_pattern.captures(&c[search_idx..]);

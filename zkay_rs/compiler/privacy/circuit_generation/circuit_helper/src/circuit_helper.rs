@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::name_factory::NameFactory;
 use crate::name_remapper::CircVarRemapper;
 use std::collections::{BTreeMap, BTreeSet};
@@ -14,8 +22,9 @@ use zkay_ast::ast::{
     Identifier, IdentifierBase, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
     IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseRef,
+    TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,StatementBaseProperty,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -367,7 +376,7 @@ where
         // ));
 
         let name = if let Some(me_expr) = label.me_expr() {
-            label.me_expr().unwrap().name.clone()
+            me_expr.name.clone()
         } else {
             label.try_as_identifier_ref().unwrap().name()
         };
@@ -479,7 +488,7 @@ where
             .unwrap()
     }
 
-    pub fn evaluate_stmt_in_circuit(&mut self, ast: Statement) -> SimpleStatement
+    pub fn evaluate_stmt_in_circuit(&mut self, mut ast: Statement) -> SimpleStatement
 // """
         // Evaluate an entire statement privately.
 
@@ -508,8 +517,8 @@ where
                 break;
             }
         }
-
-        astmt.set_before_analysis(ast.before_analysis().clone());
+        astmt.statement_base_mut_ref().before_analysis =
+            ast.statement_base_ref().unwrap().before_analysis().clone();
 
         //External values written inside statement -> function return values
         let mut ret_params = vec![];
@@ -906,13 +915,13 @@ where
 
         //Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         //but also signals the offchain simulator to perform decryption if necessary
-        expr.add_pre_statement(
+        expr.expression_base_mut_ref().statement.as_mut().unwrap().statement_base_mut_ref().unwrap().pre_statements.push(
             CircuitInputStatement::new(
                 input_idf.get_loc_expr(None).into(),
                 input_expr.unwrap(),
                 None,
             )
-            .to_statement(),
+            .into_ast(),
         );
 
         if !is_public {
@@ -1075,15 +1084,16 @@ where
             .statement
             .as_mut()
             .unwrap()
-            .extend_pre_statements(
+            .statement_base_mut_ref().unwrap()
+            .pre_statements.extend(
                 inlined_body
                     .unwrap()
                     .statement_list_base
                     .statement_base
                     .pre_statements
                     .iter()
-                    .map(|ps| ps.try_as_statement_ref().unwrap().clone())
-                    .collect(),
+                    .map(|ps| ps.try_as_statement_ref().unwrap().to_ast())
+                    .collect::<Vec<_>>(),
             );
 
         //Create TupleExpr with location expressions corresponding to the function return values as elements
@@ -1317,7 +1327,7 @@ where
                     .unwrap()
                     .visit(Some((*stmt).to_ast()));
                 //Bubble up nested pre statements
-                statements.append(&mut stmt.drain_pre_statements());
+                statements.append(&mut stmt.statement_base_mut_ref().unwrap().pre_statements.drain(..).collect::<Vec<_>>());
             }
             // stmt.pre_statements = vec![];
         }
@@ -1527,7 +1537,7 @@ where
 
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
-        expr.add_pre_statement(CircuitComputationStatement::new(new_out_param).to_statement());
+        expr.expression_base_mut_ref().statement.as_mut().unwrap().statement_base_mut_ref().unwrap().pre_statements.push(CircuitComputationStatement::new(new_out_param).into_ast());
         if let AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(le),
         )) = out_var
@@ -1761,7 +1771,7 @@ where
             self.request_public_key(&crypto_params, privacy.clone().into(), &name);
         stmt.as_mut()
             .unwrap()
-            .add_pre_statement(get_key_stmt.to_statement());
+           .statement_base_mut_ref().unwrap().pre_statements.push(get_key_stmt.to_ast());
         if let Some(requested_dynamic_pks) = self
             ._requested_dynamic_pks
             .get_mut(&*stmt.as_ref().unwrap())
@@ -1813,13 +1823,13 @@ where
             crypto_params,
         )
         .as_type(AST::TypeName(key_t));
-        stmt.add_pre_statement(
+        stmt.statement_base_mut_ref().unwrap().pre_statements.push(
             AssignmentStatementBase::new(
                 key_idf.get_loc_expr(None).into(),
                 Some(key_expr.to_expr()),
                 None,
             )
-            .to_statement(),
+            .into_ast(),
         );
         key_idf
     }

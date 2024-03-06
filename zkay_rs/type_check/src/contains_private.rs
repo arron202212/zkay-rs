@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, AST};
 use zkay_ast::visitor::visitor::AstVisitor;
 
@@ -25,10 +33,10 @@ impl AstVisitor for ContainsPrivateVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }

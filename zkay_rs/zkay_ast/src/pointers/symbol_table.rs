@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // from typing import Tuple, Dict, Union
 use crate::ast::{
     is_instance, is_instances, ASTChildren, ASTType, AnnotatedTypeName, Array, Block, Comment,
@@ -93,10 +101,10 @@ impl AstVisitor for SymbolTableFiller {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -226,7 +234,7 @@ impl SymbolTableFiller {
             })
             .collect();
     }
-    pub fn visitEnumValue(&self, ast: &mut EnumValue) {}
+    pub fn visitEnumValue(&self, _ast: &mut EnumValue) {}
 
     pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) {
         ast.identifier_declaration_base.ast_base.names = BTreeMap::from([(
@@ -274,10 +282,10 @@ impl AstVisitor for SymbolTableLinker {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }

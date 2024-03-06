@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use solidity::compiler::check_for_zkay_solc_errors;
 //, SolcException;
 use zkay_config::config::CFG;
@@ -41,14 +49,14 @@ bitflags! {
                            | Self::SOLC_CHECK.bits();
     }
 }
-
+#[warn(dead_code)]
 impl ASTFlags {
     pub fn new(flag: Option<u32>) -> Self {
         Self(flag.unwrap())
     }
-    pub fn clear(&mut self) -> &mut ASTFlags {
-        self
-    }
+    // pub fn clear(&mut self) -> &mut ASTFlags {
+    //     self
+    // }
     pub fn parents(&self) -> bool {
         *self & Self::PARENTS == Self::PARENTS
     }
@@ -64,9 +72,10 @@ impl ASTFlags {
     pub fn type_check(&self) -> bool {
         *self & Self::TYPE_CHECK == Self::TYPE_CHECK
     }
-    pub fn solc_check(&self) -> bool {
-        *self & Self::SOLC_CHECK == Self::SOLC_CHECK
-    }
+
+    // pub fn solc_check(&self) -> bool {
+    //     *self & Self::SOLC_CHECK == Self::SOLC_CHECK
+    // }
 }
 
 impl fmt::Display for ASTFlags {

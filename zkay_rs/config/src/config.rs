@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // import json
 // import os
 // use  contextlib::contextmanager;
@@ -91,7 +99,7 @@ impl Config {
         if std::path::Path::new(&filename).exists() {
             // with open(filename) as conf:
             //     try:
-            let v: Value =
+            let _v: Value =
                 serde_json::from_str(&std::fs::read_to_string(&filename).unwrap()).unwrap();
             // self.override_defaults(v);
             // except ValueError as e:

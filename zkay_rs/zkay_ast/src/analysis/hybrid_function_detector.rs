@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
@@ -40,10 +48,10 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -76,7 +84,7 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
 
-    pub fn visitAllExpr(&self, ast: AllExpr)
+    pub fn visitAllExpr(&self, _ast: AllExpr)
     // pass
     {
     }
@@ -147,10 +155,10 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -187,10 +195,10 @@ impl AstVisitor for NonInlineableCallDetector {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }

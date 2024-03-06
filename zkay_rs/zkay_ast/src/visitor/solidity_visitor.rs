@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::ast::{AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
 use zkay_config::config::CFG;
 
@@ -28,7 +36,7 @@ impl SolidityVisitor {
         String::from("msg.sender")
     }
 
-    pub fn handle_pragma(self, pragma: String) -> String {
+    pub fn handle_pragma(self, _pragma: String) -> String {
         format!(
             "pragma solidity {};",
             CFG.lock().unwrap().zkay_solc_version_compatibility()

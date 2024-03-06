@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
@@ -5,8 +13,8 @@ use crate::ast::{
     BreakStatement, BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement,
     DoWhileStatement, ExpressionStatement, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
-    RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
-    VariableDeclarationStatement, WhileStatement, AST,
+    RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseRef,
+    StatementList, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,StatementBaseProperty,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -34,10 +42,10 @@ impl AstVisitor for AliasAnalysisVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -72,7 +80,11 @@ impl AliasAnalysisVisitor {
         for p in &ast.parameters {
             s.insert(p.identifier_declaration_base.idf.to_ast());
         }
-        ast.body.as_mut().unwrap().set_before_analysis(Some(s));
+        ast.body
+            .as_mut()
+            .unwrap()
+            .statement_base_mut_ref()
+            .before_analysis = Some(s);
         self.visit(ast.body.as_ref().unwrap().to_ast());
     }
 
@@ -84,7 +96,7 @@ impl AliasAnalysisVisitor {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements.iter_mut() {
-            statement.set_before_analysis(Some(last.clone()));
+            statement.try_as_statement_mut().unwrap().statement_base_mut_ref().unwrap().before_analysis = Some(last.clone());
             print!("before  {:?},{:?}", statement, last);
             self.visit(statement.to_ast());
             last = statement.after_analysis().unwrap();
@@ -94,9 +106,9 @@ impl AliasAnalysisVisitor {
         last
     }
     pub fn visitStatementList(&self, mut ast: StatementList) {
-        ast.set_after_analysis(Some(
-            self.propagate(ast.statements(), ast.before_analysis().unwrap()),
-        ));
+        ast.statement_base_mut_ref().after_analysis=Some(
+            self.propagate(ast.statements(), ast.before_analysis().as_ref().unwrap().clone()),
+        );
     }
     pub fn visitBlock(&self, mut ast: Block) {
         let mut last = ast
@@ -156,11 +168,13 @@ impl AliasAnalysisVisitor {
 
         // else
         let after_else = if ast.else_branch.is_some() {
-            ast.else_branch.as_mut().unwrap().set_before_analysis(Some(
-                self.cond_analyzer.analyze(
-                    ast.condition.unop(String::from("!")).to_ast(),
-                    ast.statement_base.before_analysis.unwrap(),
-                ),
+            ast.else_branch
+                .as_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .before_analysis = Some(self.cond_analyzer.analyze(
+                ast.condition.unop(String::from("!")).to_ast(),
+                ast.statement_base.before_analysis.unwrap(),
             ));
             self.visit(ast.else_branch.as_ref().unwrap().to_ast());
             ast.else_branch
@@ -258,9 +272,10 @@ impl AliasAnalysisVisitor {
             ast.init
                 .as_mut()
                 .unwrap()
-                .set_before_analysis(Some(last.clone()));
+                .statement_base_mut_ref()
+                .before_analysis = Some(last.clone());
             self.visit(ast.init.as_ref().unwrap().to_ast());
-            ast.statement_base.before_analysis = ast.init.as_ref().unwrap().after_analysis();
+            ast.statement_base.before_analysis = ast.init.as_ref().unwrap().after_analysis().clone();
             // init should be taken into account when looking up things in the condition
         }
         if has_side_effects(ast.condition.to_ast())
@@ -278,24 +293,23 @@ impl AliasAnalysisVisitor {
         if let Some(update) = &mut ast.update
         // Update is always executed after the body (if it is executed)
         {
-            update.set_before_analysis(
-                ast.body
-                    .statement_list_base
-                    .statement_base
-                    .after_analysis
-                    .clone(),
-            );
+            update.statement_base_mut_ref().before_analysis = ast
+                .body
+                .statement_list_base
+                .statement_base
+                .after_analysis
+                .clone();
             self.visit(update.to_ast());
         }
 
         let skip_loop = self.cond_analyzer.analyze(
             ast.condition.unop(String::from("!")).to_ast(),
-            ast.init.unwrap().after_analysis().unwrap(),
+            ast.init.unwrap().after_analysis().as_ref().unwrap().clone(),
         );
         let did_loop = self.cond_analyzer.analyze(
             ast.condition.unop(String::from("!")).to_ast(),
             if let Some(update) = &ast.update {
-                update.after_analysis().unwrap()
+                update.after_analysis().as_ref().unwrap().clone()
             } else {
                 ast.body
                     .statement_list_base
@@ -407,7 +421,8 @@ impl AliasAnalysisVisitor {
         if has_side_effects(*ast.lhs().as_ref().unwrap().clone())
             || has_side_effects(ast.rhs().as_ref().unwrap().to_ast())
         {
-            ast.set_before_analysis(Some(ast.before_analysis().unwrap().separate_all()));
+            ast.statement_base_mut_ref().before_analysis =
+                Some(ast.before_analysis().as_ref().unwrap().separate_all());
         }
         let lhs = ast.lhs();
         let rhs = ast.rhs();
@@ -424,7 +439,7 @@ impl AliasAnalysisVisitor {
         );
 
         // save state
-        ast.set_after_analysis(after);
+        ast.statement_base_mut_ref().after_analysis=after.clone();
     }
     pub fn visitExpressionStatement(&mut self, mut ast: ExpressionStatement) {
         if has_side_effects(ast.expr.to_ast()) {
@@ -482,10 +497,10 @@ impl AstVisitor for GuardConditionAnalyzer {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }

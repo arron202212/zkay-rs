@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // """Circuit Generator implementation for the jsnark backend"""
 
 // import os
@@ -20,8 +28,8 @@ use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
-    FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, IntoAST, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,FunctionCallExprBaseProperty,
+    FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierExpr, IndexExpr,
+    IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -155,7 +163,7 @@ impl JsnarkVisitor
         )
     }
     pub fn visitCircGuardModification(&self, stmt: CircGuardModification) -> String {
-        if let Some(new_cond) = &stmt.new_cond {
+        if let Some(_new_cond) = &stmt.new_cond {
             format!(
                 r#"addGuard("{}", {});"#,
                 stmt.new_cond.unwrap().identifier_base.name,
@@ -198,7 +206,7 @@ impl JsnarkVisitor
         }
     }
 
-    pub fn visitIndexExpr(&self, ast: IndexExpr) {
+    pub fn visitIndexExpr(&self, _ast: IndexExpr) {
         unimplemented!();
     }
 
@@ -284,10 +292,7 @@ impl JsnarkVisitor
             };
         } else if ast.is_cast()
             && is_instance(
-                &ast.func()
-                    .target()
-                    .map(|v| Into::<AST>::into(*v))
-                    .unwrap(),
+                &ast.func().target().map(|v| Into::<AST>::into(*v)).unwrap(),
                 ASTType::EnumDefinition,
             )
         {
@@ -492,7 +497,7 @@ impl JsnarkGenerator
             {
                 for f in self.circuit_generator_base._get_vk_and_pk_paths(circuit) {
                     if Path::new(&f).try_exists().map_or(false, |v| v) {
-                        std::fs::remove_file(f);
+                        let _ = std::fs::remove_file(f);
                     }
                 }
             }

@@ -4,8 +4,7 @@
 #![deny(unreachable_patterns)]
 
 /// Tests for `#[derive(is_enum_variant)]`.
-
-#[macro_use]
+// #[macro_use]
 extern crate zkay_derive;
 // extern crate diff;
 use enum_dispatch::enum_dispatch;

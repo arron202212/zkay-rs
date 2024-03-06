@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // use antlr_rust::token::{Token,CommonToken};
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
@@ -6,12 +14,12 @@ use zkay_ast::ast::{
     AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
     EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
-    FunctionCallExprBase, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr,
-    IfStatement, IndexExpr, IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr,
-    NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr,
-    ReclassifyExprBase, RehomExpr, RequireStatement, SimpleStatement, Statement, StatementList,
-    StringLiteralExpr, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName,
-    WhileStatement, AST,FunctionCallExprBaseProperty,
+    FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier, IdentifierBase,
+    IdentifierDeclaration, IdentifierExpr, IfStatement, IndexExpr, IntTypeName, IntoAST,
+    IntoExpression, LiteralExpr, LocationExpr, NamespaceDefinition, NumberLiteralExpr,
+    NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr, RequireStatement,
+    SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr, TupleOrLocationExpr,
+    TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -244,7 +252,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         Some(IdentifierBase::new(name.to_string()).into_ast())
     }
 
-    fn visit_pragmaDirective(&mut self, ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
+    fn visit_pragmaDirective(&mut self, _ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
         // ctx.pragma().expect("visit_pragmaDirective").accept(self);
         // let pragmas=self.visit();
         let s = format!("pragma ;");
@@ -301,7 +309,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 if let Some(v) = p.stateVariableDeclaration() {
                     v.accept(self);
                     if let Some(AST::IdentifierDeclaration(
-                        IdentifierDeclaration::StateVariableDeclaration(a),
+                        IdentifierDeclaration::StateVariableDeclaration(_),
                     )) = self.temp_result().clone()
                     {
                         Some(self.temp_result().clone())
@@ -752,8 +760,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             "address" => Some(AddressTypeName::new().into_ast()),
             "address payable" => Some(AddressPayableTypeName::new().into_ast()),
             "bool" => Some(BoolTypeName::new().into_ast()),
-            ts if t.starts_with("int") => Some(IntTypeName::new(t).into_ast()),
-            ts if t.starts_with("uint") => Some(UintTypeName::new(t).into_ast()),
+            _ts if t.starts_with("int") => Some(IntTypeName::new(t).into_ast()),
+            _ts if t.starts_with("uint") => Some(UintTypeName::new(t).into_ast()),
             "var" => {
                 assert!(
                     false,

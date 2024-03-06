@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 // import functools
 // import os
 // from abc import ABCMeta, abstractmethod
@@ -155,8 +163,8 @@ impl CircuitGeneratorBase
             time_measure("key_generation", true, false);
             {
                 if self.parallel_keygen && !CFG.lock().unwrap().is_unit_test() {
-                    let counter = 0; // Value("i", 0);
-                                     // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
+                    let _counter = 0; // Value("i", 0);
+                                      // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
                     {
                         (0..modified_circuits_to_prove.len())
                             .into_par_iter()
@@ -189,7 +197,7 @@ impl CircuitGeneratorBase
                 match self.proving_scheme.as_str() {
                     "groth16" => {
                         let vk=<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::create_dummy_key();
-                        f.write_all(
+                        let _ = f.write_all(
                             ProvingSchemeGroth16::generate_verification_contract(
                                 vk,
                                 circuit,
@@ -202,7 +210,7 @@ impl CircuitGeneratorBase
                     "gm17" => {
                         let vk =
                             <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::create_dummy_key();
-                        f.write_all(
+                        let _ = f.write_all(
                             ProvingSchemeGm17::generate_verification_contract(
                                 vk,
                                 circuit,
@@ -311,7 +319,7 @@ impl CircuitGeneratorBase
     }
 
     // @abstractmethod
-    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &CircuitHelper) -> bool
+    pub fn _generate_zkcircuit(&self, _import_keys: bool, _circuit: &CircuitHelper) -> bool
 // """
         // Generate code and compile a single circuit.
 
@@ -333,7 +341,7 @@ impl CircuitGeneratorBase
     }
 
     // @abstractmethod
-    pub fn _generate_keys(&self, circuit: &CircuitHelper) {}
+    pub fn _generate_keys(&self, _circuit: &CircuitHelper) {}
     // """Generate prover and verification keys for the circuit stored in self._get_circuit_output_dir(circuit)."""
     // pass
 
@@ -355,7 +363,7 @@ impl CircuitGeneratorBase
     //     }
 
     // @abstractmethod
-    pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {
+    pub fn _get_prover_key_hash(&self, _circuit: &CircuitHelper) -> Vec<u8> {
         vec![]
     }
     // pass

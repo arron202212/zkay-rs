@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::ast::{AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
@@ -120,10 +128,10 @@ impl AstVisitor for DeepCopyVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -140,14 +148,14 @@ impl DeepCopyVisitor {
     }
 
     // @staticmethod
-    pub fn copy_ast_fields(ast: Option<AST>, ast_copy: &mut AST) {
+    pub fn copy_ast_fields(_ast: Option<AST>, _ast_copy: &mut AST) {
         // ast_copy.line = ast.line;
         // ast_copy.column = ast.column;
         // ast_copy.modified_values = ast.modified_values;
         // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, ast: Option<AST>) -> Option<AST> {
+    pub fn visitChildren(&self, _ast: Option<AST>) -> Option<AST> {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();

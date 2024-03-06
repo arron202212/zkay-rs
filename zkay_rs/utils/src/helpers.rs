@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // import os
 // import re
 // import hashlib
@@ -35,7 +42,7 @@ pub fn hash_string(data: &str) -> Vec<u8> {
     // let digest = hashlib.sha512(data).digest();
     let mut sha512hasher = Sha512State::default().build_hasher();
     sha512hasher.write(data.as_bytes());
-    let digest = sha512hasher.finish();
+    let _digest = sha512hasher.finish();
     let bytes_result = HasherContext::finish(&mut sha512hasher);
     let digest = format!("{bytes_result:02x}");
     assert!(digest.len() == 64);

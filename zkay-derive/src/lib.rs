@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use heck::ToSnakeCase;
 use proc_macro::{TokenStream, TokenTree};
 use proc_macro2::TokenStream as TokenStream2;
@@ -201,7 +209,7 @@ pub fn derive_is_enum_variant(tokens: TokenStream) -> TokenStream {
     // let source = tokens.to_string();
 
     let ast = parse_macro_input!(tokens as DeriveInput);
-    ///syn::parse_derive_input(&source).expect("should parse input tokens into AST");
+    // syn::parse_derive_input(&source).expect("should parse input tokens into AST");
     let expanded = zkay_derive_core::expand_derive_is_enum_variant(&ast);
 
     expanded
@@ -224,7 +232,7 @@ macro_rules! derive_error {
     ($string: tt) => {
         Error::new(Span::call_site(), $string)
             .to_compile_error()
-            .into();
+            .into()
     };
 }
 

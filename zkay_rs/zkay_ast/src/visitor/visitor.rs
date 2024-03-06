@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // class AstVisitor:
 
 //     def __init__(self, traversal='post', log=False):
@@ -47,7 +54,7 @@ pub trait AstVisitor {
     fn try_call_visit_function(&self, c: &str, ast: &AST) -> Option<Self::Return>
 // std::any::type_name::<Option<String>>(),
     {
-        let visitor_function = c.to_owned(); // String::from("visit") +
+        let _visitor_function = c.to_owned(); // String::from("visit") +
         let ret = Some(self.call_visit_function(ast));
         if ret.is_some() {
             return ret;

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::ast::{
     ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
     IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
@@ -24,10 +32,10 @@ impl AstVisitor for UsedHomomorphismsVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         BTreeSet::new()
     }
 }
@@ -75,7 +83,7 @@ impl UsedHomomorphismsVisitor {
         self.visitChildren(ast.to_ast())
     } // Parameter and return types are children; don"t bother with "function type"
 
-    pub fn visitEnumDefinition(&self, ast: EnumDefinition) -> <Self as AstVisitor>::Return {
+    pub fn visitEnumDefinition(&self, _ast: EnumDefinition) -> <Self as AstVisitor>::Return {
         BTreeSet::new()
     } // Neither the enum type nor the types of the enum values can be private
 
@@ -178,7 +186,7 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visit(&self, ast: &mut AST) -> <Self as AstVisitor>::Return {
-        let all_homs = self.visit(ast); //TODO super()
+        let all_homs = BTreeSet::new(); //self.visit(ast); //TODO super()
         if let Some(mut ast) = ast.constructor_or_function_definition() {
             if let Some(_) = ast.used_homomorphisms {
                 ast.used_homomorphisms = Some(all_homs.clone());

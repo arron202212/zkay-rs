@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // use  __future__ import annotations;
 // import abc;
 // import math;
@@ -421,7 +428,7 @@ impl AST {
     pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
-    pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     pub fn privacy_annotation_label(&self) -> Option<AST> {
         None
     }
@@ -973,7 +980,7 @@ impl Expression {
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
     }
-    pub fn add_pre_statement(&mut self, statement: Statement) {}
+    // pub fn add_pre_statement(&mut self, statement: Statement) {}
     pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn set_statement(&mut self, statement: Statement) {}
     pub fn target(&self) -> Option<Box<AST>> {
@@ -1001,7 +1008,7 @@ impl Expression {
         Expression::MeExpr(me_expr)
     }
     pub fn explicitly_converted(&self, expected: TypeName) -> AST {
-        let mut ret = None;
+        let mut ret;
         if expected == TypeName::bool_type() && !self.instanceof_data_type(&TypeName::bool_type()) {
             ret = Some(FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("!=")),
@@ -1808,7 +1815,7 @@ impl FunctionCallExpr {
     pub fn args(&self) -> Vec<Expression> {
         vec![]
     }
-    pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
+    // pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
 
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
@@ -1924,7 +1931,6 @@ impl FunctionCallExprBase {
                     LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
                     LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
                     LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
-                    _ => None,
                 };
                 if target.is_some()
                     && is_instances(
@@ -3625,7 +3631,7 @@ impl HybridArgumentIdf {
 
         let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None)
             .as_type(ArrayBase::new(AnnotatedTypeName::uint_all(), None).into_ast());
-        if let TypeName::Array(a) = *self.t.clone() {
+        if let TypeName::Array(_a) = *self.t.clone() {
             SliceExpr::new(
                 self.get_loc_expr(None)
                     .try_as_expression()
@@ -3697,7 +3703,7 @@ impl HybridArgumentIdf {
                 None,
             )))),
         );
-        if let TypeName::Array(t) = *self.t.clone() {
+        if let TypeName::Array(_t) = *self.t.clone() {
             let loc = self
                 .get_loc_expr(None)
                 .try_as_expression()
@@ -3785,7 +3791,7 @@ impl Identifier {
     pub fn corresponding_priv_expression(&self) -> Option<Expression> {
         None
     }
-    pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Option<AST> {
+    pub fn decl_var(&self, _t: AST, expr: Option<Expression>) -> Option<AST> {
         None
     }
     pub fn arg_type(&self) -> HybridArgType {
@@ -3907,6 +3913,21 @@ impl Statement {
             Statement::CircuitStatement(_) => None,
         }
     }
+    pub fn statement_base_ref(&self) -> Option<&StatementBase> {
+        match self {
+            Statement::CircuitDirectiveStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::IfStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::WhileStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::DoWhileStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::ForStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::BreakStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::ContinueStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::ReturnStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::SimpleStatement(ast) => Some(ast.statement_base_ref()),
+            Statement::StatementList(ast) => Some(ast.statement_base_ref()),
+            Statement::CircuitStatement(_) => None,
+        }
+    }
     pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
         None
     }
@@ -3914,28 +3935,28 @@ impl Statement {
         None
     }
 
-    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
-    pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    pub fn pre_statements(&self) -> Vec<AST> {
-        vec![]
-    }
-    pub fn add_pre_statement(&mut self, statement: Statement) {}
-    pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
-    pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
-    pub fn drain_pre_statements(&mut self) -> Vec<AST> {
-        vec![]
-    }
+    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
+    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn pre_statements(&self) -> Vec<AST> {
+    //     vec![]
+    // }
+    // pub fn add_pre_statement(&mut self, statement: Statement) {}
+    // pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
+    // pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
+    // pub fn drain_pre_statements(&mut self) -> Vec<AST> {
+    //     vec![]
+    // }
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
     }
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
         None
     }
-    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
+    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
     pub fn line(&self) -> i32 {
         0
     }
@@ -4313,7 +4334,7 @@ pub struct BreakStatement {
     pub statement_base: StatementBase,
 }
 impl ASTChildren for BreakStatement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {}
+    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 impl IntoAST for BreakStatement {
     fn into_ast(self) -> AST {
@@ -4334,7 +4355,7 @@ pub struct ContinueStatement {
     pub statement_base: StatementBase,
 }
 impl ASTChildren for ContinueStatement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {}
+    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 impl IntoAST for ContinueStatement {
     fn into_ast(self) -> AST {
@@ -4393,24 +4414,24 @@ pub enum SimpleStatement {
 }
 
 impl ASTChildren for SimpleStatement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {}
+    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 impl SimpleStatement {
     pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
         None
     }
 
-    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
-    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
-    pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
+    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
+    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     pub fn pre_statements(&self) -> Vec<AST> {
         vec![]
     }
-    pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     pub fn set_lhs(&mut self, lhs: AST) {}
     pub fn set_rhs(&mut self, rhs: Expression) {}
 }
@@ -4537,11 +4558,11 @@ impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 impl AssignmentStatement {
-    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
-    pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
+    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
         None
     }
@@ -4758,25 +4779,25 @@ impl StatementList {
     pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
         None
     }
-    pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
-    pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
+    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     pub fn set_statements(&mut self, statements: Vec<AST>) {}
     pub fn statements(&self) -> Vec<AST> {
         vec![]
     }
     pub fn get_item(&self, key: i32) -> AST {
         match self {
-            StatementList::Block(sl) => {
+            StatementList::Block(_sl) => {
                 assert!(self.statements().len() > key as usize);
                 self.statements()[key as usize].clone()
             }
-            StatementList::IndentBlock(sl) => {
+            StatementList::IndentBlock(_sl) => {
                 assert!(self.statements().len() > key as usize);
                 self.statements()[key as usize].clone()
             }
-            StatementList::StatementList(sl) => {
+            StatementList::StatementList(_sl) => {
                 assert!(self.statements().len() > key as usize);
                 self.statements()[key as usize].clone()
             }
@@ -4878,7 +4899,7 @@ impl Block {
             was_single_statement,
         }
     }
-    pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
+    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -4935,7 +4956,7 @@ impl ASTInstanceOf for TypeName {
             TypeName::Array(ast) => ast.get_ast_type(),
             TypeName::TupleType(ast) => ast.get_ast_type(),
             TypeName::FunctionTypeName(ast) => ast.get_ast_type(),
-            TypeName::Literal(ast) => ASTType::Literal,
+            TypeName::Literal(_) => ASTType::Literal,
         }
     }
 }
@@ -4970,7 +4991,7 @@ impl TypeName {
     pub fn names(&self) -> Vec<Identifier> {
         vec![]
     }
-    pub fn can_represent(&self, value: i32) -> bool
+    pub fn can_represent(&self, _value: i32) -> bool
 // """Return true if value can be represented by this type"""
     {
         // let elem_bitwidth = self.elem_bitwidth() as usize;
@@ -7895,9 +7916,7 @@ pub struct CodeVisitor {
     pub traversal: &'static str,
     pub log: bool,
 }
-fn a(ast: AST) -> Option<String> {
-    Some(String::new())
-}
+
 impl AstVisitor for CodeVisitor {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
@@ -7912,10 +7931,10 @@ impl AstVisitor for CodeVisitor {
     fn has_attr(&self, name: &String) -> bool {
         self.get_attr(name).is_some()
     }
-    fn get_attr(&self, name: &String) -> Option<String> {
+    fn get_attr(&self, _name: &String) -> Option<String> {
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return {
+    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -7928,7 +7947,7 @@ impl CodeVisitor {
             log: false,
         }
     }
-    pub fn visit(&self, ast: &AST) -> CodeVisitorReturn {
+    pub fn visit(&self, _ast: &AST) -> CodeVisitorReturn {
         String::new()
     }
     pub fn visit_list(&self, l: Vec<ListUnion>, mut sep: &str) -> CodeVisitorReturn {
@@ -7950,7 +7969,7 @@ impl CodeVisitor {
         }
 
         let s: Vec<_> = l.iter().filter_map(|e| handle(self, e)).collect();
-        let s = s.concat();
+        let s = s.join(sep);
         s
     }
 
@@ -7962,14 +7981,13 @@ impl CodeVisitor {
             SingleOrListUnion::Vec(v) => self.visit_list(v, sep),
             SingleOrListUnion::String(v) => v,
             SingleOrListUnion::AST(v) => self.visit(&v),
-            // _ => String::new(),
         }
     }
 
-    pub fn visit_AST(&self, ast: AST) -> CodeVisitorReturn {
+    pub fn visit_AST(&self, _ast: AST) -> CodeVisitorReturn {
         // should never be called
         // raise NotImplementedError("Did not implement code generation for " + repr(ast))
-        unimplemented!("Did not implement code generation for {:?} ", ast);
+        // unimplemented!("Did not implement code generation for {:?} ", ast);
         String::new()
     }
     pub fn visit_Comment(&self, ast: Comment) -> CodeVisitorReturn {
@@ -8370,7 +8388,7 @@ impl CodeVisitor {
     }
     pub fn visit_CircuitDirectiveStatement(
         &self,
-        ast: CircuitDirectiveStatement,
+        _ast: CircuitDirectiveStatement,
     ) -> CodeVisitorReturn {
         String::new()
     }
@@ -8468,13 +8486,11 @@ impl CodeVisitor {
                 NumberTypeName::NumberTypeNameBase(antn) => {
                     antn.elementary_type_name_base.name.clone()
                 }
-                _ => String::new(),
             },
             ElementaryTypeName::BoolTypeName(btn) => btn.elementary_type_name_base.name.clone(),
             ElementaryTypeName::BooleanLiteralType(blt) => {
                 blt.elementary_type_name_base.name.clone()
             }
-            _ => String::new(),
         }
     }
 
@@ -8488,7 +8504,6 @@ impl CodeVisitor {
             UserDefinedTypeName::AddressPayableTypeName(ast) => {
                 ast.user_defined_type_name_base.names
             }
-            _ => vec![],
         })
         .iter()
         .map(|name| ListUnion::AST(AST::Identifier(name.clone())))
@@ -8496,11 +8511,11 @@ impl CodeVisitor {
         self.visit_list(names, ".")
     }
 
-    pub fn visit_AddressTypeName(&self, ast: AddressTypeName) -> CodeVisitorReturn {
+    pub fn visit_AddressTypeName(&self, _ast: AddressTypeName) -> CodeVisitorReturn {
         String::from("address")
     }
 
-    pub fn visit_AddressPayableTypeName(&self, ast: AddressPayableTypeName) -> CodeVisitorReturn {
+    pub fn visit_AddressPayableTypeName(&self, _ast: AddressPayableTypeName) -> CodeVisitorReturn {
         String::from("address payable")
     }
 
@@ -8699,7 +8714,6 @@ impl CodeVisitor {
                         AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(p.clone())),
                     )),
                     ParameterUnion::String(s) => Some(ListUnion::String(s.clone())),
-                    _ => None,
                 })
                 .collect(),
             ", ",

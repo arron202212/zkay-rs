@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // """
 // This module provides functionality to transform a zkay AST into an equivalent public solidity AST + proof circuits
 // """
@@ -156,15 +163,15 @@ impl AstTransformerVisitor for ZkayTransformer {
         Self::new()
     }
 
-    fn visit(&self, ast: Option<AST>) -> Option<AST> {
+    fn visit(&self, _ast: Option<AST>) -> Option<AST> {
         // self._visit_internal(ast)
         None
     }
     fn visitBlock(
         &self,
-        ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _ast: Option<AST>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         // self.visit_children(ast)
         None
@@ -1091,7 +1098,7 @@ impl ZkayTransformer {
             }
             for (key_owner, crypto_params) in keys {
                 let tmp_key_var = &tmp_keys[&crypto_params];
-                let (idf, mut assignment) = ext_circuit.clone().request_public_key(
+                let (_idf, mut assignment) = ext_circuit.clone().request_public_key(
                     &crypto_params,
                     key_owner.clone(),
                     &CircuitHelper::get_glob_key_name(&key_owner.as_ref().unwrap(), &crypto_params),

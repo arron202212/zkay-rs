@@ -1,9 +1,17 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use circuit_helper::circuit_helper::CircuitHelper;
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
-    ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
-    IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition,
-    NumberLiteralExpr, AST,FunctionCallExprBaseProperty,
+    ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseProperty, Identifier,
+    IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr,
+    NamespaceDefinition, NumberLiteralExpr, AST,
 };
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;

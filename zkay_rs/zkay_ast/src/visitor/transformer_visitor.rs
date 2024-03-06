@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+
 use crate::ast::{Block, HybridArgumentIdf, AST};
 use dyn_clone::DynClone;
 // T = TypeVar("T")
@@ -23,13 +31,13 @@ pub trait AstTransformerVisitor {
             .map(|a| self.visit(Some(a.clone())))
             .collect()
     }
-    fn visit_children(&self, mut ast: Option<AST>) -> Option<AST> {
+    fn visit_children(&self, mut _ast: Option<AST>) -> Option<AST> {
         // ast.process_children(self.visit);
         // ast
         None
     }
 
-    fn _visit_internal(&self, ast: Option<AST>) -> Option<AST> {
+    fn _visit_internal(&self, _ast: Option<AST>) -> Option<AST> {
         None
     }
 }
@@ -94,8 +102,8 @@ impl AstTransformerVisitor for AstTransformerVisitorBase {
     fn visitBlock(
         &self,
         ast: Option<AST>,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
     ) -> Option<AST> {
         self.visit_children(ast)
     }
