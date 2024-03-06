@@ -21,7 +21,7 @@ pub struct TestStruct2 {
 pub struct TestStruct3 {
     ast_base2: ASTBase2,
 }
-#[impl_trait(TestStruct2, TestStruct3)]//,ExpressionBase2,LiteralExprBase2,ArrayLiteralExprBase2
+#[impl_trait(TestStruct2, TestStruct3)] //,ExpressionBase2,LiteralExprBase2,ArrayLiteralExprBase2
 pub trait ASTBase2Ref {
     fn ast_base2_ref(&self) -> &ASTBase2;
 }
@@ -39,12 +39,12 @@ pub trait ArrayLiteralExprBase2Ref: LiteralExprBase2Ref {
 pub struct ExpressionBase2 {
     pub ast_base2: ASTBase2,
 }
-#[impl_traits( ExpressionBase2, ASTBase2)]
+#[impl_traits(ExpressionBase2, ASTBase2)]
 #[derive(ImplBaseTrait)]
 pub struct LiteralExprBase2 {
     pub expression_base2: ExpressionBase2,
 }
-#[impl_traits( LiteralExprBase2, ExpressionBase2, ASTBase2)]
+#[impl_traits(LiteralExprBase2, ExpressionBase2, ASTBase2)]
 #[derive(ImplBaseTrait)]
 pub struct ArrayLiteralExprBase2 {
     pub literal_expr_base2: LiteralExprBase2,

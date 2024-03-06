@@ -1,7 +1,8 @@
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, is_instances, ASTChildren, ASTType, AssignmentStatement, BuiltinFunction,
-    Expression, FunctionCallExpr, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
+    is_instance, is_instances, ASTChildren, ASTType, AssignmentStatement,
+    AssignmentStatementBaseProperty, BuiltinFunction, Expression, FunctionCallExpr,
+    FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
     IntoStatement, LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr,
     TupleOrLocationExpr, VariableDeclaration, AST,
 };
@@ -49,9 +50,9 @@ impl AstVisitor for SideEffectsDetector {
 }
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
-        if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase)
+        if is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
-            && (*ast.func().unwrap().target().unwrap())
+            && (*ast.func().target().unwrap())
                 .constructor_or_function_definition()
                 .unwrap()
                 .has_side_effects()
@@ -107,7 +108,7 @@ impl AstVisitor for DirectModificationDetector {
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
         self.visitAST(&mut ast.to_ast());
-        self.collect_modified_values(&mut ast.to_ast(), ast.lhs().unwrap().into());
+        self.collect_modified_values(&mut ast.to_ast(), *ast.lhs().clone().unwrap());
     }
 
     pub fn collect_modified_values(&self, target: &mut AST, expr: AST) {
@@ -225,9 +226,9 @@ impl IndirectModificationDetector {
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         self.visitAST(ast.to_ast());
-        if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
+        if is_instance(&**ast.func(), ASTType::LocationExprBase) {
             //for now no reference types -> only state could have been modified
-            let mut fdef: AST = (*ast.func().unwrap().target().unwrap()).into();
+            let mut fdef: AST = (*ast.func().target().unwrap()).into();
             let mut ast = ast.to_ast();
             let rlen = ast.ast_base().unwrap().read_values.len();
             ast.ast_base_mut().unwrap().read_values = ast
@@ -389,8 +390,8 @@ impl EvalOrderUBChecker {
         }
     }
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
-            if ast.func().unwrap().has_shortcircuiting() {
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+            if ast.func().has_shortcircuiting() {
                 return;
             }
         }

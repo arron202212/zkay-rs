@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
     ConstructorOrFunctionDefinition, FunctionCallExpr, Identifier, IdentifierExpr,
     IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition,
-    NumberLiteralExpr, AST,
+    NumberLiteralExpr, AST,FunctionCallExprBaseProperty,
 };
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
@@ -74,7 +74,6 @@ pub fn _compute_transitive_circuit_io_sizes(
     for call in &cgens[fct].function_calls_with_verification {
         if let Some(cofd) = call
             .func()
-            .unwrap()
             .target()
             .map(|t| *t)
             .unwrap()
@@ -91,7 +90,6 @@ pub fn _compute_transitive_circuit_io_sizes(
         for f in &circuit.function_calls_with_verification.clone() {
             if let Some(ref mut t) = f
                 .func()
-                .unwrap()
                 .target()
                 .map(|t| *t)
                 .unwrap()

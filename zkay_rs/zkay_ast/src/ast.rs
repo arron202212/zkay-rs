@@ -310,8 +310,8 @@ impl ASTChildren for AST {
 }
 
 impl AST {
-    pub fn ast_base_ref(&self) -> Option<&ASTBase>{
-         match self {
+    pub fn ast_base_ref(&self) -> Option<&ASTBase> {
+        match self {
             AST::Identifier(ast) => Some(ast.ast_base_ref()),
             AST::Comment(ast) => Some(ast.ast_base_ref()),
             AST::Expression(ast) => Some(ast.ast_base_ref()),
@@ -354,12 +354,12 @@ impl AST {
     // pub fn statement(&self) -> Option<Statement> {
     //     None
     // }
-    pub fn builtin_function(&self) -> Option<BuiltinFunction> {
-        None
-    }
-    pub fn location_expr_base(&self) -> Option<LocationExprBase> {
-        None
-    }
+    // pub fn builtin_function(&self) -> Option<BuiltinFunction> {
+    //     None
+    // }
+    // pub fn location_expr_base(&self) -> Option<LocationExprBase> {
+    //     None
+    // }
     pub fn namespace_definition(&self) -> Option<NamespaceDefinition> {
         None
     }
@@ -385,9 +385,9 @@ impl AST {
     pub fn identifier_expr(&self) -> Option<IdentifierExpr> {
         None
     }
-    pub fn location_expr(&self) -> Option<LocationExpr> {
-        None
-    }
+    // pub fn location_expr(&self) -> Option<LocationExpr> {
+    //     None
+    // }
     pub fn tuple_expr(&self) -> Option<TupleExpr> {
         None
     }
@@ -428,9 +428,9 @@ impl AST {
     pub fn is_final(&self) -> bool {
         false
     }
-    pub fn func(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn func(&self) -> Option<Expression> {
+    //     None
+    // }
     pub fn set_func_idf_name(&mut self, name: String) {}
     pub fn to_location_expr(&self) -> Option<LocationExpr> {
         // if let Self::LocationExpr(le) = self {
@@ -831,7 +831,13 @@ impl BlankLine {
         }
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, ExpressionBaseRef,ExpressionBaseMutRef, ASTBaseRef)]
+#[enum_dispatch(
+    IntoAST,
+    ASTInstanceOf,
+    ExpressionBaseRef,
+    ExpressionBaseMutRef,
+    ASTBaseRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -890,7 +896,7 @@ impl ASTChildren for Expression {
             // Expression::AllExpr(ast) => ast.process_children(cb),
             // Expression::ReclassifyExpr(ast) => ast.process_children(cb),
             // Expression::DummyAnnotation(ast) => ast.process_children(cb),
-            _=>{}
+            _ => {}
         }
     }
 }
@@ -954,9 +960,9 @@ impl Expression {
     pub fn member(&self) -> Option<Identifier> {
         None
     }
-    pub fn func(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn func(&self) -> Option<Expression> {
+    //     None
+    // }
     pub fn idf(&self) -> Option<Identifier> {
         None
     }
@@ -1770,9 +1776,10 @@ impl HomomorphicBuiltinFunction {
     IntoAST,
     ASTInstanceOf,
     FunctionCallExprBaseRef,
+    FunctionCallExprBaseMutRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef,
+    ASTBaseRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -1813,9 +1820,9 @@ impl FunctionCallExpr {
         None
     }
 
-    pub fn func(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn func(&self) -> Option<Expression> {
+    //     None
+    // }
 
     pub fn as_type(&self, t: AST) -> Self {
         match self {
@@ -3620,7 +3627,12 @@ impl HybridArgumentIdf {
             .as_type(ArrayBase::new(AnnotatedTypeName::uint_all(), None).into_ast());
         if let TypeName::Array(a) = *self.t.clone() {
             SliceExpr::new(
-                self.get_loc_expr(None).location_expr(),
+                self.get_loc_expr(None)
+                    .try_as_expression()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr()
+                    .unwrap()
+                    .try_as_location_expr(),
                 None,
                 0,
                 self.t.size_in_uints(),
@@ -3629,31 +3641,45 @@ impl HybridArgumentIdf {
             .unwrap()
             .assign(self.serialized_loc.to_expr())
         } else if let Some(base) = &base {
-            self.get_loc_expr(None).location_expr().unwrap().assign(
-                LocationExpr::IdentifierExpr(src)
-                    .index(ExprUnion::Expression(
-                        base.binop(
-                            String::from("+"),
-                            NumberLiteralExpr::new(start_offset, false).to_expr(),
-                        )
-                        .to_expr(),
+            self.get_loc_expr(None)
+                .try_as_expression_mut()
+                .unwrap()
+                .try_as_tuple_or_location_expr_mut()
+                .unwrap()
+                .try_as_location_expr_mut()
+                .unwrap()
+                .assign(
+                    LocationExpr::IdentifierExpr(src)
+                        .index(ExprUnion::Expression(
+                            base.binop(
+                                String::from("+"),
+                                NumberLiteralExpr::new(start_offset, false).to_expr(),
+                            )
+                            .to_expr(),
+                        ))
+                        .to_expr()
+                        .explicitly_converted(*self.t.clone())
+                        .expr()
+                        .unwrap(),
+                )
+        } else {
+            self.get_loc_expr(None)
+                .try_as_expression_mut()
+                .unwrap()
+                .try_as_tuple_or_location_expr_mut()
+                .unwrap()
+                .try_as_location_expr_mut()
+                .unwrap()
+                .assign(
+                    Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
+                        LocationExpr::IndexExpr(
+                            LocationExpr::IdentifierExpr(src).index(ExprUnion::I32(start_offset)),
+                        ),
                     ))
-                    .to_expr()
                     .explicitly_converted(*self.t.clone())
                     .expr()
                     .unwrap(),
-            )
-        } else {
-            self.get_loc_expr(None).location_expr().unwrap().assign(
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                    LocationExpr::IndexExpr(
-                        LocationExpr::IdentifierExpr(src).index(ExprUnion::I32(start_offset)),
-                    ),
-                ))
-                .explicitly_converted(*self.t.clone())
-                .expr()
-                .unwrap(),
-            )
+                )
         }
     }
 
@@ -3672,7 +3698,13 @@ impl HybridArgumentIdf {
             )))),
         );
         if let TypeName::Array(t) = *self.t.clone() {
-            let loc = self.get_loc_expr(None).location_expr();
+            let loc = self
+                .get_loc_expr(None)
+                .try_as_expression()
+                .unwrap()
+                .try_as_tuple_or_location_expr()
+                .unwrap()
+                .try_as_location_expr();
             self.serialized_loc
                 .arr
                 .as_mut()
@@ -3949,8 +3981,6 @@ impl Statement {
 //     }
 // }
 
-    
-
 impl ASTChildren for Statement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         match self {
@@ -4019,7 +4049,7 @@ impl StatementBase {
     ASTInstanceOf,
     CircuitComputationStatementBaseRef,
     StatementBaseRef,
-   StatementBaseMutRef,
+    StatementBaseMutRef,
     ASTBaseRef
 )]
 #[derive(
@@ -4489,6 +4519,7 @@ impl ASTChildren for RequireStatement {
     IntoAST,
     ASTInstanceOf,
     AssignmentStatementBaseRef,
+    AssignmentStatementBaseMutRef,
     SimpleStatementBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
@@ -4517,18 +4548,18 @@ impl AssignmentStatement {
     pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
         BTreeSet::new()
     }
-    pub fn lhs(&self) -> Option<AST> {
-        None
-    }
+    // pub fn lhs(&self) -> Option<AST> {
+    //     None
+    // }
     pub fn set_lhs(&mut self, lhs: Option<AST>) {}
     pub fn set_rhs(&mut self, rhs: Option<Expression>) {}
     pub fn set_pre_statements(&mut self, pre_statements: Vec<AST>) {}
-    pub fn rhs(&self) -> Option<Expression> {
-        None
-    }
-    pub fn op(&self) -> Option<String> {
-        None
-    }
+    // pub fn rhs(&self) -> Option<Expression> {
+    //     None
+    // }
+    // pub fn op(&self) -> Option<String> {
+    //     None
+    // }
 }
 // impl IntoAST for AssignmentStatement {
 //     fn into_ast(self) -> AST {
@@ -4607,14 +4638,32 @@ impl AssignmentStatementBase {
 }
 impl ASTChildren for AssignmentStatementBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(te) = self.lhs.clone().unwrap().tuple_expr() {
-            cb.add_child(te.into_ast());
+        if let Some(te) = self
+            .lhs
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_tuple_expr_ref()
+        {
+            cb.add_child(te.to_ast());
         }
-        if let Some(le) = self.lhs.clone().unwrap().location_expr() {
-            cb.add_child(le.into_ast());
+        if let Some(le) = self
+            .lhs
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+        {
+            cb.add_child(le.to_ast());
         }
 
-        cb.add_child(self.rhs.clone().unwrap().into_ast());
+        cb.add_child(self.rhs.as_ref().unwrap().to_ast());
     }
 }
 #[impl_traits(AssignmentStatementBase, SimpleStatementBase, StatementBase, ASTBase)]
@@ -4652,11 +4701,15 @@ impl ASTChildren for CircuitInputStatement {
         if let Some(le) = self
             .assignment_statement_base
             .lhs
-            .clone()
+            .as_ref()
             .unwrap()
-            .location_expr()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
         {
-            cb.add_child(le.into_ast());
+            cb.add_child(le.to_ast());
         }
         cb.add_child(AST::Expression(
             self.assignment_statement_base.rhs.clone().unwrap(),
@@ -4887,7 +4940,7 @@ impl ASTInstanceOf for TypeName {
     }
 }
 impl TypeName {
-fn ast_base_ref(&self) -> Option<&ASTBase> {
+    fn ast_base_ref(&self) -> Option<&ASTBase> {
         match self {
             TypeName::ElementaryTypeName(ast) => Some(ast.ast_base_ref()),
             TypeName::UserDefinedTypeName(ast) => Some(ast.ast_base_ref()),
@@ -6301,9 +6354,9 @@ impl Proof {
         }
     }
 }
-#[impl_traits(ExpressionBase,ASTBase)]
+#[impl_traits(ExpressionBase, ASTBase)]
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct DummyAnnotation{
+pub struct DummyAnnotation {
     pub expression_base: ExpressionBase,
 }
 impl IntoAST for DummyAnnotation {
@@ -6314,7 +6367,9 @@ impl IntoAST for DummyAnnotation {
 
 impl DummyAnnotation {
     pub fn new() -> Self {
-        Self{expression_base: ExpressionBase::new()}
+        Self {
+            expression_base: ExpressionBase::new(),
+        }
     }
 }
 
@@ -7596,21 +7651,29 @@ impl InstanceTarget {
             if is_instance(&v, ASTType::VariableDeclaration) {
                 vec![expr[0].clone(), None]
             } else if is_instance(&v, ASTType::LocationExprBase) {
-                let v = v.location_expr().unwrap();
+                let v = v
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap();
                 match v.get_ast_type() {
                     ASTType::IdentifierExpr => {
-                        vec![v.location_expr_base().unwrap().target.clone(), None]
+                        vec![v.location_expr_base_ref().target.clone(), None]
                     }
 
                     ASTType::MemberAccessExpr => vec![
-                        v.location_expr_base().unwrap().target.clone(),
+                        v.location_expr_base_ref().target.clone(),
                         Some(Box::new(AST::Identifier(
-                            *v.member_access_expr().unwrap().member,
+                            *v.try_as_member_access_expr_ref().unwrap().member.clone(),
                         ))),
                     ],
                     ASTType::IndexExpr => vec![
-                        v.location_expr_base().unwrap().target.clone(),
-                        Some(Box::new(AST::Expression(*v.index_expr().unwrap().key))),
+                        v.location_expr_base_ref().target.clone(),
+                        Some(Box::new(AST::Expression(
+                            *v.try_as_index_expr_ref().unwrap().key.clone(),
+                        ))),
                     ],
                     _ => vec![None; 2],
                 }
@@ -7924,7 +7987,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_FunctionCallExpr(&self, ast: FunctionCallExpr) -> CodeVisitorReturn {
-        if let Some(Expression::BuiltinFunction(func)) = ast.func() {
+        if let Expression::BuiltinFunction(func) = &**ast.func() {
             let args: Vec<_> = ast
                 .args()
                 .iter()
@@ -7932,7 +7995,7 @@ impl CodeVisitor {
                 .collect();
             func.format_string(&args)
         } else {
-            let f = self.visit(&AST::Expression(ast.func().unwrap()));
+            let f = self.visit(&ast.func().to_ast());
             let a = self.visit_list(
                 ast.args()
                     .iter()
@@ -8151,9 +8214,17 @@ impl CodeVisitor {
     }
 
     pub fn visit_AssignmentStatement(&self, ast: AssignmentStatement) -> CodeVisitorReturn {
-        let lhs = ast.lhs().unwrap();
-        let mut op = ast.op().unwrap();
-        if let Some(asu) = lhs.tuple_expr() {
+        let lhs = ast.lhs();
+        let mut op = ast.op().clone();
+        if let Some(asu) = lhs
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_tuple_expr_ref()
+        {
             if let Some(at) = &asu
                 .tuple_or_location_expr_base
                 .expression_base
@@ -8164,7 +8235,15 @@ impl CodeVisitor {
                 }
             }
         }
-        if let Some(le) = lhs.location_expr() {
+        if let Some(le) = lhs
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+        {
             let annotated_type = match le {
                 LocationExpr::IdentifierExpr(ie) => {
                     if let Some(at) = ie.annotated_type.clone() {
@@ -8200,9 +8279,11 @@ impl CodeVisitor {
         }
 
         let rhs = if !op.is_empty() {
-            ast.rhs().map(|fce| fce.args()[1].clone().expr().unwrap())
-        } else {
             ast.rhs()
+                .clone()
+                .map(|fce| fce.args()[1].clone().expr().unwrap())
+        } else {
+            ast.rhs().clone()
         };
 
         let fstr = if op.starts_with("pre") {
@@ -8224,8 +8305,16 @@ impl CodeVisitor {
             Some(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
                 LocationExpr::SliceExpr(rhs),
             ))),
-        ) = (lhs.location_expr(), &rhs)
-        {
+        ) = (
+            lhs.as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref(),
+            &rhs,
+        ) {
             assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
             let mut s = String::new();
             let (lexpr, rexpr) = (
@@ -8273,7 +8362,10 @@ impl CodeVisitor {
             s[..s.len() - 1].to_string()
         } else {
             let to_ast = |hs| self.visit(hs);
-            format_string(to_ast(&lhs), self.visit(&AST::Expression(rhs.unwrap())))
+            format_string(
+                to_ast(&*lhs.as_ref().unwrap()),
+                self.visit(&rhs.unwrap().to_ast()),
+            )
         }
     }
     pub fn visit_CircuitDirectiveStatement(

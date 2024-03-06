@@ -5,15 +5,17 @@ use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS
 
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTType,
-    AllExpr, AnnotatedTypeName, Array, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
-    CombinedPrivacyUnion, ConstructorOrFunctionDefinition, ContractDefinition, ElementaryTypeName,
-    EnumDefinition, EnumTypeName, EnumValue, EnumValueTypeName, Expression, ForStatement,
-    FunctionCallExpr, FunctionTypeName, IdentifierDeclaration, IdentifierExpr, IfStatement,
+    AllExpr, AnnotatedTypeName, Array, AssignmentStatement, AssignmentStatementBaseProperty,
+    BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion, ConstructorOrFunctionDefinition,
+    ContractDefinition, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue,
+    EnumValueTypeName, Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef,
+    ForStatement, FunctionCallExpr, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, FunctionTypeName, IdentifierDeclaration, IdentifierExpr, IfStatement,
     IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion, LocationExpr, Mapping, MeExpr,
     MemberAccessExpr, NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion,
     NumberTypeName, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
     RequireStatement, ReturnStatement, StateVariableDeclaration, TupleExpr, TupleType, TypeName,
-    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
+    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -169,15 +171,18 @@ impl TypeCheckVisitor {
             ast.lhs()
         );
 
-        let expected_type = &ast.lhs().unwrap().annotated_type();
-        ast.set_rhs(self.get_rhs(ast.rhs().unwrap(), expected_type.as_ref().unwrap()));
+        let expected_type = &ast.lhs().as_ref().unwrap().annotated_type();
+        ast.set_rhs(self.get_rhs(
+            ast.rhs().as_ref().unwrap().clone(),
+            expected_type.as_ref().unwrap(),
+        ));
 
         //prevent modifying final
         let f = *ast.function().unwrap();
-        if is_instance(&ast.lhs().unwrap(), ASTType::TupleExpr)
-            || is_instance(&ast.lhs().unwrap(), ASTType::LocationExprBase)
+        if is_instance(&**ast.lhs().as_ref().unwrap(), ASTType::TupleExpr)
+            || is_instance(&**ast.lhs().as_ref().unwrap(), ASTType::LocationExprBase)
         {
-            self.check_final(f, ast.lhs().unwrap().expr().unwrap());
+            self.check_final(f, ast.lhs().as_ref().unwrap().expr().unwrap());
         }
     }
 
@@ -208,7 +213,7 @@ impl TypeCheckVisitor {
     pub fn handle_builtin_function_call(
         &mut self,
         mut ast: FunctionCallExpr,
-        func: BuiltinFunction,
+        func: &mut BuiltinFunction,
     ) {
         if func.is_parenthesis() {
             ast.set_annotated_type(ast.args()[0].annotated_type().unwrap());
@@ -223,14 +228,14 @@ impl TypeCheckVisitor {
         if all_args_all_or_me || is_public_ite {
             self.handle_unhom_builtin_function_call(ast, func);
         } else {
-            self.handle_homomorphic_builtin_function_call(ast, func);
+            self.handle_homomorphic_builtin_function_call(ast, func.clone());
         }
     }
 
     pub fn handle_unhom_builtin_function_call(
         &self,
         mut ast: FunctionCallExpr,
-        mut func: BuiltinFunction,
+        mut func: &mut BuiltinFunction,
     ) {
         let mut args = ast.args();
         //handle special cases
@@ -523,8 +528,11 @@ impl TypeCheckVisitor {
             return Self::can_rehom(&ast.expr().unwrap());
         }
         if is_instance(ast, ASTType::FunctionCallExprBase)
-            && is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
-            && ast.func().unwrap().is_ite()
+            && is_instance(
+                &**ast.try_as_function_call_expr_ref().unwrap().func(),
+                ASTType::BuiltinFunction,
+            )
+            && ast.try_as_function_call_expr_ref().unwrap().func().is_ite()
             && ast.args()[0].annotated_type().unwrap().is_public()
         {
             return Self::can_rehom(&ast.args()[1]) && Self::can_rehom(&ast.args()[2]);
@@ -558,8 +566,17 @@ impl TypeCheckVisitor {
             //Ignore primitive cast & recurse
             rhs.set_expr(Self::try_rehom(rhs.expr().unwrap(), expected_type));
         } else if is_instance(&rhs, ASTType::FunctionCallExprBase)
-            && is_instance(&rhs.func().unwrap(), ASTType::BuiltinFunction)
-            && rhs.func().unwrap().is_ite()
+            && is_instance(
+                &**rhs.try_as_function_call_expr_ref().unwrap().func(),
+                ASTType::BuiltinFunction,
+            )
+            && rhs
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_ite()
             && rhs.args()[0].annotated_type().unwrap().is_public()
         {
             //Argument is public_cond ? true_val : false_val. Try to rehom both true_val and false_val
@@ -653,7 +670,7 @@ impl TypeCheckVisitor {
     //@staticmethod
     pub fn assign_location(target: &mut Expression, source: &mut Expression) {
         //set statement
-        target.expression_base_mut_ref().statement=source.statement().clone();
+        target.expression_base_mut_ref().statement = source.statement().clone();
 
         //set parents
         target.set_parent(source.parent().clone());
@@ -705,15 +722,18 @@ impl TypeCheckVisitor {
     }
 
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
             self.handle_builtin_function_call(
                 ast.clone(),
-                ast.func().unwrap().to_ast().builtin_function().unwrap(),
+                ast.function_call_expr_base_mut_ref()
+                    .func
+                    .try_as_builtin_function_mut()
+                    .unwrap(),
             );
         } else if ast.is_cast() {
             assert!(
                 is_instance(
-                    &ast.func().unwrap().target().map(|t| *t).unwrap(),
+                    &ast.func().target().map(|t| *t).unwrap(),
                     ASTType::EnumDefinition
                 ),
                 "User type casts only implemented for enums"
@@ -722,7 +742,6 @@ impl TypeCheckVisitor {
                 self.handle_cast(
                     ast.args()[0].clone(),
                     *ast.func()
-                        .unwrap()
                         .target()
                         .unwrap()
                         .annotated_type()
@@ -730,8 +749,8 @@ impl TypeCheckVisitor {
                         .type_name,
                 ),
             );
-        } else if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
-            let ft = ast.func().unwrap().annotated_type().unwrap().type_name;
+        } else if is_instance(&**ast.func(), ASTType::LocationExprBase) {
+            let ft = ast.func().annotated_type().unwrap().type_name;
             assert!(is_instance(&*ft, ASTType::FunctionTypeName));
 
             assert!(

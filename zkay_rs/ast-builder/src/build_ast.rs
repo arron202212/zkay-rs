@@ -11,7 +11,7 @@ use zkay_ast::ast::{
     NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr,
     ReclassifyExprBase, RehomExpr, RequireStatement, SimpleStatement, Statement, StatementList,
     StringLiteralExpr, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName,
-    WhileStatement, AST,
+    WhileStatement, AST,FunctionCallExprBaseProperty,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -1506,7 +1506,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     return self.temp_result().clone();
         // }
         if let Some(Expression::FunctionCallExpr(e)) = &expr {
-            if let Some(f) = e.func().unwrap().to_ast().identifier_expr() {
+            if let Some(f) = e.func().to_ast().identifier_expr() {
                 if f.idf.name() == String::from("require") {
                     assert!(
                         e.args().len() == 1,

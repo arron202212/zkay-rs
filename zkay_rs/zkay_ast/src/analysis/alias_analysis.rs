@@ -1,9 +1,10 @@
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
-    is_instance, ASTType, AllExpr, AssignmentStatement, Block, BreakStatement, BuiltinFunction,
-    ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
-    ForStatement, FunctionCallExpr, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
+    is_instance, ASTType, AllExpr, AssignmentStatement, AssignmentStatementBaseProperty, Block,
+    BreakStatement, BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement,
+    DoWhileStatement, ExpressionStatement, ForStatement, FunctionCallExpr,
+    FunctionCallExprBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, Statement, StatementList, TupleExpr,
     VariableDeclarationStatement, WhileStatement, AST,
 };
@@ -378,8 +379,17 @@ impl AliasAnalysisVisitor {
         // make state more precise
         let c = ast.condition;
         if is_instance(&c, ASTType::FunctionCallExprBase)
-            && is_instance(&c.func().unwrap(), ASTType::BuiltinFunction)
-            && &c.func().unwrap().op().unwrap() == "=="
+            && is_instance(
+                &**c.try_as_function_call_expr_ref().unwrap().func(),
+                ASTType::BuiltinFunction,
+            )
+            && &c
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func()
+                .op()
+                .unwrap()
+                == "=="
         {
             let lhs = c.args()[0].privacy_annotation_label();
             let rhs = c.args()[1].privacy_annotation_label();
@@ -394,23 +404,22 @@ impl AliasAnalysisVisitor {
         ast.simple_statement_base.statement_base.after_analysis = after;
     }
     pub fn visitAssignmentStatement(&mut self, mut ast: AssignmentStatement) {
-        let lhs = ast.lhs();
-        let rhs = ast.rhs();
-        if has_side_effects(lhs.clone().unwrap().into())
-            || has_side_effects(rhs.clone().unwrap().to_ast())
+        if has_side_effects(*ast.lhs().as_ref().unwrap().clone())
+            || has_side_effects(ast.rhs().as_ref().unwrap().to_ast())
         {
             ast.set_before_analysis(Some(ast.before_analysis().unwrap().separate_all()));
         }
-
+        let lhs = ast.lhs();
+        let rhs = ast.rhs();
         // visit expression
-        self.visit(lhs.clone().unwrap().into());
+        self.visit(*lhs.as_ref().unwrap().clone());
         self.visit(rhs.as_ref().unwrap().to_ast());
 
         // state after assignment
         let after = ast.before_analysis();
         recursive_assign(
-            lhs.unwrap().into(),
-            rhs.unwrap().to_ast(),
+            *lhs.as_ref().unwrap().clone(),
+            rhs.as_ref().unwrap().to_ast(),
             after.clone().unwrap(),
         );
 
@@ -514,9 +523,9 @@ impl GuardConditionAnalyzer {
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
             let args = ast.args();
-            let op = &ast.func().unwrap().op().unwrap();
+            let op = &ast.func().op().unwrap();
             if op == "!" {
                 self._negated();
                 self.visit(args[0].to_ast());

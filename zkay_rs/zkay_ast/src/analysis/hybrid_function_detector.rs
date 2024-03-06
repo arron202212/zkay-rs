@@ -1,7 +1,8 @@
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
-    FunctionCallExpr, IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
+    ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
+    IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -80,10 +81,9 @@ impl DirectHybridFunctionDetectionVisitor {
     {
     }
     pub fn visitFunctionCallExpr(&self, ast: &mut FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
-            && ast.func().unwrap().is_private()
-        {
-            ast.expression_base_mut_ref().statement
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) && ast.func().is_private() {
+            ast.expression_base_mut_ref()
+                .statement
                 .as_mut()
                 .unwrap()
                 .statement_base_mut()
@@ -93,7 +93,9 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .requires_verification = true;
         } else if ast.is_cast() && ast.evaluate_privately() {
-            ast.expression_base_mut_ref().statement.as_mut()
+            ast.expression_base_mut_ref()
+                .statement
+                .as_mut()
                 .unwrap()
                 .as_mut()
                 .statement_base_mut()
@@ -194,8 +196,8 @@ impl AstVisitor for NonInlineableCallDetector {
 }
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
-        if !ast.is_cast() && is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
-            let ast1: AST = (*ast.func().unwrap().target().unwrap()).into();
+        if !ast.is_cast() && is_instance(&**ast.func(), ASTType::LocationExprBase) {
+            let ast1: AST = (*ast.func().target().unwrap()).into();
             assert!(
                 !(ast1
                     .constructor_or_function_definition()

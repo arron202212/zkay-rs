@@ -3,9 +3,10 @@ use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
-    ConstructorOrFunctionDefinition, Expression, FunctionCallExpr, FunctionTypeName, IfStatement,
-    IndexExpr, IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr,
-    ReclassifyExpr, ReturnStatement, Statement, StatementList, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
+    ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
+    FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr,
+    IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
+    ReturnStatement, Statement, StatementList, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -51,17 +52,23 @@ impl AstVisitor for DirectCanBePrivateDetector {
 }
 impl DirectCanBePrivateDetector {
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
-            if !ast.func().unwrap().is_private() {
-                let mut can_be_private = ast.func().unwrap().can_be_private();
-                if ast.func().unwrap().is_eq() || ast.func().unwrap().is_ite() {
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+            if !ast.func().is_private() {
+                let mut can_be_private = ast.func().can_be_private();
+                if ast.func().is_eq() || ast.func().is_ite() {
                     can_be_private &= ast.args()[1]
                         .annotated_type()
                         .unwrap()
                         .type_name
                         .can_be_private();
                 }
-                ast.expression_base_mut_ref().statement.as_mut().unwrap().function().unwrap().can_be_private &= can_be_private;
+                ast.expression_base_mut_ref()
+                    .statement
+                    .as_mut()
+                    .unwrap()
+                    .function()
+                    .unwrap()
+                    .can_be_private &= can_be_private;
                 //TODO to relax this for public expressions,
                 // public identifiers must use SSA remapped values (since the function is inlined)
             }
@@ -73,7 +80,13 @@ impl DirectCanBePrivateDetector {
 
     pub fn visitLocationExpr(&mut self, mut ast: LocationExpr) {
         let t = &ast.annotated_type().unwrap().type_name;
-        ast.expression_base_mut_ref().statement.as_mut().unwrap().function().unwrap().can_be_private &= t.can_be_private();
+        ast.expression_base_mut_ref()
+            .statement
+            .as_mut()
+            .unwrap()
+            .function()
+            .unwrap()
+            .can_be_private &= t.can_be_private();
         self.visit_children(&ast.to_ast());
     }
 
@@ -239,7 +252,7 @@ impl CircuitComplianceChecker {
         self.visit_children(&ast.to_ast());
     }
 
-    pub fn visitReclassifyExpr(&mut self,mut  ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&mut self, mut ast: ReclassifyExpr) {
         assert!(!self.inside_privif_stmt
             || ast.expression_base_mut_ref().statement.as_mut().unwrap().before_analysis().unwrap().same_partition(
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
@@ -263,9 +276,7 @@ impl CircuitComplianceChecker {
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction)
-            && ast.func().unwrap().is_private()
-        {
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) && ast.func().is_private() {
             self.priv_setter.set_evaluation(ast.to_ast(), true);
         } else if ast.is_cast() && ast.annotated_type().unwrap().is_private() {
             self.priv_setter.set_evaluation(ast.to_ast(), true);
@@ -381,9 +392,9 @@ impl PrivateSetter {
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if self.evaluate_privately.is_some()
-            && is_instance(&ast.func().unwrap(), ASTType::LocationExprBase)
+            && is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
-            && (*ast.func().unwrap().target().unwrap())
+            && (*ast.func().target().unwrap())
                 .constructor_or_function_definition()
                 .unwrap()
                 .has_side_effects()
@@ -437,12 +448,11 @@ impl NonstaticOrIncompatibilityDetector {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
         if ast.evaluate_privately() && !ast.is_cast() {
-            if is_instance(&ast.func().unwrap(), ASTType::LocationExprBase) {
-                assert!(ast.func().unwrap().target().is_some());
+            if is_instance(&**ast.func(), ASTType::LocationExprBase) {
+                assert!(ast.func().target().is_some());
                 assert!(is_instance(
                     &*ast
                         .func()
-                        .unwrap()
                         .target()
                         .unwrap()
                         .annotated_type()
@@ -450,18 +460,18 @@ impl NonstaticOrIncompatibilityDetector {
                         .type_name,
                     ASTType::FunctionTypeName
                 ));
-                has_nonstatic_call |= !(*ast.func().unwrap().target().unwrap())
+                has_nonstatic_call |= !(*ast.func().target().unwrap())
                     .constructor_or_function_definition()
                     .unwrap()
                     .has_static_body;
-                can_be_private &= (ast.func().unwrap().target().unwrap())
+                can_be_private &= (ast.func().target().unwrap())
                     .constructor_or_function_definition()
                     .unwrap()
                     .can_be_private;
-            } else if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
-                can_be_private &= ast.func().unwrap().can_be_private()
+            } else if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+                can_be_private &= ast.func().can_be_private()
                     || ast.annotated_type().unwrap().type_name.is_literal();
-                if ast.func().unwrap().is_eq() || ast.func().unwrap().is_ite() {
+                if ast.func().is_eq() || ast.func().is_ite() {
                     can_be_private &= ast.args()[1]
                         .annotated_type()
                         .unwrap()

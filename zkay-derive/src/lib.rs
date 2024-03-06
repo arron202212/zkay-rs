@@ -45,7 +45,7 @@ pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
                 if id.to_string() == "struct" {
                     let struct_name = it.next().unwrap().to_string();
                     let fn_name = struct_name.to_snake_case();
-                    let mut impl_traits_str=format!(
+                    let mut impl_traits_str = format!(
                         r#"
 impl {}Ref for {} {{
         fn {}_ref(&self)->&{}{{
@@ -53,7 +53,7 @@ impl {}Ref for {} {{
     }}                    "#,
                         struct_name, struct_name, fn_name, struct_name
                     );
-impl_traits_str+=&format!(
+                    impl_traits_str += &format!(
                         r#"
 #[enum_dispatch]
 pub trait {}MutRef {{
@@ -62,7 +62,7 @@ pub trait {}MutRef {{
                   "#,
                         struct_name, fn_name, struct_name
                     );
-impl_traits_str+=&format!(
+                    impl_traits_str += &format!(
                         r#"
 impl {}MutRef for {} {{
         fn {}_mut_ref(&mut self)->&mut {}{{
@@ -70,9 +70,7 @@ impl {}MutRef for {} {{
     }}                    "#,
                         struct_name, struct_name, fn_name, struct_name
                     );
-                    return impl_traits_str
-                    .parse()
-                    .unwrap();
+                    return impl_traits_str.parse().unwrap();
                 }
             }
             _ => {}
@@ -138,7 +136,7 @@ pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
     }}\n",
             base_struct_name, struct_name, fn_name, base_struct_name, struct_vairent
         );
- impls += &s;
+        impls += &s;
         let s = format!(
             "impl {}MutRef for {} {{
         fn {}_mut_ref(&mut self)->&mut {}{{

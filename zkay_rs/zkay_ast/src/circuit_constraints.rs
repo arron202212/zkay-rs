@@ -22,13 +22,13 @@ use crate::ast::{
     ASTChildren, ASTInstanceOf, ASTType, ChildListBuilder, ConstructorOrFunctionDefinition,
     Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };
-use serde::{Deserialize, Serialize};
 use enum_dispatch::enum_dispatch;
+use serde::{Deserialize, Serialize};
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
-#[enum_dispatch(IntoAST,ASTInstanceOf)]
+#[enum_dispatch(IntoAST, ASTInstanceOf)]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
 pub enum CircuitStatement {

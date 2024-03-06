@@ -5,15 +5,17 @@ use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, ASTType, AllExpr, AnnotatedTypeName,
-    AssignmentStatement, AssignmentStatementBase, Block, BooleanLiteralType, BuiltinFunction,
+    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
+    AssignmentStatementBaseProperty, Block, BooleanLiteralType, BuiltinFunction,
     CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
     ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
-    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf,
+    ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf,
     Identifier, IdentifierBase, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
     IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,ExpressionBaseProperty,ExpressionBaseMutRef,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -657,16 +659,10 @@ where
     // :param ast: The function call to include, target function must require verification
     // """
     {
-        assert!(ast
-            .func()
-            .unwrap()
-            .target()
-            .unwrap()
-            .requires_verification());
+        assert!(ast.func().target().unwrap().requires_verification());
         self.function_calls_with_verification.push(ast.clone());
         self._phi.push(CircuitStatement::CircCall(CircCall::new(
             ast.func()
-                .unwrap()
                 .target()
                 .unwrap()
                 .constructor_or_function_definition()
@@ -704,7 +700,14 @@ where
             None,
         );
         let privacy_label_expr = get_privacy_expr_from_label(plabel.unwrap());
-        let le = if let Some(le) = idf.get_loc_expr(None).location_expr() {
+        let le = idf.get_loc_expr(None);
+        let le = if let Some(le) = le
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+        {
             Some(le)
         } else {
             None
@@ -1127,7 +1130,13 @@ where
             .push(CircuitStatement::CircComment(CircComment::new(
                 ast.to_ast().code(),
             )));
-        self._add_assign(ast.lhs().unwrap().expr().unwrap(), &mut ast.rhs().unwrap());
+        self._add_assign(
+            ast.lhs().as_ref().unwrap().expr().unwrap(),
+            ast.assignment_statement_base_mut_ref()
+                .rhs
+                .as_mut()
+                .unwrap(),
+        );
     }
 
     pub fn add_var_decl_to_circuit(&mut self, ast: &mut VariableDeclarationStatement) {
@@ -1410,8 +1419,16 @@ where
             && is_instance(&expr.idf().unwrap(), ASTType::HybridArgumentIdf)
             && expr.idf().unwrap().arg_type() != HybridArgType::PubContractVal;
         let is_hom_comp = is_instance(&(*expr), ASTType::FunctionCallExprBase)
-            && is_instance(&(*expr).func().unwrap(), ASTType::BuiltinFunction)
-            && (*expr).func().unwrap().homomorphism() != Homomorphism::non_homomorphic();
+            && is_instance(
+                &**(*expr).try_as_function_call_expr_ref().unwrap().func(),
+                ASTType::BuiltinFunction,
+            )
+            && (*expr)
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func()
+                .homomorphism()
+                != Homomorphism::non_homomorphic();
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
         {
@@ -1781,7 +1798,14 @@ where
         let key_idf = self._in_name_factory.add_idf(name, key_t.clone(), None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(
-            if let Some(le) = cipher.get_loc_expr(Some((*stmt).to_ast())).location_expr() {
+            if let Some(le) = cipher
+                .get_loc_expr(Some((*stmt).to_ast()))
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+            {
                 vec![le.index(ExprUnion::I32(cipher_payload_len)).to_expr()]
             } else {
                 vec![]

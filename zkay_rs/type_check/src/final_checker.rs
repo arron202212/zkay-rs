@@ -1,9 +1,9 @@
 // use type_check::type_exceptions::TypeException
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTType, AssignmentStatement, Block, ConstructorOrFunctionDefinition,
-    ContractDefinition, Expression, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
-    StateVariableDeclaration, TupleOrLocationExpr, AST,
+    is_instance, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
+    ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierExpr, IfStatement,
+    IntoAST, LocationExpr, StateVariableDeclaration, TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitor::visitor::AstVisitor;
 
@@ -76,8 +76,8 @@ impl FinalVisitor {
     }
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
-        self.visit(ast.rhs().unwrap().to_ast());
-        if let Some(le) = ast.lhs().map(|l| l.identifier_expr()) {
+        self.visit(ast.rhs().as_ref().unwrap().to_ast());
+        if let Some(le) = ast.lhs().as_ref().map(|l| l.identifier_expr()) {
             let var: &AST = &(*le.unwrap().location_expr_base.target.unwrap()).into();
             if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
                 assert!(!*v, "Tried to reassign final variable,{:?}", ast);

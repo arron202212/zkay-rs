@@ -21,7 +21,7 @@ use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
     FunctionCallExpr, HybridArgumentIdf, IdentifierExpr, IndexExpr, IntoAST, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
+    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,FunctionCallExprBaseProperty,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -203,14 +203,14 @@ impl JsnarkVisitor
     }
 
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> String {
-        if is_instance(&ast.func().unwrap(), ASTType::BuiltinFunction) {
-            assert!(ast.func().unwrap().can_be_private());
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+            assert!(ast.func().can_be_private());
             let mut args: Vec<_> = ast
                 .args()
                 .iter()
                 .map(|arg| self.visit(arg.to_ast()))
                 .collect();
-            if ast.func().unwrap().is_shiftop() {
+            if ast.func().is_shiftop() {
                 assert!(ast.args()[1]
                     .annotated_type()
                     .unwrap()
@@ -224,12 +224,12 @@ impl JsnarkVisitor
                     .to_string()
             }
 
-            let mut op = &ast.func().unwrap().op().unwrap();
+            let mut op = &ast.func().op().unwrap();
             let op = if op == "sign-" { "-" } else { op };
             if op == "sign+" {
                 unimplemented!()
             }
-            let homomorphism = ast.func().unwrap().homomorphism();
+            let homomorphism = ast.func().homomorphism();
             let (f_start, crypto_backend, public_key_name) =
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
@@ -270,9 +270,9 @@ impl JsnarkVisitor
                     format!(r#"{f_start}{o}, {{{}}})"#, args[0])
                 } else {
                     assert!(args.len() == 2);
-                    if op == "*" && ast.func().unwrap().rerand_using().is_some() {
+                    if op == "*" && ast.func().rerand_using().is_some() {
                         // re-randomize homomorphic scalar multiplication
-                        let rnd = self.visit(ast.func().unwrap().rerand_using().unwrap().to_ast());
+                        let rnd = self.visit(ast.func().rerand_using().unwrap().to_ast());
                         format!(
                             r#"o_rerand({f_start}{{{}}}, {o}, {{{}}}), "{crypto_backend}", "{public_key_name}", {rnd})"#,
                             args[0], args[1]
@@ -285,7 +285,6 @@ impl JsnarkVisitor
         } else if ast.is_cast()
             && is_instance(
                 &ast.func()
-                    .unwrap()
                     .target()
                     .map(|v| Into::<AST>::into(*v))
                     .unwrap(),
@@ -299,7 +298,7 @@ impl JsnarkVisitor
         // assert!(
         //     false,
         //     "Unsupported function {} inside circuit",
-        //     ast.func().unwrap().code()
+        //     ast.func().code()
         // );
         String::new()
     }
