@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierExpr, IfStatement,
-    IntoAST, LocationExpr, StateVariableDeclaration, TupleOrLocationExpr, AST,
+    IntoAST, LocationExpr, StateVariableDeclaration, TupleOrLocationExpr, AST,IdentifierDeclarationBaseRef,
 };
 use zkay_ast::visitor::visitor::AstVisitor;
 
@@ -57,7 +57,7 @@ impl FinalVisitor {
     pub fn visitContractDefinition(&mut self, ast: ContractDefinition) {
         self.state_vars_assigned = Some(BTreeMap::new());
         for v in &ast.state_variable_declarations {
-            if v.is_final() && v.expr().is_some() {
+            if v.try_as_identifier_declaration_ref().unwrap().identifier_declaration_base_ref().is_final() && v.expr().is_some() {
                 self.state_vars_assigned
                     .as_mut()
                     .unwrap()

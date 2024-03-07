@@ -53,7 +53,7 @@ impl ContainsPrivateVisitor {
         if let Some(t) = ast.annotated_type() {
             assert!(is_instance(&t, ASTType::AnnotatedTypeName));
 
-            if !t.privacy_annotation.unwrap().is_all_expr() {
+            if !t.privacy_annotation.unwrap().try_as_expression_ref().unwrap().is_all_expr() {
                 self.contains_private = true;
             }
         }

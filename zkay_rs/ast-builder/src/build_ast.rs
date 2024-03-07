@@ -719,7 +719,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            AnnotatedTypeName::new(type_name.unwrap(), privacy_annotation, homomorphism).into_ast(),
+            AnnotatedTypeName::new(type_name.unwrap(), privacy_annotation.map(|p|p.into_ast()), homomorphism).into_ast(),
         )
     }
 

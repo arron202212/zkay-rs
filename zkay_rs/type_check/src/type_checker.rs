@@ -23,7 +23,7 @@ use zkay_ast::ast::{
     MemberAccessExpr, NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion,
     NumberTypeName, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
     RequireStatement, ReturnStatement, StateVariableDeclaration, TupleExpr, TupleType, TypeName,
-    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,
+    UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,IdentifierDeclarationBaseRef,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -119,7 +119,7 @@ impl TypeCheckVisitor {
         Some(if instance == Some(String::from("make-private")) {
             Self::make_private(
                 rhs,
-                &*expected_type.privacy_annotation.as_ref().unwrap(),
+                expected_type.privacy_annotation.as_ref().unwrap().try_as_expression_ref().unwrap(),
                 &expected_type.homomorphism,
             )
         } else if require_rehom {
@@ -616,7 +616,7 @@ impl TypeCheckVisitor {
         assert!(expected_type
             .privacy_annotation
             .as_ref()
-            .unwrap()
+            .unwrap().try_as_expression_ref().unwrap()
             .privacy_annotation_label()
             .is_some());
         assert!(expr
@@ -632,14 +632,14 @@ impl TypeCheckVisitor {
             expected_type
                 .privacy_annotation
                 .as_ref()
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .privacy_annotation_label()
                 .unwrap()
                 .into(),
         );
         r.reclassify_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             *expr.annotated_type().unwrap().type_name,
-            Some(pl),
+            Some(pl.into_ast()),
             expected_type.homomorphism.clone(),
         ));
         Self::check_for_invalid_private_type(r.to_ast());
@@ -664,7 +664,7 @@ impl TypeCheckVisitor {
         //set type
         r.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             *expr.annotated_type().unwrap().type_name,
-            Some(pl.clone()),
+            Some(pl.to_ast()),
             homomorphism.clone(),
         ));
         Self::check_for_invalid_private_type(r.to_ast());
@@ -814,7 +814,7 @@ impl TypeCheckVisitor {
         if expr.annotated_type().unwrap().is_private() {
             let expected = AnnotatedTypeName::new(
                 *expr.annotated_type().unwrap().type_name,
-                Some(Expression::me_expr(None)),
+                Some(Expression::me_expr(None).into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             );
             if Some(String::from("true")) == expr.instance_of(&expected) {
@@ -828,7 +828,7 @@ impl TypeCheckVisitor {
             }
             AnnotatedTypeName::new(
                 t.clone(),
-                Some(Expression::me_expr(None)),
+                Some(Expression::me_expr(None).into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             )
         } else {
@@ -922,7 +922,7 @@ impl TypeCheckVisitor {
         //NB prevent any redundant reveal (not just for public)
         ast.set_annotated_type(AnnotatedTypeName::new(
             *ast.expr().unwrap().annotated_type().unwrap().type_name,
-            ast.privacy(),
+            ast.privacy().map(|p|p.into_ast()),
             homomorphism.clone(),
         ));
 
@@ -951,7 +951,7 @@ impl TypeCheckVisitor {
         if ast.condition.annotated_type().unwrap().is_private() {
             let expected = AnnotatedTypeName::new(
                 TypeName::bool_type(),
-                Some(Expression::me_expr(None)),
+                Some(Expression::me_expr(None).into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             );
             assert!(
@@ -1042,14 +1042,14 @@ impl TypeCheckVisitor {
         let index = ast.key.clone();
         let mut map_t = arr.annotated_type().unwrap();
         //should have already been checked
-        assert!(map_t.privacy_annotation.as_ref().unwrap().is_all_expr());
+        assert!(map_t.privacy_annotation.as_ref().unwrap().try_as_expression_ref().unwrap().is_all_expr());
 
         //do actual type checking
         if let TypeName::Mapping(ref mut type_name) = &mut *map_t.type_name {
             let key_type = type_name.key_type.clone();
             let expected = AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(key_type),
-                Some(Expression::all_expr()),
+                Some(Expression::all_expr().into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             );
             let instance = index.instance_of(&expected);
@@ -1164,7 +1164,7 @@ impl TypeCheckVisitor {
             .as_ref()
             .unwrap();
         assert!(
-            !p.is_me_expr(),
+            !p.try_as_expression_ref().unwrap().is_me_expr(),
             "State variables cannot be annotated as me{:?}",
             ast
         );
@@ -1186,7 +1186,7 @@ impl TypeCheckVisitor {
                 .annotated_type()
                 .unwrap()
                 .privacy_annotation
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .is_all_expr(),
             "require needs public argument{:?}",
             ast
@@ -1206,7 +1206,7 @@ impl TypeCheckVisitor {
             }
         }
 
-        if ast.privacy_annotation != Some(Box::new(Expression::all_expr())) {
+        if ast.privacy_annotation != Some(Box::new(Expression::all_expr().into_ast())) {
             assert!(
                 ast.type_name.can_be_private(),
                 "Currently, we do not support private {:?},{:?}",
@@ -1232,12 +1232,12 @@ impl TypeCheckVisitor {
         }
         let p = *ast.privacy_annotation.unwrap();
         if is_instance(&p, ASTType::IdentifierExpr) {
-            let t = p.target().map(|t| *t);
+            let t = p.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().map(|t| *t);
             if let Some(t) = t {
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass
                 assert!(
-                    t.is_final() || t.identifier_declaration_base().unwrap().is_constant(),
+                    t.try_as_identifier_declaration_ref().unwrap().identifier_declaration_base_ref().is_final() || t.try_as_identifier_declaration_ref().unwrap().identifier_declaration_base_ref().is_constant(),
                     r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}"#,
                     p
                 );

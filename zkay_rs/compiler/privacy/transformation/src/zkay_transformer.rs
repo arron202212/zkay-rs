@@ -723,7 +723,7 @@ impl ZkayExpressionTransformer {
                     .annotated_type()
                     .unwrap()
                     .privacy_annotation
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label();
                 return self
                     .gen
@@ -803,7 +803,7 @@ impl ZkayExpressionTransformer {
                     .annotated_type()
                     .unwrap()
                     .privacy_annotation
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label();
                 return self
                     .gen
@@ -950,7 +950,7 @@ impl ZkayExpressionTransformer {
                 .unwrap()
                 .privacy_annotation
                 .as_ref()
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .privacy_annotation_label();
             self.gen
                 .as_mut()
@@ -1067,7 +1067,7 @@ impl ZkayCircuitTransformer {
             let orig_type = ast.annotated_type().unwrap().zkay_type();
             let orig_privacy = orig_type
                 .privacy_annotation
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .privacy_annotation_label();
             let orig_homomorphism = orig_type.homomorphism;
             self.gen
@@ -1133,7 +1133,7 @@ impl ZkayCircuitTransformer {
                     .unwrap()
                     .zkay_type()
                     .privacy_annotation
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label();
                 let mut s = ast.statement().as_ref().unwrap().clone();
                 ast.set_public_key(Some(Box::new(

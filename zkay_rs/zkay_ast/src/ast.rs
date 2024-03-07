@@ -425,16 +425,16 @@ impl AST {
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
     }
-    pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
+    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
     // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    pub fn privacy_annotation_label(&self) -> Option<AST> {
-        None
-    }
-    pub fn is_final(&self) -> bool {
-        false
-    }
+    // pub fn privacy_annotation_label(&self) -> Option<AST> {
+    //     None
+    // }
+    // pub fn is_final(&self) -> bool {
+    //     false
+    // }
     // pub fn func(&self) -> Option<Expression> {
     //     None
     // }
@@ -511,7 +511,7 @@ impl AST {
     pub fn name(&self) -> &'static str {
         ""
     }
-    pub fn bases(child: &str) -> &'static str {
+    pub fn bases(_child: &str) -> &'static str {
         ""
     }
     pub fn names(&self) -> BTreeMap<String, Identifier> {
@@ -688,15 +688,8 @@ impl IdentifierBase {
 }
 impl Immutable for IdentifierBase {
     fn is_immutable(&self) -> bool {
-        if let Some(v) = &self.ast_base.parent {
-            if let AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(
-                svd,
-            )) = &**v
-            {
-                svd.is_final() || svd.is_constant()
-            } else {
-                false
-            }
+        if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(svd))) = &self.ast_base.parent.as_ref().map(|p|*p.clone()) {
+                svd.identifier_declaration_base.is_final() || svd.identifier_declaration_base.is_constant()
         } else {
             false
         }
@@ -956,7 +949,7 @@ impl Expression {
     pub fn is_private(&self) -> bool {
         false
     }
-    pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
+    // pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
     pub fn to_location_expr(&self) -> Option<LocationExpr> {
         // if let Self::LocationExpr(le) = self {
         //     le.clone()
@@ -1209,10 +1202,10 @@ impl Expression {
                             .iter()
                             .map(|t| {
                                 CombinedPrivacyUnion::AST(
-                                    t.clone()
+                                    t
                                         .privacy_annotation
-                                        .clone()
-                                        .map(|pa| AST::Expression(*pa)),
+                                        .as_ref()
+                                        .map(|pa| *pa.clone()),
                                 )
                             })
                             .collect::<Vec<_>>())
@@ -1222,7 +1215,7 @@ impl Expression {
                 == actual
                     .unwrap()
                     .privacy_annotation
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label()
             {
                 Some(String::from("true"))
@@ -1250,7 +1243,7 @@ impl Expression {
 
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
         if let Some(statement) = self.statement() {
-            statement.before_analysis().clone()
+            statement.statement_base_ref().unwrap().before_analysis().clone()
         } else {
             None
         }
@@ -5199,7 +5192,7 @@ impl TypeName {
         AnnotatedTypeName::new(
             self.clone(),
             if let CombinedPrivacyUnion::AST(expr) = privacy_annotation {
-                expr.map(|ast| ast.expr().unwrap())
+                expr
             } else {
                 None
             },
@@ -6507,7 +6500,7 @@ impl TupleType {
                                 .into_ast()
                                 .type_name()
                                 .unwrap(),
-                            Some(Expression::DummyAnnotation(DummyAnnotation::new())),
+                            Some(Expression::DummyAnnotation(DummyAnnotation::new()).into_ast()),
                             String::from("NON_HOMOMORPHIC"),
                         )
                     })
@@ -6604,7 +6597,7 @@ pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
     pub type_name: Box<TypeName>,
     pub had_privacy_annotation: bool,
-    pub privacy_annotation: Option<Box<Expression>>,
+    pub privacy_annotation: Option<Box<AST>>,
     pub homomorphism: String,
 }
 impl IntoAST for AnnotatedTypeName {
@@ -6616,12 +6609,12 @@ impl IntoAST for AnnotatedTypeName {
 impl AnnotatedTypeName {
     pub fn new(
         type_name: TypeName,
-        privacy_annotation: Option<Expression>,
+        privacy_annotation: Option<AST>,
         homomorphism: String,
     ) -> Self {
         assert!(
             !(privacy_annotation.is_none()
-                || if let Some(Expression::AllExpr(_)) = &privacy_annotation {
+                || if let Some(AST::Expression(Expression::AllExpr(_))) = &privacy_annotation {
                     true
                 } else {
                     false
@@ -6634,13 +6627,7 @@ impl AnnotatedTypeName {
             ast_base: ASTBase::new(),
             type_name: Box::new(type_name),
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
-            privacy_annotation: Some(Box::new(
-                if let Some(privacy_annotation) = privacy_annotation {
-                    privacy_annotation
-                } else {
-                    Expression::AllExpr(AllExpr::new())
-                },
-            )),
+            privacy_annotation: privacy_annotation.map(|p|Box::new(p)).or(Some(Box::new(Expression::AllExpr(AllExpr::new()).into_ast()))),
             homomorphism,
         }
     }
@@ -6679,8 +6666,8 @@ impl AnnotatedTypeName {
             other.privacy_annotation.clone().unwrap(),
             self.privacy_annotation.clone().unwrap(),
         );
-        let p_expected = other_privacy_annotation.privacy_annotation_label();
-        let p_actual = self_privacy_annotation.privacy_annotation_label();
+        let p_expected = other_privacy_annotation.try_as_expression_ref().unwrap().privacy_annotation_label();
+        let p_actual = self_privacy_annotation.try_as_expression_ref().unwrap().privacy_annotation_label();
         if let (Some(p_expected), Some(p_actual)) = (p_expected, p_actual) {
             if p_expected == p_actual
                 || (analysis.is_some()
@@ -6688,13 +6675,13 @@ impl AnnotatedTypeName {
                         .unwrap()
                         .same_partition(&p_expected.into(), &p_actual.into()))
             {
-                Some(CombinedPrivacyUnion::AST(Some(AST::Expression(
+                Some(CombinedPrivacyUnion::AST(Some(
                     *self_privacy_annotation,
-                ))))
-            } else if self_privacy_annotation.is_all_expr() {
-                Some(CombinedPrivacyUnion::AST(Some(AST::Expression(
+                )))
+            } else if self_privacy_annotation.try_as_expression_ref().unwrap().is_all_expr() {
+                Some(CombinedPrivacyUnion::AST(Some(
                     *other_privacy_annotation,
-                ))))
+                )))
             } else {
                 None
             }
@@ -6703,7 +6690,7 @@ impl AnnotatedTypeName {
         }
     }
     pub fn is_public(&self) -> bool {
-        if let Some(pa) = &self.privacy_annotation {
+        if let Some(AST::Expression(pa)) = &self.privacy_annotation.as_ref().map(|pa|*pa.clone()) {
             pa.is_all_expr()
         } else {
             false
@@ -6714,7 +6701,7 @@ impl AnnotatedTypeName {
         !self.is_public()
     }
     pub fn is_private_at_me(&self, analysis: &Option<PartitionState<AST>>) -> bool {
-        if let Some(p) = &self.privacy_annotation {
+        if let Some(AST::Expression(p)) = &self.privacy_annotation.as_ref().map(|pa|*pa.clone()) {
             p.is_me_expr()
                 || (analysis.is_some()
                     && analysis.clone().unwrap().same_partition(
@@ -6795,14 +6782,14 @@ impl AnnotatedTypeName {
     pub fn all(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
             type_name,
-            Some(Expression::all_expr()),
+            Some(Expression::all_expr().into_ast()),
             String::from("NON_HOMOMORPHIC"),
         )
     }
     pub fn me(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
             type_name,
-            Some(Expression::me_expr(None)),
+            Some(Expression::me_expr(None).into_ast()),
             String::from("NON_HOMOMORPHIC"),
         )
     }
@@ -6822,7 +6809,7 @@ impl ASTChildren for AnnotatedTypeName {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::TypeName(*self.type_name.clone()));
         if let Some(privacy_annotation) = &self.privacy_annotation {
-            cb.add_child(AST::Expression(*privacy_annotation.clone()));
+            cb.add_child(*privacy_annotation.clone());
         }
     }
 }
@@ -7370,16 +7357,16 @@ impl StateVariableDeclaration {
             expr,
         }
     }
-    pub fn is_final(&self) -> bool {
-        self.identifier_declaration_base
-            .keywords
-            .contains(&String::from("final"))
-    }
-    pub fn is_constant(&self) -> bool {
-        self.identifier_declaration_base
-            .keywords
-            .contains(&String::from("constant"))
-    }
+    // pub fn is_final(&self) -> bool {
+    //     self.identifier_declaration_base
+    //         .keywords
+    //         .contains(&String::from("final"))
+    // }
+    // pub fn is_constant(&self) -> bool {
+    //     self.identifier_declaration_base
+    //         .keywords
+    //         .contains(&String::from("constant"))
+    // }
 }
 impl ASTChildren for StateVariableDeclaration {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -7740,14 +7727,14 @@ impl InstanceTarget {
                 .type_name;
             if t.has_key_label() {
                 self.key()
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             } else {
                 t.value_type()
                     .unwrap()
                     .privacy_annotation
-                    .unwrap()
+                    .unwrap().try_as_expression_ref().unwrap()
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             }
@@ -7758,7 +7745,7 @@ impl InstanceTarget {
                 .unwrap()
                 .zkay_type()
                 .privacy_annotation
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .privacy_annotation_label()
                 .map(|x| x.into_ast())
         } else {
@@ -8522,7 +8509,7 @@ impl CodeVisitor {
     pub fn visit_AnnotatedTypeName(&self, ast: AnnotatedTypeName) -> CodeVisitorReturn {
         let t = self.visit(&AST::TypeName(*ast.type_name));
         let p = if let Some(privacy_annotation) = ast.privacy_annotation {
-            self.visit(&AST::Expression(*privacy_annotation))
+            self.visit(&*privacy_annotation)
         } else {
             String::new()
         };

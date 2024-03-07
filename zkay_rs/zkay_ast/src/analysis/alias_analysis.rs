@@ -99,7 +99,7 @@ impl AliasAnalysisVisitor {
             statement.try_as_statement_mut().unwrap().statement_base_mut_ref().unwrap().before_analysis = Some(last.clone());
             print!("before  {:?},{:?}", statement, last);
             self.visit(statement.to_ast());
-            last = statement.after_analysis().unwrap();
+            last = statement.try_as_statement_ref().unwrap().statement_base_ref().unwrap().after_analysis.as_ref().unwrap().clone();
             print!("after {:?},{:?}", statement, last);
         }
 
@@ -566,8 +566,8 @@ pub fn _recursive_update(lhs: AST, rhs: AST, mut analysis: PartitionState<AST>, 
             _recursive_update(l.to_ast(), r.to_ast(), analysis.clone(), merge);
         }
     } else {
-        let lhs = lhs.privacy_annotation_label();
-        let rhs = rhs.privacy_annotation_label();
+        let lhs = lhs.try_as_expression_ref().unwrap().privacy_annotation_label();
+        let rhs = rhs.try_as_expression_ref().unwrap().privacy_annotation_label();
         if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().into()) {
             if merge {
                 analysis.merge(&lhs.unwrap().into(), &rhs.unwrap().into());

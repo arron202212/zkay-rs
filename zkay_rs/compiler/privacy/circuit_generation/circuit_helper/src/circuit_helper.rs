@@ -525,8 +525,8 @@ where
         for var in ast.modified_values() {
             if var.in_scope_at(ast.to_ast()) {
                 //side effect affects location outside statement and has privacy @me
-                assert!(ast
-                    .before_analysis()
+                assert!(ast.statement_base_ref().unwrap()
+                    .before_analysis.as_ref()
                     .unwrap()
                     .same_partition(&var.privacy().unwrap(), &Expression::me_expr(None).to_ast()));
                 assert!(is_instances(
@@ -545,7 +545,7 @@ where
                 }
                 let ret_t = AnnotatedTypeName::new(
                     *t.type_name,
-                    Some(Expression::me_expr(None)),
+                    Some(Expression::me_expr(None).into_ast()),
                     t.homomorphism,
                 ); //t, but @me
                 let mut idf = IdentifierExpr::new(
@@ -796,7 +796,7 @@ where
             expr.annotated_type()
                 .unwrap()
                 .privacy_annotation
-                .unwrap()
+                .unwrap().try_as_expression_ref().unwrap()
                 .privacy_annotation_label()
         } else {
             Some(Expression::all_expr().to_ast())

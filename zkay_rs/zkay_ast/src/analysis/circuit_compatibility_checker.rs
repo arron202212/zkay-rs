@@ -17,7 +17,7 @@ use crate::ast::{
     ReturnStatement, Statement, StatementList, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
-
+ use crate::analysis::partition_state::PartitionState;
 pub fn check_circuit_compliance(ast: AST) {
     // """
     // determines for every function whether it can be used inside a circuit
@@ -262,8 +262,8 @@ impl CircuitComplianceChecker {
 
     pub fn visitReclassifyExpr(&mut self, mut ast: ReclassifyExpr) {
         assert!(!self.inside_privif_stmt
-            || ast.expression_base_mut_ref().statement.as_mut().unwrap().before_analysis().unwrap().same_partition(
-                &ast.privacy().unwrap().privacy_annotation_label().unwrap().into(),
+            || ast.statement().as_ref().unwrap().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
+                &ast.privacy().unwrap().privacy_annotation_label().unwrap(),
                 &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast.expr().unwrap().annotated_type().unwrap().is_public() {
