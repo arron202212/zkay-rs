@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, AST,
+    is_instance, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, AST,ASTBaseProperty,
 }; //, AstException
 use crate::visitor::visitor::AstVisitor;
 
@@ -61,10 +61,10 @@ impl ReturnCheckVisitor {
             ok = false;
         }
         if !is_instance(
-            &container.parent().unwrap(),
+            &**container.ast_base_ref().unwrap().parent.as_ref().unwrap(),
             ASTType::ConstructorOrFunctionDefinition,
-        ) || container
-            .parent()
+        ) || container.ast_base_ref().unwrap()
+            .parent.as_ref()
             .unwrap()
             .constructor_or_function_definition()
             .unwrap()

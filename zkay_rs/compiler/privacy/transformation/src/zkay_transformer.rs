@@ -27,7 +27,7 @@ use zkay_ast::ast::{
     Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
     NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReturnStatement, SimpleStatement,
     StateVariableDeclaration, Statement, StatementList, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, WhileStatement, AST,
+    VariableDeclarationStatement, WhileStatement, AST,FunctionCallExprBaseMutRef,IdentifierBaseMutRef,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
@@ -846,11 +846,11 @@ impl ZkayExpressionTransformer {
                 if !is_instance(&**ast.func(), ASTType::IdentifierExpr) {
                     unimplemented!();
                 }
-                ast.set_func_idf_name(
+                ast.function_call_expr_base_mut_ref().func.try_as_tuple_or_location_expr_mut().unwrap().try_as_location_expr_mut().unwrap().try_as_identifier_expr_mut().unwrap().idf.identifier_base_mut_ref().name=
                     CFG.lock()
                         .unwrap()
-                        .get_internal_name(&*ast.func().target().unwrap()),
-                );
+                        .get_internal_name(&*ast.function_call_expr_base_mut_ref().func.target().unwrap())
+                ;
             }
 
             if ast.func().target().unwrap().requires_verification()

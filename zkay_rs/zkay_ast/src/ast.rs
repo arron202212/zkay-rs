@@ -332,21 +332,21 @@ impl AST {
             _ => None,
         }
     }
-    // pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase>{
-    //      match self {
-    //         AST::Identifier(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::Comment(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::Expression(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::Statement(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::TypeName(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::AnnotatedTypeName(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::IdentifierDeclaration(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::NamespaceDefinition(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::EnumValue(ast) => Some(ast.ast_base_mut_ref()),
-    //         AST::SourceUnit(ast) => Some(ast.ast_base_mut_ref()),
-    //         _ => None,
-    //     }
-    // }
+    pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase>{
+         match self {
+            AST::Identifier(ast) => Some(ast.ast_base_mut_ref()),
+            AST::Comment(ast) => Some(ast.ast_base_mut_ref()),
+            AST::Expression(ast) => Some(ast.ast_base_mut_ref()),
+            AST::Statement(ast) => ast.ast_base_mut_ref(),
+            AST::TypeName(ast) => ast.ast_base_mut_ref(),
+            AST::AnnotatedTypeName(ast) => Some(ast.ast_base_mut_ref()),
+            AST::IdentifierDeclaration(ast) => Some(ast.ast_base_mut_ref()),
+            AST::NamespaceDefinition(ast) => Some(ast.ast_base_mut_ref()),
+            AST::EnumValue(ast) => Some(ast.ast_base_mut_ref()),
+            AST::SourceUnit(ast) => Some(ast.ast_base_mut_ref()),
+            _ => None,
+        }
+    }
 
     // pub fn identifier(&self) -> Option<Identifier> {
     //     if let Self::Identifier(idf) = self {
@@ -485,9 +485,9 @@ impl AST {
     pub fn target() -> Option<AST> {
         None
     }
-    pub fn parent(&self) -> Option<AST> {
-        None
-    }
+    // pub fn parent(&self) -> Option<AST> {
+    //     None
+    // }
     pub fn text(&self) -> String {
         let v = CodeVisitor::new(true);
         v.visit(&self)
@@ -499,12 +499,12 @@ impl AST {
     pub fn original_code(&self) -> Vec<String> {
         vec![]
     }
-    pub fn set_original_code(&mut self, code: Vec<String>) {}
+    // pub fn set_original_code(&mut self, code: Vec<String>) {}
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
-        while e != selfs && e.parent().is_some() {
-            e = e.parent().unwrap().clone();
+        while e != selfs && e.ast_base_ref().unwrap().parent.is_some() {
+            e = *e.ast_base_ref().unwrap().parent.as_ref().unwrap().clone();
         }
         e == selfs
     }
@@ -648,7 +648,11 @@ impl IntoAST for IdentifierBase {
         AST::Identifier(Identifier::Identifier(self))
     }
 }
-
+impl ASTBaseMutRef for IdentifierBase{
+    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
+    &mut self.ast_base
+    }
+}
 impl IdentifierBase {
     pub fn new(name: String) -> Self {
         Self {
@@ -700,7 +704,7 @@ impl fmt::Display for IdentifierBase {
         write!(f, "{}", self.name)
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, CommentBaseRef, ASTBaseRef)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, CommentBaseRef, ASTBaseRef, ASTBaseMutRef)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -765,7 +769,11 @@ impl IntoAST for CommentBase {
         AST::Comment(Comment::Comment(self))
     }
 }
-
+impl ASTBaseMutRef for CommentBase{
+    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
+    &mut self.ast_base
+    }
+}
 impl CommentBase {
     pub fn new(text: String) -> Self {
         Self {
@@ -836,7 +844,7 @@ impl BlankLine {
     ASTInstanceOf,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -911,10 +919,10 @@ impl Expression {
         let v = CodeVisitor::new(true);
         v.visit(&self.to_ast())
     }
-    pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
-    pub fn parent(&self) -> Option<Box<AST>> {
-        None
-    }
+    // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
+    // pub fn parent(&self) -> Option<Box<AST>> {
+    //     None
+    // }
     pub fn privacy(&self) -> Option<Expression> {
         None
     }
@@ -1779,7 +1787,8 @@ impl HomomorphicBuiltinFunction {
     FunctionCallExprBaseMutRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2066,7 +2075,8 @@ impl ASTChildren for PrimitiveCastExpr {
     LiteralExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2284,7 +2294,7 @@ impl StringLiteralExpr {
     LiteralExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2444,7 +2454,8 @@ impl KeyLiteralExpr {
     TupleOrLocationExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2481,7 +2492,7 @@ impl TupleOrLocationExpr {
                 .parent
                 .clone()
                 .map(|p| *p),
-            TupleOrLocationExpr::LocationExpr(te) => te.parent(),
+            TupleOrLocationExpr::LocationExpr(te) => te.parent().as_ref().map(|p| *p.clone()),
         };
         if let Some(AST::Statement(Statement::SimpleStatement(
             SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(a)),
@@ -2638,7 +2649,7 @@ impl ASTChildren for TupleExpr {
     TupleOrLocationExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2718,42 +2729,42 @@ impl LocationExpr {
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
-    pub fn parent(&self) -> Option<AST> {
-        match self {
-            LocationExpr::IdentifierExpr(ie) => ie
-                .clone()
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
-                .parent
-                .map(|p| *p),
-            LocationExpr::MemberAccessExpr(mae) => mae
-                .clone()
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
-                .parent
-                .map(|p| *p),
-            LocationExpr::IndexExpr(ie) => ie
-                .clone()
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
-                .parent
-                .map(|p| *p),
-            LocationExpr::SliceExpr(se) => se
-                .clone()
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
-                .parent
-                .map(|p| *p),
-        }
-    }
+    // pub fn parent(&self) -> Option<AST> {
+    //     match self {
+    //         LocationExpr::IdentifierExpr(ie) => ie
+    //             .clone()
+    //             .location_expr_base
+    //             .tuple_or_location_expr_base
+    //             .expression_base
+    //             .ast_base
+    //             .parent
+    //             .map(|p| *p),
+    //         LocationExpr::MemberAccessExpr(mae) => mae
+    //             .clone()
+    //             .location_expr_base
+    //             .tuple_or_location_expr_base
+    //             .expression_base
+    //             .ast_base
+    //             .parent
+    //             .map(|p| *p),
+    //         LocationExpr::IndexExpr(ie) => ie
+    //             .clone()
+    //             .location_expr_base
+    //             .tuple_or_location_expr_base
+    //             .expression_base
+    //             .ast_base
+    //             .parent
+    //             .map(|p| *p),
+    //         LocationExpr::SliceExpr(se) => se
+    //             .clone()
+    //             .location_expr_base
+    //             .tuple_or_location_expr_base
+    //             .expression_base
+    //             .ast_base
+    //             .parent
+    //             .map(|p| *p),
+    //     }
+    // }
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
@@ -3233,7 +3244,7 @@ impl Immutable for AllExpr {
     ReclassifyExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -3763,7 +3774,7 @@ impl HybridArgumentIdf {
         }
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierBaseRef, ASTBaseRef)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierBaseRef,IdentifierBaseMutRef,  ASTBaseRef, ASTBaseMutRef)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -3796,9 +3807,9 @@ impl Identifier {
     pub fn name(&self) -> String {
         String::new()
     }
-    pub fn parent(&self) -> Option<AST> {
-        None
-    }
+    // pub fn parent(&self) -> Option<AST> {
+    //     None
+    // }
     pub fn t(&self) -> Option<TypeName> {
         None
     }
@@ -3888,6 +3899,21 @@ impl Statement {
             Statement::ReturnStatement(ast) => Some(ast.ast_base_ref()),
             Statement::SimpleStatement(ast) => Some(ast.ast_base_ref()),
             Statement::StatementList(ast) => Some(ast.ast_base_ref()),
+            Statement::CircuitStatement(_) => None,
+        }
+    }
+    fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
+        match self {
+            Statement::CircuitDirectiveStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::IfStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::WhileStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::DoWhileStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::ForStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::BreakStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::ContinueStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::ReturnStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::SimpleStatement(ast) => Some(ast.ast_base_mut_ref()),
+            Statement::StatementList(ast) => Some(ast.ast_base_mut_ref()),
             Statement::CircuitStatement(_) => None,
         }
     }
@@ -4064,7 +4090,8 @@ impl StatementBase {
     CircuitComputationStatementBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4394,7 +4421,7 @@ impl ASTChildren for ReturnStatement {
     SimpleStatementBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4537,7 +4564,8 @@ impl ASTChildren for RequireStatement {
     SimpleStatementBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4736,7 +4764,8 @@ impl ASTChildren for CircuitInputStatement {
     StatementListBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4954,7 +4983,7 @@ impl ASTInstanceOf for TypeName {
     }
 }
 impl TypeName {
-    fn ast_base_ref(&self) -> Option<&ASTBase> {
+    pub fn ast_base_ref(&self) -> Option<&ASTBase> {
         match self {
             TypeName::ElementaryTypeName(ast) => Some(ast.ast_base_ref()),
             TypeName::UserDefinedTypeName(ast) => Some(ast.ast_base_ref()),
@@ -4962,6 +4991,17 @@ impl TypeName {
             TypeName::Array(ast) => Some(ast.ast_base_ref()),
             TypeName::TupleType(ast) => Some(ast.ast_base_ref()),
             TypeName::FunctionTypeName(ast) => Some(ast.ast_base_ref()),
+            _ => None,
+        }
+    }
+    pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
+        match self {
+            TypeName::ElementaryTypeName(ast) => Some(ast.ast_base_mut_ref()),
+            TypeName::UserDefinedTypeName(ast) => Some(ast.ast_base_mut_ref()),
+            TypeName::Mapping(ast) => Some(ast.ast_base_mut_ref()),
+            TypeName::Array(ast) => Some(ast.ast_base_mut_ref()),
+            TypeName::TupleType(ast) => Some(ast.ast_base_mut_ref()),
+            TypeName::FunctionTypeName(ast) => Some(ast.ast_base_mut_ref()),
             _ => None,
         }
     }
@@ -4974,7 +5014,7 @@ impl TypeName {
     pub fn return_parameters(&self) -> Vec<Parameter> {
         vec![]
     }
-    pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
+    // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
     pub fn has_key_label(&self) -> bool {
         false
     }
@@ -5232,7 +5272,7 @@ impl TypeNameBase {
     ASTInstanceOf,
     ElementaryTypeNameBaseRef,
     TypeNameBaseRef,
-    ASTBaseRef
+    ASTBaseRef,ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5384,7 +5424,8 @@ impl BooleanLiteralType {
     NumberTypeNameBaseRef,
     ElementaryTypeNameBaseRef,
     TypeNameBaseRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef,
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5731,7 +5772,8 @@ impl UintTypeName {
     ASTInstanceOf,
     UserDefinedTypeNameBaseRef,
     TypeNameBaseRef,
-    ASTBaseRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5747,50 +5789,50 @@ pub enum UserDefinedTypeName {
 }
 impl UserDefinedTypeName {
     pub fn set_type_name(&mut self, type_name: TypeName) {}
-    pub fn parent(&self) -> Option<AST> {
-        None
-    }
-    pub fn set_parent(&mut self, parent: Option<AST>) {
-        match self {
-            UserDefinedTypeName::EnumTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } //UserDefinedTypeName::EnumTypeName(ast)}
-            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } //UserDefinedTypeName::EnumValueTypeName(ast)}
-            UserDefinedTypeName::StructTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } //UserDefinedTypeName::StructTypeName(ast)}
-            UserDefinedTypeName::ContractTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } // UserDefinedTypeName::ContractTypeName(ast)}
-            UserDefinedTypeName::AddressTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } // UserDefinedTypeName::AddressTypeName(ast)}
-            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base
-                    .type_name_base
-                    .ast_base
-                    .parent = parent.map(|p| Box::new(p));
-            } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-              // _ => {} //UserDefinedTypeName::default()},
-        };
-    }
+    // pub fn parent(&self) -> Option<AST> {
+    //     None
+    // }
+    // pub fn set_parent(&mut self, parent: Option<AST>) {
+    //     match self {
+    //         UserDefinedTypeName::EnumTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } //UserDefinedTypeName::EnumTypeName(ast)}
+    //         UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } //UserDefinedTypeName::EnumValueTypeName(ast)}
+    //         UserDefinedTypeName::StructTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } //UserDefinedTypeName::StructTypeName(ast)}
+    //         UserDefinedTypeName::ContractTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } // UserDefinedTypeName::ContractTypeName(ast)}
+    //         UserDefinedTypeName::AddressTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } // UserDefinedTypeName::AddressTypeName(ast)}
+    //         UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base
+    //                 .type_name_base
+    //                 .ast_base
+    //                 .parent = parent.map(|p| Box::new(p));
+    //         } //UserDefinedTypeName::AddressPayableTypeName(ast)}
+    //           // _ => {} //UserDefinedTypeName::default()},
+    //     };
+    // }
     pub fn target(&self) -> Option<NamespaceDefinition> {
         None
     }
@@ -5937,9 +5979,9 @@ impl EnumValueTypeName {
             names,
             self.user_defined_type_name_base
                 .target
-                .clone()
-                .unwrap()
-                .parent()
+                .as_ref()
+                .unwrap().ast_base_ref().unwrap()
+                .parent.as_ref()
                 .map(|p| p.namespace_definition().unwrap()),
         )))
     }
@@ -6131,7 +6173,7 @@ pub fn test() {
     let p = Array::Proof(Proof::new());
     p.array_base_ref();
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, ArrayBaseRef, TypeNameBaseRef, ASTBaseRef)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, ArrayBaseRef, TypeNameBaseRef, ASTBaseRef, ASTBaseMutRef)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -6605,7 +6647,11 @@ impl IntoAST for AnnotatedTypeName {
         AST::AnnotatedTypeName(self)
     }
 }
-
+impl ASTBaseMutRef for AnnotatedTypeName{
+    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
+    &mut self.ast_base
+    }
+}
 impl AnnotatedTypeName {
     pub fn new(
         type_name: TypeName,
@@ -6813,7 +6859,7 @@ impl ASTChildren for AnnotatedTypeName {
         }
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierDeclarationBaseRef, ASTBaseRef)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierDeclarationBaseRef, ASTBaseRef, ASTBaseMutRef)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -7014,7 +7060,7 @@ impl Parameter {
         self.clone()
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, NamespaceDefinitionBaseRef, ASTBaseRef)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, NamespaceDefinitionBaseRef, ASTBaseRef, ASTBaseMutRef)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -7035,9 +7081,9 @@ impl NamespaceDefinition {
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
     }
-    pub fn parent(&self) -> Option<AST> {
-        None
-    }
+    // pub fn parent(&self) -> Option<AST> {
+    //     None
+    // }
 }
 // impl IntoAST for NamespaceDefinition {
 //     fn into_ast(self) -> AST {
@@ -7388,7 +7434,11 @@ impl IntoAST for EnumValue {
         AST::EnumValue(self)
     }
 }
-
+impl ASTBaseMutRef for EnumValue{
+    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
+    &mut self.ast_base
+    }
+}
 impl EnumValue {
     pub fn new(idf: Option<Identifier>) -> Self {
         Self {
@@ -7573,7 +7623,11 @@ impl IntoAST for SourceUnit {
         AST::SourceUnit(self)
     }
 }
-
+impl ASTBaseMutRef for SourceUnit{
+    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
+    &mut self.ast_base
+    }
+}
 impl SourceUnit {
     pub fn new(
         pragma_directive: String,
@@ -7596,15 +7650,13 @@ impl SourceUnit {
     }
     pub fn get_item(self, key: &String) -> Option<ContractDefinition> {
         if let Some(c_identifier) = self.ast_base.names.get(key) {
-            let c = c_identifier.parent();
-            if let Some(c) = c {
-                if let AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c)) = c {
+            if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) =  c_identifier.parent().as_ref().map(|p|*p.clone()) {
                     return Some(c.clone());
-                }
             }
         }
         None
     }
+    
 }
 impl ASTChildren for SourceUnit {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -7635,7 +7687,7 @@ pub fn get_privacy_expr_from_label(plabel: AST) -> Expression
             IdentifierExprUnion::Identifier(idf.clone()),
             Some(Box::new(AnnotatedTypeName::address_all())),
         );
-        ie.location_expr_base.target = idf.parent().map(|p| Box::new((p).into()));
+        ie.location_expr_base.target = idf.parent().clone();
         ie.to_expr()
     } else {
         plabel.expr().unwrap()
@@ -7839,8 +7891,8 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get surrounding contract
     let mut ctr = fct.clone().or(Some(ast.clone()));
     while ctr.is_some() && !is_instance(ctr.as_ref().unwrap(), ASTType::ContractDefinition) {
-        if let Some(p) = ctr.as_ref().unwrap().parent() {
-            ctr = Some(p);
+        if let Some(p) = ctr.as_ref().unwrap().ast_base_ref().unwrap().parent.as_ref() {
+            ctr = Some(*p.clone());
         } else {
             break;
         }
@@ -7849,7 +7901,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get source root
     let mut root = ctr.clone().or(Some(ast.clone()));
     while root.is_some() && !is_instance(root.as_ref().unwrap(), ASTType::SourceUnit) {
-        root = root.unwrap().parent();
+        root = root.unwrap().ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
     }
 
     let error_msg = if root.is_none() {

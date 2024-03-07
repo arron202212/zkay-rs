@@ -8,7 +8,7 @@
 
 use crate::ast::{
     ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
-    NamespaceDefinition, SourceUnit, Statement, AST,
+    NamespaceDefinition, SourceUnit, Statement, AST,ASTBaseProperty,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -56,14 +56,13 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitNamespaceDefinition(&self, mut ast: NamespaceDefinition) {
-        ast.ast_base_mut().unwrap().namespace = Some(if let Some(mut parent) = ast.parent() {
+        ast.ast_base_mut().unwrap().namespace = Some(if let Some(parent) = ast.parent() {
             parent
                 .ast_base()
                 .unwrap()
-                .namespace
-                .clone()
+                .namespace.as_ref()
                 .unwrap()
-                .into_iter()
+                .iter().cloned()
                 .chain([ast.namespace_definition_base().unwrap().idf.clone()])
                 .collect()
         } else {
@@ -130,7 +129,7 @@ impl ExpressionToStatementVisitor {
             if let AST::Statement(_) = p {
                 break;
             }
-            parent = p.parent();
+            parent = p.ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
         }
         if parent.is_some() {
             ast.expression_base_mut().unwrap().statement =
@@ -147,7 +146,7 @@ impl ExpressionToStatementVisitor {
             {
                 break;
             }
-            parent = p.parent();
+            parent = p.ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
         }
         if parent.is_some() {
             ast.statement_base_mut().unwrap().function =
