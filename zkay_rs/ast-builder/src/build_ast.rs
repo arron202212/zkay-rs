@@ -126,8 +126,12 @@ pub fn build_ast(code: &str) -> AST {
     let mut full_ast = build_ast_from_parse_tree(code);
     assert!(full_ast.is_some());
     // assert isinstance(full_ast, ast.SourceUnit)
-    full_ast.as_mut().unwrap()
-        .try_as_source_unit_mut().unwrap().original_code=code.split("\n").map(String::from).collect();
+    full_ast
+        .as_mut()
+        .unwrap()
+        .try_as_source_unit_mut()
+        .unwrap()
+        .original_code = code.split("\n").map(String::from).collect();
     full_ast.unwrap()
 }
 
@@ -717,7 +721,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            AnnotatedTypeName::new(type_name.unwrap(), privacy_annotation.map(|p|p.into_ast()), homomorphism).into_ast(),
+            AnnotatedTypeName::new(
+                type_name.unwrap(),
+                privacy_annotation.map(|p| p.into_ast()),
+                homomorphism,
+            )
+            .into_ast(),
         )
     }
 

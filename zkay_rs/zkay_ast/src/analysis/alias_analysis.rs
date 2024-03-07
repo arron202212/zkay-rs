@@ -13,8 +13,8 @@ use crate::ast::{
     BreakStatement, BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement,
     DoWhileStatement, ExpressionStatement, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
-    RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseRef,
-    StatementList, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,StatementBaseProperty,
+    RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
+    StatementBaseRef, StatementList, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -96,19 +96,33 @@ impl AliasAnalysisVisitor {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements.iter_mut() {
-            statement.try_as_statement_mut().unwrap().statement_base_mut_ref().unwrap().before_analysis = Some(last.clone());
+            statement
+                .try_as_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .unwrap()
+                .before_analysis = Some(last.clone());
             print!("before  {:?},{:?}", statement, last);
             self.visit(statement.to_ast());
-            last = statement.try_as_statement_ref().unwrap().statement_base_ref().unwrap().after_analysis.as_ref().unwrap().clone();
+            last = statement
+                .try_as_statement_ref()
+                .unwrap()
+                .statement_base_ref()
+                .unwrap()
+                .after_analysis
+                .as_ref()
+                .unwrap()
+                .clone();
             print!("after {:?},{:?}", statement, last);
         }
 
         last
     }
     pub fn visitStatementList(&self, mut ast: StatementList) {
-        ast.statement_base_mut_ref().after_analysis=Some(
-            self.propagate(ast.statements(), ast.before_analysis().as_ref().unwrap().clone()),
-        );
+        ast.statement_base_mut_ref().after_analysis = Some(self.propagate(
+            ast.statements(),
+            ast.before_analysis().as_ref().unwrap().clone(),
+        ));
     }
     pub fn visitBlock(&self, mut ast: Block) {
         let mut last = ast
@@ -275,7 +289,8 @@ impl AliasAnalysisVisitor {
                 .statement_base_mut_ref()
                 .before_analysis = Some(last.clone());
             self.visit(ast.init.as_ref().unwrap().to_ast());
-            ast.statement_base.before_analysis = ast.init.as_ref().unwrap().after_analysis().clone();
+            ast.statement_base.before_analysis =
+                ast.init.as_ref().unwrap().after_analysis().clone();
             // init should be taken into account when looking up things in the condition
         }
         if has_side_effects(ast.condition.to_ast())
@@ -439,7 +454,7 @@ impl AliasAnalysisVisitor {
         );
 
         // save state
-        ast.statement_base_mut_ref().after_analysis=after.clone();
+        ast.statement_base_mut_ref().after_analysis = after.clone();
     }
     pub fn visitExpressionStatement(&mut self, mut ast: ExpressionStatement) {
         if has_side_effects(ast.expr.to_ast()) {
@@ -566,8 +581,14 @@ pub fn _recursive_update(lhs: AST, rhs: AST, mut analysis: PartitionState<AST>, 
             _recursive_update(l.to_ast(), r.to_ast(), analysis.clone(), merge);
         }
     } else {
-        let lhs = lhs.try_as_expression_ref().unwrap().privacy_annotation_label();
-        let rhs = rhs.try_as_expression_ref().unwrap().privacy_annotation_label();
+        let lhs = lhs
+            .try_as_expression_ref()
+            .unwrap()
+            .privacy_annotation_label();
+        let rhs = rhs
+            .try_as_expression_ref()
+            .unwrap()
+            .privacy_annotation_label();
         if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().into()) {
             if merge {
                 analysis.merge(&lhs.unwrap().into(), &rhs.unwrap().into());

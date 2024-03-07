@@ -387,7 +387,8 @@ impl ZkayTransformer {
             )) = var
             {
                 if var.identifier_declaration_base.annotated_type.is_address()
-                    && (var.identifier_declaration_base.is_final() || var.identifier_declaration_base.is_constant())
+                    && (var.identifier_declaration_base.is_final()
+                        || var.identifier_declaration_base.is_constant())
                 {
                     global_owners.push((*var.identifier_declaration_base.idf).to_expr());
                 }

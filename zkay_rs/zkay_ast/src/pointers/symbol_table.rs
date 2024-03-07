@@ -8,12 +8,13 @@
 
 // from typing import Tuple, Dict, Union
 use crate::ast::{
-    is_instance, is_instances, ASTChildren, ASTType, AnnotatedTypeName, Array, Block, Comment,
-    ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
-    ForStatement, Identifier, IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr,
-    IntoAST, LocationExpr, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
-    SourceUnit, Statement, StatementList, StructDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,ASTBaseProperty,ASTBaseMutRef,
+    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType,
+    AnnotatedTypeName, Array, Block, Comment, ConstructorOrFunctionDefinition, ContractDefinition,
+    EnumDefinition, EnumValue, Expression, ForStatement, Identifier, IdentifierBase,
+    IdentifierDeclaration, IdentifierExpr, IndexExpr, IntoAST, LocationExpr, Mapping,
+    MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement, StatementList,
+    StructDefinition, TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -296,11 +297,26 @@ impl SymbolTableLinker {
             if let Some(nameo) = _ancestor.names().get(&name) {
                 let decl = nameo.parent();
                 if !is_instance(
-                    &**decl.clone().unwrap().ast_base_ref().unwrap().parent.as_ref().unwrap(),
+                    &**decl
+                        .clone()
+                        .unwrap()
+                        .ast_base_ref()
+                        .unwrap()
+                        .parent
+                        .as_ref()
+                        .unwrap(),
                     ASTType::VariableDeclarationStatement,
-                ) || !decl.clone().unwrap().ast_base_ref().unwrap().parent.as_ref().unwrap().is_parent_of(&ast)
+                ) || !decl
+                    .clone()
+                    .unwrap()
+                    .ast_base_ref()
+                    .unwrap()
+                    .parent
+                    .as_ref()
+                    .unwrap()
+                    .is_parent_of(&ast)
                 {
-                    return (Some(*_ancestor.clone()), decl.as_ref().map(|d|*d.clone()));
+                    return (Some(*_ancestor.clone()), decl.as_ref().map(|d| *d.clone()));
                 }
             }
             ancestor = _ancestor.ast_base_ref().unwrap().parent.clone();
@@ -317,8 +333,22 @@ impl SymbolTableLinker {
         let mut ancs = BTreeMap::new();
         loop {
             assert!(ast1.ast_base_ref().unwrap().parent.is_some());
-            ancs.insert(ast1.ast_base_ref().unwrap().parent.as_ref().unwrap().clone(), ast1.clone());
-            ast1 = *ast1.ast_base_ref().unwrap().parent.as_ref().unwrap().clone();
+            ancs.insert(
+                ast1.ast_base_ref()
+                    .unwrap()
+                    .parent
+                    .as_ref()
+                    .unwrap()
+                    .clone(),
+                ast1.clone(),
+            );
+            ast1 = *ast1
+                .ast_base_ref()
+                .unwrap()
+                .parent
+                .as_ref()
+                .unwrap()
+                .clone();
             if ast1 == root {
                 break;
             }
@@ -330,11 +360,10 @@ impl SymbolTableLinker {
             let old_ast = ast2.clone();
             let ast2 = ast2.ast_base_ref().unwrap().parent.clone();
             if let Some(ast2v) = ancs.get(&ast2.clone().unwrap()) {
-
                 assert!(is_instances(
-            &**ast2.as_ref().unwrap(),
-            vec![ASTType::ForStatement, ASTType::StatementListBase],
-        ));
+                    &**ast2.as_ref().unwrap(),
+                    vec![ASTType::ForStatement, ASTType::StatementListBase],
+                ));
                 return (
                     ast2.clone().map(|a| a.statement_list().unwrap()).unwrap(),
                     ast2v.clone(),
@@ -351,7 +380,7 @@ impl SymbolTableLinker {
         )
         .1
         .unwrap()
-        .namespace_definition()
+        .try_as_namespace_definition_ref().map(|nd|nd.clone())
     }
 
     pub fn find_identifier_declaration(&self, mut ast: &IdentifierExpr) -> AST {
@@ -424,7 +453,9 @@ impl SymbolTableLinker {
         let mut type_def = self.find_type_declaration(ast.clone());
         for idf in &ast.names()[1..] {
             if let Some(_idf) = type_def.as_ref().unwrap().names().get(&idf.name()) {
-                if let Some(AST::NamespaceDefinition(parent)) = _idf.parent().as_ref().map(|p|*p.clone()) {
+                if let Some(AST::NamespaceDefinition(parent)) =
+                    _idf.parent().as_ref().map(|p| *p.clone())
+                {
                     type_def = Some(parent.clone());
                 }
             } else {
@@ -481,7 +512,7 @@ impl SymbolTableLinker {
             .target()
             .map(|t| *t)
             .unwrap()
-            .namespace_definition()
+            .try_as_namespace_definition_ref()
         {
             if let Some(idf) = target.names().get(&ast.member.name()) {
                 ast.location_expr_base.target = idf.parent().clone();
@@ -507,7 +538,7 @@ impl SymbolTableLinker {
                     }
                 } else {
                     t = t.clone();
-                    t.ast_base_mut_ref().parent=Some(Box::new(ast.to_ast()));
+                    t.ast_base_mut_ref().parent = Some(Box::new(ast.to_ast()));
                     self.visit(t.to_ast());
                 }
             } else {

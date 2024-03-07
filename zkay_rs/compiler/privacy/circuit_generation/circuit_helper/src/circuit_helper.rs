@@ -22,9 +22,9 @@ use zkay_ast::ast::{
     Identifier, IdentifierBase, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
     IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseRef,
-    TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,StatementBaseProperty,
+    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -525,8 +525,11 @@ where
         for var in ast.modified_values() {
             if var.in_scope_at(ast.to_ast()) {
                 //side effect affects location outside statement and has privacy @me
-                assert!(ast.statement_base_ref().unwrap()
-                    .before_analysis.as_ref()
+                assert!(ast
+                    .statement_base_ref()
+                    .unwrap()
+                    .before_analysis
+                    .as_ref()
                     .unwrap()
                     .same_partition(&var.privacy().unwrap(), &Expression::me_expr(None).to_ast()));
                 assert!(is_instances(
@@ -622,7 +625,7 @@ where
         let mut ret_args = ret_args.unwrap();
         //Move all return values out of the circuit
         let mut ret_args = if !is_instance(&ret_args, ASTType::TupleExpr) {
-            TupleExpr::new(vec![ret_args.expr().unwrap()]).into_ast()
+            TupleExpr::new(vec![ret_args.try_as_expression().unwrap()]).into_ast()
         } else {
             ret_args
         };
@@ -796,7 +799,9 @@ where
             expr.annotated_type()
                 .unwrap()
                 .privacy_annotation
-                .unwrap().try_as_expression_ref().unwrap()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
                 .privacy_annotation_label()
         } else {
             Some(Expression::all_expr().to_ast())
@@ -915,14 +920,21 @@ where
 
         //Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         //but also signals the offchain simulator to perform decryption if necessary
-        expr.expression_base_mut_ref().statement.as_mut().unwrap().statement_base_mut_ref().unwrap().pre_statements.push(
-            CircuitInputStatement::new(
-                input_idf.get_loc_expr(None).into(),
-                input_expr.unwrap(),
-                None,
-            )
-            .into_ast(),
-        );
+        expr.expression_base_mut_ref()
+            .statement
+            .as_mut()
+            .unwrap()
+            .statement_base_mut_ref()
+            .unwrap()
+            .pre_statements
+            .push(
+                CircuitInputStatement::new(
+                    input_idf.get_loc_expr(None).into(),
+                    input_expr.unwrap(),
+                    None,
+                )
+                .into_ast(),
+            );
 
         if !is_public {
             //Check if the secret plain input corresponds to the decrypted cipher value
@@ -1084,8 +1096,10 @@ where
             .statement
             .as_mut()
             .unwrap()
-            .statement_base_mut_ref().unwrap()
-            .pre_statements.extend(
+            .statement_base_mut_ref()
+            .unwrap()
+            .pre_statements
+            .extend(
                 inlined_body
                     .unwrap()
                     .statement_list_base
@@ -1141,7 +1155,7 @@ where
                 ast.to_ast().code(),
             )));
         self._add_assign(
-            ast.lhs().as_ref().unwrap().expr().unwrap(),
+            ast.lhs().as_ref().unwrap().try_as_expression_ref().unwrap().clone(),
             ast.assignment_statement_base_mut_ref()
                 .rhs
                 .as_mut()
@@ -1327,7 +1341,14 @@ where
                     .unwrap()
                     .visit(Some((*stmt).to_ast()));
                 //Bubble up nested pre statements
-                statements.append(&mut stmt.statement_base_mut_ref().unwrap().pre_statements.drain(..).collect::<Vec<_>>());
+                statements.append(
+                    &mut stmt
+                        .statement_base_mut_ref()
+                        .unwrap()
+                        .pre_statements
+                        .drain(..)
+                        .collect::<Vec<_>>(),
+                );
             }
             // stmt.pre_statements = vec![];
         }
@@ -1436,8 +1457,8 @@ where
             && (*expr)
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .func()
-                .homomorphism()
+                .func().try_as_builtin_function_ref().unwrap()
+                .homomorphism
                 != Homomorphism::non_homomorphic();
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
@@ -1490,7 +1511,7 @@ where
                 new_out_param
                     .clone()
                     .get_loc_expr(None)
-                    .expr()
+                    .try_as_expression_ref()
                     .unwrap()
                     .explicitly_converted(*expr.annotated_type().unwrap().type_name),
                 new_out_param,
@@ -1537,7 +1558,14 @@ where
 
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
-        expr.expression_base_mut_ref().statement.as_mut().unwrap().statement_base_mut_ref().unwrap().pre_statements.push(CircuitComputationStatement::new(new_out_param).into_ast());
+        expr.expression_base_mut_ref()
+            .statement
+            .as_mut()
+            .unwrap()
+            .statement_base_mut_ref()
+            .unwrap()
+            .pre_statements
+            .push(CircuitComputationStatement::new(new_out_param).into_ast());
         if let AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(le),
         )) = out_var
@@ -1607,7 +1635,7 @@ where
                 None
             },
         );
-        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(), priv_expr.unwrap().expr().unwrap());
+        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(), priv_expr.unwrap().try_as_expression_ref().unwrap().clone());
         self._phi.push(CircuitStatement::CircVarDecl(stmt));
         Some(tmp_circ_var_idf)
     }
@@ -1771,7 +1799,10 @@ where
             self.request_public_key(&crypto_params, privacy.clone().into(), &name);
         stmt.as_mut()
             .unwrap()
-           .statement_base_mut_ref().unwrap().pre_statements.push(get_key_stmt.to_ast());
+            .statement_base_mut_ref()
+            .unwrap()
+            .pre_statements
+            .push(get_key_stmt.to_ast());
         if let Some(requested_dynamic_pks) = self
             ._requested_dynamic_pks
             .get_mut(&*stmt.as_ref().unwrap())

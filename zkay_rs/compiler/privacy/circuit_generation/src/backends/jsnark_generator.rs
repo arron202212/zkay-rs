@@ -45,7 +45,7 @@ pub fn _get_t(mut t: Option<AST>) -> String
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
     let t = t.unwrap();
-    let t = if let Some(t) = t.expr() {
+    let t = if let Some(t) = t.try_as_expression_ref() {
         Some(*t.annotated_type().unwrap().type_name)
     } else {
         t.type_name()
@@ -237,7 +237,7 @@ impl JsnarkVisitor
             if op == "sign+" {
                 unimplemented!()
             }
-            let homomorphism = ast.func().homomorphism();
+            let homomorphism = ast.func().try_as_builtin_function_ref().unwrap().homomorphism.clone();
             let (f_start, crypto_backend, public_key_name) =
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())

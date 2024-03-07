@@ -10,10 +10,10 @@ use crate::circuit_helper::CircuitHelper;
 use std::any::Any;
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
+    is_instance, ASTBaseProperty, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
     IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
-    VariableDeclarationStatement, AST,ASTBaseProperty,
+    VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")
@@ -337,8 +337,7 @@ impl Remapper {
                                     .unwrap()
                                     .zkay_type(),
                             ));
-                    prev_val.location_expr_base.target =
-                        key_decl.clone();
+                    prev_val.location_expr_base.target = key_decl.clone();
                     prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base

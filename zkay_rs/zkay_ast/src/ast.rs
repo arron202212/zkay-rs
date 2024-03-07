@@ -197,7 +197,7 @@ pub trait IntoExpression: Clone {
 }
 impl<T: IntoAST + Clone> IntoExpression for T {
     fn into_expr(self) -> Expression {
-        self.into_ast().expr().unwrap()
+        self.into_ast().try_as_expression().unwrap()
     }
 }
 impl<T: IntoAST + Clone> IntoStatement for T {
@@ -332,8 +332,8 @@ impl AST {
             _ => None,
         }
     }
-    pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase>{
-         match self {
+    pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
+        match self {
             AST::Identifier(ast) => Some(ast.ast_base_mut_ref()),
             AST::Comment(ast) => Some(ast.ast_base_mut_ref()),
             AST::Expression(ast) => Some(ast.ast_base_mut_ref()),
@@ -367,9 +367,9 @@ impl AST {
     // pub fn location_expr_base(&self) -> Option<LocationExprBase> {
     //     None
     // }
-    pub fn namespace_definition(&self) -> Option<NamespaceDefinition> {
-        None
-    }
+    // pub fn namespace_definition(&self) -> Option<NamespaceDefinition> {
+    //     None
+    // }
     pub fn identifier_declaration_base(&self) -> Option<IdentifierDeclarationBase> {
         None
     }
@@ -438,7 +438,7 @@ impl AST {
     // pub fn func(&self) -> Option<Expression> {
     //     None
     // }
-    pub fn set_func_idf_name(&mut self, name: String) {}
+    // pub fn set_func_idf_name(&mut self, name: String) {}
     pub fn to_location_expr(&self) -> Option<LocationExpr> {
         // if let Self::LocationExpr(le) = self {
         //     le.clone()
@@ -449,13 +449,13 @@ impl AST {
     pub fn init(&self) -> Option<SimpleStatement> {
         None
     }
-    pub fn expr(&self) -> Option<Expression> {
-        if let Self::Expression(expr) = self {
-            Some(expr.clone())
-        } else {
-            None
-        }
-    }
+    // pub fn expr(&self) -> Option<Expression> {
+    //     if let Self::Expression(expr) = self {
+    //         Some(expr.clone())
+    //     } else {
+    //         None
+    //     }
+    // }
     pub fn pre_statements(&self) -> Vec<AST> {
         vec![]
     }
@@ -648,9 +648,9 @@ impl IntoAST for IdentifierBase {
         AST::Identifier(Identifier::Identifier(self))
     }
 }
-impl ASTBaseMutRef for IdentifierBase{
-    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
-    &mut self.ast_base
+impl ASTBaseMutRef for IdentifierBase {
+    fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
+        &mut self.ast_base
     }
 }
 impl IdentifierBase {
@@ -692,8 +692,12 @@ impl IdentifierBase {
 }
 impl Immutable for IdentifierBase {
     fn is_immutable(&self) -> bool {
-        if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(svd))) = &self.ast_base.parent.as_ref().map(|p|*p.clone()) {
-                svd.identifier_declaration_base.is_final() || svd.identifier_declaration_base.is_constant()
+        if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(
+            svd,
+        ))) = &self.ast_base.parent.as_ref().map(|p| *p.clone())
+        {
+            svd.identifier_declaration_base.is_final()
+                || svd.identifier_declaration_base.is_constant()
         } else {
             false
         }
@@ -769,9 +773,9 @@ impl IntoAST for CommentBase {
         AST::Comment(Comment::Comment(self))
     }
 }
-impl ASTBaseMutRef for CommentBase{
-    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
-    &mut self.ast_base
+impl ASTBaseMutRef for CommentBase {
+    fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
+        &mut self.ast_base
     }
 }
 impl CommentBase {
@@ -844,7 +848,8 @@ impl BlankLine {
     ASTInstanceOf,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -926,25 +931,25 @@ impl Expression {
     pub fn privacy(&self) -> Option<Expression> {
         None
     }
-    pub fn line(&self) -> i32 {
-        -1
-    }
-    pub fn set_line(&mut self, line: i32) {}
-    pub fn set_column(&mut self, column: i32) {}
-    pub fn column(&self) -> i32 {
-        -1
-    }
+    // pub fn line(&self) -> i32 {
+    //     -1
+    // }
+    // pub fn set_line(&mut self, line: i32) {}
+    // pub fn set_column(&mut self, column: i32) {}
+    // pub fn column(&self) -> i32 {
+    //     -1
+    // }
     pub fn is_ite(&self) -> bool {
         false
     }
-    pub fn set_homomorphism(&mut self, homomorphism: String) {}
-    pub fn homomorphism(&self) -> String {
-        String::new()
-    }
-    pub fn set_expr(&mut self, expr: Expression) {}
-    pub fn expr(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn set_homomorphism(&mut self, homomorphism: String) {}
+    // pub fn homomorphism(&self) -> String {
+    //     String::new()
+    // }
+    // pub fn set_expr(&mut self, expr: Expression) {}
+    // pub fn expr(&self) -> Option<Expression> {
+    //     None
+    // }
     pub fn set_args(&mut self, args: Vec<Expression>) {}
     pub fn args(&self) -> Vec<Expression> {
         vec![]
@@ -1210,20 +1215,19 @@ impl Expression {
                             .iter()
                             .map(|t| {
                                 CombinedPrivacyUnion::AST(
-                                    t
-                                        .privacy_annotation
-                                        .as_ref()
-                                        .map(|pa| *pa.clone()),
+                                    t.privacy_annotation.as_ref().map(|pa| *pa.clone()),
                                 )
                             })
                             .collect::<Vec<_>>())
                     .to_string(),
                 )
-            } else if combined_label.expr().unwrap().privacy_annotation_label()
+            } else if combined_label.clone().as_expression().unwrap().privacy_annotation_label()
                 == actual
                     .unwrap()
                     .privacy_annotation
-                    .unwrap().try_as_expression_ref().unwrap()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
                     .privacy_annotation_label()
             {
                 Some(String::from("true"))
@@ -1251,7 +1255,11 @@ impl Expression {
 
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
         if let Some(statement) = self.statement() {
-            statement.statement_base_ref().unwrap().before_analysis().clone()
+            statement
+                .statement_base_ref()
+                .unwrap()
+                .before_analysis()
+                .clone()
         } else {
             None
         }
@@ -1788,7 +1796,7 @@ impl HomomorphicBuiltinFunction {
     ExpressionBaseRef,
     ExpressionBaseMutRef,
     ASTBaseRef,
-ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -1812,7 +1820,7 @@ impl FunctionCallExpr {
     //     None
     // }
     pub fn set_public_key(&mut self, public_key: Option<Box<HybridArgumentIdf>>) {}
-    pub fn set_func_idf_name(&mut self, name: String) {}
+    // pub fn set_func_idf_name(&mut self, name: String) {}
     pub fn set_args(&mut self, args: Vec<Expression>) {}
     pub fn args(&self) -> Vec<Expression> {
         vec![]
@@ -2294,7 +2302,8 @@ impl StringLiteralExpr {
     LiteralExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2455,7 +2464,7 @@ impl KeyLiteralExpr {
     ExpressionBaseRef,
     ExpressionBaseMutRef,
     ASTBaseRef,
-    ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -2649,7 +2658,8 @@ impl ASTChildren for TupleExpr {
     TupleOrLocationExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -3242,9 +3252,11 @@ impl Immutable for AllExpr {
     IntoAST,
     ASTInstanceOf,
     ReclassifyExprBaseRef,
+    ReclassifyExprBaseMutRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -3264,7 +3276,7 @@ impl ReclassifyExpr {
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
-    pub fn set_homomorphism(&mut self, homomorphism: String) {}
+    // pub fn set_homomorphism(&mut self, homomorphism: String) {}
     pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
         None
     }
@@ -3277,9 +3289,9 @@ impl ReclassifyExpr {
             }
         }
     }
-    pub fn expr(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn expr(&self) -> Option<Expression> {
+    //     None
+    // }
     pub fn privacy(&self) -> Option<Expression> {
         None
     }
@@ -3669,7 +3681,7 @@ impl HybridArgumentIdf {
                         ))
                         .to_expr()
                         .explicitly_converted(*self.t.clone())
-                        .expr()
+                        .try_as_expression()
                         .unwrap(),
                 )
         } else {
@@ -3687,7 +3699,7 @@ impl HybridArgumentIdf {
                         ),
                     ))
                     .explicitly_converted(*self.t.clone())
-                    .expr()
+                    .try_as_expression()
                     .unwrap(),
                 )
         }
@@ -3724,7 +3736,7 @@ impl HybridArgumentIdf {
             let expr = self.get_loc_expr(None);
             let expr = if self.t.is_signed_numeric() {
                 // Cast to same size uint to prevent sign extension
-                expr.expr()
+                expr.try_as_expression()
                     .unwrap()
                     .explicitly_converted(TypeName::ElementaryTypeName(
                         ElementaryTypeName::NumberTypeName(NumberTypeName::UintTypeName(
@@ -3732,7 +3744,7 @@ impl HybridArgumentIdf {
                         )),
                     ))
             } else if self.t.is_numeric() && self.t.elem_bitwidth() == 256 {
-                expr.expr()
+                expr.try_as_expression()
                     .unwrap()
                     .binop(
                         String::from("%"),
@@ -3748,7 +3760,7 @@ impl HybridArgumentIdf {
                     .as_type(AST::TypeName(*self.t.clone()))
                     .into_ast()
             } else {
-                expr.expr()
+                expr.try_as_expression()
                     .unwrap()
                     .explicitly_converted(TypeName::uint_type())
                 //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
@@ -3764,17 +3776,24 @@ impl HybridArgumentIdf {
                         .to_expr(),
                     )),
                 )
-                .assign(expr.expr().unwrap())
+                .assign(expr.try_as_expression().unwrap())
             } else {
                 LocationExpr::IndexExpr(
                     LocationExpr::IdentifierExpr(tgt.clone()).index(ExprUnion::I32(start_offset)),
                 )
-                .assign(expr.expr().unwrap())
+                .assign(expr.try_as_expression().unwrap())
             }
         }
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierBaseRef,IdentifierBaseMutRef,  ASTBaseRef, ASTBaseMutRef)]
+#[enum_dispatch(
+    IntoAST,
+    ASTInstanceOf,
+    IdentifierBaseRef,
+    IdentifierBaseMutRef,
+    ASTBaseRef,
+    ASTBaseMutRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -3846,7 +3865,7 @@ impl IntoAST for EncryptionExpression {
 
 impl EncryptionExpression {
     pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
-        let privacy = privacy.expr().unwrap();
+        let privacy = privacy.try_as_expression().unwrap();
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
             expr.annotated_type().unwrap(),
             homomorphism.clone(),
@@ -4091,7 +4110,7 @@ impl StatementBase {
     StatementBaseRef,
     StatementBaseMutRef,
     ASTBaseRef,
-    ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4421,7 +4440,8 @@ impl ASTChildren for ReturnStatement {
     SimpleStatementBaseRef,
     StatementBaseRef,
     StatementBaseMutRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4565,7 +4585,7 @@ impl ASTChildren for RequireStatement {
     StatementBaseRef,
     StatementBaseMutRef,
     ASTBaseRef,
-ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -4765,7 +4785,7 @@ impl ASTChildren for CircuitInputStatement {
     StatementBaseRef,
     StatementBaseMutRef,
     ASTBaseRef,
-    ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5272,7 +5292,8 @@ impl TypeNameBase {
     ASTInstanceOf,
     ElementaryTypeNameBaseRef,
     TypeNameBaseRef,
-    ASTBaseRef,ASTBaseMutRef
+    ASTBaseRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5425,7 +5446,7 @@ impl BooleanLiteralType {
     ElementaryTypeNameBaseRef,
     TypeNameBaseRef,
     ASTBaseRef,
-    ASTBaseMutRef,
+    ASTBaseMutRef
 )]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -5980,9 +6001,12 @@ impl EnumValueTypeName {
             self.user_defined_type_name_base
                 .target
                 .as_ref()
-                .unwrap().ast_base_ref().unwrap()
-                .parent.as_ref()
-                .map(|p| p.namespace_definition().unwrap()),
+                .unwrap()
+                .ast_base_ref()
+                .unwrap()
+                .parent
+                .as_ref()
+                .map(|p| p.try_as_namespace_definition_ref().unwrap().clone()),
         )))
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
@@ -6173,7 +6197,14 @@ pub fn test() {
     let p = Array::Proof(Proof::new());
     p.array_base_ref();
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, ArrayBaseRef, TypeNameBaseRef, ASTBaseRef, ASTBaseMutRef)]
+#[enum_dispatch(
+    IntoAST,
+    ASTInstanceOf,
+    ArrayBaseRef,
+    TypeNameBaseRef,
+    ASTBaseRef,
+    ASTBaseMutRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -6436,11 +6467,10 @@ pub enum CombinedPrivacyUnion {
     AST(Option<AST>),
 }
 impl CombinedPrivacyUnion {
-    pub fn expr(&self) -> Option<Expression> {
-        if let CombinedPrivacyUnion::AST(expr) = &self {
-            return expr.clone().map(|expr| expr.expr().unwrap());
-        }
-        None
+    pub fn as_expression(self) -> Option<Expression> {
+        if let CombinedPrivacyUnion::AST(Some(AST::Expression(expr))) = self {
+             Some(expr)
+        }else{None}
     }
 }
 //     """Does not appear in the syntax, but is necessary for type checking"""
@@ -6647,17 +6677,13 @@ impl IntoAST for AnnotatedTypeName {
         AST::AnnotatedTypeName(self)
     }
 }
-impl ASTBaseMutRef for AnnotatedTypeName{
-    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
-    &mut self.ast_base
+impl ASTBaseMutRef for AnnotatedTypeName {
+    fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
+        &mut self.ast_base
     }
 }
 impl AnnotatedTypeName {
-    pub fn new(
-        type_name: TypeName,
-        privacy_annotation: Option<AST>,
-        homomorphism: String,
-    ) -> Self {
+    pub fn new(type_name: TypeName, privacy_annotation: Option<AST>, homomorphism: String) -> Self {
         assert!(
             !(privacy_annotation.is_none()
                 || if let Some(AST::Expression(Expression::AllExpr(_))) = &privacy_annotation {
@@ -6673,7 +6699,9 @@ impl AnnotatedTypeName {
             ast_base: ASTBase::new(),
             type_name: Box::new(type_name),
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
-            privacy_annotation: privacy_annotation.map(|p|Box::new(p)).or(Some(Box::new(Expression::AllExpr(AllExpr::new()).into_ast()))),
+            privacy_annotation: privacy_annotation.map(|p| Box::new(p)).or(Some(Box::new(
+                Expression::AllExpr(AllExpr::new()).into_ast(),
+            ))),
             homomorphism,
         }
     }
@@ -6712,8 +6740,14 @@ impl AnnotatedTypeName {
             other.privacy_annotation.clone().unwrap(),
             self.privacy_annotation.clone().unwrap(),
         );
-        let p_expected = other_privacy_annotation.try_as_expression_ref().unwrap().privacy_annotation_label();
-        let p_actual = self_privacy_annotation.try_as_expression_ref().unwrap().privacy_annotation_label();
+        let p_expected = other_privacy_annotation
+            .try_as_expression_ref()
+            .unwrap()
+            .privacy_annotation_label();
+        let p_actual = self_privacy_annotation
+            .try_as_expression_ref()
+            .unwrap()
+            .privacy_annotation_label();
         if let (Some(p_expected), Some(p_actual)) = (p_expected, p_actual) {
             if p_expected == p_actual
                 || (analysis.is_some()
@@ -6721,13 +6755,13 @@ impl AnnotatedTypeName {
                         .unwrap()
                         .same_partition(&p_expected.into(), &p_actual.into()))
             {
-                Some(CombinedPrivacyUnion::AST(Some(
-                    *self_privacy_annotation,
-                )))
-            } else if self_privacy_annotation.try_as_expression_ref().unwrap().is_all_expr() {
-                Some(CombinedPrivacyUnion::AST(Some(
-                    *other_privacy_annotation,
-                )))
+                Some(CombinedPrivacyUnion::AST(Some(*self_privacy_annotation)))
+            } else if self_privacy_annotation
+                .try_as_expression_ref()
+                .unwrap()
+                .is_all_expr()
+            {
+                Some(CombinedPrivacyUnion::AST(Some(*other_privacy_annotation)))
             } else {
                 None
             }
@@ -6736,7 +6770,7 @@ impl AnnotatedTypeName {
         }
     }
     pub fn is_public(&self) -> bool {
-        if let Some(AST::Expression(pa)) = &self.privacy_annotation.as_ref().map(|pa|*pa.clone()) {
+        if let Some(AST::Expression(pa)) = &self.privacy_annotation.as_ref().map(|pa| *pa.clone()) {
             pa.is_all_expr()
         } else {
             false
@@ -6747,7 +6781,7 @@ impl AnnotatedTypeName {
         !self.is_public()
     }
     pub fn is_private_at_me(&self, analysis: &Option<PartitionState<AST>>) -> bool {
-        if let Some(AST::Expression(p)) = &self.privacy_annotation.as_ref().map(|pa|*pa.clone()) {
+        if let Some(AST::Expression(p)) = &self.privacy_annotation.as_ref().map(|pa| *pa.clone()) {
             p.is_me_expr()
                 || (analysis.is_some()
                     && analysis.clone().unwrap().same_partition(
@@ -6859,7 +6893,13 @@ impl ASTChildren for AnnotatedTypeName {
         }
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, IdentifierDeclarationBaseRef, ASTBaseRef, ASTBaseMutRef)]
+#[enum_dispatch(
+    IntoAST,
+    ASTInstanceOf,
+    IdentifierDeclarationBaseRef,
+    ASTBaseRef,
+    ASTBaseMutRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -7060,7 +7100,13 @@ impl Parameter {
         self.clone()
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, NamespaceDefinitionBaseRef, ASTBaseRef, ASTBaseMutRef)]
+#[enum_dispatch(
+    IntoAST,
+    ASTInstanceOf,
+    NamespaceDefinitionBaseRef,
+    ASTBaseRef,
+    ASTBaseMutRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -7434,9 +7480,9 @@ impl IntoAST for EnumValue {
         AST::EnumValue(self)
     }
 }
-impl ASTBaseMutRef for EnumValue{
-    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
-    &mut self.ast_base
+impl ASTBaseMutRef for EnumValue {
+    fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
+        &mut self.ast_base
     }
 }
 impl EnumValue {
@@ -7623,9 +7669,9 @@ impl IntoAST for SourceUnit {
         AST::SourceUnit(self)
     }
 }
-impl ASTBaseMutRef for SourceUnit{
-    fn ast_base_mut_ref(&mut self)->&mut ASTBase{
-    &mut self.ast_base
+impl ASTBaseMutRef for SourceUnit {
+    fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
+        &mut self.ast_base
     }
 }
 impl SourceUnit {
@@ -7650,13 +7696,14 @@ impl SourceUnit {
     }
     pub fn get_item(self, key: &String) -> Option<ContractDefinition> {
         if let Some(c_identifier) = self.ast_base.names.get(key) {
-            if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) =  c_identifier.parent().as_ref().map(|p|*p.clone()) {
-                    return Some(c.clone());
+            if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) =
+                c_identifier.parent().as_ref().map(|p| *p.clone())
+            {
+                return Some(c.clone());
             }
         }
         None
     }
-    
 }
 impl ASTChildren for SourceUnit {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -7690,7 +7737,7 @@ pub fn get_privacy_expr_from_label(plabel: AST) -> Expression
         ie.location_expr_base.target = idf.parent().clone();
         ie.to_expr()
     } else {
-        plabel.expr().unwrap()
+        plabel.try_as_expression().unwrap()
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -7779,14 +7826,18 @@ impl InstanceTarget {
                 .type_name;
             if t.has_key_label() {
                 self.key()
-                    .unwrap().try_as_expression_ref().unwrap()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             } else {
                 t.value_type()
                     .unwrap()
                     .privacy_annotation
-                    .unwrap().try_as_expression_ref().unwrap()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             }
@@ -7797,7 +7848,9 @@ impl InstanceTarget {
                 .unwrap()
                 .zkay_type()
                 .privacy_annotation
-                .unwrap().try_as_expression_ref().unwrap()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
                 .privacy_annotation_label()
                 .map(|x| x.into_ast())
         } else {
@@ -7891,7 +7944,14 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get surrounding contract
     let mut ctr = fct.clone().or(Some(ast.clone()));
     while ctr.is_some() && !is_instance(ctr.as_ref().unwrap(), ASTType::ContractDefinition) {
-        if let Some(p) = ctr.as_ref().unwrap().ast_base_ref().unwrap().parent.as_ref() {
+        if let Some(p) = ctr
+            .as_ref()
+            .unwrap()
+            .ast_base_ref()
+            .unwrap()
+            .parent
+            .as_ref()
+        {
             ctr = Some(*p.clone());
         } else {
             break;
@@ -7901,7 +7961,13 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
     // Get source root
     let mut root = ctr.clone().or(Some(ast.clone()));
     while root.is_some() && !is_instance(root.as_ref().unwrap(), ASTType::SourceUnit) {
-        root = root.unwrap().ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
+        root = root
+            .unwrap()
+            .ast_base_ref()
+            .unwrap()
+            .parent
+            .as_ref()
+            .map(|p| *p.clone());
     }
 
     let error_msg = if root.is_none() {
@@ -8151,7 +8217,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_ReclassifyExpr(&self, ast: ReclassifyExpr) -> CodeVisitorReturn {
-        let e = self.visit(&AST::Expression(ast.expr().unwrap()));
+        let e = self.visit(&AST::Expression(*ast.expr().clone()));
         let p = self.visit(&AST::Expression(ast.privacy().unwrap()));
         let h = HOMOMORPHISM_STORE
             .lock()
@@ -8338,7 +8404,7 @@ impl CodeVisitor {
         let rhs = if !op.is_empty() {
             ast.rhs()
                 .clone()
-                .map(|fce| fce.args()[1].clone().expr().unwrap())
+                .map(|fce| fce.args()[1].clone())
         } else {
             ast.rhs().clone()
         };

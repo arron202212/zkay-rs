@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
-    NamespaceDefinition, SourceUnit, Statement, AST,ASTBaseProperty,
+    ASTBaseProperty, ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
+    NamespaceDefinition, SourceUnit, Statement, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -60,9 +60,11 @@ impl ParentSetterVisitor {
             parent
                 .ast_base()
                 .unwrap()
-                .namespace.as_ref()
+                .namespace
+                .as_ref()
                 .unwrap()
-                .iter().cloned()
+                .iter()
+                .cloned()
                 .chain([ast.namespace_definition_base().unwrap().idf.clone()])
                 .collect()
         } else {
@@ -129,7 +131,12 @@ impl ExpressionToStatementVisitor {
             if let AST::Statement(_) = p {
                 break;
             }
-            parent = p.ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
+            parent = p
+                .ast_base_ref()
+                .unwrap()
+                .parent
+                .as_ref()
+                .map(|p| *p.clone());
         }
         if parent.is_some() {
             ast.expression_base_mut().unwrap().statement =
@@ -146,7 +153,12 @@ impl ExpressionToStatementVisitor {
             {
                 break;
             }
-            parent = p.ast_base_ref().unwrap().parent.as_ref().map(|p|*p.clone());
+            parent = p
+                .ast_base_ref()
+                .unwrap()
+                .parent
+                .as_ref()
+                .map(|p| *p.clone());
         }
         if parent.is_some() {
             ast.statement_base_mut().unwrap().function =

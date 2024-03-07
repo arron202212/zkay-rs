@@ -51,10 +51,22 @@ pub fn replace_expr(
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.ast_base_mut().unwrap().parent =
-        old_ast.as_ref().unwrap().ast_base_ref().unwrap().parent.clone();
+    new_ast.ast_base_mut().unwrap().parent = old_ast
+        .as_ref()
+        .unwrap()
+        .ast_base_ref()
+        .unwrap()
+        .parent
+        .clone();
     DeepCopyVisitor::copy_ast_fields(old_ast.clone(), &mut new_ast.clone());
-    if old_ast.as_ref().unwrap().ast_base_ref().unwrap().parent.is_some() {
+    if old_ast
+        .as_ref()
+        .unwrap()
+        .ast_base_ref()
+        .unwrap()
+        .parent
+        .is_some()
+    {
         set_parents(new_ast.clone());
         link_identifiers(new_ast);
     }

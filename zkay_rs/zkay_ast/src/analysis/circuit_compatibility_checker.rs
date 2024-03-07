@@ -9,15 +9,15 @@
 use std::collections::BTreeSet;
 use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
+use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
     is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
     FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr,
     IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReturnStatement, Statement, StatementList, AST,
+    ReturnStatement, Statement, StatementList, AST,ReclassifyExprBaseProperty,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
- use crate::analysis::partition_state::PartitionState;
 pub fn check_circuit_compliance(ast: AST) {
     // """
     // determines for every function whether it can be used inside a circuit
@@ -99,7 +99,7 @@ impl DirectCanBePrivateDetector {
     }
 
     pub fn visitReclassifyExpr(&mut self, ast: ReclassifyExpr) {
-        self.visit(ast.expr().unwrap().to_ast());
+        self.visit(ast.expr().to_ast());
     }
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
@@ -225,7 +225,7 @@ impl CircuitComplianceChecker {
 
             if is_instance(&expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    &*expr.expr().unwrap().annotated_type().unwrap().type_name,
+                    &*expr.try_as_primitive_cast_expr_ref().unwrap().annotated_type().as_ref().unwrap().type_name,
                     vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
                 )
             {
@@ -266,21 +266,21 @@ impl CircuitComplianceChecker {
                 &ast.privacy().unwrap().privacy_annotation_label().unwrap(),
                 &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
-        if ast.expr().unwrap().annotated_type().unwrap().is_public() {
+        if ast.expr().annotated_type().unwrap().is_public() {
             let eval_in_public = false;
             // try
             self.priv_setter.set_evaluation(ast.to_ast(), true);
             // except TypeException
             //     eval_in_public = true
-            if eval_in_public || !Self::should_evaluate_public_expr_in_circuit(ast.expr().unwrap())
+            if eval_in_public || !Self::should_evaluate_public_expr_in_circuit(*ast.expr().clone())
             {
                 self.priv_setter
-                    .set_evaluation(ast.expr().unwrap().to_ast(), false);
+                    .set_evaluation(ast.expr().to_ast(), false);
             }
         } else {
             self.priv_setter.set_evaluation(ast.to_ast(), true);
         }
-        self.visit(ast.expr().unwrap().to_ast());
+        self.visit(ast.expr().to_ast());
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
