@@ -24,7 +24,7 @@ use zkay_ast::ast::{
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,FunctionCallExprBaseRef,FunctionCallExprBaseMutRef,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -454,7 +454,7 @@ where
     pub fn get_randomness_for_rerand(&mut self, expr: Expression) -> IdentifierExpr {
         let idf = self._secret_input_name_factory.get_new_idf(
             &TypeName::rnd_type(
-                expr.annotated_type()
+                expr.annotated_type().as_ref()
                     .unwrap()
                     .type_name
                     .crypto_params()
@@ -540,7 +540,7 @@ where
                         ASTType::StateVariableDeclaration
                     ]
                 ));
-                let t = var.target().unwrap().annotated_type().unwrap().zkay_type();
+                let t = var.target().unwrap().try_as_expression_ref().unwrap().annotated_type().as_ref().unwrap().zkay_type();
                 if !t.type_name.is_primitive_type() {
                     unimplemented!(
                         "Reference types inside private if statements are not supported"
@@ -795,10 +795,10 @@ where
         // :return: HybridArgumentIdf which references the plaintext value of the newly added input
         // """
     {
-        let privacy = if expr.annotated_type().unwrap().is_private() {
-            expr.annotated_type()
+        let privacy = if expr.annotated_type().as_ref().unwrap().is_private() {
+            expr.annotated_type().as_ref()
                 .unwrap()
-                .privacy_annotation
+                .privacy_annotation.as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
@@ -822,9 +822,9 @@ where
         let t = input_expr
             .as_ref()
             .unwrap()
-            .annotated_type()
+            .annotated_type().as_ref()
             .unwrap()
-            .type_name;
+            .type_name.clone();
         let mut locally_decrypted_idf = None;
 
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
@@ -863,11 +863,11 @@ where
                 "{}{t_suffix}",
                 self._in_name_factory
                     .base_name_factory
-                    .get_new_name(&*expr.annotated_type().unwrap().type_name, false)
+                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
             );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().unwrap().type_name,
+                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
                 None,
             );
             let return_idf = input_idf.clone();
@@ -884,17 +884,17 @@ where
                 "{}{t_suffix}",
                 self._secret_input_name_factory
                     .base_name_factory
-                    .get_new_name(&*expr.annotated_type().unwrap().type_name, false)
+                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
             );
             let locally_decrypted_idf = self._secret_input_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().unwrap().type_name,
+                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
                 None,
             );
             let return_idf = locally_decrypted_idf.clone();
             let cipher_t = TypeName::cipher_type(
-                input_expr.as_ref().unwrap().annotated_type().unwrap(),
-                expr.annotated_type().unwrap().homomorphism,
+                input_expr.as_ref().unwrap().annotated_type().as_ref().unwrap().clone(),
+                expr.annotated_type().as_ref().unwrap().homomorphism.clone(),
             );
             let tname = format!(
                 "{}{t_suffix}",
@@ -942,7 +942,7 @@ where
                 .lock()
                 .unwrap()
                 .user_config
-                .get_crypto_params(&expr.annotated_type().unwrap().homomorphism);
+                .get_crypto_params(&expr.annotated_type().as_ref().unwrap().homomorphism);
             self._phi
                 .push(CircuitStatement::CircComment(CircComment::new(format!(
                     "{:?} = dec({expr_text}) [{}]",
@@ -1463,14 +1463,15 @@ where
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
         {
-            expr.set_annotated_type(AnnotatedTypeName::cipher_type(
-                expr.annotated_type().unwrap(),
+            expr.try_as_function_call_expr_mut()
+                .unwrap().expression_base_mut_ref().annotated_type=Some(AnnotatedTypeName::cipher_type(
+                expr.annotated_type().as_ref().unwrap().clone(),
                 Some(homomorphism.clone()),
             ));
         }
 
         let priv_result_idf = if is_circ_val
-            || expr.annotated_type().unwrap().is_private()
+            || expr.annotated_type().as_ref().unwrap().is_private()
             || (*expr).evaluate_privately()
         {
             self._evaluate_private_expression(expr.clone(), "").unwrap()
@@ -1487,7 +1488,7 @@ where
         }
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
-            || expr.annotated_type().unwrap().type_name.is_cipher()
+            || expr.annotated_type().as_ref().unwrap().type_name.is_cipher()
         //If the result is public, add an equality constraint to ensure that the user supplied public output
         //is equal to the circuit evaluation result
         {
@@ -1495,11 +1496,11 @@ where
                 "{}{t_suffix}",
                 self._out_name_factory
                     .base_name_factory
-                    .get_new_name(&*expr.annotated_type().unwrap().type_name, false)
+                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
             );
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().unwrap().type_name,
+                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
                 Some(private_expr.to_expr()),
             );
             self._phi
@@ -1513,7 +1514,7 @@ where
                     .get_loc_expr(None)
                     .try_as_expression_ref()
                     .unwrap()
-                    .explicitly_converted(*expr.annotated_type().unwrap().type_name),
+                    .explicitly_converted(*expr.annotated_type().as_ref().unwrap().type_name.clone()),
                 new_out_param,
             )
         } else
@@ -1524,7 +1525,7 @@ where
                 self._get_canonical_privacy_label(&expr.analysis().unwrap(), new_privacy);
             let privacy_label_expr = get_privacy_expr_from_label(new_privacy.clone());
             let cipher_t =
-                TypeName::cipher_type(expr.annotated_type().unwrap(), homomorphism.clone());
+                TypeName::cipher_type(expr.annotated_type().as_ref().unwrap().clone(), homomorphism.clone());
             let tname = format!(
                 "{}{t_suffix}",
                 self._out_name_factory
@@ -1614,8 +1615,8 @@ where
             self._circ_temp_name_factory.base_name_factory.get_new_name(
                 &*priv_expr
                     .as_ref()
-                    .unwrap()
-                    .annotated_type()
+                    .unwrap().try_as_expression_ref().unwrap()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .type_name,
                 false
@@ -1625,10 +1626,10 @@ where
             tname,
             *priv_expr
                 .as_ref()
+                .unwrap().try_as_expression_ref().unwrap()
+                .annotated_type().as_ref()
                 .unwrap()
-                .annotated_type()
-                .unwrap()
-                .type_name,
+                .type_name.clone(),
             if let Some(AST::Expression(expr)) = &priv_expr {
                 Some(expr.clone())
             } else {

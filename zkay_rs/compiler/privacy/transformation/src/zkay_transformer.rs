@@ -398,7 +398,7 @@ impl ZkayStatementTransformer {
     // in either branch and rhs is a tuple of the corresponding circuit outputs.
     // """
     {
-        if ast.condition.annotated_type().unwrap().is_public() {
+        if ast.condition.annotated_type().as_ref().unwrap().is_public() {
             if contains_private_expr(Some(ast.then_branch.to_ast()))
                 || contains_private_expr(ast.else_branch.as_ref().map(|v| v.to_ast()))
             {
@@ -702,7 +702,7 @@ impl ZkayExpressionTransformer {
                 .privacy_annotation_label()
                 .unwrap()
                 .into(),
-            &ast.annotated_type().unwrap().homomorphism,
+            &ast.annotated_type().as_ref().unwrap().homomorphism,
         )
     }
 
@@ -722,9 +722,9 @@ impl ZkayExpressionTransformer {
             // """
             {
                 let privacy_label = ast
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
-                    .privacy_annotation
+                    .privacy_annotation.as_ref()
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
@@ -749,7 +749,7 @@ impl ZkayExpressionTransformer {
             // """
             //handle short-circuiting
             {
-                let mut args = ast.args();
+                let mut args = ast.args().clone();
                 if ast.func().has_shortcircuiting()
                     && args[1..]
                         .iter()
@@ -790,7 +790,7 @@ impl ZkayExpressionTransformer {
                             .try_as_expression()
                             .unwrap();
                     }
-                    ast.set_args(args);
+                    ast.function_call_expr_base_mut_ref().args=args;
                 }
 
                 return self.visit_children(Some(ast.to_ast())).unwrap();
@@ -804,9 +804,9 @@ impl ZkayExpressionTransformer {
             ));
             if ast.args()[0].evaluate_privately() {
                 let privacy_label = ast
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
-                    .privacy_annotation
+                    .privacy_annotation.as_ref()
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
@@ -818,7 +818,7 @@ impl ZkayExpressionTransformer {
                     .evaluate_expr_in_circuit(
                         &mut ast.to_expr(),
                         &privacy_label.unwrap().into(),
-                        &ast.annotated_type().unwrap().homomorphism,
+                        &ast.annotated_type().as_ref().unwrap().homomorphism,
                     )
                     .to_ast();
             } else {
@@ -1097,10 +1097,10 @@ impl ZkayCircuitTransformer {
     pub fn visitReclassifyExpr(&mut self, mut ast: ReclassifyExpr) -> AST
 // """Rule (15), boundary crossing if analysis determined that it is """
     {
-        if ast.annotated_type().unwrap().is_cipher()
+        if ast.annotated_type().as_ref().unwrap().is_cipher()
         //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
         {
-            let orig_type = ast.annotated_type().unwrap().zkay_type();
+            let orig_type = ast.annotated_type().as_ref().unwrap().zkay_type();
             let orig_privacy = orig_type
                 .privacy_annotation
                 .unwrap()
@@ -1120,7 +1120,7 @@ impl ZkayCircuitTransformer {
         } else if ast.expr().evaluate_privately() {
             self.visit(Some(ast.expr().to_ast())).unwrap()
         } else {
-            assert!(ast.expr().annotated_type().unwrap().is_public());
+            assert!(ast.expr().annotated_type().as_ref().unwrap().is_public());
             self.gen
                 .as_mut()
                 .unwrap()
@@ -1137,10 +1137,10 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) -> Expression {
-        let t = ast.annotated_type().unwrap().type_name;
+        let t = *ast.annotated_type().as_ref().unwrap().type_name.clone();
 
         //Constant folding for literal types
-        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = *t {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = &t {
             return replace_expr(
                 &ast.to_expr(),
                 &mut BooleanLiteralExpr::new(t.value()).to_expr(),
@@ -1148,7 +1148,7 @@ impl ZkayCircuitTransformer {
             );
         } else if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
             NumberTypeName::NumberLiteralType(t),
-        )) = *t
+        )) = &t
         {
             return replace_expr(
                 &ast.to_expr(),
@@ -1167,7 +1167,7 @@ impl ZkayCircuitTransformer {
                     .user_config
                     .get_crypto_params(&ast.func().try_as_builtin_function_ref().unwrap().homomorphism);
                 let recipient = ast
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .zkay_type()
                     .privacy_annotation
@@ -1183,38 +1183,39 @@ impl ZkayCircuitTransformer {
                         &crypto_params,
                     ),
                 )));
-
+                    let mut args=ast.args().clone();
                 if &ast.func().op().unwrap() == "*"
                 //special case: private scalar multiplication using additive homomorphism
                 //TODO ugly hack below removes ReclassifyExpr
                 {
-                    let mut new_args = vec![];
-                    for mut arg in ast.args() {
+                    let mut new_args = vec![];  
+                    for arg in args{
+                        let mut arg=arg.clone();
                         if is_instance(&arg, ASTType::ReclassifyExpr) {
                             arg = *arg.try_as_reclassify_expr_ref().unwrap().expr().clone();
-                            ast.set_func_rerand_using(Some(Box::new(
+                            ast.function_call_expr_base_mut_ref().func.try_as_builtin_function_mut().unwrap().rerand_using=Some(Box::new(
                                 self.gen
                                     .as_mut()
                                     .unwrap()
                                     .get_randomness_for_rerand(ast.to_expr()),
-                            )));
+                            ));
                         //result requires re-randomization
-                        } else if arg.annotated_type().unwrap().is_private() {
-                            arg.set_annotated_type(AnnotatedTypeName::cipher_type(
-                                arg.annotated_type().unwrap(),
+                        } else if arg.annotated_type().as_ref().unwrap().is_private() {
+                            arg.expression_base_mut_ref().annotated_type=Some(AnnotatedTypeName::cipher_type(
+                                arg.annotated_type().as_ref().unwrap().clone(),
                                 Some(ast.func().try_as_builtin_function_ref().unwrap().homomorphism.clone()),
                             ));
                         }
                         new_args.push(arg);
                     }
-                    ast.set_args(new_args);
+                    ast.function_call_expr_base_mut_ref().args=new_args;
                 } else
                 //We require all non-public arguments to be present as ciphertexts
                 {
-                    for arg in ast.args().iter_mut() {
-                        if arg.annotated_type().unwrap().is_private() {
-                            arg.set_annotated_type(AnnotatedTypeName::cipher_type(
-                                arg.annotated_type().unwrap(),
+                    for arg in args.iter_mut() {
+                        if arg.annotated_type().as_ref().unwrap().is_private() {
+                            arg.expression_base_mut_ref().annotated_type=Some(AnnotatedTypeName::cipher_type(
+                                arg.annotated_type().as_ref().unwrap().clone(),
                                 Some(ast.func().try_as_builtin_function_ref().unwrap().homomorphism.clone()),
                             ));
                         }

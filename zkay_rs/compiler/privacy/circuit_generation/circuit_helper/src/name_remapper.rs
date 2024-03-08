@@ -13,7 +13,7 @@ use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTType, Block, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierExpr,
     IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
-    VariableDeclarationStatement, AST,
+    VariableDeclarationStatement, AST,ExpressionBaseProperty,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")
@@ -254,14 +254,14 @@ impl Remapper {
                 // remap key -> new temporary with value cond ? new_value : old_value
                 {
                     let key_decl = key.parent();
-                    assert!(key_decl.clone().unwrap().annotated_type().is_some());
+                    assert!(key_decl.clone().unwrap().try_as_expression_ref().unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                             .as_type(AST::AnnotatedTypeName(
                                 key_decl
                                     .clone()
-                                    .unwrap()
-                                    .annotated_type()
+                                    .unwrap().try_as_expression_ref().unwrap()
+                                    .annotated_type().as_ref()
                                     .unwrap()
                                     .zkay_type(),
                             ));
@@ -326,14 +326,14 @@ impl Remapper {
                 // remap key -> new temporary with value cond ? old_value : new_value
                 {
                     let key_decl = key.parent();
-                    assert!(key_decl.clone().unwrap().annotated_type().is_some());
+                    assert!(key_decl.clone().unwrap().try_as_expression_ref().unwrap().annotated_type().is_some());
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                             .as_type(AST::AnnotatedTypeName(
                                 key_decl
                                     .clone()
-                                    .unwrap()
-                                    .annotated_type()
+                                    .unwrap().try_as_expression_ref().unwrap()
+                                    .annotated_type().as_ref()
                                     .unwrap()
                                     .zkay_type(),
                             ));

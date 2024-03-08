@@ -8,7 +8,7 @@
 
 use crate::ast::{
     ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
-    IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
+    IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,ExpressionBaseProperty,
 };
 use crate::homomorphism::Homomorphism;
 use crate::visitor::visitor::AstVisitor;
@@ -62,8 +62,8 @@ impl UsedHomomorphismsVisitor {
     }
 
     pub fn visitExpression(&self, ast: Expression) -> BTreeSet<String> {
-        if ast.annotated_type().is_some() && ast.annotated_type().unwrap().is_private() {
-            BTreeSet::from([ast.annotated_type().unwrap().homomorphism.clone()])
+        if ast.annotated_type().is_some() && ast.annotated_type().as_ref().unwrap().is_private() {
+            BTreeSet::from([ast.annotated_type().as_ref().unwrap().homomorphism.clone()])
                 .union(&self.visitChildren(ast.to_ast()))
                 .cloned()
                 .collect()
@@ -178,7 +178,7 @@ impl UsedHomomorphismsVisitor {
 // Base case, make sure we don"t miss any annotated types
     {
         assert!(
-            ast.annotated_type().is_none(),
+            ast.try_as_expression_ref().unwrap().annotated_type().is_none(),
             "Unhandled AST element of type {:?} with annotated type",
             ast
         );

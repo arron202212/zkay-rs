@@ -102,7 +102,7 @@ impl TypeCheckVisitor {
         if instance.is_none() {
             require_rehom = true;
             let expected_matching_hom =
-                expected_type.with_homomorphism(rhs.annotated_type().unwrap().homomorphism);
+                expected_type.with_homomorphism(rhs.annotated_type().as_ref().unwrap().clone().homomorphism);
             instance = rhs.instance_of(&expected_matching_hom);
         }
 
@@ -113,7 +113,7 @@ impl TypeCheckVisitor {
             rhs.annotated_type(),
             rhs
         );
-        if rhs.annotated_type().unwrap().type_name != expected_type.type_name {
+        if rhs.annotated_type().as_ref().unwrap().type_name != expected_type.type_name {
             rhs = Self::implicitly_converted_to(rhs, &*expected_type.type_name);
         }
 
@@ -136,13 +136,13 @@ impl TypeCheckVisitor {
     }
     //@staticmethod
     pub fn check_for_invalid_private_type(ast: AST) {
-        if let Some(at) = &ast.annotated_type() {
+        if let Some(at) = &ast.try_as_expression_ref().unwrap().annotated_type() {
             if at.is_private() && !at.type_name.can_be_private() {
                 assert!(
                     false,
                     "Type {:?} cannot be private {:?}",
                     at.type_name,
-                    ast.annotated_type()
+                    ast.try_as_expression_ref().unwrap().annotated_type()
                 );
             }
         }
@@ -185,7 +185,7 @@ impl TypeCheckVisitor {
             ast.lhs()
         );
 
-        let expected_type = &ast.lhs().as_ref().unwrap().annotated_type();
+        let expected_type = &ast.lhs().as_ref().unwrap().try_as_expression_ref().unwrap().annotated_type();
         ast.set_rhs(self.get_rhs(
             ast.rhs().as_ref().unwrap().clone(),
             expected_type.as_ref().unwrap(),
@@ -214,13 +214,13 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn has_private_type(ast: &Expression) -> bool {
-        ast.annotated_type().unwrap().is_private()
+        ast.annotated_type().as_ref().unwrap().is_private()
     }
 
     //@staticmethod
     pub fn has_literal_type(ast: Expression) -> bool {
         is_instances(
-            &*ast.annotated_type().unwrap().type_name,
+            &*ast.annotated_type().as_ref().unwrap().type_name,
             vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
         )
     }
@@ -230,15 +230,15 @@ impl TypeCheckVisitor {
         func: &mut BuiltinFunction,
     ) {
         if func.is_parenthesis() {
-            ast.set_annotated_type(ast.args()[0].annotated_type().unwrap());
+            ast.expression_base_mut_ref().annotated_type=ast.args()[0].annotated_type().clone();
             return;
         }
 
         let all_args_all_or_me = ast
             .args()
             .iter()
-            .all(|x| x.annotated_type().unwrap().is_accessible(&ast.analysis()));
-        let is_public_ite = func.is_ite() && ast.args()[0].annotated_type().unwrap().is_public();
+            .all(|x| x.annotated_type().as_ref().unwrap().is_accessible(&ast.analysis()));
+        let is_public_ite = func.is_ite() && ast.args()[0].annotated_type().as_ref().unwrap().is_public();
         if all_args_all_or_me || is_public_ite {
             self.handle_unhom_builtin_function_call(ast, func);
         } else {
@@ -251,7 +251,7 @@ impl TypeCheckVisitor {
         mut ast: FunctionCallExpr,
         mut func: &mut BuiltinFunction,
     ) {
-        let mut args = ast.args();
+        let mut args = ast.args().clone();
         //handle special cases
         if func.is_ite() {
             let cond_t = &args[0].annotated_type();
@@ -270,10 +270,10 @@ impl TypeCheckVisitor {
             );
 
             let res_t = args[1]
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
                 .type_name
-                .combined_type(*args[2].annotated_type().unwrap().type_name, true);
+                .combined_type(*args[2].annotated_type().as_ref().unwrap().type_name.clone(), true);
 
             let a = if cond_t.as_ref().unwrap().is_private()
             //Everything is turned private
@@ -285,11 +285,11 @@ impl TypeCheckVisitor {
             } else {
                 let hom = Self::combine_homomorphism(args[1].clone(), args[2].clone());
                 let true_type = args[1]
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .with_homomorphism(hom.clone());
                 let false_type = args[2]
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .with_homomorphism(hom.clone());
                 let p = true_type
@@ -299,8 +299,8 @@ impl TypeCheckVisitor {
             };
             args[1] = self.get_rhs(args[1].clone(), &a).unwrap();
             args[2] = self.get_rhs(args[2].clone(), &a).unwrap();
-            ast.set_args(args);
-            ast.set_annotated_type(a);
+            ast.function_call_expr_base_mut_ref().args=args;
+            ast.expression_base_mut_ref().annotated_type=Some(a);
             return;
         }
 
@@ -313,23 +313,23 @@ impl TypeCheckVisitor {
                         false,
                         "{:?},{:?}, {:?}",
                         t,
-                        arg.annotated_type().unwrap().type_name,
+                        arg.annotated_type().as_ref().unwrap().type_name,
                         arg
                     );
                 }
             }
         }
 
-        let t1 = *args[0].annotated_type().unwrap().type_name;
+        let t1 = *args[0].annotated_type().as_ref().unwrap().type_name.clone();
         let t2 = if args.len() == 1 {
             None
         } else {
-            Some(*args[1].annotated_type().unwrap().type_name.clone())
+            Some(*args[1].annotated_type().as_ref().unwrap().type_name.clone())
         };
 
         let mut arg_t = if args.len() == 1 {
             Some(
-                if args[0].annotated_type().unwrap().type_name.is_literal() {
+                if args[0].annotated_type().as_ref().unwrap().type_name.is_literal() {
                     TypeName::Literal(String::from("lit"))
                 } else {
                     t1.clone()
@@ -344,7 +344,7 @@ impl TypeCheckVisitor {
         let out_t = if arg_t == Some(TypeName::Literal(String::from("lit"))) {
             let res = func.op_func(
                 args.iter()
-                    .map(|arg| arg.annotated_type().unwrap().type_name.value())
+                    .map(|arg| arg.annotated_type().as_ref().unwrap().type_name.value())
                     .collect(),
             );
             let out_t = match res {
@@ -385,20 +385,20 @@ impl TypeCheckVisitor {
             assert!(arg_t != Some(TypeName::Literal(String::from("lit"))));
             if func.can_be_private() {
                 if func.is_shiftop() {
-                    if !args[1].annotated_type().unwrap().type_name.is_literal() {
+                    if !args[1].annotated_type().as_ref().unwrap().type_name.is_literal() {
                         assert!(
                             false,
                             "Private shift expressions must use a constant (literal) shift amount {:?}",
                             args[1]
                         )
                     }
-                    if args[1].annotated_type().unwrap().type_name.value() < 0 {
+                    if args[1].annotated_type().as_ref().unwrap().type_name.value() < 0 {
                         assert!(false, "Cannot shift by negative amount {:?}", args[1]);
                     }
                 }
                 if func.is_bitop() || func.is_shiftop() {
                     for arg in &args {
-                        if arg.annotated_type().unwrap().type_name.elem_bitwidth() == 256 {
+                        if arg.annotated_type().as_ref().unwrap().type_name.elem_bitwidth() == 256 {
                             assert!(false,"Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type {:?}", arg)
                         }
                     }
@@ -406,7 +406,7 @@ impl TypeCheckVisitor {
 
                 if func.is_arithmetic() {
                     for a in &args {
-                        if a.annotated_type().unwrap().type_name.elem_bitwidth() == 256 {
+                        if a.annotated_type().as_ref().unwrap().type_name.elem_bitwidth() == 256 {
                             issue_compiler_warning(
                                 func.to_ast(),
                                 String::from("Possible field prime overflow"),
@@ -419,7 +419,7 @@ impl TypeCheckVisitor {
                     }
                 } else if func.is_comp() {
                     for a in &args {
-                        if a.annotated_type().unwrap().type_name.elem_bitwidth() == 256 {
+                        if a.annotated_type().as_ref().unwrap().type_name.elem_bitwidth() == 256 {
                             issue_compiler_warning(
                                 func.to_ast(),
                                 String::from("Possible private comparison failure"),
@@ -457,14 +457,14 @@ impl TypeCheckVisitor {
                     .map(|argument| self.get_rhs(argument.clone(), &arg_pt).unwrap())
                     .collect();
             }
-            ast.set_args(args);
+            ast.function_call_expr_base_mut_ref().args=args;
         }
 
-        ast.set_annotated_type(
-            out_t
+        ast.expression_base_mut_ref().annotated_type=
+            Some(out_t
                 .unwrap()
-                .annotate(CombinedPrivacyUnion::AST(Some(p.unwrap().to_ast()))),
-        );
+                .annotate(CombinedPrivacyUnion::AST(Some(p.unwrap().to_ast()))))
+        ;
     }
     pub fn handle_homomorphic_builtin_function_call(
         &self,
@@ -479,7 +479,7 @@ impl TypeCheckVisitor {
                         false,
                         "{:?},{:?}, {:?}",
                         t,
-                        arg.annotated_type().unwrap().type_name,
+                        arg.annotated_type().as_ref().unwrap().type_name,
                         arg
                     )
                 }
@@ -499,18 +499,18 @@ impl TypeCheckVisitor {
         //For now, keep it simple and evaluate homomorphic operations in Python and check the result in the circuit.
         func.is_private = true;
 
-        ast.set_annotated_type(homomorphic_func.clone().unwrap().output_type());
-        func.homomorphism = ast.annotated_type().unwrap().homomorphism;
+        ast.expression_base_mut_ref().annotated_type=Some(homomorphic_func.clone().unwrap().output_type());
+        func.homomorphism = ast.annotated_type().as_ref().unwrap().homomorphism.clone();
         let expected_arg_types = homomorphic_func.unwrap().input_types();
 
         //Check that the argument types are correct
-        ast.set_args(
+        ast.function_call_expr_base_mut_ref().args=
             ast.args()
                 .iter()
                 .zip(expected_arg_types)
                 .map(|(arg, arg_pt)| self.get_rhs(arg.clone(), &arg_pt).unwrap())
-                .collect(),
-        );
+                .collect()
+        ;
     }
     //@staticmethod
     pub fn is_accessible_by_invoker(_ast: &Expression) -> bool {
@@ -520,19 +520,19 @@ impl TypeCheckVisitor {
     }
     //@staticmethod
     pub fn combine_homomorphism(lhs: Expression, rhs: Expression) -> String {
-        if lhs.annotated_type().unwrap().homomorphism == rhs.annotated_type().unwrap().homomorphism
+        if lhs.annotated_type().as_ref().unwrap().homomorphism == rhs.annotated_type().as_ref().unwrap().homomorphism
         {
-            lhs.annotated_type().unwrap().homomorphism.clone()
+            lhs.annotated_type().as_ref().unwrap().homomorphism.clone()
         } else if Self::can_rehom(&lhs) {
-            rhs.annotated_type().unwrap().homomorphism.clone()
+            rhs.annotated_type().as_ref().unwrap().homomorphism.clone()
         } else {
-            lhs.annotated_type().unwrap().homomorphism.clone()
+            lhs.annotated_type().as_ref().unwrap().homomorphism.clone()
         }
     }
 
     //@staticmethod
     pub fn can_rehom(ast: &Expression) -> bool {
-        if ast.annotated_type().unwrap().is_accessible(&ast.analysis()) {
+        if ast.annotated_type().as_ref().unwrap().is_accessible(&ast.analysis()) {
             return true;
         }
         if is_instance(ast, ASTType::ReclassifyExpr) {
@@ -547,9 +547,9 @@ impl TypeCheckVisitor {
                 ASTType::BuiltinFunction,
             )
             && ast.try_as_function_call_expr_ref().unwrap().func().is_ite()
-            && ast.args()[0].annotated_type().unwrap().is_public()
+            && ast.try_as_function_call_expr_ref().unwrap().args()[0].annotated_type().as_ref().unwrap().is_public()
         {
-            return Self::can_rehom(&ast.args()[1]) && Self::can_rehom(&ast.args()[2]);
+            return Self::can_rehom(&ast.try_as_function_call_expr_ref().unwrap().args()[1]) && Self::can_rehom(&ast.try_as_function_call_expr_ref().unwrap().args()[2]);
         }
 
         false
@@ -558,12 +558,12 @@ impl TypeCheckVisitor {
     //@staticmethod
     pub fn try_rehom(mut rhs: Expression, expected_type: &AnnotatedTypeName) -> Expression {
         assert!(
-            !rhs.annotated_type().unwrap().is_public(),
+            !rhs.annotated_type().as_ref().unwrap().is_public(),
             "Cannot change the homomorphism of a public value"
         );
 
         if rhs
-            .annotated_type()
+            .annotated_type().as_ref()
             .unwrap()
             .is_private_at_me(&rhs.analysis())
         {
@@ -591,13 +591,13 @@ impl TypeCheckVisitor {
                 .try_as_builtin_function_ref()
                 .unwrap()
                 .is_ite()
-            && rhs.args()[0].annotated_type().unwrap().is_public()
+            && rhs.try_as_function_call_expr_ref().unwrap().args()[0].annotated_type().as_ref().unwrap().is_public()
         {
             //Argument is public_cond ? true_val : false_val. Try to rehom both true_val and false_val
-            let mut args = rhs.args();
+            let mut args = rhs.try_as_function_call_expr_ref().unwrap().args().clone();
             args[1] = Self::try_rehom(args[1].clone(), expected_type);
             args[2] = Self::try_rehom(args[2].clone(), expected_type);
-            rhs.set_args(args);
+            rhs.try_as_function_call_expr_mut().unwrap().function_call_expr_base_mut_ref().args=args;
         } else {
             assert!(
                 false,
@@ -609,11 +609,11 @@ impl TypeCheckVisitor {
         }
 
         //Rehom worked without throwing, change annotated_type and return
-        rhs.set_annotated_type(
-            rhs.annotated_type()
+        rhs.expression_base_mut_ref().annotated_type=
+            Some(rhs.annotated_type().as_ref()
                 .unwrap()
-                .with_homomorphism(expected_type.homomorphism.clone()),
-        );
+                .with_homomorphism(expected_type.homomorphism.clone()))
+        ;
         rhs
     }
 
@@ -628,7 +628,7 @@ impl TypeCheckVisitor {
             .privacy_annotation_label()
             .is_some());
         assert!(expr
-            .annotated_type()
+            .annotated_type().as_ref()
             .unwrap()
             .is_private_at_me(&expr.analysis()));
         assert!(expected_type.is_private_at_me(&expr.analysis()));
@@ -648,7 +648,7 @@ impl TypeCheckVisitor {
                 .into(),
         );
         r.reclassify_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-            *expr.annotated_type().unwrap().type_name,
+            *expr.annotated_type().as_ref().unwrap().type_name.clone(),
             Some(pl.into_ast()),
             expected_type.homomorphism.clone(),
         ));
@@ -673,7 +673,7 @@ impl TypeCheckVisitor {
 
         //set type
         r.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-            *expr.annotated_type().unwrap().type_name,
+            *expr.annotated_type().as_ref().unwrap().type_name.clone(),
             Some(pl.to_ast()),
             homomorphism.clone(),
         ));
@@ -692,9 +692,9 @@ impl TypeCheckVisitor {
 
         //set parents
         target.ast_base_mut_ref().parent = source.parent().clone();
-        let mut annotated_type = target.annotated_type();
+        let mut annotated_type = target.annotated_type().clone();
         annotated_type.as_mut().unwrap().ast_base.parent = Some(Box::new((*target).to_ast()));
-        target.set_annotated_type(annotated_type.unwrap());
+        target.expression_base_mut_ref().annotated_type=annotated_type;
         source.ast_base_mut_ref().parent = Some(Box::new(target.clone().to_ast()));
 
         //set source location
@@ -707,14 +707,14 @@ impl TypeCheckVisitor {
         if is_instance(&expr, ASTType::ReclassifyExpr) && !expr.privacy().unwrap().is_all_expr() {
             //Cast the argument of the ReclassifyExpr instead
             expr.try_as_reclassify_expr_mut().unwrap().reclassify_expr_base_mut_ref().expr=Box::new(Self::implicitly_converted_to(*expr.try_as_reclassify_expr_ref().unwrap().expr().clone(), t));
-            let mut expr_annotated_type = expr.annotated_type();
+            let mut expr_annotated_type = expr.annotated_type().clone();
             expr_annotated_type.as_mut().unwrap().type_name =
-                expr.try_as_reclassify_expr_ref().unwrap().expr().as_ref().annotated_type().unwrap().type_name;
-            expr.set_annotated_type(expr_annotated_type.unwrap());
+                expr.try_as_reclassify_expr_ref().unwrap().expr().as_ref().annotated_type().as_ref().unwrap().type_name.clone();
+            expr.expression_base_mut_ref().annotated_type=expr_annotated_type;
             return expr;
         }
 
-        assert!(expr.annotated_type().unwrap().type_name.is_primitive_type());
+        assert!(expr.annotated_type().as_ref().unwrap().type_name.is_primitive_type());
         let mut cast = PrimitiveCastExpr::new(t.clone(), expr.clone(), true);
         cast.expression_base.ast_base.parent = expr.parent().clone();
         cast.expression_base.statement = expr.statement().clone();
@@ -724,11 +724,11 @@ impl TypeCheckVisitor {
         expr.ast_base_mut_ref().parent = Some(Box::new(cast.to_ast()));
         cast.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             t.clone(),
-            expr.annotated_type()
+            expr.annotated_type().as_ref()
                 .unwrap()
-                .privacy_annotation
-                .map(|p| *p),
-            expr.annotated_type().unwrap().homomorphism.clone(),
+                .privacy_annotation.as_ref()
+                .map(|p| *p.clone()),
+            expr.annotated_type().as_ref().unwrap().homomorphism.clone(),
         ));
         cast.expression_base
             .annotated_type
@@ -756,20 +756,19 @@ impl TypeCheckVisitor {
                 ),
                 "User type casts only implemented for enums"
             );
-            ast.set_annotated_type(
-                self.handle_cast(
+            ast.expression_base_mut_ref().annotated_type=
+                Some(self.handle_cast(
                     ast.args()[0].clone(),
                     *ast.func()
                         .target()
+                        .unwrap().try_as_expression_ref().unwrap()
+                        .annotated_type().as_ref()
                         .unwrap()
-                        .annotated_type()
-                        .unwrap()
-                        .type_name,
-                ),
-            );
+                        .type_name.clone(),
+                ));
         } else if is_instance(&**ast.func(), ASTType::LocationExprBase) {
-            let ft = ast.func().annotated_type().unwrap().type_name;
-            assert!(is_instance(&*ft, ASTType::FunctionTypeName));
+            let ft = *ast.func().annotated_type().as_ref().unwrap().type_name.clone();
+            assert!(is_instance(&ft, ASTType::FunctionTypeName));
 
             assert!(
                 ft.parameters().len() == ast.args().len(),
@@ -778,7 +777,7 @@ impl TypeCheckVisitor {
             );
 
             //Check arguments
-            let mut args = ast.args();
+            let mut args = ast.args().clone();
             for i in 0..ast.args().len() {
                 args[i] = self
                     .get_rhs(
@@ -789,10 +788,10 @@ impl TypeCheckVisitor {
                     )
                     .unwrap();
             }
-            ast.set_args(args);
+            ast.function_call_expr_base_mut_ref().args=args;
 
             //Set expression type to return type
-            ast.set_annotated_type(if ft.return_parameters().len() == 1 {
+            ast.expression_base_mut_ref().annotated_type=Some(if ft.return_parameters().len() == 1 {
                 *ft.return_parameters()[0]
                     .identifier_declaration_base
                     .annotated_type
@@ -821,9 +820,9 @@ impl TypeCheckVisitor {
 
     pub fn handle_cast(&self, expr: Expression, t: TypeName) -> AnnotatedTypeName {
         //because of the fake solidity check we already know that the cast is possible -> don"t have to check if cast possible
-        if expr.annotated_type().unwrap().is_private() {
+        if expr.annotated_type().as_ref().unwrap().is_private() {
             let expected = AnnotatedTypeName::new(
-                *expr.annotated_type().unwrap().type_name,
+                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
                 Some(Expression::me_expr(None).into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             );
@@ -858,14 +857,14 @@ impl TypeCheckVisitor {
                 .expr
                 .as_ref()
                 .unwrap()
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
                 .is_address()
                 && ast
                     .expr
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .is_private()),
             "Cannot access members of private address variable{:?}",
@@ -874,7 +873,7 @@ impl TypeCheckVisitor {
         ast.location_expr_base
             .tuple_or_location_expr_base
             .expression_base
-            .annotated_type = ast.location_expr_base.target.unwrap().annotated_type();
+            .annotated_type = ast.location_expr_base.target.unwrap().try_as_expression_ref().unwrap().annotated_type().clone();
     }
 
     pub fn visitReclassifyExpr(&self, mut ast: ReclassifyExpr) {
@@ -890,7 +889,7 @@ impl TypeCheckVisitor {
         //Prevent ReclassifyExpr to all with homomorphic type
         if ast.privacy().unwrap().is_all_expr()
             && (ast.homomorphism() != Some(Homomorphism::non_homomorphic())
-                || ast.expr().annotated_type().unwrap().homomorphism
+                || ast.expr().annotated_type().as_ref().unwrap().homomorphism
                     != Homomorphism::non_homomorphic())
         {
             //If the target privacy is all, we infer a target homomorphism of NonHomomorphic
@@ -899,10 +898,10 @@ impl TypeCheckVisitor {
         }
 
         //Make sure the first argument to reveal / rehom is public or private provably equal to @me
-        let is_expr_at_all = ast.expr().annotated_type().unwrap().is_public();
+        let is_expr_at_all = ast.expr().annotated_type().as_ref().unwrap().is_public();
         let is_expr_at_me = ast
             .expr()
-            .annotated_type()
+            .annotated_type().as_ref()
             .unwrap()
             .is_private_at_me(&ast.analysis());
         assert!(
@@ -929,8 +928,8 @@ impl TypeCheckVisitor {
         );
 
         //NB prevent any redundant reveal (not just for public)
-        ast.set_annotated_type(AnnotatedTypeName::new(
-            *ast.expr().annotated_type().unwrap().type_name,
+        ast.expression_base_mut_ref().annotated_type=Some(AnnotatedTypeName::new(
+            *ast.expr().annotated_type().as_ref().unwrap().type_name.clone(),
             ast.privacy().map(|p| p.into_ast()),
             homomorphism.clone(),
         ));
@@ -939,7 +938,7 @@ impl TypeCheckVisitor {
             Some(String::from("true"))
                 != ast
                     .to_expr()
-                    .instance_of(&ast.expr().annotated_type().unwrap()),
+                    .instance_of(&ast.expr().annotated_type().as_ref().unwrap()),
             r#"Redundant "{}": Expression is already @{}{homomorphism}"{:?}"#,
             ast.func_name(),
             ast.privacy().unwrap().code(),
@@ -954,10 +953,10 @@ impl TypeCheckVisitor {
             b.instanceof_data_type(&TypeName::bool_type()),
             "{:?}, {:?} ,{:?}",
             TypeName::bool_type(),
-            b.annotated_type().unwrap().type_name,
+            b.annotated_type().as_ref().unwrap().type_name,
             b
         );
-        if ast.condition.annotated_type().unwrap().is_private() {
+        if ast.condition.annotated_type().as_ref().unwrap().is_private() {
             let expected = AnnotatedTypeName::new(
                 TypeName::bool_type(),
                 Some(Expression::me_expr(None).into_ast()),
@@ -1019,7 +1018,7 @@ impl TypeCheckVisitor {
             TypeName::TupleType(TupleType::new(
                 ast.elements
                     .iter()
-                    .map(|elem| elem.annotated_type().unwrap())
+                    .map(|elem| elem.annotated_type().as_ref().unwrap().clone())
                     .collect(),
             )),
             None,
@@ -1041,7 +1040,7 @@ impl TypeCheckVisitor {
                 "Unsupported use of contract type in expression{:?}",
                 ast
             );
-            ast.annotated_type = target.annotated_type().map(|t| Box::new(t));
+            ast.annotated_type = target.try_as_expression_ref().unwrap().annotated_type().as_ref().map(|t| Box::new(t.clone()));
 
             assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         }
@@ -1049,7 +1048,7 @@ impl TypeCheckVisitor {
     pub fn visitIndexExpr(&self, mut ast: IndexExpr) {
         let arr = ast.arr.clone().unwrap();
         let index = ast.key.clone();
-        let mut map_t = arr.annotated_type().unwrap();
+        let mut map_t = arr.annotated_type().as_ref().unwrap();
         //should have already been checked
         assert!(map_t
             .privacy_annotation
@@ -1058,9 +1057,9 @@ impl TypeCheckVisitor {
             .try_as_expression_ref()
             .unwrap()
             .is_all_expr());
-
+        let mut tn=*map_t.type_name.clone();
         //do actual type checking
-        if let TypeName::Mapping(ref mut type_name) = &mut *map_t.type_name {
+        if let TypeName::Mapping(ref mut type_name) = tn {
             let key_type = type_name.key_type.clone();
             let expected = AnnotatedTypeName::new(
                 TypeName::ElementaryTypeName(key_type),
@@ -1095,9 +1094,9 @@ impl TypeCheckVisitor {
                 .annotated_type = Some(*type_name.value_type.clone());
 
             assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
-        } else if let TypeName::Array(type_name) = *map_t.type_name {
+        } else if let TypeName::Array(type_name) = map_t.type_name.as_ref(){
             assert!(
-                !ast.key.annotated_type().unwrap().is_private(),
+                !ast.key.annotated_type().as_ref().unwrap().is_private(),
                 "No private array index{:?}",
                 ast
             );
@@ -1198,9 +1197,9 @@ impl TypeCheckVisitor {
     pub fn visitRequireStatement(&self, ast: RequireStatement) {
         assert!(
             ast.condition
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
-                .privacy_annotation
+                .privacy_annotation.as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
@@ -1274,9 +1273,9 @@ impl TypeCheckVisitor {
                     p
                 );
                 assert!(
-                    t.annotated_type() == Some(AnnotatedTypeName::address_all()),
+                    t.try_as_expression_ref().unwrap().annotated_type() == &Some(AnnotatedTypeName::address_all()),
                     r#"Privacy type is not a public address, but {:?},{:?}"#,
-                    t.annotated_type(),
+                    t.try_as_expression_ref().unwrap().annotated_type(),
                     p
                 );
             }

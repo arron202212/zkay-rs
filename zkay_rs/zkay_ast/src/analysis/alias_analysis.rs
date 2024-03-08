@@ -420,8 +420,10 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 == "=="
         {
-            let lhs = c.args()[0].privacy_annotation_label();
-            let rhs = c.args()[1].privacy_annotation_label();
+            let lhs = c.try_as_function_call_expr_ref()
+                .unwrap().args()[0].privacy_annotation_label();
+            let rhs = c .try_as_function_call_expr_ref()
+                .unwrap().args()[1].privacy_annotation_label();
             if lhs.is_some() && rhs.is_some() {
                 after
                     .as_mut()

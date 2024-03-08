@@ -14,7 +14,7 @@ use crate::ast::{
     IdentifierDeclaration, IdentifierExpr, IndexExpr, IntoAST, LocationExpr, Mapping,
     MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement, StatementList,
     StructDefinition, TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    VariableDeclarationStatement, AST,ExpressionBaseProperty,
 };
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -518,26 +518,26 @@ impl SymbolTableLinker {
                 ast.location_expr_base.target = idf.parent().clone();
             }
         } else {
-            let mut t = ast
+            let mut t = *ast
                 .expr
                 .as_ref()
                 .unwrap()
                 .target()
+                .unwrap().try_as_expression_ref().unwrap()
+                .annotated_type().as_ref()
                 .unwrap()
-                .annotated_type()
-                .unwrap()
-                .type_name;
-            if let TypeName::Array(_) = *t {
+                .type_name.clone();
+            if let TypeName::Array(_) = &t {
                 assert!(ast.member.name() == "length");
                 ast.location_expr_base.target = Some(Box::new(ARRAY_LENGTH_MEMBER.to_ast()));
-            } else if let TypeName::UserDefinedTypeName(mut t) = *t {
+            } else if let TypeName::UserDefinedTypeName(ref mut t) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
                     if let Some(idf) = target.names().get(&ast.member.name()) {
                         ast.location_expr_base.target = idf.parent().clone();
                     }
                 } else {
-                    t = t.clone();
+                    *t = t.clone();
                     t.ast_base_mut_ref().parent = Some(Box::new(ast.to_ast()));
                     self.visit(t.to_ast());
                 }
@@ -570,8 +570,8 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .target()
-            .unwrap()
-            .annotated_type()
+            .unwrap().try_as_expression_ref().unwrap()
+            .annotated_type().as_ref()
             .unwrap()
             .type_name
             .clone();

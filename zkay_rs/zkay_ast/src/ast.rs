@@ -469,9 +469,9 @@ impl AST {
     pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
         None
     }
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
     pub fn line(&self) -> i32 {
         0
     }
@@ -950,12 +950,12 @@ impl Expression {
     // pub fn expr(&self) -> Option<Expression> {
     //     None
     // }
-    pub fn set_args(&mut self, args: Vec<Expression>) {}
-    pub fn args(&self) -> Vec<Expression> {
-        vec![]
-    }
+    // pub fn set_args(&mut self, args: Vec<Expression>) {}
+    // pub fn args(&self) -> Vec<Expression> {
+    //     vec![]
+    // }
 
-    pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
+    // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
     pub fn has_shortcircuiting(&self) -> bool {
         false
     }
@@ -979,22 +979,22 @@ impl Expression {
     pub fn idf(&self) -> Option<Identifier> {
         None
     }
-    pub fn evaluate_privately(&self) -> bool {
-        false
-    }
-    pub fn set_evaluate_privately(&self, v: bool) {}
+    // pub fn evaluate_privately(&self) -> bool {
+    //     false
+    // }
+    // pub fn set_evaluate_privately(&self, v: bool) {}
     pub fn elements(&self) -> Vec<Expression> {
         vec![]
     }
     // pub fn add_pre_statement(&mut self, statement: Statement) {}
-    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn set_statement(&mut self, statement: Statement) {}
     pub fn target(&self) -> Option<Box<AST>> {
         None
     }
-    pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
-        None
-    }
+    // pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
+    //     None
+    // }
     pub fn op(&self) -> Option<String> {
         None
     }
@@ -1041,14 +1041,14 @@ impl Expression {
                 None,
             ));
         } else {
-            let t = self.annotated_type().unwrap().type_name;
+            let t = &self.annotated_type().as_ref().unwrap().type_name;
 
-            if *t == expected {
+            if &**t == &expected {
                 return self.clone().into_ast();
             }
 
             // Explicit casts
-            let cast = is_instance(&*t, ASTType::NumberTypeNameBase)
+            let cast = is_instance(&**t, ASTType::NumberTypeNameBase)
                 && is_instances(
                     &expected,
                     vec![
@@ -1058,14 +1058,14 @@ impl Expression {
                         ASTType::EnumTypeName,
                     ],
                 )
-                || is_instance(&*t, ASTType::AddressTypeName)
+                || is_instance(&**t, ASTType::AddressTypeName)
                     && is_instance(&expected, ASTType::NumberTypeNameBase)
-                || is_instance(&*t, ASTType::AddressPayableTypeName)
+                || is_instance(&**t, ASTType::AddressPayableTypeName)
                     && is_instances(
                         &expected,
                         vec![ASTType::NumberTypeNameBase, ASTType::AddressTypeName],
                     )
-                || is_instance(&*t, ASTType::EnumTypeName)
+                || is_instance(&**t, ASTType::EnumTypeName)
                     && is_instance(&expected, ASTType::NumberTypeNameBase);
             assert!(cast);
             return Expression::PrimitiveCastExpr(PrimitiveCastExpr::new(
@@ -1080,12 +1080,12 @@ impl Expression {
         let mut ret = ret.unwrap();
         ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             expected.clone(),
-            if let Some(privacy_annotation) = self.annotated_type().unwrap().privacy_annotation {
-                Some(*privacy_annotation)
+            if let Some(privacy_annotation) = &self.annotated_type().as_ref().unwrap().privacy_annotation {
+                Some(*privacy_annotation.clone())
             } else {
                 None
             },
-            self.annotated_type().unwrap().homomorphism,
+            self.annotated_type().as_ref().unwrap().homomorphism.clone(),
         ));
         ret.into_ast()
     }
@@ -1138,7 +1138,7 @@ impl Expression {
         }
     }
     pub fn instanceof_data_type(&self, expected: &TypeName) -> bool {
-        self.annotated_type()
+        self.annotated_type().as_ref()
             .unwrap()
             .type_name
             .implicitly_convertible_to(expected)
@@ -1161,7 +1161,7 @@ impl Expression {
 
     pub fn ite(&self, e_true: Expression, e_false: Expression) -> FunctionCallExpr {
         let mut bf = BuiltinFunction::new("ite");
-        bf.is_private = self.annotated_type().unwrap().is_private();
+        bf.is_private = self.annotated_type().as_ref().unwrap().is_private();
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
             Expression::BuiltinFunction(bf),
             vec![self.clone(), e_true, e_false],
@@ -1190,7 +1190,7 @@ impl Expression {
         if let Some(combined_label) = combined_label {
             if let CombinedPrivacyUnion::Vec(combined_label) = combined_label {
                 assert!(
-                    if let TypeName::TupleType(_) = *self.annotated_type().unwrap().type_name {
+                    if let TypeName::TupleType(_) = *self.annotated_type().as_ref().unwrap().type_name {
                         true
                     } else {
                         false
@@ -1207,7 +1207,7 @@ impl Expression {
                 Some(
                     (combined_label
                         == self
-                            .annotated_type()
+                            .annotated_type().as_ref()
                             .unwrap()
                             .type_name
                             .types()
@@ -1222,9 +1222,9 @@ impl Expression {
                     .to_string(),
                 )
             } else if combined_label.clone().as_expression().unwrap().privacy_annotation_label()
-                == actual
+                == actual.as_ref()
                     .unwrap()
-                    .privacy_annotation
+                    .privacy_annotation.as_ref()
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
@@ -1264,9 +1264,9 @@ impl Expression {
             None
         }
     }
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
     // pub fn statement(&self) -> Option<Box<Statement>> {
     //     None
     // }
@@ -1278,7 +1278,7 @@ pub trait ExpressionBaseRef: ASTBaseRef {
 pub trait ExpressionBaseProperty {
     fn annotated_type(&self) -> &Option<AnnotatedTypeName>;
     fn statement(&self) -> &Option<Box<Statement>>;
-    fn evaluate_privately(&self) -> &bool;
+    fn evaluate_privately(&self) -> bool;
 }
 impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
     fn annotated_type(&self) -> &Option<AnnotatedTypeName> {
@@ -1287,8 +1287,8 @@ impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
     fn statement(&self) -> &Option<Box<Statement>> {
         &self.expression_base_ref().statement
     }
-    fn evaluate_privately(&self) -> &bool {
-        &self.expression_base_ref().evaluate_privately
+    fn evaluate_privately(&self) -> bool {
+        self.expression_base_ref().evaluate_privately
     }
 }
 #[derive(
@@ -1648,7 +1648,7 @@ impl BuiltinFunction {
 
     pub fn select_homomorphic_overload(
         &self,
-        args: Vec<Expression>,
+        args: &Vec<Expression>,
         analysis: Option<PartitionState<AST>>,
     ) -> Option<HomomorphicBuiltinFunction> {
         // """
@@ -1682,10 +1682,10 @@ impl BuiltinFunction {
         let base_type = AnnotatedTypeName::new(
             elem_type,
             inaccessible_arg_types[0]
-                .clone()
+                .as_ref()
                 .unwrap()
-                .privacy_annotation
-                .map(|pr| *pr),
+                .privacy_annotation.as_ref()
+                .map(|pr| *pr.clone()),
             String::from("NON_HOMOMORPHIC"),
         );
         let public_args: Vec<_> = arg_types
@@ -1718,12 +1718,12 @@ impl BuiltinFunction {
         if self.op == "*"
             && !args[0]
                 .clone()
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
                 .is_accessible(&analysis)
             && !args[1]
                 .clone()
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
                 .is_accessible(&analysis)
             && (isinstance(&args[0]) && !isinstance(&args[1]))
@@ -1807,29 +1807,29 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
-    pub fn evaluate_privately(&self) -> bool {
-        false
-    }
+    // pub fn evaluate_privately(&self) -> bool {
+    //     false
+    // }
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
-    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
 
-    pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
+    // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
     // pub fn statement(&self) -> Option<Box<Statement>> {
     //     None
     // }
     pub fn set_public_key(&mut self, public_key: Option<Box<HybridArgumentIdf>>) {}
     // pub fn set_func_idf_name(&mut self, name: String) {}
-    pub fn set_args(&mut self, args: Vec<Expression>) {}
-    pub fn args(&self) -> Vec<Expression> {
-        vec![]
-    }
+    // pub fn set_args(&mut self, args: Vec<Expression>) {}
+    // pub fn args(&self) -> Vec<Expression> {
+    //     vec![]
+    // }
     // pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
 
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
     pub fn is_cast(&self) -> bool {
         false
     }
@@ -2736,9 +2736,9 @@ impl LocationExpr {
     // pub fn statement(&self) -> Option<Box<Statement>> {
     //     None
     // }
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
     // pub fn parent(&self) -> Option<AST> {
     //     match self {
     //         LocationExpr::IdentifierExpr(ie) => ie
@@ -2970,7 +2970,7 @@ impl IdentifierExpr {
         self.location_expr_base
             .target
             .clone()
-            .map(|t| t.annotated_type().unwrap())
+            .map(|t| t.try_as_expression_ref().unwrap().annotated_type().as_ref().unwrap().clone())
     }
 
     pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
@@ -3272,14 +3272,14 @@ impl ReclassifyExpr {
     // pub fn statement(&self) -> Option<Box<Statement>> {
     //     None
     // }
-    pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
+    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
         None
     }
     // pub fn set_homomorphism(&mut self, homomorphism: String) {}
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
             ReclassifyExpr::ReclassifyExpr(ast) => ReclassifyExpr::ReclassifyExpr(ast.as_type(t)),
@@ -3511,7 +3511,7 @@ impl HybridArgumentIdf {
                     .corresponding_priv_expression
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .type_name
             {
@@ -3524,7 +3524,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .type_name
                     .bool_value(),
@@ -3538,7 +3538,7 @@ impl HybridArgumentIdf {
                 .corresponding_priv_expression
                 .as_ref()
                 .unwrap()
-                .annotated_type()
+                .annotated_type().as_ref()
                 .unwrap()
                 .type_name
             {
@@ -3551,7 +3551,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
-                    .annotated_type()
+                    .annotated_type().as_ref()
                     .unwrap()
                     .type_name
                     .value(),
@@ -3867,7 +3867,7 @@ impl EncryptionExpression {
     pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
         let privacy = privacy.try_as_expression().unwrap();
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
-            expr.annotated_type().unwrap(),
+            expr.annotated_type().as_ref().unwrap().clone(),
             homomorphism.clone(),
         ));
         Self {
@@ -6913,9 +6913,9 @@ impl IdentifierDeclaration {
     pub fn identifier_declaration_base(&self) -> Option<IdentifierDeclarationBase> {
         None
     }
-    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
+    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
 }
 // impl IntoAST for IdentifierDeclaration {
 //     fn into_ast(self) -> AST {
@@ -7816,11 +7816,11 @@ impl InstanceTarget {
     }
 
     pub fn privacy(&self) -> Option<AST> {
-        if let TypeName::Mapping(_) = *self.target().unwrap().annotated_type().unwrap().type_name {
+        if let TypeName::Mapping(_) = *self.target().unwrap().try_as_expression_ref().unwrap().annotated_type().as_ref().unwrap().type_name {
             let t = self
                 .target()
-                .unwrap()
-                .annotated_type()
+                .unwrap().try_as_expression_ref().unwrap()
+                .annotated_type().as_ref()
                 .unwrap()
                 .zkay_type()
                 .type_name;
@@ -7843,8 +7843,8 @@ impl InstanceTarget {
             }
         } else if self.key().is_none() {
             self.target()
-                .unwrap()
-                .annotated_type()
+                .unwrap().try_as_expression_ref().unwrap()
+                .annotated_type().as_ref()
                 .unwrap()
                 .zkay_type()
                 .privacy_annotation
@@ -8404,7 +8404,8 @@ impl CodeVisitor {
         let rhs = if !op.is_empty() {
             ast.rhs()
                 .clone()
-                .map(|fce| fce.args()[1].clone())
+                .map(|fce| fce.try_as_function_call_expr_ref()
+                .unwrap().args()[1].clone())
         } else {
             ast.rhs().clone()
         };

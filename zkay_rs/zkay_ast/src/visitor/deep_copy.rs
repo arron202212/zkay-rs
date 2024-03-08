@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use crate::ast::{AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST};
+use crate::ast::{AnnotatedTypeName, Expression, IntoAST, Statement, UserDefinedTypeName, AST,ExpressionBaseProperty};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
 use crate::visitor::visitor::AstVisitor;

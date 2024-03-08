@@ -8,7 +8,7 @@
 
 use crate::ast::{
     is_instance, ASTType, Expression, FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST,
-    IntoExpression, LocationExpr, AST,
+    IntoExpression, LocationExpr, AST,ExpressionBaseProperty,
 };
 use crate::visitor::visitor::AstVisitor;
 
