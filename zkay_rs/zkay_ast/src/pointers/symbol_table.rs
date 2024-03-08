@@ -10,11 +10,11 @@
 use crate::ast::{
     is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType,
     AnnotatedTypeName, Array, Block, Comment, ConstructorOrFunctionDefinition, ContractDefinition,
-    EnumDefinition, EnumValue, Expression, ForStatement, Identifier, IdentifierBase,
-    IdentifierDeclaration, IdentifierExpr, IndexExpr, IntoAST, LocationExpr, Mapping,
-    MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement, StatementList,
-    StructDefinition, TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,ExpressionBaseProperty,
+    EnumDefinition, EnumValue, Expression, ExpressionBaseProperty, ForStatement, Identifier,
+    IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr, IntoAST, LocationExpr,
+    Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement,
+    StatementList, StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
@@ -380,7 +380,8 @@ impl SymbolTableLinker {
         )
         .1
         .unwrap()
-        .try_as_namespace_definition_ref().map(|nd|nd.clone())
+        .try_as_namespace_definition_ref()
+        .map(|nd| nd.clone())
     }
 
     pub fn find_identifier_declaration(&self, mut ast: &IdentifierExpr) -> AST {
@@ -523,10 +524,14 @@ impl SymbolTableLinker {
                 .as_ref()
                 .unwrap()
                 .target()
-                .unwrap().try_as_expression_ref().unwrap()
-                .annotated_type().as_ref()
                 .unwrap()
-                .type_name.clone();
+                .try_as_expression_ref()
+                .unwrap()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .type_name
+                .clone();
             if let TypeName::Array(_) = &t {
                 assert!(ast.member.name() == "length");
                 ast.location_expr_base.target = Some(Box::new(ARRAY_LENGTH_MEMBER.to_ast()));
@@ -570,8 +575,11 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .target()
-            .unwrap().try_as_expression_ref().unwrap()
-            .annotated_type().as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .annotated_type()
+            .as_ref()
             .unwrap()
             .type_name
             .clone();

@@ -1521,7 +1521,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     return self.temp_result().clone();
         // }
         if let Some(Expression::FunctionCallExpr(e)) = &expr {
-            if let Some(f) = e.func().to_ast().identifier_expr() {
+            if let Some(f) = e.func().to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref() {
                 if f.idf.name() == String::from("require") {
                     assert!(
                         e.args().len() == 1,

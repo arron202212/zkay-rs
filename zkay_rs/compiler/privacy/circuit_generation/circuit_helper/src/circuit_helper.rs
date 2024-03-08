@@ -18,13 +18,14 @@ use zkay_ast::ast::{
     CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
     ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
     ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf,
-    Identifier, IdentifierBase, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
-    IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
-    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,FunctionCallExprBaseRef,FunctionCallExprBaseMutRef,
+    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
+    IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression,
+    IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr, NumberLiteralExpr,
+    NumberLiteralType, NumberTypeName, Parameter, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty,
+    StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
+    VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -375,7 +376,7 @@ where
         //     vec![ASTType::MeExpr, ASTType::Identifier]
         // ));
 
-        let name = if let Some(me_expr) = label.me_expr() {
+        let name = if let Some(me_expr) = label.try_as_expression_ref().unwrap().try_as_me_expr_ref() {
             me_expr.name.clone()
         } else {
             label.try_as_identifier_ref().unwrap().name()
@@ -454,7 +455,8 @@ where
     pub fn get_randomness_for_rerand(&mut self, expr: Expression) -> IdentifierExpr {
         let idf = self._secret_input_name_factory.get_new_idf(
             &TypeName::rnd_type(
-                expr.annotated_type().as_ref()
+                expr.annotated_type()
+                    .as_ref()
                     .unwrap()
                     .type_name
                     .crypto_params()
@@ -540,7 +542,15 @@ where
                         ASTType::StateVariableDeclaration
                     ]
                 ));
-                let t = var.target().unwrap().try_as_expression_ref().unwrap().annotated_type().as_ref().unwrap().zkay_type();
+                let t = var
+                    .target()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .zkay_type();
                 if !t.type_name.is_primitive_type() {
                     unimplemented!(
                         "Reference types inside private if statements are not supported"
@@ -629,12 +639,12 @@ where
         } else {
             ret_args
         };
-        for ret_arg in ret_args.tuple_expr_mut().unwrap().elements.iter_mut() {
-            ret_arg.set_statement(astmt.to_statement());
+        for ret_arg in ret_args.try_as_expression_mut().unwrap().try_as_tuple_or_location_expr_mut().unwrap().try_as_tuple_expr_mut().unwrap().elements.iter_mut() {
+            ret_arg.expression_base_mut_ref().statement = Some(Box::new(astmt.to_statement()));
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
-            .zip(ret_args.tuple_expr_mut().unwrap().elements.iter_mut())
+            .zip(ret_args.try_as_expression_mut().unwrap().try_as_tuple_or_location_expr_mut().unwrap().try_as_tuple_expr_mut().unwrap().elements.iter_mut())
             .map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
@@ -648,10 +658,18 @@ where
         //Create assignment statement
         if !ret_params.is_empty() {
             astmt
-                .set_lhs(TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_ast());
-            astmt.set_rhs(
-                TupleExpr::new(ret_arg_outs.iter().map(|r| r.to_expr()).collect()).to_expr(),
-            );
+                .try_as_assignment_statement_mut()
+                .unwrap()
+                .assignment_statement_base_mut_ref()
+                .lhs = Some(Box::new(
+                TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_ast(),
+            ));
+            astmt
+                .try_as_assignment_statement_mut()
+                .unwrap()
+                .assignment_statement_base_mut_ref()
+                .rhs =
+                Some(TupleExpr::new(ret_arg_outs.iter().map(|r| r.to_expr()).collect()).to_expr());
             astmt
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
@@ -796,9 +814,11 @@ where
         // """
     {
         let privacy = if expr.annotated_type().as_ref().unwrap().is_private() {
-            expr.annotated_type().as_ref()
+            expr.annotated_type()
+                .as_ref()
                 .unwrap()
-                .privacy_annotation.as_ref()
+                .privacy_annotation
+                .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
@@ -822,9 +842,11 @@ where
         let t = input_expr
             .as_ref()
             .unwrap()
-            .annotated_type().as_ref()
+            .annotated_type()
+            .as_ref()
             .unwrap()
-            .type_name.clone();
+            .type_name
+            .clone();
         let mut locally_decrypted_idf = None;
 
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
@@ -893,7 +915,13 @@ where
             );
             let return_idf = locally_decrypted_idf.clone();
             let cipher_t = TypeName::cipher_type(
-                input_expr.as_ref().unwrap().annotated_type().as_ref().unwrap().clone(),
+                input_expr
+                    .as_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .clone(),
                 expr.annotated_type().as_ref().unwrap().homomorphism.clone(),
             );
             let tname = format!(
@@ -959,7 +987,7 @@ where
                 false,
                 true,
             );
-            expr.set_statement(statement);
+            expr.expression_base_mut_ref().statement = Some(Box::new(statement));
         }
 
         //Cache circuit input for later reuse if possible
@@ -1155,7 +1183,12 @@ where
                 ast.to_ast().code(),
             )));
         self._add_assign(
-            ast.lhs().as_ref().unwrap().try_as_expression_ref().unwrap().clone(),
+            ast.lhs()
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .clone(),
             ast.assignment_statement_base_mut_ref()
                 .rhs
                 .as_mut()
@@ -1457,14 +1490,18 @@ where
             && (*expr)
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .func().try_as_builtin_function_ref().unwrap()
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
                 .homomorphism
                 != Homomorphism::non_homomorphic();
         if is_hom_comp
         //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
         {
             expr.try_as_function_call_expr_mut()
-                .unwrap().expression_base_mut_ref().annotated_type=Some(AnnotatedTypeName::cipher_type(
+                .unwrap()
+                .expression_base_mut_ref()
+                .annotated_type = Some(AnnotatedTypeName::cipher_type(
                 expr.annotated_type().as_ref().unwrap().clone(),
                 Some(homomorphism.clone()),
             ));
@@ -1488,7 +1525,12 @@ where
         }
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
-            || expr.annotated_type().as_ref().unwrap().type_name.is_cipher()
+            || expr
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .type_name
+                .is_cipher()
         //If the result is public, add an equality constraint to ensure that the user supplied public output
         //is equal to the circuit evaluation result
         {
@@ -1514,7 +1556,9 @@ where
                     .get_loc_expr(None)
                     .try_as_expression_ref()
                     .unwrap()
-                    .explicitly_converted(*expr.annotated_type().as_ref().unwrap().type_name.clone()),
+                    .explicitly_converted(
+                        *expr.annotated_type().as_ref().unwrap().type_name.clone(),
+                    ),
                 new_out_param,
             )
         } else
@@ -1524,8 +1568,10 @@ where
             let new_privacy =
                 self._get_canonical_privacy_label(&expr.analysis().unwrap(), new_privacy);
             let privacy_label_expr = get_privacy_expr_from_label(new_privacy.clone());
-            let cipher_t =
-                TypeName::cipher_type(expr.annotated_type().as_ref().unwrap().clone(), homomorphism.clone());
+            let cipher_t = TypeName::cipher_type(
+                expr.annotated_type().as_ref().unwrap().clone(),
+                homomorphism.clone(),
+            );
             let tname = format!(
                 "{}{t_suffix}",
                 self._out_name_factory
@@ -1615,8 +1661,11 @@ where
             self._circ_temp_name_factory.base_name_factory.get_new_name(
                 &*priv_expr
                     .as_ref()
-                    .unwrap().try_as_expression_ref().unwrap()
-                    .annotated_type().as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .as_ref()
                     .unwrap()
                     .type_name,
                 false
@@ -1626,17 +1675,24 @@ where
             tname,
             *priv_expr
                 .as_ref()
-                .unwrap().try_as_expression_ref().unwrap()
-                .annotated_type().as_ref()
                 .unwrap()
-                .type_name.clone(),
+                .try_as_expression_ref()
+                .unwrap()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .type_name
+                .clone(),
             if let Some(AST::Expression(expr)) = &priv_expr {
                 Some(expr.clone())
             } else {
                 None
             },
         );
-        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(), priv_expr.unwrap().try_as_expression_ref().unwrap().clone());
+        let stmt = CircVarDecl::new(
+            tmp_circ_var_idf.clone(),
+            priv_expr.unwrap().try_as_expression_ref().unwrap().clone(),
+        );
         self._phi.push(CircuitStatement::CircVarDecl(stmt));
         Some(tmp_circ_var_idf)
     }

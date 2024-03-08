@@ -14,7 +14,8 @@ use crate::ast::{
     DoWhileStatement, ExpressionStatement, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
-    StatementBaseRef, StatementList, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,
+    StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -120,7 +121,7 @@ impl AliasAnalysisVisitor {
     }
     pub fn visitStatementList(&self, mut ast: StatementList) {
         ast.statement_base_mut_ref().after_analysis = Some(self.propagate(
-            ast.statements(),
+            ast.statements().clone(),
             ast.before_analysis().as_ref().unwrap().clone(),
         ));
     }
@@ -420,10 +421,10 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 == "=="
         {
-            let lhs = c.try_as_function_call_expr_ref()
-                .unwrap().args()[0].privacy_annotation_label();
-            let rhs = c .try_as_function_call_expr_ref()
-                .unwrap().args()[1].privacy_annotation_label();
+            let lhs =
+                c.try_as_function_call_expr_ref().unwrap().args()[0].privacy_annotation_label();
+            let rhs =
+                c.try_as_function_call_expr_ref().unwrap().args()[1].privacy_annotation_label();
             if lhs.is_some() && rhs.is_some() {
                 after
                     .as_mut()

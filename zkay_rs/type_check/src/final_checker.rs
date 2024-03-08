@@ -63,8 +63,11 @@ impl FinalVisitor {
                 .identifier_declaration_base_ref()
                 .is_final()
                 && v.try_as_identifier_declaration_ref()
-                .unwrap().try_as_state_variable_declaration_ref()
-                .unwrap().expr.is_some()
+                    .unwrap()
+                    .try_as_state_variable_declaration_ref()
+                    .unwrap()
+                    .expr
+                    .is_some()
             {
                 self.state_vars_assigned
                     .as_mut()
@@ -93,8 +96,8 @@ impl FinalVisitor {
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
         self.visit(ast.rhs().as_ref().unwrap().to_ast());
-        if let Some(le) = ast.lhs().as_ref().map(|l| l.identifier_expr()) {
-            let var: &AST = &(*le.unwrap().location_expr_base.target.unwrap()).into();
+        if let Some(le) = ast.lhs().as_ref().unwrap().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref() {
+            let var: &AST = le.location_expr_base.target.as_ref().unwrap();
             if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
                 assert!(!*v, "Tried to reassign final variable,{:?}", ast);
                 *v = true;

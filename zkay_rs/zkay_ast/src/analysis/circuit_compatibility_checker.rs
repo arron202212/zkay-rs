@@ -15,7 +15,7 @@ use crate::ast::{
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
     FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr,
     IntoAST, IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReturnStatement, Statement, StatementList, AST,ReclassifyExprBaseProperty,
+    ReclassifyExprBaseProperty, ReturnStatement, Statement, StatementList, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 pub fn check_circuit_compliance(ast: AST) {
@@ -65,7 +65,8 @@ impl DirectCanBePrivateDetector {
                 let mut can_be_private = ast.func().can_be_private();
                 if ast.func().is_eq() || ast.func().is_ite() {
                     can_be_private &= ast.args()[1]
-                        .annotated_type().as_ref()
+                        .annotated_type()
+                        .as_ref()
                         .unwrap()
                         .type_name
                         .can_be_private();
@@ -225,7 +226,13 @@ impl CircuitComplianceChecker {
 
             if is_instance(&expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    &*expr.try_as_primitive_cast_expr_ref().unwrap().annotated_type().as_ref().unwrap().type_name,
+                    &*expr
+                        .try_as_primitive_cast_expr_ref()
+                        .unwrap()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name,
                     vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
                 )
             {
@@ -274,8 +281,7 @@ impl CircuitComplianceChecker {
             //     eval_in_public = true
             if eval_in_public || !Self::should_evaluate_public_expr_in_circuit(*ast.expr().clone())
             {
-                self.priv_setter
-                    .set_evaluation(ast.expr().to_ast(), false);
+                self.priv_setter.set_evaluation(ast.expr().to_ast(), false);
             }
         } else {
             self.priv_setter.set_evaluation(ast.to_ast(), true);
@@ -301,7 +307,13 @@ impl CircuitComplianceChecker {
 
     pub fn visitIfStatement(&mut self, ast: IfStatement) {
         let old_in_privif_stmt = self.inside_privif_stmt.clone();
-        if ast.condition.annotated_type().as_ref().unwrap().is_private() {
+        if ast
+            .condition
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .is_private()
+        {
             let mut mod_vals = ast
                 .then_branch
                 .statement_list_base
@@ -326,8 +338,11 @@ impl CircuitComplianceChecker {
             for val in mod_vals {
                 if !val
                     .target()
-                    .unwrap().try_as_expression_ref().unwrap()
-                    .annotated_type().as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .as_ref()
                     .unwrap()
                     .zkay_type()
                     .type_name
@@ -418,7 +433,7 @@ impl PrivateSetter {
 
     pub fn visitExpression(&mut self, mut ast: Expression) {
         assert!(self.evaluate_privately.is_some());
-        ast.expression_base_mut_ref().evaluate_privately=self.evaluate_privately.unwrap();
+        ast.expression_base_mut_ref().evaluate_privately = self.evaluate_privately.unwrap();
         self.visit_children(&ast.to_ast());
     }
 }
@@ -462,8 +477,11 @@ impl NonstaticOrIncompatibilityDetector {
                     &*ast
                         .func()
                         .target()
-                        .unwrap().try_as_expression_ref().unwrap()
-                        .annotated_type().as_ref()
+                        .unwrap()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .annotated_type()
+                        .as_ref()
                         .unwrap()
                         .type_name,
                     ASTType::FunctionTypeName
@@ -478,10 +496,16 @@ impl NonstaticOrIncompatibilityDetector {
                     .can_be_private;
             } else if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
                 can_be_private &= ast.func().can_be_private()
-                    || ast.annotated_type().as_ref().unwrap().type_name.is_literal();
+                    || ast
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name
+                        .is_literal();
                 if ast.func().is_eq() || ast.func().is_ite() {
                     can_be_private &= ast.args()[1]
-                        .annotated_type().as_ref()
+                        .annotated_type()
+                        .as_ref()
                         .unwrap()
                         .type_name
                         .can_be_private();

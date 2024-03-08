@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTType, Expression, FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST,
-    IntoExpression, LocationExpr, AST,ExpressionBaseProperty,
+    is_instance, ASTType, Expression, ExpressionBaseProperty, FunctionCallExpr,
+    FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 

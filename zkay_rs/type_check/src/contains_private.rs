@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, AST,ExpressionBaseProperty};
+use zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, ExpressionBaseProperty, AST};
 use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private(ast: AST) -> bool {
@@ -54,7 +54,8 @@ impl ContainsPrivateVisitor {
             assert!(is_instance(t, ASTType::AnnotatedTypeName));
 
             if !t
-                .privacy_annotation.as_ref()
+                .privacy_annotation
+                .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()

@@ -21,15 +21,16 @@ use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
     is_instance, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
-    ArrayLiteralExprBase, AssignmentStatement, AssignmentStatementBase, BlankLine, Block,
-    CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
-    ContractTypeName, ExprUnion, Expression, ExpressionStatement, FunctionCallExpr,
-    FunctionCallExprBase, HybridArgumentIdf, Identifier, IdentifierBase, IdentifierDeclaration,
-    IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement,
-    LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr, Parameter,
-    PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration,
-    Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
-    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    ArrayLiteralExprBase, AssignmentStatement, AssignmentStatementBase,
+    AssignmentStatementBaseMutRef, BlankLine, Block, CipherText, Comment, CommentBase,
+    ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
+    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier,
+    IdentifierBase, IdentifierBaseRef, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion,
+    IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr, NamespaceDefinition,
+    NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement,
+    SourceUnit, StateVariableDeclaration, Statement, StatementList, StatementListBase,
+    StructDefinition, StructTypeName, TupleExpr, TypeName, UserDefinedTypeName,
+    VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::pointers::symbol_table::link_identifiers;
@@ -1104,7 +1105,7 @@ impl ZkayTransformer {
                     key_owner.clone(),
                     &CircuitHelper::get_glob_key_name(&key_owner.as_ref().unwrap(), &crypto_params),
                 );
-                assignment.set_lhs(Some(
+                assignment.assignment_statement_base_mut_ref().lhs = Some(Box::new(
                     IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(Identifier::Identifier(
                             tmp_key_var.clone(),
@@ -1249,13 +1250,11 @@ impl ZkayTransformer {
             AnnotatedTypeName::new(TypeName::dyn_uint_array(), None, String::from("NON_")),
             vec![NumberLiteralExpr::new(ext_circuit.in_size_trans(), false).to_expr()],
         );
-        let in_var_decl = (*in_arr_var.idf.clone())
-            .decl_var(
-                AST::TypeName(TypeName::dyn_uint_array()),
-                Some(new_in_array_expr.to_expr()),
-            )
-            .unwrap();
-        stmts.push(in_var_decl);
+        let in_var_decl = (*in_arr_var.idf.clone()).identifier_base_ref().decl_var(
+            AST::TypeName(TypeName::dyn_uint_array()),
+            Some(new_in_array_expr.to_expr()),
+        );
+        stmts.push(in_var_decl.into_ast());
         stmts.push(CommentBase::new(String::new()).to_ast());
         stmts.extend(CommentBase::comment_wrap_block(
             String::from("Request static public keys"),

@@ -28,8 +28,9 @@ use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
-    FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierExpr, IndexExpr,
-    IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,ExpressionBaseProperty,
+    ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf,
+    IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,
+    PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -48,7 +49,7 @@ pub fn _get_t(mut t: Option<AST>) -> String
     let t = if let Some(t) = t.try_as_expression_ref() {
         Some(*t.annotated_type().as_ref().unwrap().type_name.clone())
     } else {
-        t.type_name()
+        t.try_as_type_name()
     };
     assert!(t.is_some());
     let t = t.unwrap();
@@ -220,12 +221,14 @@ impl JsnarkVisitor
                 .collect();
             if ast.func().is_shiftop() {
                 assert!(ast.args()[1]
-                    .annotated_type().as_ref()
+                    .annotated_type()
+                    .as_ref()
                     .unwrap()
                     .type_name
                     .is_literal());
                 args[1] = ast.args()[1]
-                    .annotated_type().as_ref()
+                    .annotated_type()
+                    .as_ref()
                     .unwrap()
                     .type_name
                     .value()
@@ -237,7 +240,12 @@ impl JsnarkVisitor
             if op == "sign+" {
                 unimplemented!()
             }
-            let homomorphism = ast.func().try_as_builtin_function_ref().unwrap().homomorphism.clone();
+            let homomorphism = ast
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .homomorphism
+                .clone();
             let (f_start, crypto_backend, public_key_name) =
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
@@ -278,9 +286,24 @@ impl JsnarkVisitor
                     format!(r#"{f_start}{o}, {{{}}})"#, args[0])
                 } else {
                     assert!(args.len() == 2);
-                    if op == "*" && ast.func().try_as_builtin_function_ref().unwrap().rerand_using.is_some() {
+                    if op == "*"
+                        && ast
+                            .func()
+                            .try_as_builtin_function_ref()
+                            .unwrap()
+                            .rerand_using
+                            .is_some()
+                    {
                         // re-randomize homomorphic scalar multiplication
-                        let rnd = self.visit(ast.func().try_as_builtin_function_ref().unwrap().rerand_using.as_ref().unwrap().to_ast());
+                        let rnd = self.visit(
+                            ast.func()
+                                .try_as_builtin_function_ref()
+                                .unwrap()
+                                .rerand_using
+                                .as_ref()
+                                .unwrap()
+                                .to_ast(),
+                        );
                         format!(
                             r#"o_rerand({f_start}{{{}}}, {o}, {{{}}}), "{crypto_backend}", "{public_key_name}", {rnd})"#,
                             args[0], args[1]
@@ -296,7 +319,14 @@ impl JsnarkVisitor
                 ASTType::EnumDefinition,
             )
         {
-            assert!(ast.annotated_type().as_ref().unwrap().type_name.elem_bitwidth() == 256);
+            assert!(
+                ast.annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .elem_bitwidth()
+                    == 256
+            );
             return self.handle_cast(self.visit(ast.args()[0].to_ast()), TypeName::uint_type());
         }
 

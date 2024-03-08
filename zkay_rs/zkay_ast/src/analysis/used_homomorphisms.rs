@@ -8,7 +8,7 @@
 
 use crate::ast::{
     ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
-    IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,ExpressionBaseProperty,
+    ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
 };
 use crate::homomorphism::Homomorphism;
 use crate::visitor::visitor::AstVisitor;
@@ -178,7 +178,10 @@ impl UsedHomomorphismsVisitor {
 // Base case, make sure we don"t miss any annotated types
     {
         assert!(
-            ast.try_as_expression_ref().unwrap().annotated_type().is_none(),
+            ast.try_as_expression_ref()
+                .unwrap()
+                .annotated_type()
+                .is_none(),
             "Unhandled AST element of type {:?} with annotated type",
             ast
         );
