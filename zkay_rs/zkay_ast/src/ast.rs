@@ -401,30 +401,30 @@ impl AST {
     // pub fn tuple_expr_mut(&mut self) -> Option<&mut TupleExpr> {
     //     None
     // }
-    pub fn parameter(&self) -> Option<&Parameter> {
-        None
-    }
-    pub fn variable_declaration(&self) -> Option<&VariableDeclaration> {
-        None
-    }
-    pub fn source_unit(&self) -> Option<&SourceUnit> {
-        None
-    }
-    pub fn statement_list_base(&self) -> Option<StatementListBase> {
-        None
-    }
-    pub fn statement_list(&self) -> Option<StatementList> {
-        None
-    }
-    pub fn ast_base(&self) -> Option<&ASTBase> {
-        None
-    }
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
-    pub fn elements(&self) -> Vec<Expression> {
-        vec![]
-    }
+    // pub fn parameter(&self) -> Option<&Parameter> {
+    //     None
+    // }
+    // pub fn variable_declaration(&self) -> Option<&VariableDeclaration> {
+    //     None
+    // }
+    // pub fn source_unit(&self) -> Option<&SourceUnit> {
+    //     None
+    // }
+    // pub fn statement_list_base(&self) -> Option<StatementListBase> {
+    //     None
+    // }
+    // pub fn statement_list(&self) -> Option<StatementList> {
+    //     None
+    // }
+    // pub fn ast_base(&self) -> Option<&ASTBase> {
+    //     None
+    // }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
+    // pub fn elements(&self) -> Vec<Expression> {
+    //     vec![]
+    // }
     // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
     //     None
     // }
@@ -439,16 +439,16 @@ impl AST {
     //     None
     // }
     // pub fn set_func_idf_name(&mut self, name: String) {}
-    pub fn to_location_expr(&self) -> Option<LocationExpr> {
-        // if let Self::LocationExpr(le) = self {
-        //     le.clone()
-        // } else {
-        None
-        // }
-    }
-    pub fn init(&self) -> Option<SimpleStatement> {
-        None
-    }
+    // pub fn to_location_expr(&self) -> Option<LocationExpr> {
+    //     // if let Self::LocationExpr(le) = self {
+    //     //     le.clone()
+    //     // } else {
+    //     None
+    //     // }
+    // }
+    // pub fn init(&self) -> Option<SimpleStatement> {
+    //     None
+    // }
     // pub fn expr(&self) -> Option<Expression> {
     //     if let Self::Expression(expr) = self {
     //         Some(expr.clone())
@@ -456,35 +456,35 @@ impl AST {
     //         None
     //     }
     // }
-    pub fn pre_statements(&self) -> Vec<AST> {
-        vec![]
-    }
-    pub fn block(&self) -> Option<Block> {
-        if let AST::Statement(Statement::StatementList(StatementList::Block(b))) = self {
-            Some(b.clone())
-        } else {
-            None
-        }
-    }
-    pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
-        None
-    }
+    // pub fn pre_statements(&self) -> Vec<AST> {
+    //     vec![]
+    // }
+    // pub fn block(&self) -> Option<Block> {
+    //     if let AST::Statement(Statement::StatementList(StatementList::Block(b))) = self {
+    //         Some(b.clone())
+    //     } else {
+    //         None
+    //     }
+    // }
+    // pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
+    //     None
+    // }
     // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
     //     None
     // }
-    pub fn line(&self) -> i32 {
-        0
-    }
-    pub fn column(&self) -> i32 {
-        0
-    }
-    pub fn contract_definition(&self) -> Option<ContractDefinition> {
-        None
-    }
+    // pub fn line(&self) -> i32 {
+    //     0
+    // }
+    // pub fn column(&self) -> i32 {
+    //     0
+    // }
+    // pub fn contract_definition(&self) -> Option<ContractDefinition> {
+    //     None
+    // }
 
-    pub fn target() -> Option<AST> {
-        None
-    }
+    // pub fn target() -> Option<AST> {
+    //     None
+    // }
     // pub fn parent(&self) -> Option<AST> {
     //     None
     // }
@@ -496,9 +496,9 @@ impl AST {
         let v = CodeVisitor::new(true);
         v.visit(&self)
     }
-    pub fn original_code(&self) -> Vec<String> {
-        vec![]
-    }
+    // pub fn original_code(&self) -> Vec<String> {
+    //     vec![]
+    // }
     // pub fn set_original_code(&mut self, code: Vec<String>) {}
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
@@ -516,13 +516,13 @@ impl AST {
     }
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
-    }
-    pub fn idf(&self) -> Option<Identifier> {
-        None
-    }
-    pub fn requires_verification(&self) -> bool {
-        false
-    }
+    }                       
+    // pub fn idf(&self) -> Option<Identifier> {
+    //     None
+    // }
+    // pub fn requires_verification(&self) -> bool {
+    //     false
+    // }
 }
 
 use std::fmt;
@@ -914,12 +914,12 @@ impl ASTChildren for Expression {
     }
 }
 impl Expression {
-    pub fn expression_base_mut(&mut self) -> Option<&mut ExpressionBase> {
-        None
-    }
-    pub fn is_eq(&self) -> bool {
-        false
-    }
+    // pub fn expression_base_mut(&mut self) -> Option<&mut ExpressionBase> {
+    //     None
+    // }
+    // pub fn is_eq(&self) -> bool {
+    //     false
+    // }
     pub fn code(&self) -> String {
         let v = CodeVisitor::new(true);
         v.visit(&self.to_ast())
@@ -928,9 +928,9 @@ impl Expression {
     // pub fn parent(&self) -> Option<Box<AST>> {
     //     None
     // }
-    pub fn privacy(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn privacy(&self) -> Option<Expression> {
+    //     None
+    // }
     // pub fn line(&self) -> i32 {
     //     -1
     // }
@@ -939,9 +939,9 @@ impl Expression {
     // pub fn column(&self) -> i32 {
     //     -1
     // }
-    pub fn is_ite(&self) -> bool {
-        false
-    }
+    // pub fn is_ite(&self) -> bool {
+    //     false
+    // }
     // pub fn set_homomorphism(&mut self, homomorphism: String) {}
     // pub fn homomorphism(&self) -> String {
     //     String::new()
@@ -956,42 +956,42 @@ impl Expression {
     // }
 
     // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
-    pub fn has_shortcircuiting(&self) -> bool {
-        false
-    }
-    pub fn is_private(&self) -> bool {
-        false
-    }
+    // pub fn has_shortcircuiting(&self) -> bool {
+    //     false
+    // }
+    // pub fn is_private(&self) -> bool {
+    //     false
+    // }
     // pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
-    pub fn to_location_expr(&self) -> Option<LocationExpr> {
-        // if let Self::LocationExpr(le) = self {
-        //     le.clone()
-        // } else {
-        None
-        // }
-    }
-    pub fn member(&self) -> Option<Identifier> {
-        None
-    }
+    // pub fn to_location_expr(&self) -> Option<LocationExpr> {
+    //     // if let Self::LocationExpr(le) = self {
+    //     //     le.clone()
+    //     // } else {
+    //     None
+    //     // }
+    // }
+    // pub fn member(&self) -> Option<Identifier> {
+    //     None
+    // }
     // pub fn func(&self) -> Option<Expression> {
     //     None
     // }
-    pub fn idf(&self) -> Option<Identifier> {
-        None
-    }
+    // pub fn idf(&self) -> Option<Identifier> {
+    //     None
+    // }
     // pub fn evaluate_privately(&self) -> bool {
     //     false
     // }
     // pub fn set_evaluate_privately(&self, v: bool) {}
-    pub fn elements(&self) -> Vec<Expression> {
-        vec![]
-    }
+    // pub fn elements(&self) -> Vec<Expression> {
+    //     vec![]
+    // }
     // pub fn add_pre_statement(&mut self, statement: Statement) {}
     // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
     // pub fn set_statement(&mut self, statement: Statement) {}
-    pub fn target(&self) -> Option<Box<AST>> {
-        None
-    }
+    // pub fn target(&self) -> Option<Box<AST>> {
+    //     None
+    // }
     // pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
     //     None
     // }
@@ -1937,25 +1937,26 @@ impl FunctionCallExprBase {
 
     pub fn is_cast(&self) -> bool {
         // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
-        if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
-            if let TupleOrLocationExpr::LocationExpr(le) = tole {
-                let target = match le {
-                    LocationExpr::IdentifierExpr(ie) => ie.location_expr_base.target.clone(),
-                    LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
-                    LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
-                    LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
-                };
-                if target.is_some()
-                    && is_instances(
-                        &*target.unwrap(),
+is_instance(&*self.func, ASTType::LocationExprBase)  && is_instances(
+                        &**self.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
                         vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
                     )
-                {
-                    return true;
-                }
-            }
-        }
-        false
+        // if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
+        //     if let TupleOrLocationExpr::LocationExpr(le) = tole {
+        //         let target = match le {
+        //             LocationExpr::IdentifierExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
+        //         };
+        //         if target.is_some()
+        //             && 
+        //         {
+        //             return true;
+        //         }
+        //     }
+        // }
+        // false
     }
     pub fn as_type(&self, t: AST) -> Self {
         let mut selfs = self.clone();
@@ -2900,9 +2901,9 @@ impl LocationExpr {
             LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
         }
     }
-    pub fn target(&self) -> Option<Box<AST>> {
-        None
-    }
+    // pub fn target(&self) -> Option<Box<AST>> {
+    //     None
+    // }
 }
 #[enum_dispatch]
 pub trait LocationExprBaseRef: TupleOrLocationExprBaseRef {
@@ -3299,9 +3300,9 @@ impl ReclassifyExpr {
     // pub fn expr(&self) -> Option<Expression> {
     //     None
     // }
-    pub fn privacy(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn privacy(&self) -> Option<Expression> {
+    //     None
+    // }
     pub fn homomorphism(&self) -> Option<String> {
         None
     }
@@ -7674,7 +7675,7 @@ impl ASTChildren for SourceUnit {
 }
 impl ConstructorOrFunctionDefinitionAttr for AST {
     fn get_requires_verification_when_external(&self) -> bool {
-        if let Some(c) = self.constructor_or_function_definition() {
+        if let Some(c) = self.try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref() {
             c.requires_verification_when_external
         } else {
             false
@@ -7833,7 +7834,7 @@ impl InstanceTarget {
 
     pub fn in_scope_at(&self, ast: AST) -> bool {
         crate::pointers::symbol_table::SymbolTableLinker::in_scope_at(
-            &self.target().unwrap().idf().unwrap(),
+            &**self.target().unwrap().try_as_identifier_declaration_ref().unwrap().idf(),
             ast,
         )
     }
@@ -7947,12 +7948,12 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
         String::from("error")
     } else {
         get_code_error_msg(
-            ast.line(),
-            ast.column(),
-            root.unwrap().original_code(),
-            ctr.unwrap().contract_definition(),
+            ast.ast_base_ref().unwrap().line,
+            ast.ast_base_ref().unwrap().column,
+            root.unwrap().try_as_source_unit_ref().unwrap().original_code.clone(),
+            ctr.unwrap().try_as_namespace_definition().unwrap().try_as_contract_definition(),
             fct.clone()
-                .map(|f| f.constructor_or_function_definition().unwrap()),
+                .map(|f| f.try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition().unwrap()),
             stmt.clone().map(|s| *s),
         )
     };
@@ -8191,7 +8192,7 @@ impl CodeVisitor {
 
     pub fn visit_ReclassifyExpr(&self, ast: ReclassifyExpr) -> CodeVisitorReturn {
         let e = self.visit(&AST::Expression(*ast.expr().clone()));
-        let p = self.visit(&AST::Expression(ast.privacy().unwrap()));
+        let p = self.visit(&AST::Expression(*ast.privacy().clone()));
         let h = HOMOMORPHISM_STORE
             .lock()
             .unwrap()

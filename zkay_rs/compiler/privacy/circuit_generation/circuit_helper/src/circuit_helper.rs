@@ -25,7 +25,7 @@ use zkay_ast::ast::{
     NumberLiteralType, NumberTypeName, Parameter, ReturnStatement, SimpleStatement,
     StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty,
     StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement, AST,
+    VariableDeclaration, VariableDeclarationStatement, AST,IdentifierDeclarationBaseProperty,NamespaceDefinitionBaseProperty,LocationExprBaseProperty,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -562,7 +562,7 @@ where
                     t.homomorphism,
                 ); //t, but @me
                 let mut idf = IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(var.target().unwrap().idf().unwrap()),
+                    IdentifierExprUnion::Identifier(*var.target().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone()),
                     Some(Box::new(ret_t)),
                 );
                 idf.location_expr_base.target = var.target();
@@ -590,12 +590,12 @@ where
                         Parameter::new(
                             vec![],
                             *ret.annotated_type.clone().unwrap(),
-                            ret.location_expr_base
+                            *ret.location_expr_base
                                 .target
                                 .clone()
-                                .unwrap()
+                                .unwrap().try_as_identifier_declaration_ref().unwrap()
                                 .idf()
-                                .unwrap(),
+                                .clone(),
                             None,
                         )
                     })
@@ -689,14 +689,14 @@ where
     // :param ast: The function call to include, target function must require verification
     // """
     {
-        assert!(ast.func().target().unwrap().requires_verification());
+        assert!(ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref().unwrap().requires_verification);
         self.function_calls_with_verification.push(ast.clone());
         self._phi.push(CircuitStatement::CircCall(CircCall::new(
-            ast.func()
-                .target()
+            ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
+                .target().as_ref()
                 .unwrap()
-                .constructor_or_function_definition()
-                .unwrap(),
+                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                .unwrap().clone(),
         )));
     }
 
@@ -868,15 +868,14 @@ where
         if is_instance(expr, ASTType::IdentifierExpr)
         //Look in cache before doing expensive move-in
         {
-            let expr_target: AST = expr.target().map(|v| *v).unwrap().into();
-            if self._remapper.0.is_remapped(&expr_target.idf().unwrap()) {
+            if self._remapper.0.is_remapped(&expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf()) {
                 return self
                     ._remapper
                     .0
-                    .get_current(expr_target.idf().unwrap(), None);
+                    .get_current(*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), None);
             }
 
-            t_suffix = format!("_{}", expr_target.name());
+            t_suffix = format!("_{}", expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().name());
         }
 
         //Generate circuit inputs
@@ -996,10 +995,9 @@ where
         //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
         //      This works for now because we never perform homomorphic operations on variables we can decrypt.
         {
-            let expr_target: AST = expr.target().map(|v| *v).unwrap().into();
             self._remapper
                 .0
-                .remap(expr_target.idf().unwrap(), return_idf.clone());
+                .remap(*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), return_idf.clone());
         }
 
         return_idf
@@ -1019,12 +1017,12 @@ where
         if self
             ._remapper
             .0
-            .is_remapped(&target.as_ref().unwrap().idf().unwrap())
+            .is_remapped(&target.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone())
         {
             let remapped_idf = self
                 ._remapper
                 .0
-                .get_current(target.as_ref().unwrap().idf().unwrap(), None);
+                .get_current(*target.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), None);
             remapped_idf
                 .get_idf_expr(
                     &idf.location_expr_base
@@ -1063,20 +1061,20 @@ where
         // """
     {
         assert!(
-            is_instance(&*fcall.func, ASTType::LocationExprBase) && fcall.func.target().is_some()
+            is_instance(&*fcall.func, ASTType::LocationExprBase) && fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().is_some()
         );
-        let fdef = fcall.func.target().clone();
+        let fdef = fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().clone();
         //with
         self._remapper.0.remap_scope(Some(
-            (*fcall.func.target().unwrap())
-                .constructor_or_function_definition()
+            (*fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().clone())
+                .try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition()
                 .unwrap()
                 .body
                 .unwrap(),
         ));
 
         //with
-        if fcall.func.target().unwrap().idf().unwrap().name() != "<stmt_fct>" {
+        if fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().clone().try_as_namespace_definition().unwrap().idf().name() != "<stmt_fct>" {
             self.circ_indent_block(&format!("INLINED {}", fcall.to_ast().code()));
         }
 
@@ -1084,7 +1082,7 @@ where
         for (param, arg) in fdef
             .as_ref()
             .unwrap()
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
             .unwrap()
             .parameters
             .iter()
@@ -1110,7 +1108,7 @@ where
         let inlined_body = fdef
             .as_ref()
             .unwrap()
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
             .unwrap()
             .original_body
             .clone(); //deep_copy(fdef.original_body, true, true);
@@ -1140,7 +1138,7 @@ where
 
         //Create TupleExpr with location expressions corresponding to the function return values as elements
         let ret_idfs: Vec<_> = (*fdef.as_ref().unwrap())
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
             .unwrap()
             .return_var_decls
             .iter()
@@ -1245,7 +1243,7 @@ where
             .unwrap()
             .return_var_decls
             .iter()
-            .zip(&ast.expr.as_ref().unwrap().elements())
+            .zip(&ast.expr.as_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements)
         {
             //Assign return value to new version of return variable
             self.create_new_idf_version_from_value(
@@ -1436,9 +1434,9 @@ where
         if is_instance(&lhs, ASTType::IdentifierExpr)
         //for now no ref types
         {
-            assert!(lhs.target().is_some());
+            assert!(lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().is_some());
             self.create_new_idf_version_from_value(
-                lhs.target().unwrap().idf().unwrap(),
+                *lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(),
                 rhs.clone(),
             );
         } else if is_instance(&lhs, ASTType::IndexExpr) {
@@ -1455,9 +1453,9 @@ where
             }
             assert!(
                 is_instance(&*rhs, ASTType::TupleExpr)
-                    && lhs.elements().len() == rhs.elements().len()
+                    && lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.len() == rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.len()
             );
-            for (e_l, e_r) in lhs.elements().iter().zip(&rhs.elements()) {
+            for (e_l, e_r) in lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.iter().zip(&rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.clone()) {
                 self._add_assign(e_l.clone(), &mut e_r.clone());
             }
         }
@@ -1480,8 +1478,8 @@ where
         // """
     {
         let is_circ_val = is_instance(&*expr, ASTType::IdentifierExpr)
-            && is_instance(&expr.idf().unwrap(), ASTType::HybridArgumentIdf)
-            && expr.idf().unwrap().arg_type() != HybridArgType::PubContractVal;
+            && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf, ASTType::HybridArgumentIdf)
+            && expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.arg_type() != HybridArgType::PubContractVal;
         let is_hom_comp = is_instance(&(*expr), ASTType::FunctionCallExprBase)
             && is_instance(
                 &**(*expr).try_as_function_call_expr_ref().unwrap().func(),
@@ -1521,7 +1519,7 @@ where
 
         let mut t_suffix = String::new();
         if is_instance(expr, ASTType::IdentifierExpr) && !is_circ_val {
-            t_suffix += &format!("_{}", (*expr).idf().unwrap().name());
+            t_suffix += &format!("_{}", expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.name());
         }
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
@@ -1637,18 +1635,15 @@ where
     {
         assert!(
             !(is_instance(&expr, ASTType::MemberAccessExpr)
-                && is_instance(&expr.member().unwrap(), ASTType::HybridArgumentIdf))
+                && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member.clone(), ASTType::HybridArgumentIdf))
         );
         if is_instance(&expr, ASTType::IdentifierExpr)
-            && is_instance(&expr.idf().unwrap(), ASTType::HybridArgumentIdf)
-            && expr.idf().unwrap().arg_type() != HybridArgType::PubContractVal
+            && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf, ASTType::HybridArgumentIdf)
+            && expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.arg_type() != HybridArgType::PubContractVal
         //Already evaluated in circuit
         {
-            return if let Some(Identifier::HybridArgumentIdf(hai)) = expr.idf() {
-                Some(hai)
-            } else {
-                None
-            };
+            return expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.clone().try_as_hybrid_argument_idf() 
+               ;
         }
 
         let priv_expr = self

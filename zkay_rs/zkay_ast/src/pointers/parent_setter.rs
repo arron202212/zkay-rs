@@ -8,7 +8,7 @@
 
 use crate::ast::{
     ASTBaseProperty, ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
-    NamespaceDefinition, SourceUnit, Statement, AST,
+    NamespaceDefinition, SourceUnit, Statement, AST,ASTBaseMutRef,ExpressionBaseMutRef,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -56,9 +56,9 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitNamespaceDefinition(&self, mut ast: NamespaceDefinition) {
-        ast.ast_base_mut().unwrap().namespace = Some(if let Some(parent) = ast.parent() {
+        ast.ast_base_mut_ref().namespace = Some(if let Some(parent) = ast.parent() {
             parent
-                .ast_base()
+                .ast_base_ref()
                 .unwrap()
                 .namespace
                 .as_ref()
@@ -92,8 +92,8 @@ impl ParentSetterVisitor {
 
     pub fn visitChildren(&self, ast: &mut AST) {
         for c in ast.children().iter_mut() {
-            c.ast_base_mut().unwrap().parent = Some(Box::new(ast.clone()));
-            c.ast_base_mut().unwrap().namespace = ast.ast_base().unwrap().namespace.clone();
+            c.ast_base_mut_ref().unwrap().parent = Some(Box::new(ast.clone()));
+            c.ast_base_mut_ref().unwrap().namespace = ast.ast_base_ref().unwrap().namespace.clone();
             self.visit(c.clone());
         }
     }
@@ -139,7 +139,7 @@ impl ExpressionToStatementVisitor {
                 .map(|p| *p.clone());
         }
         if parent.is_some() {
-            ast.expression_base_mut().unwrap().statement =
+            ast.expression_base_mut_ref().statement =
                 parent.map(|p| Box::new(p.try_as_statement().unwrap()));
         }
     }
@@ -162,7 +162,7 @@ impl ExpressionToStatementVisitor {
         }
         if parent.is_some() {
             ast.statement_base_mut().unwrap().function =
-                parent.map(|p| Box::new(p.constructor_or_function_definition().unwrap()));
+                parent.map(|p| Box::new(p.try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition().unwrap()));
         }
     }
 }

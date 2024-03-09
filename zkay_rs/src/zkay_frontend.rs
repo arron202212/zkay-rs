@@ -148,7 +148,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     print_step("Write library contract files");
     CFG.lock().unwrap().library_compilation_environment();
     for crypto_params in ast
-        .source_unit()
+        .try_as_source_unit_ref()
         .unwrap()
         .used_crypto_backends
         .clone()
@@ -226,7 +226,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         // Set crypto backends for unused homomorphisms to None
         for hom in Homomorphism::fields() {
             if !ast
-                .source_unit()
+                .try_as_source_unit_ref()
                 .unwrap()
                 .used_homomorphisms
                 .as_ref()

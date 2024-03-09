@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
     ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseProperty, Identifier,
     IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement, MeExpr,
-    NamespaceDefinition, NumberLiteralExpr, AST,
+    NamespaceDefinition, NumberLiteralExpr, AST,LocationExprBaseProperty,
 };
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
@@ -81,11 +81,11 @@ pub fn _compute_transitive_circuit_io_sizes(
         .collect();
     for call in &cgens[fct].function_calls_with_verification {
         if let Some(cofd) = call
-            .func()
+            .func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
             .target()
-            .map(|t| *t)
+            .as_ref()
             .unwrap()
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
         {
             called_fcts.insert(cofd.clone());
         }
@@ -97,11 +97,11 @@ pub fn _compute_transitive_circuit_io_sizes(
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
         for f in &circuit.function_calls_with_verification.clone() {
             if let Some(ref mut t) = f
-                .func()
+                .func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
                 .target()
-                .map(|t| *t)
+                .as_ref()
                 .unwrap()
-                .constructor_or_function_definition()
+                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
             {
                 let (i, o, p) = _compute_transitive_circuit_io_sizes(cgens, t, gkeys, called_fcts);
                 if let Some(target_circuit) = cgens.get(&*t) {
@@ -185,11 +185,11 @@ pub fn transform_internal_calls(
                     .to_expr(),
                 ]);
                 if let Some(t) = fc
-                    .func
+                    .func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
                     .target()
-                    .map(|t| *t)
+                    .as_ref()
                     .unwrap()
-                    .constructor_or_function_definition()
+                    .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
                 {
                     if let Some(cg) = cgens.get(&t) {
                         i += cg.in_size_trans();

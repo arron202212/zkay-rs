@@ -8,7 +8,7 @@
 
 use crate::ast::{
     is_instance, ASTBaseProperty, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST,
-    ReturnStatement, AST,
+    ReturnStatement, AST,StatementListBaseProperty,
 }; //, AstException
 use crate::visitor::visitor::AstVisitor;
 
@@ -51,9 +51,9 @@ impl ReturnCheckVisitor {
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;
         if container
-            .statement_list_base()
+            .try_as_statement_ref().unwrap().try_as_statement_list_ref()
             .unwrap()
-            .statements
+            .statements()
             .last()
             .map(|v| v.clone())
             .unwrap()
@@ -70,7 +70,7 @@ impl ReturnCheckVisitor {
             .parent
             .as_ref()
             .unwrap()
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
             .unwrap()
             .is_constructor()
         {

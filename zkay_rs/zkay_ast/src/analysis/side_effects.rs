@@ -12,7 +12,7 @@ use crate::ast::{
     AssignmentStatementBaseProperty, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
     IntoStatement, LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr,
-    TupleOrLocationExpr, VariableDeclaration, AST,
+    TupleOrLocationExpr, VariableDeclaration, AST,ASTBaseMutRef,LocationExprBaseProperty,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
@@ -60,8 +60,8 @@ impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
         if is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
-            && (*ast.func().target().unwrap())
-                .constructor_or_function_definition()
+            && (*ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap())
+                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .has_side_effects()
         {
@@ -121,13 +121,13 @@ impl DirectModificationDetector {
 
     pub fn collect_modified_values(&self, target: &mut AST, expr: AST) {
         if is_instance(&expr, ASTType::TupleExpr) {
-            for elem in expr.elements() {
+            for elem in &expr.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements {
                 self.collect_modified_values(target, elem.to_ast());
             }
         } else {
             let mod_value = InstanceTarget::new(vec![Some(Box::new(expr.to_ast()))]);
             if target
-                .ast_base()
+                .ast_base_ref()
                 .unwrap()
                 .modified_values
                 .contains(&mod_value)
@@ -135,7 +135,7 @@ impl DirectModificationDetector {
                 assert!(false,"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
             }
             target
-                .ast_base_mut()
+                .ast_base_mut_ref()
                 .unwrap()
                 .modified_values
                 .insert(mod_value);
@@ -144,10 +144,10 @@ impl DirectModificationDetector {
     pub fn visitLocationExpr(&self, ast: &mut LocationExpr) {
         let ast2: LocationExpr = ast.clone();
         self.visitAST(&mut (*ast).to_ast());
-        let ast1: AST = (*ast.target().unwrap()).into();
+        let ast1 = ast.target().as_ref().unwrap();
         if TupleOrLocationExpr::LocationExpr(ast.clone()).is_rvalue()
             && is_instances(
-                &ast1,
+                &**ast1,
                 vec![
                     ASTType::VariableDeclaration,
                     ASTType::StateVariableDeclaration,
@@ -155,7 +155,7 @@ impl DirectModificationDetector {
                 ],
             )
         {
-            ast.ast_base_mut()
+            ast.ast_base_mut_ref()
                 .read_values
                 .insert(InstanceTarget::new(vec![Some(Box::new(ast2.to_ast()))]));
         }
@@ -173,16 +173,16 @@ impl DirectModificationDetector {
         for child in ast.children().iter_mut() {
             self.visit(child.clone());
             modified_values = modified_values
-                .union(&child.ast_base_mut().unwrap().modified_values)
+                .union(&child.ast_base_mut_ref().unwrap().modified_values)
                 .cloned()
                 .collect();
             read_values = read_values
-                .union(&child.ast_base().unwrap().read_values)
+                .union(&child.ast_base_ref().unwrap().read_values)
                 .cloned()
                 .collect();
         }
-        ast.ast_base_mut().unwrap().modified_values = modified_values;
-        ast.ast_base_mut().unwrap().read_values = read_values;
+        ast.ast_base_mut_ref().unwrap().modified_values = modified_values;
+        ast.ast_base_mut_ref().unwrap().read_values = read_values;
     }
 }
 // class IndirectModificationDetector(FunctionVisitor)
@@ -236,16 +236,16 @@ impl IndirectModificationDetector {
         self.visitAST(ast.to_ast());
         if is_instance(&**ast.func(), ASTType::LocationExprBase) {
             //for now no reference types -> only state could have been modified
-            let mut fdef: AST = (*ast.func().target().unwrap()).into();
+            let mut fdef= ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap();
             let mut ast = ast.to_ast();
-            let rlen = ast.ast_base().unwrap().read_values.len();
-            ast.ast_base_mut().unwrap().read_values = ast
-                .ast_base_mut()
+            let rlen = ast.ast_base_ref().unwrap().read_values.len();
+            ast.ast_base_mut_ref().unwrap().read_values = ast
+                .ast_base_mut_ref()
                 .unwrap()
                 .read_values
                 .union(
                     &fdef
-                        .ast_base()
+                        .ast_base_ref()
                         .unwrap()
                         .read_values
                         .iter()
@@ -266,46 +266,46 @@ impl IndirectModificationDetector {
                 )
                 .cloned()
                 .collect();
-            self.fixed_point_reached &= rlen == ast.ast_base().unwrap().read_values.len();
+            self.fixed_point_reached &= rlen == ast.ast_base_ref().unwrap().read_values.len();
 
             //update modified values if any
-            let mlen = ast.ast_base().unwrap().modified_values.len();
-            for v in &fdef.ast_base().unwrap().modified_values {
+            let mlen = ast.ast_base_ref().unwrap().modified_values.len();
+            for v in &fdef.ast_base_ref().unwrap().modified_values {
                 if is_instance(
                     &v.target().map(|t| *t).unwrap(),
                     ASTType::StateVariableDeclaration,
                 ) {
-                    ast.ast_base_mut()
+                    ast.ast_base_mut_ref()
                         .unwrap()
                         .modified_values
                         .insert(v.clone());
                 }
             }
-            self.fixed_point_reached &= mlen == ast.ast_base().unwrap().modified_values.len();
+            self.fixed_point_reached &= mlen == ast.ast_base_ref().unwrap().modified_values.len();
         }
     }
     pub fn visitAST(&mut self, mut ast: AST) {
-        let mlen = ast.ast_base().unwrap().modified_values.len();
-        let rlen = ast.ast_base().unwrap().read_values.len();
+        let mlen = ast.ast_base_ref().unwrap().modified_values.len();
+        let rlen = ast.ast_base_ref().unwrap().read_values.len();
         for child in ast.children().iter_mut() {
             self.visit(child.clone());
-            ast.ast_base_mut().unwrap().modified_values = ast
-                .ast_base_mut()
+            ast.ast_base_mut_ref().unwrap().modified_values = ast
+                .ast_base_mut_ref()
                 .unwrap()
                 .modified_values
-                .union(&child.ast_base().unwrap().modified_values)
+                .union(&child.ast_base_ref().unwrap().modified_values)
                 .cloned()
                 .collect();
-            ast.ast_base_mut().unwrap().read_values = ast
-                .ast_base_mut()
+            ast.ast_base_mut_ref().unwrap().read_values = ast
+                .ast_base_mut_ref()
                 .unwrap()
                 .read_values
-                .union(&child.ast_base().unwrap().read_values)
+                .union(&child.ast_base_ref().unwrap().read_values)
                 .cloned()
                 .collect();
         }
-        self.fixed_point_reached &= mlen == ast.ast_base().unwrap().modified_values.len();
-        self.fixed_point_reached &= rlen == ast.ast_base().unwrap().read_values.len();
+        self.fixed_point_reached &= mlen == ast.ast_base_ref().unwrap().modified_values.len();
+        self.fixed_point_reached &= rlen == ast.ast_base_ref().unwrap().read_values.len();
     }
 }
 // class EvalOrderUBChecker(AstVisitor)
@@ -336,9 +336,9 @@ impl EvalOrderUBChecker {
     // @staticmethod
     pub fn visit_child_expressions(parent: AST, mut exprs: Vec<AST>) {
         if exprs.len() > 1 {
-            let mut modset: BTreeSet<_> = exprs[0].ast_base().unwrap().modified_values.clone();
+            let mut modset: BTreeSet<_> = exprs[0].ast_base_ref().unwrap().modified_values.clone();
             for arg in &exprs[1..] {
-                let modified_values = arg.ast_base().unwrap().modified_values.clone();
+                let modified_values = arg.ast_base_ref().unwrap().modified_values.clone();
                 let diffset: BTreeSet<_> = modset.intersection(&modified_values).collect();
 
                 assert!(
@@ -359,14 +359,14 @@ impl EvalOrderUBChecker {
             }
 
             for arg in &exprs {
-                let modset: BTreeSet<_> = arg.ast_base().unwrap().modified_values.clone();
+                let modset: BTreeSet<_> = arg.ast_base_ref().unwrap().modified_values.clone();
                 let other_args: BTreeSet<_> = exprs
                     .iter()
                     .filter_map(|e| if e != arg { Some(e) } else { None })
                     .collect();
                 for arg2 in &other_args {
                     let diffset: BTreeSet<_> = modset
-                        .intersection(&arg2.ast_base().unwrap().read_values)
+                        .intersection(&arg2.ast_base_ref().unwrap().read_values)
                         .collect();
                     if !diffset.is_empty() {
                         let setstr = format!(
@@ -399,7 +399,7 @@ impl EvalOrderUBChecker {
     }
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
-            if ast.func().has_shortcircuiting() {
+            if ast.func().try_as_builtin_function_ref().unwrap().has_shortcircuiting() {
                 return;
             }
         }

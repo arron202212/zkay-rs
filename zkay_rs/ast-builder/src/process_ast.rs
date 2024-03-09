@@ -173,7 +173,7 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
     assert!(ast.is_some(), "Invalid AST (no source unit at root)");
     let ast = ast.unwrap();
     let mut vc_names = vec![];
-    for contract in &ast.source_unit().unwrap().contracts {
+    for contract in &ast.try_as_source_unit_ref().unwrap().contracts {
         let cname = contract.namespace_definition_base.idf.name();
         let fcts: Vec<_> = contract
             .function_definitions

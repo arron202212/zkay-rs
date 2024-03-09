@@ -99,11 +99,11 @@ impl GlobalDefs {
             ],
         );
         address_payable_struct.members[1]
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_mut().unwrap().try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
         address_payable_struct.members[2]
-            .constructor_or_function_definition()
+            .try_as_namespace_definition_mut().unwrap().try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
         set_parents(address_payable_struct.to_ast());

@@ -25,7 +25,7 @@ use zkay_ast::ast::{
     NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr, ReclassifyExpr,
     ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr,
     RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef, TupleExpr,
-    TupleType, TypeName, UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,
+    TupleType, TypeName, UserDefinedTypeName, VariableDeclarationStatement, WhileStatement, AST,LocationExprBaseProperty,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -68,7 +68,7 @@ impl TypeCheckVisitor {
         if is_instance(&rhs, ASTType::TupleExpr) {
             if !is_instance(&rhs, ASTType::TupleExpr)
                 || !is_instance(&*expected_type.type_name, ASTType::TupleType)
-                || rhs.elements().len() != expected_type.type_name.types().unwrap().len()
+                || rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.len() != expected_type.type_name.types().unwrap().len()
             {
                 assert!(
                     false,
@@ -83,7 +83,7 @@ impl TypeCheckVisitor {
                 .types()
                 .unwrap()
                 .iter()
-                .zip(rhs.elements())
+                .zip(rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.clone())
                 .map(|(e, a)| self.get_rhs(a, e).unwrap())
                 .collect();
             return Some(
@@ -150,8 +150,8 @@ impl TypeCheckVisitor {
     }
     pub fn check_final(&self, fct: ConstructorOrFunctionDefinition, ast: Expression) {
         if is_instance(&ast, ASTType::IdentifierExpr) {
-            if let Some(target) = ast
-                .target()
+            if let Some(target) = ast.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap()
+                .target().as_ref()
                 .unwrap().try_as_identifier_declaration_ref().unwrap()
                 .try_as_state_variable_declaration_ref()
             {
@@ -172,8 +172,8 @@ impl TypeCheckVisitor {
             }
         } else {
             assert!(is_instance(&ast, ASTType::TupleExpr));
-            for elem in ast.elements() {
-                self.check_final(fct.clone(), elem);
+            for elem in &ast.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements {
+                self.check_final(fct.clone(), elem.clone());
             }
         }
     }
@@ -606,7 +606,7 @@ impl TypeCheckVisitor {
                 &**ast.try_as_function_call_expr_ref().unwrap().func(),
                 ASTType::BuiltinFunction,
             )
-            && ast.try_as_function_call_expr_ref().unwrap().func().is_ite()
+            && ast.try_as_function_call_expr_ref().unwrap().func().try_as_builtin_function_ref().unwrap().is_ite()
             && ast.try_as_function_call_expr_ref().unwrap().args()[0]
                 .annotated_type()
                 .as_ref()
@@ -783,7 +783,7 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn implicitly_converted_to(mut expr: Expression, t: &TypeName) -> Expression {
-        if is_instance(&expr, ASTType::ReclassifyExpr) && !expr.privacy().unwrap().is_all_expr() {
+        if is_instance(&expr, ASTType::ReclassifyExpr) && !expr.try_as_reclassify_expr_ref().unwrap().privacy().is_all_expr() {
             //Cast the argument of the ReclassifyExpr instead
             expr.try_as_reclassify_expr_mut()
                 .unwrap()
@@ -851,7 +851,7 @@ impl TypeCheckVisitor {
         } else if ast.is_cast() {
             assert!(
                 is_instance(
-                    &ast.func().target().map(|t| *t).unwrap(),
+                    &**ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
                     ASTType::EnumDefinition
                 ),
                 "User type casts only implemented for enums"
@@ -859,8 +859,8 @@ impl TypeCheckVisitor {
             ast.expression_base_mut_ref().annotated_type = Some(
                 self.handle_cast(
                     ast.args()[0].clone(),
-                    *ast.func()
-                        .target()
+                    *ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
+                        .target().as_ref()
                         .unwrap()
                         .try_as_expression_ref()
                         .unwrap()
@@ -999,7 +999,7 @@ impl TypeCheckVisitor {
 
     pub fn visitReclassifyExpr(&self, mut ast: ReclassifyExpr) {
         assert!(
-            ast.privacy().unwrap().privacy_annotation_label().is_none(),
+            ast.privacy().privacy_annotation_label().is_none(),
             r#"Second argument of "reveal" cannot be used as a privacy type{:?}"#,
             ast
         );
@@ -1008,7 +1008,7 @@ impl TypeCheckVisitor {
         assert!(!homomorphism.is_empty());
 
         //Prevent ReclassifyExpr to all with homomorphic type
-        if ast.privacy().unwrap().is_all_expr()
+        if ast.privacy().is_all_expr()
             && (ast.homomorphism() != Some(Homomorphism::non_homomorphic())
                 || ast.expr().annotated_type().as_ref().unwrap().homomorphism
                     != Homomorphism::non_homomorphic())
@@ -1057,7 +1057,7 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .type_name
                 .clone(),
-            ast.privacy().map(|p| p.into_ast()),
+            Some(ast.privacy().to_ast()),
             homomorphism.clone(),
         ));
 
@@ -1068,7 +1068,7 @@ impl TypeCheckVisitor {
                     .instance_of(&ast.expr().annotated_type().as_ref().unwrap()),
             r#"Redundant "{}": Expression is already @{}{homomorphism}"{:?}"#,
             ast.func_name(),
-            ast.privacy().unwrap().code(),
+            ast.privacy().code(),
             ast
         );
         Self::check_for_invalid_private_type(ast.to_ast());
@@ -1392,8 +1392,7 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
-                .target()
-                .map(|t| *t);
+                .target().as_ref();
             if let Some(t) = t {
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass

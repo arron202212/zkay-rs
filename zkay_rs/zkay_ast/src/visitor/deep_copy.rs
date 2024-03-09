@@ -30,7 +30,7 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
     // assert!(isinstance(ast, AST));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
     let mut ast_copy = v.visit(ast.clone().unwrap());
-    ast_copy.as_mut().unwrap().ast_base_mut().unwrap().parent =
+    ast_copy.as_mut().unwrap().ast_base_mut_ref().unwrap().parent =
         ast.unwrap().ast_base_ref().unwrap().parent.clone();
     set_parents(ast_copy.clone().unwrap());
     link_identifiers(ast_copy.as_ref().unwrap());
@@ -54,7 +54,7 @@ pub fn replace_expr(
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.ast_base_mut().unwrap().parent = old_ast
+    new_ast.ast_base_mut_ref().unwrap().parent = old_ast
         .as_ref()
         .unwrap()
         .ast_base_ref()

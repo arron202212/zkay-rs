@@ -29,7 +29,7 @@ use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf,
-    IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,
+    IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,LocationExprBaseProperty,
     PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
@@ -315,7 +315,7 @@ impl JsnarkVisitor
             };
         } else if ast.is_cast()
             && is_instance(
-                &ast.func().target().map(|v| Into::<AST>::into(*v)).unwrap(),
+                &**ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
                 ASTType::EnumDefinition,
             )
         {

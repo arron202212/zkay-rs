@@ -500,7 +500,7 @@ impl ZkayTransformer {
                 .var_decl_trafo
                 .visit_list(f.return_var_decls.iter().map(|p| p.to_ast()).collect())
                 .into_iter()
-                .filter_map(|p| p.map(|v| v.variable_declaration().unwrap().clone()))
+                .filter_map(|p| p.map(|v| v.try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref().unwrap().clone()))
                 .collect();
         }
 
@@ -781,7 +781,7 @@ impl ZkayTransformer {
                 deserialize_stmts.push(
                     LocationExpr::IndexExpr(
                         s.get_loc_expr(None)
-                            .to_location_expr()
+                            .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref()
                             .unwrap()
                             .index(ExprUnion::I32(cipher_payload_len)),
                     )
@@ -886,13 +886,8 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let pp = deep_copy(Some(p.to_ast()), true, false);
-                    let pp = pp.unwrap();
-                    let pp = pp.parameter();
-                    let mut pp = pp.unwrap().clone();
-                    let pp =
-                        pp.with_changed_storage(String::from("memory"), String::from("calldata"));
-                    pp.clone()
+                    let mut pp = deep_copy(Some(p.to_ast()), true, false).unwrap().try_as_identifier_declaration().unwrap().try_as_parameter().unwrap().clone();
+                    pp.with_changed_storage(String::from("memory"), String::from("calldata")).clone()
                 })
                 .collect();
             zkay_config::lc_vec_s!["external"]
@@ -1308,7 +1303,7 @@ impl ZkayTransformer {
                         VariableDeclarationStatement::new(
                             deep_copy(Some(vd.to_ast()), false, false)
                                 .unwrap()
-                                .variable_declaration()
+                                .try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref()
                                 .unwrap()
                                 .clone(),
                             None,

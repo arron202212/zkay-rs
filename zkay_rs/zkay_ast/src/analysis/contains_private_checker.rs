@@ -8,7 +8,7 @@
 
 use crate::ast::{
     is_instance, ASTType, Expression, ExpressionBaseProperty, FunctionCallExpr,
-    FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, AST,
+    FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, AST,LocationExprBaseProperty,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -58,7 +58,7 @@ impl ContainsPrivVisitor {
     }
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
         if is_instance(&**ast.func(), ASTType::LocationExprBase) && !ast.is_cast() {
-            self.contains_private |= ast.func().target().unwrap().requires_verification();
+            self.contains_private |= ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref().unwrap().requires_verification;
         }
         self.visitExpression(ast.to_expr())
     }

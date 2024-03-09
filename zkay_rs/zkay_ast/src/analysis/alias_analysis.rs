@@ -15,7 +15,7 @@ use crate::ast::{
     FunctionCallExprBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
     StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
-    VariableDeclarationStatement, WhileStatement, AST,
+    VariableDeclarationStatement, WhileStatement, AST,IdentifierDeclarationBaseProperty,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -76,7 +76,7 @@ impl AliasAnalysisVisitor {
                 .into(),
         );
         for d in &ast.parent.as_ref().unwrap().state_variable_declarations {
-            s.insert(d.idf().unwrap().to_ast());
+            s.insert(d.try_as_identifier_declaration_ref().unwrap().try_as_state_variable_declaration_ref().unwrap().idf().to_ast());
         }
         for p in &ast.parameters {
             s.insert(p.identifier_declaration_base.idf.to_ast());
@@ -580,7 +580,7 @@ impl GuardConditionAnalyzer {
 }
 pub fn _recursive_update(lhs: AST, rhs: AST, mut analysis: PartitionState<AST>, merge: bool) {
     if is_instance(&lhs, ASTType::TupleExpr) && is_instance(&rhs, ASTType::TupleExpr) {
-        for (l, r) in lhs.elements().iter().zip(rhs.elements()) {
+        for (l, r) in lhs.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.iter().zip(&rhs.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements) {
             _recursive_update(l.to_ast(), r.to_ast(), analysis.clone(), merge);
         }
     } else {
