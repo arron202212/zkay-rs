@@ -20,12 +20,13 @@ use zkay_ast::ast::{
     ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionStatement, FunctionCallExpr,
     FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
     FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
-    IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression,
-    IntoStatement, KeyLiteralExpr, LocationExpr, MeExpr, MemberAccessExpr, NumberLiteralExpr,
-    NumberLiteralType, NumberTypeName, Parameter, ReturnStatement, SimpleStatement,
-    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty,
-    StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement, AST,IdentifierDeclarationBaseProperty,NamespaceDefinitionBaseProperty,LocationExprBaseProperty,
+    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
+    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty,
+    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
+    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -376,11 +377,12 @@ where
         //     vec![ASTType::MeExpr, ASTType::Identifier]
         // ));
 
-        let name = if let Some(me_expr) = label.try_as_expression_ref().unwrap().try_as_me_expr_ref() {
-            me_expr.name.clone()
-        } else {
-            label.try_as_identifier_ref().unwrap().name()
-        };
+        let name =
+            if let Some(me_expr) = label.try_as_expression_ref().unwrap().try_as_me_expr_ref() {
+                me_expr.name.clone()
+            } else {
+                label.try_as_identifier_ref().unwrap().name().clone()
+            };
         format!("glob_key_{}__{}", crypto_params.identifier_name(), name)
     }
 
@@ -411,7 +413,7 @@ where
         assert!(param.identifier_declaration_base.annotated_type.is_cipher());
 
         let plain_idf = self._secret_input_name_factory.add_idf(
-            param.identifier_declaration_base.idf.name(),
+            param.identifier_declaration_base.idf.name().clone(),
             *param
                 .identifier_declaration_base
                 .annotated_type
@@ -443,9 +445,8 @@ where
             param
                 .identifier_declaration_base
                 .annotated_type
-                .type_name
-                .crypto_params()
-                .unwrap(),
+                .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
+                .crypto_params.clone(),
             cipher_idf,
             true,
             false,
@@ -458,9 +459,9 @@ where
                 expr.annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name
-                    .crypto_params()
-                    .unwrap(),
+                    .type_name.try_as_array_ref().unwrap().try_as_randomness_ref().unwrap()
+                    .crypto_params.clone()
+                    ,
             ),
             None,
         );
@@ -510,7 +511,7 @@ where
         let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
             NumberLiteralExpr::new(0, false).to_expr(),
         ));
-        for var in &ast.modified_values() {
+        for var in &ast.ast_base_ref().unwrap().modified_values {
             if var.in_scope_at(ast.to_ast()) {
                 astmt =
                     SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
@@ -524,7 +525,7 @@ where
 
         //External values written inside statement -> function return values
         let mut ret_params = vec![];
-        for var in ast.modified_values() {
+        for var in &ast.ast_base_ref().unwrap().modified_values {
             if var.in_scope_at(ast.to_ast()) {
                 //side effect affects location outside statement and has privacy @me
                 assert!(ast
@@ -562,7 +563,14 @@ where
                     t.homomorphism,
                 ); //t, but @me
                 let mut idf = IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(*var.target().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone()),
+                    IdentifierExprUnion::Identifier(
+                        *var.target()
+                            .unwrap()
+                            .try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .idf()
+                            .clone(),
+                    ),
                     Some(Box::new(ret_t)),
                 );
                 idf.location_expr_base.target = var.target();
@@ -593,7 +601,9 @@ where
                             *ret.location_expr_base
                                 .target
                                 .clone()
-                                .unwrap().try_as_identifier_declaration_ref().unwrap()
+                                .unwrap()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
                                 .idf()
                                 .clone(),
                             None,
@@ -639,12 +649,31 @@ where
         } else {
             ret_args
         };
-        for ret_arg in ret_args.try_as_expression_mut().unwrap().try_as_tuple_or_location_expr_mut().unwrap().try_as_tuple_expr_mut().unwrap().elements.iter_mut() {
+        for ret_arg in ret_args
+            .try_as_expression_mut()
+            .unwrap()
+            .try_as_tuple_or_location_expr_mut()
+            .unwrap()
+            .try_as_tuple_expr_mut()
+            .unwrap()
+            .elements
+            .iter_mut()
+        {
             ret_arg.expression_base_mut_ref().statement = Some(Box::new(astmt.to_statement()));
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
-            .zip(ret_args.try_as_expression_mut().unwrap().try_as_tuple_or_location_expr_mut().unwrap().try_as_tuple_expr_mut().unwrap().elements.iter_mut())
+            .zip(
+                ret_args
+                    .try_as_expression_mut()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_mut()
+                    .unwrap()
+                    .try_as_tuple_expr_mut()
+                    .unwrap()
+                    .elements
+                    .iter_mut(),
+            )
             .map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
@@ -689,14 +718,36 @@ where
     // :param ast: The function call to include, target function must require verification
     // """
     {
-        assert!(ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref().unwrap().requires_verification);
+        assert!(
+            ast.func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .requires_verification
+        );
         self.function_calls_with_verification.push(ast.clone());
         self._phi.push(CircuitStatement::CircCall(CircCall::new(
-            ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
-                .target().as_ref()
+            ast.func()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
-                .unwrap().clone(),
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .clone(),
         )));
     }
 
@@ -773,10 +824,10 @@ where
                     .iter()
                     .filter_map(
                         |p| if p.identifier_declaration_base.annotated_type.is_cipher() {
-                            p.identifier_declaration_base
+                            Some(p.identifier_declaration_base
                                 .annotated_type
-                                .type_name
-                                .crypto_params()
+                                .type_name.try_as_array_ref().unwrap().try_as_key_ref().unwrap()
+                                .crypto_params.clone())
                         } else {
                             None
                         }
@@ -868,14 +919,50 @@ where
         if is_instance(expr, ASTType::IdentifierExpr)
         //Look in cache before doing expensive move-in
         {
-            if self._remapper.0.is_remapped(&expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf()) {
-                return self
-                    ._remapper
-                    .0
-                    .get_current(*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), None);
+            if self._remapper.0.is_remapped(
+                &expr
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .idf(),
+            ) {
+                return self._remapper.0.get_current(
+                    *expr
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .target()
+                        .as_ref()
+                        .unwrap()
+                        .try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .idf()
+                        .clone(),
+                    None,
+                );
             }
 
-            t_suffix = format!("_{}", expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().name());
+            t_suffix = format!(
+                "_{}",
+                expr.try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .idf()
+                    .name()
+            );
         }
 
         //Generate circuit inputs
@@ -995,9 +1082,21 @@ where
         //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
         //      This works for now because we never perform homomorphic operations on variables we can decrypt.
         {
-            self._remapper
-                .0
-                .remap(*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), return_idf.clone());
+            self._remapper.0.remap(
+                *expr
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .idf()
+                    .clone(),
+                return_idf.clone(),
+            );
         }
 
         return_idf
@@ -1014,15 +1113,25 @@ where
         let target: Option<AST> = idf.location_expr_base.target.clone().map(|v| (*v).into());
         assert!(target.is_some());
         assert!(!is_instance(&*idf.idf, ASTType::HybridArgumentIdf));
-        if self
-            ._remapper
-            .0
-            .is_remapped(&target.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone())
-        {
-            let remapped_idf = self
-                ._remapper
-                .0
-                .get_current(*target.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(), None);
+        if self._remapper.0.is_remapped(
+            &target
+                .as_ref()
+                .unwrap()
+                .try_as_identifier_declaration_ref()
+                .unwrap()
+                .idf()
+                .clone(),
+        ) {
+            let remapped_idf = self._remapper.0.get_current(
+                *target
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .idf()
+                    .clone(),
+                None,
+            );
             remapped_idf
                 .get_idf_expr(
                     &idf.location_expr_base
@@ -1061,20 +1170,61 @@ where
         // """
     {
         assert!(
-            is_instance(&*fcall.func, ASTType::LocationExprBase) && fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().is_some()
+            is_instance(&*fcall.func, ASTType::LocationExprBase)
+                && fcall
+                    .func
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .is_some()
         );
-        let fdef = fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().clone();
+        let fdef = fcall
+            .func
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target()
+            .clone();
         //with
         self._remapper.0.remap_scope(Some(
-            (*fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().clone())
-                .try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition()
+            (*fcall
+                .func
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .body
-                .unwrap(),
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .clone())
+            .try_as_namespace_definition()
+            .unwrap()
+            .try_as_constructor_or_function_definition()
+            .unwrap()
+            .body
+            .unwrap(),
         ));
 
         //with
-        if fcall.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().clone().try_as_namespace_definition().unwrap().idf().name() != "<stmt_fct>" {
+        if fcall
+            .func
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target()
+            .as_ref()
+            .unwrap()
+            .clone()
+            .try_as_namespace_definition()
+            .unwrap()
+            .idf()
+            .name()
+            != "<stmt_fct>"
+        {
             self.circ_indent_block(&format!("INLINED {}", fcall.to_ast().code()));
         }
 
@@ -1082,7 +1232,9 @@ where
         for (param, arg) in fdef
             .as_ref()
             .unwrap()
-            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .parameters
             .iter()
@@ -1108,7 +1260,9 @@ where
         let inlined_body = fdef
             .as_ref()
             .unwrap()
-            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .original_body
             .clone(); //deep_copy(fdef.original_body, true, true);
@@ -1138,7 +1292,9 @@ where
 
         //Create TupleExpr with location expressions corresponding to the function return values as elements
         let ret_idfs: Vec<_> = (*fdef.as_ref().unwrap())
-            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .return_var_decls
             .iter()
@@ -1243,7 +1399,16 @@ where
             .unwrap()
             .return_var_decls
             .iter()
-            .zip(&ast.expr.as_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements)
+            .zip(
+                &ast.expr
+                    .as_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_tuple_expr_ref()
+                    .unwrap()
+                    .elements,
+            )
         {
             //Assign return value to new version of return variable
             self.create_new_idf_version_from_value(
@@ -1434,9 +1599,25 @@ where
         if is_instance(&lhs, ASTType::IdentifierExpr)
         //for now no ref types
         {
-            assert!(lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().is_some());
+            assert!(lhs
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .is_some());
             self.create_new_idf_version_from_value(
-                *lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone(),
+                *lhs.try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .idf()
+                    .clone(),
                 rhs.clone(),
             );
         } else if is_instance(&lhs, ASTType::IndexExpr) {
@@ -1453,9 +1634,37 @@ where
             }
             assert!(
                 is_instance(&*rhs, ASTType::TupleExpr)
-                    && lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.len() == rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.len()
+                    && lhs
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_tuple_expr_ref()
+                        .unwrap()
+                        .elements
+                        .len()
+                        == rhs
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_tuple_expr_ref()
+                            .unwrap()
+                            .elements
+                            .len()
             );
-            for (e_l, e_r) in lhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.iter().zip(&rhs.try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements.clone()) {
+            for (e_l, e_r) in lhs
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_tuple_expr_ref()
+                .unwrap()
+                .elements
+                .iter()
+                .zip(
+                    &rhs.try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_tuple_expr_ref()
+                        .unwrap()
+                        .elements
+                        .clone(),
+                )
+            {
                 self._add_assign(e_l.clone(), &mut e_r.clone());
             }
         }
@@ -1478,8 +1687,29 @@ where
         // """
     {
         let is_circ_val = is_instance(&*expr, ASTType::IdentifierExpr)
-            && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf, ASTType::HybridArgumentIdf)
-            && expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.arg_type() != HybridArgType::PubContractVal;
+            && is_instance(
+                &*expr
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_identifier_expr_ref()
+                    .unwrap()
+                    .idf,
+                ASTType::HybridArgumentIdf,
+            )
+            && expr
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+                .unwrap()
+                .idf
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .arg_type
+                != HybridArgType::PubContractVal;
         let is_hom_comp = is_instance(&(*expr), ASTType::FunctionCallExprBase)
             && is_instance(
                 &**(*expr).try_as_function_call_expr_ref().unwrap().func(),
@@ -1519,7 +1749,17 @@ where
 
         let mut t_suffix = String::new();
         if is_instance(expr, ASTType::IdentifierExpr) && !is_circ_val {
-            t_suffix += &format!("_{}", expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.name());
+            t_suffix += &format!(
+                "_{}",
+                expr.try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_identifier_expr_ref()
+                    .unwrap()
+                    .idf
+                    .name()
+            );
         }
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
@@ -1635,15 +1875,55 @@ where
     {
         assert!(
             !(is_instance(&expr, ASTType::MemberAccessExpr)
-                && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member.clone(), ASTType::HybridArgumentIdf))
+                && is_instance(
+                    &*expr
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
+                        .member
+                        .clone(),
+                    ASTType::HybridArgumentIdf
+                ))
         );
         if is_instance(&expr, ASTType::IdentifierExpr)
-            && is_instance(&*expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf, ASTType::HybridArgumentIdf)
-            && expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.arg_type() != HybridArgType::PubContractVal
+            && is_instance(
+                &*expr
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_identifier_expr_ref()
+                    .unwrap()
+                    .idf,
+                ASTType::HybridArgumentIdf,
+            )
+            && expr
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+                .unwrap()
+                .idf
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .arg_type
+                != HybridArgType::PubContractVal
         //Already evaluated in circuit
         {
-            return expr.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap().idf.clone().try_as_hybrid_argument_idf() 
-               ;
+            return expr
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+                .unwrap()
+                .idf
+                .clone()
+                .try_as_hybrid_argument_idf();
         }
 
         let priv_expr = self

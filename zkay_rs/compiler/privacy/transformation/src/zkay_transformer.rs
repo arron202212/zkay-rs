@@ -16,21 +16,22 @@ use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;
 use zkay_ast::ast::{
-    is_instance, ASTBaseRef, ASTChildren, ASTType, AnnotatedTypeName, AssignmentStatement,
-    AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BlankLine, Block,
-    BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction, ChildListBuilder,
-    Comment, CommentBase, ContinueStatement, DoWhileStatement, ElementaryTypeName,
-    EncryptionExpression, EnumDefinition, ExprUnion, Expression, ExpressionBaseMutRef,
-    ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBase,
-    FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf,
-    Identifier, IdentifierBase, IdentifierBaseMutRef, IdentifierDeclaration, IdentifierExpr,
-    IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement,
-    LiteralExpr, LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
+    is_instance, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTType, AnnotatedTypeName,
+    AssignmentStatement, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BlankLine,
+    Block, BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction,
+    ChildListBuilder, Comment, CommentBase, ContinueStatement, DoWhileStatement,
+    ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion, Expression,
+    ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, HybridArgType,
+    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseMutRef, IdentifierBaseProperty,
+    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
+    LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr,
     ReclassifyExpr, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef, StatementList,
     StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, WhileStatement, AST,IdentifierDeclarationBaseProperty,LocationExprBaseProperty,
+    VariableDeclarationStatement, WhileStatement, AST,StatementBaseProperty,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
@@ -141,7 +142,7 @@ impl ZkayVarDeclTransformer {
     pub fn visitMapping(&self, ast: &mut Mapping) -> AST {
         if ast.key_label.is_some() {
             ast.key_label = Some(Identifier::Identifier(IdentifierBase::new(
-                ast.key_label.as_ref().unwrap().name(),
+                ast.key_label.as_ref().unwrap().name().clone(),
             )));
         }
         self.visit_children(Some(ast.to_ast())).unwrap()
@@ -225,7 +226,11 @@ impl ZkayStatementTransformer {
                     transformed_stmt
                         .as_ref()
                         .unwrap()
-                        .try_as_statement_ref().unwrap().statement_base_ref().unwrap().pre_statements
+                        .try_as_statement_ref()
+                        .unwrap()
+                        .statement_base_ref()
+                        .unwrap()
+                        .pre_statements
                         .iter()
                         .cloned()
                         .chain([transformed_stmt.as_ref().unwrap().clone()])
@@ -285,16 +290,39 @@ impl ZkayStatementTransformer {
             .visit(Some(ast.rhs().as_ref().unwrap().to_ast()))
             .unwrap()
             .try_as_expression();
-        let mut modvals = ast.modified_values();
+        let mut modvals = ast.modified_values().clone();
         if CFG.lock().unwrap().user_config.opt_cache_circuit_outputs()
             && is_instance(&**ast.lhs().as_ref().unwrap(), ASTType::IdentifierExpr)
             && is_instance(ast.rhs().as_ref().unwrap(), ASTType::MemberAccessExpr)
         {
             //Skip invalidation if rhs is circuit output
             if is_instance(
-                &*ast.rhs().as_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member,
+                &*ast
+                    .rhs()
+                    .as_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_member_access_expr_ref()
+                    .unwrap()
+                    .member,
                 ASTType::HybridArgumentIdf,
-            ) && ast.rhs().as_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member.arg_type()
+            ) && ast
+                .rhs()
+                .as_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_member_access_expr_ref()
+                .unwrap()
+                .member
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .arg_type
                 == HybridArgType::PubCircuitArg
             {
                 modvals = modvals
@@ -320,34 +348,72 @@ impl ZkayStatementTransformer {
                     })
                     .collect();
                 let ridf = if is_instance(
-                    &ast.rhs()
+                    ast.rhs()
                         .as_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member
-                        .corresponding_priv_expression()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
+                        .member
+                        .try_as_hybrid_argument_idf_ref()
+                        .unwrap()
+                        .corresponding_priv_expression
+                        .as_ref()
                         .unwrap(),
                     ASTType::EncryptionExpression,
                 ) {
                     *ast.rhs()
                         .as_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member
-                        .corresponding_priv_expression()
-                        .unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap()
-                        .idf.clone()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
+                        .member
+                        .try_as_hybrid_argument_idf_ref()
+                        .unwrap()
+                        .corresponding_priv_expression
+                        .as_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_identifier_expr_ref()
+                        .unwrap()
+                        .idf
+                        .clone()
                 } else {
                     *ast.rhs()
                         .as_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member
-                        .corresponding_priv_expression()
-                                                .unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap()
-                        .idf.clone()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
+                        .member
+                        .try_as_hybrid_argument_idf_ref()
+                        .unwrap()
+                        .corresponding_priv_expression
+                        .as_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_identifier_expr_ref()
+                        .unwrap()
+                        .idf
+                        .clone()
                 };
-                assert!(is_instance(
-                    &ridf,
-                    ASTType::HybridArgumentIdf
-                ));
+                assert!(is_instance(&ridf, ASTType::HybridArgumentIdf));
                 if let Identifier::HybridArgumentIdf(ridf) = ridf {
                     self.gen.as_mut().unwrap()._remapper.0.remap(
                         *ast.lhs()
@@ -359,8 +425,11 @@ impl ZkayStatementTransformer {
                             .unwrap()
                             .try_as_location_expr_ref()
                             .unwrap()
-                            .target().as_ref()
-                            .unwrap().try_as_identifier_declaration_ref().unwrap()
+                            .target()
+                            .as_ref()
+                            .unwrap()
+                            .try_as_identifier_declaration_ref()
+                            .unwrap()
                             .idf()
                             .clone(),
                         ridf,
@@ -374,10 +443,16 @@ impl ZkayStatementTransformer {
         {
             for val in modvals {
                 if val.key().is_none() {
-                    self.gen
-                        .as_mut()
-                        .unwrap()
-                        .invalidate_idf(&*val.target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone());
+                    self.gen.as_mut().unwrap().invalidate_idf(
+                        &*val
+                            .target()
+                            .as_ref()
+                            .unwrap()
+                            .try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .idf()
+                            .clone(),
+                    );
                 }
             }
         }
@@ -415,7 +490,11 @@ impl ZkayStatementTransformer {
                     ast.then_branch = self
                         .visit(Some(ast.then_branch.to_ast()))
                         .unwrap()
-                        .try_as_statement().unwrap().try_as_statement_list().unwrap().try_as_block()
+                        .try_as_statement()
+                        .unwrap()
+                        .try_as_statement_list()
+                        .unwrap()
+                        .try_as_block()
                         .unwrap();
                     self.gen
                         .as_mut()
@@ -430,7 +509,11 @@ impl ZkayStatementTransformer {
                     ast.else_branch = self
                         .visit(Some(ast.else_branch.as_ref().unwrap().to_ast()))
                         .unwrap()
-                        .try_as_statement().unwrap().try_as_statement_list().unwrap().try_as_block();
+                        .try_as_statement()
+                        .unwrap()
+                        .try_as_statement_list()
+                        .unwrap()
+                        .try_as_block();
                     self.gen
                         .as_mut()
                         .unwrap()
@@ -442,10 +525,16 @@ impl ZkayStatementTransformer {
                 //Invalidate values modified in either branch
                 for val in &ast.statement_base.ast_base.modified_values {
                     if val.key().is_none() {
-                        self.gen
-                            .as_mut()
-                            .unwrap()
-                            .invalidate_idf(&*val.target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone());
+                        self.gen.as_mut().unwrap().invalidate_idf(
+                            &*val
+                                .target()
+                                .as_ref()
+                                .unwrap()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
+                                .idf()
+                                .clone(),
+                        );
                     }
                 }
             } else {
@@ -458,13 +547,22 @@ impl ZkayStatementTransformer {
                 ast.then_branch = self
                     .visit(Some(ast.then_branch.to_ast()))
                     .unwrap()
-                    .try_as_statement_ref().unwrap().try_as_statement_list_ref().unwrap().try_as_block_ref()
-                    .unwrap().clone();
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .try_as_statement_list_ref()
+                    .unwrap()
+                    .try_as_block_ref()
+                    .unwrap()
+                    .clone();
                 if ast.else_branch.is_some() {
                     ast.else_branch = self
                         .visit(Some(ast.else_branch.as_ref().unwrap().to_ast()))
                         .unwrap()
-                        .try_as_statement().unwrap().try_as_statement_list().unwrap().try_as_block();
+                        .try_as_statement()
+                        .unwrap()
+                        .try_as_statement_list()
+                        .unwrap()
+                        .try_as_block();
                 }
             }
             (*ast).to_statement()
@@ -499,11 +597,16 @@ impl ZkayStatementTransformer {
             ast.init = self
                 .visit(Some(ast.init.as_ref().unwrap().to_ast()))
                 .unwrap()
-                .try_as_statement_ref().unwrap().try_as_for_statement_ref().unwrap().init.as_ref()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_for_statement_ref()
+                .unwrap()
+                .init
+                .as_ref()
                 .map(|i| i.clone());
             ast.statement_base
                 .pre_statements
-                .extend(ast.init.as_ref().unwrap().pre_statements());
+                .extend(ast.init.as_ref().unwrap().pre_statements().clone());
         }
         assert!(!contains_private_expr(Some(ast.condition.to_ast())));
         assert!(
@@ -641,7 +744,9 @@ impl ZkayExpressionTransformer {
             .to_expr(),
             false,
         )
-        .try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref()
+        .try_as_tuple_or_location_expr_ref()
+        .unwrap()
+        .try_as_location_expr_ref()
         .unwrap()
         .dot(IdentifierExprUnion::String(String::from("sender")))
         .as_type(AST::AnnotatedTypeName(AnnotatedTypeName::address_all()))
@@ -668,7 +773,11 @@ impl ZkayExpressionTransformer {
             &mut self
                 .visit(ast.arr.map(|a| (*a).to_ast()))
                 .unwrap()
-                            .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
                 .unwrap()
                 .index(ExprUnion::Expression(
                     self.visit(Some((*ast.key).to_ast()))
@@ -699,10 +808,7 @@ impl ZkayExpressionTransformer {
         let mut expr = ast.reclassify_expr_base_mut_ref().expr.clone();
         self.gen.as_mut().unwrap().evaluate_expr_in_circuit(
             &mut expr,
-            &ast.privacy()
-                .privacy_annotation_label()
-                .unwrap()
-                .into(),
+            &ast.privacy().privacy_annotation_label().unwrap().into(),
             &ast.annotated_type().as_ref().unwrap().homomorphism,
         )
     }
@@ -759,12 +865,16 @@ impl ZkayExpressionTransformer {
             //handle short-circuiting
             {
                 let mut args = ast.args().clone();
-                if ast.func().try_as_builtin_function_ref().unwrap().has_shortcircuiting()
+                if ast
+                    .func()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .has_shortcircuiting()
                     && args[1..]
                         .iter()
                         .any(|arg| contains_private_expr(Some(arg.to_ast())))
                 {
-                    let op = &ast.func().op().unwrap();
+                    let op = &ast.func().try_as_builtin_function_ref().unwrap().op;
                     let guard_var = self
                         .gen
                         .as_mut()
@@ -811,7 +921,15 @@ impl ZkayExpressionTransformer {
         // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
         {
             assert!(is_instance(
-                &**ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
+                &**ast
+                    .func()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap(),
                 ASTType::EnumDefinition
             ));
             if ast.args()[0].evaluate_privately() {
@@ -855,10 +973,17 @@ impl ZkayExpressionTransformer {
                 .try_as_function_call_expr()
                 .unwrap();
             if ast
-                .func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
-                .target().as_ref()
+                .func()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .requires_verification_when_external
             //Reroute the function call to the corresponding internal function if the called function was split into external/internal.
@@ -877,11 +1002,33 @@ impl ZkayExpressionTransformer {
                     .idf
                     .identifier_base_mut_ref()
                     .name = CFG.lock().unwrap().get_internal_name(
-                    &**ast.function_call_expr_base_mut_ref().func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
+                    &**ast
+                        .function_call_expr_base_mut_ref()
+                        .func
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .target()
+                        .as_ref()
+                        .unwrap(),
                 );
             }
 
-            if ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap().try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref().unwrap().requires_verification
+            if ast
+                .func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .requires_verification
             //If the target function has an associated circuit, make this function"s circuit aware of the call.
             {
                 // let cf = if let AST::Expression(Expression::FunctionCallExpr(fce)) = &ast {
@@ -891,10 +1038,17 @@ impl ZkayExpressionTransformer {
                 // };
                 self.gen.as_mut().unwrap().call_function(&ast);
             } else if ast
-                .func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap()
-                .target().as_ref()
+                .func()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .has_side_effects()
                 && self.gen.is_some()
@@ -907,10 +1061,16 @@ impl ZkayExpressionTransformer {
                             ASTType::StateVariableDeclaration,
                         )
                     {
-                        self.gen
-                            .as_mut()
-                            .unwrap()
-                            .invalidate_idf(&*val.target().as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().idf().clone());
+                        self.gen.as_mut().unwrap().invalidate_idf(
+                            &*val
+                                .target()
+                                .as_ref()
+                                .unwrap()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
+                                .idf()
+                                .clone(),
+                        );
                     }
                 }
             }
@@ -1091,7 +1251,10 @@ impl ZkayCircuitTransformer {
             && is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
         //The current version of ast.idf is already in the circuit
         {
-            assert!(ast.idf.arg_type() != HybridArgType::PubContractVal);
+            assert!(
+                ast.idf.try_as_hybrid_argument_idf_ref().unwrap().arg_type
+                    != HybridArgType::PubContractVal
+            );
             LocationExpr::IdentifierExpr(ast)
         } else
         //ast is not yet in the circuit -> move it in
@@ -1209,7 +1372,7 @@ impl ZkayCircuitTransformer {
                     ),
                 ));
                 let mut args = ast.args().clone();
-                if &ast.func().op().unwrap() == "*"
+                if &ast.func().try_as_builtin_function_ref().unwrap().op == "*"
                 //special case: private scalar multiplication using additive homomorphism
                 //TODO ugly hack below removes ReclassifyExpr
                 {
@@ -1274,18 +1437,32 @@ impl ZkayCircuitTransformer {
                 .unwrap();
         }
 
-        let fdef = &*ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap();
+        let fdef = &*ast
+            .func()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target()
+            .as_ref()
+            .unwrap();
         assert!(fdef
-            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .is_function());
         assert!(!fdef
-            .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .return_parameters
             .is_empty());
         assert!(
-            fdef.try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            fdef.try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .has_static_body
         );

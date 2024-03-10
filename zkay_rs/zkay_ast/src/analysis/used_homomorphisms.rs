@@ -190,7 +190,11 @@ impl UsedHomomorphismsVisitor {
 
     pub fn visit(&self, ast: &mut AST) -> <Self as AstVisitor>::Return {
         let all_homs = BTreeSet::new(); //self.visit(ast); //TODO super()
-        if let Some(mut ast) = ast.try_as_namespace_definition_mut().unwrap().try_as_constructor_or_function_definition_mut() {
+        if let Some(mut ast) = ast
+            .try_as_namespace_definition_mut()
+            .unwrap()
+            .try_as_constructor_or_function_definition_mut()
+        {
             if let Some(_) = ast.used_homomorphisms {
                 ast.used_homomorphisms = Some(all_homs.clone());
             }

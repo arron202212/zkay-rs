@@ -9,7 +9,7 @@
 use crate::ast::{
     is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ExpressionBaseMutRef,
     ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST,
-    LocationExpr, NamespaceDefinition, WhileStatement, AST,LocationExprBaseProperty,
+    LocationExpr, LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,FunctionCallExprBaseRef,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -57,18 +57,35 @@ impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, mut ast: FunctionCallExpr) {
         if !is_instance(&**ast.func(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&**ast.func(), ASTType::LocationExprBase));
-            let fdef = ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap();
+            let fdef = ast
+                .func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap();
             assert!(fdef
-                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .is_function());
-            if let Some(cofd) = fdef.try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref() {
-                let cofd=cofd.clone();
+            if let Some(cofd) = fdef
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+            {
+                let cofd = cofd.clone();
                 ast.expression_base_mut_ref()
                     .statement
                     .as_mut()
                     .unwrap()
-                    .function()
+                    .statement_base_mut_ref()
+                    .unwrap()
+                    .function
+                    .as_mut()
                     .unwrap()
                     .called_functions
                     .insert(cofd);

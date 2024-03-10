@@ -8,9 +8,9 @@
 
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
-    AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName, Identifier,
-    IdentifierBase, IntoAST, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName,
-    TypeName, UserDefinedTypeName, VariableDeclaration,
+    ASTBaseMutRef, AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName,
+    Identifier, IdentifierBase, IntoAST, Parameter, StateVariableDeclaration, StructDefinition,
+    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
 };
 use crate::pointers::parent_setter::set_parents;
 
@@ -99,11 +99,15 @@ impl GlobalDefs {
             ],
         );
         address_payable_struct.members[1]
-            .try_as_namespace_definition_mut().unwrap().try_as_constructor_or_function_definition_mut()
+            .try_as_namespace_definition_mut()
+            .unwrap()
+            .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
         address_payable_struct.members[2]
-            .try_as_namespace_definition_mut().unwrap().try_as_constructor_or_function_definition_mut()
+            .try_as_namespace_definition_mut()
+            .unwrap()
+            .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
         set_parents(address_payable_struct.to_ast());
@@ -245,8 +249,7 @@ impl GlobalVars {
         );
         msg.identifier_declaration_base
             .idf
-            .ast_base_mut()
-            .unwrap()
+            .ast_base_mut_ref()
             .parent = Some(Box::new(msg.to_ast()));
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -268,8 +271,7 @@ impl GlobalVars {
         block
             .identifier_declaration_base
             .idf
-            .ast_base_mut()
-            .unwrap()
+            .ast_base_mut_ref()
             .parent = Some(Box::new(block.to_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -284,11 +286,7 @@ impl GlobalVars {
             Identifier::identifier("tx"),
             None,
         );
-        tx.identifier_declaration_base
-            .idf
-            .ast_base_mut()
-            .unwrap()
-            .parent = Some(Box::new(tx.to_ast()));
+        tx.identifier_declaration_base.idf.ast_base_mut_ref().parent = Some(Box::new(tx.to_ast()));
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
@@ -298,8 +296,7 @@ impl GlobalVars {
         );
         now.identifier_declaration_base
             .idf
-            .ast_base_mut()
-            .unwrap()
+            .ast_base_mut_ref()
             .parent = Some(Box::new(now.to_ast()));
         Self {
             msg,

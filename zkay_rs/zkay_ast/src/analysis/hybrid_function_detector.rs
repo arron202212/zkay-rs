@@ -10,7 +10,7 @@
 use crate::ast::{
     is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
-    IntoAST, LocationExpr, PrimitiveCastExpr, ReclassifyExpr, AST,LocationExprBaseProperty,
+    IntoAST, LocationExpr, LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -61,7 +61,10 @@ impl DirectHybridFunctionDetectionVisitor {
             re.expression_base
                 .statement
                 .unwrap()
-                .function()
+                .statement_base_mut_ref()
+                .unwrap()
+                .function
+                .as_mut()
                 .unwrap()
                 .requires_verification = true;
         }
@@ -73,7 +76,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 .statement
                 .as_mut()
                 .unwrap()
-                .statement_base_mut()
+                .statement_base_mut_ref()
                 .unwrap()
                 .function
                 .as_mut()
@@ -89,12 +92,14 @@ impl DirectHybridFunctionDetectionVisitor {
     {
     }
     pub fn visitFunctionCallExpr(&self, ast: &mut FunctionCallExpr) {
-        if is_instance(&**ast.func(), ASTType::BuiltinFunction) && ast.func().try_as_builtin_function_ref().unwrap().is_private{
+        if is_instance(&**ast.func(), ASTType::BuiltinFunction)
+            && ast.func().try_as_builtin_function_ref().unwrap().is_private
+        {
             ast.expression_base_mut_ref()
                 .statement
                 .as_mut()
                 .unwrap()
-                .statement_base_mut()
+                .statement_base_mut_ref()
                 .unwrap()
                 .function
                 .as_mut()
@@ -106,7 +111,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 .as_mut()
                 .unwrap()
                 .as_mut()
-                .statement_base_mut()
+                .statement_base_mut_ref()
                 .unwrap()
                 .function
                 .as_mut()
@@ -205,14 +210,26 @@ impl AstVisitor for NonInlineableCallDetector {
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if !ast.is_cast() && is_instance(&**ast.func(), ASTType::LocationExprBase) {
-            let ast1 = ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap();
+            let ast1 = ast
+                .func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap();
             assert!(
                 !(ast1
-                    .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                    .try_as_namespace_definition_ref()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_ref()
                     .unwrap()
                     .requires_verification
                     && ast1
-                        .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+                        .try_as_namespace_definition_ref()
+                        .unwrap()
+                        .try_as_constructor_or_function_definition_ref()
                         .unwrap()
                         .is_recursive),
                 "Non-inlineable call to recursive private function {:?}",

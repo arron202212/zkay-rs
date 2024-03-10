@@ -29,8 +29,8 @@ use std::path::Path;
 use zkay_ast::ast::{
     indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf,
-    IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,LocationExprBaseProperty,
-    PrimitiveCastExpr, TypeName, AST,
+    IdentifierBaseProperty, IdentifierExpr, IndexExpr, IntoAST, LocationExprBaseProperty, MeExpr,
+    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -136,10 +136,10 @@ impl JsnarkVisitor
         assert!(stmt.pk.t.is_key());
         assert!(stmt.rnd.t.is_randomness());
         assert!(
-            stmt.cipher.t.crypto_params() == stmt.pk.t.crypto_params()
-                && stmt.pk.t.crypto_params() == stmt.rnd.t.crypto_params()
+            stmt.cipher.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params == stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params
+                && stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params == stmt.rnd.t.try_as_array_ref().unwrap().try_as_randomness_ref().unwrap().crypto_params
         );
-        let backend = stmt.pk.t.crypto_params().unwrap().crypto_name;
+        let backend = stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params.crypto_name.clone();
 
         format!(
             r#"check{}("{backend}", "{}", "{}", "{}", "{}");"#,
@@ -153,8 +153,8 @@ impl JsnarkVisitor
     pub fn visitCircSymmEncConstraint(&self, stmt: CircSymmEncConstraint) -> String {
         assert!(stmt.iv_cipher.t.is_cipher());
         assert!(stmt.other_pk.t.is_key());
-        assert!(stmt.iv_cipher.t.crypto_params() == stmt.other_pk.t.crypto_params());
-        let backend = stmt.other_pk.t.crypto_params().unwrap().crypto_name;
+        assert!(stmt.iv_cipher.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params == stmt.other_pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params);
+        let backend = stmt.other_pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params.crypto_name.clone();
         format!(
             r#"checkSymm{}("{backend}", "{}", "{}", "{}");"#,
             if stmt.is_dec { "Dec" } else { "Enc" },
@@ -190,7 +190,14 @@ impl JsnarkVisitor
     }
 
     pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) -> String {
-        if is_instance(&*ast.idf, ASTType::HybridArgumentIdf) && ast.idf.t().unwrap().is_cipher() {
+        if is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
+            && ast
+                .idf
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .t
+                .is_cipher()
+        {
             format!(r#"getCipher("{}")"#, ast.idf.name())
         } else {
             format!(r#"get("{}")"#, ast.idf.name())
@@ -199,10 +206,23 @@ impl JsnarkVisitor
 
     pub fn visitMemberAccessExpr(&self, ast: MemberAccessExpr) -> String {
         assert!(is_instance(&*ast.member, ASTType::HybridArgumentIdf));
-        if ast.member.t().unwrap().is_cipher() {
+        if ast
+            .member
+            .try_as_hybrid_argument_idf_ref()
+            .unwrap()
+            .t
+            .is_cipher()
+        {
             format!(r#"getCipher("{}")"#, ast.member.name())
         } else {
-            assert!(ast.member.t().unwrap().size_in_uints() == 1);
+            assert!(
+                ast.member
+                    .try_as_hybrid_argument_idf_ref()
+                    .unwrap()
+                    .t
+                    .size_in_uints()
+                    == 1
+            );
             format!(r#"get("{}")"#, ast.member.name())
         }
     }
@@ -213,13 +233,22 @@ impl JsnarkVisitor
 
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> String {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
-            assert!(ast.func().can_be_private());
+            assert!(ast
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .can_be_private());
             let mut args: Vec<_> = ast
                 .args()
                 .iter()
                 .map(|arg| self.visit(arg.to_ast()))
                 .collect();
-            if ast.func().is_shiftop() {
+            if ast
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_shiftop()
+            {
                 assert!(ast.args()[1]
                     .annotated_type()
                     .as_ref()
@@ -230,12 +259,12 @@ impl JsnarkVisitor
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name
+                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap()
                     .value()
                     .to_string()
             }
 
-            let mut op = &ast.func().op().unwrap();
+            let mut op = &ast.func().try_as_builtin_function_ref().unwrap().op;
             let op = if op == "sign-" { "-" } else { op };
             if op == "sign+" {
                 unimplemented!()
@@ -256,7 +285,7 @@ impl JsnarkVisitor
                         .user_config
                         .get_crypto_params(&homomorphism)
                         .crypto_name;
-                    let public_key_name = ast.public_key().unwrap().identifier_base.name;
+                    let public_key_name = ast.public_key().as_ref().unwrap().identifier_base.name.clone();
 
                     args = args
                         .iter()
@@ -315,7 +344,15 @@ impl JsnarkVisitor
             };
         } else if ast.is_cast()
             && is_instance(
-                &**ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
+                &**ast
+                    .func()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap(),
                 ASTType::EnumDefinition,
             )
         {
@@ -362,7 +399,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
 
     for pub_input in circuit.input_idfs() {
         input_init_stmts.push(if pub_input.t.is_key() {
-            let backend = pub_input.t.crypto_params().unwrap().crypto_name;
+            let backend = pub_input.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.crypto_name.clone();
             format!(
                 r#"addK("{backend}", "{}", {});"#,
                 pub_input.identifier_base.name,

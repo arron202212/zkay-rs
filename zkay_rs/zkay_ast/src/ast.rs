@@ -516,7 +516,7 @@ impl AST {
     }
     pub fn names(&self) -> BTreeMap<String, Identifier> {
         BTreeMap::new()
-    }                       
+    }
     // pub fn idf(&self) -> Option<Identifier> {
     //     None
     // }
@@ -995,16 +995,16 @@ impl Expression {
     // pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
     //     None
     // }
-    pub fn op(&self) -> Option<String> {
-        None
-    }
+    // pub fn op(&self) -> Option<String> {
+    //     None
+    // }
 
-    pub fn can_be_private(&self) -> bool {
-        false
-    }
-    pub fn is_shiftop(&self) -> bool {
-        false
-    }
+    // pub fn can_be_private(&self) -> bool {
+    //     false
+    // }
+    // pub fn is_shiftop(&self) -> bool {
+    //     false
+    // }
     pub fn all_expr() -> Self {
         Expression::AllExpr(AllExpr::new())
     }
@@ -1107,20 +1107,30 @@ impl Expression {
     //     }
     // }
     pub fn privacy_annotation_label(&self) -> Option<AST> {
-        if let Some(ie)=self.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref(){
-            if let Some(target)=ie.target(){
-                if let Some(mapping)=target.try_as_type_name_ref().unwrap().try_as_mapping_ref(){
-                     return mapping.instantiated_key.as_ref().unwrap().privacy_annotation_label()
+        if let Some(ie) = self
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .try_as_identifier_expr_ref()
+        {
+            if let Some(target) = ie.target() {
+                if let Some(mapping) = target.try_as_type_name_ref().unwrap().try_as_mapping_ref() {
+                    return mapping
+                        .instantiated_key
+                        .as_ref()
+                        .unwrap()
+                        .privacy_annotation_label();
                 }
-                if let Some(id)=target.try_as_identifier_declaration_ref(){
-                     return Some(id.idf().to_ast())
+                if let Some(id) = target.try_as_identifier_declaration_ref() {
+                    return Some(id.idf().to_ast());
                 }
-                if let Some(id)=target.try_as_namespace_definition_ref(){
-                     return Some(id.idf().to_ast())
+                if let Some(id) = target.try_as_namespace_definition_ref() {
+                    return Some(id.idf().to_ast());
                 }
             }
         }
-        
+
         if self.is_all_expr() || self.is_me_expr() {
             Some(AST::Expression(self.clone()))
         } else {
@@ -1203,9 +1213,8 @@ impl Expression {
                             .annotated_type()
                             .as_ref()
                             .unwrap()
-                            .type_name
-                            .types()
-                            .unwrap()
+                            .type_name.try_as_tuple_type_ref().unwrap()
+                            .types
                             .iter()
                             .map(|t| {
                                 CombinedPrivacyUnion::AST(
@@ -1813,9 +1822,9 @@ impl FunctionCallExpr {
     // pub fn evaluate_privately(&self) -> bool {
     //     false
     // }
-    pub fn analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
+    // pub fn analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
     // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
 
     // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
@@ -1833,17 +1842,49 @@ impl FunctionCallExpr {
     // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
     //     None
     // }
-    pub fn is_cast(&self) -> bool {
-        false
-    }
-    pub fn public_key(&self) -> Option<HybridArgumentIdf> {
-        None
-    }
+    // pub fn is_cast(&self) -> bool {
+    //     false
+    // }
+    // pub fn public_key(&self) -> Option<HybridArgumentIdf> {
+    //     None
+    // }
 
     // pub fn func(&self) -> Option<Expression> {
     //     None
     // }
 
+    pub fn is_cast(&self) -> bool {
+        // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
+        is_instance(&**self.func(), ASTType::LocationExprBase)
+            && is_instances(
+                &**self
+                    .func()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap(),
+                vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
+            )
+        // if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
+        //     if let TupleOrLocationExpr::LocationExpr(le) = tole {
+        //         let target = match le {
+        //             LocationExpr::IdentifierExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
+        //             LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
+        //         };
+        //         if target.is_some()
+        //             &&
+        //         {
+        //             return true;
+        //         }
+        //     }
+        // }
+        // false
+    }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
             FunctionCallExpr::FunctionCallExpr(ast) => {
@@ -1935,29 +1976,6 @@ impl FunctionCallExprBase {
         }
     }
 
-    pub fn is_cast(&self) -> bool {
-        // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
-is_instance(&*self.func, ASTType::LocationExprBase)  && is_instances(
-                        &**self.func.try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap(),
-                        vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
-                    )
-        // if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
-        //     if let TupleOrLocationExpr::LocationExpr(le) = tole {
-        //         let target = match le {
-        //             LocationExpr::IdentifierExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
-        //         };
-        //         if target.is_some()
-        //             && 
-        //         {
-        //             return true;
-        //         }
-        //     }
-        // }
-        // false
-    }
     pub fn as_type(&self, t: AST) -> Self {
         let mut selfs = self.clone();
         if let AST::AnnotatedTypeName(at) = t {
@@ -2511,7 +2529,14 @@ impl TupleOrLocationExpr {
             SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(a)),
         ))) = &parent
         {
-            return self == a.lhs.as_ref().unwrap().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap();
+            return self
+                == a.lhs
+                    .as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap();
         }
         if let Some(AST::Expression(Expression::TupleOrLocationExpr(
             TupleOrLocationExpr::LocationExpr(LocationExpr::IndexExpr(ie)),
@@ -2523,12 +2548,16 @@ impl TupleOrLocationExpr {
                     .clone()
                     .unwrap()
                     .into_ast()
-                    .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
             {
                 return parent
                     .unwrap()
-                    .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .is_lvalue();
             }
@@ -2543,12 +2572,16 @@ impl TupleOrLocationExpr {
                     .clone()
                     .unwrap()
                     .into_ast()
-                    .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
             {
                 return parent
                     .unwrap()
-                    .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .is_lvalue();
             }
@@ -2869,7 +2902,7 @@ impl LocationExpr {
         };
         let value_type = if let Some(type_name) = type_name {
             match *type_name {
-                TypeName::Array(a) => a.value_type().map(|v| v.to_ast()),
+                TypeName::Array(a) => Some(a.value_type().to_ast()),
                 TypeName::Mapping(a) => Some(AST::AnnotatedTypeName(*a.value_type)),
                 _ => None,
             }
@@ -3281,9 +3314,9 @@ impl ReclassifyExpr {
     //     None
     // }
     // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
-    pub fn analysis(&self) -> Option<PartitionState<AST>> {
-        None
-    }
+    // pub fn analysis(&self) -> Option<PartitionState<AST>> {
+    //     None
+    // }
     // pub fn set_homomorphism(&mut self, homomorphism: String) {}
     // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
     //     None
@@ -3303,9 +3336,9 @@ impl ReclassifyExpr {
     // pub fn privacy(&self) -> Option<Expression> {
     //     None
     // }
-    pub fn homomorphism(&self) -> Option<String> {
-        None
-    }
+    // pub fn homomorphism(&self) -> Option<String> {
+    //     None
+    // }
     pub fn func_name(&self) -> String {
         String::from("reveal")
     }
@@ -3536,8 +3569,8 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name
-                    .bool_value(),
+                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_boolean_literal_type_ref().unwrap()
+                    .value(),
             )
             .into_ast()
         } else if self.arg_type == HybridArgType::TmpCircuitVal
@@ -3565,7 +3598,7 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name
+                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap()
                     .value(),
                 false,
             )
@@ -3821,30 +3854,30 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
-    pub fn corresponding_priv_expression(&self) -> Option<Expression> {
-        None
-    }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
+    // pub fn corresponding_priv_expression(&self) -> Option<Expression> {
+    //     None
+    // }
     // pub fn decl_var(&self, _t: AST, expr: Option<Expression>) -> Option<AST> {
     //     None
     // }
-    pub fn arg_type(&self) -> HybridArgType {
-        HybridArgType::PubContractVal
-    }
+    // pub fn arg_type(&self) -> HybridArgType {
+    //     HybridArgType::PubContractVal
+    // }
     pub fn identifier(name: &str) -> Self {
         Self::Identifier(IdentifierBase::new(String::from(name)))
     }
-    pub fn name(&self) -> String {
-        String::new()
-    }
+    // pub fn name(&self) -> String {
+    //     String::new()
+    // }
     // pub fn parent(&self) -> Option<AST> {
     //     None
     // }
-    pub fn t(&self) -> Option<TypeName> {
-        None
-    }
+    // pub fn t(&self) -> Option<TypeName> {
+    //     None
+    // }
 }
 // impl IntoAST for Identifier {
 //     fn into_ast(self) -> AST {
@@ -3919,7 +3952,7 @@ pub enum Statement {
     CircuitStatement(CircuitStatement),
 }
 impl Statement {
-    fn ast_base_ref(&self) -> Option<&ASTBase> {
+    pub fn ast_base_ref(&self) -> Option<&ASTBase> {
         match self {
             Statement::CircuitDirectiveStatement(ast) => Some(ast.ast_base_ref()),
             Statement::IfStatement(ast) => Some(ast.ast_base_ref()),
@@ -3934,7 +3967,7 @@ impl Statement {
             Statement::CircuitStatement(_) => None,
         }
     }
-    fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
+    pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
         match self {
             Statement::CircuitDirectiveStatement(ast) => Some(ast.ast_base_mut_ref()),
             Statement::IfStatement(ast) => Some(ast.ast_base_mut_ref()),
@@ -3979,12 +4012,12 @@ impl Statement {
             Statement::CircuitStatement(_) => None,
         }
     }
-    pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
-        None
-    }
-    pub fn statement_base(&self) -> Option<&StatementBase> {
-        None
-    }
+    // pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
+    //     None
+    // }
+    // pub fn statement_base(&self) -> Option<&StatementBase> {
+    //     None
+    // }
 
     // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
     //     None
@@ -3999,24 +4032,24 @@ impl Statement {
     // pub fn drain_pre_statements(&mut self) -> Vec<AST> {
     //     vec![]
     // }
-    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
-        BTreeSet::new()
-    }
-    pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
-        None
-    }
+    // pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
+    //     BTreeSet::new()
+    // }
+    // pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
+    //     None
+    // }
     // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
     //     None
     // }
-    pub fn line(&self) -> i32 {
-        0
-    }
-    pub fn column(&self) -> i32 {
-        0
-    }
-    pub fn original_code(&self) -> Vec<String> {
-        vec![]
-    }
+    // pub fn line(&self) -> i32 {
+    //     0
+    // }
+    // pub fn column(&self) -> i32 {
+    //     0
+    // }
+    // pub fn original_code(&self) -> Vec<String> {
+    //     vec![]
+    // }
 }
 // impl IntoAST for Statement {
 //     fn into_ast(self) -> AST {
@@ -4352,9 +4385,9 @@ impl ForStatement {
             body,
         }
     }
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
 
     pub fn statements(&self) -> Vec<Statement> {
         vec![
@@ -4470,9 +4503,9 @@ impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 impl SimpleStatement {
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
 
     // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
     //     None
@@ -4481,9 +4514,9 @@ impl SimpleStatement {
     //     None
     // }
     // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    pub fn pre_statements(&self) -> Vec<AST> {
-        vec![]
-    }
+    // pub fn pre_statements(&self) -> Vec<AST> {
+    //     vec![]
+    // }
     // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     // pub fn set_lhs(&mut self, lhs: AST) {}
     // pub fn set_rhs(&mut self, rhs: Expression) {}
@@ -4617,12 +4650,12 @@ impl AssignmentStatement {
     // }
     // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
     // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
-        None
-    }
-    pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
-        BTreeSet::new()
-    }
+    // pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
+    //     None
+    // }
+    // pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
+    //     BTreeSet::new()
+    // }
     // pub fn lhs(&self) -> Option<AST> {
     //     None
     // }
@@ -4836,9 +4869,9 @@ impl ASTChildren for StatementList {
 //     }
 // }
 impl StatementList {
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
     // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
     //     None
     // }
@@ -5043,68 +5076,68 @@ impl TypeName {
             _ => None,
         }
     }
-    pub fn tuple_type(&self) -> Option<TupleType> {
-        None
-    }
-    pub fn parameters(&self) -> Vec<Parameter> {
-        vec![]
-    }
-    pub fn return_parameters(&self) -> Vec<Parameter> {
-        vec![]
-    }
-    // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
-    pub fn has_key_label(&self) -> bool {
-        false
-    }
-    pub fn value_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
-    pub fn names(&self) -> Vec<Identifier> {
-        vec![]
-    }
-//     pub fn can_represent(&self, _value: i32) -> bool
-// // """Return true if value can be represented by this type"""
-//     {
-//         // let elem_bitwidth = self.elem_bitwidth() as usize;
-//         // let lo = if self.signed {
-//         //     -(1 << elem_bitwidth - 1)
-//         // } else {
-//         //     0
-//         // };
-//         // let hi = if self.signed {
-//         //     1 << elem_bitwidth - 1
-//         // } else {
-//         //     1 << elem_bitwidth
-//         // };
-//         // lo <= value && value < hi
-//         true
-//     }
-    pub fn to_abstract_type(&self) -> TypeName {
-        if self.value() < 0 {
-            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                NumberTypeName::IntTypeName(IntTypeName::new(format!(
-                    "i32{}",
-                    self.elem_bitwidth()
-                ))),
-            ))
-        } else {
-            TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                NumberTypeName::UintTypeName(UintTypeName::new(format!(
-                    "uint{}",
-                    self.elem_bitwidth()
-                ))),
-            ))
-        }
-    }
-    pub fn value(&self) -> i32 {
-        0
-    }
-    pub fn bool_value(&self) -> bool {
-        false
-    }
-    pub fn types(&self) -> Option<Vec<AnnotatedTypeName>> {
-        None
-    }
+    // pub fn tuple_type(&self) -> Option<TupleType> {
+    //     None
+    // }
+    // pub fn parameters(&self) -> Vec<Parameter> {
+    //     vec![]
+    // }
+    // pub fn return_parameters(&self) -> Vec<Parameter> {
+    //     vec![]
+    // }
+    // // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
+    // pub fn has_key_label(&self) -> bool {
+    //     false
+    // }
+    // pub fn value_type(&self) -> Option<AnnotatedTypeName> {
+    //     None
+    // }
+    // pub fn names(&self) -> Vec<Identifier> {
+    //     vec![]
+    // }
+    //     pub fn can_represent(&self, _value: i32) -> bool
+    // // """Return true if value can be represented by this type"""
+    //     {
+    //         // let elem_bitwidth = self.elem_bitwidth() as usize;
+    //         // let lo = if self.signed {
+    //         //     -(1 << elem_bitwidth - 1)
+    //         // } else {
+    //         //     0
+    //         // };
+    //         // let hi = if self.signed {
+    //         //     1 << elem_bitwidth - 1
+    //         // } else {
+    //         //     1 << elem_bitwidth
+    //         // };
+    //         // lo <= value && value < hi
+    //         true
+    //     }
+    // pub fn to_abstract_type(&self) -> TypeName {
+    //     if self.value() < 0 {
+    //         TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+    //             NumberTypeName::IntTypeName(IntTypeName::new(format!(
+    //                 "i32{}",
+    //                 self.elem_bitwidth()
+    //             ))),
+    //         ))
+    //     } else {
+    //         TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+    //             NumberTypeName::UintTypeName(UintTypeName::new(format!(
+    //                 "uint{}",
+    //                 self.elem_bitwidth()
+    //             ))),
+    //         ))
+    //     }
+    // }
+    // pub fn value(&self) -> i32 {
+    //     0
+    // }
+    // pub fn bool_value(&self) -> bool {
+    //     false
+    // }
+    // pub fn types(&self) -> Option<Vec<AnnotatedTypeName>> {
+    //     None
+    // }
     pub fn bool_type() -> Self {
         TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(BoolTypeName::new()))
     }
@@ -5166,31 +5199,51 @@ impl TypeName {
         // raise NotImplementedError()
         1
     }
-    pub fn is_literals(&self) -> bool
-    {
-is_instances(self, vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType,ASTType::EnumValueTypeName])
+    pub fn is_literals(&self) -> bool {
+        is_instances(
+            self,
+            vec![
+                ASTType::NumberLiteralType,
+                ASTType::BooleanLiteralType,
+                ASTType::EnumValueTypeName,
+            ],
+        )
     }
-    pub fn is_address(&self) -> bool
-    {
-        is_instances(self, vec![ASTType::AddressTypeName, ASTType::AddressPayableTypeName])
+    pub fn is_address(&self) -> bool {
+        is_instances(
+            self,
+            vec![ASTType::AddressTypeName, ASTType::AddressPayableTypeName],
+        )
     }
     pub fn is_primitive_type(&self) -> bool {
-is_instances(self, vec![ASTType::ElementaryTypeNameBase, ASTType::EnumTypeName,ASTType::EnumValueTypeName, ASTType::AddressTypeName,ASTType::AddressPayableTypeName])
+        is_instances(
+            self,
+            vec![
+                ASTType::ElementaryTypeNameBase,
+                ASTType::EnumTypeName,
+                ASTType::EnumValueTypeName,
+                ASTType::AddressTypeName,
+                ASTType::AddressPayableTypeName,
+            ],
+        )
     }
     pub fn is_cipher(&self) -> bool {
-is_instance(self,ASTType::CipherText)
+        is_instance(self, ASTType::CipherText)
     }
     pub fn is_key(&self) -> bool {
-is_instance(self,ASTType::Key)
+        is_instance(self, ASTType::Key)
     }
     pub fn is_randomness(&self) -> bool {
-is_instance(self,ASTType::Randomness)
+        is_instance(self, ASTType::Randomness)
     }
     pub fn is_numeric(&self) -> bool {
-        is_instance(self,ASTType::NumberTypeNameBase)
+        is_instance(self, ASTType::NumberTypeNameBase)
     }
     pub fn is_boolean(&self) -> bool {
-        is_instances(self,vec![ASTType::BooleanLiteralType,ASTType::BoolTypeName])
+        is_instances(
+            self,
+            vec![ASTType::BooleanLiteralType, ASTType::BoolTypeName],
+        )
     }
     pub fn signed(&self) -> bool {
         false
@@ -5229,12 +5282,12 @@ is_instance(self,ASTType::Randomness)
             String::from("NON_HOMOMORPHIC"),
         )
     }
-    pub fn crypto_params(&self) -> Option<CryptoParams> {
-        None
-    }
-    pub fn op(&self) -> Option<String> {
-        None
-    }
+    // pub fn crypto_params(&self) -> Option<CryptoParams> {
+    //     None
+    // }
+    // pub fn op(&self) -> Option<String> {
+    //     None
+    // }
 }
 #[enum_dispatch]
 pub trait TypeNameBaseRef: ASTBaseRef {
@@ -5374,9 +5427,11 @@ impl BooleanLiteralType {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-        self.to_ast().try_as_type_name_ref().unwrap()
+        self.to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .implicitly_convertible_to(expected)
-            || is_instance(expected,ASTType::BoolTypeName)
+            || is_instance(expected, ASTType::BoolTypeName)
     }
     pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
         if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) = &other_type
@@ -5387,7 +5442,9 @@ impl BooleanLiteralType {
                 TypeName::Literal(String::from("lit"))
             }
         } else {
-            self.to_ast().try_as_type_name_ref().unwrap()
+            self.to_ast()
+                .try_as_type_name_ref()
+                .unwrap()
                 .combined_type(other_type, convert_literals)
                 .unwrap()
         }
@@ -5453,23 +5510,23 @@ impl NumberTypeName {
             Some(256),
         ))
     }
-//     pub fn can_represent(&self, value: i32) -> bool
-// // """Return true if value can be represented by this type"""
-//     {
-//         // let elem_bitwidth = self.elem_bitwidth() as usize;
-//         // let lo = if self.signed {
-//         //     -(1 << elem_bitwidth - 1)
-//         // } else {
-//         //     0
-//         // };
-//         // let hi = if self.signed {
-//         //     1 << elem_bitwidth - 1
-//         // } else {
-//         //     1 << elem_bitwidth
-//         // };
-//         // lo <= value && value < hi
-//         true
-//     }
+    //     pub fn can_represent(&self, value: i32) -> bool
+    // // """Return true if value can be represented by this type"""
+    //     {
+    //         // let elem_bitwidth = self.elem_bitwidth() as usize;
+    //         // let lo = if self.signed {
+    //         //     -(1 << elem_bitwidth - 1)
+    //         // } else {
+    //         //     0
+    //         // };
+    //         // let hi = if self.signed {
+    //         //     1 << elem_bitwidth - 1
+    //         // } else {
+    //         //     1 << elem_bitwidth
+    //         // };
+    //         // lo <= value && value < hi
+    //         true
+    //     }
 }
 #[enum_dispatch]
 pub trait NumberTypeNameBaseRef: ElementaryTypeNameBaseRef {
@@ -5546,7 +5603,9 @@ impl NumberTypeNameBase {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-        self.to_ast().try_as_type_name_ref().unwrap()
+        self.to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .implicitly_convertible_to(expected)
             || if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)) =
                 &expected
@@ -5631,7 +5690,13 @@ impl NumberLiteralType {
         if expected.is_numeric() && !expected.is_literals()
         // Allow implicit conversion only if it fits
         {
-            expected.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().number_type_name_base_ref().can_represent(self.value())
+            expected
+                .try_as_elementary_type_name_ref()
+                .unwrap()
+                .try_as_number_type_name_ref()
+                .unwrap()
+                .number_type_name_base_ref()
+                .can_represent(self.value())
         } else if expected.is_address()
             && self.number_type_name_base.elem_bitwidth() == 160
             && !self.number_type_name_base.signed
@@ -5650,13 +5715,15 @@ impl NumberLiteralType {
         {
             if convert_literals {
                 self.to_abstract_type()
-                    .combined_type(other_type.to_abstract_type(), convert_literals)
+                    .combined_type(other_type.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap().to_abstract_type(), convert_literals)
                     .unwrap()
             } else {
                 TypeName::Literal(String::from("lit"))
             }
         } else {
-            self.to_ast().try_as_type_name_ref().unwrap()
+            self.to_ast()
+                .try_as_type_name_ref()
+                .unwrap()
                 .combined_type(other_type, convert_literals)
                 .unwrap()
         }
@@ -5818,35 +5885,35 @@ impl UserDefinedTypeName {
     //           // _ => {} //UserDefinedTypeName::default()},
     //     };
     // }
-    pub fn target(&self) -> Option<NamespaceDefinition> {
-        None
-    }
-    pub fn set_target(&mut self, type_def: NamespaceDefinition) {
-        match self {
-            UserDefinedTypeName::EnumTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } //UserDefinedTypeName::EnumTypeName(ast)}
-            UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } //UserDefinedTypeName::EnumValueTypeName(ast)}
-            UserDefinedTypeName::StructTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } //UserDefinedTypeName::StructTypeName(ast)}
-            UserDefinedTypeName::ContractTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } // UserDefinedTypeName::ContractTypeName(ast)}
-            UserDefinedTypeName::AddressTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } //UserDefinedTypeName::AddressTypeName(ast)}
-            UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
-                ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-            } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-              // _ => {} //UserDefinedTypeName::default(),
-        };
-    }
-    pub fn names(&self) -> Vec<Identifier> {
-        vec![]
-    }
+    // pub fn target(&self) -> Option<NamespaceDefinition> {
+    //     None
+    // }
+    // pub fn set_target(&mut self, type_def: NamespaceDefinition) {
+    //     match self {
+    //         UserDefinedTypeName::EnumTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } //UserDefinedTypeName::EnumTypeName(ast)}
+    //         UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } //UserDefinedTypeName::EnumValueTypeName(ast)}
+    //         UserDefinedTypeName::StructTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } //UserDefinedTypeName::StructTypeName(ast)}
+    //         UserDefinedTypeName::ContractTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } // UserDefinedTypeName::ContractTypeName(ast)}
+    //         UserDefinedTypeName::AddressTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } //UserDefinedTypeName::AddressTypeName(ast)}
+    //         UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
+    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
+    //         } //UserDefinedTypeName::AddressPayableTypeName(ast)}
+    //           // _ => {} //UserDefinedTypeName::default(),
+    //     };
+    // }
+    // pub fn names(&self) -> Vec<Identifier> {
+    //     vec![]
+    // }
 }
 // impl IntoAST for UserDefinedTypeName {
 //     fn into_ast(self) -> AST {
@@ -5975,13 +6042,15 @@ impl EnumValueTypeName {
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.to_ast().try_as_type_name_ref().unwrap()
+        self.to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .implicitly_convertible_to(expected)
-            || (is_instance(expected,ASTType::EnumTypeName)
-                 && expected.names()
-                >= self.user_defined_type_name_base.names
-                    [..self.user_defined_type_name_base.names.len() - 1]
-                    .to_vec())
+            || (is_instance(expected, ASTType::EnumTypeName)
+                && expected.try_as_user_defined_type_name_ref().unwrap().try_as_enum_type_name_ref().unwrap().user_defined_type_name_base_ref().names.clone()
+                    >= self.user_defined_type_name_base.names
+                        [..self.user_defined_type_name_base.names.len() - 1]
+                        .to_vec())
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
@@ -6088,7 +6157,9 @@ impl AddressPayableTypeName {
 
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.to_ast().try_as_type_name_ref().unwrap()
+        self.to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .implicitly_convertible_to(expected)
             || expected == &TypeName::address_type()
     }
@@ -6150,10 +6221,10 @@ pub enum ExprUnion {
     I32(i32),
     Expression(Expression),
 }
-pub fn test() {
-    let p = Array::Proof(Proof::new());
-    p.array_base_ref();
-}
+// pub fn test() {
+//     let p = Array::Proof(Proof::new());
+//     p.array_base_ref();
+// }
 #[enum_dispatch(
     IntoAST,
     ASTInstanceOf,
@@ -6173,11 +6244,11 @@ pub enum Array {
     Proof(Proof),
     Array(ArrayBase),
 }
-impl Array {
-    pub fn value_type(&self) -> Option<AnnotatedTypeName> {
-        None
-    }
-}
+// impl Array {
+//     pub fn value_type(&self) -> Option<AnnotatedTypeName> {
+//         None
+//     }
+// }
 // impl IntoAST for Array {
 //     fn into_ast(self) -> AST {
 //         match self {
@@ -6526,7 +6597,7 @@ impl TupleType {
                             e1.type_name
                                 .combined_type(*e2.type_name.clone(), convert_literals)
                                 .unwrap()
-                                .tuple_type()
+                                .try_as_tuple_type()
                                 .unwrap()
                                 .into_ast()
                                 .try_as_type_name()
@@ -6868,14 +6939,14 @@ pub enum IdentifierDeclaration {
     Parameter(Parameter),
     StateVariableDeclaration(StateVariableDeclaration),
 }
-impl IdentifierDeclaration {
-    pub fn identifier_declaration_base(&self) -> Option<IdentifierDeclarationBase> {
-        None
-    }
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-}
+// impl IdentifierDeclaration {
+//     // pub fn identifier_declaration_base(&self) -> Option<IdentifierDeclarationBase> {
+//     //     None
+//     // }
+//     // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+//     //     None
+//     // }
+// }
 // impl IntoAST for IdentifierDeclaration {
 //     fn into_ast(self) -> AST {
 //         match self {
@@ -7077,15 +7148,15 @@ pub enum NamespaceDefinition {
     ContractDefinition(ContractDefinition),
 }
 impl NamespaceDefinition {
-    pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-        None
-    }
-    pub fn namespace_definition_base(&self) -> Option<&NamespaceDefinitionBase> {
-        None
-    }
-    pub fn names(&self) -> BTreeMap<String, Identifier> {
-        BTreeMap::new()
-    }
+    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
+    //     None
+    // }
+    // pub fn namespace_definition_base(&self) -> Option<&NamespaceDefinitionBase> {
+    //     None
+    // }
+    // pub fn names(&self) -> BTreeMap<String, Identifier> {
+    //     BTreeMap::new()
+    // }
     // pub fn parent(&self) -> Option<AST> {
     //     None
     // }
@@ -7181,7 +7252,7 @@ impl ConstructorOrFunctionDefinition {
         body: Option<Block>,
     ) -> Self {
         assert!(
-            idf.is_some() && idf.as_ref().unwrap().name() != String::from("constructor")
+            idf.is_some() && idf.as_ref().unwrap().name() != "constructor"
                 || return_parameters.is_none()
         );
         let idf = if let Some(idf) = idf {
@@ -7295,7 +7366,7 @@ impl ConstructorOrFunctionDefinition {
     }
 
     pub fn is_constructor(&self) -> bool {
-        &self.namespace_definition_base.idf.name() == "constructor"
+        self.namespace_definition_base.idf.name().as_str() == "constructor"
     }
 
     pub fn is_function(&self) -> bool {
@@ -7675,7 +7746,11 @@ impl ASTChildren for SourceUnit {
 }
 impl ConstructorOrFunctionDefinitionAttr for AST {
     fn get_requires_verification_when_external(&self) -> bool {
-        if let Some(c) = self.try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref() {
+        if let Some(c) = self
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
+        {
             c.requires_verification_when_external
         } else {
             false
@@ -7775,7 +7850,7 @@ impl InstanceTarget {
     }
 
     pub fn privacy(&self) -> Option<AST> {
-        if let TypeName::Mapping(_) = *self
+    if self.key().is_none()  && !is_instance(&*self
             .target()
             .unwrap()
             .try_as_expression_ref()
@@ -7783,36 +7858,7 @@ impl InstanceTarget {
             .annotated_type()
             .as_ref()
             .unwrap()
-            .type_name
-        {
-            let t = self
-                .target()
-                .unwrap()
-                .try_as_expression_ref()
-                .unwrap()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .zkay_type()
-                .type_name;
-            if t.has_key_label() {
-                self.key()
-                    .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .privacy_annotation_label()
-                    .map(|x| x.into_ast())
-            } else {
-                t.value_type()
-                    .unwrap()
-                    .privacy_annotation
-                    .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .privacy_annotation_label()
-                    .map(|x| x.into_ast())
-            }
-        } else if self.key().is_none() {
+            .type_name,ASTType::Mapping){
             self.target()
                 .unwrap()
                 .try_as_expression_ref()
@@ -7827,14 +7873,47 @@ impl InstanceTarget {
                 .unwrap()
                 .privacy_annotation_label()
                 .map(|x| x.into_ast())
-        } else {
-            None
+        }else{
+let t = self
+                .target()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .zkay_type()
+                .type_name;
+assert!(is_instance(&*t,ASTType::Mapping));
+
+            if t.try_as_mapping_ref().unwrap().has_key_label() {
+                self.key()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .privacy_annotation_label()
+                    .map(|x| x.into_ast())
+            } else {
+                t.try_as_mapping_ref().unwrap().value_type
+                    .privacy_annotation.as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .privacy_annotation_label()
+                    .map(|x| x.into_ast())
+            }
         }
+        
     }
 
     pub fn in_scope_at(&self, ast: AST) -> bool {
         crate::pointers::symbol_table::SymbolTableLinker::in_scope_at(
-            &**self.target().unwrap().try_as_identifier_declaration_ref().unwrap().idf(),
+            &**self
+                .target()
+                .unwrap()
+                .try_as_identifier_declaration_ref()
+                .unwrap()
+                .idf(),
             ast,
         )
     }
@@ -7872,7 +7951,7 @@ pub fn get_code_error_msg(
     error_msg += " ";
 
     let start_line = if let Some(stmt) = stmt {
-        stmt.line()
+        stmt.ast_base_ref().unwrap().line
     } else {
         line
     };
@@ -7908,7 +7987,11 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
 
     // Get surrounding function
     let fct = if let Some(stmt) = &stmt {
-        stmt.function().map(|f| f.into_ast())
+        stmt.statement_base_ref()
+            .unwrap()
+            .function
+            .as_ref()
+            .map(|f| f.to_ast())
     } else if is_instance(&ast, ASTType::ConstructorOrFunctionDefinition) {
         Some(ast.clone())
     } else {
@@ -7950,10 +8033,21 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
         get_code_error_msg(
             ast.ast_base_ref().unwrap().line,
             ast.ast_base_ref().unwrap().column,
-            root.unwrap().try_as_source_unit_ref().unwrap().original_code.clone(),
-            ctr.unwrap().try_as_namespace_definition().unwrap().try_as_contract_definition(),
-            fct.clone()
-                .map(|f| f.try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition().unwrap()),
+            root.unwrap()
+                .try_as_source_unit_ref()
+                .unwrap()
+                .original_code
+                .clone(),
+            ctr.unwrap()
+                .try_as_namespace_definition()
+                .unwrap()
+                .try_as_contract_definition(),
+            fct.clone().map(|f| {
+                f.try_as_namespace_definition()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition()
+                    .unwrap()
+            }),
             stmt.clone().map(|s| *s),
         )
     };
@@ -8196,7 +8290,7 @@ impl CodeVisitor {
         let h = HOMOMORPHISM_STORE
             .lock()
             .unwrap()
-            .get(&ast.homomorphism().unwrap())
+            .get(ast.homomorphism().as_ref().unwrap())
             .unwrap()
             .clone();
         format!("reveal{h:?}({e}, {p})")
@@ -8779,7 +8873,7 @@ impl CodeVisitor {
         return_parameters: Vec<Parameter>,
         body: String,
     ) -> CodeVisitorReturn {
-        let definition = if idf.name() != String::from("constructor") {
+        let definition = if idf.name() != "constructor" {
             let i = self.visit(&AST::Identifier(idf));
             format!("function {i}")
         } else {

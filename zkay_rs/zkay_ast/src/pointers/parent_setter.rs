@@ -7,8 +7,9 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTBaseProperty, ASTChildren, ConstructorOrFunctionDefinition, Expression, Identifier, IntoAST,
-    NamespaceDefinition, SourceUnit, Statement, AST,ASTBaseMutRef,ExpressionBaseMutRef,
+    ASTBaseMutRef, ASTBaseProperty, ASTChildren, ConstructorOrFunctionDefinition, Expression,
+    ExpressionBaseMutRef, Identifier, IntoAST, NamespaceDefinition,
+    NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -65,10 +66,10 @@ impl ParentSetterVisitor {
                 .unwrap()
                 .iter()
                 .cloned()
-                .chain([ast.namespace_definition_base().unwrap().idf.clone()])
+                .chain([ast.idf().clone()])
                 .collect()
         } else {
-            vec![ast.namespace_definition_base().unwrap().idf.clone()]
+            vec![ast.idf().clone()]
         });
     }
 
@@ -161,8 +162,14 @@ impl ExpressionToStatementVisitor {
                 .map(|p| *p.clone());
         }
         if parent.is_some() {
-            ast.statement_base_mut().unwrap().function =
-                parent.map(|p| Box::new(p.try_as_namespace_definition().unwrap().try_as_constructor_or_function_definition().unwrap()));
+            ast.statement_base_mut_ref().unwrap().function = parent.map(|p| {
+                Box::new(
+                    p.try_as_namespace_definition()
+                        .unwrap()
+                        .try_as_constructor_or_function_definition()
+                        .unwrap(),
+                )
+            });
         }
     }
 }

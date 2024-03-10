@@ -25,12 +25,12 @@ use zkay_ast::ast::{
     AssignmentStatementBaseMutRef, BlankLine, Block, CipherText, Comment, CommentBase,
     ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
     ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier,
-    IdentifierBase, IdentifierBaseRef, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion,
-    IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr, NamespaceDefinition,
-    NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement,
-    SourceUnit, StateVariableDeclaration, Statement, StatementList, StatementListBase,
-    StructDefinition, StructTypeName, TupleExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement, AST,
+    IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration,
+    IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement,
+    LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr, Parameter,
+    PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration,
+    Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
+    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::pointers::symbol_table::link_identifiers;
@@ -286,7 +286,7 @@ impl ZkayTransformer {
         {
             if f.requires_verification_when_external && f.has_side_effects() {
                 let name = CFG.lock().unwrap().get_verification_contract_name(
-                    c.namespace_definition_base.idf.name(),
+                    c.namespace_definition_base.idf.name().clone(),
                     f.name(),
                 );
                 Self::import_contract(&name, su, self.circuits.get_mut(&f));
@@ -500,7 +500,15 @@ impl ZkayTransformer {
                 .var_decl_trafo
                 .visit_list(f.return_var_decls.iter().map(|p| p.to_ast()).collect())
                 .into_iter()
-                .filter_map(|p| p.map(|v| v.try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref().unwrap().clone()))
+                .filter_map(|p| {
+                    p.map(|v| {
+                        v.try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .try_as_variable_declaration_ref()
+                            .unwrap()
+                            .clone()
+                    })
+                })
                 .collect();
         }
 
@@ -766,22 +774,26 @@ impl ZkayTransformer {
                 offset,
             ));
             if is_instance(&*s.t, ASTType::CipherText)
-                && s.t.crypto_params().unwrap().is_symmetric_cipher()
+                && s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.is_symmetric_cipher()
             // Assign sender field to user-encrypted values if necessary
             // Assumption: s.t.crypto_params.key_len == 1 for all symmetric ciphers
             {
                 assert!(
-                    me_key_idx.contains_key(&s.t.crypto_params().unwrap()),
+                    me_key_idx.contains_key(&s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params),
                     "Symmetric cipher but did not request me key"
                 );
-                let key_idx = me_key_idx[&s.t.crypto_params().unwrap()];
+                let key_idx = me_key_idx[&s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params];
                 let sender_key =
                     LocationExpr::IdentifierExpr(in_var.clone()).index(ExprUnion::I32(key_idx));
-                let cipher_payload_len = s.t.crypto_params().unwrap().cipher_payload_len();
+                let cipher_payload_len = s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.cipher_payload_len();
                 deserialize_stmts.push(
                     LocationExpr::IndexExpr(
                         s.get_loc_expr(None)
-                            .try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_location_expr_ref()
                             .unwrap()
                             .index(ExprUnion::I32(cipher_payload_len)),
                     )
@@ -886,8 +898,15 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let mut pp = deep_copy(Some(p.to_ast()), true, false).unwrap().try_as_identifier_declaration().unwrap().try_as_parameter().unwrap().clone();
-                    pp.with_changed_storage(String::from("memory"), String::from("calldata")).clone()
+                    let mut pp = deep_copy(Some(p.to_ast()), true, false)
+                        .unwrap()
+                        .try_as_identifier_declaration()
+                        .unwrap()
+                        .try_as_parameter()
+                        .unwrap()
+                        .clone();
+                    pp.with_changed_storage(String::from("memory"), String::from("calldata"))
+                        .clone()
                 })
                 .collect();
             zkay_config::lc_vec_s!["external"]
@@ -1007,9 +1026,8 @@ impl ZkayTransformer {
             .map(|p| {
                 p.identifier_declaration_base
                     .annotated_type
-                    .type_name
-                    .crypto_params()
-                    .unwrap()
+                    .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
+                    .crypto_params.clone()
             })
             .collect();
         let mut stmts = vec![];
@@ -1150,9 +1168,8 @@ impl ZkayTransformer {
                 let cipher_payload_len = p
                     .identifier_declaration_base
                     .annotated_type
-                    .type_name
-                    .crypto_params()
-                    .unwrap()
+                    .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
+                    .crypto_params
                     .cipher_payload_len();
                 let assign_stmt = in_arr_var
                     .slice(offset, cipher_payload_len, None)
@@ -1186,9 +1203,9 @@ impl ZkayTransformer {
                     .type_name
                     .clone();
                 assert!(is_instance(&*c, ASTType::CipherText));
-                if c.crypto_params().unwrap().is_symmetric_cipher() {
+                if c.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.is_symmetric_cipher() {
                     let sender_key = LocationExpr::IdentifierExpr(in_arr_var.clone())
-                        .index(ExprUnion::I32(me_key_idx[&c.crypto_params().unwrap()]));
+                        .index(ExprUnion::I32(me_key_idx[&c.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params]));
                     let idf = IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(*p.identifier_declaration_base.idf.clone()),
                         None,
@@ -1303,7 +1320,9 @@ impl ZkayTransformer {
                         VariableDeclarationStatement::new(
                             deep_copy(Some(vd.to_ast()), false, false)
                                 .unwrap()
-                                .try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
+                                .try_as_variable_declaration_ref()
                                 .unwrap()
                                 .clone(),
                             None,

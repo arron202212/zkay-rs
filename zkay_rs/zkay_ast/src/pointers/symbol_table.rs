@@ -11,11 +11,13 @@ use crate::ast::{
     is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType,
     AnnotatedTypeName, Array, Block, Comment, ConstructorOrFunctionDefinition, ContractDefinition,
     EnumDefinition, EnumValue, Expression, ExpressionBaseProperty, ForStatement, Identifier,
-    IdentifierBase, IdentifierDeclaration, IdentifierExpr, IndexExpr, IntoAST, LocationExpr,
-    Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement, SourceUnit, Statement,
-    StatementList, StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,IdentifierDeclarationBaseProperty,LocationExprBaseProperty,
-};
+    IdentifierBase, IdentifierBaseProperty, IdentifierDeclaration,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST, LocationExpr,
+    LocationExprBaseProperty, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
+    SourceUnit, Statement, StatementList, StatementListBaseProperty, StructDefinition,
+    TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,UserDefinedTypeNameBaseProperty,ASTBaseRef,UserDefinedTypeNameBaseRef
+,};
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
@@ -160,13 +162,20 @@ impl SymbolTableFiller {
                 if is_instance(d, ASTType::CommentBase) {
                     None
                 } else {
-                    Some((d.try_as_identifier_declaration_ref().unwrap().idf().name().clone(), *d.try_as_identifier_declaration_ref().unwrap().idf().clone()))
+                    Some((
+                        d.try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .idf()
+                            .name()
+                            .clone(),
+                        *d.try_as_identifier_declaration_ref().unwrap().idf().clone(),
+                    ))
                 }
             })
             .collect();
         let mut funcs = BTreeMap::new();
         for f in &ast.function_definitions {
-            if funcs.contains_key(&f.namespace_definition_base.idf.name()) {
+            if funcs.contains_key(f.namespace_definition_base.idf.name()) {
                 // raise UnknownIdentifierException(f"Zkay does not currently support method overloading.", f)
                 assert!(
                     false,
@@ -175,7 +184,7 @@ impl SymbolTableFiller {
                 );
             }
             funcs.insert(
-                f.namespace_definition_base.idf.name(),
+                f.namespace_definition_base.idf.name().clone(),
                 f.namespace_definition_base.idf.clone(),
             );
         }
@@ -220,7 +229,16 @@ impl SymbolTableFiller {
         ast.namespace_definition_base.ast_base.names = ast
             .members
             .iter()
-            .map(|d| (d.try_as_identifier_declaration_ref().unwrap().idf().name().clone(), *d.try_as_identifier_declaration_ref().unwrap().idf().clone()))
+            .map(|d| {
+                (
+                    d.try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .idf()
+                        .name()
+                        .clone(),
+                    *d.try_as_identifier_declaration_ref().unwrap().idf().clone(),
+                )
+            })
             .collect();
     }
     pub fn visitEnumDefinition(&self, mut ast: EnumDefinition) {
@@ -239,7 +257,7 @@ impl SymbolTableFiller {
 
     pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) {
         ast.identifier_declaration_base.ast_base.names = BTreeMap::from([(
-            ast.identifier_declaration_base.idf.name(),
+            ast.identifier_declaration_base.idf.name().clone(),
             *ast.identifier_declaration_base.idf.clone(),
         )]);
     }
@@ -365,7 +383,14 @@ impl SymbolTableLinker {
                     vec![ASTType::ForStatement, ASTType::StatementListBase],
                 ));
                 return (
-                    ast2.clone().map(|a| a.try_as_statement().unwrap().try_as_statement_list().unwrap()).unwrap(),
+                    ast2.clone()
+                        .map(|a| {
+                            a.try_as_statement()
+                                .unwrap()
+                                .try_as_statement_list()
+                                .unwrap()
+                        })
+                        .unwrap(),
                     ast2v.clone(),
                     old_ast,
                 );
@@ -376,7 +401,7 @@ impl SymbolTableLinker {
     pub fn find_type_declaration(&self, t: UserDefinedTypeName) -> Option<NamespaceDefinition> {
         SymbolTableLinker::_find_next_decl(
             AST::TypeName(TypeName::UserDefinedTypeName(t.clone())),
-            t.names()[0].name(),
+            t.user_defined_type_name_base_ref().names[0].name().clone(),
         )
         .1
         .unwrap()
@@ -385,13 +410,19 @@ impl SymbolTableLinker {
     }
 
     pub fn find_identifier_declaration(&self, ast: &mut IdentifierExpr) -> AST {
-        let mut _ans=ast.to_ast();//TODO side effect
+        let mut _ans = ast.to_ast(); //TODO side effect
         let name = ast.idf.name();
         loop {
             let (anc, decl) = SymbolTableLinker::_find_next_decl(ast.to_ast(), name.clone());
-            if let (Some(AST::Statement(Statement::ForStatement(anc))), Some(decl)) =
-                (&anc, &decl.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref())
-            {
+            if let (Some(AST::Statement(Statement::ForStatement(anc))), Some(decl)) = (
+                &anc,
+                &decl
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .try_as_variable_declaration_ref(),
+            ) {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
                     SymbolTableLinker::_find_lca(ast.to_ast(), decl.to_ast(), anc.to_ast());
@@ -408,8 +439,15 @@ impl SymbolTableLinker {
             if let (
                 Some(AST::Statement(Statement::StatementList(StatementList::Block(anc)))),
                 Some(decl),
-            ) = (&anc, &decl.as_ref().unwrap().try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref())
-            {
+            ) = (
+                &anc,
+                &decl
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .try_as_variable_declaration_ref(),
+            ) {
                 // Check if identifier really references this declaration (does not come before declaration)
                 let (lca, ref_anchor, decl_anchor) =
                     SymbolTableLinker::_find_lca(ast.to_ast(), decl.to_ast(), anc.to_ast());
@@ -430,7 +468,7 @@ impl SymbolTableLinker {
     pub fn in_scope_at(target_idf: &Identifier, ast: AST) -> bool {
         let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
         while let Some(_ancestor) = ancestor {
-            if let Some(name) = _ancestor.names().get(&target_idf.name())
+            if let Some(name) = _ancestor.names().get(target_idf.name())
             // found name
             {
                 if name == target_idf {
@@ -442,7 +480,7 @@ impl SymbolTableLinker {
         false
     }
 
-    pub fn visitIdentifierExpr(&self,  ast: &mut IdentifierExpr) -> IdentifierExpr {
+    pub fn visitIdentifierExpr(&self, ast: &mut IdentifierExpr) -> IdentifierExpr {
         let decl = self.find_identifier_declaration(ast);
         ast.location_expr_base.target = Some(Box::new(decl.to_ast()));
         assert!(ast.location_expr_base.target.as_ref().is_some());
@@ -452,8 +490,8 @@ impl SymbolTableLinker {
     pub fn visitUserDefinedTypeName(&self, mut ast: UserDefinedTypeName) -> UserDefinedTypeName {
         //  try:
         let mut type_def = self.find_type_declaration(ast.clone());
-        for idf in &ast.names()[1..] {
-            if let Some(_idf) = type_def.as_ref().unwrap().names().get(&idf.name()) {
+        for idf in &ast.user_defined_type_name_base_ref().names[1..] {
+            if let Some(_idf) = type_def.as_ref().unwrap().names().get(idf.name()) {
                 if let Some(AST::NamespaceDefinition(parent)) =
                     _idf.parent().as_ref().map(|p| *p.clone())
                 {
@@ -510,11 +548,12 @@ impl SymbolTableLinker {
             .expr
             .as_ref()
             .unwrap()
-            .target().as_ref()
+            .target()
+            .as_ref()
             .unwrap()
             .try_as_namespace_definition_ref()
         {
-            if let Some(idf) = target.names().get(&ast.member.name()) {
+            if let Some(idf) = target.names().get(ast.member.name()) {
                 ast.location_expr_base.target = idf.parent().clone();
             }
         } else {
@@ -522,7 +561,8 @@ impl SymbolTableLinker {
                 .expr
                 .as_ref()
                 .unwrap()
-                .target().as_ref()
+                .target()
+                .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
@@ -537,7 +577,7 @@ impl SymbolTableLinker {
             } else if let TypeName::UserDefinedTypeName(ref mut t) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
-                    if let Some(idf) = target.names().get(&ast.member.name()) {
+                    if let Some(idf) = target.names().get(ast.member.name()) {
                         ast.location_expr_base.target = idf.parent().clone();
                     }
                 } else {
@@ -573,7 +613,8 @@ impl SymbolTableLinker {
             .arr
             .as_ref()
             .unwrap()
-            .target().as_ref()
+            .target()
+            .as_ref()
             .unwrap()
             .try_as_expression_ref()
             .unwrap()
@@ -585,7 +626,7 @@ impl SymbolTableLinker {
         ast.location_expr_base.target = Some(Box::new(
             VariableDeclaration::new(
                 vec![],
-                source_t.value_type().unwrap(),
+                *source_t.try_as_mapping_ref().unwrap().value_type.clone(),
                 Identifier::Identifier(IdentifierBase::new(String::new())),
                 None,
             )

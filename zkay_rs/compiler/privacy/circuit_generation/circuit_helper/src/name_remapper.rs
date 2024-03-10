@@ -12,8 +12,8 @@ use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTType, Block, BuiltinFunction, Expression,
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBase, HybridArgType,
-    HybridArgumentIdf, Identifier, IdentifierExpr, IdentifierExprUnion, IfStatement, IntoAST,
-    IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
+    HybridArgumentIdf, Identifier, IdentifierBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IntoAST, IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")

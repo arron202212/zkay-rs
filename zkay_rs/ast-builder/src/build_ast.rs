@@ -15,11 +15,11 @@ use zkay_ast::ast::{
     ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
     EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
     FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier, IdentifierBase,
-    IdentifierDeclaration, IdentifierExpr, IfStatement, IndexExpr, IntTypeName, IntoAST,
-    IntoExpression, LiteralExpr, LocationExpr, NamespaceDefinition, NumberLiteralExpr,
-    NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr, RequireStatement,
-    SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr, TupleOrLocationExpr,
-    TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,
+    IdentifierBaseProperty, IdentifierDeclaration, IdentifierExpr, IfStatement, IndexExpr,
+    IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr, NamespaceDefinition,
+    NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
+    RequireStatement, SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr,
+    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -1080,7 +1080,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             LocationExpr::IdentifierExpr(func),
         ))) = &func
         {
-            if func.idf.name() == String::from("reveal") {
+            if func.idf.name() == "reveal" {
                 assert!(
                     args.len() == 2,
                     "Invalid number of arguments for reveal: {args:?},{:?},{:?}",
@@ -1090,7 +1090,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
                 Some(ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None).to_expr())
             } else if let Some(homomorphism) =
-                REHOM_EXPRESSIONS.lock().unwrap().get(&func.idf.name())
+                REHOM_EXPRESSIONS.lock().unwrap().get(func.idf.name())
             {
                 assert!(
                     args.len() == 1,
@@ -1521,8 +1521,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     return self.temp_result().clone();
         // }
         if let Some(Expression::FunctionCallExpr(e)) = &expr {
-            if let Some(f) = e.func().to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref() {
-                if f.idf.name() == String::from("require") {
+            if let Some(f) = e
+                .func()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+            {
+                if f.idf.name() == "require" {
                     assert!(
                         e.args().len() == 1,
                         "Invalid number of arguments for require: {:?},{:?},{:?}",

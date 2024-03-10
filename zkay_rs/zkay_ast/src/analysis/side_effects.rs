@@ -8,11 +8,11 @@
 
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, is_instances, ASTChildren, ASTType, AssignmentStatement,
+    is_instance, is_instances, ASTBaseMutRef, ASTChildren, ASTType, AssignmentStatement,
     AssignmentStatementBaseProperty, BuiltinFunction, Expression, FunctionCallExpr,
     FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST, IntoExpression,
-    IntoStatement, LocationExpr, Parameter, StateVariableDeclaration, Statement, TupleExpr,
-    TupleOrLocationExpr, VariableDeclaration, AST,ASTBaseMutRef,LocationExprBaseProperty,
+    IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter, StateVariableDeclaration,
+    Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
@@ -60,10 +60,20 @@ impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
         if is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
-            && (*ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap())
-                .try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref()
+            && (*ast
+                .func()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .has_side_effects()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap())
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .has_side_effects()
         {
             true
         } else {
@@ -121,7 +131,15 @@ impl DirectModificationDetector {
 
     pub fn collect_modified_values(&self, target: &mut AST, expr: AST) {
         if is_instance(&expr, ASTType::TupleExpr) {
-            for elem in &expr.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap().elements {
+            for elem in &expr
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_tuple_expr_ref()
+                .unwrap()
+                .elements
+            {
                 self.collect_modified_values(target, elem.to_ast());
             }
         } else {
@@ -236,7 +254,15 @@ impl IndirectModificationDetector {
         self.visitAST(ast.to_ast());
         if is_instance(&**ast.func(), ASTType::LocationExprBase) {
             //for now no reference types -> only state could have been modified
-            let mut fdef= ast.func().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().target().as_ref().unwrap();
+            let mut fdef = ast
+                .func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .as_ref()
+                .unwrap();
             let mut ast = ast.to_ast();
             let rlen = ast.ast_base_ref().unwrap().read_values.len();
             ast.ast_base_mut_ref().unwrap().read_values = ast
@@ -399,7 +425,12 @@ impl EvalOrderUBChecker {
     }
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
-            if ast.func().try_as_builtin_function_ref().unwrap().has_shortcircuiting() {
+            if ast
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .has_shortcircuiting()
+            {
                 return;
             }
         }
