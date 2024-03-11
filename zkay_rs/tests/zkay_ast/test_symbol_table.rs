@@ -1,13 +1,12 @@
-// from parameterized import parameterized_class
 
-// from zkay.examples.examples import simple, simple_storage, all_examples
-// from zkay.tests.utils.test_examples import TestExamples
-// from zkay.tests.zkay_unit_test import ZkayTestCase
-// from zkay.zkay_ast.ast import SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
+// from zkay.examples.examples::simple, simple_storage, all_examples
+// from zkay.tests.utils.test_examples::TestExamples
+// from zkay.tests.zkay_unit_test::ZkayTestCase
+// from zkay.zkay_ast.ast::SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
 //     AssignmentStatement
-// from zkay.zkay_ast.build_ast import build_ast
-// from zkay.zkay_ast.pointers.parent_setter import set_parents
-// from zkay.zkay_ast.pointers.symbol_table import fill_symbol_table, link_identifiers, get_builtin_globals
+// from zkay.zkay_ast.build_ast::build_ast
+// from zkay.zkay_ast.pointers.parent_setter::set_parents
+// from zkay.zkay_ast.pointers.symbol_table::fill_symbol_table, link_identifiers, get_builtin_globals
 
 
 // class TestSimpleAST(ZkayTestCase):

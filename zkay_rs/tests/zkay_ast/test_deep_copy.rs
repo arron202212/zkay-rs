@@ -1,9 +1,9 @@
-// from parameterized import parameterized_class
+// from parameterized::parameterized_class
 
-// from zkay.examples.examples import all_examples
-// from zkay.tests.utils.test_examples import TestExamples
-// from zkay.zkay_ast.build_ast import build_ast
-// from zkay.zkay_ast.visitor.deep_copy import deep_copy
+// from zkay.examples.examples::all_examples
+// from zkay.tests.utils.test_examples::TestExamples
+// from zkay.zkay_ast.build_ast::build_ast
+// from zkay.zkay_ast.visitor.deep_copy::deep_copy
 
 
 // @parameterized_class(('name', 'example'), all_examples)

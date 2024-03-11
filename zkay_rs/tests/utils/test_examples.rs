@@ -1,9 +1,9 @@
-// from parameterized import parameterized_class
+// from parameterized::parameterized_class
 
-// from zkay.examples.scenario import Scenario
-// from zkay.examples.example_scenarios import all_scenarios
-// from zkay.examples.examples import all_examples, Example
-// from zkay.tests.zkay_unit_test import ZkayTestCase
+// from zkay.examples.scenario::Scenario
+// from zkay.examples.example_scenarios::all_scenarios
+// from zkay.examples.examples::all_examples, Example
+// from zkay.tests.zkay_unit_test::ZkayTestCase
 
 
 // class TestExamples(ZkayTestCase):

@@ -1,5 +1,5 @@
-// from zkay.tests.zkay_unit_test import ZkayTestCase
-// from zkay.utils.helpers import lines_of_code
+// from zkay.tests.zkay_unit_test::ZkayTestCase
+// from zkay.utils.helpers::lines_of_code
 
 // example_code = """pragma solidity ^0.6.0;
 

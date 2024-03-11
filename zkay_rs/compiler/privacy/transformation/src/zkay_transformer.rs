@@ -208,7 +208,7 @@ impl ZkayStatementTransformer {
             if transformed_stmt.is_none() {
                 continue;
             }
-            let r = Regex::new(r"@{WS_PATTERN}*{ID_PATTERN}")
+            let r = Regex::new(&format!(r"@{WS_PATTERN}*{ID_PATTERN}"))
                 .unwrap()
                 .replace_all(&old_code, "");
             let old_code_wo_annotations = Regex::new(r"(?=\b)me(?=\b)")

@@ -16,3 +16,5 @@ rust-version.workspace = true
  my_logging={workspace = true }
 rs_sha512={ workspace = true }
 textwrap={ workspace = true }
+regex={workspace=true}
+# solidity={workspace=true}

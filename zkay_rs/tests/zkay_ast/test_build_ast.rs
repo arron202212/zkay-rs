@@ -1,9 +1,9 @@
-// from parameterized import parameterized_class
+// from parameterized::parameterized_class
 
-// from zkay.examples.examples import all_examples
-// from zkay.tests.utils.test_examples import TestExamples
-// from zkay.solidity_parser.emit import normalize_code
-// from zkay.zkay_ast.build_ast import build_ast
+// from zkay.examples.examples::all_examples
+// from zkay.tests.utils.test_examples::TestExamples
+// from zkay.solidity_parser.emit::normalize_code
+// from zkay.zkay_ast.build_ast::build_ast
 
 
 // @parameterized_class(('name', 'example'), all_examples)

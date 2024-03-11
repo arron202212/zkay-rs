@@ -1,5 +1,5 @@
-// from zkay.tests.zkay_unit_test import ZkayTestCase
-// from zkay.zkay_ast.ast import BooleanLiteralExpr, RequireStatement, Identifier, IdentifierExpr, AssignmentStatement, \
+// from zkay.tests.zkay_unit_test::ZkayTestCase
+// from zkay.zkay_ast.ast::BooleanLiteralExpr, RequireStatement, Identifier, IdentifierExpr, AssignmentStatement, \
 //     BuiltinFunction, FunctionCallExpr, NumberLiteralExpr
 
 
