@@ -29,9 +29,9 @@ use zkay_ast::ast::{
     LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
     NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr,
     ReclassifyExpr, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef, StatementList,
-    StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
-    VariableDeclarationStatement, WhileStatement, AST,StatementBaseProperty,
+    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementList, StatementListBaseMutRef, StatementListBaseProperty,
+    TupleExpr, TypeName, VariableDeclaration, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;

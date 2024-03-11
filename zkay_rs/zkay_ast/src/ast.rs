@@ -5,16 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-// use  __future__ import annotations;
-// import abc;
-// import math;
-// import operator;
-// import textwrap;
-// use  collections import OrderedDict;
-// use  dataclasses import dataclass;
-// use  enum import IntEnum;
-// use  functools import cmp_to_key, reduce;
-// use  os import linesep;
+
 #[cfg(windows)]
 const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
@@ -24,19 +15,18 @@ use crate::analysis::partition_state::PartitionState;
 use crate::circuit_constraints::CircuitStatement;
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitor::visitor::AstVisitor;
+use enum_dispatch::enum_dispatch;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
+use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
     config::{ConstructorOrFunctionDefinitionAttr, CFG},
     zk_print,
 };
 use zkay_crypto::params::CryptoParams;
-use zkay_utils::progress_printer::warn_print;
-// T = TypeVar('T')
-use enum_dispatch::enum_dispatch;
-use strum_macros::{EnumIs, EnumTryAs};
 use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
+use zkay_utils::progress_printer::warn_print;
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
 }
@@ -45,9 +35,6 @@ impl ChildListBuilder {
         Self { children: vec![] }
     }
     pub fn add_child(&mut self, ast: AST) {
-        // if ast.is_none() {
-        //     return;
-        // }
         self.children.push(ast.clone());
     }
 }
@@ -63,12 +50,6 @@ pub fn is_instance<T: ASTInstanceOf>(var: &T, ast_type: ASTType) -> bool {
 pub fn is_instances<T: ASTInstanceOf>(var: &T, ast_types: Vec<ASTType>) -> bool {
     ast_types.iter().any(|t| t == &var.get_ast_type())
 }
-// #[macro_export]
-// macro_rules! is_instance {
-//     ($var: expr,$typ:expr) => {
-//         var.get_ast_type() == std::concat_idents(ASTType,($typ))
-//     };
-// }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[serde(untagged)]
@@ -172,7 +153,7 @@ pub enum ASTType {
     CircSymmEncConstraint,
     CircEqConstraint,
 }
-
+#[enum_dispatch]
 pub trait ASTChildren {
     fn children(&mut self) -> Vec<AST> {
         let mut cb = ChildListBuilder::new();
@@ -297,197 +278,39 @@ impl ASTInstanceOf for AST {
 impl ASTChildren for AST {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         match self {
-            // AST::Identifier(ast) => ast.get_ast_type(),
-            // AST::Comment(ast) => ast.get_ast_type(),
             AST::Expression(ast) => ast.process_children(cb),
             AST::Statement(ast) => ast.process_children(cb),
-            // AST::TypeName(ast) => ast.get_ast_type(),
-            // AST::AnnotatedTypeName(ast) => ast.get_ast_type(),
-            // AST::IdentifierDeclaration(ast) => ast.get_ast_type(),
-            // AST::NamespaceDefinition(ast) => ast.get_ast_type(),
-            // AST::EnumValue(ast) => ast.get_ast_type(),
-            // AST::SourceUnit(ast) => ast.get_ast_type(),
-            // AST::Pragma(_) => ASTType::Pragma,
-            // AST::VersionPragma(_) => ASTType::VersionPragma,
-            // AST::Modifier(_) => ASTType::Modifier,
-            // AST::Homomorphism(_) => ASTType::Homomorphism,
             _ => {}
         }
     }
 }
+#[macro_export]
+macro_rules! impl_base_ref {
+    ($fn_name: ident,$self: ident) => {
+        match $self {
+            AST::Identifier(ast) => Some(ast.$fn_name()),
+            AST::Comment(ast) => Some(ast.$fn_name()),
+            AST::Expression(ast) => Some(ast.$fn_name()),
+            AST::Statement(ast) => ast.$fn_name(),
+            AST::TypeName(ast) => ast.$fn_name(),
+            AST::AnnotatedTypeName(ast) => Some(ast.$fn_name()),
+            AST::IdentifierDeclaration(ast) => Some(ast.$fn_name()),
+            AST::NamespaceDefinition(ast) => Some(ast.$fn_name()),
+            AST::EnumValue(ast) => Some(ast.$fn_name()),
+            AST::SourceUnit(ast) => Some(ast.$fn_name()),
+            _ => None,
+        }
+    };
+}
 
 impl AST {
     pub fn ast_base_ref(&self) -> Option<&ASTBase> {
-        match self {
-            AST::Identifier(ast) => Some(ast.ast_base_ref()),
-            AST::Comment(ast) => Some(ast.ast_base_ref()),
-            AST::Expression(ast) => Some(ast.ast_base_ref()),
-            AST::Statement(ast) => ast.ast_base_ref(),
-            AST::TypeName(ast) => ast.ast_base_ref(),
-            AST::AnnotatedTypeName(ast) => Some(ast.ast_base_ref()),
-            AST::IdentifierDeclaration(ast) => Some(ast.ast_base_ref()),
-            AST::NamespaceDefinition(ast) => Some(ast.ast_base_ref()),
-            AST::EnumValue(ast) => Some(ast.ast_base_ref()),
-            AST::SourceUnit(ast) => Some(ast.ast_base_ref()),
-            _ => None,
-        }
+        impl_base_ref!(ast_base_ref, self)
     }
     pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
-        match self {
-            AST::Identifier(ast) => Some(ast.ast_base_mut_ref()),
-            AST::Comment(ast) => Some(ast.ast_base_mut_ref()),
-            AST::Expression(ast) => Some(ast.ast_base_mut_ref()),
-            AST::Statement(ast) => ast.ast_base_mut_ref(),
-            AST::TypeName(ast) => ast.ast_base_mut_ref(),
-            AST::AnnotatedTypeName(ast) => Some(ast.ast_base_mut_ref()),
-            AST::IdentifierDeclaration(ast) => Some(ast.ast_base_mut_ref()),
-            AST::NamespaceDefinition(ast) => Some(ast.ast_base_mut_ref()),
-            AST::EnumValue(ast) => Some(ast.ast_base_mut_ref()),
-            AST::SourceUnit(ast) => Some(ast.ast_base_mut_ref()),
-            _ => None,
-        }
+        impl_base_ref!(ast_base_mut_ref, self)
     }
 
-    // pub fn identifier(&self) -> Option<Identifier> {
-    //     if let Self::Identifier(idf) = self {
-    //         Some(idf.clone())
-    //     } else {
-    //         None
-    //     }
-    // }
-    // pub fn identifier_mut(&mut self) -> Option<&mut Identifier> {
-    //     None
-    // }
-    // pub fn statement(&self) -> Option<Statement> {
-    //     None
-    // }
-    // pub fn builtin_function(&self) -> Option<BuiltinFunction> {
-    //     None
-    // }
-    // pub fn location_expr_base(&self) -> Option<LocationExprBase> {
-    //     None
-    // }
-    // pub fn namespace_definition(&self) -> Option<NamespaceDefinition> {
-    //     None
-    // }
-    // pub fn identifier_declaration_base(&self) -> Option<IdentifierDeclarationBase> {
-    //     None
-    // }
-    // pub fn identifier_declaration(&self) -> Option<IdentifierDeclaration> {
-    //     None
-    // }
-    // pub fn state_variable_declaration(&self) -> Option<StateVariableDeclaration> {
-    //     None
-    // }
-    // pub fn type_name(&self) -> Option<TypeName> {
-    //     None
-    // }
-
-    // pub fn me_expr(&self) -> Option<MeExpr> {
-    //     None
-    // }
-    // pub fn tuple_or_location_expr(&self) -> Option<TupleOrLocationExpr> {
-    //     None
-    // }
-    // pub fn identifier_expr(&self) -> Option<IdentifierExpr> {
-    //     None
-    // }
-    // pub fn location_expr(&self) -> Option<LocationExpr> {
-    //     None
-    // }
-    // pub fn tuple_expr(&self) -> Option<TupleExpr> {
-    //     None
-    // }
-    // pub fn tuple_expr_mut(&mut self) -> Option<&mut TupleExpr> {
-    //     None
-    // }
-    // pub fn parameter(&self) -> Option<&Parameter> {
-    //     None
-    // }
-    // pub fn variable_declaration(&self) -> Option<&VariableDeclaration> {
-    //     None
-    // }
-    // pub fn source_unit(&self) -> Option<&SourceUnit> {
-    //     None
-    // }
-    // pub fn statement_list_base(&self) -> Option<StatementListBase> {
-    //     None
-    // }
-    // pub fn statement_list(&self) -> Option<StatementList> {
-    //     None
-    // }
-    // pub fn ast_base(&self) -> Option<&ASTBase> {
-    //     None
-    // }
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
-    // pub fn elements(&self) -> Vec<Expression> {
-    //     vec![]
-    // }
-    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn privacy_annotation_label(&self) -> Option<AST> {
-    //     None
-    // }
-    // pub fn is_final(&self) -> bool {
-    //     false
-    // }
-    // pub fn func(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn set_func_idf_name(&mut self, name: String) {}
-    // pub fn to_location_expr(&self) -> Option<LocationExpr> {
-    //     // if let Self::LocationExpr(le) = self {
-    //     //     le.clone()
-    //     // } else {
-    //     None
-    //     // }
-    // }
-    // pub fn init(&self) -> Option<SimpleStatement> {
-    //     None
-    // }
-    // pub fn expr(&self) -> Option<Expression> {
-    //     if let Self::Expression(expr) = self {
-    //         Some(expr.clone())
-    //     } else {
-    //         None
-    //     }
-    // }
-    // pub fn pre_statements(&self) -> Vec<AST> {
-    //     vec![]
-    // }
-    // pub fn block(&self) -> Option<Block> {
-    //     if let AST::Statement(Statement::StatementList(StatementList::Block(b))) = self {
-    //         Some(b.clone())
-    //     } else {
-    //         None
-    //     }
-    // }
-    // pub fn constructor_or_function_definition(&self) -> Option<ConstructorOrFunctionDefinition> {
-    //     None
-    // }
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-    // pub fn line(&self) -> i32 {
-    //     0
-    // }
-    // pub fn column(&self) -> i32 {
-    //     0
-    // }
-    // pub fn contract_definition(&self) -> Option<ContractDefinition> {
-    //     None
-    // }
-
-    // pub fn target() -> Option<AST> {
-    //     None
-    // }
-    // pub fn parent(&self) -> Option<AST> {
-    //     None
-    // }
     pub fn text(&self) -> String {
         let v = CodeVisitor::new(true);
         v.visit(&self)
@@ -496,10 +319,7 @@ impl AST {
         let v = CodeVisitor::new(true);
         v.visit(&self)
     }
-    // pub fn original_code(&self) -> Vec<String> {
-    //     vec![]
-    // }
-    // pub fn set_original_code(&mut self, code: Vec<String>) {}
+
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
@@ -514,15 +334,6 @@ impl AST {
     pub fn bases(_child: &str) -> &'static str {
         ""
     }
-    pub fn names(&self) -> BTreeMap<String, Identifier> {
-        BTreeMap::new()
-    }
-    // pub fn idf(&self) -> Option<Identifier> {
-    //     None
-    // }
-    // pub fn requires_verification(&self) -> bool {
-    //     false
-    // }
 }
 
 use std::fmt;
@@ -867,144 +678,20 @@ pub enum Expression {
     DummyAnnotation(DummyAnnotation),
 }
 
-// impl IntoAST for Expression {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Expression::BuiltinFunction(ast) => ast.into_ast(),
-//             Expression::FunctionCallExpr(ast) => ast.into_ast(),
-//             Expression::PrimitiveCastExpr(ast) => ast.into_ast(),
-//             Expression::LiteralExpr(ast) => ast.into_ast(),
-//             Expression::TupleOrLocationExpr(ast) => ast.into_ast(),
-//             Expression::MeExpr(ast) => ast.into_ast(),
-//             Expression::AllExpr(ast) => ast.into_ast(),
-//             Expression::ReclassifyExpr(ast) => ast.into_ast(),
-//             Expression::DummyAnnotation(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for Expression {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Expression::BuiltinFunction(ast) => ast.get_ast_type(),
-//             Expression::FunctionCallExpr(ast) => ast.get_ast_type(),
-//             Expression::PrimitiveCastExpr(ast) => ast.get_ast_type(),
-//             Expression::LiteralExpr(ast) => ast.get_ast_type(),
-//             Expression::TupleOrLocationExpr(ast) => ast.get_ast_type(),
-//             Expression::MeExpr(ast) => ast.get_ast_type(),
-//             Expression::AllExpr(ast) => ast.get_ast_type(),
-//             Expression::ReclassifyExpr(ast) => ast.get_ast_type(),
-//             Expression::DummyAnnotation(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl ASTChildren for Expression {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         match self {
-            // Expression::BuiltinFunction(ast) => ast.process_children(),
-            // Expression::FunctionCallExpr(ast) => ast.process_children(cb),
             Expression::PrimitiveCastExpr(ast) => ast.process_children(cb),
-            // Expression::LiteralExpr(ast) => ast.process_children(cb),
-            // Expression::TupleOrLocationExpr(ast) => ast.process_children(cb),
-            // Expression::MeExpr(ast) => ast.process_children(cb),
-            // Expression::AllExpr(ast) => ast.process_children(cb),
-            // Expression::ReclassifyExpr(ast) => ast.process_children(cb),
-            // Expression::DummyAnnotation(ast) => ast.process_children(cb),
             _ => {}
         }
     }
 }
 impl Expression {
-    // pub fn expression_base_mut(&mut self) -> Option<&mut ExpressionBase> {
-    //     None
-    // }
-    // pub fn is_eq(&self) -> bool {
-    //     false
-    // }
     pub fn code(&self) -> String {
         let v = CodeVisitor::new(true);
         v.visit(&self.to_ast())
     }
-    // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
-    // pub fn parent(&self) -> Option<Box<AST>> {
-    //     None
-    // }
-    // pub fn privacy(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn line(&self) -> i32 {
-    //     -1
-    // }
-    // pub fn set_line(&mut self, line: i32) {}
-    // pub fn set_column(&mut self, column: i32) {}
-    // pub fn column(&self) -> i32 {
-    //     -1
-    // }
-    // pub fn is_ite(&self) -> bool {
-    //     false
-    // }
-    // pub fn set_homomorphism(&mut self, homomorphism: String) {}
-    // pub fn homomorphism(&self) -> String {
-    //     String::new()
-    // }
-    // pub fn set_expr(&mut self, expr: Expression) {}
-    // pub fn expr(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn set_args(&mut self, args: Vec<Expression>) {}
-    // pub fn args(&self) -> Vec<Expression> {
-    //     vec![]
-    // }
 
-    // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
-    // pub fn has_shortcircuiting(&self) -> bool {
-    //     false
-    // }
-    // pub fn is_private(&self) -> bool {
-    //     false
-    // }
-    // pub fn set_statement_pre_statements(&mut self, pre_statements: Vec<AST>) {}
-    // pub fn to_location_expr(&self) -> Option<LocationExpr> {
-    //     // if let Self::LocationExpr(le) = self {
-    //     //     le.clone()
-    //     // } else {
-    //     None
-    //     // }
-    // }
-    // pub fn member(&self) -> Option<Identifier> {
-    //     None
-    // }
-    // pub fn func(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn idf(&self) -> Option<Identifier> {
-    //     None
-    // }
-    // pub fn evaluate_privately(&self) -> bool {
-    //     false
-    // }
-    // pub fn set_evaluate_privately(&self, v: bool) {}
-    // pub fn elements(&self) -> Vec<Expression> {
-    //     vec![]
-    // }
-    // pub fn add_pre_statement(&mut self, statement: Statement) {}
-    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
-    // pub fn set_statement(&mut self, statement: Statement) {}
-    // pub fn target(&self) -> Option<Box<AST>> {
-    //     None
-    // }
-    // pub fn rerand_using(&self) -> Option<Box<IdentifierExpr>> {
-    //     None
-    // }
-    // pub fn op(&self) -> Option<String> {
-    //     None
-    // }
-
-    // pub fn can_be_private(&self) -> bool {
-    //     false
-    // }
-    // pub fn is_shiftop(&self) -> bool {
-    //     false
-    // }
     pub fn all_expr() -> Self {
         Expression::AllExpr(AllExpr::new())
     }
@@ -1092,20 +779,6 @@ impl Expression {
         ret.into_ast()
     }
 
-    // pub fn is_all_expr(&self) -> bool {
-    //     if let Expression::AllExpr(_) = self {
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
-    // pub fn is_me_expr(&self) -> bool {
-    //     if let Expression::MeExpr(_) = self {
-    //         true
-    //     } else {
-    //         false
-    //     }
-    // }
     pub fn privacy_annotation_label(&self) -> Option<AST> {
         if let Some(ie) = self
             .try_as_tuple_or_location_expr_ref()
@@ -1213,7 +886,9 @@ impl Expression {
                             .annotated_type()
                             .as_ref()
                             .unwrap()
-                            .type_name.try_as_tuple_type_ref().unwrap()
+                            .type_name
+                            .try_as_tuple_type_ref()
+                            .unwrap()
                             .types
                             .iter()
                             .map(|t| {
@@ -1273,12 +948,6 @@ impl Expression {
             None
         }
     }
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-    // pub fn statement(&self) -> Option<Box<Statement>> {
-    //     None
-    // }
 }
 #[enum_dispatch]
 pub trait ExpressionBaseRef: ASTBaseRef {
@@ -1354,33 +1023,6 @@ pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralUnion {
         _ => LiteralUnion::Bool(false),
     }
 }
-// BUILTIN_FUNCTIONS = {
-//     'parenthesis': '({})',
-//     'ite': '{} ? {} : {}'
-// }
-
-// // arithmetic
-// arithmetic = {op: f'{{}} {op} {{}}' for op in ['**', '*', '/', '%', '+', '-']}
-// arithmetic.update({'sign+': '+{}', 'sign-': '-{}'})
-// // comparison
-// comp = {op: f'{{}} {op} {{}}' for op in ['<', '>', '<=', '>=']}
-// // equality
-// eq = {op: f'{{}} {op} {{}}' for op in ['==', '!=']}
-// // boolean operations
-// bop = {op: f'{{}} {op} {{}}' for op in ['&&', '||']}
-// bop['!'] = '!{}'
-// // bitwise operations
-// bitop = {op: f'{{}} {op} {{}}' for op in ['|', '&', '^']}
-// bitop['~'] = '~{}'
-// // shift operations
-// shiftop = {op: f'{{}} {op} {{}}' for op in ['<<', '>>']}
-
-// BUILTIN_FUNCTIONS.update(arithmetic)
-// BUILTIN_FUNCTIONS.update(comp)
-// BUILTIN_FUNCTIONS.update(eq)
-// BUILTIN_FUNCTIONS.update(bop)
-// BUILTIN_FUNCTIONS.update(bitop)
-// BUILTIN_FUNCTIONS.update(shiftop)
 
 // assert builtin_op_fct.keys() == BUILTIN_FUNCTIONS.keys()
 const BINARY_OP: &'static str = "{{}} {op} {{}}";
@@ -1476,22 +1118,7 @@ impl HomomorphicBuiltin {
         }
     }
 }
-// HOMOMORPHIC_BUILTIN_FUNCTIONS = [
-//     HomomorphicBuiltin('sign+', Homomorphism.ADDITIVE, [False]),
-//     HomomorphicBuiltin('sign-', Homomorphism.ADDITIVE, [False]),
-//     HomomorphicBuiltin('+', Homomorphism.ADDITIVE, [False, False]),
-//     HomomorphicBuiltin('-', Homomorphism.ADDITIVE, [False, False]),
-//     HomomorphicBuiltin('*', Homomorphism.ADDITIVE, [True, False]),
-//     HomomorphicBuiltin('*', Homomorphism.ADDITIVE, [False, True]),
-//     // HomomorphicBuiltin('ite', Homomorphism.ADDITIVE, [False, True, True]),
-//     // HomomorphicBuiltin('ite', Homomorphism.ADDITIVE, [True, False, False]),
-//     // HomomorphicBuiltin('*', Homomorphism.MULTIPLICATIVE, [False, False]),
-// ]
 
-// for __hom in HOMOMORPHIC_BUILTIN_FUNCTIONS:
-//     assert __hom.op in builtin_op_fct and __hom.homomorphism != Homomorphism.NON_HOMOMORPHIC
-//     op_arity = BUILTIN_FUNCTIONS[__hom.op].count('{}')
-//     assert op_arity == len(__hom.public_args)
 lazy_static! {
     static ref HOMOMORPHIC_BUILTIN_FUNCTIONS: Vec<HomomorphicBuiltin> = {
         let homomorphic_builtin_functions_internal = vec![
@@ -1505,7 +1132,7 @@ lazy_static! {
         for __hom in &homomorphic_builtin_functions_internal {
             assert!(
                 BUILTIN_FUNCTIONS.contains_key(&__hom.op)
-                    && __hom.homomorphism != String::from("NON_HOMOMORPHIC")
+                    && __hom.homomorphism != Homomorphism::non_homomorphic()
             );
             let op_arity = BUILTIN_FUNCTIONS[&__hom.op].matches("{}").count() as usize;
             assert!(op_arity == __hom.public_args.len());
@@ -1540,7 +1167,7 @@ impl BuiltinFunction {
             expression_base: ExpressionBase::new(),
             op,
             is_private: false,
-            homomorphism: String::from("NON_HOMOMORPHIC"),
+            homomorphism: Homomorphism::non_homomorphic(),
             rerand_using: None,
         }
     }
@@ -1696,7 +1323,7 @@ impl BuiltinFunction {
                 .privacy_annotation
                 .as_ref()
                 .map(|pr| *pr.clone()),
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         );
         let public_args: Vec<_> = arg_types
             .iter()
@@ -1761,7 +1388,7 @@ impl BuiltinFunction {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -1783,8 +1410,10 @@ impl HomomorphicBuiltinFunction {
         }
     }
     pub fn input_types(&self) -> Vec<AnnotatedTypeName> {
-        let public_type = AnnotatedTypeName::all(*self.target_type.type_name.clone()); // same data type, but @all
-                                                                                       //  [public_type if public else self.target_type for public in self.public_args]
+        let public_type = AnnotatedTypeName::all(*self.target_type.type_name.clone());
+        // same data type, but @all
+
+        //  [public_type if public else self.target_type for public in self.public_args]
         self.public_args
             .iter()
             .map(|&public| {
@@ -1819,40 +1448,6 @@ pub enum FunctionCallExpr {
 }
 
 impl FunctionCallExpr {
-    // pub fn evaluate_privately(&self) -> bool {
-    //     false
-    // }
-    // pub fn analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
-
-    // pub fn set_func_rerand_using(&mut self, rerand_using: Option<Box<IdentifierExpr>>) {}
-    // pub fn statement(&self) -> Option<Box<Statement>> {
-    //     None
-    // }
-    // pub fn set_public_key(&mut self, public_key: Option<Box<HybridArgumentIdf>>) {}
-    // pub fn set_func_idf_name(&mut self, name: String) {}
-    // pub fn set_args(&mut self, args: Vec<Expression>) {}
-    // pub fn args(&self) -> Vec<Expression> {
-    //     vec![]
-    // }
-    // pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
-
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-    // pub fn is_cast(&self) -> bool {
-    //     false
-    // }
-    // pub fn public_key(&self) -> Option<HybridArgumentIdf> {
-    //     None
-    // }
-
-    // pub fn func(&self) -> Option<Expression> {
-    //     None
-    // }
-
     pub fn is_cast(&self) -> bool {
         // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
         is_instance(&**self.func(), ASTType::LocationExprBase)
@@ -1868,22 +1463,6 @@ impl FunctionCallExpr {
                     .unwrap(),
                 vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
             )
-        // if let Expression::TupleOrLocationExpr(tole) = *self.func.clone() {
-        //     if let TupleOrLocationExpr::LocationExpr(le) = tole {
-        //         let target = match le {
-        //             LocationExpr::IdentifierExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::MemberAccessExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::IndexExpr(ie) => ie.location_expr_base.target.clone(),
-        //             LocationExpr::SliceExpr(ie) => ie.location_expr_base.target.clone(),
-        //         };
-        //         if target.is_some()
-        //             &&
-        //         {
-        //             return true;
-        //         }
-        //     }
-        // }
-        // false
     }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
@@ -1895,22 +1474,6 @@ impl FunctionCallExpr {
     }
 }
 
-// impl IntoAST for FunctionCallExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             FunctionCallExpr::FunctionCallExpr(ast) => ast.into_ast(),
-//             FunctionCallExpr::NewExpr(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for FunctionCallExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             FunctionCallExpr::FunctionCallExpr(ast) => ast.get_ast_type(),
-//             FunctionCallExpr::NewExpr(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait FunctionCallExprBaseRef: ExpressionBaseRef {
     fn function_call_expr_base_ref(&self) -> &FunctionCallExprBase;
@@ -1984,7 +1547,7 @@ impl FunctionCallExprBase {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2040,7 +1603,7 @@ impl NewExpr {
             selfs.function_call_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.function_call_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, String::from("NON_HOMOMORPHIC")),
+                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
             );
         }
 
@@ -2086,7 +1649,7 @@ impl PrimitiveCastExpr {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2191,7 +1754,7 @@ impl BooleanLiteralExpr {
                     BooleanLiteralType::new(value),
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ))),
         }
     }
@@ -2203,7 +1766,7 @@ impl BooleanLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2242,7 +1805,7 @@ impl NumberLiteralExpr {
                     )),
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ))),
         }
     }
@@ -2259,7 +1822,7 @@ impl NumberLiteralExpr {
                     )),
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ))),
         }
     }
@@ -2271,7 +1834,7 @@ impl NumberLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2310,7 +1873,7 @@ impl StringLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2420,7 +1983,7 @@ impl ArrayLiteralExprBase {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2472,7 +2035,7 @@ impl KeyLiteralExpr {
                 .annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2674,7 +2237,7 @@ impl TupleExpr {
                 .annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -2770,48 +2333,7 @@ impl LocationExpr {
             }
         }
     }
-    // pub fn statement(&self) -> Option<Box<Statement>> {
-    //     None
-    // }
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-    // pub fn parent(&self) -> Option<AST> {
-    //     match self {
-    //         LocationExpr::IdentifierExpr(ie) => ie
-    //             .clone()
-    //             .location_expr_base
-    //             .tuple_or_location_expr_base
-    //             .expression_base
-    //             .ast_base
-    //             .parent
-    //             .map(|p| *p),
-    //         LocationExpr::MemberAccessExpr(mae) => mae
-    //             .clone()
-    //             .location_expr_base
-    //             .tuple_or_location_expr_base
-    //             .expression_base
-    //             .ast_base
-    //             .parent
-    //             .map(|p| *p),
-    //         LocationExpr::IndexExpr(ie) => ie
-    //             .clone()
-    //             .location_expr_base
-    //             .tuple_or_location_expr_base
-    //             .expression_base
-    //             .ast_base
-    //             .parent
-    //             .map(|p| *p),
-    //         LocationExpr::SliceExpr(se) => se
-    //             .clone()
-    //             .location_expr_base
-    //             .tuple_or_location_expr_base
-    //             .expression_base
-    //             .ast_base
-    //             .parent
-    //             .map(|p| *p),
-    //     }
-    // }
+
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
@@ -2934,9 +2456,6 @@ impl LocationExpr {
             LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
         }
     }
-    // pub fn target(&self) -> Option<Box<AST>> {
-    //     None
-    // }
 }
 #[enum_dispatch]
 pub trait LocationExprBaseRef: TupleOrLocationExprBaseRef {
@@ -3030,7 +2549,7 @@ impl IdentifierExpr {
             selfs.annotated_type = Some(Box::new(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             )));
         }
 
@@ -3081,7 +2600,7 @@ impl MemberAccessExpr {
                 .annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3135,7 +2654,7 @@ impl IndexExpr {
                 .annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3202,7 +2721,7 @@ impl SliceExpr {
                 .annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3238,7 +2757,7 @@ impl MeExpr {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3277,7 +2796,7 @@ impl AllExpr {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3310,17 +2829,6 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
-    // pub fn statement(&self) -> Option<Box<Statement>> {
-    //     None
-    // }
-    // pub fn set_annotated_type(&mut self, annotated_type: AnnotatedTypeName) {}
-    // pub fn analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_homomorphism(&mut self, homomorphism: String) {}
-    // pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
     pub fn as_type(&self, t: AST) -> Self {
         match self {
             ReclassifyExpr::ReclassifyExpr(ast) => ReclassifyExpr::ReclassifyExpr(ast.as_type(t)),
@@ -3330,37 +2838,12 @@ impl ReclassifyExpr {
             }
         }
     }
-    // pub fn expr(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn privacy(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn homomorphism(&self) -> Option<String> {
-    //     None
-    // }
+
     pub fn func_name(&self) -> String {
         String::from("reveal")
     }
 }
-// impl IntoAST for ReclassifyExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             ReclassifyExpr::ReclassifyExpr(ast) => ast.into_ast(),
-//             ReclassifyExpr::RehomExpr(ast) => ast.into_ast(),
-//             ReclassifyExpr::EncryptionExpression(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for ReclassifyExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             ReclassifyExpr::ReclassifyExpr(ast) => ast.get_ast_type(),
-//             ReclassifyExpr::RehomExpr(ast) => ast.get_ast_type(),
-//             ReclassifyExpr::EncryptionExpression(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 #[enum_dispatch]
 pub trait ReclassifyExprBaseRef: ExpressionBaseRef {
     fn reclassify_expr_base_ref(&self) -> &ReclassifyExprBase;
@@ -3429,7 +2912,7 @@ impl ReclassifyExprBase {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
                 tn,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ));
         }
 
@@ -3478,7 +2961,7 @@ impl RehomExpr {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, String::from("NON_HOMOMORPHIC")),
+                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
             );
         }
 
@@ -3569,7 +3052,11 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_boolean_literal_type_ref().unwrap()
+                    .type_name
+                    .try_as_elementary_type_name_ref()
+                    .unwrap()
+                    .try_as_boolean_literal_type_ref()
+                    .unwrap()
                     .value(),
             )
             .into_ast()
@@ -3598,7 +3085,13 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap()
+                    .type_name
+                    .try_as_elementary_type_name_ref()
+                    .unwrap()
+                    .try_as_number_type_name_ref()
+                    .unwrap()
+                    .try_as_number_literal_type_ref()
+                    .unwrap()
                     .value(),
                 false,
             )
@@ -3854,47 +3347,11 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
-    // pub fn corresponding_priv_expression(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn decl_var(&self, _t: AST, expr: Option<Expression>) -> Option<AST> {
-    //     None
-    // }
-    // pub fn arg_type(&self) -> HybridArgType {
-    //     HybridArgType::PubContractVal
-    // }
     pub fn identifier(name: &str) -> Self {
         Self::Identifier(IdentifierBase::new(String::from(name)))
     }
-    // pub fn name(&self) -> String {
-    //     String::new()
-    // }
-    // pub fn parent(&self) -> Option<AST> {
-    //     None
-    // }
-    // pub fn t(&self) -> Option<TypeName> {
-    //     None
-    // }
 }
-// impl IntoAST for Identifier {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Identifier::Identifier(ast) => ast.into_ast(),
-//             Identifier::HybridArgumentIdf(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for Identifier {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Identifier::Identifier(ast) => ast.get_ast_type(),
-//             Identifier::HybridArgumentIdf(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EncryptionExpression {
@@ -3927,14 +3384,14 @@ impl EncryptionExpression {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, String::from("NON_HOMOMORPHIC")),
+                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
             );
         }
 
         selfs
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf)]
+#[enum_dispatch(IntoAST, ASTInstanceOf, ASTChildren)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -3951,158 +3408,41 @@ pub enum Statement {
     StatementList(StatementList),
     CircuitStatement(CircuitStatement),
 }
+
+#[macro_export]
+macro_rules! impl_base_ref_for_statement {
+    ($fn_name: ident,$self: ident) => {
+        match $self {
+            Statement::CircuitDirectiveStatement(ast) => Some(ast.$fn_name()),
+            Statement::IfStatement(ast) => Some(ast.$fn_name()),
+            Statement::WhileStatement(ast) => Some(ast.$fn_name()),
+            Statement::DoWhileStatement(ast) => Some(ast.$fn_name()),
+            Statement::ForStatement(ast) => Some(ast.$fn_name()),
+            Statement::BreakStatement(ast) => Some(ast.$fn_name()),
+            Statement::ContinueStatement(ast) => Some(ast.$fn_name()),
+            Statement::ReturnStatement(ast) => Some(ast.$fn_name()),
+            Statement::SimpleStatement(ast) => Some(ast.$fn_name()),
+            Statement::StatementList(ast) => Some(ast.$fn_name()),
+            Statement::CircuitStatement(_) => None,
+        }
+    };
+}
+
 impl Statement {
     pub fn ast_base_ref(&self) -> Option<&ASTBase> {
-        match self {
-            Statement::CircuitDirectiveStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::IfStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::WhileStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::DoWhileStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::ForStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::BreakStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::ContinueStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::ReturnStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::SimpleStatement(ast) => Some(ast.ast_base_ref()),
-            Statement::StatementList(ast) => Some(ast.ast_base_ref()),
-            Statement::CircuitStatement(_) => None,
-        }
+        impl_base_ref_for_statement!(ast_base_ref, self)
     }
     pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
-        match self {
-            Statement::CircuitDirectiveStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::IfStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::WhileStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::DoWhileStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::ForStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::BreakStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::ContinueStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::ReturnStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::SimpleStatement(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::StatementList(ast) => Some(ast.ast_base_mut_ref()),
-            Statement::CircuitStatement(_) => None,
-        }
-    }
-    pub fn statement_base_mut_ref(&mut self) -> Option<&mut StatementBase> {
-        match self {
-            Statement::CircuitDirectiveStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::IfStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::WhileStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::DoWhileStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::ForStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::BreakStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::ContinueStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::ReturnStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::SimpleStatement(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::StatementList(ast) => Some(ast.statement_base_mut_ref()),
-            Statement::CircuitStatement(_) => None,
-        }
+        impl_base_ref_for_statement!(ast_base_mut_ref, self)
     }
     pub fn statement_base_ref(&self) -> Option<&StatementBase> {
-        match self {
-            Statement::CircuitDirectiveStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::IfStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::WhileStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::DoWhileStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::ForStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::BreakStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::ContinueStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::ReturnStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::SimpleStatement(ast) => Some(ast.statement_base_ref()),
-            Statement::StatementList(ast) => Some(ast.statement_base_ref()),
-            Statement::CircuitStatement(_) => None,
-        }
+        impl_base_ref_for_statement!(statement_base_ref, self)
     }
-    // pub fn statement_base_mut(&mut self) -> Option<&mut StatementBase> {
-    //     None
-    // }
-    // pub fn statement_base(&self) -> Option<&StatementBase> {
-    //     None
-    // }
-
-    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn pre_statements(&self) -> Vec<AST> {
-    //     vec![]
-    // }
-    // pub fn add_pre_statement(&mut self, statement: Statement) {}
-    // pub fn extend_pre_statements(&mut self, statement: Vec<Statement>) {}
-    // pub fn append_pre_statements(&mut self, statement: &mut Vec<Statement>) {}
-    // pub fn drain_pre_statements(&mut self) -> Vec<AST> {
-    //     vec![]
-    // }
-    // pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
-    //     BTreeSet::new()
-    // }
-    // pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
-    //     None
-    // }
-    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn line(&self) -> i32 {
-    //     0
-    // }
-    // pub fn column(&self) -> i32 {
-    //     0
-    // }
-    // pub fn original_code(&self) -> Vec<String> {
-    //     vec![]
-    // }
-}
-// impl IntoAST for Statement {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Statement::CircuitDirectiveStatement(ast) => ast.into_ast(),
-//             Statement::IfStatement(ast) => ast.into_ast(),
-//             Statement::WhileStatement(ast) => ast.into_ast(),
-//             Statement::DoWhileStatement(ast) => ast.into_ast(),
-//             Statement::ForStatement(ast) => ast.into_ast(),
-//             Statement::BreakStatement(ast) => ast.into_ast(),
-//             Statement::ContinueStatement(ast) => ast.into_ast(),
-//             Statement::ReturnStatement(ast) => ast.into_ast(),
-//             Statement::SimpleStatement(ast) => ast.into_ast(),
-//             Statement::StatementList(ast) => ast.into_ast(),
-//             Statement::CircuitStatement(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for Statement {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Statement::CircuitDirectiveStatement(ast) => ast.get_ast_type(),
-//             Statement::IfStatement(ast) => ast.get_ast_type(),
-//             Statement::WhileStatement(ast) => ast.get_ast_type(),
-//             Statement::DoWhileStatement(ast) => ast.get_ast_type(),
-//             Statement::ForStatement(ast) => ast.get_ast_type(),
-//             Statement::BreakStatement(ast) => ast.get_ast_type(),
-//             Statement::ContinueStatement(ast) => ast.get_ast_type(),
-//             Statement::ReturnStatement(ast) => ast.get_ast_type(),
-//             Statement::SimpleStatement(ast) => ast.get_ast_type(),
-//             Statement::StatementList(ast) => ast.get_ast_type(),
-//             Statement::CircuitStatement(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
-
-impl ASTChildren for Statement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        match self {
-            Statement::CircuitDirectiveStatement(ast) => ast.process_children(cb),
-            Statement::IfStatement(ast) => ast.process_children(cb),
-            Statement::WhileStatement(ast) => ast.process_children(cb),
-            Statement::DoWhileStatement(ast) => ast.process_children(cb),
-            Statement::ForStatement(ast) => ast.process_children(cb),
-            Statement::BreakStatement(ast) => ast.process_children(cb),
-            Statement::ContinueStatement(ast) => ast.process_children(cb),
-            Statement::ReturnStatement(ast) => ast.process_children(cb),
-            Statement::SimpleStatement(ast) => ast.process_children(cb),
-            Statement::StatementList(ast) => ast.process_children(cb),
-            Statement::CircuitStatement(ast) => ast.process_children(cb),
-        }
+    pub fn statement_base_mut_ref(&mut self) -> Option<&mut StatementBase> {
+        impl_base_ref_for_statement!(statement_base_mut_ref, self)
     }
 }
+
 #[enum_dispatch]
 pub trait StatementBaseRef: ASTBaseRef {
     fn statement_base_ref(&self) -> &StatementBase;
@@ -4173,22 +3513,7 @@ impl ASTChildren for CircuitDirectiveStatement {
         }
     }
 }
-// impl IntoAST for CircuitDirectiveStatement {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             CircuitDirectiveStatement::CircuitComputationStatement(ast) => ast.into_ast(),
-//             CircuitDirectiveStatement::EnterPrivateKeyStatement(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for CircuitDirectiveStatement {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             CircuitDirectiveStatement::CircuitComputationStatement(ast) => ast.get_ast_type(),
-//             CircuitDirectiveStatement::EnterPrivateKeyStatement(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 #[enum_dispatch]
 pub trait CircuitDirectiveStatementBaseRef: StatementBaseRef {
     fn circuit_directive_statement_base_ref(&self) -> &CircuitDirectiveStatementBase;
@@ -4385,9 +3710,6 @@ impl ForStatement {
             body,
         }
     }
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
 
     pub fn statements(&self) -> Vec<Statement> {
         vec![
@@ -4502,45 +3824,7 @@ pub enum SimpleStatement {
 impl ASTChildren for SimpleStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
-impl SimpleStatement {
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
 
-    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn after_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn pre_statements(&self) -> Vec<AST> {
-    //     vec![]
-    // }
-    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn set_lhs(&mut self, lhs: AST) {}
-    // pub fn set_rhs(&mut self, rhs: Expression) {}
-}
-// impl IntoAST for SimpleStatement {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             SimpleStatement::ExpressionStatement(ast) => ast.into_ast(),
-//             SimpleStatement::RequireStatement(ast) => ast.into_ast(),
-//             SimpleStatement::AssignmentStatement(ast) => ast.into_ast(),
-//             SimpleStatement::VariableDeclarationStatement(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for SimpleStatement {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             SimpleStatement::ExpressionStatement(ast) => ast.get_ast_type(),
-//             SimpleStatement::RequireStatement(ast) => ast.get_ast_type(),
-//             SimpleStatement::AssignmentStatement(ast) => ast.get_ast_type(),
-//             SimpleStatement::VariableDeclarationStatement(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait SimpleStatementBaseRef: StatementBaseRef {
     fn simple_statement_base_ref(&self) -> &SimpleStatementBase;
@@ -4609,11 +3893,7 @@ impl RequireStatement {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
             condition,
-            unmodified_code: if let Some(unmodified_code) = unmodified_code {
-                unmodified_code
-            } else {
-                String::new() //self.code()
-            },
+            unmodified_code: unmodified_code.unwrap_or(String::new()), //self.code()
         }
     }
 }
@@ -4644,47 +3924,7 @@ pub enum AssignmentStatement {
 impl ASTChildren for AssignmentStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
-impl AssignmentStatement {
-    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn function(&self) -> Option<Box<ConstructorOrFunctionDefinition>> {
-    //     None
-    // }
-    // pub fn modified_values(&self) -> BTreeSet<InstanceTarget> {
-    //     BTreeSet::new()
-    // }
-    // pub fn lhs(&self) -> Option<AST> {
-    //     None
-    // }
-    // pub fn set_lhs(&mut self, lhs: Option<AST>) {}
-    // pub fn set_rhs(&mut self, rhs: Option<Expression>) {}
-    // pub fn set_pre_statements(&mut self, pre_statements: Vec<AST>) {}
-    // pub fn rhs(&self) -> Option<Expression> {
-    //     None
-    // }
-    // pub fn op(&self) -> Option<String> {
-    //     None
-    // }
-}
-// impl IntoAST for AssignmentStatement {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             AssignmentStatement::AssignmentStatement(ast) => ast.into_ast(),
-//             AssignmentStatement::CircuitInputStatement(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for AssignmentStatement {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             AssignmentStatement::AssignmentStatement(ast) => ast.get_ast_type(),
-//             AssignmentStatement::CircuitInputStatement(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 #[enum_dispatch]
 pub trait AssignmentStatementBaseRef: SimpleStatementBaseRef {
     fn assignment_statement_base_ref(&self) -> &AssignmentStatementBase;
@@ -4850,36 +4090,7 @@ pub enum StatementList {
 impl ASTChildren for StatementList {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
-// impl IntoAST for StatementList {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             StatementList::Block(ast) => ast.into_ast(),
-//             StatementList::IndentBlock(ast) => ast.into_ast(),
-//             StatementList::StatementList(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for StatementList {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             StatementList::Block(ast) => ast.get_ast_type(),
-//             StatementList::IndentBlock(ast) => ast.get_ast_type(),
-//             StatementList::StatementList(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl StatementList {
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
-    // pub fn before_analysis(&self) -> Option<PartitionState<AST>> {
-    //     None
-    // }
-    // pub fn set_after_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
-    // pub fn set_statements(&mut self, statements: Vec<AST>) {}
-    // pub fn statements(&self) -> Vec<AST> {
-    //     vec![]
-    // }
     pub fn get_item(&self, key: i32) -> AST {
         match self {
             StatementList::Block(_sl) => {
@@ -4992,7 +4203,6 @@ impl Block {
             was_single_statement,
         }
     }
-    // pub fn set_before_analysis(&mut self, before_analysis: Option<PartitionState<AST>>) {}
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -5053,91 +4263,29 @@ impl ASTInstanceOf for TypeName {
         }
     }
 }
+
+#[macro_export]
+macro_rules! impl_base_ref_for_typename {
+    ($fn_name: ident,$self: ident) => {
+        match $self {
+            TypeName::ElementaryTypeName(ast) => Some(ast.$fn_name()),
+            TypeName::UserDefinedTypeName(ast) => Some(ast.$fn_name()),
+            TypeName::Mapping(ast) => Some(ast.$fn_name()),
+            TypeName::Array(ast) => Some(ast.$fn_name()),
+            TypeName::TupleType(ast) => Some(ast.$fn_name()),
+            TypeName::FunctionTypeName(ast) => Some(ast.$fn_name()),
+            _ => None,
+        }
+    };
+}
 impl TypeName {
     pub fn ast_base_ref(&self) -> Option<&ASTBase> {
-        match self {
-            TypeName::ElementaryTypeName(ast) => Some(ast.ast_base_ref()),
-            TypeName::UserDefinedTypeName(ast) => Some(ast.ast_base_ref()),
-            TypeName::Mapping(ast) => Some(ast.ast_base_ref()),
-            TypeName::Array(ast) => Some(ast.ast_base_ref()),
-            TypeName::TupleType(ast) => Some(ast.ast_base_ref()),
-            TypeName::FunctionTypeName(ast) => Some(ast.ast_base_ref()),
-            _ => None,
-        }
+        impl_base_ref_for_typename!(ast_base_ref, self)
     }
     pub fn ast_base_mut_ref(&mut self) -> Option<&mut ASTBase> {
-        match self {
-            TypeName::ElementaryTypeName(ast) => Some(ast.ast_base_mut_ref()),
-            TypeName::UserDefinedTypeName(ast) => Some(ast.ast_base_mut_ref()),
-            TypeName::Mapping(ast) => Some(ast.ast_base_mut_ref()),
-            TypeName::Array(ast) => Some(ast.ast_base_mut_ref()),
-            TypeName::TupleType(ast) => Some(ast.ast_base_mut_ref()),
-            TypeName::FunctionTypeName(ast) => Some(ast.ast_base_mut_ref()),
-            _ => None,
-        }
+        impl_base_ref_for_typename!(ast_base_mut_ref, self)
     }
-    // pub fn tuple_type(&self) -> Option<TupleType> {
-    //     None
-    // }
-    // pub fn parameters(&self) -> Vec<Parameter> {
-    //     vec![]
-    // }
-    // pub fn return_parameters(&self) -> Vec<Parameter> {
-    //     vec![]
-    // }
-    // // pub fn set_parent(&mut self, parent: Option<Box<AST>>) {}
-    // pub fn has_key_label(&self) -> bool {
-    //     false
-    // }
-    // pub fn value_type(&self) -> Option<AnnotatedTypeName> {
-    //     None
-    // }
-    // pub fn names(&self) -> Vec<Identifier> {
-    //     vec![]
-    // }
-    //     pub fn can_represent(&self, _value: i32) -> bool
-    // // """Return true if value can be represented by this type"""
-    //     {
-    //         // let elem_bitwidth = self.elem_bitwidth() as usize;
-    //         // let lo = if self.signed {
-    //         //     -(1 << elem_bitwidth - 1)
-    //         // } else {
-    //         //     0
-    //         // };
-    //         // let hi = if self.signed {
-    //         //     1 << elem_bitwidth - 1
-    //         // } else {
-    //         //     1 << elem_bitwidth
-    //         // };
-    //         // lo <= value && value < hi
-    //         true
-    //     }
-    // pub fn to_abstract_type(&self) -> TypeName {
-    //     if self.value() < 0 {
-    //         TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-    //             NumberTypeName::IntTypeName(IntTypeName::new(format!(
-    //                 "i32{}",
-    //                 self.elem_bitwidth()
-    //             ))),
-    //         ))
-    //     } else {
-    //         TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-    //             NumberTypeName::UintTypeName(UintTypeName::new(format!(
-    //                 "uint{}",
-    //                 self.elem_bitwidth()
-    //             ))),
-    //         ))
-    //     }
-    // }
-    // pub fn value(&self) -> i32 {
-    //     0
-    // }
-    // pub fn bool_value(&self) -> bool {
-    //     false
-    // }
-    // pub fn types(&self) -> Option<Vec<AnnotatedTypeName>> {
-    //     None
-    // }
+
     pub fn bool_type() -> Self {
         TypeName::ElementaryTypeName(ElementaryTypeName::BoolTypeName(BoolTypeName::new()))
     }
@@ -5246,7 +4394,13 @@ impl TypeName {
         )
     }
     pub fn signed(&self) -> bool {
-        false
+        is_instance(self, ASTType::NumberTypeNameBase)
+            && self
+                .try_as_elementary_type_name_ref()
+                .unwrap()
+                .try_as_number_type_name_ref()
+                .unwrap()
+                .signed()
     }
     pub fn is_signed_numeric(&self) -> bool {
         self.is_numeric() && self.signed()
@@ -5279,15 +4433,9 @@ impl TypeName {
             } else {
                 None
             },
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
-    // pub fn crypto_params(&self) -> Option<CryptoParams> {
-    //     None
-    // }
-    // pub fn op(&self) -> Option<String> {
-    //     None
-    // }
 }
 #[enum_dispatch]
 pub trait TypeNameBaseRef: ASTBaseRef {
@@ -5306,9 +4454,6 @@ impl TypeNameBase {
             ast_base: ASTBase::new(),
         }
     }
-    // pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-    //     true
-    // }
 }
 #[enum_dispatch(
     IntoAST,
@@ -5328,24 +4473,6 @@ pub enum ElementaryTypeName {
     BooleanLiteralType(BooleanLiteralType),
 }
 
-// impl IntoAST for ElementaryTypeName {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             ElementaryTypeName::NumberTypeName(ast) => ast.into_ast(),
-//             ElementaryTypeName::BoolTypeName(ast) => ast.into_ast(),
-//             ElementaryTypeName::BooleanLiteralType(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for ElementaryTypeName {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             ElementaryTypeName::NumberTypeName(ast) => ast.get_ast_type(),
-//             ElementaryTypeName::BoolTypeName(ast) => ast.get_ast_type(),
-//             ElementaryTypeName::BooleanLiteralType(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait ElementaryTypeNameBaseRef: TypeNameBaseRef {
     fn elementary_type_name_base_ref(&self) -> &ElementaryTypeNameBase;
@@ -5373,12 +4500,6 @@ impl ElementaryTypeNameBase {
             name,
         }
     }
-    // pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-    //     true
-    // }
-    // pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> Option<TypeName> {
-    //     None
-    // }
 }
 #[impl_traits(ElementaryTypeNameBase, TypeNameBase, ASTBase)]
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -5481,26 +4602,6 @@ pub enum NumberTypeName {
     NumberTypeNameBase(NumberTypeNameBase),
 }
 
-// impl IntoAST for NumberTypeName {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             NumberTypeName::NumberLiteralType(ast) => ast.into_ast(),
-//             NumberTypeName::IntTypeName(ast) => ast.into_ast(),
-//             NumberTypeName::UintTypeName(ast) => ast.into_ast(),
-//             NumberTypeName::NumberTypeNameBase(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for NumberTypeName {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             NumberTypeName::NumberLiteralType(ast) => ast.get_ast_type(),
-//             NumberTypeName::IntTypeName(ast) => ast.get_ast_type(),
-//             NumberTypeName::UintTypeName(ast) => ast.get_ast_type(),
-//             NumberTypeName::NumberTypeNameBase(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl NumberTypeName {
     pub fn any() -> Self {
         NumberTypeName::NumberTypeNameBase(NumberTypeNameBase::new(
@@ -5510,23 +4611,6 @@ impl NumberTypeName {
             Some(256),
         ))
     }
-    //     pub fn can_represent(&self, value: i32) -> bool
-    // // """Return true if value can be represented by this type"""
-    //     {
-    //         // let elem_bitwidth = self.elem_bitwidth() as usize;
-    //         // let lo = if self.signed {
-    //         //     -(1 << elem_bitwidth - 1)
-    //         // } else {
-    //         //     0
-    //         // };
-    //         // let hi = if self.signed {
-    //         //     1 << elem_bitwidth - 1
-    //         // } else {
-    //         //     1 << elem_bitwidth
-    //         // };
-    //         // lo <= value && value < hi
-    //         true
-    //     }
 }
 #[enum_dispatch]
 pub trait NumberTypeNameBaseRef: ElementaryTypeNameBaseRef {
@@ -5715,7 +4799,17 @@ impl NumberLiteralType {
         {
             if convert_literals {
                 self.to_abstract_type()
-                    .combined_type(other_type.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap().to_abstract_type(), convert_literals)
+                    .combined_type(
+                        other_type
+                            .try_as_elementary_type_name_ref()
+                            .unwrap()
+                            .try_as_number_type_name_ref()
+                            .unwrap()
+                            .try_as_number_literal_type_ref()
+                            .unwrap()
+                            .to_abstract_type(),
+                        convert_literals,
+                    )
                     .unwrap()
             } else {
                 TypeName::Literal(String::from("lit"))
@@ -5839,106 +4933,7 @@ pub enum UserDefinedTypeName {
     AddressTypeName(AddressTypeName),
     AddressPayableTypeName(AddressPayableTypeName),
 }
-impl UserDefinedTypeName {
-    // pub fn set_type_name(&mut self, type_name: TypeName) {}
-    // pub fn parent(&self) -> Option<AST> {
-    //     None
-    // }
-    // pub fn set_parent(&mut self, parent: Option<AST>) {
-    //     match self {
-    //         UserDefinedTypeName::EnumTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } //UserDefinedTypeName::EnumTypeName(ast)}
-    //         UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } //UserDefinedTypeName::EnumValueTypeName(ast)}
-    //         UserDefinedTypeName::StructTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } //UserDefinedTypeName::StructTypeName(ast)}
-    //         UserDefinedTypeName::ContractTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } // UserDefinedTypeName::ContractTypeName(ast)}
-    //         UserDefinedTypeName::AddressTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } // UserDefinedTypeName::AddressTypeName(ast)}
-    //         UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base
-    //                 .type_name_base
-    //                 .ast_base
-    //                 .parent = parent.map(|p| Box::new(p));
-    //         } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-    //           // _ => {} //UserDefinedTypeName::default()},
-    //     };
-    // }
-    // pub fn target(&self) -> Option<NamespaceDefinition> {
-    //     None
-    // }
-    // pub fn set_target(&mut self, type_def: NamespaceDefinition) {
-    //     match self {
-    //         UserDefinedTypeName::EnumTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } //UserDefinedTypeName::EnumTypeName(ast)}
-    //         UserDefinedTypeName::EnumValueTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } //UserDefinedTypeName::EnumValueTypeName(ast)}
-    //         UserDefinedTypeName::StructTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } //UserDefinedTypeName::StructTypeName(ast)}
-    //         UserDefinedTypeName::ContractTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } // UserDefinedTypeName::ContractTypeName(ast)}
-    //         UserDefinedTypeName::AddressTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } //UserDefinedTypeName::AddressTypeName(ast)}
-    //         UserDefinedTypeName::AddressPayableTypeName(ref mut ast) => {
-    //             ast.user_defined_type_name_base.target = Some(Box::new(type_def.into_ast()));
-    //         } //UserDefinedTypeName::AddressPayableTypeName(ast)}
-    //           // _ => {} //UserDefinedTypeName::default(),
-    //     };
-    // }
-    // pub fn names(&self) -> Vec<Identifier> {
-    //     vec![]
-    // }
-}
-// impl IntoAST for UserDefinedTypeName {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             UserDefinedTypeName::EnumTypeName(ast) => ast.into_ast(),
-//             UserDefinedTypeName::EnumValueTypeName(ast) => ast.into_ast(),
-//             UserDefinedTypeName::StructTypeName(ast) => ast.into_ast(),
-//             UserDefinedTypeName::ContractTypeName(ast) => ast.into_ast(),
-//             UserDefinedTypeName::AddressTypeName(ast) => ast.into_ast(),
-//             UserDefinedTypeName::AddressPayableTypeName(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for UserDefinedTypeName {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             UserDefinedTypeName::EnumTypeName(ast) => ast.get_ast_type(),
-//             UserDefinedTypeName::EnumValueTypeName(ast) => ast.get_ast_type(),
-//             UserDefinedTypeName::StructTypeName(ast) => ast.get_ast_type(),
-//             UserDefinedTypeName::ContractTypeName(ast) => ast.get_ast_type(),
-//             UserDefinedTypeName::AddressTypeName(ast) => ast.get_ast_type(),
-//             UserDefinedTypeName::AddressPayableTypeName(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 #[enum_dispatch]
 pub trait UserDefinedTypeNameBaseRef: TypeNameBaseRef {
     fn user_defined_type_name_base_ref(&self) -> &UserDefinedTypeNameBase;
@@ -6047,7 +5042,14 @@ impl EnumValueTypeName {
             .unwrap()
             .implicitly_convertible_to(expected)
             || (is_instance(expected, ASTType::EnumTypeName)
-                && expected.try_as_user_defined_type_name_ref().unwrap().try_as_enum_type_name_ref().unwrap().user_defined_type_name_base_ref().names.clone()
+                && expected
+                    .try_as_user_defined_type_name_ref()
+                    .unwrap()
+                    .try_as_enum_type_name_ref()
+                    .unwrap()
+                    .user_defined_type_name_base_ref()
+                    .names
+                    .clone()
                     >= self.user_defined_type_name_base.names
                         [..self.user_defined_type_name_base.names.len() - 1]
                         .to_vec())
@@ -6221,10 +5223,7 @@ pub enum ExprUnion {
     I32(i32),
     Expression(Expression),
 }
-// pub fn test() {
-//     let p = Array::Proof(Proof::new());
-//     p.array_base_ref();
-// }
+
 #[enum_dispatch(
     IntoAST,
     ASTInstanceOf,
@@ -6244,33 +5243,7 @@ pub enum Array {
     Proof(Proof),
     Array(ArrayBase),
 }
-// impl Array {
-//     pub fn value_type(&self) -> Option<AnnotatedTypeName> {
-//         None
-//     }
-// }
-// impl IntoAST for Array {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Array::CipherText(ast) => ast.into_ast(),
-//             Array::Randomness(ast) => ast.into_ast(),
-//             Array::Key(ast) => ast.into_ast(),
-//             Array::Proof(ast) => ast.into_ast(),
-//             Array::Array(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for Array {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Array::CipherText(ast) => ast.get_ast_type(),
-//             Array::Randomness(ast) => ast.get_ast_type(),
-//             Array::Key(ast) => ast.get_ast_type(),
-//             Array::Proof(ast) => ast.get_ast_type(),
-//             Array::Array(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
+
 impl ASTChildren for ArrayBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(AST::AnnotatedTypeName(self.value_type.clone()));
@@ -6603,7 +5576,7 @@ impl TupleType {
                                 .try_as_type_name()
                                 .unwrap(),
                             Some(Expression::DummyAnnotation(DummyAnnotation::new()).into_ast()),
-                            String::from("NON_HOMOMORPHIC"),
+                            Homomorphism::non_homomorphic(),
                         )
                     })
                     .collect(),
@@ -6620,7 +5593,7 @@ impl TupleType {
                         .collect(),
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             )))
         } else if let CombinedPrivacyUnion::Vec(privacy_annotation) = &privacy_annotation {
             assert!(self.types.len() == privacy_annotation.len());
@@ -6633,7 +5606,7 @@ impl TupleType {
                         .collect(),
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             )))
         } else {
             None
@@ -6721,7 +5694,7 @@ impl AnnotatedTypeName {
                 } else {
                     false
                 })
-                || homomorphism == String::from("NON_HOMOMORPHIC"),
+                || homomorphism == Homomorphism::non_homomorphic(),
             "Public type name cannot be homomorphic (got {:?})",
             HOMOMORPHISM_STORE.lock().unwrap().get(&homomorphism)
         );
@@ -6814,9 +5787,9 @@ impl AnnotatedTypeName {
         if let Some(AST::Expression(p)) = &self.privacy_annotation.as_ref().map(|pa| *pa.clone()) {
             p.is_me_expr()
                 || (analysis.is_some()
-                    && analysis.clone().unwrap().same_partition(
+                    && analysis.as_ref().unwrap().same_partition(
                         &p.privacy_annotation_label().unwrap().into(),
-                        &AST::Expression(Expression::MeExpr(MeExpr::new())).into(),
+                        &MeExpr::new().into_ast(),
                     ))
         } else {
             false
@@ -6827,21 +5800,13 @@ impl AnnotatedTypeName {
     }
 
     pub fn is_address(&self) -> bool {
-        if let TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(_))
-        | TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(_)) =
-            *self.type_name
-        {
-            true
-        } else {
-            false
-        }
+        is_instances(
+            &*self.type_name,
+            vec![ASTType::AddressTypeName, ASTType::AddressPayableTypeName],
+        )
     }
     pub fn is_cipher(&self) -> bool {
-        if let TypeName::Array(Array::CipherText(_)) = *self.type_name {
-            true
-        } else {
-            false
-        }
+        is_instance(&*self.type_name, ASTType::CipherText)
     }
     pub fn with_homomorphism(&self, hom: String) -> Self {
         AnnotatedTypeName::new(
@@ -6851,18 +5816,18 @@ impl AnnotatedTypeName {
         )
     }
     pub fn uint_all() -> Self {
-        AnnotatedTypeName::new(TypeName::uint_type(), None, String::from("NON_HOMOMORPHIC"))
+        AnnotatedTypeName::new(TypeName::uint_type(), None, Homomorphism::non_homomorphic())
     }
 
     pub fn bool_all() -> Self {
-        AnnotatedTypeName::new(TypeName::bool_type(), None, String::from("NON_HOMOMORPHIC"))
+        AnnotatedTypeName::new(TypeName::bool_type(), None, Homomorphism::non_homomorphic())
     }
 
     pub fn address_all() -> Self {
         AnnotatedTypeName::new(
             TypeName::address_type(),
             None,
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
 
@@ -6870,7 +5835,7 @@ impl AnnotatedTypeName {
         AnnotatedTypeName::new(
             TypeName::cipher_type(plain_type, hom.unwrap()),
             None,
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
 
@@ -6878,7 +5843,7 @@ impl AnnotatedTypeName {
         AnnotatedTypeName::new(
             TypeName::key_type(crypto_params),
             None,
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
 
@@ -6886,21 +5851,21 @@ impl AnnotatedTypeName {
         AnnotatedTypeName::new(
             TypeName::proof_type(),
             None,
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
     pub fn all(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
             type_name,
             Some(Expression::all_expr().into_ast()),
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
     pub fn me(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
             type_name,
             Some(Expression::me_expr(None).into_ast()),
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         )
     }
     pub fn array_all(value_type: AnnotatedTypeName, length: Vec<i32>) -> Self {
@@ -6909,7 +5874,7 @@ impl AnnotatedTypeName {
             t = AnnotatedTypeName::new(
                 TypeName::Array(Array::Array(ArrayBase::new(t, Some(ExprUnion::I32(l))))),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             );
         }
         t
@@ -7304,7 +6269,7 @@ impl ConstructorOrFunctionDefinition {
                     return_parameters,
                 )),
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             )),
             called_functions: BTreeSet::new(),
             is_recursive: false,
@@ -7381,7 +6346,7 @@ impl ConstructorOrFunctionDefinition {
                 self.return_parameters.clone(),
             )),
             None,
-            String::from("NON_HOMOMORPHIC"),
+            Homomorphism::non_homomorphic(),
         ));
         // AnnotatedTypeName(FunctionTypeName(&self.parameters, self.modifiers, self.return_parameters));
     }
@@ -7393,7 +6358,7 @@ impl ConstructorOrFunctionDefinition {
             Some(AnnotatedTypeName::new(
                 t,
                 None,
-                String::from("NON_HOMOMORPHIC"),
+                Homomorphism::non_homomorphic(),
             ))
         } else {
             None
@@ -7479,16 +6444,6 @@ impl StateVariableDeclaration {
             expr,
         }
     }
-    // pub fn is_final(&self) -> bool {
-    //     self.identifier_declaration_base
-    //         .keywords
-    //         .contains(&String::from("final"))
-    // }
-    // pub fn is_constant(&self) -> bool {
-    //     self.identifier_declaration_base
-    //         .keywords
-    //         .contains(&String::from("constant"))
-    // }
 }
 impl ASTChildren for StateVariableDeclaration {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -7850,15 +6805,20 @@ impl InstanceTarget {
     }
 
     pub fn privacy(&self) -> Option<AST> {
-    if self.key().is_none()  && !is_instance(&*self
-            .target()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .annotated_type()
-            .as_ref()
-            .unwrap()
-            .type_name,ASTType::Mapping){
+        if self.key().is_none()
+            && !is_instance(
+                &*self
+                    .target()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name,
+                ASTType::Mapping,
+            )
+        {
             self.target()
                 .unwrap()
                 .try_as_expression_ref()
@@ -7873,8 +6833,8 @@ impl InstanceTarget {
                 .unwrap()
                 .privacy_annotation_label()
                 .map(|x| x.into_ast())
-        }else{
-let t = self
+        } else {
+            let t = self
                 .target()
                 .unwrap()
                 .try_as_expression_ref()
@@ -7884,7 +6844,7 @@ let t = self
                 .unwrap()
                 .zkay_type()
                 .type_name;
-assert!(is_instance(&*t,ASTType::Mapping));
+            assert!(is_instance(&*t, ASTType::Mapping));
 
             if t.try_as_mapping_ref().unwrap().has_key_label() {
                 self.key()
@@ -7894,8 +6854,11 @@ assert!(is_instance(&*t,ASTType::Mapping));
                     .privacy_annotation_label()
                     .map(|x| x.into_ast())
             } else {
-                t.try_as_mapping_ref().unwrap().value_type
-                    .privacy_annotation.as_ref()
+                t.try_as_mapping_ref()
+                    .unwrap()
+                    .value_type
+                    .privacy_annotation
+                    .as_ref()
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
@@ -7903,7 +6866,6 @@ assert!(is_instance(&*t,ASTType::Mapping));
                     .map(|x| x.into_ast())
             }
         }
-        
     }
 
     pub fn in_scope_at(&self, ast: AST) -> bool {
@@ -9058,7 +8020,6 @@ impl CodeVisitor {
         ret + ";"
     }
 
-    // @staticmethod
     fn contract_definition_to_str(
         idf: Identifier,
         state_vars: Vec<String>,

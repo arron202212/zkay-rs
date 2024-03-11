@@ -774,18 +774,42 @@ impl ZkayTransformer {
                 offset,
             ));
             if is_instance(&*s.t, ASTType::CipherText)
-                && s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.is_symmetric_cipher()
+                && s.t
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_cipher_text_ref()
+                    .unwrap()
+                    .crypto_params
+                    .is_symmetric_cipher()
             // Assign sender field to user-encrypted values if necessary
             // Assumption: s.t.crypto_params.key_len == 1 for all symmetric ciphers
             {
                 assert!(
-                    me_key_idx.contains_key(&s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params),
+                    me_key_idx.contains_key(
+                        &s.t.try_as_array_ref()
+                            .unwrap()
+                            .try_as_cipher_text_ref()
+                            .unwrap()
+                            .crypto_params
+                    ),
                     "Symmetric cipher but did not request me key"
                 );
-                let key_idx = me_key_idx[&s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params];
+                let key_idx = me_key_idx[&s
+                    .t
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_cipher_text_ref()
+                    .unwrap()
+                    .crypto_params];
                 let sender_key =
                     LocationExpr::IdentifierExpr(in_var.clone()).index(ExprUnion::I32(key_idx));
-                let cipher_payload_len = s.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.cipher_payload_len();
+                let cipher_payload_len =
+                    s.t.try_as_array_ref()
+                        .unwrap()
+                        .try_as_cipher_text_ref()
+                        .unwrap()
+                        .crypto_params
+                        .cipher_payload_len();
                 deserialize_stmts.push(
                     LocationExpr::IndexExpr(
                         s.get_loc_expr(None)
@@ -1026,8 +1050,13 @@ impl ZkayTransformer {
             .map(|p| {
                 p.identifier_declaration_base
                     .annotated_type
-                    .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
-                    .crypto_params.clone()
+                    .type_name
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_cipher_text_ref()
+                    .unwrap()
+                    .crypto_params
+                    .clone()
             })
             .collect();
         let mut stmts = vec![];
@@ -1168,7 +1197,11 @@ impl ZkayTransformer {
                 let cipher_payload_len = p
                     .identifier_declaration_base
                     .annotated_type
-                    .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
+                    .type_name
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_cipher_text_ref()
+                    .unwrap()
                     .crypto_params
                     .cipher_payload_len();
                 let assign_stmt = in_arr_var
@@ -1203,9 +1236,22 @@ impl ZkayTransformer {
                     .type_name
                     .clone();
                 assert!(is_instance(&*c, ASTType::CipherText));
-                if c.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.is_symmetric_cipher() {
-                    let sender_key = LocationExpr::IdentifierExpr(in_arr_var.clone())
-                        .index(ExprUnion::I32(me_key_idx[&c.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params]));
+                if c.try_as_array_ref()
+                    .unwrap()
+                    .try_as_cipher_text_ref()
+                    .unwrap()
+                    .crypto_params
+                    .is_symmetric_cipher()
+                {
+                    let sender_key =
+                        LocationExpr::IdentifierExpr(in_arr_var.clone()).index(ExprUnion::I32(
+                            me_key_idx[&c
+                                .try_as_array_ref()
+                                .unwrap()
+                                .try_as_cipher_text_ref()
+                                .unwrap()
+                                .crypto_params],
+                        ));
                     let idf = IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(*p.identifier_declaration_base.idf.clone()),
                         None,

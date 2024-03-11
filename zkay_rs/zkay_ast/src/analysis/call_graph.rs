@@ -8,8 +8,9 @@
 
 use crate::ast::{
     is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ExpressionBaseMutRef,
-    ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST,
-    LocationExpr, LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,FunctionCallExprBaseRef,
+    ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
+    WhileStatement, AST,
 };
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 

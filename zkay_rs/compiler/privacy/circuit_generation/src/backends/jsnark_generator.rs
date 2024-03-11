@@ -136,10 +136,48 @@ impl JsnarkVisitor
         assert!(stmt.pk.t.is_key());
         assert!(stmt.rnd.t.is_randomness());
         assert!(
-            stmt.cipher.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params == stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params
-                && stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params == stmt.rnd.t.try_as_array_ref().unwrap().try_as_randomness_ref().unwrap().crypto_params
+            stmt.cipher
+                .t
+                .try_as_array_ref()
+                .unwrap()
+                .try_as_cipher_text_ref()
+                .unwrap()
+                .crypto_params
+                == stmt
+                    .pk
+                    .t
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_key_ref()
+                    .unwrap()
+                    .crypto_params
+                && stmt
+                    .pk
+                    .t
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_key_ref()
+                    .unwrap()
+                    .crypto_params
+                    == stmt
+                        .rnd
+                        .t
+                        .try_as_array_ref()
+                        .unwrap()
+                        .try_as_randomness_ref()
+                        .unwrap()
+                        .crypto_params
         );
-        let backend = stmt.pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params.crypto_name.clone();
+        let backend = stmt
+            .pk
+            .t
+            .try_as_array_ref()
+            .unwrap()
+            .try_as_key_ref()
+            .unwrap()
+            .crypto_params
+            .crypto_name
+            .clone();
 
         format!(
             r#"check{}("{backend}", "{}", "{}", "{}", "{}");"#,
@@ -153,8 +191,33 @@ impl JsnarkVisitor
     pub fn visitCircSymmEncConstraint(&self, stmt: CircSymmEncConstraint) -> String {
         assert!(stmt.iv_cipher.t.is_cipher());
         assert!(stmt.other_pk.t.is_key());
-        assert!(stmt.iv_cipher.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params == stmt.other_pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params);
-        let backend = stmt.other_pk.t.try_as_array_ref().unwrap().try_as_key_ref().unwrap().crypto_params.crypto_name.clone();
+        assert!(
+            stmt.iv_cipher
+                .t
+                .try_as_array_ref()
+                .unwrap()
+                .try_as_cipher_text_ref()
+                .unwrap()
+                .crypto_params
+                == stmt
+                    .other_pk
+                    .t
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_key_ref()
+                    .unwrap()
+                    .crypto_params
+        );
+        let backend = stmt
+            .other_pk
+            .t
+            .try_as_array_ref()
+            .unwrap()
+            .try_as_key_ref()
+            .unwrap()
+            .crypto_params
+            .crypto_name
+            .clone();
         format!(
             r#"checkSymm{}("{backend}", "{}", "{}", "{}");"#,
             if stmt.is_dec { "Dec" } else { "Enc" },
@@ -259,7 +322,13 @@ impl JsnarkVisitor
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap()
+                    .type_name
+                    .try_as_elementary_type_name_ref()
+                    .unwrap()
+                    .try_as_number_type_name_ref()
+                    .unwrap()
+                    .try_as_number_literal_type_ref()
+                    .unwrap()
                     .value()
                     .to_string()
             }
@@ -285,7 +354,13 @@ impl JsnarkVisitor
                         .user_config
                         .get_crypto_params(&homomorphism)
                         .crypto_name;
-                    let public_key_name = ast.public_key().as_ref().unwrap().identifier_base.name.clone();
+                    let public_key_name = ast
+                        .public_key()
+                        .as_ref()
+                        .unwrap()
+                        .identifier_base
+                        .name
+                        .clone();
 
                     args = args
                         .iter()
@@ -399,7 +474,15 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String>
 
     for pub_input in circuit.input_idfs() {
         input_init_stmts.push(if pub_input.t.is_key() {
-            let backend = pub_input.t.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap().crypto_params.crypto_name.clone();
+            let backend = pub_input
+                .t
+                .try_as_array_ref()
+                .unwrap()
+                .try_as_cipher_text_ref()
+                .unwrap()
+                .crypto_params
+                .crypto_name
+                .clone();
             format!(
                 r#"addK("{backend}", "{}", {});"#,
                 pub_input.identifier_base.name,

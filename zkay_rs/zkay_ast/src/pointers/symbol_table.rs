@@ -8,16 +8,16 @@
 
 // from typing import Tuple, Dict, Union
 use crate::ast::{
-    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType,
+    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTType,
     AnnotatedTypeName, Array, Block, Comment, ConstructorOrFunctionDefinition, ContractDefinition,
     EnumDefinition, EnumValue, Expression, ExpressionBaseProperty, ForStatement, Identifier,
     IdentifierBase, IdentifierBaseProperty, IdentifierDeclaration,
     IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST, LocationExpr,
     LocationExprBaseProperty, Mapping, MemberAccessExpr, NamespaceDefinition, SimpleStatement,
     SourceUnit, Statement, StatementList, StatementListBaseProperty, StructDefinition,
-    TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,UserDefinedTypeNameBaseProperty,ASTBaseRef,UserDefinedTypeNameBaseRef
-,};
+    TupleOrLocationExpr, TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseProperty,
+    UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
+};
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
@@ -312,7 +312,7 @@ impl SymbolTableLinker {
     pub fn _find_next_decl(ast: AST, name: String) -> (Option<AST>, Option<AST>) {
         let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
         while let Some(_ancestor) = ancestor {
-            if let Some(nameo) = _ancestor.names().get(&name) {
+            if let Some(nameo) = _ancestor.ast_base_ref().unwrap().names().get(&name) {
                 let decl = nameo.parent();
                 if !is_instance(
                     &**decl
@@ -468,7 +468,11 @@ impl SymbolTableLinker {
     pub fn in_scope_at(target_idf: &Identifier, ast: AST) -> bool {
         let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
         while let Some(_ancestor) = ancestor {
-            if let Some(name) = _ancestor.names().get(target_idf.name())
+            if let Some(name) = _ancestor
+                .ast_base_ref()
+                .unwrap()
+                .names()
+                .get(target_idf.name())
             // found name
             {
                 if name == target_idf {
@@ -577,7 +581,12 @@ impl SymbolTableLinker {
             } else if let TypeName::UserDefinedTypeName(ref mut t) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
-                    if let Some(idf) = target.names().get(ast.member.name()) {
+                    if let Some(idf) = target
+                        .ast_base_ref()
+                        .unwrap()
+                        .names()
+                        .get(ast.member.name())
+                    {
                         ast.location_expr_base.target = idf.parent().clone();
                     }
                 } else {

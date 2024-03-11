@@ -13,12 +13,12 @@ use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS
 
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTBaseMutRef,
-    ASTBaseProperty, ASTBaseRef, ASTType, AllExpr, AnnotatedTypeName, Array, AssignmentStatement,
-    AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BooleanLiteralType,
-    BuiltinFunction, CombinedPrivacyUnion, ConstructorOrFunctionDefinition, ContractDefinition,
-    ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue, EnumValueTypeName, Expression,
-    ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef, ForStatement,
-    FunctionCallExpr, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
+    ASTBaseProperty, ASTBaseRef, ASTType, AllExpr, AnnotatedTypeName, Array, ArrayBaseProperty,
+    AssignmentStatement, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty,
+    BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion, ConstructorOrFunctionDefinition,
+    ContractDefinition, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue,
+    EnumValueTypeName, Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef,
+    ForStatement, FunctionCallExpr, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
     FunctionCallExprBaseRef, FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseRef,
     IdentifierExpr, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion,
     LocationExpr, LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
@@ -26,7 +26,7 @@ use zkay_ast::ast::{
     ReclassifyExpr, ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty,
     RehomExpr, RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef,
     StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    VariableDeclarationStatement, WhileStatement, AST,UserDefinedTypeNameBaseProperty,ArrayBaseProperty,
+    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::AstVisitor;
@@ -76,7 +76,12 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .elements
                     .len()
-                    != expected_type.type_name.try_as_tuple_type_ref().unwrap().types.len()
+                    != expected_type
+                        .type_name
+                        .try_as_tuple_type_ref()
+                        .unwrap()
+                        .types
+                        .len()
             {
                 assert!(
                     false,
@@ -87,7 +92,9 @@ impl TypeCheckVisitor {
                 )
             }
             let exprs: Vec<_> = expected_type
-                .type_name.try_as_tuple_type_ref().unwrap()
+                .type_name
+                .try_as_tuple_type_ref()
+                .unwrap()
                 .types
                 .iter()
                 .zip(
@@ -402,7 +409,19 @@ impl TypeCheckVisitor {
         let out_t = if arg_t == Some(TypeName::Literal(String::from("lit"))) {
             let res = func.op_func(
                 args.iter()
-                    .map(|arg| arg.annotated_type().as_ref().unwrap().type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap().value())
+                    .map(|arg| {
+                        arg.annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .type_name
+                            .try_as_elementary_type_name_ref()
+                            .unwrap()
+                            .try_as_number_type_name_ref()
+                            .unwrap()
+                            .try_as_number_literal_type_ref()
+                            .unwrap()
+                            .value()
+                    })
                     .collect(),
             );
             let out_t = match res {
@@ -422,9 +441,25 @@ impl TypeCheckVisitor {
                 }
             };
             if func.is_eq() {
-                arg_t = t1.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap()
+                arg_t = t1
+                    .try_as_elementary_type_name_ref()
+                    .unwrap()
+                    .try_as_number_type_name_ref()
+                    .unwrap()
+                    .try_as_number_literal_type_ref()
+                    .unwrap()
                     .to_abstract_type()
-                    .combined_type(t2.unwrap().try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap().to_abstract_type(), true);
+                    .combined_type(
+                        t2.unwrap()
+                            .try_as_elementary_type_name_ref()
+                            .unwrap()
+                            .try_as_number_type_name_ref()
+                            .unwrap()
+                            .try_as_number_literal_type_ref()
+                            .unwrap()
+                            .to_abstract_type(),
+                        true,
+                    );
             }
             Some(out_t)
         } else if func.output_type() == Some(TypeName::bool_type()) {
@@ -456,7 +491,20 @@ impl TypeCheckVisitor {
                             args[1]
                         )
                     }
-                    if args[1].annotated_type().as_ref().unwrap().type_name.try_as_elementary_type_name_ref().unwrap().try_as_number_type_name_ref().unwrap().try_as_number_literal_type_ref().unwrap().value() < 0 {
+                    if args[1]
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name
+                        .try_as_elementary_type_name_ref()
+                        .unwrap()
+                        .try_as_number_type_name_ref()
+                        .unwrap()
+                        .try_as_number_literal_type_ref()
+                        .unwrap()
+                        .value()
+                        < 0
+                    {
                         assert!(false, "Cannot shift by negative amount {:?}", args[1]);
                     }
                 }
@@ -569,7 +617,8 @@ impl TypeCheckVisitor {
             }
         }
 
-        let homomorphic_func = func.select_homomorphic_overload(ast.args(), ast.to_expr().analysis());
+        let homomorphic_func =
+            func.select_homomorphic_overload(ast.args(), ast.to_expr().analysis());
         if homomorphic_func.is_none() {
             assert!(
                 false,
@@ -956,9 +1005,17 @@ impl TypeCheckVisitor {
             ast.function_call_expr_base_mut_ref().args = args;
 
             //Set expression type to return type
-            ast.expression_base_mut_ref().annotated_type =
-                Some(if ft.try_as_function_type_name_ref().unwrap().return_parameters.len() == 1 {
-                    *ft.try_as_function_type_name_ref().unwrap().return_parameters[0]
+            ast.expression_base_mut_ref().annotated_type = Some(
+                if ft
+                    .try_as_function_type_name_ref()
+                    .unwrap()
+                    .return_parameters
+                    .len()
+                    == 1
+                {
+                    *ft.try_as_function_type_name_ref()
+                        .unwrap()
+                        .return_parameters[0]
                         .identifier_declaration_base
                         .annotated_type
                         .clone()
@@ -966,7 +1023,9 @@ impl TypeCheckVisitor {
                     //TODO maybe not None label in the future
                     AnnotatedTypeName::new(
                         TypeName::TupleType(TupleType::new(
-                            ft.try_as_function_type_name_ref().unwrap().return_parameters
+                            ft.try_as_function_type_name_ref()
+                                .unwrap()
+                                .return_parameters
                                 .iter()
                                 .map(|t| *t.identifier_declaration_base.annotated_type.clone())
                                 .collect(),
@@ -974,7 +1033,8 @@ impl TypeCheckVisitor {
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     )
-                });
+                },
+            );
         } else {
             assert!(false, "Invalid function call{:?}", ast);
         }
@@ -1407,10 +1467,13 @@ impl TypeCheckVisitor {
         if is_instance(&*ast.type_name, ASTType::UserDefinedTypeNameBase) {
             assert!(
                 is_instance(
-                    &**ast.type_name
+                    &**ast
+                        .type_name
                         .try_as_user_defined_type_name_ref()
                         .unwrap()
-                        .target().as_ref().unwrap(),
+                        .target()
+                        .as_ref()
+                        .unwrap(),
                     ASTType::EnumDefinition
                 ),
                 "Unsupported use of user-defined type {:?}",
@@ -1420,8 +1483,11 @@ impl TypeCheckVisitor {
                 .type_name
                 .try_as_user_defined_type_name_ref()
                 .unwrap()
-                .target().as_ref()
-                .unwrap().try_as_namespace_definition_ref().unwrap()
+                .target()
+                .as_ref()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
                 .try_as_enum_definition_ref()
                 .unwrap()
                 .annotated_type

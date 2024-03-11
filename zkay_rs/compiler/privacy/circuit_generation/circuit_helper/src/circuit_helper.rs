@@ -445,8 +445,13 @@ where
             param
                 .identifier_declaration_base
                 .annotated_type
-                .type_name.try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()
-                .crypto_params.clone(),
+                .type_name
+                .try_as_array_ref()
+                .unwrap()
+                .try_as_cipher_text_ref()
+                .unwrap()
+                .crypto_params
+                .clone(),
             cipher_idf,
             true,
             false,
@@ -459,9 +464,13 @@ where
                 expr.annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name.try_as_array_ref().unwrap().try_as_randomness_ref().unwrap()
-                    .crypto_params.clone()
-                    ,
+                    .type_name
+                    .try_as_array_ref()
+                    .unwrap()
+                    .try_as_randomness_ref()
+                    .unwrap()
+                    .crypto_params
+                    .clone(),
             ),
             None,
         );
@@ -824,10 +833,17 @@ where
                     .iter()
                     .filter_map(
                         |p| if p.identifier_declaration_base.annotated_type.is_cipher() {
-                            Some(p.identifier_declaration_base
-                                .annotated_type
-                                .type_name.try_as_array_ref().unwrap().try_as_key_ref().unwrap()
-                                .crypto_params.clone())
+                            Some(
+                                p.identifier_declaration_base
+                                    .annotated_type
+                                    .type_name
+                                    .try_as_array_ref()
+                                    .unwrap()
+                                    .try_as_key_ref()
+                                    .unwrap()
+                                    .crypto_params
+                                    .clone(),
+                            )
                         } else {
                             None
                         }
