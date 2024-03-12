@@ -4,7 +4,7 @@
 // import os
 
 // from argcomplete.completers import FilesCompleter, DirectoriesCompleter
-
+mod tests;
 // from zkay.config_user import UserConfig
 pub mod zkay_frontend;
 #[macro_use]

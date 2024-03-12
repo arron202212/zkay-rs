@@ -27,6 +27,7 @@ circuit_helper={workspace=true}
  zkay-transaction={workspace = true }
  zkay-utils={workspace = true }
  zkay_ast={workspace = true }
+ zkay-examples={workspace = true }
  ast-builder={workspace = true }
 clap = { workspace = true }
 lazy_static = { workspace = true }

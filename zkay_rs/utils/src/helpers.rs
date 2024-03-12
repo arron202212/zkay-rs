@@ -10,6 +10,7 @@
 // import hashlib
 // from typing import Optional, List
 // use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
+use regex::Regex;
 use rs_sha512::{HasherContext, Sha512State};
 use std::fs::File;
 use std::hash::BuildHasher;
@@ -17,7 +18,6 @@ use std::hash::Hasher;
 use std::io::prelude::*;
 use std::io::{BufRead, BufReader, Error, Read, Write};
 use std::path::{Path, PathBuf};
-use regex::Regex;
 const WS_PATTERN: &str = r"[ \t\r\n\u000C]";
 const ID_PATTERN: &str = r"[a-zA-Z\$_][a-zA-Z0-9\$_]*";
 pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) -> String {
@@ -81,16 +81,20 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
 //     ext_idx = len(filename) if ext_idx == -1 else ext_idx
 //     return filename[:ext_idx]
 
-pub fn get_contract_names(sol_filename: &str) -> Vec<String>
-  {  
-        let mut f = File::open(sol_filename).expect("");
-        // with open(sol_filename) as f
-        // s = f.read()
-        // return [m.group(1) for m in matches.ite
-        let mut s = String::new();
-        f.read_to_string(&mut s).unwrap();
-       Regex::new(&format!(r"contract{WS_PATTERN}*({ID_PATTERN}){WS_PATTERN}*{{"))
-                .unwrap().captures_iter(&s).map(|c|c.get(1).unwrap().as_str().to_owned()).collect()
+pub fn get_contract_names(sol_filename: &str) -> Vec<String> {
+    let mut f = File::open(sol_filename).expect("");
+    // with open(sol_filename) as f
+    // s = f.read()
+    // return [m.group(1) for m in matches.ite
+    let mut s = String::new();
+    f.read_to_string(&mut s).unwrap();
+    Regex::new(&format!(
+        r"contract{WS_PATTERN}*({ID_PATTERN}){WS_PATTERN}*\{{"
+    ))
+    .unwrap()
+    .captures_iter(&s)
+    .map(|c| c.get(1).unwrap().as_str().to_owned())
+    .collect()
 }
 
 // pub fn prepend_to_lines(text: str, pre: str)

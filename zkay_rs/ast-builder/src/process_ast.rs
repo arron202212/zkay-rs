@@ -52,7 +52,7 @@ bitflags! {
 #[warn(dead_code)]
 impl ASTFlags {
     pub fn new(flag: Option<u32>) -> Self {
-        Self(flag.unwrap())
+        Self(flag.unwrap_or(0x1f))
     }
     // pub fn clear(&mut self) -> &mut ASTFlags {
     //     self
