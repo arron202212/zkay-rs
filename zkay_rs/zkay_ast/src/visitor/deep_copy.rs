@@ -8,7 +8,7 @@
 
 use crate::ast::{
     AnnotatedTypeName, Expression, ExpressionBaseProperty, IntoAST, Statement, UserDefinedTypeName,
-    AST,
+    AST,ASTType
 };
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
@@ -144,15 +144,13 @@ impl AstVisitor for DeepCopyVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl DeepCopyVisitor {
     pub fn new(with_types: bool, with_analysis: bool) -> Self

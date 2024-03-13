@@ -1,7 +1,8 @@
 // use  zkay.tests.zkay_unit_test::ZkayTestCase
 use zkay_ast::ast::{
-    AssignmentStatement, BooleanLiteralExpr, BuiltinFunction, FunctionCallExpr, Identifier,
-    IdentifierExpr, NumberLiteralExpr, RequireStatement,FunctionCallExprBase,
+    ASTBaseProperty, ASTChildren, AssignmentStatementBase, BooleanLiteralExpr, BuiltinFunction,
+    FunctionCallExprBase, IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression,
+    NumberLiteralExpr, RequireStatement,
 };
 
 #[cfg(test)]
@@ -11,20 +12,20 @@ mod tests {
     #[test]
     fn test_require() {
         let e = BooleanLiteralExpr::new(true);
-        let r = RequireStatement::new(e.into_expr());
+        let r = RequireStatement::new(e.into_expr(), None);
         assert_eq!(&r.to_string(), "require(true);");
     }
     #[test]
     fn test_assignment_statement() {
-        let i = Identifier::new("x");
-        let lhs = IdentifierExpr::new(i);
+        // let i = Identifier::identifier("x");
+        let lhs = IdentifierExpr::new(IdentifierExprUnion::String(String::from("x")), None);
         let rhs = BooleanLiteralExpr::new(true);
-        let a = AssignmentStatement::new(lhs, rhs);
-        assert!(a.is_some());
+        let mut a = AssignmentStatementBase::new(Some(lhs.to_ast()), Some(rhs.to_expr()), None);
+        // assert!(a.is_some());
         assert_eq!(a.to_string(), "x = true;");
-        assert_eq!(a.children(), vec![lhs, rhs]);
-        assert!(a.names.is_empty());
-        assert!(a.parent.is_none());
+        assert_eq!(a.children(), vec![lhs.into_ast(), rhs.into_ast()]);
+        assert!(a.names().is_empty());
+        assert!(a.parent().is_none());
     }
     #[test]
     fn test_builtin_arity() {
@@ -35,9 +36,13 @@ mod tests {
     fn test_builtin_code() {
         let f = BuiltinFunction::new("+");
         let c = FunctionCallExprBase::new(
-            f,
-            vec![NumberLiteralExpr::new(0,false), NumberLiteralExpr::new(0,false)],
+            f.into_expr(),
+            vec![
+                NumberLiteralExpr::new(0, false).into_expr(),
+                NumberLiteralExpr::new(0, false).into_expr(),
+            ],
+            None,
         );
-        assert_eq!(c.code(), "0 + 0");
+        assert_eq!(c.to_ast().code(), "0 + 0");
     }
 }

@@ -49,15 +49,13 @@ impl AstVisitor for DirectCanBePrivateDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl DirectCanBePrivateDetector {
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
@@ -161,15 +159,13 @@ impl AstVisitor for IndirectCanBePrivateDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl IndirectCanBePrivateDetector {
     pub fn visitConstructorOrFunctionDefinition(
@@ -204,15 +200,13 @@ impl AstVisitor for CircuitComplianceChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl CircuitComplianceChecker {
     // pub fn __init__(self)
@@ -408,15 +402,13 @@ impl AstVisitor for PrivateSetter {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl PrivateSetter {
     // pub fn __init__(self)
@@ -486,15 +478,13 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl NonstaticOrIncompatibilityDetector {
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {

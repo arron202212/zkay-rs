@@ -46,15 +46,13 @@ impl AstVisitor for SideEffectsDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
@@ -113,15 +111,13 @@ impl AstVisitor for DirectModificationDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
@@ -220,15 +216,13 @@ impl AstVisitor for IndirectModificationDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl IndirectModificationDetector {
     // pub fn __init__(self)
@@ -348,15 +342,13 @@ impl AstVisitor for EvalOrderUBChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl EvalOrderUBChecker {
     // @staticmethod

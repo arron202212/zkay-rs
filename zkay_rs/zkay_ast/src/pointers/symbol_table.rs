@@ -101,15 +101,13 @@ impl AstVisitor for SymbolTableFiller {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 // class SymbolTableFiller(AstVisitor)
 impl SymbolTableFiller {
@@ -298,15 +296,13 @@ impl AstVisitor for SymbolTableLinker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl SymbolTableLinker {
     pub fn _find_next_decl(ast: AST, name: String) -> (Option<AST>, Option<AST>) {

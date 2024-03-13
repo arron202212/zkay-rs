@@ -25,7 +25,7 @@ use zkay_config::{
     zk_print,
 };
 use zkay_crypto::params::CryptoParams;
-use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
+use zkay_derive::{impl_trait, impl_traits, ASTDebug, ASTKind, ImplBaseTrait};
 use zkay_utils::progress_printer::warn_print;
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
@@ -319,7 +319,6 @@ impl AST {
         let v = CodeVisitor::new(true);
         v.visit(&self)
     }
-
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
@@ -328,11 +327,109 @@ impl AST {
         }
         e == selfs
     }
-    pub fn name(&self) -> &'static str {
-        ""
-    }
-    pub fn bases(_child: &str) -> &'static str {
-        ""
+
+    pub fn bases(_child: ASTType) -> Option<ASTType> {
+        match _child {
+            ASTType::IdentifierBase
+            | ASTType::CommentBase
+            | ASTType::ExpressionBase
+            | ASTType::StatementBase
+            | ASTType::TypeNameBase
+            | ASTType::AnnotatedTypeName
+            | ASTType::IdentifierDeclarationBase
+            | ASTType::NamespaceDefinitionBase
+            | ASTType::EnumValue
+            | ASTType::SourceUnit
+            | ASTType::Pragma
+            | ASTType::VersionPragma
+            | ASTType::Modifier
+            | ASTType::Homomorphism => Some(ASTType::ASTBase),
+            ASTType::BlankLine => Some(ASTType::CommentBase),
+            ASTType::BuiltinFunction
+            | ASTType::FunctionCallExprBase
+            | ASTType::PrimitiveCastExpr
+            | ASTType::LiteralExprBase
+            | ASTType::TupleOrLocationExprBase
+            | ASTType::MeExpr
+            | ASTType::AllExpr
+            | ASTType::ReclassifyExpr
+            | ASTType::DummyAnnotation => Some(ASTType::ExpressionBase),
+            ASTType::NewExpr => Some(ASTType::FunctionCallExprBase),
+            ASTType::BooleanLiteralExpr
+            | ASTType::NumberLiteralExpr
+            | ASTType::StringLiteralExpr
+            | ASTType::ArrayLiteralExprBase => Some(ASTType::LiteralExprBase),
+            ASTType::KeyLiteralExpr => Some(ASTType::ArrayLiteralExprBase),
+            ASTType::TupleExpr | ASTType::LocationExprBase => {
+                Some(ASTType::TupleOrLocationExprBase)
+            }
+            ASTType::IdentifierExpr
+            | ASTType::MemberAccessExpr
+            | ASTType::IndexExpr
+            | ASTType::SliceExpr => Some(ASTType::LocationExprBase),
+            ASTType::ReclassifyExprBase | ASTType::RehomExpr | ASTType::EncryptionExpression => {
+                Some(ASTType::ReclassifyExprBase)
+            }
+            ASTType::HybridArgumentIdf => Some(ASTType::IdentifierBase),
+            ASTType::CircuitDirectiveStatementBase
+            | ASTType::IfStatement
+            | ASTType::WhileStatement
+            | ASTType::DoWhileStatement
+            | ASTType::ForStatement
+            | ASTType::BreakStatement
+            | ASTType::ContinueStatement
+            | ASTType::ReturnStatement
+            | ASTType::SimpleStatementBase
+            | ASTType::StatementListBase => Some(ASTType::StatementBase),
+            ASTType::CircuitComputationStatement | ASTType::EnterPrivateKeyStatement => {
+                Some(ASTType::CircuitDirectiveStatementBase)
+            }
+            ASTType::ExpressionStatement
+            | ASTType::RequireStatement
+            | ASTType::AssignmentStatementBase
+            | ASTType::VariableDeclarationStatement => Some(ASTType::SimpleStatementBase),
+            ASTType::CircuitInputStatement => Some(ASTType::AssignmentStatementBase),
+            ASTType::Block | ASTType::IndentBlock => Some(ASTType::StatementListBase),
+            ASTType::ElementaryTypeNameBase
+            | ASTType::UserDefinedTypeNameBase
+            | ASTType::Mapping
+            | ASTType::ArrayBase
+            | ASTType::TupleType
+            | ASTType::FunctionTypeName
+            | ASTType::Literal => Some(ASTType::TypeNameBase),
+            ASTType::NumberTypeNameBase | ASTType::BoolTypeName | ASTType::BooleanLiteralType => {
+                Some(ASTType::ElementaryTypeNameBase)
+            }
+            ASTType::NumberLiteralType | ASTType::IntTypeName | ASTType::UintTypeName => {
+                Some(ASTType::NumberTypeNameBase)
+            }
+            ASTType::EnumTypeName
+            | ASTType::EnumValueTypeName
+            | ASTType::StructTypeName
+            | ASTType::ContractTypeName
+            | ASTType::AddressTypeName
+            | ASTType::AddressPayableTypeName => Some(ASTType::UserDefinedTypeNameBase),
+            ASTType::CipherText | ASTType::Randomness | ASTType::Key | ASTType::Proof => {
+                Some(ASTType::ArrayBase)
+            }
+            ASTType::VariableDeclaration
+            | ASTType::Parameter
+            | ASTType::StateVariableDeclaration => Some(ASTType::IdentifierDeclarationBase),
+            ASTType::ConstructorOrFunctionDefinition
+            | ASTType::EnumDefinition
+            | ASTType::StructDefinition
+            | ASTType::ContractDefinition => Some(ASTType::NamespaceDefinitionBase),
+
+            ASTType::CircComment
+            | ASTType::CircIndentBlock
+            | ASTType::CircCall
+            | ASTType::CircVarDecl
+            | ASTType::CircGuardModification
+            | ASTType::CircEncConstraint
+            | ASTType::CircSymmEncConstraint
+            | ASTType::CircEqConstraint => Some(ASTType::NamespaceDefinitionBase),
+            _ => None,
+        }
     }
 }
 
@@ -687,11 +784,6 @@ impl ASTChildren for Expression {
     }
 }
 impl Expression {
-    pub fn code(&self) -> String {
-        let v = CodeVisitor::new(true);
-        v.visit(&self.to_ast())
-    }
-
     pub fn all_expr() -> Self {
         Expression::AllExpr(AllExpr::new())
     }
@@ -3873,7 +3965,9 @@ impl ASTChildren for ExpressionStatement {
     }
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTDebug, ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
+)]
 pub struct RequireStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub condition: Expression,
@@ -3947,6 +4041,7 @@ impl<T: AssignmentStatementBaseRef> AssignmentStatementBaseProperty for T {
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(
+    ASTDebug,
     ImplBaseTrait,
     ASTKind,
     Clone,
@@ -7063,15 +7158,13 @@ impl AstVisitor for CodeVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 type CodeVisitorReturn = String;
 impl CodeVisitor {

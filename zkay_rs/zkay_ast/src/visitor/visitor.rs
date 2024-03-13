@@ -10,7 +10,7 @@
 //     def __init__(self, traversal='post', log=False):
 //         self.traversal = traversal
 //         self.log = log
-use crate::ast::{ASTChildren, AST};
+use crate::ast::{ASTChildren, AST,ASTType};
 pub trait AstVisitor {
     type Return;
     fn visit(&self, ast: AST) -> Self::Return {
@@ -18,8 +18,8 @@ pub trait AstVisitor {
     }
     fn log(&self) -> bool;
     fn traversal(&self) -> &'static str;
-    fn has_attr(&self, name: &String) -> bool;
-    fn get_attr(&self, name: &String) -> Option<String>;
+    fn has_attr(&self, name: &ASTType) -> bool;
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return>;
     fn temper_result(&self) -> Self::Return;
     fn _visit_internal(&self, ast: AST) -> Option<Self::Return> {
         if self.log() {
@@ -32,9 +32,9 @@ pub trait AstVisitor {
         if self.traversal() == "post" {
             ret_children = Some(self.visit_children(&ast));
         }
-        let f = Some(self.try_call_visit_function("SourceUnit", &ast));
+        let f = self.get_visit_function(ASTType::SourceUnit, &ast);
         if f.is_some() {
-            ret = Some(f);
+            ret = f;
         } else if self.traversal() == "node-or-children" {
             ret_children = Some(self.visit_children(&ast));
         }
@@ -51,22 +51,20 @@ pub trait AstVisitor {
         }
     }
 
-    fn try_call_visit_function(&self, c: &str, ast: &AST) -> Option<Self::Return>
+    fn get_visit_function(&self, c: ASTType, ast: &AST) -> Option<Self::Return>
 // std::any::type_name::<Option<String>>(),
     {
-        let _visitor_function = c.to_owned(); // String::from("visit") +
-        let ret = Some(self.call_visit_function(ast));
-        if ret.is_some() {
-            return ret;
-        } else {
-            let f = self.try_call_visit_function(AST::bases(c), ast);
+        // let _visitor_function = c; // String::from("visit") +
+        if self.has_attr(&c) {
+            return self.get_attr(&c,ast);
+        } else if let Some(c)=AST::bases(c){
+            let f = self.get_visit_function(c, ast);
             if f.is_some() {
                 return f;
             }
         }
         None
     }
-    fn call_visit_function(&self, ast: &AST) -> Self::Return;
     fn visit_children(&self, ast: &AST) -> Self::Return {
         let mut ast = ast.clone();
         for c in ast.children() {

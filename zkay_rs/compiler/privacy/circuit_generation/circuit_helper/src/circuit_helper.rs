@@ -495,7 +495,7 @@ where
         // :return: Location expression which references the encrypted circuit result
         // """
     {
-        self.circ_indent_block(&expr.code());
+        self.circ_indent_block(&expr.to_ast().code());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
             .unwrap()
     }
@@ -895,7 +895,7 @@ where
         };
         let is_public = privacy == Some(Expression::all_expr().to_ast());
 
-        let expr_text = expr.code();
+        let expr_text = expr.to_ast().code();
         let input_expr = if let Some(AST::Expression(expr)) = self
             ._expr_trafo
             .as_ref()
@@ -1260,7 +1260,7 @@ where
                 .push(CircuitStatement::CircComment(CircComment::new(format!(
                     "ARG {}: {}",
                     param.identifier_declaration_base.idf.name(),
-                    arg.code()
+                    arg.to_ast().code()
                 ))));
             // with
             self.circ_indent_block("");
@@ -1440,7 +1440,7 @@ where
         //Handle if branch
         // with
         self._remapper.0.remap_scope(None);
-        let mut comment = CircComment::new(format!("if ({})", ast.condition.code()));
+        let mut comment = CircComment::new(format!("if ({})", ast.condition.to_ast().code()));
         self._phi
             .push(CircuitStatement::CircComment(comment.clone()));
         let cond = self._evaluate_private_expression(ast.condition.clone(), "");
@@ -2114,12 +2114,10 @@ where
                 None,
             );
         }
-        if stmt.is_some() {
             assert!(
-                false,
+                stmt.is_none(),
                 "stmt cannot be None if privacy is not guaranteed to be statically known"
-            )
-        }
+            );
 
         //privacy cannot be MeExpr (is in _static_owner_labels) or AllExpr (has no public key)
         assert!(is_instance(privacy, ASTType::IdentifierBase));
@@ -2141,7 +2139,7 @@ where
             self._in_name_factory
                 .base_name_factory
                 .get_new_name(&TypeName::key_type(crypto_params.clone()), false),
-            privacy.name()
+            privacy.try_as_identifier_ref().unwrap().name()
         );
         let (idf, get_key_stmt) =
             self.request_public_key(&crypto_params, privacy.clone().into(), &name);

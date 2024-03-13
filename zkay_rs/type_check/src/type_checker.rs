@@ -50,15 +50,13 @@ impl AstVisitor for TypeCheckVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl TypeCheckVisitor {
     pub fn get_rhs(
@@ -1182,7 +1180,7 @@ impl TypeCheckVisitor {
                     .instance_of(&ast.expr().annotated_type().as_ref().unwrap()),
             r#"Redundant "{}": Expression is already @{}{homomorphism}"{:?}"#,
             ast.func_name(),
-            ast.privacy().code(),
+            ast.privacy().to_ast().code(),
             ast
         );
         Self::check_for_invalid_private_type(ast.to_ast());

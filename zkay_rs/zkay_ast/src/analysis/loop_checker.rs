@@ -9,7 +9,7 @@
 // use type_check::type_exceptions::TypeException
 use crate::analysis::contains_private_checker::contains_private_expr;
 
-use crate::ast::{DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST};
+use crate::ast::{DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST,ASTType};
 
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -36,15 +36,13 @@ impl AstVisitor for LoopChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &String) -> bool {
-        self.get_attr(name).is_some()
+    fn has_attr(&self, name: &ASTType) -> bool{
+        false
     }
-    fn get_attr(&self, _name: &String) -> Option<String> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    fn call_visit_function(&self, _ast: &AST) -> Self::Return {
-        None
-    }
+    
 }
 impl LoopChecker {
     pub fn visitWhileStatement(self, ast: WhileStatement) {

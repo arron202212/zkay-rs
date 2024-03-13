@@ -44,6 +44,34 @@ impl ASTInstanceOf for {} {{
     panic!("no ident found")
 }
 
+#[proc_macro_derive(ASTDebug)]
+pub fn derive_ast_debug(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    let struct_name = it.next().unwrap().to_string();
+                    return format!(
+                        r#"
+impl std::fmt::Display for {} {{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result  {{
+        write!(f, "{{}}", self.to_ast().code())
+    }}
+}}
+                    "#,
+                        struct_name
+                    )
+                    .parse()
+                    .unwrap();
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("no ident found")
+}
+
 #[proc_macro_derive(ImplBaseTrait)]
 pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter();
