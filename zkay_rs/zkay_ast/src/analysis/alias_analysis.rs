@@ -21,7 +21,7 @@ use crate::visitor::visitor::AstVisitor;
 
 pub fn alias_analysis(ast: &AST) {
     let v = AliasAnalysisVisitor::new();
-    v.cond_analyzer.visit(ast.clone());
+    v.cond_analyzer.visit(ast);
 }
 
 struct AliasAnalysisVisitor {
@@ -40,7 +40,7 @@ impl AstVisitor for AliasAnalysisVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
@@ -90,7 +90,7 @@ impl AliasAnalysisVisitor {
             .unwrap()
             .statement_base_mut_ref()
             .before_analysis = Some(s);
-        self.visit(ast.body.as_ref().unwrap().to_ast());
+        self.visit(&ast.body.as_ref().unwrap().to_ast());
     }
 
     pub fn propagate(
@@ -108,7 +108,7 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 .before_analysis = Some(last.clone());
             print!("before  {:?},{:?}", statement, last);
-            self.visit(statement.to_ast());
+            self.visit(&statement.to_ast());
             last = statement
                 .try_as_statement_ref()
                 .unwrap()
@@ -178,7 +178,7 @@ impl AliasAnalysisVisitor {
             .statement_list_base
             .statement_base
             .before_analysis = Some(before_then);
-        self.visit(ast.then_branch.to_ast());
+        self.visit(&ast.then_branch.to_ast());
         let after_then = ast
             .then_branch
             .statement_list_base
@@ -195,7 +195,7 @@ impl AliasAnalysisVisitor {
                 ast.condition.unop(String::from("!")).to_ast(),
                 ast.statement_base.before_analysis.unwrap(),
             ));
-            self.visit(ast.else_branch.as_ref().unwrap().to_ast());
+            self.visit(&ast.else_branch.as_ref().unwrap().to_ast());
             ast.else_branch
                 .as_ref()
                 .unwrap()
@@ -230,7 +230,7 @@ impl AliasAnalysisVisitor {
                 ast.condition.to_ast(),
                 ast.statement_base.before_analysis.clone().unwrap(),
             ));
-        self.visit(ast.body.to_ast());
+        self.visit(&ast.body.to_ast());
 
         // Either no loop iteration or at least one loop iteration
         let skip_loop = self.cond_analyzer.analyze(
@@ -265,7 +265,7 @@ impl AliasAnalysisVisitor {
 
         ast.body.statement_list_base.statement_base.before_analysis =
             ast.statement_base.before_analysis.clone();
-        self.visit(ast.body.to_ast());
+        self.visit(&ast.body.to_ast());
 
         // ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
         ast.statement_base.before_analysis = ast
@@ -293,7 +293,7 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 .statement_base_mut_ref()
                 .before_analysis = Some(last.clone());
-            self.visit(ast.init.as_ref().unwrap().to_ast());
+            self.visit(&ast.init.as_ref().unwrap().to_ast());
             ast.statement_base.before_analysis =
                 ast.init.as_ref().unwrap().after_analysis().clone();
             // init should be taken into account when looking up things in the condition
@@ -309,7 +309,7 @@ impl AliasAnalysisVisitor {
                 ast.condition.to_ast(),
                 ast.statement_base.before_analysis.clone().unwrap(),
             ));
-        self.visit(ast.body.to_ast());
+        self.visit(&ast.body.to_ast());
         if let Some(update) = &mut ast.update
         // Update is always executed after the body (if it is executed)
         {
@@ -319,7 +319,7 @@ impl AliasAnalysisVisitor {
                 .statement_base
                 .after_analysis
                 .clone();
-            self.visit(update.to_ast());
+            self.visit(&update.to_ast());
         }
 
         let skip_loop = self.cond_analyzer.analyze(
@@ -366,7 +366,7 @@ impl AliasAnalysisVisitor {
 
         // visit expression
         if let Some(e) = e {
-            self.visit(e.to_ast());
+            self.visit(&e.to_ast());
         }
 
         // state after declaration
@@ -401,7 +401,7 @@ impl AliasAnalysisVisitor {
             );
         }
 
-        self.visit(ast.condition.to_ast());
+        self.visit(&ast.condition.to_ast());
 
         // state after require
         let mut after = ast
@@ -450,8 +450,8 @@ impl AliasAnalysisVisitor {
         let lhs = ast.lhs();
         let rhs = ast.rhs();
         // visit expression
-        self.visit(*lhs.as_ref().unwrap().clone());
-        self.visit(rhs.as_ref().unwrap().to_ast());
+        self.visit(&*lhs.as_ref().unwrap().clone());
+        self.visit(&rhs.as_ref().unwrap().to_ast());
 
         // state after assignment
         let after = ast.before_analysis();
@@ -476,7 +476,7 @@ impl AliasAnalysisVisitor {
         }
 
         // visit expression
-        self.visit(ast.expr.to_ast());
+        self.visit(&ast.expr.to_ast());
 
         // if expression has effect, we are already at TOP
         ast.simple_statement_base.statement_base.after_analysis = ast
@@ -517,13 +517,12 @@ impl AstVisitor for GuardConditionAnalyzer {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 // class GuardConditionAnalyzer(AstVisitor)
 // pub fn __init__(&self, log=False)
@@ -547,7 +546,7 @@ impl GuardConditionAnalyzer {
         } else {
             self._neg = false;
             self._analysis = Some(before_analysis);
-            self.visit(cond.clone());
+            self.visit(&cond.clone());
             self._analysis.clone().unwrap()
         }
     }
@@ -564,13 +563,13 @@ impl GuardConditionAnalyzer {
             let op = &ast.func().try_as_builtin_function_ref().unwrap().op;
             if op == "!" {
                 self._negated();
-                self.visit(args[0].to_ast());
+                self.visit(&args[0].to_ast());
                 self._negated();
             } else if (op == "&&" && !self._neg) || (op == "||" && self._neg) {
-                self.visit(args[0].to_ast());
-                self.visit(args[1].to_ast());
+                self.visit(&args[0].to_ast());
+                self.visit(&args[1].to_ast());
             } else if op == "parenthesis" {
-                self.visit(args[0].to_ast());
+                self.visit(&args[0].to_ast());
             } else if (op == "==" && !self._neg) || (op == "!=" && self._neg) {
                 recursive_merge(
                     args[0].to_ast(),

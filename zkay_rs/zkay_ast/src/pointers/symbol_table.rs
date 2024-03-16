@@ -25,12 +25,12 @@ use crate::visitor::visitor::AstVisitor;
 
 pub fn fill_symbol_table(ast: &AST) {
     let v = SymbolTableFiller;
-    v.visit(ast.clone());
+    v.visit(ast);
 }
 
 pub fn link_symbol_table(ast: &AST) {
     let v = SymbolTableLinker;
-    v.visit(ast.clone());
+    v.visit(ast);
 }
 
 pub fn link_identifiers(ast: &AST) {
@@ -101,20 +101,19 @@ impl AstVisitor for SymbolTableFiller {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 // class SymbolTableFiller(AstVisitor)
 impl SymbolTableFiller {
     pub fn get_builtin_globals(&self) -> BTreeMap<String, Identifier> {
         let mut global_defs = GLOBAL_DEFS.vars();
         for d in global_defs.iter_mut() {
-            self.visit((*d).to_ast());
+            self.visit(&(*d).to_ast());
         }
         let global_defs = global_defs
             .iter()
@@ -296,13 +295,12 @@ impl AstVisitor for SymbolTableLinker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl SymbolTableLinker {
     pub fn _find_next_decl(ast: AST, name: String) -> (Option<AST>, Option<AST>) {
@@ -588,7 +586,7 @@ impl SymbolTableLinker {
                 } else {
                     *t = t.clone();
                     t.ast_base_mut_ref().parent = Some(Box::new(ast.to_ast()));
-                    self.visit(t.to_ast());
+                    self.visit(&t.to_ast());
                 }
             } else {
                 assert!(false);

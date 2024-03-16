@@ -18,7 +18,7 @@ pub fn contains_private_expr(ast: Option<AST>) -> bool {
         return false;
     }
     let v = ContainsPrivVisitor::new();
-    v.visit(ast.unwrap());
+    v.visit(ast.as_ref().unwrap());
     v.contains_private
 }
 
@@ -41,13 +41,12 @@ impl AstVisitor for ContainsPrivVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl ContainsPrivVisitor {
     pub fn new() -> Self {

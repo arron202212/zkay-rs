@@ -9,7 +9,7 @@
 // use type_check::type_exceptions::TypeException
 use crate::analysis::contains_private_checker::contains_private_expr;
 
-use crate::ast::{DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST,ASTType};
+use crate::ast::{ASTType, DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST};
 
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 
@@ -18,7 +18,7 @@ pub fn check_loops(ast: AST) {
     // Checks if loops don't contain private expressions
     // """
     let v = LoopChecker;
-    v.visit(ast);
+    v.visit(&ast);
 }
 
 // class LoopChecker(FunctionVisitor)
@@ -36,13 +36,12 @@ impl AstVisitor for LoopChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl LoopChecker {
     pub fn visitWhileStatement(self, ast: WhileStatement) {

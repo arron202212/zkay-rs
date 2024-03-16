@@ -14,7 +14,7 @@ use crate::visitor::visitor::AstVisitor;
 
 pub fn check_return(ast: &AST) {
     let v = ReturnCheckVisitor;
-    v.visit(ast.clone());
+    v.visit(ast);
 }
 // class ReturnPositionException(AstException):
 
@@ -35,13 +35,12 @@ impl AstVisitor for ReturnCheckVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl ReturnCheckVisitor {
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {

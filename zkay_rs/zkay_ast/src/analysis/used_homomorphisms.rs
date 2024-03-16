@@ -7,8 +7,9 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTChildren, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
-    ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,ASTType,
+    ASTChildren, ASTType, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition,
+    Expression, ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit,
+    StructDefinition, AST,
 };
 use crate::homomorphism::Homomorphism;
 use crate::visitor::visitor::AstVisitor;
@@ -29,7 +30,7 @@ impl AstVisitor for UsedHomomorphismsVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {

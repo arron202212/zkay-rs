@@ -17,19 +17,19 @@ use crate::ast::{
 use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
 use std::collections::BTreeSet;
 pub fn has_side_effects(ast: AST) -> bool {
-    SideEffectsDetector.visit(ast).is_some()
+    SideEffectsDetector.visit(&ast).is_some()
 }
 
 pub fn compute_modified_sets(ast: AST) {
     let v = DirectModificationDetector;
-    v.visit(ast.clone());
+    v.visit(&ast);
 
     let mut v = IndirectModificationDetector::new();
     v.iterate_until_fixed_point(ast.clone());
 }
 
 pub fn check_for_undefined_behavior_due_to_eval_order(ast: AST) {
-    EvalOrderUBChecker.visit(ast);
+    EvalOrderUBChecker.visit(&ast);
 }
 
 // class SideEffectsDetector(AstVisitor)
@@ -46,13 +46,12 @@ impl AstVisitor for SideEffectsDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl SideEffectsDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
@@ -91,9 +90,7 @@ impl SideEffectsDetector {
     }
 
     pub fn visitAST(&self, mut ast: AST) -> bool {
-        ast.children()
-            .iter()
-            .any(|c| self.visit(c.clone()).is_some())
+        ast.children().iter().any(|c| self.visit(&c).is_some())
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
@@ -111,13 +108,12 @@ impl AstVisitor for DirectModificationDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl DirectModificationDetector {
     pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
@@ -185,7 +181,7 @@ impl DirectModificationDetector {
         let mut modified_values = BTreeSet::new();
         let mut read_values = BTreeSet::new();
         for child in ast.children().iter_mut() {
-            self.visit(child.clone());
+            self.visit(&*child);
             modified_values = modified_values
                 .union(&child.ast_base_mut_ref().unwrap().modified_values)
                 .cloned()
@@ -216,13 +212,12 @@ impl AstVisitor for IndirectModificationDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl IndirectModificationDetector {
     // pub fn __init__(self)
@@ -235,7 +230,7 @@ impl IndirectModificationDetector {
     }
     pub fn iterate_until_fixed_point(&mut self, ast: AST) {
         loop {
-            self.visit(ast.clone());
+            self.visit(&ast);
             if self.fixed_point_reached {
                 break;
             } else {
@@ -308,7 +303,7 @@ impl IndirectModificationDetector {
         let mlen = ast.ast_base_ref().unwrap().modified_values.len();
         let rlen = ast.ast_base_ref().unwrap().read_values.len();
         for child in ast.children().iter_mut() {
-            self.visit(child.clone());
+            self.visit(&*child);
             ast.ast_base_mut_ref().unwrap().modified_values = ast
                 .ast_base_mut_ref()
                 .unwrap()
@@ -342,13 +337,12 @@ impl AstVisitor for EvalOrderUBChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl EvalOrderUBChecker {
     // @staticmethod

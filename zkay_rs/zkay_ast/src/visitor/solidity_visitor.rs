@@ -7,10 +7,14 @@
 #![allow(unused_braces)]
 
 use crate::ast::{AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
+use crate::visitor::visitor::AstVisitor;
 use zkay_config::config::CFG;
 
 pub fn to_solidity(ast: AST) -> String {
-    SolidityVisitor::new().code_visitor_base.visit(&ast)
+    SolidityVisitor::new()
+        .code_visitor_base
+        .visit(&ast)
+        .unwrap()
 }
 
 // class SolidityVisitor(CodeVisitor)
@@ -29,7 +33,9 @@ impl SolidityVisitor {
     pub fn visitAnnotatedTypeName(self, ast: AnnotatedTypeName) -> String
 //only display data type, not privacy annotation
     {
-        self.code_visitor_base.visit(&(*ast.type_name).to_ast())
+        self.code_visitor_base
+            .visit(&(*ast.type_name).to_ast())
+            .unwrap()
     }
 
     pub fn visitMeExpr(self, _: MeExpr) -> String {

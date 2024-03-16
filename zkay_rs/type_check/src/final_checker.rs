@@ -18,7 +18,7 @@ use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn check_final(ast: AST) {
     let v = FinalVisitor::new();
-    v.visit(ast);
+    v.visit(&ast);
 }
 
 // class FinalVisitor(AstVisitor)
@@ -36,13 +36,12 @@ impl AstVisitor for FinalVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl FinalVisitor {
     // pub fn __init__(self)
@@ -77,7 +76,7 @@ impl FinalVisitor {
         if ast.constructor_definitions.len() > 0 {
             assert!(ast.constructor_definitions.len() == 1);
             let c = &ast.constructor_definitions[0];
-            self.visit(c.body.as_ref().unwrap().to_ast());
+            self.visit(&c.body.as_ref().unwrap().to_ast());
         }
 
         for (sv, assigned) in self.state_vars_assigned.as_ref().unwrap() {
@@ -93,7 +92,7 @@ impl FinalVisitor {
     }
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
-        self.visit(ast.rhs().as_ref().unwrap().to_ast());
+        self.visit(&ast.rhs().as_ref().unwrap().to_ast());
         if let Some(le) = ast
             .lhs()
             .as_ref()
@@ -115,13 +114,13 @@ impl FinalVisitor {
     }
 
     pub fn visitIfStatement(&mut self, ast: IfStatement) {
-        self.visit(ast.condition.to_ast());
+        self.visit(&ast.condition.to_ast());
         let prev = self.state_vars_assigned.as_ref().unwrap().clone();
-        self.visit(ast.then_branch.to_ast());
+        self.visit(&ast.then_branch.to_ast());
         let then_b = self.state_vars_assigned.as_ref().unwrap().clone();
         self.state_vars_assigned = Some(prev);
         if let Some(else_branch) = &ast.else_branch {
-            self.visit(else_branch.to_ast());
+            self.visit(&else_branch.to_ast());
         }
 
         assert!(

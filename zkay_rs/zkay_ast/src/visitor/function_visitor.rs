@@ -18,10 +18,10 @@ pub trait FunctionVisitor: AstVisitor {
     fn visitSourceUnit(&self, ast: SourceUnit) {
         for c in ast.contracts {
             for cd in c.constructor_definitions {
-                self.visit(cd.to_ast());
+                self.visit(&cd.to_ast());
             }
             for fd in c.function_definitions {
-                self.visit(fd.to_ast());
+                self.visit(&fd.to_ast());
             }
         }
     }

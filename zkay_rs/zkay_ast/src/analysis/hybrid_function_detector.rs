@@ -21,13 +21,13 @@ pub fn detect_hybrid_functions(ast: AST)
 // """
 {
     let v = DirectHybridFunctionDetectionVisitor;
-    v.visit(ast.clone());
+    v.visit(&ast);
 
     let v = IndirectHybridFunctionDetectionVisitor;
-    v.visit(ast.clone());
+    v.visit(&ast);
 
     let v = NonInlineableCallDetector;
-    v.visit(ast);
+    v.visit(&ast);
 }
 
 // class DirectHybridFunctionDetectionVisitor(FunctionVisitor)
@@ -45,13 +45,12 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl DirectHybridFunctionDetectionVisitor {
     pub fn visitReclassifyExpr(&self, ast: ReclassifyExpr) {
@@ -120,7 +119,7 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
-        self.visit(ast.body.as_ref().unwrap().to_ast());
+        self.visit(&ast.body.as_ref().unwrap().to_ast());
 
         if ast.can_be_external() {
             if ast.requires_verification {
@@ -155,13 +154,12 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl IndirectHybridFunctionDetectionVisitor {
     pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
@@ -193,13 +191,12 @@ impl AstVisitor for NonInlineableCallDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl NonInlineableCallDetector {
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) {

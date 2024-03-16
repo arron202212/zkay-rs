@@ -34,7 +34,7 @@ use zkay_ast::visitor::visitor::AstVisitor;
 pub fn type_check(ast: AST) {
     check_final(ast.clone());
     let v = TypeCheckVisitor;
-    v.visit(ast);
+    v.visit(&ast);
 }
 
 // class TypeCheckVisitor(AstVisitor)
@@ -50,13 +50,12 @@ impl AstVisitor for TypeCheckVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl TypeCheckVisitor {
     pub fn get_rhs(

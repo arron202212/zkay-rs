@@ -7,9 +7,9 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTBaseMutRef, ASTBaseProperty, ASTChildren, ConstructorOrFunctionDefinition, Expression,
-    ExpressionBaseMutRef, Identifier, IntoAST, NamespaceDefinition,
-    NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,ASTType
+    ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType, ConstructorOrFunctionDefinition,
+    Expression, ExpressionBaseMutRef, Identifier, IntoAST, NamespaceDefinition,
+    NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,
 };
 use crate::visitor::visitor::AstVisitor;
 
@@ -28,13 +28,12 @@ impl AstVisitor for ParentSetterVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 // class ParentSetterVisitor(AstVisitor)
 //     """
@@ -93,7 +92,7 @@ impl ParentSetterVisitor {
         for c in ast.children().iter_mut() {
             c.ast_base_mut_ref().unwrap().parent = Some(Box::new(ast.clone()));
             c.ast_base_mut_ref().unwrap().namespace = ast.ast_base_ref().unwrap().namespace.clone();
-            self.visit(c.clone());
+            self.visit(&*c);
         }
     }
 }
@@ -111,13 +110,12 @@ impl AstVisitor for ExpressionToStatementVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 // class ExpressionToStatementVisitor(AstVisitor)
 
@@ -172,7 +170,7 @@ impl ExpressionToStatementVisitor {
 
 pub fn set_parents(ast: AST) {
     let v = ParentSetterVisitor::new();
-    v.visit(ast.clone());
+    v.visit(&ast);
     let v = ExpressionToStatementVisitor;
-    v.visit(ast);
+    v.visit(&ast);
 }

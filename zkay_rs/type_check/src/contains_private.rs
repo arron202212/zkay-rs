@@ -11,7 +11,7 @@ use zkay_ast::visitor::visitor::AstVisitor;
 
 pub fn contains_private(ast: AST) -> bool {
     let v = ContainsPrivateVisitor::new();
-    v.visit(ast);
+    v.visit(&ast);
     v.contains_private
 }
 
@@ -30,13 +30,12 @@ impl AstVisitor for ContainsPrivateVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl ContainsPrivateVisitor {
     // pub fn __init__(self)

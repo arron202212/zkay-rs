@@ -21,13 +21,13 @@ pub fn call_graph_analysis(ast: AST)
 // """
 {
     let v = DirectCalledFunctionDetector;
-    v.visit(ast.clone());
+    v.visit(&ast.clone());
 
     let v = IndirectCalledFunctionDetector;
-    v.visit(ast.clone());
+    v.visit(&ast.clone());
 
     let v = IndirectDynamicBodyDetector;
-    v.visit(ast);
+    v.visit(&ast);
 }
 struct DirectCalledFunctionDetector;
 
@@ -44,13 +44,12 @@ impl AstVisitor for DirectCalledFunctionDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl DirectCalledFunctionDetector {
     pub fn visitFunctionCallExpr(&self, mut ast: FunctionCallExpr) {
@@ -123,13 +122,12 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl IndirectCalledFunctionDetector {
     pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition)
@@ -179,13 +177,12 @@ impl AstVisitor for IndirectDynamicBodyDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl IndirectDynamicBodyDetector {
     pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {

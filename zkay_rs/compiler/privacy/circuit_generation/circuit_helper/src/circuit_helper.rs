@@ -2114,10 +2114,10 @@ where
                 None,
             );
         }
-            assert!(
-                stmt.is_none(),
-                "stmt cannot be None if privacy is not guaranteed to be statically known"
-            );
+        assert!(
+            stmt.is_none(),
+            "stmt cannot be None if privacy is not guaranteed to be statically known"
+        );
 
         //privacy cannot be MeExpr (is in _static_owner_labels) or AllExpr (has no public key)
         assert!(is_instance(privacy, ASTType::IdentifierBase));

@@ -24,13 +24,13 @@ pub fn check_circuit_compliance(ast: AST) {
     // determines for every function whether it can be used inside a circuit
     // """
     let v = DirectCanBePrivateDetector;
-    v.visit(ast.clone());
+    v.visit(&ast.clone());
 
     let v = IndirectCanBePrivateDetector;
-    v.visit(ast.clone());
+    v.visit(&ast.clone());
 
     let v = CircuitComplianceChecker::new();
-    v.visit(ast.clone());
+    v.visit(&ast.clone());
 
     check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast)
 }
@@ -49,13 +49,12 @@ impl AstVisitor for DirectCanBePrivateDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl DirectCanBePrivateDetector {
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
@@ -91,7 +90,7 @@ impl DirectCanBePrivateDetector {
             }
         }
         for arg in ast.args() {
-            self.visit(arg.to_ast());
+            self.visit(&arg.to_ast());
         }
     }
 
@@ -111,7 +110,7 @@ impl DirectCanBePrivateDetector {
     }
 
     pub fn visitReclassifyExpr(&mut self, ast: ReclassifyExpr) {
-        self.visit(ast.expr().to_ast());
+        self.visit(&ast.expr().to_ast());
     }
 
     pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
@@ -159,13 +158,12 @@ impl AstVisitor for IndirectCanBePrivateDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl IndirectCanBePrivateDetector {
     pub fn visitConstructorOrFunctionDefinition(
@@ -200,13 +198,12 @@ impl AstVisitor for CircuitComplianceChecker {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl CircuitComplianceChecker {
     // pub fn __init__(self)
@@ -298,7 +295,7 @@ impl CircuitComplianceChecker {
         } else {
             self.priv_setter.set_evaluation(ast.to_ast(), true);
         }
-        self.visit(ast.expr().to_ast());
+        self.visit(&ast.expr().to_ast());
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
@@ -402,13 +399,12 @@ impl AstVisitor for PrivateSetter {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl PrivateSetter {
     // pub fn __init__(self)
@@ -421,7 +417,7 @@ impl PrivateSetter {
     }
     pub fn set_evaluation(&mut self, ast: AST, evaluate_privately: bool) {
         self.evaluate_privately = Some(evaluate_privately);
-        self.visit(ast);
+        self.visit(&ast);
         self.evaluate_privately = None;
     }
 
@@ -460,7 +456,7 @@ impl PrivateSetter {
     }
 }
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast: AST) {
-    NonstaticOrIncompatibilityDetector.visit(ast);
+    NonstaticOrIncompatibilityDetector.visit(&ast);
 }
 
 // class NonstaticOrIncompatibilityDetector(FunctionVisitor)
@@ -478,13 +474,12 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool{
+    fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
         None
     }
-    
 }
 impl NonstaticOrIncompatibilityDetector {
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
