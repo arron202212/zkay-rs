@@ -73,6 +73,8 @@ impl DirectCanBePrivateDetector {
                         .as_ref()
                         .unwrap()
                         .type_name
+                        .as_ref()
+                        .unwrap()
                         .can_be_private();
                 }
                 ast.expression_base_mut_ref()
@@ -105,7 +107,7 @@ impl DirectCanBePrivateDetector {
             .function
             .as_mut()
             .unwrap()
-            .can_be_private &= t.can_be_private();
+            .can_be_private &= t.as_ref().unwrap().can_be_private();
         self.visit_children(&ast.to_ast());
     }
 
@@ -226,7 +228,13 @@ impl CircuitComplianceChecker {
             .opt_eval_constexpr_in_circuit()
         {
             if is_instances(
-                &*expr.annotated_type().as_ref().unwrap().type_name,
+                &**expr
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .as_ref()
+                    .unwrap(),
                 vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
             ) {
                 //Expressions for which the value is known at compile time -> embed constant expression value into the circuit
@@ -235,13 +243,15 @@ impl CircuitComplianceChecker {
 
             if is_instance(&expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    &*expr
+                    &**expr
                         .try_as_primitive_cast_expr_ref()
                         .unwrap()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
-                        .type_name,
+                        .type_name
+                        .as_ref()
+                        .unwrap(),
                     vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
                 )
             {
@@ -357,6 +367,7 @@ impl CircuitComplianceChecker {
                     .unwrap()
                     .zkay_type()
                     .type_name
+                    .unwrap()
                     .is_primitive_type()
                 {
                     assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
@@ -496,7 +507,7 @@ impl NonstaticOrIncompatibilityDetector {
                     .target()
                     .is_some());
                 assert!(is_instance(
-                    &*ast
+                    &**ast
                         .func()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
@@ -510,7 +521,9 @@ impl NonstaticOrIncompatibilityDetector {
                         .annotated_type()
                         .as_ref()
                         .unwrap()
-                        .type_name,
+                        .type_name
+                        .as_ref()
+                        .unwrap(),
                     ASTType::FunctionTypeName
                 ));
                 has_nonstatic_call |= !(*ast
@@ -552,6 +565,8 @@ impl NonstaticOrIncompatibilityDetector {
                         .as_ref()
                         .unwrap()
                         .type_name
+                        .as_ref()
+                        .unwrap()
                         .is_literal();
                 if ast.func().try_as_builtin_function_ref().unwrap().is_eq()
                     || ast.func().try_as_builtin_function_ref().unwrap().is_ite()
@@ -561,6 +576,8 @@ impl NonstaticOrIncompatibilityDetector {
                         .as_ref()
                         .unwrap()
                         .type_name
+                        .as_ref()
+                        .unwrap()
                         .can_be_private();
                 }
             }

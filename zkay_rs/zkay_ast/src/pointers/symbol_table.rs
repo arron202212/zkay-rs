@@ -568,7 +568,8 @@ impl SymbolTableLinker {
                 .as_ref()
                 .unwrap()
                 .type_name
-                .clone();
+                .clone()
+                .unwrap();
             if let TypeName::Array(_) = &t {
                 assert!(ast.member.name() == "length");
                 ast.location_expr_base.target = Some(Box::new(ARRAY_LENGTH_MEMBER.to_ast()));
@@ -625,7 +626,8 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .type_name
-            .clone();
+            .clone()
+            .unwrap();
         ast.location_expr_base.target = Some(Box::new(
             VariableDeclaration::new(
                 vec![],

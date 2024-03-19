@@ -10,16 +10,18 @@
 use antlr_rust::common_token_stream::CommonTokenStream;
 // use  semantic_version::{NpmSpec, Version};
 use zkay_ast::ast::{
-    self, AddressPayableTypeName, AddressTypeName, AnnotatedTypeName, AssignmentStatement,
-    AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr, BuiltinFunction,
-    ConstructorOrFunctionDefinition, ContractDefinition, DoWhileStatement, ElementaryTypeName,
-    EnumDefinition, EnumValue, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier, IdentifierBase,
-    IdentifierBaseProperty, IdentifierDeclaration, IdentifierExpr, IfStatement, IndexExpr,
-    IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr, NamespaceDefinition,
+    self, is_instance, is_instances, ASTType, AddressPayableTypeName, AddressTypeName, AllExpr,
+    AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, Block, BoolTypeName,
+    BooleanLiteralExpr, BuiltinFunction, ConstructorOrFunctionDefinition, ContractDefinition,
+    DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumValue, Expression,
+    ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBase,
+    FunctionCallExprBaseProperty, Identifier, IdentifierBase, IdentifierBaseProperty,
+    IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
+    IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr, MeExpr, NamespaceDefinition,
     NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
-    RequireStatement, SimpleStatement, Statement, StatementList, StringLiteralExpr, TupleExpr,
-    TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement, AST,
+    RequireStatement, SimpleStatement, SourceUnit, Statement, StatementList, StringLiteralExpr,
+    TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement,
+    AST,
 };
 // use antlr_rust::TokenSource;
 // use  crate::config::cfg;
@@ -29,19 +31,28 @@ use solidity_parser::{
     generated::{
         soliditylexer::SolidityLexer,
         solidityparser::{
-            AndExprContext, AnnotatedTypeNameContext, AssignmentExprContext, BitShiftExprContext,
-            BitwiseAndExprContext, BitwiseNotExprContext, BitwiseOrExprContext,
-            BitwiseXorExprContext, BooleanLiteralExprContext, CompExprContext,
-            ConstructorDefinitionContext, ContractDefinitionContext, ContractPartContextAttrs,
-            DoWhileStatementContext, ElementaryTypeNameContext, EnumDefinitionContext,
+            AllExprContext, AllExprContextAttrs, AndExprContext, AnnotatedTypeNameContext,
+            AssignmentExprContext, BitShiftExprContext, BitwiseAndExprContext,
+            BitwiseNotExprContext, BitwiseOrExprContext, BitwiseXorExprContext, BlockContext,
+            BooleanLiteralExprContext, BreakStatementContext, CompExprContext,
+            ConstructorDefinitionContext, ContinueStatementContext, ContractDefinitionContext,
+            ContractPartContext, ContractPartContextAttrs, DoWhileStatementContext,
+            ElementaryTypeNameContext, ElementaryTypeNameExpressionContext, EnumDefinitionContext,
             EnumValueContext, EqExprContext, ExpressionStatementContext, ForStatementContext,
-            FunctionCallExprContext, FunctionDefinitionContext, HomomorphismAnnotationContext,
-            IdentifierContext, IfStatementContext, IndexExprContext, IteExprContext,
-            ModifierContext, MultDivModExprContext, NotExprContext, NumberLiteralExprContext,
-            OrExprContext, ParenthesisExprContext, PlusMinusExprContext, PostCrementExprContext,
-            PowExprContext, PragmaDirectiveContext, PragmaDirectiveContextAttrs,
-            PreCrementExprContext, SignExprContext, SolidityParser, SolidityParserContextType,
-            StringLiteralExprContext, TupleExprContext, VersionPragmaContext,
+            FunctionCallArgumentsContext, FunctionCallExprContext, FunctionDefinitionContext,
+            HomomorphismAnnotationContext, IdentifierContext, IdentifierExprContext,
+            IfStatementContext, IndexExprContext, IteExprContext, MappingContext, MeExprContext,
+            MeExprContextAttrs, MemberAccessExprContext, ModifierContext, ModifierListContext,
+            MultDivModExprContext, NotExprContext, NumberLiteralContext, NumberLiteralExprContext,
+            OrExprContext, ParameterListContext, ParenthesisExprContext, PlusMinusExprContext,
+            PostCrementExprContext, PowExprContext, PragmaDirectiveContext,
+            PragmaDirectiveContextAttrs, PreCrementExprContext, PrimitiveCastExprContext,
+            ReturnParametersContext, ReturnStatementContext, SignExprContext,
+            SimpleStatementContext, SolidityParser, SolidityParserContextType, SourceUnitContext,
+            StateMutabilityContext, StateVariableDeclarationContext, StatementContext,
+            StringLiteralExprContext, TupleExprContext, TupleExpressionContext, TypeNameContext,
+            UserDefinedTypeNameContext, VariableDeclarationStatementContext,
+            VersionConstraintContext, VersionContext, VersionOperatorContext, VersionPragmaContext,
             WhileStatementContext,
         },
     },
@@ -149,10 +160,10 @@ impl BuildASTVisitor {
         }
     }
 }
-use std::any::{Any, TypeId};
-pub fn is_instance<S: ?Sized + Any, T: ?Sized + Any>(_s: &T) -> bool {
-    TypeId::of::<T>() == TypeId::of::<S>()
-}
+// use std::any::{Any, TypeId};
+// pub fn is_instance<S: ?Sized + Any, T: ?Sized + Any>(_s: &T) -> bool {
+//     TypeId::of::<T>() == TypeId::of::<S>()
+// }
 // pub fn is_instance<'t,T:'t>(s: &'t dyn Any) -> bool {
 //     TypeId::of::<T>() == s.type_id()
 // }
@@ -254,10 +265,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         Some(IdentifierBase::new(name.to_string()).into_ast())
     }
 
-    fn visit_pragmaDirective(&mut self, _ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
-        // ctx.pragma().expect("visit_pragmaDirective").accept(self);
-        // let pragmas=self.visit();
-        let s = format!("pragma ;");
+    fn visit_pragmaDirective(&mut self, ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
+        ctx.pragma().expect("visit_pragmaDirective").accept(self);
+        let pragmas = if let Some(AST::VersionPragma(p)) = self.temp_result().clone() {
+            p
+        } else {
+            String::new()
+        };
+        let s = format!("pragma {pragmas};");
         Some(AST::Pragma(s))
     }
 
@@ -698,6 +713,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut homomorphism = String::from("NON_HOMOMORPHIC");
         if let Some(pa) = &ctx.privacy_annotation {
             pa.accept(self);
+            // println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
             privacy_annotation = if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
@@ -709,9 +725,28 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     homomorphism = hom;
                 }
             }
+            assert!(
+                privacy_annotation.is_some()
+                    && is_instances(
+                        privacy_annotation.as_ref().unwrap(),
+                        vec![ASTType::AllExpr, ASTType::MeExpr, ASTType::IdentifierExpr]
+                    ),
+                "Privacy annotation can only be me | all | Identifier,{:?},{:?}",
+                privacy_annotation,
+                self.code
+            );
+            assert!(
+                !is_instance(privacy_annotation.as_ref().unwrap(), ASTType::AllExpr)
+                    || homomorphism == String::from("NON_HOMOMORPHIC"),
+                "Public types cannot be homomorphic,{:?},{:?}",
+                homomorphism,
+                self.code
+            );
         }
+        // println!("======{:?},{:?}",ctx,ctx.type_name);
         let type_name = if let Some(tn) = &ctx.type_name {
             tn.accept(self);
+            // println!("=type_name=={:?},{:?}",tn,self.temp_result().clone());
             if let Some(AST::TypeName(tn)) = self.temp_result().clone() {
                 Some(tn)
             } else {
@@ -722,7 +757,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         Some(
             AnnotatedTypeName::new(
-                type_name.unwrap(),
+                type_name,
                 privacy_annotation.map(|p| p.into_ast()),
                 homomorphism,
             )
@@ -1507,20 +1542,22 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     }
         //     assert isinstance(e, ast.Expression)
         //     return ExpressionStatement(e)}
-        let expr = if let Some(expr) = &ctx.expr {
+        // println!("{:?}",ctx.expr );
+        let mut expression = None;
+        if let Some(expr) = &ctx.expr {
             expr.accept(self);
-            if let Some(AST::Expression(expr)) = self.temp_result().clone() {
-                Some(expr)
-            } else {
-                None
+            if let Some(AST::Statement(_)) = self.temp_result() {
+                //  println!("==self.temp_result().clone()======={:?}",self.temp_result().clone());
+                return self.temp_result().clone();
             }
-        } else {
-            None
-        };
+            if let Some(AST::Expression(expr)) = self.temp_result().clone() {
+                expression = Some(expr);
+            }
+        }
         // if let AST::Statement(_) = &expr {
         //     return self.temp_result().clone();
         // }
-        if let Some(Expression::FunctionCallExpr(e)) = &expr {
+        if let Some(Expression::FunctionCallExpr(e)) = &expression {
             if let Some(f) = e
                 .func()
                 .to_ast()
@@ -1546,7 +1583,179 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             }
         }
 
-        Some(ExpressionStatement::new(expr.unwrap()).into_ast())
+        Some(ExpressionStatement::new(expression.unwrap()).into_ast())
+    }
+
+    fn visit_sourceUnit(&mut self, ctx: &SourceUnitContext<'input>) -> Self::Return {
+        let pragma_directive = if let Some(pd) = &ctx.pragma_directive {
+            pd.accept(self);
+            if let Some(AST::Pragma(s)) = self.temp_result().clone() {
+                s
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+
+        let contracts = ctx
+            .contracts
+            .iter()
+            .filter_map(|contract| {
+                contract.accept(self);
+                self.temp_result().clone().map(|c| {
+                    c.try_as_namespace_definition()
+                        .unwrap()
+                        .try_as_contract_definition()
+                        .unwrap()
+                })
+            })
+            .collect();
+        Some(SourceUnit::new(pragma_directive, contracts, None).into_ast())
+    }
+
+    fn visit_version(&mut self, ctx: &VersionContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_versionOperator(&mut self, ctx: &VersionOperatorContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_versionConstraint(&mut self, ctx: &VersionConstraintContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_contractPart(&mut self, ctx: &ContractPartContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_stateVariableDeclaration(
+        &mut self,
+        ctx: &StateVariableDeclarationContext<'input>,
+    ) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_returnParameters(&mut self, ctx: &ReturnParametersContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_modifierList(&mut self, ctx: &ModifierListContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_parameterList(&mut self, ctx: &ParameterListContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_typeName(&mut self, ctx: &TypeNameContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_userDefinedTypeName(
+        &mut self,
+        ctx: &UserDefinedTypeNameContext<'input>,
+    ) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_mapping(&mut self, ctx: &MappingContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_stateMutability(&mut self, ctx: &StateMutabilityContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_block(&mut self, ctx: &BlockContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_statement(&mut self, ctx: &StatementContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_simpleStatement(&mut self, ctx: &SimpleStatementContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_continueStatement(&mut self, ctx: &ContinueStatementContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_breakStatement(&mut self, ctx: &BreakStatementContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_returnStatement(&mut self, ctx: &ReturnStatementContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_variableDeclarationStatement(
+        &mut self,
+        ctx: &VariableDeclarationStatementContext<'input>,
+    ) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_AllExpr(&mut self, ctx: &AllExprContext<'input>) -> Self::Return {
+        if ctx.AllKeyword().is_some() {
+            Some(AllExpr::new().into_ast())
+        } else {
+            None
+        }
+    }
+
+    fn visit_IdentifierExpr(&mut self, ctx: &IdentifierExprContext<'input>) -> Self::Return {
+        if let Some(idf) = &ctx.idf {
+            idf.accept(self);
+            if let Some(AST::Identifier(v)) = self.temp_result().clone() {
+                Some(IdentifierExpr::new(IdentifierExprUnion::Identifier(v), None).into_ast())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    fn visit_MeExpr(&mut self, ctx: &MeExprContext<'input>) -> Self::Return {
+        if ctx.MeKeyword().is_some() {
+            Some(MeExpr::new().into_ast())
+        } else {
+            None
+        }
+    }
+
+    fn visit_PrimitiveCastExpr(&mut self, ctx: &PrimitiveCastExprContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_MemberAccessExpr(&mut self, ctx: &MemberAccessExprContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_functionCallArguments(
+        &mut self,
+        ctx: &FunctionCallArgumentsContext<'input>,
+    ) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_tupleExpression(&mut self, ctx: &TupleExpressionContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_elementaryTypeNameExpression(
+        &mut self,
+        ctx: &ElementaryTypeNameExpressionContext<'input>,
+    ) -> Self::Return {
+        self.visit_children(ctx)
+    }
+
+    fn visit_numberLiteral(&mut self, ctx: &NumberLiteralContext<'input>) -> Self::Return {
+        self.visit_children(ctx)
     }
 }
 #[cfg(test)]

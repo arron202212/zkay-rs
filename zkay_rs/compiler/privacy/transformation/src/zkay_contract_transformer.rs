@@ -245,8 +245,8 @@ impl ZkayTransformer {
         );
         StateVariableDeclaration::new(
             AnnotatedTypeName::new(
-                TypeName::UserDefinedTypeName(UserDefinedTypeName::ContractTypeName(
-                    c_type.clone(),
+                Some(TypeName::UserDefinedTypeName(
+                    UserDefinedTypeName::ContractTypeName(c_type.clone()),
                 )),
                 None,
                 String::from("NON_HOMOMORPHIC"),
@@ -555,7 +555,7 @@ impl ZkayTransformer {
                             VariableDeclaration::new(
                                 vec![],
                                 AnnotatedTypeName::new(
-                                    *idf.t.clone(),
+                                    Some(*idf.t.clone()),
                                     None,
                                     String::from("NON_HOMOMORPHIC"),
                                 ),
@@ -1051,6 +1051,8 @@ impl ZkayTransformer {
                 p.identifier_declaration_base
                     .annotated_type
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .try_as_cipher_text_ref()
@@ -1071,7 +1073,7 @@ impl ZkayTransformer {
             ext_circuit._require_public_key_for_label_at(
                 None,
                 &Expression::me_expr(None).to_ast(),
-                crypto_params,
+                &crypto_params,
             );
         }
         for crypto_params in CFG.lock().unwrap().user_config.all_crypto_params() {
@@ -1198,6 +1200,8 @@ impl ZkayTransformer {
                     .identifier_declaration_base
                     .annotated_type
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .try_as_cipher_text_ref()
@@ -1235,8 +1239,10 @@ impl ZkayTransformer {
                     .annotated_type
                     .type_name
                     .clone();
-                assert!(is_instance(&*c, ASTType::CipherText));
-                if c.try_as_array_ref()
+                assert!(is_instance(&**c.as_ref().unwrap(), ASTType::CipherText));
+                if c.as_ref()
+                    .unwrap()
+                    .try_as_array_ref()
                     .unwrap()
                     .try_as_cipher_text_ref()
                     .unwrap()
@@ -1246,6 +1252,8 @@ impl ZkayTransformer {
                     let sender_key =
                         LocationExpr::IdentifierExpr(in_arr_var.clone()).index(ExprUnion::I32(
                             me_key_idx[&c
+                                .as_ref()
+                                .unwrap()
                                 .try_as_array_ref()
                                 .unwrap()
                                 .try_as_cipher_text_ref()
@@ -1305,7 +1313,7 @@ impl ZkayTransformer {
 
         // Declare in array
         let new_in_array_expr = NewExpr::new(
-            AnnotatedTypeName::new(TypeName::dyn_uint_array(), None, String::from("NON_")),
+            AnnotatedTypeName::new(Some(TypeName::dyn_uint_array()), None, String::from("NON_")),
             vec![NumberLiteralExpr::new(ext_circuit.in_size_trans(), false).to_expr()],
         );
         let in_var_decl = (*in_arr_var.idf.clone()).identifier_base_ref().decl_var(

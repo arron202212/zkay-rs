@@ -118,7 +118,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
+                        Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     ),
@@ -143,7 +143,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
+                        Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     ),
@@ -196,7 +196,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::new(
-                        TypeName::address_payable_type(),
+                        Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     ),

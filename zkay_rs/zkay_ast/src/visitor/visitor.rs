@@ -37,7 +37,7 @@ impl<T: AstVisitorBaseRef> AstVisitorBaseProperty for T {
         self.ast_visitor_base_ref().log
     }
 }
-use crate::ast::{ASTChildren, ASTType, AST};
+use crate::ast::{ASTChildren, ASTInstanceOf, ASTType, AST};
 pub trait AstVisitor {
     type Return;
     fn visit(&self, ast: &AST) -> Self::Return {
@@ -59,7 +59,7 @@ pub trait AstVisitor {
         if self.traversal() == "post" {
             ret_children = Some(self.visit_children(&ast));
         }
-        let f = self.get_visit_function(ASTType::SourceUnit, &ast);
+        let f = self.get_visit_function(ast.get_ast_type(), &ast);
         if f.is_some() {
             ret = f;
         } else if self.traversal() == "node-or-children" {
@@ -70,7 +70,7 @@ pub trait AstVisitor {
         }
         if ret.is_some() {
             // Some(ret)
-            None
+            ret
         } else if ret_children.is_some() {
             ret_children
         } else {

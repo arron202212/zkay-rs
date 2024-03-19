@@ -418,13 +418,20 @@ where
                 .identifier_declaration_base
                 .annotated_type
                 .zkay_type()
-                .type_name,
+                .type_name
+                .clone()
+                .unwrap(),
             None,
         );
         let name = format!(
             "{}_{}",
             self._in_name_factory.base_name_factory.get_new_name(
-                &param.identifier_declaration_base.annotated_type.type_name,
+                &*param
+                    .identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .as_ref()
+                    .unwrap(),
                 false
             ),
             param.identifier_declaration_base.idf.name()
@@ -435,7 +442,8 @@ where
                 .identifier_declaration_base
                 .annotated_type
                 .type_name
-                .clone(),
+                .clone()
+                .unwrap(),
             None,
         );
         self._ensure_encryption(
@@ -446,6 +454,8 @@ where
                 .identifier_declaration_base
                 .annotated_type
                 .type_name
+                .as_ref()
+                .unwrap()
                 .try_as_array_ref()
                 .unwrap()
                 .try_as_cipher_text_ref()
@@ -465,6 +475,8 @@ where
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .try_as_randomness_ref()
@@ -561,13 +573,13 @@ where
                     .as_ref()
                     .unwrap()
                     .zkay_type();
-                if !t.type_name.is_primitive_type() {
+                if !t.type_name.as_ref().unwrap().is_primitive_type() {
                     unimplemented!(
                         "Reference types inside private if statements are not supported"
                     );
                 }
                 let ret_t = AnnotatedTypeName::new(
-                    *t.type_name,
+                    t.type_name.as_ref().map(|t| *t.clone()),
                     Some(Expression::me_expr(None).into_ast()),
                     t.homomorphism,
                 ); //t, but @me
@@ -837,6 +849,8 @@ where
                                 p.identifier_declaration_base
                                     .annotated_type
                                     .type_name
+                                    .as_ref()
+                                    .unwrap()
                                     .try_as_array_ref()
                                     .unwrap()
                                     .try_as_key_ref()
@@ -918,13 +932,15 @@ where
 
         //If expression has literal type -> evaluate it inside the circuit (constant folding will be used)
         //rather than introducing an unnecessary public circuit input (expensive)
-        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = *t {
+        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) =
+            &**t.as_ref().unwrap()
+        {
             return self
                 ._evaluate_private_expression(input_expr.unwrap(), &t.value().to_string())
                 .unwrap();
         } else if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
             NumberTypeName::NumberLiteralType(t),
-        )) = *t
+        )) = &**t.as_ref().unwrap()
         {
             return self
                 ._evaluate_private_expression(input_expr.unwrap(), &t.value().to_string())
@@ -985,13 +1001,26 @@ where
         let (return_idf, input_idf) = if is_public {
             let tname = format!(
                 "{}{t_suffix}",
-                self._in_name_factory
-                    .base_name_factory
-                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
+                self._in_name_factory.base_name_factory.get_new_name(
+                    &*expr
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name
+                        .as_ref()
+                        .unwrap(),
+                    false
+                )
             );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
+                *expr
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .clone()
+                    .unwrap(),
                 None,
             );
             let return_idf = input_idf.clone();
@@ -1008,11 +1037,26 @@ where
                 "{}{t_suffix}",
                 self._secret_input_name_factory
                     .base_name_factory
-                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
+                    .get_new_name(
+                        &*expr
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .type_name
+                            .as_ref()
+                            .unwrap(),
+                        false
+                    )
             );
             let locally_decrypted_idf = self._secret_input_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
+                *expr
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .clone()
+                    .unwrap(),
                 None,
             );
             let return_idf = locally_decrypted_idf.clone();
@@ -1380,13 +1424,13 @@ where
                 .annotated_type
                 .type_name
                 .clone();
-            assert!(t.can_be_private());
+            assert!(t.as_ref().unwrap().can_be_private());
             let mut nle = NumberLiteralExpr::new(0, false);
             nle.literal_expr_base.expression_base.ast_base.parent = Some(Box::new(ast.to_ast()));
             nle.literal_expr_base.expression_base.statement = Some(Box::new(ast.to_statement()));
             ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(
                 nle.to_expr(),
-                &*t,
+                &*t.unwrap(),
             ));
         }
         self.create_new_idf_version_from_value(
@@ -1784,19 +1828,34 @@ where
                 .as_ref()
                 .unwrap()
                 .type_name
+                .as_ref()
+                .unwrap()
                 .is_cipher()
         //If the result is public, add an equality constraint to ensure that the user supplied public output
         //is equal to the circuit evaluation result
         {
             let tname = format!(
                 "{}{t_suffix}",
-                self._out_name_factory
-                    .base_name_factory
-                    .get_new_name(&*expr.annotated_type().as_ref().unwrap().type_name, false)
+                self._out_name_factory.base_name_factory.get_new_name(
+                    &**expr
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name
+                        .as_ref()
+                        .unwrap(),
+                    false
+                )
             );
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
-                *expr.annotated_type().as_ref().unwrap().type_name.clone(),
+                *expr
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .clone()
+                    .unwrap(),
                 Some(private_expr.to_expr()),
             );
             self._phi
@@ -1811,7 +1870,13 @@ where
                     .try_as_expression_ref()
                     .unwrap()
                     .explicitly_converted(
-                        *expr.annotated_type().as_ref().unwrap().type_name.clone(),
+                        *expr
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .type_name
+                            .clone()
+                            .unwrap(),
                     ),
                 new_out_param,
             )
@@ -1958,7 +2023,9 @@ where
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name,
+                    .type_name
+                    .as_ref()
+                    .unwrap(),
                 false
             )
         );
@@ -1973,7 +2040,8 @@ where
                 .as_ref()
                 .unwrap()
                 .type_name
-                .clone(),
+                .clone()
+                .unwrap(),
             if let Some(AST::Expression(expr)) = &priv_expr {
                 Some(expr.clone())
             } else {

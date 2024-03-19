@@ -7,7 +7,7 @@ use std::{
 use zkay_config::config::CFG;
 use zkay_utils::helpers::get_contract_names;
 lazy_static! {
-    pub static ref EXAMPLES_DIR: PathBuf = std::env::current_dir().unwrap();
+    pub static ref EXAMPLES_DIR: PathBuf = PathBuf::from(&env!("CARGO_MANIFEST_DIR"));//std::env::current_dir().unwrap();
     pub static ref CODE_DIR: PathBuf = (*EXAMPLES_DIR).join("code");///Users/lisheng/mygit/arron/zkay-rs/zkay_rs/examples/code
     pub static ref TYPE_ERROR_DIR: PathBuf = (*EXAMPLES_DIR).join("type_errors");
     pub static ref OTHERS_DIR: PathBuf = (*EXAMPLES_DIR).join("others");
@@ -142,7 +142,7 @@ impl Example {
 
 pub fn collect_examples(directory: &String) -> Vec<(String, Example)> {
     let mut examples = vec![];
-    // println!("{:?}",directory);
+    println!("{:?}", directory);
     for f in fs::read_dir(directory).unwrap() {
         // println!("=f=={:?}",f);
         if f.as_ref()
@@ -181,4 +181,54 @@ mod tests {
         }
         assert!(true);
     }
+
+    #[test]
+    pub fn test_examples_abs_path_env() {
+        use std::path::Path;
+
+        println!("FILE: {:?}", FILE);
+        println!("src path: {:?}", Path::new(FILE).parent());
+        println!(
+            "directory is: {:?}",
+            crate::file_abs_workspace!().parent().unwrap()
+        );
+
+        println!(
+            "===directory is: {:?}",
+            crate::file_abs!().parent().unwrap()
+        );
+        // let this_file = file!();
+        // println!("defined in file: {this_file}");
+        //         println!("{:?}", *EXAMPLES_DIR);
+        for (name, _example) in ALL_EXAMPLES.iter() {
+            // println!("{:?}", name);
+            // let  _ast = get_processed_ast(&example.code(), Some(!0b00001000));
+            assert!(true);
+        }
+        assert!(true);
+    }
+}
+
+const FILE: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/", file!());
+
+#[macro_export]
+macro_rules! file_abs {
+    () => {
+        std::path::Path::new(&(env!("CARGO_MANIFEST_DIR").to_owned() + file!()))
+    };
+}
+
+#[macro_export]
+macro_rules! file_abs_workspace {
+    () => {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(crate::examples::pop_first_two_path_components(file!()))
+    };
+}
+
+pub fn pop_first_two_path_components(path: &str) -> PathBuf {
+    let mut components = std::path::Path::new(path).components();
+    components.next();
+    components.next();
+    components.as_path().to_path_buf()
 }

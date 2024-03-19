@@ -34,7 +34,7 @@ impl SolidityVisitor {
 //only display data type, not privacy annotation
     {
         self.code_visitor_base
-            .visit(&(*ast.type_name).to_ast())
+            .visit(&(*ast.type_name.unwrap()).to_ast())
             .unwrap()
     }
 

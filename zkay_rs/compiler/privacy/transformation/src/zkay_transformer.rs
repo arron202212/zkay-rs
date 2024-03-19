@@ -81,13 +81,13 @@ impl ZkayVarDeclTransformer {
         let t = if ast.is_private() {
             Some(TypeName::cipher_type(ast.clone(), ast.homomorphism.clone()))
         } else {
-            if let Some(AST::TypeName(t)) = self.visit(Some((*ast.type_name).to_ast())) {
+            if let Some(AST::TypeName(t)) = self.visit(ast.type_name.as_ref().map(|t| t.to_ast())) {
                 Some(t)
             } else {
                 None
             }
         };
-        AnnotatedTypeName::new(t.unwrap(), None, String::from("NON_HOMOMORPHISM"))
+        AnnotatedTypeName::new(t, None, String::from("NON_HOMOMORPHISM"))
     }
 
     pub fn visitVariableDeclaration(&self, ast: &mut VariableDeclaration) -> AST {
@@ -105,6 +105,8 @@ impl ZkayVarDeclTransformer {
                 .identifier_declaration_base
                 .annotated_type
                 .type_name
+                .as_ref()
+                .unwrap()
                 .is_primitive_type()
             {
                 ast.identifier_declaration_base.storage_location = Some(String::from("memory"));
@@ -1318,7 +1320,13 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) -> Expression {
-        let t = *ast.annotated_type().as_ref().unwrap().type_name.clone();
+        let t = *ast
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .type_name
+            .clone()
+            .unwrap();
 
         //Constant folding for literal types
         if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) = &t {

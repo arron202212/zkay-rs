@@ -572,7 +572,7 @@ impl IdentifierBase {
     pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Statement {
         let t = match t {
             AST::TypeName(t) => Some(AnnotatedTypeName::new(
-                t,
+                Some(t),
                 None,
                 Homomorphism::non_homomorphic(),
             )),
@@ -581,7 +581,7 @@ impl IdentifierBase {
         };
         assert!(t.is_some());
         let t = t.unwrap();
-        let storage_loc = if t.type_name.is_primitive_type() {
+        let storage_loc = if t.type_name.as_ref().unwrap().is_primitive_type() {
             String::new()
         } else {
             String::from("memory")
@@ -630,22 +630,6 @@ impl Comment {
         String::new()
     }
 }
-// impl IntoAST for Comment {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Comment::Comment(ast) => ast.into_ast(),
-//             Comment::BlankLine(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for Comment {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Comment::Comment(ast) => ast.get_ast_type(),
-//             Comment::BlankLine(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait CommentBaseRef: ASTBaseRef {
     fn comment_base_ref(&self) -> &CommentBase;
@@ -820,7 +804,13 @@ impl Expression {
                 None,
             ));
         } else {
-            let t = &self.annotated_type().as_ref().unwrap().type_name;
+            let t = self
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .type_name
+                .as_ref()
+                .unwrap();
 
             if &**t == &expected {
                 return self.clone().into_ast();
@@ -858,7 +848,7 @@ impl Expression {
         assert!(ret.is_some());
         let mut ret = ret.unwrap();
         ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-            expected.clone(),
+            Some(expected.clone()),
             if let Some(privacy_annotation) =
                 &self.annotated_type().as_ref().unwrap().privacy_annotation
             {
@@ -907,6 +897,8 @@ impl Expression {
             .as_ref()
             .unwrap()
             .type_name
+            .as_ref()
+            .unwrap()
             .implicitly_convertible_to(expected)
     }
     pub fn unop(&self, op: String) -> FunctionCallExpr {
@@ -944,7 +936,7 @@ impl Expression {
 
         let actual = self.annotated_type();
 
-        if !self.instanceof_data_type(&*expected.type_name) {
+        if !self.instanceof_data_type(&*expected.type_name.as_ref().unwrap()) {
             return Some(String::from("false"));
         }
 
@@ -956,8 +948,13 @@ impl Expression {
         if let Some(combined_label) = combined_label {
             if let CombinedPrivacyUnion::Vec(combined_label) = combined_label {
                 assert!(
-                    if let TypeName::TupleType(_) =
-                        *self.annotated_type().as_ref().unwrap().type_name
+                    if let TypeName::TupleType(_) = **self
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
                     {
                         true
                     } else {
@@ -979,6 +976,8 @@ impl Expression {
                             .as_ref()
                             .unwrap()
                             .type_name
+                            .as_ref()
+                            .unwrap()
                             .try_as_tuple_type_ref()
                             .unwrap()
                             .types
@@ -1404,11 +1403,11 @@ impl BuiltinFunction {
         }
         let elem_type = *arg_types
             .iter()
-            .map(|a| a.as_ref().unwrap().type_name.clone())
+            .map(|a| a.as_ref().unwrap().type_name.clone().unwrap())
             .reduce(|l, r| Box::new(l.combined_type(*r, true).unwrap()))
             .unwrap();
         let base_type = AnnotatedTypeName::new(
-            elem_type,
+            Some(elem_type),
             inaccessible_arg_types[0]
                 .as_ref()
                 .unwrap()
@@ -1478,7 +1477,7 @@ impl BuiltinFunction {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -1502,7 +1501,7 @@ impl HomomorphicBuiltinFunction {
         }
     }
     pub fn input_types(&self) -> Vec<AnnotatedTypeName> {
-        let public_type = AnnotatedTypeName::all(*self.target_type.type_name.clone());
+        let public_type = AnnotatedTypeName::all(*self.target_type.type_name.clone().unwrap());
         // same data type, but @all
 
         //  [public_type if public else self.target_type for public in self.public_args]
@@ -1637,7 +1636,7 @@ impl FunctionCallExprBase {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -1695,7 +1694,7 @@ impl NewExpr {
             selfs.function_call_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.function_call_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
+                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
             );
         }
 
@@ -1739,7 +1738,7 @@ impl PrimitiveCastExpr {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -1783,26 +1782,6 @@ impl LiteralExpr {
         }
     }
 }
-// impl IntoAST for LiteralExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             LiteralExpr::BooleanLiteralExpr(ast) => ast.into_ast(),
-//             LiteralExpr::NumberLiteralExpr(ast) => ast.into_ast(),
-//             LiteralExpr::StringLiteralExpr(ast) => ast.into_ast(),
-//             LiteralExpr::ArrayLiteralExpr(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for LiteralExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             LiteralExpr::BooleanLiteralExpr(ast) => ast.get_ast_type(),
-//             LiteralExpr::NumberLiteralExpr(ast) => ast.get_ast_type(),
-//             LiteralExpr::StringLiteralExpr(ast) => ast.get_ast_type(),
-//             LiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait LiteralExprBaseRef: ExpressionBaseRef {
     fn literal_expr_base_ref(&self) -> &LiteralExprBase;
@@ -1842,9 +1821,7 @@ impl BooleanLiteralExpr {
             literal_expr_base: LiteralExprBase::new(),
             value,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
-                TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(
-                    BooleanLiteralType::new(value),
-                )),
+                BooleanLiteralType::new(value).into_ast().try_as_type_name(),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
@@ -1856,7 +1833,7 @@ impl BooleanLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -1891,11 +1868,9 @@ impl NumberLiteralExpr {
             value_string: None,
             was_hex,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                    NumberTypeName::NumberLiteralType(NumberLiteralType::new(
-                        NumberLiteralTypeUnion::I32(value),
-                    )),
-                )),
+                NumberLiteralType::new(NumberLiteralTypeUnion::I32(value))
+                    .into_ast()
+                    .try_as_type_name(),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
@@ -1908,11 +1883,9 @@ impl NumberLiteralExpr {
             value_string: Some(value_string.clone()),
             was_hex: false,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
-                TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                    NumberTypeName::NumberLiteralType(NumberLiteralType::new(
-                        NumberLiteralTypeUnion::String(value_string),
-                    )),
-                )),
+                NumberLiteralType::new(NumberLiteralTypeUnion::String(value_string))
+                    .into_ast()
+                    .try_as_type_name(),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
@@ -1924,7 +1897,7 @@ impl NumberLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -1963,7 +1936,7 @@ impl StringLiteralExpr {
             selfs.literal_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2005,22 +1978,6 @@ impl ArrayLiteralExpr {
         }
     }
 }
-// impl IntoAST for ArrayLiteralExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.into_ast(),
-//             ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for ArrayLiteralExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.get_ast_type(),
-//             ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait ArrayLiteralExprBaseRef: LiteralExprBaseRef {
     fn array_literal_expr_base_ref(&self) -> &ArrayLiteralExprBase;
@@ -2073,7 +2030,7 @@ impl ArrayLiteralExprBase {
             selfs.literal_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2125,7 +2082,7 @@ impl KeyLiteralExpr {
                 .literal_expr_base
                 .expression_base
                 .annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2152,22 +2109,6 @@ pub enum TupleOrLocationExpr {
     LocationExpr(LocationExpr),
 }
 
-// impl IntoAST for TupleOrLocationExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             TupleOrLocationExpr::TupleExpr(ast) => ast.into_ast(),
-//             TupleOrLocationExpr::LocationExpr(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for TupleOrLocationExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             TupleOrLocationExpr::TupleExpr(ast) => ast.get_ast_type(),
-//             TupleOrLocationExpr::LocationExpr(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl TupleOrLocationExpr {
     pub fn is_lvalue(&self) -> bool {
         let parent = match self {
@@ -2327,7 +2268,7 @@ impl TupleExpr {
                 .tuple_or_location_expr_base
                 .expression_base
                 .annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2363,26 +2304,6 @@ pub enum LocationExpr {
     SliceExpr(SliceExpr),
 }
 
-// impl IntoAST for LocationExpr {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             LocationExpr::IdentifierExpr(ast) => ast.into_ast(),
-//             LocationExpr::MemberAccessExpr(ast) => ast.into_ast(),
-//             LocationExpr::IndexExpr(ast) => ast.into_ast(),
-//             LocationExpr::SliceExpr(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for LocationExpr {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             LocationExpr::IdentifierExpr(ast) => ast.get_ast_type(),
-//             LocationExpr::MemberAccessExpr(ast) => ast.get_ast_type(),
-//             LocationExpr::IndexExpr(ast) => ast.get_ast_type(),
-//             LocationExpr::SliceExpr(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl LocationExpr {
     pub fn location_expr_base(&self) -> Option<LocationExprBase> {
         None
@@ -2515,7 +2436,7 @@ impl LocationExpr {
             }
         };
         let value_type = if let Some(type_name) = type_name {
-            match *type_name {
+            match *type_name.unwrap() {
                 TypeName::Array(a) => Some(a.value_type().to_ast()),
                 TypeName::Mapping(a) => Some(AST::AnnotatedTypeName(*a.value_type)),
                 _ => None,
@@ -2639,7 +2560,7 @@ impl IdentifierExpr {
             selfs.annotated_type = Some(Box::new(at));
         } else if let AST::TypeName(tn) = t {
             selfs.annotated_type = Some(Box::new(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             )));
@@ -2690,7 +2611,7 @@ impl MemberAccessExpr {
                 .tuple_or_location_expr_base
                 .expression_base
                 .annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2744,7 +2665,7 @@ impl IndexExpr {
                 .tuple_or_location_expr_base
                 .expression_base
                 .annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2811,7 +2732,7 @@ impl SliceExpr {
                 .tuple_or_location_expr_base
                 .expression_base
                 .annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2847,7 +2768,7 @@ impl MeExpr {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -2886,7 +2807,7 @@ impl AllExpr {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -3002,7 +2923,7 @@ impl ReclassifyExprBase {
             selfs.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                tn,
+                Some(tn),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -3053,7 +2974,7 @@ impl RehomExpr {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
+                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
             );
         }
 
@@ -3123,7 +3044,7 @@ impl HybridArgumentIdf {
         if self.arg_type == HybridArgType::TmpCircuitVal
             && self.corresponding_priv_expression.is_some()
             && if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) =
-                *self
+                **self
                     .corresponding_priv_expression
                     .as_ref()
                     .unwrap()
@@ -3131,6 +3052,8 @@ impl HybridArgumentIdf {
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
             {
                 true
             } else {
@@ -3145,6 +3068,8 @@ impl HybridArgumentIdf {
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_elementary_type_name_ref()
                     .unwrap()
                     .try_as_boolean_literal_type_ref()
@@ -3156,7 +3081,7 @@ impl HybridArgumentIdf {
             && self.corresponding_priv_expression.is_some()
             && if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
                 NumberTypeName::NumberLiteralType(_),
-            )) = *self
+            )) = **self
                 .corresponding_priv_expression
                 .as_ref()
                 .unwrap()
@@ -3164,6 +3089,8 @@ impl HybridArgumentIdf {
                 .as_ref()
                 .unwrap()
                 .type_name
+                .as_ref()
+                .unwrap()
             {
                 true
             } else {
@@ -3178,6 +3105,8 @@ impl HybridArgumentIdf {
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_elementary_type_name_ref()
                     .unwrap()
                     .try_as_number_type_name_ref()
@@ -3476,7 +3405,7 @@ impl EncryptionExpression {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
         } else if let AST::TypeName(tn) = t {
             selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(tn, None, Homomorphism::non_homomorphic()),
+                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
             );
         }
 
@@ -4522,7 +4451,7 @@ impl TypeName {
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> AnnotatedTypeName {
         AnnotatedTypeName::new(
-            self.clone(),
+            Some(self.clone()),
             if let CombinedPrivacyUnion::AST(expr) = privacy_annotation {
                 expr
             } else {
@@ -5413,7 +5342,7 @@ impl ArrayBase {
     }
 
     pub fn elem_bitwidth(&self) -> i32 {
-        self.value_type.type_name.elem_bitwidth()
+        self.value_type.type_name.as_ref().unwrap().elem_bitwidth()
     }
 }
 
@@ -5432,7 +5361,7 @@ impl IntoAST for CipherText {
 
 impl CipherText {
     pub fn new(plain_type: AnnotatedTypeName, crypto_params: CryptoParams) -> Self {
-        assert!(!plain_type.type_name.is_cipher());
+        assert!(!plain_type.type_name.as_ref().unwrap().is_cipher());
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
@@ -5593,7 +5522,7 @@ impl TupleType {
     }
     pub fn ensure_tuple(t: Option<AnnotatedTypeName>) -> TupleType {
         if let Some(t) = t {
-            if let TypeName::TupleType(t) = *t.type_name {
+            if let TypeName::TupleType(t) = &**t.type_name.as_ref().unwrap() {
                 t.clone()
             } else {
                 TupleType::new(vec![t.clone()])
@@ -5631,7 +5560,9 @@ impl TupleType {
     pub fn implicitly_convertible_to(&self, expected: TypeName) -> bool {
         if let TypeName::TupleType(expected) = expected {
             self.check_component_wise(&expected, |x, y| {
-                x.type_name.implicitly_convertible_to(&y.type_name)
+                x.type_name
+                    .unwrap()
+                    .implicitly_convertible_to(&y.type_name.unwrap())
             })
         } else {
             false
@@ -5641,7 +5572,7 @@ impl TupleType {
     pub fn compatible_with(&self, other_type: TypeName) -> bool {
         if let TypeName::TupleType(other_type) = other_type {
             self.check_component_wise(&other_type, |x, y| {
-                x.type_name.compatible_with(&y.type_name)
+                x.type_name.unwrap().compatible_with(&y.type_name.unwrap())
             })
         } else {
             false
@@ -5663,13 +5594,14 @@ impl TupleType {
                     .map(|(e1, e2)| {
                         AnnotatedTypeName::new(
                             e1.type_name
-                                .combined_type(*e2.type_name.clone(), convert_literals)
+                                .as_ref()
+                                .unwrap()
+                                .combined_type(*e2.type_name.clone().unwrap(), convert_literals)
                                 .unwrap()
                                 .try_as_tuple_type()
                                 .unwrap()
                                 .into_ast()
-                                .try_as_type_name()
-                                .unwrap(),
+                                .try_as_type_name(),
                             Some(Expression::DummyAnnotation(DummyAnnotation::new()).into_ast()),
                             Homomorphism::non_homomorphic(),
                         )
@@ -5681,25 +5613,30 @@ impl TupleType {
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> CombinedPrivacyUnion {
         CombinedPrivacyUnion::AST(if let CombinedPrivacyUnion::AST(_) = &privacy_annotation {
             Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
-                TypeName::TupleType(TupleType::new(
+                Some(TypeName::TupleType(TupleType::new(
                     self.types
                         .iter()
-                        .map(|t| t.type_name.annotate(privacy_annotation.clone()))
+                        .map(|t| {
+                            t.type_name
+                                .as_ref()
+                                .unwrap()
+                                .annotate(privacy_annotation.clone())
+                        })
                         .collect(),
-                )),
+                ))),
                 None,
                 Homomorphism::non_homomorphic(),
             )))
         } else if let CombinedPrivacyUnion::Vec(privacy_annotation) = &privacy_annotation {
             assert!(self.types.len() == privacy_annotation.len());
             Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
-                TypeName::TupleType(TupleType::new(
+                Some(TypeName::TupleType(TupleType::new(
                     self.types
                         .iter()
                         .zip(privacy_annotation)
-                        .map(|(t, a)| t.type_name.annotate(a.clone()))
+                        .map(|(t, a)| t.type_name.as_ref().unwrap().annotate(a.clone()))
                         .collect(),
-                )),
+                ))),
                 None,
                 Homomorphism::non_homomorphic(),
             )))
@@ -5765,7 +5702,7 @@ impl ASTChildren for FunctionTypeName {
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
-    pub type_name: Box<TypeName>,
+    pub type_name: Option<Box<TypeName>>,
     pub had_privacy_annotation: bool,
     pub privacy_annotation: Option<Box<AST>>,
     pub homomorphism: String,
@@ -5781,7 +5718,11 @@ impl ASTBaseMutRef for AnnotatedTypeName {
     }
 }
 impl AnnotatedTypeName {
-    pub fn new(type_name: TypeName, privacy_annotation: Option<AST>, homomorphism: String) -> Self {
+    pub fn new(
+        type_name: Option<TypeName>,
+        privacy_annotation: Option<AST>,
+        homomorphism: String,
+    ) -> Self {
         assert!(
             !(privacy_annotation.is_none()
                 || if let Some(AST::Expression(Expression::AllExpr(_))) = &privacy_annotation {
@@ -5795,7 +5736,7 @@ impl AnnotatedTypeName {
         );
         Self {
             ast_base: ASTBase::new(),
-            type_name: Box::new(type_name),
+            type_name: type_name.map(|t| Box::new(t)),
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
             privacy_annotation: privacy_annotation.map(|p| Box::new(p)).or(Some(Box::new(
                 Expression::AllExpr(AllExpr::new()).into_ast(),
@@ -5804,7 +5745,7 @@ impl AnnotatedTypeName {
         }
     }
     pub fn zkay_type(&self) -> Self {
-        if let TypeName::Array(Array::CipherText(ct)) = *self.type_name.clone() {
+        if let TypeName::Array(Array::CipherText(ct)) = *self.type_name.clone().unwrap() {
             ct.plain_type.clone()
         } else {
             self.clone()
@@ -5815,9 +5756,10 @@ impl AnnotatedTypeName {
         analysis: Option<PartitionState<AST>>,
         other: AnnotatedTypeName,
     ) -> Option<CombinedPrivacyUnion> {
-        if let (TypeName::TupleType(selfs), TypeName::TupleType(others)) =
-            (*self.type_name.clone(), *other.type_name.clone())
-        {
+        if let (TypeName::TupleType(selfs), TypeName::TupleType(others)) = (
+            *self.type_name.clone().unwrap(),
+            *other.type_name.clone().unwrap(),
+        ) {
             assert!(selfs.types.len() == others.types.len());
             return Some(CombinedPrivacyUnion::Vec(
                 selfs
@@ -5896,31 +5838,39 @@ impl AnnotatedTypeName {
 
     pub fn is_address(&self) -> bool {
         is_instances(
-            &*self.type_name,
+            &**self.type_name.as_ref().unwrap(),
             vec![ASTType::AddressTypeName, ASTType::AddressPayableTypeName],
         )
     }
     pub fn is_cipher(&self) -> bool {
-        is_instance(&*self.type_name, ASTType::CipherText)
+        is_instance(&**self.type_name.as_ref().unwrap(), ASTType::CipherText)
     }
     pub fn with_homomorphism(&self, hom: String) -> Self {
         AnnotatedTypeName::new(
-            *self.type_name.clone(),
+            self.type_name.as_ref().map(|t| *t.clone()),
             self.privacy_annotation.clone().map(|p| *p),
             hom,
         )
     }
     pub fn uint_all() -> Self {
-        AnnotatedTypeName::new(TypeName::uint_type(), None, Homomorphism::non_homomorphic())
+        AnnotatedTypeName::new(
+            Some(TypeName::uint_type()),
+            None,
+            Homomorphism::non_homomorphic(),
+        )
     }
 
     pub fn bool_all() -> Self {
-        AnnotatedTypeName::new(TypeName::bool_type(), None, Homomorphism::non_homomorphic())
+        AnnotatedTypeName::new(
+            Some(TypeName::bool_type()),
+            None,
+            Homomorphism::non_homomorphic(),
+        )
     }
 
     pub fn address_all() -> Self {
         AnnotatedTypeName::new(
-            TypeName::address_type(),
+            Some(TypeName::address_type()),
             None,
             Homomorphism::non_homomorphic(),
         )
@@ -5928,7 +5878,7 @@ impl AnnotatedTypeName {
 
     pub fn cipher_type(plain_type: AnnotatedTypeName, hom: Option<String>) -> Self {
         AnnotatedTypeName::new(
-            TypeName::cipher_type(plain_type, hom.unwrap()),
+            Some(TypeName::cipher_type(plain_type, hom.unwrap())),
             None,
             Homomorphism::non_homomorphic(),
         )
@@ -5936,7 +5886,7 @@ impl AnnotatedTypeName {
 
     pub fn key_type(crypto_params: CryptoParams) -> Self {
         AnnotatedTypeName::new(
-            TypeName::key_type(crypto_params),
+            Some(TypeName::key_type(crypto_params)),
             None,
             Homomorphism::non_homomorphic(),
         )
@@ -5944,21 +5894,21 @@ impl AnnotatedTypeName {
 
     pub fn proof_type() -> Self {
         AnnotatedTypeName::new(
-            TypeName::proof_type(),
+            Some(TypeName::proof_type()),
             None,
             Homomorphism::non_homomorphic(),
         )
     }
     pub fn all(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
-            type_name,
+            Some(type_name),
             Some(Expression::all_expr().into_ast()),
             Homomorphism::non_homomorphic(),
         )
     }
     pub fn me(type_name: TypeName) -> Self {
         AnnotatedTypeName::new(
-            type_name,
+            Some(type_name),
             Some(Expression::me_expr(None).into_ast()),
             Homomorphism::non_homomorphic(),
         )
@@ -5967,7 +5917,10 @@ impl AnnotatedTypeName {
         let mut t = value_type;
         for &l in &length {
             t = AnnotatedTypeName::new(
-                TypeName::Array(Array::Array(ArrayBase::new(t, Some(ExprUnion::I32(l))))),
+                Some(TypeName::Array(Array::Array(ArrayBase::new(
+                    t,
+                    Some(ExprUnion::I32(l)),
+                )))),
                 None,
                 Homomorphism::non_homomorphic(),
             );
@@ -5977,7 +5930,7 @@ impl AnnotatedTypeName {
 }
 impl ASTChildren for AnnotatedTypeName {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::TypeName(*self.type_name.clone()));
+        cb.add_child(AST::TypeName(*self.type_name.clone().unwrap()));
         if let Some(privacy_annotation) = &self.privacy_annotation {
             cb.add_child(*privacy_annotation.clone());
         }
@@ -6181,40 +6134,6 @@ pub enum NamespaceDefinition {
     StructDefinition(StructDefinition),
     ContractDefinition(ContractDefinition),
 }
-impl NamespaceDefinition {
-    // pub fn ast_base_mut(&mut self) -> Option<&mut ASTBase> {
-    //     None
-    // }
-    // pub fn namespace_definition_base(&self) -> Option<&NamespaceDefinitionBase> {
-    //     None
-    // }
-    // pub fn names(&self) -> BTreeMap<String, Identifier> {
-    //     BTreeMap::new()
-    // }
-    // pub fn parent(&self) -> Option<AST> {
-    //     None
-    // }
-}
-// impl IntoAST for NamespaceDefinition {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             NamespaceDefinition::ConstructorOrFunctionDefinition(ast) => ast.into_ast(),
-//             NamespaceDefinition::EnumDefinition(ast) => ast.into_ast(),
-//             NamespaceDefinition::StructDefinition(ast) => ast.into_ast(),
-//             NamespaceDefinition::ContractDefinition(ast) => ast.into_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for NamespaceDefinition {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             NamespaceDefinition::ConstructorOrFunctionDefinition(ast) => ast.get_ast_type(),
-//             NamespaceDefinition::EnumDefinition(ast) => ast.get_ast_type(),
-//             NamespaceDefinition::StructDefinition(ast) => ast.get_ast_type(),
-//             NamespaceDefinition::ContractDefinition(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 #[enum_dispatch]
 pub trait NamespaceDefinitionBaseRef: ASTBaseRef {
     fn namespace_definition_base_ref(&self) -> &NamespaceDefinitionBase;
@@ -6332,11 +6251,11 @@ impl ConstructorOrFunctionDefinition {
             parent: None,
             original_body: None,
             annotated_type: Some(AnnotatedTypeName::new(
-                TypeName::FunctionTypeName(FunctionTypeName::new(
+                Some(TypeName::FunctionTypeName(FunctionTypeName::new(
                     parameters.unwrap(),
                     modifiers.unwrap(),
                     return_parameters,
-                )),
+                ))),
                 None,
                 Homomorphism::non_homomorphic(),
             )),
@@ -6409,11 +6328,11 @@ impl ConstructorOrFunctionDefinition {
 
     pub fn _update_fct_type(&mut self) {
         self.annotated_type = Some(AnnotatedTypeName::new(
-            TypeName::FunctionTypeName(FunctionTypeName::new(
+            Some(TypeName::FunctionTypeName(FunctionTypeName::new(
                 self.parameters.clone(),
                 self.modifiers.clone(),
                 self.return_parameters.clone(),
-            )),
+            ))),
             None,
             Homomorphism::non_homomorphic(),
         ));
@@ -6425,7 +6344,7 @@ impl ConstructorOrFunctionDefinition {
             Some(t)
         } else if let AST::TypeName(t) = t {
             Some(AnnotatedTypeName::new(
-                t,
+                Some(t),
                 None,
                 Homomorphism::non_homomorphic(),
             ))
@@ -6439,7 +6358,14 @@ impl ConstructorOrFunctionDefinition {
         } else {
             None
         };
-        let storage_loc = if t.as_ref().unwrap().type_name.is_primitive_type() {
+        let storage_loc = if t
+            .as_ref()
+            .unwrap()
+            .type_name
+            .as_ref()
+            .unwrap()
+            .is_primitive_type()
+        {
             None
         } else {
             Some(ref_storage_loc)
@@ -6876,7 +6802,7 @@ impl InstanceTarget {
     pub fn privacy(&self) -> Option<AST> {
         if self.key().is_none()
             && !is_instance(
-                &*self
+                &**self
                     .target()
                     .unwrap()
                     .try_as_expression_ref()
@@ -6884,7 +6810,9 @@ impl InstanceTarget {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
-                    .type_name,
+                    .type_name
+                    .as_ref()
+                    .unwrap(),
                 ASTType::Mapping,
             )
         {
@@ -6912,7 +6840,8 @@ impl InstanceTarget {
                 .as_ref()
                 .unwrap()
                 .zkay_type()
-                .type_name;
+                .type_name
+                .unwrap();
             assert!(is_instance(&*t, ASTType::Mapping));
 
             if t.try_as_mapping_ref().unwrap().has_key_label() {
@@ -7184,58 +7113,418 @@ impl AstVisitor for CodeVisitor {
             || &ASTType::SourceUnit == name
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
-        match *name{
-        ASTType::ASTBase=>Some(Some(self.visit_AST(ast))),
-             ASTType::CommentBase=>Some(Some(self.visit_Comment(ast.try_as_comment_ref().unwrap()))),
-             ASTType::IdentifierBase=>Some(Some(self.visit_Identifier(ast.try_as_identifier_ref().unwrap()))),
-             ASTType::FunctionCallExprBase=>Some(Some(self.visit_FunctionCallExpr(ast.try_as_expression_ref().unwrap().try_as_function_call_expr_ref().unwrap()))),
-             ASTType::PrimitiveCastExpr=>Some(Some(self.visit_PrimitiveCastExpr(ast.try_as_expression_ref().unwrap().try_as_primitive_cast_expr_ref().unwrap()))),
-             ASTType::BooleanLiteralExpr=>Some(Some(self.visit_BooleanLiteralExpr(ast.try_as_expression_ref().unwrap().try_as_literal_expr_ref().unwrap().try_as_boolean_literal_expr_ref().unwrap()))),
-             ASTType::NumberLiteralExpr=>Some(Some(self.visit_NumberLiteralExpr(ast.try_as_expression_ref().unwrap().try_as_literal_expr_ref().unwrap().try_as_number_literal_expr_ref().unwrap()))),
-             ASTType::StringLiteralExpr=>Some(Some(self.visit_StringLiteralExpr(ast.try_as_expression_ref().unwrap().try_as_literal_expr_ref().unwrap().try_as_string_literal_expr_ref().unwrap()))),
-             ASTType::ArrayLiteralExprBase=>Some(Some(self.visit_ArrayLiteralExpr(ast.try_as_expression_ref().unwrap().try_as_literal_expr_ref().unwrap().try_as_array_literal_expr_ref().unwrap()))),
-             ASTType::TupleExpr=>Some(Some(self.visit_TupleExpr(ast.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_tuple_expr_ref().unwrap()))),
-             ASTType::IdentifierExpr=>Some(Some(self.visit_IdentifierExpr(ast.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_identifier_expr_ref().unwrap()))),
-             ASTType::MemberAccessExpr=>Some(Some(self.visit_MemberAccessExpr(ast.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap()))),
-             ASTType::IndexExpr=>Some(Some(self.visit_IndexExpr(ast.try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_index_expr_ref().unwrap()))),
-             ASTType::MeExpr=>Some(Some(self.visit_MeExpr(ast.try_as_expression_ref().unwrap().try_as_me_expr_ref().unwrap()))),
-             ASTType::AllExpr=>Some(Some(self.visit_AllExpr(ast.try_as_expression_ref().unwrap().try_as_all_expr_ref().unwrap()))),
-             ASTType::ReclassifyExpr=>Some(Some(self.visit_ReclassifyExpr(ast.try_as_expression_ref().unwrap().try_as_reclassify_expr_ref().unwrap()))),
-             ASTType::RehomExpr=>Some(Some(self.visit_RehomExpr(ast.try_as_expression_ref().unwrap().try_as_reclassify_expr_ref().unwrap().try_as_rehom_expr_ref().unwrap()))),
-             ASTType::IfStatement=>Some(Some(self.visit_IfStatement(ast.try_as_statement_ref().unwrap().try_as_if_statement_ref().unwrap()))),
-             ASTType::WhileStatement=>Some(Some(self.visit_WhileStatement(ast.try_as_statement_ref().unwrap().try_as_while_statement_ref().unwrap()))),
-             ASTType::DoWhileStatement=>Some(Some(self.visit_DoWhileStatement(ast.try_as_statement_ref().unwrap().try_as_do_while_statement_ref().unwrap()))),
-             ASTType::ForStatement=>Some(Some(self.visit_ForStatement(ast.try_as_statement_ref().unwrap().try_as_for_statement_ref().unwrap()))),
-             ASTType::BreakStatement=>Some(Some(self.visit_BreakStatement(ast.try_as_statement_ref().unwrap().try_as_break_statement_ref().unwrap()))),
-             ASTType::ContinueStatement=>Some(Some(self.visit_ContinueStatement(ast.try_as_statement_ref().unwrap().try_as_continue_statement_ref().unwrap()))),
-             ASTType::ReturnStatement=>Some(Some(self.visit_ReturnStatement(ast.try_as_statement_ref().unwrap().try_as_return_statement_ref().unwrap()))),
-             ASTType::ExpressionStatement=>Some(Some(self.visit_ExpressionStatement(ast.try_as_statement_ref().unwrap().try_as_simple_statement_ref().unwrap().try_as_expression_statement_ref().unwrap()))),
-             ASTType::RequireStatement=>Some(Some(self.visit_RequireStatement(ast.try_as_statement_ref().unwrap().try_as_simple_statement_ref().unwrap().try_as_require_statement_ref().unwrap()))),
-             ASTType::AssignmentStatementBase=>Some(Some(self.visit_AssignmentStatement(ast.try_as_statement_ref().unwrap().try_as_simple_statement_ref().unwrap().try_as_assignment_statement_ref().unwrap()))),
-             ASTType::CircuitDirectiveStatementBase=>Some(Some(self.visit_CircuitDirectiveStatement(ast.try_as_statement_ref().unwrap().try_as_circuit_directive_statement_ref().unwrap()))),
-             ASTType::StatementListBase=>Some(Some(self.visit_StatementList(ast.try_as_statement_ref().unwrap().try_as_statement_list_ref().unwrap()))),
-             ASTType::Block=>Some(Some(self.visit_Block(ast.try_as_statement_ref().unwrap().try_as_statement_list_ref().unwrap().try_as_block_ref().unwrap()))),
-             ASTType::IndentBlock=>Some(Some(self.visit_IndentBlock(ast.try_as_statement_ref().unwrap().try_as_statement_list_ref().unwrap().try_as_indent_block_ref().unwrap()))),
-             ASTType::ElementaryTypeNameBase=>Some(Some(self.visit_ElementaryTypeName(ast.try_as_type_name_ref().unwrap().try_as_elementary_type_name_ref().unwrap()))),
-             ASTType::UserDefinedTypeNameBase=>Some(Some(self.visit_UserDefinedTypeName(ast.try_as_type_name_ref().unwrap().try_as_user_defined_type_name_ref().unwrap()))),
-             ASTType::AddressTypeName=>Some(Some(self.visit_AddressTypeName(ast.try_as_type_name_ref().unwrap().try_as_user_defined_type_name_ref().unwrap().try_as_address_type_name_ref().unwrap()))),
-             ASTType::AddressPayableTypeName=>Some(Some(self.visit_AddressPayableTypeName(ast.try_as_type_name_ref().unwrap().try_as_user_defined_type_name_ref().unwrap().try_as_address_payable_type_name_ref().unwrap()))),
-             ASTType::AnnotatedTypeName=>Some(Some(self.visit_AnnotatedTypeName(ast.try_as_annotated_type_name_ref().unwrap()))),
-             ASTType::Mapping=>Some(Some(self.visit_Mapping(ast.try_as_type_name_ref().unwrap().try_as_mapping_ref().unwrap()))),
-             ASTType::ArrayBase=>Some(Some(self.visit_Array(ast.try_as_type_name_ref().unwrap().try_as_array_ref().unwrap()))),
-             ASTType::CipherText=>Some(Some(self.visit_CipherText(ast.try_as_type_name_ref().unwrap().try_as_array_ref().unwrap().try_as_cipher_text_ref().unwrap()))),
-             ASTType::TupleType=>Some(Some(self.visit_TupleType(ast.try_as_type_name_ref().unwrap().try_as_tuple_type_ref().unwrap()))),
-             ASTType::VariableDeclaration=>Some(Some(self.visit_VariableDeclaration(ast.try_as_identifier_declaration_ref().unwrap().try_as_variable_declaration_ref().unwrap()))),
-             ASTType::VariableDeclarationStatement=>Some(Some(self.visit_VariableDeclarationStatement(ast.try_as_statement_ref().unwrap().try_as_simple_statement_ref().unwrap().try_as_variable_declaration_statement_ref().unwrap()))),
-             ASTType::Parameter=>Some(Some(self.visit_Parameter(ast.try_as_identifier_declaration_ref().unwrap().try_as_parameter_ref().unwrap()))),
-             ASTType::ConstructorOrFunctionDefinition=>Some(Some(self.visit_ConstructorOrFunctionDefinition(ast.try_as_namespace_definition_ref().unwrap().try_as_constructor_or_function_definition_ref().unwrap()))),
-             ASTType::EnumValue=>Some(Some(self.visit_EnumValue(ast.try_as_enum_value_ref().unwrap()))),
-             ASTType::EnumDefinition=>Some(Some(self.visit_EnumDefinition(ast.try_as_namespace_definition_ref().unwrap().try_as_enum_definition_ref().unwrap()))),
-             ASTType::StructDefinition=>Some(Some(self.visit_StructDefinition(ast.try_as_namespace_definition_ref().unwrap().try_as_struct_definition_ref().unwrap()))),
-             ASTType::StateVariableDeclaration=>Some(Some(self.visit_StateVariableDeclaration(ast.try_as_identifier_declaration_ref().unwrap().try_as_state_variable_declaration_ref().unwrap()))),
-             ASTType::ContractDefinition=>Some(Some(self.visit_ContractDefinition(ast.try_as_namespace_definition_ref().unwrap().try_as_contract_definition_ref().unwrap()))),
-             ASTType::SourceUnit=>Some(Some(self.visit_SourceUnit(ast.try_as_source_unit_ref().unwrap()))),
-        _=>None
+        match *name {
+            ASTType::ASTBase => Some(Some(self.visit_AST(ast))),
+            ASTType::CommentBase => {
+                Some(Some(self.visit_Comment(ast.try_as_comment_ref().unwrap())))
+            }
+            ASTType::IdentifierBase => Some(Some(
+                self.visit_Identifier(ast.try_as_identifier_ref().unwrap()),
+            )),
+            ASTType::FunctionCallExprBase => Some(Some(
+                self.visit_FunctionCallExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_function_call_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::PrimitiveCastExpr => Some(Some(
+                self.visit_PrimitiveCastExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_primitive_cast_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::BooleanLiteralExpr => Some(Some(
+                self.visit_BooleanLiteralExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_boolean_literal_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::NumberLiteralExpr => Some(Some(
+                self.visit_NumberLiteralExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_number_literal_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::StringLiteralExpr => Some(Some(
+                self.visit_StringLiteralExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_string_literal_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ArrayLiteralExprBase => Some(Some(
+                self.visit_ArrayLiteralExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_array_literal_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::TupleExpr => Some(Some(
+                self.visit_TupleExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_tuple_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::IdentifierExpr => Some(Some(
+                self.visit_IdentifierExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_identifier_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::MemberAccessExpr => Some(Some(
+                self.visit_MemberAccessExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::IndexExpr => Some(Some(
+                self.visit_IndexExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_index_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::MeExpr => Some(Some(
+                self.visit_MeExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_me_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::AllExpr => Some(Some(
+                self.visit_AllExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_all_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ReclassifyExpr => Some(Some(
+                self.visit_ReclassifyExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_reclassify_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::RehomExpr => Some(Some(
+                self.visit_RehomExpr(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .try_as_rehom_expr_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::IfStatement => Some(Some(
+                self.visit_IfStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_if_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::WhileStatement => Some(Some(
+                self.visit_WhileStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_while_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::DoWhileStatement => Some(Some(
+                self.visit_DoWhileStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_do_while_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ForStatement => Some(Some(
+                self.visit_ForStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_for_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::BreakStatement => Some(Some(
+                self.visit_BreakStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_break_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ContinueStatement => Some(Some(
+                self.visit_ContinueStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_continue_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ReturnStatement => Some(Some(
+                self.visit_ReturnStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_return_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ExpressionStatement => Some(Some(
+                self.visit_ExpressionStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_simple_statement_ref()
+                        .unwrap()
+                        .try_as_expression_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::RequireStatement => Some(Some(
+                self.visit_RequireStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_simple_statement_ref()
+                        .unwrap()
+                        .try_as_require_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::AssignmentStatementBase => Some(Some(
+                self.visit_AssignmentStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_simple_statement_ref()
+                        .unwrap()
+                        .try_as_assignment_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::CircuitDirectiveStatementBase => Some(Some(
+                self.visit_CircuitDirectiveStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_circuit_directive_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::StatementListBase => Some(Some(
+                self.visit_StatementList(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_statement_list_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::Block => Some(Some(
+                self.visit_Block(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_statement_list_ref()
+                        .unwrap()
+                        .try_as_block_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::IndentBlock => Some(Some(
+                self.visit_IndentBlock(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_statement_list_ref()
+                        .unwrap()
+                        .try_as_indent_block_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ElementaryTypeNameBase => Some(Some(
+                self.visit_ElementaryTypeName(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_elementary_type_name_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::UserDefinedTypeNameBase => Some(Some(
+                self.visit_UserDefinedTypeName(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_user_defined_type_name_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::AddressTypeName => Some(Some(
+                self.visit_AddressTypeName(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_user_defined_type_name_ref()
+                        .unwrap()
+                        .try_as_address_type_name_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::AddressPayableTypeName => Some(Some(
+                self.visit_AddressPayableTypeName(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_user_defined_type_name_ref()
+                        .unwrap()
+                        .try_as_address_payable_type_name_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::AnnotatedTypeName => Some(Some(
+                self.visit_AnnotatedTypeName(ast.try_as_annotated_type_name_ref().unwrap()),
+            )),
+            ASTType::Mapping => Some(Some(
+                self.visit_Mapping(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_mapping_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ArrayBase => Some(Some(
+                self.visit_Array(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_array_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::CipherText => Some(Some(
+                self.visit_CipherText(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_array_ref()
+                        .unwrap()
+                        .try_as_cipher_text_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::TupleType => Some(Some(
+                self.visit_TupleType(
+                    ast.try_as_type_name_ref()
+                        .unwrap()
+                        .try_as_tuple_type_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::VariableDeclaration => Some(Some(
+                self.visit_VariableDeclaration(
+                    ast.try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .try_as_variable_declaration_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::VariableDeclarationStatement => Some(Some(
+                self.visit_VariableDeclarationStatement(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .try_as_simple_statement_ref()
+                        .unwrap()
+                        .try_as_variable_declaration_statement_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::Parameter => Some(Some(
+                self.visit_Parameter(
+                    ast.try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .try_as_parameter_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ConstructorOrFunctionDefinition => Some(Some(
+                self.visit_ConstructorOrFunctionDefinition(
+                    ast.try_as_namespace_definition_ref()
+                        .unwrap()
+                        .try_as_constructor_or_function_definition_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::EnumValue => Some(Some(
+                self.visit_EnumValue(ast.try_as_enum_value_ref().unwrap()),
+            )),
+            ASTType::EnumDefinition => Some(Some(
+                self.visit_EnumDefinition(
+                    ast.try_as_namespace_definition_ref()
+                        .unwrap()
+                        .try_as_enum_definition_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::StructDefinition => Some(Some(
+                self.visit_StructDefinition(
+                    ast.try_as_namespace_definition_ref()
+                        .unwrap()
+                        .try_as_struct_definition_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::StateVariableDeclaration => Some(Some(
+                self.visit_StateVariableDeclaration(
+                    ast.try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .try_as_state_variable_declaration_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::ContractDefinition => Some(Some(
+                self.visit_ContractDefinition(
+                    ast.try_as_namespace_definition_ref()
+                        .unwrap()
+                        .try_as_contract_definition_ref()
+                        .unwrap(),
+                ),
+            )),
+            ASTType::SourceUnit => Some(Some(
+                self.visit_SourceUnit(ast.try_as_source_unit_ref().unwrap()),
+            )),
+            _ => None,
         }
     }
 }
@@ -7282,13 +7571,13 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_AST(&self, _ast:&AST) -> CodeVisitorReturn {
+    pub fn visit_AST(&self, _ast: &AST) -> CodeVisitorReturn {
         // should never be called
         // raise NotImplementedError("Did not implement code generation for " + repr(ast))
         // unimplemented!("Did not implement code generation for {:?} ", ast);
         String::new()
     }
-    pub fn visit_Comment(&self, ast:&Comment) -> CodeVisitorReturn {
+    pub fn visit_Comment(&self, ast: &Comment) -> CodeVisitorReturn {
         if ast.text() == String::new() {
             String::new()
         } else if ast.text().contains(" ") {
@@ -7298,11 +7587,11 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_Identifier(&self, ast:&Identifier) -> CodeVisitorReturn {
+    pub fn visit_Identifier(&self, ast: &Identifier) -> CodeVisitorReturn {
         ast.name().clone()
     }
 
-    pub fn visit_FunctionCallExpr(&self, ast:&FunctionCallExpr) -> CodeVisitorReturn {
+    pub fn visit_FunctionCallExpr(&self, ast: &FunctionCallExpr) -> CodeVisitorReturn {
         if let Expression::BuiltinFunction(func) = &**ast.func() {
             let args: Vec<_> = ast
                 .args()
@@ -7323,7 +7612,7 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_PrimitiveCastExpr(&self, ast:&PrimitiveCastExpr) -> CodeVisitorReturn {
+    pub fn visit_PrimitiveCastExpr(&self, ast: &PrimitiveCastExpr) -> CodeVisitorReturn {
         if ast.is_implicit {
             self.visit(&ast.expr.to_ast()).unwrap()
         } else {
@@ -7335,11 +7624,11 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_BooleanLiteralExpr(&self, ast:&BooleanLiteralExpr) -> CodeVisitorReturn {
+    pub fn visit_BooleanLiteralExpr(&self, ast: &BooleanLiteralExpr) -> CodeVisitorReturn {
         ast.value.to_string().to_ascii_lowercase()
     }
 
-    pub fn visit_NumberLiteralExpr(&self, ast:&NumberLiteralExpr) -> CodeVisitorReturn {
+    pub fn visit_NumberLiteralExpr(&self, ast: &NumberLiteralExpr) -> CodeVisitorReturn {
         if ast.was_hex {
             format!("{:x}", ast.value())
         } else {
@@ -7347,11 +7636,11 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_StringLiteralExpr(&self, ast:&StringLiteralExpr) -> CodeVisitorReturn {
+    pub fn visit_StringLiteralExpr(&self, ast: &StringLiteralExpr) -> CodeVisitorReturn {
         format!("\"{}\"", ast.value)
     }
 
-    pub fn visit_ArrayLiteralExpr(&self, ast:&ArrayLiteralExpr) -> CodeVisitorReturn {
+    pub fn visit_ArrayLiteralExpr(&self, ast: &ArrayLiteralExpr) -> CodeVisitorReturn {
         format!(
             "[{}]",
             self.visit_list(
@@ -7364,7 +7653,7 @@ impl CodeVisitor {
         )
     }
 
-    pub fn visit_TupleExpr(&self, ast:&TupleExpr) -> CodeVisitorReturn {
+    pub fn visit_TupleExpr(&self, ast: &TupleExpr) -> CodeVisitorReturn {
         format!(
             "({})",
             self.visit_list(
@@ -7377,11 +7666,11 @@ impl CodeVisitor {
         )
     }
 
-    pub fn visit_IdentifierExpr(&self, ast:&IdentifierExpr) -> CodeVisitorReturn {
+    pub fn visit_IdentifierExpr(&self, ast: &IdentifierExpr) -> CodeVisitorReturn {
         self.visit(&ast.idf.to_ast()).unwrap()
     }
 
-    pub fn visit_MemberAccessExpr(&self, ast:&MemberAccessExpr) -> CodeVisitorReturn {
+    pub fn visit_MemberAccessExpr(&self, ast: &MemberAccessExpr) -> CodeVisitorReturn {
         format!(
             "{}.{}",
             self.visit(&ast.expr.as_ref().unwrap().to_ast()).unwrap(),
@@ -7389,7 +7678,7 @@ impl CodeVisitor {
         )
     }
 
-    pub fn visit_IndexExpr(&self, ast:&IndexExpr) -> CodeVisitorReturn {
+    pub fn visit_IndexExpr(&self, ast: &IndexExpr) -> CodeVisitorReturn {
         format!(
             "{}[{}]",
             self.visit(&ast.arr.as_ref().unwrap().to_ast()).unwrap(),
@@ -7405,10 +7694,9 @@ impl CodeVisitor {
         String::from("all")
     }
 
-    pub fn visit_ReclassifyExpr(&self, ast:&ReclassifyExpr) -> CodeVisitorReturn {
+    pub fn visit_ReclassifyExpr(&self, ast: &ReclassifyExpr) -> CodeVisitorReturn {
         let e = self.visit(&ast.expr().to_ast()).unwrap();
-        let p = self
-            .visit(&ast.privacy().to_ast()).unwrap();
+        let p = self.visit(&ast.privacy().to_ast()).unwrap();
         let h = HOMOMORPHISM_STORE
             .lock()
             .unwrap()
@@ -7418,56 +7706,39 @@ impl CodeVisitor {
         format!("reveal{h:?}({e}, {p})")
     }
 
-    pub fn visit_RehomExpr(&self, ast:&RehomExpr) -> CodeVisitorReturn {
-        let e = self
-            .visit(&ast.reclassify_expr_base.expr.to_ast())
-            .unwrap();
+    pub fn visit_RehomExpr(&self, ast: &RehomExpr) -> CodeVisitorReturn {
+        let e = self.visit(&ast.reclassify_expr_base.expr.to_ast()).unwrap();
         format!("{}({e})", ast.func_name())
     }
 
-    pub fn visit_IfStatement(&self, ast:&IfStatement) -> CodeVisitorReturn {
+    pub fn visit_IfStatement(&self, ast: &IfStatement) -> CodeVisitorReturn {
         let c = self.visit(&ast.condition.to_ast()).unwrap();
-        let t = self.visit_single_or_list(
-            SingleOrListUnion::AST(ast.then_branch.to_ast()),
-            "",
-        );
+        let t = self.visit_single_or_list(SingleOrListUnion::AST(ast.then_branch.to_ast()), "");
         let mut ret = format!("if ({c}) {t}");
         if let Some(else_branch) = &ast.else_branch {
-            let e = self.visit_single_or_list(
-                SingleOrListUnion::AST(else_branch.to_ast()),
-                "",
-            );
+            let e = self.visit_single_or_list(SingleOrListUnion::AST(else_branch.to_ast()), "");
             ret += format!("\n else {e}").as_str();
         }
         ret
     }
 
-    pub fn visit_WhileStatement(&self, ast:&WhileStatement) -> CodeVisitorReturn {
+    pub fn visit_WhileStatement(&self, ast: &WhileStatement) -> CodeVisitorReturn {
         let c = self.visit(&ast.condition.to_ast()).unwrap();
-        let b = self.visit_single_or_list(
-            SingleOrListUnion::AST(ast.body.to_ast()),
-            "",
-        );
+        let b = self.visit_single_or_list(SingleOrListUnion::AST(ast.body.to_ast()), "");
         format!("while ({c}) {b}")
     }
 
-    pub fn visit_DoWhileStatement(&self, ast:&DoWhileStatement) -> CodeVisitorReturn {
-        let b = self.visit_single_or_list(
-            SingleOrListUnion::AST(ast.body.to_ast()),
-            "",
-        );
+    pub fn visit_DoWhileStatement(&self, ast: &DoWhileStatement) -> CodeVisitorReturn {
+        let b = self.visit_single_or_list(SingleOrListUnion::AST(ast.body.to_ast()), "");
         let c = self.visit(&ast.condition.to_ast()).unwrap();
         format!("do {b} while ({c});")
     }
 
-    pub fn visit_ForStatement(&self, ast:&ForStatement) -> CodeVisitorReturn {
+    pub fn visit_ForStatement(&self, ast: &ForStatement) -> CodeVisitorReturn {
         let i = if let Some(init) = &ast.init {
             format!(
                 "{}",
-                self.visit_single_or_list(
-                    SingleOrListUnion::AST(init.to_ast()),
-                    ""
-                )
+                self.visit_single_or_list(SingleOrListUnion::AST(init.to_ast()), "")
             )
         } else {
             String::from(";")
@@ -7476,19 +7747,13 @@ impl CodeVisitor {
         let u = if let Some(update) = &ast.update {
             format!(
                 " {}",
-                self.visit_single_or_list(
-                    SingleOrListUnion::AST(update.to_ast()),
-                    ""
-                )
-                .replace(";", "")
+                self.visit_single_or_list(SingleOrListUnion::AST(update.to_ast()), "")
+                    .replace(";", "")
             )
         } else {
             String::new()
         };
-        let b = self.visit_single_or_list(
-            SingleOrListUnion::AST(ast.body.to_ast()),
-            "",
-        );
+        let b = self.visit_single_or_list(SingleOrListUnion::AST(ast.body.to_ast()), "");
         format!("for ({i} {c};{u}) {b}")
     }
 
@@ -7500,7 +7765,7 @@ impl CodeVisitor {
         String::from("continue;")
     }
 
-    pub fn visit_ReturnStatement(&self, ast:&ReturnStatement) -> CodeVisitorReturn {
+    pub fn visit_ReturnStatement(&self, ast: &ReturnStatement) -> CodeVisitorReturn {
         if ast.expr.is_none() {
             String::from("return;")
         } else {
@@ -7509,16 +7774,16 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_ExpressionStatement(&self, ast:&ExpressionStatement) -> CodeVisitorReturn {
+    pub fn visit_ExpressionStatement(&self, ast: &ExpressionStatement) -> CodeVisitorReturn {
         self.visit(&ast.expr.to_ast()).unwrap() + ";"
     }
 
-    pub fn visit_RequireStatement(&self, ast:&RequireStatement) -> CodeVisitorReturn {
+    pub fn visit_RequireStatement(&self, ast: &RequireStatement) -> CodeVisitorReturn {
         let c = self.visit(&ast.condition.to_ast()).unwrap();
         format!("require({c});")
     }
 
-    pub fn visit_AssignmentStatement(&self, ast:&AssignmentStatement) -> CodeVisitorReturn {
+    pub fn visit_AssignmentStatement(&self, ast: &AssignmentStatement) -> CodeVisitorReturn {
         let lhs = ast.lhs();
         let mut op = ast.op().clone();
         if let Some(asu) = lhs
@@ -7551,17 +7816,11 @@ impl CodeVisitor {
         {
             let annotated_type = match le {
                 LocationExpr::IdentifierExpr(ie) => {
-                     ie.annotated_type.as_ref().map(|at| *at.clone()) 
+                    ie.annotated_type.as_ref().map(|at| *at.clone())
                 }
-                LocationExpr::MemberAccessExpr(ie) => ie
-                    .annotated_type()
-                    .clone(),
-                LocationExpr::IndexExpr(ie) => ie
-                    .annotated_type()
-                    .clone(),
-                LocationExpr::SliceExpr(ie) => ie
-                    .annotated_type()
-                    .clone(),
+                LocationExpr::MemberAccessExpr(ie) => ie.annotated_type().clone(),
+                LocationExpr::IndexExpr(ie) => ie.annotated_type().clone(),
+                LocationExpr::SliceExpr(ie) => ie.annotated_type().clone(),
             };
             if let Some(at) = annotated_type {
                 if at.is_private() {
@@ -7610,24 +7869,16 @@ impl CodeVisitor {
             assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
             let mut s = String::new();
             let (lexpr, rexpr) = (
-                self.visit(&lhs.arr.as_ref().unwrap().to_ast())
-                .unwrap(),
-                self.visit(&rhs.arr.as_ref().unwrap().to_ast())
-                .unwrap(),
+                self.visit(&lhs.arr.as_ref().unwrap().to_ast()).unwrap(),
+                self.visit(&rhs.arr.as_ref().unwrap().to_ast()).unwrap(),
             );
             let mut lbase = if let Some(base) = &lhs.base {
-                format!(
-                    "{} + ",
-                    self.visit(&base.to_ast()).unwrap()
-                )
+                format!("{} + ", self.visit(&base.to_ast()).unwrap())
             } else {
                 String::new()
             };
             let mut rbase = if let Some(base) = &rhs.base {
-                format!(
-                    "{} + ",
-                    self.visit(&base.to_ast()).unwrap()
-                )
+                format!("{} + ", self.visit(&base.to_ast()).unwrap())
             } else {
                 String::new()
             };
@@ -7666,12 +7917,12 @@ impl CodeVisitor {
     }
     pub fn visit_CircuitDirectiveStatement(
         &self,
-        _ast:&CircuitDirectiveStatement,
+        _ast: &CircuitDirectiveStatement,
     ) -> CodeVisitorReturn {
         String::new()
     }
 
-    fn handle_block(&self, ast:&StatementList) -> CodeVisitorReturn {
+    fn handle_block(&self, ast: &StatementList) -> CodeVisitorReturn {
         match ast {
             StatementList::Block(block) => indent(
                 self.visit_list(
@@ -7699,7 +7950,7 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_StatementList(&self, ast:&StatementList) -> CodeVisitorReturn {
+    pub fn visit_StatementList(&self, ast: &StatementList) -> CodeVisitorReturn {
         match ast {
             StatementList::Block(block) => indent(
                 self.visit_list(
@@ -7727,7 +7978,7 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_Block(&self, ast:&Block) -> CodeVisitorReturn {
+    pub fn visit_Block(&self, ast: &Block) -> CodeVisitorReturn {
         let b = self
             .handle_block(&StatementList::Block(ast.clone()))
             .trim_end()
@@ -7739,32 +7990,36 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_IndentBlock(&self, ast:&IndentBlock) -> CodeVisitorReturn {
+    pub fn visit_IndentBlock(&self, ast: &IndentBlock) -> CodeVisitorReturn {
         self.handle_block(ast.to_statement().try_as_statement_list_ref().unwrap())
     }
 
-    pub fn visit_ElementaryTypeName(&self, ast:&ElementaryTypeName) -> CodeVisitorReturn {
+    pub fn visit_ElementaryTypeName(&self, ast: &ElementaryTypeName) -> CodeVisitorReturn {
         ast.name().clone()
     }
 
-    pub fn visit_UserDefinedTypeName(&self, ast:&UserDefinedTypeName) -> CodeVisitorReturn {
-        let names: Vec<_> = ast.user_defined_type_name_base_ref().names
+    pub fn visit_UserDefinedTypeName(&self, ast: &UserDefinedTypeName) -> CodeVisitorReturn {
+        let names: Vec<_> = ast
+            .user_defined_type_name_base_ref()
+            .names
             .iter()
             .map(|name| ListUnion::AST(AST::Identifier(name.clone())))
             .collect();
         self.visit_list(names, ".")
     }
 
-    pub fn visit_AddressTypeName(&self, _ast:&AddressTypeName) -> CodeVisitorReturn {
+    pub fn visit_AddressTypeName(&self, _ast: &AddressTypeName) -> CodeVisitorReturn {
         String::from("address")
     }
 
-    pub fn visit_AddressPayableTypeName(&self, _ast:&AddressPayableTypeName) -> CodeVisitorReturn {
+    pub fn visit_AddressPayableTypeName(&self, _ast: &AddressPayableTypeName) -> CodeVisitorReturn {
         String::from("address payable")
     }
 
-    pub fn visit_AnnotatedTypeName(&self, ast:&AnnotatedTypeName) -> CodeVisitorReturn {
-        let t = self.visit(&ast.type_name.to_ast()).unwrap();
+    pub fn visit_AnnotatedTypeName(&self, ast: &AnnotatedTypeName) -> CodeVisitorReturn {
+        let t = self
+            .visit(&ast.type_name.as_ref().unwrap().to_ast())
+            .unwrap();
         let p = if let Some(privacy_annotation) = &ast.privacy_annotation {
             self.visit(&*privacy_annotation).unwrap()
         } else {
@@ -7785,16 +8040,10 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_Mapping(&self, ast:&Mapping) -> CodeVisitorReturn {
-        let k = self
-            .visit(&ast.key_type.to_ast())
-            .unwrap();
+    pub fn visit_Mapping(&self, ast: &Mapping) -> CodeVisitorReturn {
+        let k = self.visit(&ast.key_type.to_ast()).unwrap();
         let label = if let Some(Identifier::Identifier(idf)) = &ast.key_label {
-            format!(
-                "!{}",
-                self.visit(&idf.to_ast())
-                    .unwrap()
-            )
+            format!("!{}", self.visit(&idf.to_ast()).unwrap())
         } else {
             if let Some(Identifier::HybridArgumentIdf(key_label)) = &ast.key_label {
                 format!("/*!{:?}*/", key_label)
@@ -7802,18 +8051,14 @@ impl CodeVisitor {
                 String::new()
             }
         };
-        let v = self
-            .visit(&ast.value_type.to_ast())
-            .unwrap();
+        let v = self.visit(&ast.value_type.to_ast()).unwrap();
         format!("mapping({k}{label} => {v})")
     }
 
-    pub fn visit_Array(&self, ast:&Array) -> CodeVisitorReturn {
-        let value_type = ast.value_type().clone() ;
+    pub fn visit_Array(&self, ast: &Array) -> CodeVisitorReturn {
+        let value_type = ast.value_type().clone();
         let expr = ast.expr().clone();
-        let t = self
-            .visit(&value_type.to_ast())
-            .unwrap();
+        let t = self.visit(&value_type.to_ast()).unwrap();
         let e = if let Some(ExprUnion::Expression(expr)) = &expr {
             self.visit(&expr.to_ast()).unwrap()
         } else if let Some(ExprUnion::I32(expr)) = &expr {
@@ -7824,12 +8069,12 @@ impl CodeVisitor {
         format!("{t}[{e}]")
     }
 
-    pub fn visit_CipherText(&self, ast:&CipherText) -> CodeVisitorReturn {
+    pub fn visit_CipherText(&self, ast: &CipherText) -> CodeVisitorReturn {
         let e = self.visit_Array(&Array::CipherText(ast.clone()));
         format!("{e}/*{}*/", ast.plain_type.to_ast().code())
     }
 
-    pub fn visit_TupleType(&self, ast:&TupleType) -> CodeVisitorReturn {
+    pub fn visit_TupleType(&self, ast: &TupleType) -> CodeVisitorReturn {
         let s = self.visit_list(
             ast.types
                 .iter()
@@ -7840,7 +8085,7 @@ impl CodeVisitor {
         format!("({s})")
     }
 
-    pub fn visit_VariableDeclaration(&self, ast:&VariableDeclaration) -> CodeVisitorReturn {
+    pub fn visit_VariableDeclaration(&self, ast: &VariableDeclaration) -> CodeVisitorReturn {
         let keywords: Vec<_> = ast
             .identifier_declaration_base
             .keywords
@@ -7870,7 +8115,7 @@ impl CodeVisitor {
 
     pub fn visit_VariableDeclarationStatement(
         &self,
-        ast:&VariableDeclarationStatement,
+        ast: &VariableDeclarationStatement,
     ) -> CodeVisitorReturn {
         let mut s = self.visit(&ast.variable_declaration.to_ast()).unwrap();
         if let Some(expr) = &ast.expr {
@@ -7880,7 +8125,7 @@ impl CodeVisitor {
         s
     }
 
-    pub fn visit_Parameter(&self, ast:&Parameter) -> CodeVisitorReturn {
+    pub fn visit_Parameter(&self, ast: &Parameter) -> CodeVisitorReturn {
         let final_string = String::from("final");
         let f = if !self.display_final {
             None
@@ -7897,16 +8142,21 @@ impl CodeVisitor {
         };
         let t = self.visit(&ast.identifier_declaration_base.annotated_type.to_ast());
         let i = self.visit(&ast.identifier_declaration_base.idf.to_ast());
-        let description: Vec<_> = [f, t, ast.identifier_declaration_base.storage_location.clone(), i]
-            .iter()
-            .filter_map(|d| d.clone())
-            .collect();
+        let description: Vec<_> = [
+            f,
+            t,
+            ast.identifier_declaration_base.storage_location.clone(),
+            i,
+        ]
+        .iter()
+        .filter_map(|d| d.clone())
+        .collect();
         description.join(" ")
     }
 
     pub fn visit_ConstructorOrFunctionDefinition(
         &self,
-        ast:&ConstructorOrFunctionDefinition,
+        ast: &ConstructorOrFunctionDefinition,
     ) -> CodeVisitorReturn {
         let b = if let Some(body) = &ast.body {
             self.visit_single_or_list(SingleOrListUnion::AST(body.to_ast()), "")
@@ -7942,9 +8192,7 @@ impl CodeVisitor {
             parameters
                 .iter()
                 .filter_map(|parameter| match parameter {
-                    ParameterUnion::Parameter(p) => Some(ListUnion::AST(
-                       p.to_ast()
-                    )),
+                    ParameterUnion::Parameter(p) => Some(ListUnion::AST(p.to_ast())),
                     ParameterUnion::String(s) => Some(ListUnion::String(s.clone())),
                 })
                 .collect(),
@@ -7957,9 +8205,7 @@ impl CodeVisitor {
         let mut r = self.visit_list(
             return_parameters
                 .iter()
-                .map(|p| {
-                    ListUnion::AST(p.to_ast())
-                })
+                .map(|p| ListUnion::AST(p.to_ast()))
                 .collect(),
             ", ",
         );
@@ -7970,7 +8216,7 @@ impl CodeVisitor {
         format!("{definition}({p}){m}{r} {body}")
     }
 
-    pub fn visit_EnumValue(&self, ast:&EnumValue) -> CodeVisitorReturn {
+    pub fn visit_EnumValue(&self, ast: &EnumValue) -> CodeVisitorReturn {
         if let Some(idf) = &ast.idf {
             self.visit(&idf.to_ast()).unwrap()
         } else {
@@ -7978,7 +8224,7 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_EnumDefinition(&self, ast:&EnumDefinition) -> CodeVisitorReturn {
+    pub fn visit_EnumDefinition(&self, ast: &EnumDefinition) -> CodeVisitorReturn {
         let values = indent(
             self.visit_list(
                 ast.values
@@ -8003,18 +8249,14 @@ impl CodeVisitor {
         ) = (v1, v2)
         {
             (
-                Some(
-                    v1.identifier_declaration_base
-                        .annotated_type
-                        .type_name
-                        .clone(),
-                ),
-                Some(
-                    v2.identifier_declaration_base
-                        .annotated_type
-                        .type_name
-                        .clone(),
-                ),
+                v1.identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .clone(),
+                v2.identifier_declaration_base
+                    .annotated_type
+                    .type_name
+                    .clone(),
             )
         } else {
             (None, None)
@@ -8050,7 +8292,7 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_StructDefinition(&self, ast:&StructDefinition) -> CodeVisitorReturn {
+    pub fn visit_StructDefinition(&self, ast: &StructDefinition) -> CodeVisitorReturn {
         // Define struct with members in order of descending size (to get maximum space savings through packing)
         let mut members_by_descending_size = ast.members.clone();
         members_by_descending_size.sort_by(|v1, v2| Self::__cmp_type_size(v1, v2).reverse());
@@ -8070,7 +8312,7 @@ impl CodeVisitor {
 
     pub fn visit_StateVariableDeclaration(
         &self,
-        ast:&StateVariableDeclaration,
+        ast: &StateVariableDeclaration,
     ) -> CodeVisitorReturn {
         let final_string = String::from("final");
         let keywords: Vec<_> = ast
@@ -8091,8 +8333,7 @@ impl CodeVisitor {
             String::new()
         };
         let t = self
-            .visit(&ast.identifier_declaration_base.annotated_type.to_ast()
-            )
+            .visit(&ast.identifier_declaration_base.annotated_type.to_ast())
             .unwrap();
         let mut k = ast
             .identifier_declaration_base
@@ -8143,7 +8384,7 @@ impl CodeVisitor {
         format!("contract {i} {{\n{body}\n}}")
     }
 
-    pub fn visit_ContractDefinition(&self, ast:&ContractDefinition) -> CodeVisitorReturn {
+    pub fn visit_ContractDefinition(&self, ast: &ContractDefinition) -> CodeVisitorReturn {
         let state_vars = ast
             .state_variable_declarations
             .iter()
@@ -8184,7 +8425,7 @@ impl CodeVisitor {
         pragma
     }
 
-    pub fn visit_SourceUnit(&self, ast:&SourceUnit) -> CodeVisitorReturn {
+    pub fn visit_SourceUnit(&self, ast: &SourceUnit) -> CodeVisitorReturn {
         let p = self.handle_pragma(ast.pragma_directive.clone());
         let contracts = self.visit_list(
             ast.contracts

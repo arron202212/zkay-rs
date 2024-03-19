@@ -47,7 +47,12 @@ pub fn _get_t(mut t: Option<AST>) -> String
 {
     let t = t.unwrap();
     let t = if let Some(t) = t.try_as_expression_ref() {
-        Some(*t.annotated_type().as_ref().unwrap().type_name.clone())
+        t.annotated_type()
+            .as_ref()
+            .unwrap()
+            .type_name
+            .as_ref()
+            .map(|t| *t.clone())
     } else {
         t.try_as_type_name()
     };
@@ -317,12 +322,16 @@ impl JsnarkVisitor
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .is_literal());
                 args[1] = ast.args()[1]
                     .annotated_type()
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .try_as_elementary_type_name_ref()
                     .unwrap()
                     .try_as_number_type_name_ref()
@@ -436,6 +445,8 @@ impl JsnarkVisitor
                     .as_ref()
                     .unwrap()
                     .type_name
+                    .as_ref()
+                    .unwrap()
                     .elem_bitwidth()
                     == 256
             );
