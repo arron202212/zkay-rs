@@ -292,13 +292,13 @@ pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
     println!("{}", file_name);
     dir.push(file_name.clone());
 
-    let mut file = File::create(dir).unwrap();
+    let mut file = File::create(dir.clone()).unwrap();
     write!(file, "{}", fake_solidity_code).expect("write file failed");
     // dump fake solidity code into temporary file
     // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
     //     f.write(fake_solidity_code)
     //     f.flush()
-    check_compilation(&file_name, true, zkay_code);
+    check_compilation(dir.to_str().unwrap(), true, zkay_code);
 }
 
 // def compile_solidity_code(code: str, working_directory: Optional[str] = None, optimizer_runs=cfg.opt_solc_optimizer_runs) -> Dict:

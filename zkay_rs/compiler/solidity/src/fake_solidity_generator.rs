@@ -2,8 +2,8 @@
 // // so that code can be passed to solc for type checking.
 
 // import re
+use fancy_regex::Regex as Regexf;
 use lazy_static::lazy_static;
-
 use regex::{Regex, RegexSet, RegexSetBuilder};
 use zkay_config::config::CFG;
 // // Declaration for me which is injected into each contract
@@ -22,43 +22,41 @@ lazy_static! {
   static ref ELEM_TYPE_PATTERN: String =  format!("(?:address|address payable|bool|{UINT_PATTERN}|{INT_PATTERN}|(?:(?:{ID_PATTERN}\\.)*(?:{ID_PATTERN})))");
   static ref PARENS_PATTERN: Regex =  Regex::new(r"[()]").unwrap();
   static ref BRACE_PATTERN: Regex =  Regex::new(r"[{}]").unwrap();
-  static ref STRING_OR_COMMENT_PATTERN: RegexSet = RegexSetBuilder::new(&[
-   r"(?P<repl>",
-   r"(?://[^\r\n]*)",                           // match line comment
-   r"|(?:/\*.*?\*/)",                           // match block comment
-   r"|(?:(?<=')(?:[^'\r\n\\]|(?:\\.))*(?='))",  // match single quoted string literal
-   r#"|(?:(?<=")(?:[^"\r\n\\]|(?:\\.))*(?="))"#,  // match double quoted string literal
-   r")"]).build().expect("RegexSetBuilder build fail");
+  static ref STRING_OR_COMMENT_PATTERN: Regexf= Regexf::new(
+   r#"^(?P<repl>
+   (?://[^\r\n]*)                           #  match line comment
+   |(?:/\*.*?\*/)                           #  match block comment
+   |(?:(?<=')(?:[^'\r\n\\]|(?:\\.))*(?='))  #  match single quoted string literal
+   |(?:(?<=")(?:[^"\r\n\\]|(?:\\.))*(?="))  #  match double quoted string literal
+   )$"#).unwrap();//.expect("RegexSetBuilder build fail");
 
 
 
 // ---------  Parsing ---------
-  static ref CONTRACT_START_PATTERN : Regex =  Regex::new(r"{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])").unwrap();
+  static ref CONTRACT_START_PATTERN : Regexf =  Regexf::new(&format!("{NONID_START}contract{WS_PATTERN}*{ID_PATTERN}{WS_PATTERN}*(?=[{{])")).unwrap();
 // Regex to match annotated types
 
-static ref ATYPE_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)").unwrap();
+static ref ATYPE_PATTERN : Regex =  Regex::new(&format!(r"(?P<keep>{NONID_START}{}{WS_PATTERN}*)(?P<repl>@{WS_PATTERN}*{ID_PATTERN}({HOMOMORPHISM_PATTERN})?)",*ELEM_TYPE_PATTERN)).unwrap();
        // match basic type
   // match @owner[<op>]
 
 // Regexes to match "all" and "final"
 //   pub const  MATCH_WORD_FSTR : &str = "(?P<keep>{NONID_START})(?P<repl>{{}})(?={NONID_END})";
-  static ref FINAL_PATTERN : Regex =  Regex::new(&format!( "(?P<keep>{NONID_START})(?P<repl>{{{}}})(?={NONID_END})","final")).unwrap();
-  static ref ALL_PATTERN : Regex =  Regex::new(&format!("(?P<keep>{NONID_START})(?P<repl>{{{}}})(?={NONID_END})","all")).unwrap();
+  static ref FINAL_PATTERN : Regexf =  Regexf::new(&format!("(?P<keep>{NONID_START})(?P<repl>final)(?={NONID_END})")).unwrap();
+  static ref ALL_PATTERN : Regexf =  Regexf::new(&format!("(?P<keep>{NONID_START})(?P<repl>all)(?={NONID_END})")).unwrap();
 
 // Pragma regex
-  static ref PRAGMA_PATTERN : Regex =  Regex::new(r"(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);").unwrap();
+  static ref PRAGMA_PATTERN : Regex =  Regex::new(&format!(r"(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);")).unwrap();
 
 // Regex to match tagged mapping declarations
-  static ref MAP_PATTERN : Regex =  Regex::new(
-    r"(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*{ELEM_TYPE_PATTERN}{WS_PATTERN}*)(?P<repl>!{WS_PATTERN}*{ID_PATTERN})(?={WS_PATTERN}*=>{WS_PATTERN}*)").unwrap();   // match "mapping (address"
-                                               // match "!tag"
-                                                   // expect "=>"
+  static ref MAP_PATTERN : Regexf =  Regexf::new(&format!(
+    "(?P<keep>{NONID_START}mapping{WS_PATTERN}*\\({WS_PATTERN}*{}{WS_PATTERN}*)(?P<repl>!{WS_PATTERN}*{ID_PATTERN})(?={WS_PATTERN}*=>{WS_PATTERN}*)",*ELEM_TYPE_PATTERN)).unwrap();  //  # match 'mapping (address'   # match '!tag'  #expect '=>'
 
 // Regex to detect start of reveal
-  static ref REVEAL_START_PATTERN : Regex =  Regex::new(r"(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()").unwrap();  // match "reveal", expect "("
+  static ref REVEAL_START_PATTERN : Regexf =  Regexf::new(&format!("(?:^|(?<=[^\\w]))reveal{WS_PATTERN}*(?=\\()")).unwrap();  // match "reveal", expect "("
 
 // Regex to detect addhom & unhom
-  static ref ADDHOM_UNHOM_PATTERN : Regex =  Regex::new(r"(?:^|(?<=[^\\w]))(?P<repl>addhom|unhom){WS_PATTERN}*(?=\\()").unwrap();
+  static ref ADDHOM_UNHOM_PATTERN : Regexf =  Regexf::new(&format!("(?:^|(?<=[^\\w]))(?P<repl>addhom|unhom){WS_PATTERN}*(?=\\()")).unwrap();
 }
 // """
 // Preserve newlines and replace all other characters with spaces
@@ -117,8 +115,8 @@ pub fn strip_reveals(code: &str) -> String
     let c = code.clone();
     let matches = REVEAL_START_PATTERN.find_iter(&c);
     for m in matches {
-        let before_reveal_loc = m.start();
-        let reveal_open_parens_loc = m.end();
+        let before_reveal_loc = m.clone().expect("m").start();
+        let reveal_open_parens_loc = m.clone().expect("m").end();
 
         // Find matching closing parenthesis
         let reveal_close_parens_loc =
@@ -146,7 +144,10 @@ pub fn inject_me_decls(code: &str) -> String
     let matches = CONTRACT_START_PATTERN.find_iter(code);
     let mut insert_indices = vec![];
     for m in matches {
-        insert_indices.push(find_matching_parenthesis(code, m.end() as i32));
+        insert_indices.push(find_matching_parenthesis(
+            code,
+            m.clone().unwrap().end() as i32,
+        ));
     }
     let parts: Vec<_> = [0]
         .iter()
@@ -167,32 +168,32 @@ pub fn inject_me_decls(code: &str) -> String
 
 // The <repl> capture group must be the last thing that is matched in search pattern
 // """
-pub fn replace_with_surrogates(
-    code: &str,
-    search_pattern: &RegexSet,
-    replacement_fstr: &str,
-) -> String {
-    // Compile each pattern independently.
-    let regexes: Vec<_> = search_pattern
-        .patterns()
-        .iter()
-        .map(|pat| Regex::new(pat).unwrap())
-        .collect();
+// pub fn replace_with_surrogates(
+//     code: &str,
+//     search_pattern: &RegexSet,
+//     replacement_fstr: &str,
+// ) -> String {
+//     // Compile each pattern independently.
+//     let regexes: Vec<_> = search_pattern
+//         .patterns()
+//         .iter()
+//         .map(|pat| Regex::new(pat).unwrap())
+//         .collect();
 
-    // Match against the whole set first and identify the individual
-    // matching patterns.
-    search_pattern
-        .matches(code)
-        .into_iter()
-        // Dereference the match index to get the corresponding
-        // compiled pattern.
-        .map(|index| &regexes[index])
-        // To get match locations or any other info, we then have to search the
-        // exact same haystack again, using our separately-compiled pattern.
-        .fold(code.to_owned(), |a, re| {
-            replace_with_surrogate(&a, re, replacement_fstr)
-        })
-}
+//     // Match against the whole set first and identify the individual
+//     // matching patterns.
+//     search_pattern
+//         .matches(code)
+//         .into_iter()
+//         // Dereference the match index to get the corresponding
+//         // compiled pattern.
+//         .map(|index| &regexes[index])
+//         // To get match locations or any other info, we then have to search the
+//         // exact same haystack again, using our separately-compiled pattern.
+//         .fold(code.to_owned(), |a, re| {
+//             replace_with_surrogate(&a, re, replacement_fstr)
+//         })
+// }
 pub fn replace_with_surrogate(
     code: &str,
     search_pattern: &Regex,
@@ -231,13 +232,54 @@ pub fn replace_with_surrogate(
     }
     code
 }
+
+pub fn replace_with_surrogatef(
+    code: &str,
+    search_pattern: &Regexf,
+    replacement_fstr: &str,
+) -> String {
+    let mut code = code.to_owned();
+    let keep_repl_pattern = if search_pattern.as_str().contains("(?P<keep>") {
+        r"\g<keep>"
+    } else {
+        ""
+    };
+    let has_ph = replacement_fstr.is_empty();
+    let mut replacement = replacement_fstr.to_owned();
+    let mut search_idx = 0;
+    let mut c;
+    loop {
+        c = code.clone();
+        let matches = search_pattern
+            .captures(&c[search_idx..])
+            .expect("Error running regex");
+        if matches.is_none() {
+            break;
+        }
+        let end = matches.as_ref().unwrap().get(0).unwrap().end();
+        if has_ph {
+            let repl = matches
+                .and_then(|cap| cap.name("repl").map(|repl| repl.as_str()))
+                .unwrap();
+            replacement = create_surrogate_string(repl);
+        }
+
+        code = code[..search_idx].to_owned()
+            + &search_pattern.replace(
+                &code[search_idx..],
+                keep_repl_pattern.to_owned() + &replacement,
+            );
+        search_idx += end + 1;
+    }
+    code
+}
 // """
 // Returns the solidity code to which the given zkay_code corresponds when dropping all privacy features,
 // while preserving original formatting
 // """
 pub fn fake_solidity_code(code: &str) -> String {
     // Strip string literals and comments
-    let mut code = replace_with_surrogates(code, &STRING_OR_COMMENT_PATTERN, "");
+    let mut code = replace_with_surrogatef(code, &STRING_OR_COMMENT_PATTERN, "");
 
     // Replace zkay pragma with solidity pragma
     code = replace_with_surrogate(
@@ -250,16 +292,16 @@ pub fn fake_solidity_code(code: &str) -> String {
     );
 
     // Strip final
-    code = replace_with_surrogate(&code, &FINAL_PATTERN, "");
+    code = replace_with_surrogatef(&code, &FINAL_PATTERN, "");
 
     // Strip ownership annotations
     code = replace_with_surrogate(&code, &ATYPE_PATTERN, "");
 
     // Strip map key tags
-    code = replace_with_surrogate(&code, &MAP_PATTERN, "");
+    code = replace_with_surrogatef(&code, &MAP_PATTERN, "");
 
     // Strip addhom / unhom expressions
-    code = replace_with_surrogate(&code, &ADDHOM_UNHOM_PATTERN, "");
+    code = replace_with_surrogatef(&code, &ADDHOM_UNHOM_PATTERN, "");
 
     // Strip reveal expressions
     code = strip_reveals(&code);
