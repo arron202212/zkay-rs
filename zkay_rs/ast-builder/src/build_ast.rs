@@ -6,26 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-// use antlr_rust::token::{Token,CommonToken};
-use antlr_rust::common_token_stream::CommonTokenStream;
-// use  semantic_version::{NpmSpec, Version};
-use zkay_ast::ast::{
-    self, is_instance, is_instances, ASTType, AddressPayableTypeName, AddressTypeName, AllExpr,
-    AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, Block, BoolTypeName,
-    BooleanLiteralExpr, BuiltinFunction, ConstructorOrFunctionDefinition, ContractDefinition,
-    DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumValue, Expression,
-    ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBase,
-    FunctionCallExprBaseProperty, Identifier, IdentifierBase, IdentifierBaseProperty,
-    IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
-    IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr, MeExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberTypeName, Parameter, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
-    RequireStatement, SimpleStatement, SourceUnit, Statement, StatementList, StringLiteralExpr,
-    TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, WhileStatement,
-    AST,
+use antlr_rust::{
+    common_token_stream::CommonTokenStream,
+    input_stream::InputStream,
+    token::{CommonToken, Token},
+    tree::{ParseTree, Visitable},
 };
-// use antlr_rust::TokenSource;
-// use  crate::config::cfg;
-// use  solidity_parser::parse::SyntaxException;
 use solidity_parser::{
     emit::Emitter,
     generated::{
@@ -34,53 +20,62 @@ use solidity_parser::{
             AllExprContext, AllExprContextAttrs, AndExprContext, AnnotatedTypeNameContext,
             AssignmentExprContext, BitShiftExprContext, BitwiseAndExprContext,
             BitwiseNotExprContext, BitwiseOrExprContext, BitwiseXorExprContext, BlockContext,
-            BooleanLiteralExprContext, BreakStatementContext, CompExprContext,
-            ConstructorDefinitionContext, ContinueStatementContext, ContractDefinitionContext,
-            ContractPartContext, ContractPartContextAttrs, DoWhileStatementContext,
-            ElementaryTypeNameContext, ElementaryTypeNameExpressionContext, EnumDefinitionContext,
-            EnumValueContext, EqExprContext, ExpressionStatementContext, ForStatementContext,
-            FunctionCallArgumentsContext, FunctionCallExprContext, FunctionDefinitionContext,
-            HomomorphismAnnotationContext, IdentifierContext, IdentifierExprContext,
-            IfStatementContext, IndexExprContext, IteExprContext, MappingContext, MeExprContext,
-            MeExprContextAttrs, MemberAccessExprContext, ModifierContext, ModifierListContext,
-            MultDivModExprContext, NotExprContext, NumberLiteralContext, NumberLiteralExprContext,
+            BooleanLiteralExprContext, BreakStatementContext, BreakStatementContextAttrs,
+            CompExprContext, ConstructorDefinitionContext, ContinueStatementContext,
+            ContinueStatementContextAttrs, ContractDefinitionContext, ContractPartContext,
+            ContractPartContextAttrs, DoWhileStatementContext, ElementaryTypeNameContext,
+            ElementaryTypeNameExpressionContext, ElementaryTypeNameExpressionContextAttrs,
+            EnumDefinitionContext, EnumValueContext, EqExprContext, ExpressionStatementContext,
+            ForStatementContext, FunctionCallArgumentsContext, FunctionCallExprContext,
+            FunctionDefinitionContext, HomomorphismAnnotationContext, IdentifierContext,
+            IdentifierExprContext, IfStatementContext, IndexExprContext, IteExprContext,
+            MappingContext, MeExprContext, MeExprContextAttrs, MemberAccessExprContext,
+            ModifierContext, ModifierListContext, MultDivModExprContext, NotExprContext,
+            NumberLiteralContext, NumberLiteralContextAttrs, NumberLiteralExprContext,
             OrExprContext, ParameterListContext, ParenthesisExprContext, PlusMinusExprContext,
             PostCrementExprContext, PowExprContext, PragmaDirectiveContext,
             PragmaDirectiveContextAttrs, PreCrementExprContext, PrimitiveCastExprContext,
             ReturnParametersContext, ReturnStatementContext, SignExprContext,
-            SimpleStatementContext, SolidityParser, SolidityParserContextType, SourceUnitContext,
-            StateMutabilityContext, StateVariableDeclarationContext, StatementContext,
-            StringLiteralExprContext, TupleExprContext, TupleExpressionContext, TypeNameContext,
-            UserDefinedTypeNameContext, VariableDeclarationStatementContext,
-            VersionConstraintContext, VersionContext, VersionOperatorContext, VersionPragmaContext,
-            WhileStatementContext,
+            SimpleStatementContext, SimpleStatementContextAttrs, SolidityParser,
+            SolidityParserContextType, SourceUnitContext, StateMutabilityContext,
+            StateMutabilityContextAttrs, StateVariableDeclarationContext, StatementContext,
+            StatementContextAttrs, StringLiteralExprContext, TupleExprContext,
+            TupleExpressionContext, TupleExpressionContextAttrs, TypeNameContext,
+            TypeNameContextAttrs, UserDefinedTypeNameContext, VariableDeclarationContext,
+            VariableDeclarationStatementContext, VersionConstraintContext, VersionContext,
+            VersionOperatorContext, VersionPragmaContext, WhileStatementContext,
         },
     },
+    parse::MyErrorListener,
+};
+use zkay_ast::{
+    ast::{
+        self, is_instance, is_instances, ASTType, AddressPayableTypeName, AddressTypeName, AllExpr,
+        AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, Block, BoolTypeName,
+        BooleanLiteralExpr, BreakStatement, BuiltinFunction, ConstructorOrFunctionDefinition,
+        ContinueStatement, ContractDefinition, ContractTypeName, DoWhileStatement,
+        ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue, EnumValueTypeName, Expression,
+        ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBase,
+        FunctionCallExprBaseProperty, Identifier, IdentifierBase, IdentifierBaseProperty,
+        IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
+        IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr, Mapping, MeExpr,
+        MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter,
+        PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, RehomExpr, RequireStatement,
+        ReturnStatement, SimpleStatement, SourceUnit, StateVariableDeclaration, Statement,
+        StatementList, StringLiteralExpr, StructTypeName, TupleExpr, TupleOrLocationExpr, TypeName,
+        UintTypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement,
+        WhileStatement, AST,
+    },
+    homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS},
 };
 
-use antlr_rust::tree::ParseTree;
-// use  solidity_parser::generated::solidityvisitor::SolidityVisitor;
-// use solidity_parser::parse::MyParser;
-// use  zkay_ast::ast::StateVariableDeclaration, ContractDefinition, NumberLiteralExpr,
-//     BooleanLiteralExpr, FunctionCallExpr, ExpressionStatement, IdentifierExpr,
-//     ReclassifyExpr, RehomExpr, BuiltinFunction, IndexExpr;
-use zkay_ast::homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
-// use antlr_rust::common_token_stream::CommonTokenStream;
-use antlr_rust::input_stream::InputStream;
-// use solidity_parser::generated::solidityparser::{SourceUnitContextAll} ;
-// use antlr_rust::parser_rule_context::ParserRuleContext;
-use solidity_parser::parse::MyErrorListener;
-// use antlr_rust::tree::ParseTreeVisitor;
-use antlr_rust::tree::Visitable;
 #[macro_export]
 macro_rules! _visit_binary_expr {
     ($ctx: expr,$self: expr) => {{
-        let mut f = BuiltinFunction::new("");
-        if let Some(op) = &($ctx).op {
-            f = BuiltinFunction::new(&op.text);
-            f.expression_base.ast_base.line = op.line as i32;
-            f.expression_base.ast_base.column = op.column as i32;
-        }
+        let op = ($ctx).op.as_ref().unwrap();
+        let mut f = BuiltinFunction::new(&op.text);
+        f.expression_base.ast_base.line = op.line as i32;
+        f.expression_base.ast_base.column = op.column as i32;
         let lhs = if let Some(expr) = &($ctx).lhs {
             expr.accept($self);
             if let Some(AST::Expression(expr)) = ($self).temp_result().clone() {
@@ -797,6 +792,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ElementaryTypeNameContext<'input>,
     ) -> Self::Return {
+        // println!("===========ctx.get_text()==={}==========",ctx.get_text());
         let t = ctx.get_text();
         match t.as_str() {
             "address" => Some(AddressTypeName::new().into_ast()),
@@ -883,12 +879,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // f = BuiltinFunction("sign" + ctx.op.text).override(line=ctx.op.line, column=ctx.op.column)
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
-        let mut f = BuiltinFunction::new("sign");
-        if let Some(op) = &ctx.op {
-            f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
-            f.expression_base.ast_base.line = op.line as i32;
-            f.expression_base.ast_base.column = op.column as i32;
-        }
+        // println!("{:?},========{:?}",1,ctx.op.as_ref().unwrap());
+        let op = ctx.op.as_ref().unwrap();
+        // println!("{:?},========{:?}",2,op.text);
+        let mut f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
+        f.expression_base.ast_base.line = op.line as i32;
+        f.expression_base.ast_base.column = op.column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -1086,9 +1082,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //         return RehomExpr(args[0], homomorphism)
 
         // return FunctionCallExpr(func, args)
+
         let mut func = if let Some(expr) = &ctx.func {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
+                // println!("{:?},==={:?}",expr,self.temp_result().clone()  );
                 Some(expr)
             } else {
                 None
@@ -1111,10 +1109,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             vec![]
         };
-        func = if let Some(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
+        if let Some(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
             LocationExpr::IdentifierExpr(func),
         ))) = &func
         {
+            //    println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
             if func.idf.name() == "reveal" {
                 assert!(
                     args.len() == 2,
@@ -1123,7 +1122,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     self.code
                 );
                 // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
-                Some(ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None).to_expr())
+                return Some(
+                    ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None).into_ast(),
+                );
             } else if let Some(homomorphism) =
                 REHOM_EXPRESSIONS.lock().unwrap().get(func.idf.name())
             {
@@ -1135,19 +1136,17 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     self.code
                 );
                 // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
-                Some(RehomExpr::new(args[0].clone(), Some(homomorphism.value.clone())).to_expr())
-            } else {
-                None
+                return Some(
+                    RehomExpr::new(args[0].clone(), Some(homomorphism.value.clone())).into_ast(),
+                );
             }
-        } else {
-            None
-        };
+        }
         Some(FunctionCallExprBase::new(func.unwrap(), args, Some(0)).into_ast())
     }
 
     fn visit_ifStatement(&mut self, ctx: &IfStatementContext<'input>) -> Self::Return {
-        let cond = if let Some(expr) = &ctx.condition {
-            expr.accept(self);
+        let cond = if let Some(condition) = &ctx.condition {
+            condition.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
@@ -1156,20 +1155,28 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        let then_branch = if let Some(expr) = &ctx.then_branch {
-            expr.accept(self);
-            if let Some(AST::Statement(Statement::StatementList(StatementList::Block(expr)))) =
-                self.temp_result().clone()
-            {
-                Some(expr)
-            } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
-                Some(Block::new(vec![expr.to_ast()], true))
-            } else {
-                None
-            }
+        // println!("={:?}=then_branch=={:?}", ctx.then_branch, 1);
+
+        let then_branch = ctx.then_branch.as_ref().unwrap();
+        then_branch.accept(self);
+        // println!(
+        //     "={:?}=then_branch=={:?}",
+        //     ctx.then_branch,
+        //     self.temp_result().clone()
+        // );
+        let then_branch = if !is_instance(self.temp_result().as_ref().unwrap(), ASTType::Block) {
+            Some(Block::new(vec![self.temp_result().clone().unwrap()], true))
         } else {
-            None
+            self.temp_result()
+                .clone()
+                .unwrap()
+                .try_as_statement()
+                .unwrap()
+                .try_as_statement_list()
+                .unwrap()
+                .try_as_block()
         };
+
         let else_branch = if let Some(expr) = &ctx.else_branch {
             expr.accept(self);
             if let Some(AST::Statement(Statement::StatementList(StatementList::Block(expr)))) =
@@ -1627,76 +1634,355 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_contractPart(&mut self, ctx: &ContractPartContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(statement) = ctx.stateVariableDeclaration() {
+            statement.accept(self);
+
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.constructorDefinition() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.functionDefinition() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.enumDefinition() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+
+        None
     }
 
     fn visit_stateVariableDeclaration(
         &mut self,
         ctx: &StateVariableDeclarationContext<'input>,
     ) -> Self::Return {
-        self.visit_children(ctx)
+        let annotated_type = if let Some(at) = &ctx.annotated_type {
+            at.accept(self);
+            self.temp_result()
+                .clone()
+                .unwrap()
+                .try_as_annotated_type_name()
+        } else {
+            None
+        };
+        let idf = if let Some(idf) = &ctx.idf {
+            idf.accept(self);
+            self.temp_result().clone().unwrap().try_as_identifier()
+        } else {
+            None
+        };
+        let expr = if let Some(expr) = &ctx.expr {
+            expr.accept(self);
+            if let Some(AST::Expression(e)) = self.temp_result() {
+                Some(e.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
+        Some(
+            StateVariableDeclaration::new(annotated_type.unwrap(), keywords, idf.unwrap(), expr)
+                .into_ast(),
+        )
     }
 
     fn visit_returnParameters(&mut self, ctx: &ReturnParametersContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        //TODO vec
+        let rp: Vec<_> = ctx
+            .return_parameters
+            .iter()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result().clone()
+            })
+            .collect();
+        if rp.is_empty() {
+            None
+        } else {
+            rp[0].clone()
+        }
     }
 
     fn visit_modifierList(&mut self, ctx: &ModifierListContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        //TODO vec
+        let rp: Vec<_> = ctx
+            .modifiers
+            .iter()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result().clone()
+            })
+            .collect();
+        if rp.is_empty() {
+            None
+        } else {
+            rp[0].clone()
+        }
     }
 
     fn visit_parameterList(&mut self, ctx: &ParameterListContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        //TODO vec
+        let rp: Vec<_> = ctx
+            .params
+            .iter()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result().clone()
+            })
+            .collect();
+        if rp.is_empty() {
+            None
+        } else {
+            rp[0].clone()
+        }
     }
-
+    fn visit_variableDeclaration(
+        &mut self,
+        ctx: &VariableDeclarationContext<'input>,
+    ) -> Self::Return {
+        let annotated_type = if let Some(at) = &ctx.annotated_type {
+            at.accept(self);
+            self.temp_result()
+                .clone()
+                .unwrap()
+                .try_as_annotated_type_name()
+        } else {
+            None
+        };
+        let idf = if let Some(idf) = &ctx.idf {
+            idf.accept(self);
+            self.temp_result().clone().unwrap().try_as_identifier()
+        } else {
+            None
+        };
+        let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
+        Some(
+            VariableDeclaration::new(keywords, annotated_type.unwrap(), idf.unwrap(), None)
+                .into_ast(),
+        )
+    }
     fn visit_typeName(&mut self, ctx: &TypeNameContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(statement) = ctx.elementaryTypeName() {
+            statement.accept(self);
+
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.userDefinedTypeName() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.mapping() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        None
     }
 
     fn visit_userDefinedTypeName(
         &mut self,
         ctx: &UserDefinedTypeNameContext<'input>,
     ) -> Self::Return {
-        self.visit_children(ctx)
+        let identifier = if let Some(identifier) = &ctx.identifier {
+            identifier.accept(self);
+            self.temp_result().clone().unwrap().try_as_identifier()
+        } else {
+            None
+        };
+        let names: Vec<_> = ctx
+            .names
+            .iter()
+            .map(|name| {
+                name.accept(self);
+                self.temp_result()
+                    .clone()
+                    .unwrap()
+                    .try_as_identifier()
+                    .unwrap()
+            })
+            .collect();
+        match identifier.unwrap().name().as_str() {
+            "enum" => Some(EnumTypeName::new(names, None).into_ast()),
+            "enum value" => Some(EnumValueTypeName::new(names, None).into_ast()),
+            "struct" => Some(StructTypeName::new(names, None).into_ast()),
+            "constract" => Some(ContractTypeName::new(names, None).into_ast()),
+            "address" => Some(AddressTypeName::new().into_ast()),
+            "address payable" => Some(AddressPayableTypeName::new().into_ast()),
+            _ => None,
+        }
     }
 
     fn visit_mapping(&mut self, ctx: &MappingContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        let key_type = if let Some(key_type) = &ctx.key_type {
+            key_type.accept(self);
+            // println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
+            self.temp_result().clone().unwrap().try_as_type_name()
+        } else {
+            None
+        };
+        assert!(key_type.is_some(), "key_type is none");
+        let key_label = if let Some(key_label) = &ctx.key_label {
+            key_label.accept(self);
+            self.temp_result().clone().unwrap().try_as_identifier()
+        } else {
+            None
+        };
+        let value_type = if let Some(value_type) = &ctx.value_type {
+            value_type.accept(self);
+            self.temp_result()
+                .clone()
+                .unwrap()
+                .try_as_annotated_type_name()
+        } else {
+            None
+        };
+        assert!(value_type.is_some(), "value_type is none");
+        Some(Mapping::new(key_type.unwrap(), key_label, value_type.unwrap()).into_ast())
     }
 
     fn visit_stateMutability(&mut self, ctx: &StateMutabilityContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if ctx.PayableKeyword().is_some() {
+            return None;
+        }
+        if ctx.PureKeyword().is_some() {
+            return None;
+        }
+        if ctx.ViewKeyword().is_some() {
+            return None;
+        }
+        None
     }
 
     fn visit_block(&mut self, ctx: &BlockContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(statement) = &ctx.statement {
+            statement.accept(self);
+            Some(Block::new(vec![self.temp_result().clone().unwrap()], true).into_ast())
+        } else {
+            let statements: Vec<_> = ctx
+                .statements
+                .iter()
+                .map(|statement| {
+                    statement.accept(self);
+                    self.temp_result().clone().unwrap()
+                })
+                .collect();
+            let was_single_statement = statements.len() == 1;
+            Some(Block::new(statements, was_single_statement).into_ast())
+        }
     }
 
     fn visit_statement(&mut self, ctx: &StatementContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(statement) = ctx.ifStatement() {
+            statement.accept(self);
+
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.whileStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.forStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.block() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.doWhileStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.continueStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.breakStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.returnStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.simpleStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        None
     }
 
     fn visit_simpleStatement(&mut self, ctx: &SimpleStatementContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(statement) = ctx.variableDeclarationStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        if let Some(statement) = ctx.expressionStatement() {
+            statement.accept(self);
+            return self.temp_result().clone();
+        }
+        None
     }
 
     fn visit_continueStatement(&mut self, ctx: &ContinueStatementContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if ctx.ContinueKeyword().is_some() {
+            Some(ContinueStatement::new().into_ast())
+        } else {
+            None
+        }
     }
 
     fn visit_breakStatement(&mut self, ctx: &BreakStatementContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if ctx.BreakKeyword().is_some() {
+            Some(BreakStatement::new().into_ast())
+        } else {
+            None
+        }
     }
 
     fn visit_returnStatement(&mut self, ctx: &ReturnStatementContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        let expr = if let Some(expr) = &ctx.expr {
+            expr.accept(self);
+            if let Some(AST::Expression(e)) = self.temp_result() {
+                Some(e.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        Some(ReturnStatement::new(expr).into_ast())
     }
 
     fn visit_variableDeclarationStatement(
         &mut self,
         ctx: &VariableDeclarationStatementContext<'input>,
     ) -> Self::Return {
-        self.visit_children(ctx)
+        ctx.variable_declaration.as_ref().unwrap().accept(self);
+        // println!("{:?}====={:?}", self
+        //     .temp_result(), ctx.variable_declaration);
+        let variable_declaration = self
+            .temp_result()
+            .clone()
+            .unwrap()
+            .try_as_identifier_declaration()
+            .unwrap()
+            .try_as_variable_declaration();
+        let expr = if let Some(expr) = &ctx.expr {
+            expr.accept(self);
+            if let Some(AST::Expression(e)) = self.temp_result() {
+                Some(e.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        Some(VariableDeclarationStatement::new(variable_declaration.unwrap(), expr).into_ast())
     }
 
     fn visit_AllExpr(&mut self, ctx: &AllExprContext<'input>) -> Self::Return {
@@ -1729,33 +2015,108 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_PrimitiveCastExpr(&mut self, ctx: &PrimitiveCastExprContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        let elem_type = if let Some(elem_type) = &ctx.elem_type {
+            elem_type.accept(self);
+            self.temp_result().clone().unwrap().try_as_type_name()
+        } else {
+            None
+        };
+        let expr = if let Some(expr) = &ctx.expr {
+            expr.accept(self);
+            self.temp_result().clone().unwrap().try_as_expression()
+        } else {
+            None
+        };
+        Some(PrimitiveCastExpr::new(elem_type.unwrap(), expr.unwrap(), false).into_ast())
     }
 
     fn visit_MemberAccessExpr(&mut self, ctx: &MemberAccessExprContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        let member = if let Some(member) = &ctx.member {
+            member.accept(self);
+            self.temp_result().clone().unwrap().try_as_identifier()
+        } else {
+            None
+        };
+        let expr = if let Some(expr) = &ctx.expr {
+            expr.accept(self);
+            self.temp_result().clone().unwrap().try_as_expression()
+        } else {
+            None
+        };
+        Some(
+            MemberAccessExpr::new(
+                expr.map(|e| {
+                    e.try_as_tuple_or_location_expr()
+                        .unwrap()
+                        .try_as_location_expr()
+                        .unwrap()
+                }),
+                member.unwrap(),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_functionCallArguments(
         &mut self,
         ctx: &FunctionCallArgumentsContext<'input>,
     ) -> Self::Return {
-        self.visit_children(ctx)
+        //TODO vec
+        let rp: Vec<_> = ctx
+            .exprs
+            .iter()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result().clone()
+            })
+            .collect();
+        if rp.is_empty() {
+            None
+        } else {
+            rp[0].clone()
+        }
     }
 
     fn visit_tupleExpression(&mut self, ctx: &TupleExpressionContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        //TODO vec
+        let rp: Vec<_> = ctx
+            .expression_all()
+            .iter()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result().clone()
+            })
+            .collect();
+        if rp.is_empty() {
+            None
+        } else {
+            rp[0].clone()
+        }
     }
 
     fn visit_elementaryTypeNameExpression(
         &mut self,
         ctx: &ElementaryTypeNameExpressionContext<'input>,
     ) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(etn) = ctx.elementaryTypeName() {
+            etn.accept(self);
+            self.temp_result().clone()
+        } else {
+            None
+        }
     }
 
     fn visit_numberLiteral(&mut self, ctx: &NumberLiteralContext<'input>) -> Self::Return {
-        self.visit_children(ctx)
+        if let Some(dn) = ctx.DecimalNumber() {
+            return Some(
+                NumberLiteralExpr::new(dn.symbol.get_text().parse::<i32>().unwrap(), false)
+                    .into_ast(),
+            );
+        }
+        if let Some(dn) = ctx.HexNumber() {
+            return Some(NumberLiteralExpr::new_string(dn.symbol.get_text().to_owned()).into_ast());
+        }
+        None
     }
 }
 #[cfg(test)]

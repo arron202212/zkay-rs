@@ -1881,7 +1881,7 @@ impl NumberLiteralExpr {
             literal_expr_base: LiteralExprBase::new(),
             value: 0,
             value_string: Some(value_string.clone()),
-            was_hex: false,
+            was_hex: true,
             annotated_type: Some(Box::new(AnnotatedTypeName::new(
                 NumberLiteralType::new(NumberLiteralTypeUnion::String(value_string))
                     .into_ast()
@@ -4691,7 +4691,7 @@ impl IntoAST for NumberTypeNameBase {
 
 impl NumberTypeNameBase {
     pub fn new(name: String, prefix: String, signed: bool, bitwidth: Option<i32>) -> Self {
-        assert!(name.starts_with(&prefix));
+        assert!(name.starts_with(&prefix), "{name} {prefix}");
         let prefix_len = prefix.len();
         let _size_in_bits = if let Some(bitwidth) = bitwidth {
             bitwidth
@@ -4887,7 +4887,7 @@ impl IntoAST for IntTypeName {
 impl IntTypeName {
     pub fn new(name: String) -> Self {
         Self {
-            number_type_name_base: NumberTypeNameBase::new(name, String::from("i32"), true, None),
+            number_type_name_base: NumberTypeNameBase::new(name, String::from("int"), true, None),
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
@@ -5202,7 +5202,7 @@ pub enum KeyLabelUnion {
 #[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Mapping {
     pub type_name_base: TypeNameBase,
-    pub key_type: ElementaryTypeName,
+    pub key_type: Box<TypeName>,
     pub key_label: Option<Identifier>,
     pub value_type: Box<AnnotatedTypeName>,
     pub instantiated_key: Option<Expression>,
@@ -5215,13 +5215,13 @@ impl IntoAST for Mapping {
 
 impl Mapping {
     pub fn new(
-        key_type: ElementaryTypeName,
+        key_type: TypeName,
         key_label: Option<Identifier>,
         value_type: AnnotatedTypeName,
     ) -> Self {
         Self {
             type_name_base: TypeNameBase::new(),
-            key_type,
+            key_type: Box::new(key_type),
             key_label,
             value_type: Box::new(value_type),
             instantiated_key: None,
@@ -5233,9 +5233,7 @@ impl Mapping {
 }
 impl ASTChildren for Mapping {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::TypeName(TypeName::ElementaryTypeName(
-            self.key_type.clone(),
-        )));
+        cb.add_child(AST::TypeName(*self.key_type.clone()));
         if let Some(idf) = &self.key_label {
             cb.add_child(AST::Identifier(idf.clone()));
         }
@@ -6243,8 +6241,8 @@ impl ConstructorOrFunctionDefinition {
         });
         Self {
             namespace_definition_base: NamespaceDefinitionBase::new(idf),
-            parameters: parameters.as_ref().unwrap().clone(),
-            modifiers: modifiers.as_ref().unwrap().clone(),
+            parameters: parameters.clone().unwrap_or(vec![]),
+            modifiers: modifiers.clone().unwrap_or(vec![]),
             return_parameters: return_parameters.clone(),
             body,
             return_var_decls,
@@ -6252,8 +6250,8 @@ impl ConstructorOrFunctionDefinition {
             original_body: None,
             annotated_type: Some(AnnotatedTypeName::new(
                 Some(TypeName::FunctionTypeName(FunctionTypeName::new(
-                    parameters.unwrap(),
-                    modifiers.unwrap(),
+                    parameters.unwrap_or(vec![]),
+                    modifiers.unwrap_or(vec![]),
                     return_parameters,
                 ))),
                 None,

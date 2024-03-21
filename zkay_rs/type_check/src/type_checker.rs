@@ -50,10 +50,10 @@ impl AstVisitor for TypeCheckVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
         None
     }
 }
@@ -1382,9 +1382,9 @@ impl TypeCheckVisitor {
         let mut tn = *map_t.type_name.clone().unwrap();
         //do actual type checking
         if let TypeName::Mapping(ref mut type_name) = tn {
-            let key_type = type_name.key_type.clone();
+            let key_type = *type_name.key_type.clone();
             let expected = AnnotatedTypeName::new(
-                Some(TypeName::ElementaryTypeName(key_type)),
+                Some(key_type),
                 Some(Expression::all_expr().into_ast()),
                 String::from("NON_HOMOMORPHISM"),
             );
@@ -1513,7 +1513,7 @@ impl TypeCheckVisitor {
     pub fn visitMapping(&self, ast: Mapping) {
         if ast.key_label.is_some() {
             assert!(
-                TypeName::ElementaryTypeName(ast.key_type.clone()) == TypeName::address_type(),
+                *ast.key_type.clone() == TypeName::address_type(),
                 "Only addresses can be annotated{:?}",
                 ast
             );
