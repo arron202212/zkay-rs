@@ -12,36 +12,36 @@ use crate::ast::{
     StructDefinition, AST,
 };
 use crate::homomorphism::Homomorphism;
-use crate::visitor::visitor::AstVisitor;
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
+use zkay_derive::ASTVisitorBaseRefImpl;
 // class UsedHomomorphismsVisitor(AstVisitor)
-pub struct UsedHomomorphismsVisitor;
-
+#[derive(ASTVisitorBaseRefImpl)]
+pub struct UsedHomomorphismsVisitor {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl AstVisitor for UsedHomomorphismsVisitor {
     type Return = BTreeSet<String>;
     fn temper_result(&self) -> Self::Return {
         BTreeSet::new()
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
+        self.temper_result()
     }
 }
 impl UsedHomomorphismsVisitor {
     //pub fn __init__(self)
     //     super().__init__(traversal="node-or-children")
     pub fn new() -> Self {
-        Self {}
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
     }
     pub fn visitChildren(&self, mut ast: AST) -> BTreeSet<String> {
         let mut all_homs = BTreeSet::new();

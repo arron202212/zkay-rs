@@ -7,7 +7,8 @@
 #![allow(unused_braces)]
 
 use zkay_ast::ast::{is_instance, ASTType, AnnotatedTypeName, ExpressionBaseProperty, AST};
-use zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 
 pub fn contains_private(ast: AST) -> bool {
     let v = ContainsPrivateVisitor::new();
@@ -16,7 +17,9 @@ pub fn contains_private(ast: AST) -> bool {
 }
 
 // class ContainsPrivateVisitor(AstVisitor)
+#[derive(ASTVisitorBaseRefImpl)]
 pub struct ContainsPrivateVisitor {
+    pub ast_visitor_base: AstVisitorBase,
     pub contains_private: bool,
 }
 impl AstVisitor for ContainsPrivateVisitor {
@@ -24,17 +27,11 @@ impl AstVisitor for ContainsPrivateVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+        self.temper_result()
     }
 }
 impl ContainsPrivateVisitor {
@@ -43,6 +40,7 @@ impl ContainsPrivateVisitor {
     //     self.contains_private = False
     pub fn new() -> Self {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             contains_private: false,
         }
     }

@@ -21,15 +21,15 @@ use crate::ast::{
 use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
 use serde::{Deserialize, Serialize};
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
-use crate::visitor::visitor::AstVisitor;
-
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn fill_symbol_table(ast: &AST) {
-    let v = SymbolTableFiller;
+    let v = SymbolTableFiller::new();
     v.visit(ast);
 }
 
 pub fn link_symbol_table(ast: &AST) {
-    let v = SymbolTableLinker;
+    let v = SymbolTableLinker::new();
     v.visit(ast);
 }
 
@@ -85,31 +85,35 @@ pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, Identifier> {
 }
 
 pub fn get_builtin_globals() -> BTreeMap<String, Identifier> {
-    let sf = SymbolTableFiller;
+    let sf = SymbolTableFiller::new();
     sf.get_builtin_globals()
 }
 
-struct SymbolTableFiller;
+#[derive(ASTVisitorBaseRefImpl)]
+struct SymbolTableFiller {
+    pub ast_visitor_base: AstVisitorBase,
+}
+
 impl AstVisitor for SymbolTableFiller {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 // class SymbolTableFiller(AstVisitor)
 impl SymbolTableFiller {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
     pub fn get_builtin_globals(&self) -> BTreeMap<String, Identifier> {
         let mut global_defs = GLOBAL_DEFS.vars();
         for d in global_defs.iter_mut() {
@@ -282,27 +286,29 @@ impl SymbolTableFiller {
     }
 }
 
-pub struct SymbolTableLinker;
+#[derive(ASTVisitorBaseRefImpl)]
+pub struct SymbolTableLinker {
+    pub ast_visitor_base: AstVisitorBase,
+}
 // class SymbolTableLinker(AstVisitor)
 impl AstVisitor for SymbolTableLinker {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 impl SymbolTableLinker {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
     pub fn _find_next_decl(ast: AST, name: String) -> (Option<AST>, Option<AST>) {
         let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
         while let Some(_ancestor) = ancestor {

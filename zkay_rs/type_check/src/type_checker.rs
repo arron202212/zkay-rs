@@ -29,35 +29,38 @@ use zkay_ast::ast::{
     UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
-use zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 
 pub fn type_check(ast: AST) {
     check_final(ast.clone());
-    let v = TypeCheckVisitor;
+    let v = TypeCheckVisitor::new();
     v.visit(&ast);
 }
 
 // class TypeCheckVisitor(AstVisitor)
-pub struct TypeCheckVisitor;
+#[derive(ASTVisitorBaseRefImpl)]
+pub struct TypeCheckVisitor {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl AstVisitor for TypeCheckVisitor {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+        self.temper_result()
     }
 }
 impl TypeCheckVisitor {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
     pub fn get_rhs(
         &self,
         mut rhs: Expression,

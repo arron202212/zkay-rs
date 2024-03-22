@@ -14,7 +14,7 @@ const LINE_ENDING: &'static str = "\n";
 use crate::analysis::partition_state::PartitionState;
 use crate::circuit_constraints::CircuitStatement;
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase};
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,9 @@ use zkay_config::{
     zk_print,
 };
 use zkay_crypto::params::CryptoParams;
-use zkay_derive::{impl_trait, impl_traits, ASTDebug, ASTKind, ImplBaseTrait};
+use zkay_derive::{
+    impl_trait, impl_traits, ASTDebug, ASTKind, ASTVisitorBaseRefImpl, ImplBaseTrait,
+};
 use zkay_utils::progress_printer::warn_print;
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
@@ -7047,21 +7049,16 @@ pub enum SingleOrListUnion {
     AST(AST),
     String(String),
 }
+#[derive(ASTVisitorBaseRefImpl)]
 pub struct CodeVisitor {
-    pub display_final: bool,
     pub ast_visitor_base: AstVisitorBase,
+    pub display_final: bool,
 }
 
 impl AstVisitor for CodeVisitor {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
-    }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
     }
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ASTBase == name
@@ -7115,32 +7112,30 @@ impl AstVisitor for CodeVisitor {
             || &ASTType::ContractDefinition == name
             || &ASTType::SourceUnit == name
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         match *name {
-            ASTType::ASTBase => Some(Some(self.visit_AST(ast))),
-            ASTType::CommentBase => {
-                Some(Some(self.visit_Comment(ast.try_as_comment_ref().unwrap())))
+            ASTType::ASTBase => Some(self.visit_AST(ast)),
+            ASTType::CommentBase => Some(self.visit_Comment(ast.try_as_comment_ref().unwrap())),
+            ASTType::IdentifierBase => {
+                Some(self.visit_Identifier(ast.try_as_identifier_ref().unwrap()))
             }
-            ASTType::IdentifierBase => Some(Some(
-                self.visit_Identifier(ast.try_as_identifier_ref().unwrap()),
-            )),
-            ASTType::FunctionCallExprBase => Some(Some(
+            ASTType::FunctionCallExprBase => Some(
                 self.visit_FunctionCallExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
                         .try_as_function_call_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::PrimitiveCastExpr => Some(Some(
+            ),
+            ASTType::PrimitiveCastExpr => Some(
                 self.visit_PrimitiveCastExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
                         .try_as_primitive_cast_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::BooleanLiteralExpr => Some(Some(
+            ),
+            ASTType::BooleanLiteralExpr => Some(
                 self.visit_BooleanLiteralExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7149,8 +7144,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_boolean_literal_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::NumberLiteralExpr => Some(Some(
+            ),
+            ASTType::NumberLiteralExpr => Some(
                 self.visit_NumberLiteralExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7159,8 +7154,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_number_literal_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::StringLiteralExpr => Some(Some(
+            ),
+            ASTType::StringLiteralExpr => Some(
                 self.visit_StringLiteralExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7169,8 +7164,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_string_literal_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ArrayLiteralExprBase => Some(Some(
+            ),
+            ASTType::ArrayLiteralExprBase => Some(
                 self.visit_ArrayLiteralExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7179,8 +7174,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_array_literal_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::TupleExpr => Some(Some(
+            ),
+            ASTType::TupleExpr => Some(
                 self.visit_TupleExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7189,8 +7184,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_tuple_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::IdentifierExpr => Some(Some(
+            ),
+            ASTType::IdentifierExpr => Some(
                 self.visit_IdentifierExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7201,8 +7196,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_identifier_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::MemberAccessExpr => Some(Some(
+            ),
+            ASTType::MemberAccessExpr => Some(
                 self.visit_MemberAccessExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7213,8 +7208,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_member_access_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::IndexExpr => Some(Some(
+            ),
+            ASTType::IndexExpr => Some(
                 self.visit_IndexExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7225,32 +7220,32 @@ impl AstVisitor for CodeVisitor {
                         .try_as_index_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::MeExpr => Some(Some(
+            ),
+            ASTType::MeExpr => Some(
                 self.visit_MeExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
                         .try_as_me_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::AllExpr => Some(Some(
+            ),
+            ASTType::AllExpr => Some(
                 self.visit_AllExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
                         .try_as_all_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ReclassifyExpr => Some(Some(
+            ),
+            ASTType::ReclassifyExpr => Some(
                 self.visit_ReclassifyExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
                         .try_as_reclassify_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::RehomExpr => Some(Some(
+            ),
+            ASTType::RehomExpr => Some(
                 self.visit_RehomExpr(
                     ast.try_as_expression_ref()
                         .unwrap()
@@ -7259,64 +7254,64 @@ impl AstVisitor for CodeVisitor {
                         .try_as_rehom_expr_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::IfStatement => Some(Some(
+            ),
+            ASTType::IfStatement => Some(
                 self.visit_IfStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_if_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::WhileStatement => Some(Some(
+            ),
+            ASTType::WhileStatement => Some(
                 self.visit_WhileStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_while_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::DoWhileStatement => Some(Some(
+            ),
+            ASTType::DoWhileStatement => Some(
                 self.visit_DoWhileStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_do_while_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ForStatement => Some(Some(
+            ),
+            ASTType::ForStatement => Some(
                 self.visit_ForStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_for_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::BreakStatement => Some(Some(
+            ),
+            ASTType::BreakStatement => Some(
                 self.visit_BreakStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_break_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ContinueStatement => Some(Some(
+            ),
+            ASTType::ContinueStatement => Some(
                 self.visit_ContinueStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_continue_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ReturnStatement => Some(Some(
+            ),
+            ASTType::ReturnStatement => Some(
                 self.visit_ReturnStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_return_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ExpressionStatement => Some(Some(
+            ),
+            ASTType::ExpressionStatement => Some(
                 self.visit_ExpressionStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7325,8 +7320,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_expression_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::RequireStatement => Some(Some(
+            ),
+            ASTType::RequireStatement => Some(
                 self.visit_RequireStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7335,8 +7330,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_require_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::AssignmentStatementBase => Some(Some(
+            ),
+            ASTType::AssignmentStatementBase => Some(
                 self.visit_AssignmentStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7345,24 +7340,24 @@ impl AstVisitor for CodeVisitor {
                         .try_as_assignment_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::CircuitDirectiveStatementBase => Some(Some(
+            ),
+            ASTType::CircuitDirectiveStatementBase => Some(
                 self.visit_CircuitDirectiveStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_circuit_directive_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::StatementListBase => Some(Some(
+            ),
+            ASTType::StatementListBase => Some(
                 self.visit_StatementList(
                     ast.try_as_statement_ref()
                         .unwrap()
                         .try_as_statement_list_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::Block => Some(Some(
+            ),
+            ASTType::Block => Some(
                 self.visit_Block(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7371,8 +7366,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_block_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::IndentBlock => Some(Some(
+            ),
+            ASTType::IndentBlock => Some(
                 self.visit_IndentBlock(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7381,24 +7376,24 @@ impl AstVisitor for CodeVisitor {
                         .try_as_indent_block_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ElementaryTypeNameBase => Some(Some(
+            ),
+            ASTType::ElementaryTypeNameBase => Some(
                 self.visit_ElementaryTypeName(
                     ast.try_as_type_name_ref()
                         .unwrap()
                         .try_as_elementary_type_name_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::UserDefinedTypeNameBase => Some(Some(
+            ),
+            ASTType::UserDefinedTypeNameBase => Some(
                 self.visit_UserDefinedTypeName(
                     ast.try_as_type_name_ref()
                         .unwrap()
                         .try_as_user_defined_type_name_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::AddressTypeName => Some(Some(
+            ),
+            ASTType::AddressTypeName => Some(
                 self.visit_AddressTypeName(
                     ast.try_as_type_name_ref()
                         .unwrap()
@@ -7407,8 +7402,8 @@ impl AstVisitor for CodeVisitor {
                         .try_as_address_type_name_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::AddressPayableTypeName => Some(Some(
+            ),
+            ASTType::AddressPayableTypeName => Some(
                 self.visit_AddressPayableTypeName(
                     ast.try_as_type_name_ref()
                         .unwrap()
@@ -7417,27 +7412,27 @@ impl AstVisitor for CodeVisitor {
                         .try_as_address_payable_type_name_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::AnnotatedTypeName => Some(Some(
-                self.visit_AnnotatedTypeName(ast.try_as_annotated_type_name_ref().unwrap()),
-            )),
-            ASTType::Mapping => Some(Some(
+            ),
+            ASTType::AnnotatedTypeName => {
+                Some(self.visit_AnnotatedTypeName(ast.try_as_annotated_type_name_ref().unwrap()))
+            }
+            ASTType::Mapping => Some(
                 self.visit_Mapping(
                     ast.try_as_type_name_ref()
                         .unwrap()
                         .try_as_mapping_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ArrayBase => Some(Some(
+            ),
+            ASTType::ArrayBase => Some(
                 self.visit_Array(
                     ast.try_as_type_name_ref()
                         .unwrap()
                         .try_as_array_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::CipherText => Some(Some(
+            ),
+            ASTType::CipherText => Some(
                 self.visit_CipherText(
                     ast.try_as_type_name_ref()
                         .unwrap()
@@ -7446,24 +7441,24 @@ impl AstVisitor for CodeVisitor {
                         .try_as_cipher_text_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::TupleType => Some(Some(
+            ),
+            ASTType::TupleType => Some(
                 self.visit_TupleType(
                     ast.try_as_type_name_ref()
                         .unwrap()
                         .try_as_tuple_type_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::VariableDeclaration => Some(Some(
+            ),
+            ASTType::VariableDeclaration => Some(
                 self.visit_VariableDeclaration(
                     ast.try_as_identifier_declaration_ref()
                         .unwrap()
                         .try_as_variable_declaration_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::VariableDeclarationStatement => Some(Some(
+            ),
+            ASTType::VariableDeclarationStatement => Some(
                 self.visit_VariableDeclarationStatement(
                     ast.try_as_statement_ref()
                         .unwrap()
@@ -7472,61 +7467,59 @@ impl AstVisitor for CodeVisitor {
                         .try_as_variable_declaration_statement_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::Parameter => Some(Some(
+            ),
+            ASTType::Parameter => Some(
                 self.visit_Parameter(
                     ast.try_as_identifier_declaration_ref()
                         .unwrap()
                         .try_as_parameter_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ConstructorOrFunctionDefinition => Some(Some(
+            ),
+            ASTType::ConstructorOrFunctionDefinition => Some(
                 self.visit_ConstructorOrFunctionDefinition(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
                         .try_as_constructor_or_function_definition_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::EnumValue => Some(Some(
-                self.visit_EnumValue(ast.try_as_enum_value_ref().unwrap()),
-            )),
-            ASTType::EnumDefinition => Some(Some(
+            ),
+            ASTType::EnumValue => Some(self.visit_EnumValue(ast.try_as_enum_value_ref().unwrap())),
+            ASTType::EnumDefinition => Some(
                 self.visit_EnumDefinition(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
                         .try_as_enum_definition_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::StructDefinition => Some(Some(
+            ),
+            ASTType::StructDefinition => Some(
                 self.visit_StructDefinition(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
                         .try_as_struct_definition_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::StateVariableDeclaration => Some(Some(
+            ),
+            ASTType::StateVariableDeclaration => Some(
                 self.visit_StateVariableDeclaration(
                     ast.try_as_identifier_declaration_ref()
                         .unwrap()
                         .try_as_state_variable_declaration_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::ContractDefinition => Some(Some(
+            ),
+            ASTType::ContractDefinition => Some(
                 self.visit_ContractDefinition(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
                         .try_as_contract_definition_ref()
                         .unwrap(),
                 ),
-            )),
-            ASTType::SourceUnit => Some(Some(
-                self.visit_SourceUnit(ast.try_as_source_unit_ref().unwrap()),
-            )),
+            ),
+            ASTType::SourceUnit => {
+                Some(self.visit_SourceUnit(ast.try_as_source_unit_ref().unwrap()))
+            }
             _ => None,
         }
     }

@@ -14,15 +14,17 @@ use zkay_ast::ast::{
     IdentifierExpr, IfStatement, IntoAST, LocationExpr, StateVariableDeclaration,
     TupleOrLocationExpr, AST,
 };
-use zkay_ast::visitor::visitor::AstVisitor;
-
+use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_final(ast: AST) {
     let v = FinalVisitor::new();
     v.visit(&ast);
 }
 
 // class FinalVisitor(AstVisitor)
+#[derive(ASTVisitorBaseRefImpl)]
 struct FinalVisitor {
+    pub ast_visitor_base: AstVisitorBase,
     state_vars_assigned: Option<BTreeMap<AST, bool>>,
 }
 impl AstVisitor for FinalVisitor {
@@ -30,17 +32,11 @@ impl AstVisitor for FinalVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+        self.temper_result()
     }
 }
 impl FinalVisitor {
@@ -49,6 +45,7 @@ impl FinalVisitor {
     //     self.state_vars_assigned: Optional[Dict[StateVariableDeclaration, bool]] = None
     pub fn new() -> Self {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             state_vars_assigned: None,
         }
     }

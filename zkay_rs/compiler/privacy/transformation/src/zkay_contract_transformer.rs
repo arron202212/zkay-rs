@@ -53,10 +53,10 @@ pub fn transform_ast(
     // """
 {
     let zt = ZkayTransformer::new();
-    let new_ast = zt.visit(Some(ast.unwrap().to_ast()));
+    let mut new_ast = zt.visit(Some(ast.unwrap().to_ast()));
 
     // restore all parent pointers and identifier targets
-    set_parents(new_ast.clone().unwrap());
+    set_parents(new_ast.as_mut().unwrap());
     link_identifiers(&new_ast.as_ref().unwrap());
     (new_ast.unwrap(), zt.circuits)
 }

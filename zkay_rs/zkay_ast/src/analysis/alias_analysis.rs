@@ -17,15 +17,16 @@ use crate::ast::{
     StatementBaseMutRef, StatementBaseProperty, StatementBaseRef, StatementList,
     StatementListBaseProperty, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,
 };
-use crate::visitor::visitor::AstVisitor;
-
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn alias_analysis(ast: &AST) {
-    let v = AliasAnalysisVisitor::new();
+    let v = AliasAnalysisVisitor::new(false);
     v.cond_analyzer.visit(ast);
 }
-
+#[derive(ASTVisitorBaseRefImpl)]
 struct AliasAnalysisVisitor {
-    cond_analyzer: GuardConditionAnalyzer,
+    pub ast_visitor_base: AstVisitorBase,
+    pub cond_analyzer: GuardConditionAnalyzer,
 }
 // class AliasAnalysisVisitor(AstVisitor)
 
@@ -34,16 +35,10 @@ impl AstVisitor for AliasAnalysisVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
@@ -51,9 +46,10 @@ impl AliasAnalysisVisitor {
     // pub fn __init__(&self, log=False)
     //     super().__init__("node-or-children", log)
     //     self.cond_analyzer = GuardConditionAnalyzer()
-    pub fn new() -> Self {
+    pub fn new(log: bool) -> Self {
         Self {
-            cond_analyzer: GuardConditionAnalyzer::new(),
+            ast_visitor_base: AstVisitorBase::new("node-or-children", log),
+            cond_analyzer: GuardConditionAnalyzer::new(log),
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
@@ -502,7 +498,9 @@ impl AliasAnalysisVisitor {
         unimplemented!();
     }
 }
+#[derive(ASTVisitorBaseRefImpl)]
 pub struct GuardConditionAnalyzer {
+    pub ast_visitor_base: AstVisitorBase,
     _neg: bool,
     _analysis: Option<PartitionState<AST>>,
 }
@@ -511,27 +509,19 @@ impl AstVisitor for GuardConditionAnalyzer {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
-// class GuardConditionAnalyzer(AstVisitor)
-// pub fn __init__(&self, log=False)
-//     super().__init__("node-or-children", log)
-//     self._neg = False
-//     self._analysis = None
+
 impl GuardConditionAnalyzer {
-    pub fn new() -> Self {
+    pub fn new(log: bool) -> Self {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", log),
             _neg: false,
             _analysis: None,
         }

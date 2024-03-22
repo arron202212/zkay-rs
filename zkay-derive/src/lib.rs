@@ -44,6 +44,34 @@ impl ASTInstanceOf for {} {{
     panic!("no ident found")
 }
 
+#[proc_macro_derive(ASTVisitorBaseRefImpl)]
+pub fn derive_ast_visitor_base_ref(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    let struct_name = it.next().unwrap().to_string();
+                    return format!(
+                        r#"
+impl AstVisitorBaseRef for {} {{
+    fn ast_visitor_base_ref(&self) -> &AstVisitorBase {{
+        &self.ast_visitor_base
+    }}
+}}
+                    "#,
+                        struct_name
+                    )
+                    .parse()
+                    .unwrap();
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("no ident found")
+}
+
 #[proc_macro_derive(ASTDebug)]
 pub fn derive_ast_debug(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter();

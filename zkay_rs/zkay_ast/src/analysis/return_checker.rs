@@ -10,10 +10,10 @@ use crate::ast::{
     is_instance, ASTBaseProperty, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST,
     ReturnStatement, StatementListBaseProperty, AST,
 }; //, AstException
-use crate::visitor::visitor::AstVisitor;
-
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_return(ast: &AST) {
-    let v = ReturnCheckVisitor;
+    let v = ReturnCheckVisitor::new();
     v.visit(ast);
 }
 // class ReturnPositionException(AstException):
@@ -23,26 +23,28 @@ pub fn check_return(ast: &AST) {
 
 // class ReturnCheckVisitor(AstVisitor):
 
-struct ReturnCheckVisitor;
+#[derive(ASTVisitorBaseRefImpl)]
+struct ReturnCheckVisitor {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl AstVisitor for ReturnCheckVisitor {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 impl ReturnCheckVisitor {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("post", false),
+        }
+    }
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
         let container = ast.statement_base.ast_base.parent.clone().unwrap();
         // assert!(is_instance(&*container,ASTType::Block));

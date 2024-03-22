@@ -12,9 +12,10 @@ use crate::ast::{
 };
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
-use crate::visitor::visitor::AstVisitor;
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use std::collections::BTreeMap;
 use zkay_crypto::params::CryptoParams;
+use zkay_derive::ASTVisitorBaseRefImpl;
 // T = TypeVar("T")
 
 pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Option<AST>
@@ -36,7 +37,7 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
         .ast_base_mut_ref()
         .unwrap()
         .parent = ast.unwrap().ast_base_ref().unwrap().parent.clone();
-    set_parents(ast_copy.clone().unwrap());
+    set_parents(ast_copy.as_mut().unwrap());
     link_identifiers(ast_copy.as_ref().unwrap());
     ast_copy
 }
@@ -74,7 +75,7 @@ pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
         .parent
         .is_some()
     {
-        set_parents(new_ast.clone());
+        set_parents(&mut new_ast);
         link_identifiers(new_ast);
     }
 }
@@ -128,7 +129,10 @@ const setting_later: [&str; 42] = [
     "value_type",
 ];
 // class DeepCopyVisitor(AstVisitor)
+#[derive(ASTVisitorBaseRefImpl)]
 pub struct DeepCopyVisitor {
+    pub ast_visitor_base: AstVisitorBase,
+
     with_types: bool,
     with_analysis: bool,
 }
@@ -138,16 +142,10 @@ impl AstVisitor for DeepCopyVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
         None
     }
 }
@@ -158,6 +156,7 @@ impl DeepCopyVisitor {
         // self.with_analysis = with_analysis
     {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             with_types,
             with_analysis,
         }

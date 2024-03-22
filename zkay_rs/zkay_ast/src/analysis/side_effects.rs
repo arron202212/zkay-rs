@@ -14,46 +14,53 @@ use crate::ast::{
     IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter, StateVariableDeclaration,
     Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,
 };
-use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
+use crate::visitor::{
+    function_visitor::FunctionVisitor,
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+};
+use zkay_derive::ASTVisitorBaseRefImpl;
+
 use std::collections::BTreeSet;
 pub fn has_side_effects(ast: AST) -> bool {
-    SideEffectsDetector.visit(&ast).is_some()
+    SideEffectsDetector::new().visit(&ast).is_some()
 }
 
-pub fn compute_modified_sets(ast: AST) {
-    let v = DirectModificationDetector;
-    v.visit(&ast);
+pub fn compute_modified_sets(ast: &mut AST) {
+    let mut v = DirectModificationDetector::new();
+    v.visit(ast);
 
     let mut v = IndirectModificationDetector::new();
-    v.iterate_until_fixed_point(ast.clone());
+    v.iterate_until_fixed_point(ast);
 }
 
 pub fn check_for_undefined_behavior_due_to_eval_order(ast: AST) {
-    EvalOrderUBChecker.visit(&ast);
+    EvalOrderUBChecker::new().visit(&ast);
 }
 
 // class SideEffectsDetector(AstVisitor)
-pub struct SideEffectsDetector;
-
+#[derive(ASTVisitorBaseRefImpl)]
+struct SideEffectsDetector {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl AstVisitor for SideEffectsDetector {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 impl SideEffectsDetector {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("post", false),
+        }
+    }
     pub fn visitFunctionCallExpr(&self, ast: FunctionCallExpr) -> bool {
         if is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
@@ -94,29 +101,31 @@ impl SideEffectsDetector {
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
-pub struct DirectModificationDetector;
-
+#[derive(ASTVisitorBaseRefImpl)]
+struct DirectModificationDetector {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl FunctionVisitor for DirectModificationDetector {}
-impl AstVisitor for DirectModificationDetector {
+impl AstVisitorMut for DirectModificationDetector {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
         None
     }
 }
 impl DirectModificationDetector {
-    pub fn visitAssignmentStatement(&self, ast: AssignmentStatement) {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
+    pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
         self.visitAST(&mut ast.to_ast());
         self.collect_modified_values(&mut ast.to_ast(), *ast.lhs().clone().unwrap());
     }
@@ -151,7 +160,7 @@ impl DirectModificationDetector {
                 .insert(mod_value);
         }
     }
-    pub fn visitLocationExpr(&self, ast: &mut LocationExpr) {
+    pub fn visitLocationExpr(&mut self, ast: &mut LocationExpr) {
         let ast2: LocationExpr = ast.clone();
         self.visitAST(&mut (*ast).to_ast());
         let ast1 = ast.target().as_ref().unwrap();
@@ -177,11 +186,11 @@ impl DirectModificationDetector {
             .insert(InstanceTarget::new(vec![Some(Box::new(ast.to_ast()))]));
     }
 
-    pub fn visitAST(&self, ast: &mut AST) {
+    pub fn visitAST(&mut self, ast: &mut AST) {
         let mut modified_values = BTreeSet::new();
         let mut read_values = BTreeSet::new();
         for child in ast.children().iter_mut() {
-            self.visit(&*child);
+            self.visit(child);
             modified_values = modified_values
                 .union(&child.ast_base_mut_ref().unwrap().modified_values)
                 .cloned()
@@ -196,26 +205,22 @@ impl DirectModificationDetector {
     }
 }
 // class IndirectModificationDetector(FunctionVisitor)
+#[derive(ASTVisitorBaseRefImpl)]
 struct IndirectModificationDetector {
+    pub ast_visitor_base: AstVisitorBase,
     fixed_point_reached: bool,
 }
-
 impl FunctionVisitor for IndirectModificationDetector {}
-impl AstVisitor for IndirectModificationDetector {
+impl AstVisitorMut for IndirectModificationDetector {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
         None
     }
 }
@@ -225,12 +230,13 @@ impl IndirectModificationDetector {
     //     self.fixed_point_reached = true
     pub fn new() -> Self {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             fixed_point_reached: true,
         }
     }
-    pub fn iterate_until_fixed_point(&mut self, ast: AST) {
+    pub fn iterate_until_fixed_point(&mut self, ast: &mut AST) {
         loop {
-            self.visit(&ast);
+            self.visit(ast);
             if self.fixed_point_reached {
                 break;
             } else {
@@ -240,7 +246,7 @@ impl IndirectModificationDetector {
     }
 
     pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
-        self.visitAST(ast.to_ast());
+        self.visitAST(&mut ast.to_ast());
         if is_instance(&**ast.func(), ASTType::LocationExprBase) {
             //for now no reference types -> only state could have been modified
             let mut fdef = ast
@@ -299,11 +305,11 @@ impl IndirectModificationDetector {
             self.fixed_point_reached &= mlen == ast.ast_base_ref().unwrap().modified_values.len();
         }
     }
-    pub fn visitAST(&mut self, mut ast: AST) {
+    pub fn visitAST(&mut self, ast: &mut AST) {
         let mlen = ast.ast_base_ref().unwrap().modified_values.len();
         let rlen = ast.ast_base_ref().unwrap().read_values.len();
         for child in ast.children().iter_mut() {
-            self.visit(&*child);
+            self.visit(child);
             ast.ast_base_mut_ref().unwrap().modified_values = ast
                 .ast_base_mut_ref()
                 .unwrap()
@@ -324,27 +330,29 @@ impl IndirectModificationDetector {
     }
 }
 // class EvalOrderUBChecker(AstVisitor)
-struct EvalOrderUBChecker;
-
+#[derive(ASTVisitorBaseRefImpl)]
+struct EvalOrderUBChecker {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl AstVisitor for EvalOrderUBChecker {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 impl EvalOrderUBChecker {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("post", false),
+        }
+    }
     // @staticmethod
     pub fn visit_child_expressions(parent: AST, mut exprs: Vec<AST>) {
         if exprs.len() > 1 {

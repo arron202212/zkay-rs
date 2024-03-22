@@ -105,12 +105,12 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
 pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
     let flag = ASTFlags::new(flag);
 
-    let (ast, _) =
+    let (mut ast, _) =
         get_parsed_ast_and_fake_code(code, flag & ASTFlags::SOLC_CHECK == ASTFlags::SOLC_CHECK); //solc_check
 
     // Zkay preprocessing and type checking
     process_ast(
-        ast.clone(),
+        &mut ast,
         flag.parents(),
         flag.link_identifiers(),
         flag.check_return(),
@@ -122,7 +122,7 @@ pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
 }
 
 fn process_ast(
-    ast: AST,
+    ast: &mut AST,
     parents: bool,
     link_identifiers: bool,
     check_return: bool,
@@ -131,7 +131,7 @@ fn process_ast(
 ) {
     print_step("Preprocessing AST");
     if parents {
-        set_parents(ast.clone());
+        set_parents(ast);
     }
     if link_identifiers
     // try:
@@ -147,8 +147,8 @@ fn process_ast(
     if alias_analysis {
         a(&ast);
     }
-    call_graph_analysis(ast.clone());
-    compute_modified_sets(ast.clone());
+    call_graph_analysis(ast);
+    compute_modified_sets(ast);
     check_for_undefined_behavior_due_to_eval_order(ast.clone());
     // except AstException as e:
     //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
@@ -156,8 +156,8 @@ fn process_ast(
         print_step("Zkay type checking");
         // try:
         t(ast.clone());
-        check_circuit_compliance(ast.clone());
-        detect_hybrid_functions(ast.clone());
+        check_circuit_compliance(ast);
+        detect_hybrid_functions(ast);
         check_loops(ast);
         // except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
         //     raise TypeCheckException(f"\n\nCOMPILER ERROR: {e}")

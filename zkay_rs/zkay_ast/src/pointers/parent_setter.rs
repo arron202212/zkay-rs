@@ -11,49 +11,57 @@ use crate::ast::{
     Expression, ExpressionBaseMutRef, Identifier, IntoAST, NamespaceDefinition,
     NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,
 };
-use crate::visitor::visitor::AstVisitor;
-
+use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
+use zkay_derive::ASTVisitorBaseRefImpl;
+#[derive(ASTVisitorBaseRefImpl)]
 struct ParentSetterVisitor {
-    traversal: String,
+    pub ast_visitor_base: AstVisitorBase,
 }
 
-impl AstVisitor for ParentSetterVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+impl AstVisitorMut for ParentSetterVisitor {
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::SourceUnit == name
+            || &ASTType::NamespaceDefinitionBase == name
+            || &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
-        None
-    }
-}
-// class ParentSetterVisitor(AstVisitor)
-//     """
-//     Links parents
-//     """
-impl ParentSetterVisitor {
-    pub fn new() -> Self {
-        Self {
-            traversal: String::from("pre"),
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+        match name {
+            ASTType::SourceUnit => self.visitSourceUnit(ast.try_as_source_unit_mut().unwrap()),
+            ASTType::NamespaceDefinitionBase => {
+                self.visitNamespaceDefinition(ast.try_as_namespace_definition_mut().unwrap())
+            }
+            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
+                ast.try_as_namespace_definition_mut()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap(),
+            ),
+            _ => {}
         }
     }
 
-    //     pub fn __init__(self)
-    //         super().__init__(traversal='pre')
+    fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
+        for c in ast.children().iter_mut() {
+            c.ast_base_mut_ref().unwrap().parent = Some(Box::new(ast.clone()));
+            c.ast_base_mut_ref().unwrap().namespace = ast.ast_base_ref().unwrap().namespace.clone();
+            self.visit(c);
+        }
+    }
+}
 
+impl ParentSetterVisitor {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("pre", false),
+        }
+    }
     pub fn visitSourceUnit(&self, ast: &mut SourceUnit) {
         ast.ast_base.namespace = Some(vec![]);
     }
 
-    pub fn visitNamespaceDefinition(&self, mut ast: NamespaceDefinition) {
+    pub fn visitNamespaceDefinition(&self, ast: &mut NamespaceDefinition) {
         ast.ast_base_mut_ref().namespace = Some(if let Some(parent) = ast.parent() {
             parent
                 .ast_base_ref()
@@ -87,39 +95,33 @@ impl ParentSetterVisitor {
                 vec![ast.namespace_definition_base.idf.clone()]
             });
     }
+}
+#[derive(ASTVisitorBaseRefImpl)]
+struct ExpressionToStatementVisitor {
+    pub ast_visitor_base: AstVisitorBase,
+}
 
-    pub fn visitChildren(&self, ast: &mut AST) {
-        for c in ast.children().iter_mut() {
-            c.ast_base_mut_ref().unwrap().parent = Some(Box::new(ast.clone()));
-            c.ast_base_mut_ref().unwrap().namespace = ast.ast_base_ref().unwrap().namespace.clone();
-            self.visit(&*c);
+impl AstVisitorMut for ExpressionToStatementVisitor {
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
+    fn has_attr(&self, name: &ASTType) -> bool {
+        &ASTType::ExpressionBase == name || &ASTType::StatementBase == name
+    }
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+        match name {
+            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_mut().unwrap()),
+            ASTType::StatementBase => self.visitStatement(ast.try_as_statement_mut().unwrap()),
+            _ => {}
         }
     }
 }
 
-struct ExpressionToStatementVisitor;
-
-impl AstVisitor for ExpressionToStatementVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
-    fn has_attr(&self, name: &ASTType) -> bool {
-        false
-    }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
-        None
-    }
-}
-// class ExpressionToStatementVisitor(AstVisitor)
-
 impl ExpressionToStatementVisitor {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("post", false),
+        }
+    }
     pub fn visitExpression(&self, ast: &mut Expression) {
         let mut parent = Some(ast.to_ast());
         while let Some(p) = &parent {
@@ -168,9 +170,9 @@ impl ExpressionToStatementVisitor {
     }
 }
 
-pub fn set_parents(ast: AST) {
-    let v = ParentSetterVisitor::new();
-    v.visit(&ast);
-    let v = ExpressionToStatementVisitor;
-    v.visit(&ast);
+pub fn set_parents(ast: &mut AST) {
+    let mut v = ParentSetterVisitor::new();
+    v.visit(ast);
+    let mut v = ExpressionToStatementVisitor::new();
+    v.visit(ast);
 }

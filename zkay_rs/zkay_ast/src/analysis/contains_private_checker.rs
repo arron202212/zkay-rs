@@ -11,8 +11,8 @@ use crate::ast::{
     FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
     AST,
 };
-use crate::visitor::visitor::AstVisitor;
-
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn contains_private_expr(ast: Option<AST>) -> bool {
     if ast.is_none() {
         return false;
@@ -26,7 +26,9 @@ pub fn contains_private_expr(ast: Option<AST>) -> bool {
 // pub fn __init__(self)
 //     super().__init__('node-or-children')
 //     self.contains_private = False
+#[derive(ASTVisitorBaseRefImpl)]
 pub struct ContainsPrivVisitor {
+    pub ast_visitor_base: AstVisitorBase,
     pub contains_private: bool,
 }
 
@@ -35,26 +37,22 @@ impl AstVisitor for ContainsPrivVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
         None
     }
 }
 impl ContainsPrivVisitor {
     pub fn new() -> Self {
         Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             contains_private: false,
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&mut self, ast: &FunctionCallExpr) {
         if is_instance(&**ast.func(), ASTType::LocationExprBase) && !ast.is_cast() {
             self.contains_private |= ast
                 .func()
@@ -71,20 +69,20 @@ impl ContainsPrivVisitor {
                 .unwrap()
                 .requires_verification;
         }
-        self.visitExpression(ast.to_expr())
+        self.visitExpression(&ast.to_expr())
     }
 
-    pub fn visitExpression(&mut self, ast: Expression) {
+    pub fn visitExpression(&mut self, ast: &Expression) {
         if ast.evaluate_privately() {
             self.contains_private = true;
         }
-        self.visitAST(ast.to_ast())
+        self.visitAST(&ast.to_ast())
     }
 
-    pub fn visitAST(&self, ast: AST) {
+    pub fn visitAST(&self, ast: &AST) {
         if self.contains_private {
             return;
         }
-        self.visit_children(&ast);
+        self.visit_children(ast);
     }
 }

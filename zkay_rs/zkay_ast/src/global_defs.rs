@@ -53,7 +53,7 @@ impl GlobalDefs {
             )
             .to_ast()],
         );
-        set_parents(address_struct.to_ast());
+        set_parents(&mut address_struct.clone().into_ast());
 
         let mut address_payable_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<address_payable>"),
@@ -110,7 +110,7 @@ impl GlobalDefs {
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
-        set_parents(address_payable_struct.to_ast());
+        set_parents(&mut address_payable_struct.clone().into_ast());
 
         let msg_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<msg>"),
@@ -135,7 +135,7 @@ impl GlobalDefs {
                 .to_ast(),
             ],
         );
-        set_parents(msg_struct.to_ast());
+        set_parents(&mut msg_struct.clone().into_ast());
 
         let block_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<block>"),
@@ -181,7 +181,7 @@ impl GlobalDefs {
                 .to_ast(),
             ],
         );
-        set_parents(block_struct.to_ast());
+        set_parents(&mut block_struct.clone().into_ast());
 
         let tx_struct: StructDefinition = StructDefinition::new(
             Identifier::identifier("<tx>"),
@@ -206,7 +206,7 @@ impl GlobalDefs {
                 .to_ast(),
             ],
         );
-        set_parents(tx_struct.to_ast());
+        set_parents(&mut tx_struct.clone().into_ast());
         Self {
             address_struct,
             address_payable_struct,

@@ -4,11 +4,20 @@ use zkay_ast::ast::{
     SourceUnit, AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
-use zkay_ast::visitor::visitor::AstVisitor;
+use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_derive::ASTVisitorBaseRefImpl;
 use zkay_examples::examples::ALL_EXAMPLES;
-
-pub struct ParentChecker;
-
+#[derive(ASTVisitorBaseRefImpl)]
+struct ParentChecker {
+    pub ast_visitor_base: AstVisitorBase,
+}
+impl ParentChecker {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
+}
 impl AstVisitor for ParentChecker {
     fn visit(&self, ast: &AST) -> Self::Return {
         if !is_instance(ast, ASTType::SourceUnit) {
@@ -21,17 +30,11 @@ impl AstVisitor for ParentChecker {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+        self.temper_result()
     }
 }
 
@@ -44,7 +47,7 @@ mod tests {
     pub fn test_root_children_have_parent() {
         for (name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
-            set_parents(ast.clone());
+            set_parents(&mut ast);
 
             // test
             for c in ast.children() {
@@ -58,8 +61,8 @@ mod tests {
     #[test]
     pub fn test_contract_identifier() {
         for (name, example) in ALL_EXAMPLES.iter() {
-            let ast = build_ast(&example.code());
-            set_parents(ast.clone());
+            let mut ast = build_ast(&example.code());
+            set_parents(&mut ast);
 
             // test
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
@@ -70,11 +73,11 @@ mod tests {
     #[test]
     pub fn test_all_nodes_have_parent() {
         for (name, example) in ALL_EXAMPLES.iter() {
-            let ast = build_ast(&example.code());
-            set_parents(ast.clone());
+            let mut ast = build_ast(&example.code());
+            set_parents(&mut ast);
 
             // test
-            let v = ParentChecker;
+            let mut v = ParentChecker::new();
             v.visit(&ast);
         }
     }

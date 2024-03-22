@@ -12,47 +12,52 @@ use crate::ast::{
     FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
     WhileStatement, AST,
 };
-use crate::visitor::{function_visitor::FunctionVisitor, visitor::AstVisitor};
-
-pub fn call_graph_analysis(ast: AST)
+use crate::visitor::{
+    function_visitor::FunctionVisitor,
+    visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+};
+use zkay_derive::ASTVisitorBaseRefImpl;
+pub fn call_graph_analysis(ast: &mut AST)
 // """
 // determines (indirectly) called functions for every function
 // and concludes from that whether a function has a static body
 // """
 {
-    let v = DirectCalledFunctionDetector;
-    v.visit(&ast.clone());
+    let mut v = DirectCalledFunctionDetector::new();
+    v.visit(ast);
 
-    let v = IndirectCalledFunctionDetector;
-    v.visit(&ast.clone());
+    let mut v = IndirectCalledFunctionDetector::new();
+    v.visit(ast);
 
-    let v = IndirectDynamicBodyDetector;
-    v.visit(&ast);
+    let mut v = IndirectDynamicBodyDetector::new();
+    v.visit(ast);
 }
-struct DirectCalledFunctionDetector;
+#[derive(ASTVisitorBaseRefImpl)]
+struct DirectCalledFunctionDetector {
+    pub ast_visitor_base: AstVisitorBase,
+}
 
 // class DirectCalledFunctionDetector(FunctionVisitor)
 impl FunctionVisitor for DirectCalledFunctionDetector {}
-impl AstVisitor for DirectCalledFunctionDetector {
+impl AstVisitorMut for DirectCalledFunctionDetector {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
         None
     }
 }
 impl DirectCalledFunctionDetector {
-    pub fn visitFunctionCallExpr(&self, mut ast: FunctionCallExpr) {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
+    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
         if !is_instance(&**ast.func(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&**ast.func(), ASTType::LocationExprBase));
             let fdef = ast
@@ -89,48 +94,54 @@ impl DirectCalledFunctionDetector {
                     .insert(cofd);
             }
         }
-        self.visit_children(&ast.to_ast());
+        self.visit_children(&mut ast.to_ast());
     }
-    pub fn visitForStatement(&self, mut ast: ForStatement) {
+    pub fn visitForStatement(&mut self, ast: &mut ForStatement) {
         ast.statement_base
             .function
             .as_mut()
             .unwrap()
             .has_static_body = false;
-        self.visit_children(&ast.to_ast());
+        self.visit_children(&mut ast.to_ast());
     }
-    pub fn visitWhileStatement(&self, mut ast: WhileStatement) {
+    pub fn visitWhileStatement(&mut self, ast: &mut WhileStatement) {
         ast.statement_base
             .function
             .as_mut()
             .unwrap()
             .has_static_body = false;
-        self.visit_children(&ast.to_ast());
+        self.visit_children(&mut ast.to_ast());
     }
 }
 // class IndirectCalledFunctionDetector(FunctionVisitor)
-struct IndirectCalledFunctionDetector;
+#[derive(ASTVisitorBaseRefImpl)]
+struct IndirectCalledFunctionDetector {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl FunctionVisitor for IndirectCalledFunctionDetector {}
-impl AstVisitor for IndirectCalledFunctionDetector {
+impl AstVisitorMut for IndirectCalledFunctionDetector {
     type Return = Option<String>;
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
         None
     }
 }
 impl IndirectCalledFunctionDetector {
-    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition)
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
+    pub fn visitConstructorOrFunctionDefinition(
+        &mut self,
+        ast: &mut ConstructorOrFunctionDefinition,
+    )
     //Fixed point iteration
     {
         let mut size = 0;
@@ -163,34 +174,36 @@ impl IndirectCalledFunctionDetector {
     }
 }
 // class IndirectDynamicBodyDetector(FunctionVisitor)
-pub struct IndirectDynamicBodyDetector;
-
+#[derive(ASTVisitorBaseRefImpl)]
+struct IndirectDynamicBodyDetector {
+    pub ast_visitor_base: AstVisitorBase,
+}
 impl FunctionVisitor for IndirectDynamicBodyDetector {}
-impl AstVisitor for IndirectDynamicBodyDetector {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
-    fn log(&self) -> bool {
-        false
-    }
-    fn traversal(&self) -> &'static str {
-        "node-or-children"
-    }
+impl AstVisitorMut for IndirectDynamicBodyDetector {
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
-        None
+    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+        self.temper_result()
     }
 }
 impl IndirectDynamicBodyDetector {
-    pub fn visitConstructorOrFunctionDefinition(&self, mut ast: ConstructorOrFunctionDefinition) {
+    pub fn new() -> Self {
+        Self {
+            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+        }
+    }
+    pub fn visitConstructorOrFunctionDefinition(
+        &mut self,
+        ast: &mut ConstructorOrFunctionDefinition,
+    ) {
         if !ast.has_static_body {
             return;
         }
 
-        for fct in ast.called_functions {
+        for fct in &ast.called_functions {
             if !fct.has_static_body
             // This function (directly or indirectly) calls a recursive function
             {

@@ -121,8 +121,8 @@ mod tests {
     }
 
     pub fn test_link_identifiers() {
-        let ast = build_ast(&SIMPLE.code());
-        set_parents(ast.clone());
+        let mut ast = build_ast(&SIMPLE.code());
+        set_parents(&mut ast);
         link_identifiers(&ast);
 
         let ASTElements {
@@ -159,8 +159,8 @@ mod tests {
     }
 
     pub fn test_link_identifierss() {
-        let ast = build_ast(&SIMPLE_STORAGE.code());
-        set_parents(ast.clone());
+        let mut ast = build_ast(&SIMPLE_STORAGE.code());
+        set_parents(&mut ast);
         link_identifiers(&ast);
         let assignment = &ast
             .try_as_source_unit_ref()
@@ -237,8 +237,8 @@ mod tests {
 
     pub fn test_symbol_table() {
         for (name, example) in ALL_EXAMPLES.iter() {
-            let ast = build_ast(&example.code());
-            set_parents(ast.clone());
+            let mut ast = build_ast(&example.code());
+            set_parents(&mut ast);
             fill_symbol_table(&ast);
             link_identifiers(&ast);
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
