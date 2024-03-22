@@ -1,84 +1,248 @@
-
-// from zkay.examples.examples::simple, simple_storage, all_examples
-// from zkay.tests.utils.test_examples::TestExamples
-// from zkay.tests.zkay_unit_test::ZkayTestCase
-// from zkay.zkay_ast.ast::SourceUnit, VariableDeclarationStatement, IdentifierExpr, \
-//     AssignmentStatement
-// from zkay.zkay_ast.build_ast::build_ast
-// from zkay.zkay_ast.pointers.parent_setter::set_parents
-// from zkay.zkay_ast.pointers.symbol_table::fill_symbol_table, link_identifiers, get_builtin_globals
-
-
+use ast_builder::build_ast::build_ast;
+use std::collections::BTreeMap;
+use zkay_ast::ast::{
+    is_instance, ASTBaseProperty, ASTType, AssignmentStatement, AssignmentStatementBaseProperty,
+    Block, ConstructorOrFunctionDefinition, ContractDefinition, IdentifierBaseProperty,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST, LocationExprBaseProperty,
+    NamespaceDefinitionBaseProperty, SourceUnit, StatementListBaseProperty, VariableDeclaration,
+    VariableDeclarationStatement,
+};
+use zkay_ast::pointers::{
+    parent_setter::set_parents,
+    symbol_table::{fill_symbol_table, get_builtin_globals, link_identifiers},
+};
+use zkay_examples::examples::{ALL_EXAMPLES, SIMPLE, SIMPLE_STORAGE};
+pub struct ASTElements {
+    pub contract: ContractDefinition,
+    pub f: ConstructorOrFunctionDefinition,
+    pub body: Option<Block>,
+    pub decl_statement: VariableDeclarationStatement,
+    pub decl: VariableDeclaration,
+    pub assignment: AssignmentStatement,
+    pub identifier_expr: IdentifierExpr,
+}
 // class TestSimpleAST(ZkayTestCase):
 
-//     def get_ast_elements(self, ast: SourceUnit):
-//         self.contract = ast.contracts[0]
-//         self.f = self.contract.function_definitions[0]
-//         self.body = self.f.body
-//         self.decl_statement = self.body.statements[0]
-//         assert (isinstance(self.decl_statement, VariableDeclarationStatement))
-//         self.decl = self.decl_statement.variable_declaration
-//         self.assignment = self.body.statements[1]
-//         assert (isinstance(self.assignment, AssignmentStatement))
-//         self.identifier_expr = self.assignment.lhs
-//         assert (isinstance(self.identifier_expr, IdentifierExpr))
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     def test_fill_symbol_table(self):
-//         ast = build_ast(simple.code())
-//         fill_symbol_table(ast)
+    pub fn get_ast_elements(ast: &SourceUnit) -> ASTElements {
+        let contract = ast.contracts[0].clone();
+        let f = contract.function_definitions[0].clone();
+        let body = f.body.clone();
+        let decl_statement = body.as_ref().unwrap().statements()[0].clone();
+        assert!(is_instance(
+            &decl_statement,
+            ASTType::VariableDeclarationStatement
+        ));
+        let decl = decl_statement
+            .clone()
+            .try_as_statement()
+            .unwrap()
+            .try_as_simple_statement()
+            .unwrap()
+            .try_as_variable_declaration_statement()
+            .unwrap()
+            .variable_declaration
+            .clone();
+        let assignment = body.as_ref().unwrap().statements()[1].clone();
+        assert!(is_instance(&assignment, ASTType::AssignmentStatementBase));
+        let identifier_expr = assignment
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .lhs()
+            .clone();
+        assert!(is_instance(
+            &**identifier_expr.as_ref().unwrap(),
+            ASTType::IdentifierExpr
+        ));
+        ASTElements {
+            contract,
+            f,
+            body,
+            decl_statement: decl_statement
+                .try_as_statement()
+                .unwrap()
+                .try_as_simple_statement()
+                .unwrap()
+                .try_as_variable_declaration_statement()
+                .unwrap(),
+            decl,
+            assignment: assignment
+                .try_as_statement()
+                .unwrap()
+                .try_as_simple_statement()
+                .unwrap()
+                .try_as_assignment_statement()
+                .unwrap(),
+            identifier_expr: identifier_expr
+                .unwrap()
+                .try_as_expression()
+                .unwrap()
+                .try_as_tuple_or_location_expr()
+                .unwrap()
+                .try_as_location_expr()
+                .unwrap()
+                .try_as_identifier_expr()
+                .unwrap(),
+        }
+    }
+    #[test]
+    pub fn test_fill_symbol_table() {
+        let ast = build_ast(&SIMPLE.code());
+        fill_symbol_table(&ast);
 
-//         self.get_ast_elements(ast)
+        let ASTElements {
+            contract,
+            f,
+            body,
+            decl_statement,
+            decl,
+            assignment,
+            identifier_expr,
+        } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
-//         s = get_builtin_globals()
-//         s.update({'Simple': self.contract.idf})
-//         self.assertDictEqual(ast.names, s)
-//         self.assertDictEqual(self.contract.names, {'f': self.f.idf})
-//         self.assertDictEqual(self.body.names, {'x': self.decl.idf})
+        let mut s = get_builtin_globals();
+        s.insert(String::from("Simple"), contract.idf().clone());
+        assert_eq!(ast.ast_base_ref().unwrap().names(), &s);
+        assert_eq!(
+            contract.names(),
+            &BTreeMap::from([(String::from("f"), f.idf().clone())])
+        );
+        assert_eq!(
+            body.unwrap().names(),
+            &BTreeMap::from([(String::from("x"), *decl.idf().clone())])
+        );
+    }
 
-//     def test_link_identifiers(self):
-//         ast = build_ast(simple.code())
-//         set_parents(ast)
-//         link_identifiers(ast)
+    pub fn test_link_identifiers() {
+        let ast = build_ast(&SIMPLE.code());
+        set_parents(ast.clone());
+        link_identifiers(&ast);
 
-//         self.get_ast_elements(ast)
+        let ASTElements {
+            contract,
+            f,
+            body,
+            decl_statement,
+            decl,
+            assignment,
+            identifier_expr,
+        } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
-//         self.assertEqual(self.identifier_expr.target, self.decl)
-//         self.assertEqual(self.identifier_expr.annotated_type(), self.decl.annotated_type)
+        assert_eq!(
+            *identifier_expr.target().as_ref().unwrap().clone(),
+            decl.to_ast()
+        );
+        assert_eq!(
+            identifier_expr.annotated_type(),
+            Some(*decl.annotated_type().clone())
+        );
+    }
 
+    // class TestSimpleStorageAST(ZkayTestCase):
 
-// class TestSimpleStorageAST(ZkayTestCase):
+    pub fn test_fill_symbol_tables() {
+        let ast = build_ast(&SIMPLE_STORAGE.code());
+        fill_symbol_table(&ast);
 
-//     def test_fill_symbol_table(self):
-//         ast = build_ast(simple_storage.code())
-//         fill_symbol_table(ast)
+        let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
 
-//         contract = ast.contracts[0]
+        let mut s = get_builtin_globals();
+        s.insert(String::from("SimpleStorage"), contract.idf().clone());
+        assert_eq!(ast.ast_base_ref().unwrap().names(), &s);
+    }
 
-//         s = get_builtin_globals()
-//         s.update({'SimpleStorage': contract.idf})
-//         self.assertDictEqual(ast.names, s)
+    pub fn test_link_identifierss() {
+        let ast = build_ast(&SIMPLE_STORAGE.code());
+        set_parents(ast.clone());
+        link_identifiers(&ast);
+        let assignment = &ast
+            .try_as_source_unit_ref()
+            .unwrap()
+            .get_item(&String::from("SimpleStorage"))
+            .unwrap()
+            .get_item(&String::from("set"))
+            .unwrap()
+            .try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .body
+            .as_ref()
+            .unwrap()
+            .get_item(0);
+        assert!(is_instance(assignment, ASTType::AssignmentStatementBase));
 
-//     def test_link_identifiers(self):
-//         ast = build_ast(simple_storage.code())
-//         set_parents(ast)
-//         link_identifiers(ast)
-//         assignment = ast['SimpleStorage']['set'].body[0]
-//         self.assertIsInstance(assignment, AssignmentStatement)
+        let stored_data = &assignment
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .lhs()
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target();
+        assert_eq!(
+            stored_data.as_ref().map(|s| *s.clone()),
+            ast.try_as_source_unit_ref()
+                .as_ref()
+                .unwrap()
+                .get_item(&String::from("SimpleStorage"))
+                .unwrap()
+                .get_item(&String::from("storedData"))
+        );
 
-//         stored_data = assignment.lhs.target
-//         self.assertEqual(stored_data, ast['SimpleStorage']['storedData'])
+        let x = assignment
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .rhs()
+            .as_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target();
+        assert_eq!(
+            x.as_ref()
+                .unwrap()
+                .try_as_identifier_declaration_ref()
+                .unwrap()
+                .idf()
+                .name(),
+            &String::from("x")
+        );
+    }
 
-//         x = assignment.rhs.target
-//         self.assertEqual(x.idf.name, 'x')
+    // @parameterized_class(("name", "example"), all_examples)
+    // class TestSymbolTable(TestExamples):
 
-
-// @parameterized_class(('name', 'example'), all_examples)
-// class TestSymbolTable(TestExamples):
-
-//     def test_symbol_table(self):
-//         ast = build_ast(self.example.code())
-//         set_parents(ast)
-//         fill_symbol_table(ast)
-//         link_identifiers(ast)
-//         contract = ast.contracts[0]
-//         self.assertEqual(contract.idf.name, self.name)
+    pub fn test_symbol_table() {
+        for (name, example) in ALL_EXAMPLES.iter() {
+            let ast = build_ast(&example.code());
+            set_parents(ast.clone());
+            fill_symbol_table(&ast);
+            link_identifiers(&ast);
+            let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
+            assert_eq!(contract.idf().name(), name);
+        }
+    }
+}

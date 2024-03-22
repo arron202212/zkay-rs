@@ -144,10 +144,10 @@ impl AstVisitor for DeepCopyVisitor {
     fn traversal(&self) -> &'static str {
         "node-or-children"
     }
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Option<Self::Return> {
+    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Option<Self::Return> {
         None
     }
 }

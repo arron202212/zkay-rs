@@ -9,7 +9,7 @@ mod tests;
 pub mod zkay_frontend;
 #[macro_use]
 extern crate lazy_static;
-use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
+use clap::{value_parser, Arg, ArgAction, ArgGroup, ArgMatches, Command};
 use std::path::{Path, PathBuf};
 // def parse_config_doc():
 //     import textwrap
@@ -115,11 +115,13 @@ fn parse_arguments() -> ArgMatches {
                         .help("The directory to output the compiled contract to. Default: Current directory")
                         .default_value(CURR_DIRS.as_str())
                         .value_name("<output_directory>")
+ .value_parser(value_parser!(std::path::PathBuf))
                         .action(ArgAction::Set))
                     .arg( Arg::new("input")
                         .long("input")
                         .help("The zkay source file")
                         .value_name("<zkay_file>")
+ .value_parser(value_parser!(std::path::PathBuf))
                         .action(ArgAction::Set))
 .arg( Arg::new("log")
                         .long("log")
@@ -421,17 +423,6 @@ fn main() {
         //
         println!("Using solc version Versions.SOLC_VERSION");
 
-        let input_path = if let Some(input_path) = a.get_one::<PathBuf>("manifest-path") {
-            if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
-                fail_print();
-                println!("Error: input file \'{input_path:?}\' does not exist");
-                std::process::exit(10);
-            }
-            input_path.clone()
-        } else {
-            PathBuf::new()
-        };
-
         match a.subcommand() {
             Some(("check", _)) => {
                 //             // only type-check
@@ -458,9 +449,25 @@ fn main() {
                 //                 cfg._is_unit_test = was_unit_test
                 //             exit(0)
             }
-            Some(("compile", _)) => {
+            Some(("compile", sub_compile)) => {
+                println!("=============================={:?}", sub_compile);
+                let input_path =
+                    if let Ok(Some(input_path)) = sub_compile.try_get_one::<PathBuf>("input") {
+                        if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
+                            fail_print();
+                            println!("Error: input file \'{input_path:?}\' does not exist");
+                            std::process::exit(10);
+                        }
+                        input_path.clone()
+                    } else {
+                        PathBuf::new()
+                    };
                 // create output directory
-                let output = a.get_one::<PathBuf>("output").unwrap();
+                let output = sub_compile
+                    .try_get_one::<PathBuf>("output")
+                    .unwrap()
+                    .unwrap();
+                println!("============================={:?}", output);
                 use path_absolutize::*;
                 let output_dir = Path::new(output).absolutize().expect("absolute path fail");
                 if let Err(_) | Ok(false) = output_dir.try_exists() {
@@ -472,18 +479,18 @@ fn main() {
                 }
 
                 // // Enable logging
-                if let Some(true) = a.get_one::<bool>("log") {
+                if let Some(true) = sub_compile.get_one::<bool>("log") {
                     // log_file = my_logging.get_log_file(filename='compile', include_timestamp=False, label=None)
                     // my_logging.prepare_logger(log_file)
                 }
                 // // only type-check
-                println!("Compiling file {:?}:", input_path.file_name());
+                println!("Compiling file {:?}:", input_path);
 
                 // // compile
                 // log_context(os.path.basename(a.input));
 
                 if let Err(e) = frontend::compile_zkay_file(
-                    input_path.to_str().expect(""),
+                    &input_path.to_str().expect(""),
                     output_dir.to_str().expect(""),
                     false,
                 ) {

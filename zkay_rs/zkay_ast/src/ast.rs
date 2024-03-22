@@ -4114,43 +4114,7 @@ pub enum StatementList {
 impl ASTChildren for StatementList {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
-impl StatementList {
-    pub fn get_item(&self, key: i32) -> AST {
-        match self {
-            StatementList::Block(_sl) => {
-                assert!(self.statements().len() > key as usize);
-                self.statements()[key as usize].clone()
-            }
-            StatementList::IndentBlock(_sl) => {
-                assert!(self.statements().len() > key as usize);
-                self.statements()[key as usize].clone()
-            }
-            StatementList::StatementList(_sl) => {
-                assert!(self.statements().len() > key as usize);
-                self.statements()[key as usize].clone()
-            }
-        }
-    }
 
-    pub fn contains(&self, stmt: &AST) -> bool {
-        if self.statements().contains(stmt) {
-            return true;
-        }
-        for s in self.statements() {
-            if let AST::Statement(Statement::StatementList(StatementList::Block(sl))) = &s {
-                if sl.statement_list_base.statements.contains(stmt) {
-                    return true;
-                }
-            }
-            if let AST::Statement(Statement::StatementList(StatementList::IndentBlock(sl))) = &s {
-                if sl.statement_list_base.statements.contains(stmt) {
-                    return true;
-                }
-            }
-        }
-        false
-    }
-}
 #[enum_dispatch]
 pub trait StatementListBaseRef: StatementBaseRef {
     fn statement_list_base_ref(&self) -> &StatementListBase;
@@ -4158,6 +4122,29 @@ pub trait StatementListBaseRef: StatementBaseRef {
 pub trait StatementListBaseProperty {
     fn statements(&self) -> &Vec<AST>;
     fn excluded_from_simulation(&self) -> bool;
+    fn get_item(&self, key: i32) -> AST {
+        assert!(self.statements().len() > key as usize);
+        self.statements()[key as usize].clone()
+    }
+
+    fn contains(&self, stmt: &AST) -> bool {
+        if self.statements().contains(stmt) {
+            return true;
+        }
+        for s in self.statements() {
+            if is_instance(s, ASTType::StatementListBase) {
+                if s.try_as_statement_ref()
+                    .unwrap()
+                    .try_as_statement_list_ref()
+                    .unwrap()
+                    .contains(stmt)
+                {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 impl<T: StatementListBaseRef> StatementListBaseProperty for T {
     fn statements(&self) -> &Vec<AST> {
@@ -6589,6 +6576,24 @@ impl ContractDefinition {
             used_crypto_backends,
         }
     }
+    pub fn get_item(&self, key: &String) -> Option<AST> {
+        if key == "constructor" {
+            if self.constructor_definitions.len() == 0 {
+                // # return empty constructor
+                let mut c = ConstructorOrFunctionDefinition::new(None, None, None, None, None);
+                c.ast_base_mut_ref().parent = Some(Box::new(self.to_ast()));
+                Some(c.into_ast())
+            } else if self.constructor_definitions.len() == 1 {
+                Some(self.constructor_definitions[0].to_ast())
+            } else {
+                // assert!(false,"Multiple constructors exist");
+                None
+            }
+        } else {
+            let d_identifier = self.names().get(key).unwrap();
+            d_identifier.parent().as_ref().map(|p| *p.clone())
+        }
+    }
 }
 impl ASTChildren for ContractDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
@@ -6672,7 +6677,7 @@ impl SourceUnit {
             original_code: vec![],
         }
     }
-    pub fn get_item(self, key: &String) -> Option<ContractDefinition> {
+    pub fn get_item(&self, key: &String) -> Option<ContractDefinition> {
         if let Some(c_identifier) = self.ast_base.names.get(key) {
             if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) =
                 c_identifier.parent().as_ref().map(|p| *p.clone())
