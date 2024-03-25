@@ -17,9 +17,16 @@ use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
 use lazy_static::lazy_static;
-use serde::{Deserialize, Serialize,Deserializer};
-use std::{fmt::Debug,cell::RefCell,sync::{Arc, Mutex},cmp::Ordering, rc::Rc ,hash::{Hash, Hasher},
-    ops::{Deref,DerefMut}};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::{
+    cell::RefCell,
+    cmp::Ordering,
+    fmt::Debug,
+    hash::{Hash, Hasher},
+    ops::{Deref, DerefMut},
+    rc::Rc,
+    sync::{Arc, Mutex},
+};
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
     config::{ConstructorOrFunctionDefinitionAttr, CFG},
@@ -33,26 +40,26 @@ use zkay_derive::{
 use zkay_utils::progress_printer::warn_print;
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
-pub struct RRWrapper<T: Hash+PartialEq+Eq+Ord+Clone+Debug>(Arc<RefCell<T>>);
+pub struct RRWrapper<T: Hash + PartialEq + Eq + Ord + Clone + Debug>(Arc<RefCell<T>>);
 
-impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> Deref for RRWrapper<T> {
+impl<T: Hash + PartialEq + Eq + Ord + Clone + Debug> Deref for RRWrapper<T> {
     type Target = Arc<RefCell<T>>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
-impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug>  DerefMut for RRWrapper<T>   {
+impl<T: Hash + PartialEq + Eq + Ord + Clone + Debug> DerefMut for RRWrapper<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         return &mut self.0;
     }
 }
-impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> Hash for RRWrapper<T> {
+impl<T: Hash + PartialEq + Eq + Ord + Clone + Debug> Hash for RRWrapper<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.0.borrow().hash(state);
     }
 }
 
-impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> RRWrapper<T> {
+impl<T: Hash + PartialEq + Eq + Ord + Clone + Debug> RRWrapper<T> {
     pub fn new(inner: T) -> Self {
         RRWrapper(Arc::new(RefCell::new(inner)))
     }
@@ -361,9 +368,28 @@ impl AST {
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
-        while e != selfs && e.ast_base_ref().unwrap().parent_namespace.as_ref().unwrap().borrow().parent.is_some() {
-            let e1 = e.ast_base_ref().unwrap().parent_namespace.as_ref().unwrap().borrow().parent.as_ref().map(|p|*p.clone()).unwrap();
-            e=e1;
+        while e != selfs
+            && e.ast_base_ref()
+                .unwrap()
+                .parent_namespace
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .parent
+                .is_some()
+        {
+            let e1 = e
+                .ast_base_ref()
+                .unwrap()
+                .parent_namespace
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .parent
+                .as_ref()
+                .map(|p| *p.clone())
+                .unwrap();
+            e = e1;
         }
         e == selfs
     }
@@ -512,10 +538,22 @@ pub trait ASTBaseProperty {
 }
 impl<T: ASTBaseRef> ASTBaseProperty for T {
     fn parent(&self) -> Option<Box<AST>> {
-        self.ast_base_ref().parent_namespace.as_ref().unwrap().borrow().parent.clone()
+        self.ast_base_ref()
+            .parent_namespace
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .parent
+            .clone()
     }
     fn namespace(&self) -> Option<Vec<Identifier>> {
-        self.ast_base_ref().parent_namespace.as_ref().unwrap().borrow().namespace.clone()
+        self.ast_base_ref()
+            .parent_namespace
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .namespace
+            .clone()
     }
     fn names(&self) -> &BTreeMap<String, Identifier> {
         &self.ast_base_ref().names
@@ -2216,10 +2254,7 @@ pub enum TupleOrLocationExpr {
 impl TupleOrLocationExpr {
     pub fn is_lvalue(&self) -> bool {
         let parent = match self {
-            TupleOrLocationExpr::TupleExpr(te) => te
-                .parent()
-                .clone()
-                .map(|p| *p),
+            TupleOrLocationExpr::TupleExpr(te) => te.parent().clone().map(|p| *p),
             TupleOrLocationExpr::LocationExpr(te) => te.parent().as_ref().map(|p| *p.clone()),
         };
         if let Some(AST::Statement(Statement::SimpleStatement(
@@ -3281,7 +3316,11 @@ impl HybridArgumentIdf {
             ma.location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
-                .ast_base.parent_namespace.as_mut().unwrap().borrow_mut()
+                .ast_base
+                .parent_namespace
+                .as_mut()
+                .unwrap()
+                .borrow_mut()
                 .parent = parent.clone().map(|p| Box::new(p));
             ma.location_expr_base
                 .tuple_or_location_expr_base
@@ -3305,7 +3344,12 @@ impl HybridArgumentIdf {
         )
         .as_type(AST::TypeName(*self.t.clone()));
         if let Identifier::Identifier(mut idf) = *ie.idf {
-            idf.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().parent = parent.clone();
+            idf.ast_base
+                .parent_namespace
+                .as_mut()
+                .unwrap()
+                .borrow_mut()
+                .parent = parent.clone();
             ie.idf = Box::new(Identifier::Identifier(idf));
         }
 
@@ -5168,6 +5212,7 @@ impl UintTypeName {
     IntoAST,
     ASTInstanceOf,
     UserDefinedTypeNameBaseRef,
+    UserDefinedTypeNameBaseMutRef,
     TypeNameBaseRef,
     ASTBaseRef,
     ASTBaseMutRef
@@ -6078,13 +6123,9 @@ impl AnnotatedTypeName {
         homomorphism: String,
     ) -> Self {
         assert!(
-            !(privacy_annotation.is_none()
-                || if let Some(AST::Expression(Expression::AllExpr(_))) = &privacy_annotation {
-                    true
-                } else {
-                    false
-                })
-                || homomorphism == Homomorphism::non_homomorphic(),
+            !(privacy_annotation.is_some()
+                && is_instance(privacy_annotation.as_ref().unwrap(), ASTType::AllExpr)
+                && homomorphism != Homomorphism::non_homomorphic()),
             "Public type name cannot be homomorphic (got {:?})",
             HOMOMORPHISM_STORE.lock().unwrap().get(&homomorphism)
         );
@@ -6615,7 +6656,12 @@ impl ConstructorOrFunctionDefinition {
             .collect();
         return_var_decls.iter_mut().for_each(|mut vd| {
             if let Identifier::Identifier(mut idf) = *vd.identifier_declaration_base.idf.clone() {
-                idf.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(AST::IdentifierDeclaration(
+                idf.ast_base
+                    .parent_namespace
+                    .as_mut()
+                    .unwrap()
+                    .borrow_mut()
+                    .parent = Some(Box::new(AST::IdentifierDeclaration(
                     IdentifierDeclaration::VariableDeclaration(vd.clone()),
                 )));
                 vd.identifier_declaration_base.idf = Box::new(Identifier::Identifier(idf));
@@ -6970,7 +7016,12 @@ impl ContractDefinition {
             if self.constructor_definitions.len() == 0 {
                 // # return empty constructor
                 let mut c = ConstructorOrFunctionDefinition::new(None, None, None, None, None);
-                c.ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(self.to_ast()));
+                c.ast_base_mut_ref()
+                    .parent_namespace
+                    .as_mut()
+                    .unwrap()
+                    .borrow_mut()
+                    .parent = Some(Box::new(self.to_ast()));
                 Some(c.into_ast())
             } else if self.constructor_definitions.len() == 1 {
                 Some(self.constructor_definitions[0].to_ast())

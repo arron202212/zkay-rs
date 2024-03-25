@@ -11,7 +11,7 @@ mod tests {
     #[test]
     fn test_build_ast() {
         for (name, example) in ALL_EXAMPLES.iter() {
-            println!("{:?}", name);
+            // println!("{:?}", name);
             let _ast = build_ast(&example.code());
             assert!(true);
         }

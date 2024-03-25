@@ -186,17 +186,17 @@ mod tests {
     pub fn test_examples_abs_path_env() {
         use std::path::Path;
 
-        println!("FILE: {:?}", FILE);
-        println!("src path: {:?}", Path::new(FILE).parent());
+        // println!("FILE: {:?}", FILE);
+        // println!("src path: {:?}", Path::new(FILE).parent());
         println!(
             "directory is: {:?}",
             crate::file_abs_workspace!().parent().unwrap()
         );
 
-        println!(
-            "===directory is: {:?}",
-            crate::file_abs!().parent().unwrap()
-        );
+        // println!(
+        //     "===directory is: {:?}",
+        //     crate::file_abs!().parent().unwrap()
+        // );
         // let this_file = file!();
         // println!("defined in file: {this_file}");
         //         println!("{:?}", *EXAMPLES_DIR);
@@ -209,14 +209,14 @@ mod tests {
     }
 }
 
-const FILE: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/", file!());
+// const FILE: &'static str = concat!(env!("CARGO_MANIFEST_DIR"), "/", file!());
 
-#[macro_export]
-macro_rules! file_abs {
-    () => {
-        std::path::Path::new(&(env!("CARGO_MANIFEST_DIR").to_owned() + file!()))
-    };
-}
+// #[macro_export]
+// macro_rules! file_abs {
+//     () => {
+//         std::path::Path::new(&(env!("CARGO_MANIFEST_DIR").to_owned() + file!()))
+//     };
+// }
 
 #[macro_export]
 macro_rules! file_abs_workspace {

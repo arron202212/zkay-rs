@@ -450,7 +450,7 @@ fn main() {
                 //             exit(0)
             }
             Some(("compile", sub_compile)) => {
-                println!("=============================={:?}", sub_compile);
+                // println!("=============================={:?}", sub_compile);
                 let input_path =
                     if let Ok(Some(input_path)) = sub_compile.try_get_one::<PathBuf>("input") {
                         if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
@@ -467,7 +467,7 @@ fn main() {
                     .try_get_one::<PathBuf>("output")
                     .unwrap()
                     .unwrap();
-                println!("============================={:?}", output);
+                // println!("============================={:?}", output);
                 use path_absolutize::*;
                 let output_dir = Path::new(output).absolutize().expect("absolute path fail");
                 if let Err(_) | Ok(false) = output_dir.try_exists() {

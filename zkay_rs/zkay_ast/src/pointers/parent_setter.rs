@@ -44,9 +44,21 @@ impl AstVisitorMut for ParentSetterVisitor {
 
     fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
         for c in ast.children().iter_mut() {
-            println!("============{:?}", c);
-            c.ast_base_mut_ref().unwrap().parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(ast.clone()));
-            c.ast_base_mut_ref().unwrap().parent_namespace.as_mut().unwrap().borrow_mut().namespace = ast.ast_base_ref().unwrap().namespace().clone();
+            // println!("============{:?}", c);
+            c.ast_base_mut_ref()
+                .unwrap()
+                .parent_namespace
+                .as_mut()
+                .unwrap()
+                .borrow_mut()
+                .parent = Some(Box::new(ast.clone()));
+            c.ast_base_mut_ref()
+                .unwrap()
+                .parent_namespace
+                .as_mut()
+                .unwrap()
+                .borrow_mut()
+                .namespace = ast.ast_base_ref().unwrap().namespace().clone();
             self.visit(c);
         }
     }
@@ -59,14 +71,28 @@ impl ParentSetterVisitor {
         }
     }
     pub fn visitSourceUnit(&self, ast: &mut SourceUnit) {
-        ast.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().namespace = Some(vec![]);
+        ast.ast_base
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .namespace = Some(vec![]);
     }
 
     pub fn visitNamespaceDefinition(&self, ast: &mut NamespaceDefinition) {
-        ast.ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut().namespace = Some(if let Some(parent) = ast.parent() {
+        ast.ast_base_mut_ref()
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .namespace = Some(if let Some(parent) = ast.parent() {
             parent
                 .ast_base_ref()
-                .unwrap().parent_namespace.as_ref().unwrap().borrow()
+                .unwrap()
+                .parent_namespace
+                .as_ref()
+                .unwrap()
+                .borrow()
                 .namespace
                 .as_ref()
                 .unwrap()
@@ -80,21 +106,26 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &mut ConstructorOrFunctionDefinition) {
-        ast.namespace_definition_base.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().namespace =
-            Some(if let Some(parent) = &ast.parent {
-                parent
-                    .namespace_definition_base
-                    .ast_base
-                    .namespace()
-                    .as_ref()
-                    .unwrap()
-                    .into_iter()
-                    .chain([&ast.namespace_definition_base.idf.clone()])
-                    .cloned()
-                    .collect()
-            } else {
-                vec![ast.namespace_definition_base.idf.clone()]
-            });
+        ast.namespace_definition_base
+            .ast_base
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .namespace = Some(if let Some(parent) = &ast.parent {
+            parent
+                .namespace_definition_base
+                .ast_base
+                .namespace()
+                .as_ref()
+                .unwrap()
+                .into_iter()
+                .chain([&ast.namespace_definition_base.idf.clone()])
+                .cloned()
+                .collect()
+        } else {
+            vec![ast.namespace_definition_base.idf.clone()]
+        });
     }
 }
 #[derive(ASTVisitorBaseRefImpl)]

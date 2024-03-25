@@ -136,7 +136,7 @@ fn process_ast(
     if link_identifiers
     // try:
     {
-        link(&ast);
+        link(ast);
     }
     // except UnknownIdentifierException as e:
     //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")

@@ -13,27 +13,31 @@ use crate::ast::{
     StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
 };
 use crate::pointers::parent_setter::set_parents;
-use std::sync::{Mutex,Arc};
 use lazy_static::lazy_static;
-pub fn array_length_member()->VariableDeclaration{
+use std::sync::{Arc, Mutex};
+pub fn array_length_member() -> VariableDeclaration {
     VariableDeclaration::new(
         vec![],
         AnnotatedTypeName::uint_all(),
         Identifier::identifier("length"),
-        None
+        None,
     )
 }
-  pub fn global_defs()-> GlobalDefs { GlobalDefs::new()}
-    pub fn global_vars()->GlobalVars {GlobalVars::new()}
+pub fn global_defs() -> GlobalDefs {
+    GlobalDefs::new()
+}
+pub fn global_vars() -> GlobalVars {
+    GlobalVars::new()
+}
 // lazy_static! {
-    // pub static ref ARRAY_LENGTH_MEMBER: Arc<Mutex<VariableDeclaration>> = Arc::new(Mutex::new(VariableDeclaration::new(
-    //     vec![],
-    //     AnnotatedTypeName::uint_all(),
-    //     Identifier::identifier("length"),
-    //     None
-    // )));
-    // pub static ref global_defs(): GlobalDefs = GlobalDefs::new();
-    // pub static ref global_vars(): GlobalVars = GlobalVars::new();
+// pub static ref ARRAY_LENGTH_MEMBER: Arc<Mutex<VariableDeclaration>> = Arc::new(Mutex::new(VariableDeclaration::new(
+//     vec![],
+//     AnnotatedTypeName::uint_all(),
+//     Identifier::identifier("length"),
+//     None
+// )));
+// pub static ref global_defs(): GlobalDefs = GlobalDefs::new();
+// pub static ref global_vars(): GlobalVars = GlobalVars::new();
 // }
 pub struct GlobalDefs {
     address_struct: StructDefinition,
@@ -248,7 +252,11 @@ impl GlobalVars {
         let mut msg: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs().msg_struct.namespace_definition_base.idf.clone()],
+                    vec![global_defs()
+                        .msg_struct
+                        .namespace_definition_base
+                        .idf
+                        .clone()],
                     Some(global_defs().msg_struct.to_namespace_definition()),
                 )
                 .to_type_name(),
@@ -259,7 +267,11 @@ impl GlobalVars {
         );
         msg.identifier_declaration_base
             .idf
-            .ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut()
+            .ast_base_mut_ref()
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .parent = Some(Box::new(msg.to_ast()));
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -281,13 +293,21 @@ impl GlobalVars {
         block
             .identifier_declaration_base
             .idf
-            .ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut()
+            .ast_base_mut_ref()
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .parent = Some(Box::new(block.to_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs().tx_struct.namespace_definition_base.idf.clone()],
+                    vec![global_defs()
+                        .tx_struct
+                        .namespace_definition_base
+                        .idf
+                        .clone()],
                     Some(global_defs().tx_struct.to_namespace_definition()),
                 )
                 .to_type_name(),
@@ -296,7 +316,14 @@ impl GlobalVars {
             Identifier::identifier("tx"),
             None,
         );
-        tx.identifier_declaration_base.idf.ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(tx.to_ast()));
+        tx.identifier_declaration_base
+            .idf
+            .ast_base_mut_ref()
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .parent = Some(Box::new(tx.to_ast()));
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
@@ -306,7 +333,11 @@ impl GlobalVars {
         );
         now.identifier_declaration_base
             .idf
-            .ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut()
+            .ast_base_mut_ref()
+            .parent_namespace
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .parent = Some(Box::new(now.to_ast()));
         Self {
             msg,

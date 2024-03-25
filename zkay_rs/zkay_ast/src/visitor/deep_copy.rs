@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty, IntoAST, Statement,
-    UserDefinedTypeName, AST,ASTBaseProperty,
+    ASTBaseProperty, ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty, IntoAST,
+    Statement, UserDefinedTypeName, AST,
 };
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
@@ -35,10 +35,14 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
         .as_mut()
         .unwrap()
         .ast_base_mut_ref()
-        .unwrap().parent_namespace.as_mut().unwrap().borrow_mut()
+        .unwrap()
+        .parent_namespace
+        .as_mut()
+        .unwrap()
+        .borrow_mut()
         .parent = ast.unwrap().ast_base_ref().unwrap().parent().clone();
     set_parents(ast_copy.as_mut().unwrap());
-    link_identifiers(ast_copy.as_ref().unwrap());
+    link_identifiers(ast_copy.as_mut().unwrap());
     ast_copy
 }
 
@@ -59,7 +63,14 @@ pub fn replace_expr(
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.ast_base_mut_ref().unwrap().parent_namespace.as_mut().unwrap().borrow_mut().parent = old_ast
+    new_ast
+        .ast_base_mut_ref()
+        .unwrap()
+        .parent_namespace
+        .as_mut()
+        .unwrap()
+        .borrow_mut()
+        .parent = old_ast
         .as_ref()
         .unwrap()
         .ast_base_ref()

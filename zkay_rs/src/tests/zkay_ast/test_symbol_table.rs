@@ -94,8 +94,8 @@ mod tests {
     }
     #[test]
     pub fn test_fill_symbol_table() {
-        let ast = build_ast(&SIMPLE.code());
-        fill_symbol_table(&ast);
+        let mut ast = build_ast(&SIMPLE.code());
+        fill_symbol_table(&mut ast);
 
         let ASTElements {
             contract,
@@ -123,7 +123,7 @@ mod tests {
     pub fn test_link_identifiers() {
         let mut ast = build_ast(&SIMPLE.code());
         set_parents(&mut ast);
-        link_identifiers(&ast);
+        link_identifiers(&mut ast);
 
         let ASTElements {
             contract,
@@ -147,9 +147,9 @@ mod tests {
 
     // class TestSimpleStorageAST(ZkayTestCase):
     #[test]
-    pub fn test_fill_symbol_tables() {
-        let ast = build_ast(&SIMPLE_STORAGE.code());
-        fill_symbol_table(&ast);
+    pub fn _test_fill_symbol_tables() {
+        let mut ast = build_ast(&SIMPLE_STORAGE.code());
+        fill_symbol_table(&mut ast);
 
         let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
 
@@ -161,7 +161,7 @@ mod tests {
     pub fn test_link_identifierss() {
         let mut ast = build_ast(&SIMPLE_STORAGE.code());
         set_parents(&mut ast);
-        link_identifiers(&ast);
+        link_identifiers(&mut ast);
         let assignment = &ast
             .try_as_source_unit_ref()
             .unwrap()
@@ -239,8 +239,8 @@ mod tests {
         for (name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
             set_parents(&mut ast);
-            fill_symbol_table(&ast);
-            link_identifiers(&ast);
+            fill_symbol_table(&mut ast);
+            link_identifiers(&mut ast);
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
             assert_eq!(contract.idf().name(), name);
         }

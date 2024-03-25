@@ -57,7 +57,7 @@ pub fn transform_ast(
 
     // restore all parent pointers and identifier targets
     set_parents(new_ast.as_mut().unwrap());
-    link_identifiers(&new_ast.as_ref().unwrap());
+    link_identifiers(new_ast.as_mut().unwrap());
     (new_ast.unwrap(), zt.circuits)
 }
 
