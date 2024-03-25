@@ -119,7 +119,7 @@ mod tests {
             &BTreeMap::from([(String::from("x"), *decl.idf().clone())])
         );
     }
-
+    #[test]
     pub fn test_link_identifiers() {
         let mut ast = build_ast(&SIMPLE.code());
         set_parents(&mut ast);
@@ -146,7 +146,7 @@ mod tests {
     }
 
     // class TestSimpleStorageAST(ZkayTestCase):
-
+    #[test]
     pub fn test_fill_symbol_tables() {
         let ast = build_ast(&SIMPLE_STORAGE.code());
         fill_symbol_table(&ast);
@@ -157,7 +157,7 @@ mod tests {
         s.insert(String::from("SimpleStorage"), contract.idf().clone());
         assert_eq!(ast.ast_base_ref().unwrap().names(), &s);
     }
-
+    #[test]
     pub fn test_link_identifierss() {
         let mut ast = build_ast(&SIMPLE_STORAGE.code());
         set_parents(&mut ast);
@@ -234,7 +234,7 @@ mod tests {
 
     // @parameterized_class(("name", "example"), all_examples)
     // class TestSymbolTable(TestExamples):
-
+    #[test]
     pub fn test_symbol_table() {
         for (name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());

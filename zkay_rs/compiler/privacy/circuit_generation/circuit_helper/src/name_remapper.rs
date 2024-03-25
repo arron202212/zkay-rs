@@ -16,6 +16,7 @@ use zkay_ast::ast::{
     IfStatement, IntoAST, IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
+use std::ops::{Deref,DerefMut};
 // Identifier = TypeVar("Identifier")
 // HybridArgumentIdf = TypeVar("HybridArgumentIdf")
 // class Remapper(Generic[Identifier, HybridArgumentIdf]):
@@ -279,7 +280,7 @@ impl Remapper {
                         .location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
-                        .ast_base
+                        .ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut()
                         .parent = Some(Box::new(stmt.to_ast()));
                     prev_val
                         .location_expr_base
@@ -360,7 +361,7 @@ impl Remapper {
                         .location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
-                        .ast_base
+                        .ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut()
                         .parent = Some(Box::new(stmt.to_ast()));
                     prev_val
                         .location_expr_base

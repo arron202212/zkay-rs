@@ -18,7 +18,7 @@ use crate::ast::{
     TupleOrLocationExpr, TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseProperty,
     UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
 };
-use crate::global_defs::{ARRAY_LENGTH_MEMBER, GLOBAL_DEFS, GLOBAL_VARS};
+use crate::global_defs::{array_length_member, global_defs, global_vars};
 use serde::{Deserialize, Serialize};
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -115,7 +115,7 @@ impl SymbolTableFiller {
         }
     }
     pub fn get_builtin_globals(&self) -> BTreeMap<String, Identifier> {
-        let mut global_defs = GLOBAL_DEFS.vars();
+        let mut global_defs = global_defs().vars();
         for d in global_defs.iter_mut() {
             self.visit(&(*d).to_ast());
         }
@@ -128,7 +128,7 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        let global_vars = GLOBAL_VARS
+        let global_vars = global_vars()
             .vars()
             .into_iter()
             .map(|d| {
@@ -310,7 +310,7 @@ impl SymbolTableLinker {
         }
     }
     pub fn _find_next_decl(ast: AST, name: String) -> (Option<AST>, Option<AST>) {
-        let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
+        let mut ancestor = ast.ast_base_ref().unwrap().parent().clone();
         while let Some(_ancestor) = ancestor {
             if let Some(nameo) = _ancestor.ast_base_ref().unwrap().names().get(&name) {
                 let decl = nameo.parent();
@@ -320,7 +320,7 @@ impl SymbolTableLinker {
                         .unwrap()
                         .ast_base_ref()
                         .unwrap()
-                        .parent
+                        .parent()
                         .as_ref()
                         .unwrap(),
                     ASTType::VariableDeclarationStatement,
@@ -329,7 +329,7 @@ impl SymbolTableLinker {
                     .unwrap()
                     .ast_base_ref()
                     .unwrap()
-                    .parent
+                    .parent()
                     .as_ref()
                     .unwrap()
                     .is_parent_of(&ast)
@@ -337,7 +337,7 @@ impl SymbolTableLinker {
                     return (Some(*_ancestor.clone()), decl.as_ref().map(|d| *d.clone()));
                 }
             }
-            ancestor = _ancestor.ast_base_ref().unwrap().parent.clone();
+            ancestor = _ancestor.ast_base_ref().unwrap().parent().clone();
         }
         // raise UnknownIdentifierException(f"Undefined identifier {name}", ast)
         // assert!(false, "Undefined identifier {name},{:?}", ast);
@@ -350,11 +350,11 @@ impl SymbolTableLinker {
         // Gather ast1"s ancestors + immediate child towards ast1 (for each)
         let mut ancs = BTreeMap::new();
         loop {
-            assert!(ast1.ast_base_ref().unwrap().parent.is_some());
+            assert!(ast1.ast_base_ref().unwrap().parent().is_some());
             ancs.insert(
                 ast1.ast_base_ref()
                     .unwrap()
-                    .parent
+                    .parent()
                     .as_ref()
                     .unwrap()
                     .clone(),
@@ -363,7 +363,7 @@ impl SymbolTableLinker {
             ast1 = *ast1
                 .ast_base_ref()
                 .unwrap()
-                .parent
+                .parent()
                 .as_ref()
                 .unwrap()
                 .clone();
@@ -374,9 +374,9 @@ impl SymbolTableLinker {
 
         // Find least common ancestor with ast2 + immediate child towards ast2
         loop {
-            assert!(ast2.ast_base_ref().unwrap().parent.is_some());
+            assert!(ast2.ast_base_ref().unwrap().parent().is_some());
             let old_ast = ast2.clone();
-            let ast2 = ast2.ast_base_ref().unwrap().parent.clone();
+            let ast2 = ast2.ast_base_ref().unwrap().parent().clone();
             if let Some(ast2v) = ancs.get(&ast2.clone().unwrap()) {
                 assert!(is_instances(
                     &**ast2.as_ref().unwrap(),
@@ -466,7 +466,7 @@ impl SymbolTableLinker {
     }
 
     pub fn in_scope_at(target_idf: &Identifier, ast: AST) -> bool {
-        let mut ancestor = ast.ast_base_ref().unwrap().parent.clone();
+        let mut ancestor = ast.ast_base_ref().unwrap().parent().clone();
         while let Some(_ancestor) = ancestor {
             if let Some(name) = _ancestor
                 .ast_base_ref()
@@ -479,7 +479,7 @@ impl SymbolTableLinker {
                     return true;
                 }
             }
-            ancestor = _ancestor.ast_base_ref().unwrap().parent.clone();
+            ancestor = _ancestor.ast_base_ref().unwrap().parent().clone();
         }
         false
     }
@@ -578,7 +578,7 @@ impl SymbolTableLinker {
                 .unwrap();
             if let TypeName::Array(_) = &t {
                 assert!(ast.member.name() == "length");
-                ast.location_expr_base.target = Some(Box::new(ARRAY_LENGTH_MEMBER.to_ast()));
+                ast.location_expr_base.target = Some(Box::new(array_length_member().into_ast()));
             } else if let TypeName::UserDefinedTypeName(ref mut t) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
@@ -592,7 +592,7 @@ impl SymbolTableLinker {
                     }
                 } else {
                     *t = t.clone();
-                    t.ast_base_mut_ref().parent = Some(Box::new(ast.to_ast()));
+                    t.ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(ast.to_ast()));
                     self.visit(&t.to_ast());
                 }
             } else {

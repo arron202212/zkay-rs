@@ -31,7 +31,7 @@ use zkay_ast::ast::{
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-
+use std::ops::DerefMut;
 pub fn type_check(ast: AST) {
     check_final(ast.clone());
     let v = TypeCheckVisitor::new();
@@ -915,11 +915,11 @@ impl TypeCheckVisitor {
         target.expression_base_mut_ref().statement = source.statement().clone();
 
         //set parents
-        target.ast_base_mut_ref().parent = source.parent().clone();
+        target.ast_base_mut_ref().parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = source.parent().clone();
         let mut annotated_type = target.annotated_type().clone();
-        annotated_type.as_mut().unwrap().ast_base.parent = Some(Box::new((*target).to_ast()));
+        annotated_type.as_mut().unwrap().ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new((*target).to_ast()));
         target.expression_base_mut_ref().annotated_type = annotated_type;
-        source.ast_base_mut_ref().parent = Some(Box::new(target.clone().to_ast()));
+        source.ast_base_mut_ref().parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new(target.clone().to_ast()));
 
         //set source location
         target.ast_base_mut_ref().line = source.ast_base_ref().line;
@@ -967,12 +967,12 @@ impl TypeCheckVisitor {
             .unwrap()
             .is_primitive_type());
         let mut cast = PrimitiveCastExpr::new(t.clone(), expr.clone(), true);
-        cast.expression_base.ast_base.parent = expr.parent().clone();
+        cast.expression_base.ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = expr.parent().clone();
         cast.expression_base.statement = expr.statement().clone();
         cast.expression_base.ast_base.line = expr.line();
         cast.expression_base.ast_base.column = expr.column();
-        cast.elem_type.ast_base_mut_ref().unwrap().parent = Some(Box::new(cast.to_ast()));
-        expr.ast_base_mut_ref().parent = Some(Box::new(cast.to_ast()));
+        cast.elem_type.ast_base_mut_ref().unwrap().parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new(cast.to_ast()));
+        expr.ast_base_mut_ref().parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new(cast.to_ast()));
         cast.expression_base.annotated_type = Some(AnnotatedTypeName::new(
             Some(t.clone()),
             expr.annotated_type()
@@ -988,7 +988,7 @@ impl TypeCheckVisitor {
             .as_mut()
             .unwrap()
             .ast_base
-            .parent = Some(Box::new(cast.to_ast()));
+            .parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new(cast.to_ast()));
         Expression::PrimitiveCastExpr(cast)
     }
 

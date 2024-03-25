@@ -128,7 +128,7 @@ impl CircuitGeneratorBase
         } else {
             // with Pool(processes=self.p_count) as pool
             (0..self.circuits_to_prove.len())
-                .into_par_iter()
+                // .into_par_iter()
                 .map(|i| gen_circs(&self.circuits_to_prove[i]))
                 .collect()
         };
@@ -167,7 +167,7 @@ impl CircuitGeneratorBase
                                       // with Pool(processes=self.p_count, initializer=self.__init_worker, initargs=(counter, c_count,)) as pool
                     {
                         (0..modified_circuits_to_prove.len())
-                            .into_par_iter()
+                            // .into_par_iter()
                             .for_each(|i| {
                                 self._generate_keys_par(modified_circuits_to_prove[i]);
                             });

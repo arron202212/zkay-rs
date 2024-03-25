@@ -17,8 +17,9 @@ use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
 use lazy_static::lazy_static;
-use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
+use serde::{Deserialize, Serialize,Deserializer};
+use std::{fmt::Debug,cell::RefCell,sync::{Arc, Mutex},cmp::Ordering, rc::Rc ,hash::{Hash, Hasher},
+    ops::{Deref,DerefMut}};
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
     config::{ConstructorOrFunctionDefinitionAttr, CFG},
@@ -26,9 +27,37 @@ use zkay_config::{
 };
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
-    impl_trait, impl_traits, ASTDebug, ASTKind, ASTVisitorBaseRefImpl, ImplBaseTrait,
+    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTKind, ASTVisitorBaseRefImpl,
+    ImplBaseTrait,
 };
 use zkay_utils::progress_printer::warn_print;
+
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
+pub struct RRWrapper<T: Hash+PartialEq+Eq+Ord+Clone+Debug>(Arc<RefCell<T>>);
+
+impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> Deref for RRWrapper<T> {
+    type Target = Arc<RefCell<T>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug>  DerefMut for RRWrapper<T>   {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        return &mut self.0;
+    }
+}
+impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> Hash for RRWrapper<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.borrow().hash(state);
+    }
+}
+
+impl<T: Hash+PartialEq+Eq+Ord+Clone+Debug> RRWrapper<T> {
+    pub fn new(inner: T) -> Self {
+        RRWrapper(Arc::new(RefCell::new(inner)))
+    }
+}
+
 pub struct ChildListBuilder {
     pub children: Vec<AST>,
 }
@@ -282,6 +311,14 @@ impl ASTChildren for AST {
         match self {
             AST::Expression(ast) => ast.process_children(cb),
             AST::Statement(ast) => ast.process_children(cb),
+            AST::SourceUnit(ast) => ast.process_children(cb),
+            // AST::Identifier(ast) => ast.process_children(cb),
+            // AST::Comment(ast) => ast.process_children(cb),
+            AST::TypeName(ast) => ast.process_children(cb),
+            AST::AnnotatedTypeName(ast) => ast.process_children(cb),
+            AST::IdentifierDeclaration(ast) => ast.process_children(cb),
+            AST::NamespaceDefinition(ast) => ast.process_children(cb),
+            AST::EnumValue(ast) => ast.process_children(cb),
             _ => {}
         }
     }
@@ -324,8 +361,9 @@ impl AST {
     pub fn is_parent_of(&self, child: &AST) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
-        while e != selfs && e.ast_base_ref().unwrap().parent.is_some() {
-            e = *e.ast_base_ref().unwrap().parent.as_ref().unwrap().clone();
+        while e != selfs && e.ast_base_ref().unwrap().parent_namespace.as_ref().unwrap().borrow().parent.is_some() {
+            let e1 = e.ast_base_ref().unwrap().parent_namespace.as_ref().unwrap().borrow().parent.as_ref().map(|p|*p.clone()).unwrap();
+            e=e1;
         }
         e == selfs
     }
@@ -464,8 +502,8 @@ pub trait ASTBaseRef {
     fn ast_base_ref(&self) -> &ASTBase;
 }
 pub trait ASTBaseProperty {
-    fn parent(&self) -> &Option<Box<AST>>;
-    fn namespace(&self) -> &Option<Vec<Identifier>>;
+    fn parent(&self) -> Option<Box<AST>>;
+    fn namespace(&self) -> Option<Vec<Identifier>>;
     fn names(&self) -> &BTreeMap<String, Identifier>;
     fn line(&self) -> i32;
     fn column(&self) -> i32;
@@ -473,11 +511,11 @@ pub trait ASTBaseProperty {
     fn read_values(&self) -> &BTreeSet<InstanceTarget>;
 }
 impl<T: ASTBaseRef> ASTBaseProperty for T {
-    fn parent(&self) -> &Option<Box<AST>> {
-        &self.ast_base_ref().parent
+    fn parent(&self) -> Option<Box<AST>> {
+        self.ast_base_ref().parent_namespace.as_ref().unwrap().borrow().parent.clone()
     }
-    fn namespace(&self) -> &Option<Vec<Identifier>> {
-        &self.ast_base_ref().namespace
+    fn namespace(&self) -> Option<Vec<Identifier>> {
+        self.ast_base_ref().parent_namespace.as_ref().unwrap().borrow().namespace.clone()
     }
     fn names(&self) -> &BTreeMap<String, Identifier> {
         &self.ast_base_ref().names
@@ -495,12 +533,17 @@ impl<T: ASTBaseRef> ASTBaseProperty for T {
         &self.ast_base_ref().read_values
     }
 }
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub struct ASTParentNamespace {
+    pub parent: Option<Box<AST>>,
+    pub namespace: Option<Vec<Identifier>>,
+}
 #[derive(
     ImplBaseTrait, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
 pub struct ASTBase {
-    pub parent: Option<Box<AST>>,
-    pub namespace: Option<Vec<Identifier>>,
+    #[serde(skip)]
+    pub parent_namespace: Option<RRWrapper<ASTParentNamespace>>,
     pub names: BTreeMap<String, Identifier>,
     pub line: i32,
     pub column: i32,
@@ -510,8 +553,10 @@ pub struct ASTBase {
 impl ASTBase {
     pub fn new() -> Self {
         Self {
-            parent: None,
-            namespace: None,
+            parent_namespace: Some(RRWrapper::new(ASTParentNamespace {
+                parent: None,
+                namespace: None,
+            })),
             names: BTreeMap::new(),
             line: -1,
             column: -1,
@@ -604,7 +649,7 @@ impl Immutable for IdentifierBase {
     fn is_immutable(&self) -> bool {
         if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(
             svd,
-        ))) = &self.ast_base.parent.as_ref().map(|p| *p.clone())
+        ))) = &self.parent().as_ref().map(|p| *p.clone())
         {
             svd.identifier_declaration_base.is_final()
                 || svd.identifier_declaration_base.is_constant()
@@ -738,6 +783,7 @@ impl BlankLine {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     ExpressionBaseRef,
@@ -761,14 +807,6 @@ pub enum Expression {
     DummyAnnotation(DummyAnnotation),
 }
 
-impl ASTChildren for Expression {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        match self {
-            Expression::PrimitiveCastExpr(ast) => ast.process_children(cb),
-            _ => {}
-        }
-    }
-}
 impl Expression {
     pub fn all_expr() -> Self {
         Expression::AllExpr(AllExpr::new())
@@ -1234,7 +1272,19 @@ lazy_static! {
     };
 }
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BuiltinFunction {
     pub expression_base: ExpressionBase,
     pub op: String,
@@ -1523,6 +1573,7 @@ impl HomomorphicBuiltinFunction {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     FunctionCallExprBaseRef,
@@ -1650,9 +1701,9 @@ impl FunctionCallExprBase {
 
 impl ASTChildren for FunctionCallExprBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(*self.func.clone()));
+        cb.add_child(self.func.to_ast());
         self.args.iter().for_each(|arg| {
-            cb.add_child(AST::Expression(arg.clone()));
+            cb.add_child(arg.to_ast());
         });
     }
 }
@@ -1705,9 +1756,9 @@ impl NewExpr {
 }
 impl ASTChildren for NewExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::AnnotatedTypeName(self.annotated_type.clone()));
+        cb.add_child(self.annotated_type.to_ast());
         self.function_call_expr_base.args.iter().for_each(|arg| {
-            cb.add_child(AST::Expression(arg.clone()));
+            cb.add_child(arg.to_ast());
         });
     }
 }
@@ -1751,11 +1802,12 @@ impl PrimitiveCastExpr {
 }
 impl ASTChildren for PrimitiveCastExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::TypeName(*self.elem_type.clone()));
-        cb.add_child(AST::Expression(*self.expr.clone()));
+        cb.add_child(self.elem_type.to_ast());
+        cb.add_child(self.expr.to_ast());
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     LiteralExprBaseRef,
@@ -1803,7 +1855,19 @@ impl LiteralExprBase {
     }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BooleanLiteralExpr {
     pub literal_expr_base: LiteralExprBase,
     pub value: bool,
@@ -1845,7 +1909,19 @@ impl BooleanLiteralExpr {
     }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct NumberLiteralExpr {
     pub literal_expr_base: LiteralExprBase,
     pub value: i32,
@@ -1912,7 +1988,19 @@ impl NumberLiteralExpr {
     }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct StringLiteralExpr {
     pub literal_expr_base: LiteralExprBase,
     pub value: String,
@@ -1948,6 +2036,7 @@ impl StringLiteralExpr {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     ArrayLiteralExprBaseRef,
@@ -2044,13 +2133,25 @@ impl ArrayLiteralExprBase {
 impl ASTChildren for ArrayLiteralExprBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.values.iter().for_each(|value| {
-            cb.add_child(AST::Expression(value.clone()));
+            cb.add_child(value.to_ast());
         });
     }
 }
 
 #[impl_traits(ArrayLiteralExprBase, LiteralExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct KeyLiteralExpr {
     pub array_literal_expr_base: ArrayLiteralExprBase,
     pub crypto_params: CryptoParams,
@@ -2094,6 +2195,7 @@ impl KeyLiteralExpr {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     TupleOrLocationExprBaseRef,
@@ -2115,10 +2217,7 @@ impl TupleOrLocationExpr {
     pub fn is_lvalue(&self) -> bool {
         let parent = match self {
             TupleOrLocationExpr::TupleExpr(te) => te
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
-                .parent
+                .parent()
                 .clone()
                 .map(|p| *p),
             TupleOrLocationExpr::LocationExpr(te) => te.parent().as_ref().map(|p| *p.clone()),
@@ -2282,11 +2381,12 @@ impl TupleExpr {
 impl ASTChildren for TupleExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.elements.iter().for_each(|element| {
-            cb.add_child(AST::Expression(element.clone()));
+            cb.add_child(element.to_ast());
         });
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     LocationExprBaseRef,
@@ -2573,7 +2673,7 @@ impl IdentifierExpr {
 }
 impl ASTChildren for IdentifierExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Identifier(*self.idf.clone()));
+        cb.add_child(self.idf.to_ast());
     }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
@@ -2624,10 +2724,10 @@ impl MemberAccessExpr {
 }
 impl ASTChildren for MemberAccessExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(Expression::TupleOrLocationExpr(
-            TupleOrLocationExpr::LocationExpr(*self.expr.clone().unwrap()),
-        )));
-        cb.add_child(AST::Identifier(*self.member.clone()));
+        if let Some(expr) = &self.expr {
+            cb.add_child(expr.to_ast());
+        }
+        cb.add_child(self.member.to_ast());
     }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
@@ -2678,14 +2778,26 @@ impl IndexExpr {
 }
 impl ASTChildren for IndexExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(Expression::TupleOrLocationExpr(
-            TupleOrLocationExpr::LocationExpr(*self.arr.clone().unwrap()),
-        )));
-        cb.add_child(AST::Expression(*self.key.clone()));
+        if let Some(arr) = &self.arr {
+            cb.add_child(arr.to_ast());
+        }
+        cb.add_child(self.key.to_ast());
     }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct SliceExpr {
     pub location_expr_base: LocationExprBase,
     pub arr: Option<Box<LocationExpr>>,
@@ -2744,7 +2856,19 @@ impl SliceExpr {
     }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct MeExpr {
     pub expression_base: ExpressionBase,
     pub name: String,
@@ -2785,7 +2909,19 @@ impl Immutable for MeExpr {
     }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct AllExpr {
     pub expression_base: ExpressionBase,
     pub name: String,
@@ -2824,6 +2960,7 @@ impl Immutable for AllExpr {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     ReclassifyExprBaseRef,
@@ -2936,12 +3073,24 @@ impl ReclassifyExprBase {
 }
 impl ASTChildren for ReclassifyExprBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(*self.expr.clone()));
-        cb.add_child(AST::Expression(*self.privacy.clone()));
+        cb.add_child(self.expr.to_ast());
+        cb.add_child(self.privacy.to_ast());
     }
 }
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct RehomExpr {
     pub reclassify_expr_base: ReclassifyExprBase,
 }
@@ -3132,7 +3281,7 @@ impl HybridArgumentIdf {
             ma.location_expr_base
                 .tuple_or_location_expr_base
                 .expression_base
-                .ast_base
+                .ast_base.parent_namespace.as_mut().unwrap().borrow_mut()
                 .parent = parent.clone().map(|p| Box::new(p));
             ma.location_expr_base
                 .tuple_or_location_expr_base
@@ -3156,7 +3305,7 @@ impl HybridArgumentIdf {
         )
         .as_type(AST::TypeName(*self.t.clone()));
         if let Identifier::Identifier(mut idf) = *ie.idf {
-            idf.ast_base.parent = parent.clone();
+            idf.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().parent = parent.clone();
             ie.idf = Box::new(Identifier::Identifier(idf));
         }
 
@@ -3376,7 +3525,19 @@ impl Identifier {
 }
 
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EncryptionExpression {
     pub reclassify_expr_base: ReclassifyExprBase,
     pub annotated_type: Option<AnnotatedTypeName>,
@@ -3414,7 +3575,7 @@ impl EncryptionExpression {
         selfs
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, ASTChildren)]
+#[enum_dispatch(ASTChildren, IntoAST, ASTInstanceOf)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -3513,6 +3674,7 @@ impl StatementBase {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     CircuitComputationStatementBaseRef,
@@ -3527,14 +3689,6 @@ impl StatementBase {
 pub enum CircuitDirectiveStatement {
     CircuitComputationStatement(CircuitComputationStatement),
     EnterPrivateKeyStatement(EnterPrivateKeyStatement),
-}
-impl ASTChildren for CircuitDirectiveStatement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        match self {
-            Self::CircuitComputationStatement(ast) => ast.process_children(cb),
-            Self::EnterPrivateKeyStatement(ast) => ast.process_children(cb),
-        }
-    }
 }
 
 #[enum_dispatch]
@@ -3557,15 +3711,24 @@ impl CircuitDirectiveStatementBase {
     }
 }
 #[impl_traits(CircuitDirectiveStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct CircuitComputationStatement {
     pub circuit_directive_statement_base: CircuitDirectiveStatementBase,
     pub idf: HybridArgumentIdf,
 }
 
-impl ASTChildren for CircuitComputationStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
-}
 impl IntoAST for CircuitComputationStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::CircuitDirectiveStatement(
@@ -3583,14 +3746,24 @@ impl CircuitComputationStatement {
     }
 }
 #[impl_traits(CircuitDirectiveStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EnterPrivateKeyStatement {
     pub circuit_directive_statement_base: CircuitDirectiveStatementBase,
     pub crypto_params: CryptoParams,
 }
-impl ASTChildren for EnterPrivateKeyStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
-}
+
 impl IntoAST for EnterPrivateKeyStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::CircuitDirectiveStatement(
@@ -3634,13 +3807,9 @@ impl IfStatement {
 }
 impl ASTChildren for IfStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.condition.clone()));
-        cb.add_child(AST::Statement(Statement::StatementList(
-            StatementList::Block(self.then_branch.clone()),
-        )));
-        cb.add_child(AST::Statement(Statement::StatementList(
-            StatementList::Block(self.then_branch.clone()),
-        )));
+        cb.add_child(self.condition.to_ast());
+        cb.add_child(self.then_branch.to_ast());
+        cb.add_child(self.then_branch.to_ast());
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
@@ -3667,10 +3836,8 @@ impl WhileStatement {
 }
 impl ASTChildren for WhileStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.condition.clone()));
-        cb.add_child(AST::Statement(Statement::StatementList(
-            StatementList::Block(self.body.clone()),
-        )));
+        cb.add_child(self.condition.to_ast());
+        cb.add_child(self.body.to_ast());
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
@@ -3697,10 +3864,8 @@ impl DoWhileStatement {
 }
 impl ASTChildren for DoWhileStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Statement(Statement::StatementList(
-            StatementList::Block(self.body.clone()),
-        )));
-        cb.add_child(AST::Expression(self.condition.clone()));
+        cb.add_child(self.body.to_ast());
+        cb.add_child(self.condition.to_ast());
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
@@ -3746,26 +3911,34 @@ impl ForStatement {
 impl ASTChildren for ForStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         if let Some(init) = &self.init {
-            cb.add_child(AST::Statement(Statement::SimpleStatement(*init.clone())));
+            cb.add_child(init.to_ast());
         }
 
-        cb.add_child(AST::Expression(self.condition.clone()));
+        cb.add_child(self.condition.to_ast());
         if let Some(update) = &self.update {
-            cb.add_child(AST::Statement(Statement::SimpleStatement(*update.clone())));
+            cb.add_child(update.to_ast());
         }
-        cb.add_child(AST::Statement(Statement::StatementList(
-            StatementList::Block(self.body.clone()),
-        )));
+        cb.add_child(self.body.to_ast());
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BreakStatement {
     pub statement_base: StatementBase,
 }
-impl ASTChildren for BreakStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
-}
+
 impl IntoAST for BreakStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::BreakStatement(self))
@@ -3780,13 +3953,23 @@ impl BreakStatement {
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ContinueStatement {
     pub statement_base: StatementBase,
 }
-impl ASTChildren for ContinueStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
-}
+
 impl IntoAST for ContinueStatement {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::ContinueStatement(self))
@@ -3822,10 +4005,13 @@ impl ReturnStatement {
 }
 impl ASTChildren for ReturnStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.expr.clone().unwrap()));
+        if let Some(expr) = &self.expr {
+            cb.add_child(expr.to_ast());
+        }
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     SimpleStatementBaseRef,
@@ -3842,10 +4028,6 @@ pub enum SimpleStatement {
     RequireStatement(RequireStatement),
     AssignmentStatement(AssignmentStatement),
     VariableDeclarationStatement(VariableDeclarationStatement),
-}
-
-impl ASTChildren for SimpleStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 
 #[enum_dispatch]
@@ -3892,7 +4074,7 @@ impl ExpressionStatement {
 }
 impl ASTChildren for ExpressionStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.expr.clone()));
+        cb.add_child(self.expr.to_ast());
     }
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
@@ -3924,10 +4106,11 @@ impl RequireStatement {
 }
 impl ASTChildren for RequireStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Expression(self.condition.clone()));
+        cb.add_child(self.condition.to_ast());
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     AssignmentStatementBaseRef,
@@ -3944,10 +4127,6 @@ impl ASTChildren for RequireStatement {
 pub enum AssignmentStatement {
     AssignmentStatement(AssignmentStatementBase),
     CircuitInputStatement(CircuitInputStatement),
-}
-
-impl ASTChildren for AssignmentStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 
 #[enum_dispatch]
@@ -4012,36 +4191,28 @@ impl AssignmentStatementBase {
 }
 impl ASTChildren for AssignmentStatementBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(te) = self
-            .lhs
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_tuple_expr_ref()
-        {
-            cb.add_child(te.to_ast());
+        if let Some(lhs) = &self.lhs {
+            cb.add_child(lhs.to_ast());
         }
-        if let Some(le) = self
-            .lhs
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-        {
-            cb.add_child(le.to_ast());
+        if let Some(rhs) = &self.rhs {
+            cb.add_child(rhs.to_ast());
         }
-
-        cb.add_child(self.rhs.as_ref().unwrap().to_ast());
     }
 }
 #[impl_traits(AssignmentStatementBase, SimpleStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct CircuitInputStatement {
     pub assignment_statement_base: AssignmentStatementBase,
 }
@@ -4061,40 +4232,9 @@ impl CircuitInputStatement {
         }
     }
 }
-impl ASTChildren for CircuitInputStatement {
-    fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        if let Some(te) = self
-            .assignment_statement_base
-            .lhs
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_tuple_expr_ref()
-        {
-            cb.add_child(te.to_ast());
-        }
-        if let Some(le) = self
-            .assignment_statement_base
-            .lhs
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-        {
-            cb.add_child(le.to_ast());
-        }
-        cb.add_child(AST::Expression(
-            self.assignment_statement_base.rhs.clone().unwrap(),
-        ));
-    }
-}
+
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     StatementListBaseRef,
@@ -4111,10 +4251,6 @@ pub enum StatementList {
     Block(Block),
     IndentBlock(IndentBlock),
     StatementList(StatementListBase),
-}
-
-impl ASTChildren for StatementList {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
 }
 
 #[enum_dispatch]
@@ -4198,7 +4334,19 @@ impl ASTChildren for StatementListBase {
     }
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Block {
     pub statement_list_base: StatementListBase,
     pub was_single_statement: bool,
@@ -4218,7 +4366,19 @@ impl Block {
     }
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IndentBlock {
     pub statement_list_base: StatementListBase,
 }
@@ -4273,6 +4433,20 @@ impl ASTInstanceOf for TypeName {
             TypeName::TupleType(ast) => ast.get_ast_type(),
             TypeName::FunctionTypeName(ast) => ast.get_ast_type(),
             TypeName::Literal(_) => ASTType::Literal,
+        }
+    }
+}
+
+impl ASTChildren for TypeName {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        match self {
+            TypeName::ElementaryTypeName(ast) => ast.process_children(cb),
+            TypeName::UserDefinedTypeName(ast) => ast.process_children(cb),
+            TypeName::Mapping(ast) => ast.process_children(cb),
+            TypeName::Array(ast) => ast.process_children(cb),
+            // TypeName::TupleType(ast) => ast.process_children(cb),
+            TypeName::FunctionTypeName(ast) => ast.process_children(cb),
+            _ => {}
         }
     }
 }
@@ -4469,6 +4643,7 @@ impl TypeNameBase {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     ElementaryTypeNameBaseRef,
@@ -4515,7 +4690,19 @@ impl ElementaryTypeNameBase {
     }
 }
 #[impl_traits(ElementaryTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BoolTypeName {
     pub elementary_type_name_base: ElementaryTypeNameBase,
 }
@@ -4540,7 +4727,19 @@ impl BoolTypeName {
     }
 }
 #[impl_traits(ElementaryTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BooleanLiteralType {
     pub elementary_type_name_base: ElementaryTypeNameBase,
 }
@@ -4596,6 +4795,7 @@ impl BooleanLiteralType {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     NumberTypeNameBaseRef,
@@ -4651,6 +4851,7 @@ impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
 }
 #[impl_traits(ElementaryTypeNameBase, TypeNameBase, ASTBase)]
 #[derive(
+    ASTChildrenImpl,
     ImplBaseTrait,
     ASTKind,
     Clone,
@@ -4744,7 +4945,19 @@ pub enum NumberLiteralTypeUnion {
     I32(i32),
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct NumberLiteralType {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -4861,7 +5074,19 @@ impl NumberLiteralType {
     }
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IntTypeName {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -4894,7 +5119,19 @@ impl IntTypeName {
     }
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct UintTypeName {
     pub number_type_name_base: NumberTypeNameBase,
 }
@@ -4927,6 +5164,7 @@ impl UintTypeName {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     UserDefinedTypeNameBaseRef,
@@ -4982,7 +5220,19 @@ impl UserDefinedTypeNameBase {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EnumTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5008,7 +5258,19 @@ impl EnumTypeName {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EnumValueTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5043,7 +5305,7 @@ impl EnumValueTypeName {
                 .unwrap()
                 .ast_base_ref()
                 .unwrap()
-                .parent
+                .parent()
                 .as_ref()
                 .map(|p| p.try_as_namespace_definition_ref().unwrap().clone()),
         )))
@@ -5069,7 +5331,19 @@ impl EnumValueTypeName {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct StructTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5095,7 +5369,19 @@ impl StructTypeName {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ContractTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5118,7 +5404,19 @@ impl ContractTypeName {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct AddressTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5146,7 +5444,19 @@ impl AddressTypeName {
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct AddressPayableTypeName {
     pub user_defined_type_name_base: UserDefinedTypeNameBase,
 }
@@ -5222,11 +5532,11 @@ impl Mapping {
 }
 impl ASTChildren for Mapping {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::TypeName(*self.key_type.clone()));
+        cb.add_child(self.key_type.to_ast());
         if let Some(idf) = &self.key_label {
-            cb.add_child(AST::Identifier(idf.clone()));
+            cb.add_child(idf.to_ast());
         }
-        cb.add_child(AST::AnnotatedTypeName(*self.value_type.clone()));
+        cb.add_child(self.value_type.to_ast());
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -5236,6 +5546,7 @@ pub enum ExprUnion {
 }
 
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     ArrayBaseRef,
@@ -5257,9 +5568,9 @@ pub enum Array {
 
 impl ASTChildren for ArrayBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::AnnotatedTypeName(self.value_type.clone()));
+        cb.add_child(self.value_type.to_ast());
         if let Some(ExprUnion::Expression(expr)) = &self.expr {
-            cb.add_child(AST::Expression(expr.clone()));
+            cb.add_child(expr.to_ast());
         }
     }
 }
@@ -5334,7 +5645,19 @@ impl ArrayBase {
 }
 
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct CipherText {
     pub array_base: ArrayBase,
     pub plain_type: AnnotatedTypeName,
@@ -5368,7 +5691,19 @@ impl CipherText {
     }
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Randomness {
     pub array_base: ArrayBase,
     pub crypto_params: CryptoParams,
@@ -5400,7 +5735,19 @@ impl Randomness {
     }
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Key {
     pub array_base: ArrayBase,
     pub crypto_params: CryptoParams,
@@ -5428,7 +5775,19 @@ impl Key {
     }
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Proof {
     pub array_base: ArrayBase,
 }
@@ -5454,7 +5813,19 @@ impl Proof {
     }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct DummyAnnotation {
     pub expression_base: ExpressionBase,
 }
@@ -5674,14 +6045,10 @@ impl FunctionTypeName {
 impl ASTChildren for FunctionTypeName {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.parameters.iter().for_each(|parameter| {
-            cb.add_child(AST::IdentifierDeclaration(
-                IdentifierDeclaration::Parameter(parameter.clone()),
-            ));
+            cb.add_child(parameter.to_ast());
         });
         self.return_parameters.iter().for_each(|parameter| {
-            cb.add_child(AST::IdentifierDeclaration(
-                IdentifierDeclaration::Parameter(parameter.clone()),
-            ));
+            cb.add_child(parameter.to_ast());
         });
     }
 }
@@ -5917,13 +6284,16 @@ impl AnnotatedTypeName {
 }
 impl ASTChildren for AnnotatedTypeName {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::TypeName(*self.type_name.clone().unwrap()));
+        if let Some(type_name) = &self.type_name {
+            cb.add_child(type_name.to_ast());
+        }
         if let Some(privacy_annotation) = &self.privacy_annotation {
-            cb.add_child(*privacy_annotation.clone());
+            cb.add_child(privacy_annotation.to_ast());
         }
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     IdentifierDeclarationBaseRef,
@@ -5998,12 +6368,24 @@ impl IdentifierDeclarationBase {
 }
 impl ASTChildren for IdentifierDeclarationBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::AnnotatedTypeName(*self.annotated_type.clone()));
-        cb.add_child(AST::Identifier(*self.idf.clone()));
+        cb.add_child(self.annotated_type.to_ast());
+        cb.add_child(self.idf.to_ast());
     }
 }
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct VariableDeclaration {
     pub identifier_declaration_base: IdentifierDeclarationBase,
 }
@@ -6057,16 +6439,26 @@ impl VariableDeclarationStatement {
 }
 impl ASTChildren for VariableDeclarationStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::IdentifierDeclaration(
-            IdentifierDeclaration::VariableDeclaration(self.variable_declaration.clone()),
-        ));
+        cb.add_child(self.variable_declaration.to_ast());
         if let Some(expr) = &self.expr {
-            cb.add_child(AST::Expression(expr.clone()));
+            cb.add_child(expr.to_ast());
         }
     }
 }
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTChildrenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Parameter {
     pub identifier_declaration_base: IdentifierDeclarationBase,
 }
@@ -6105,6 +6497,7 @@ impl Parameter {
     }
 }
 #[enum_dispatch(
+    ASTChildren,
     IntoAST,
     ASTInstanceOf,
     NamespaceDefinitionBaseRef,
@@ -6151,7 +6544,7 @@ impl NamespaceDefinitionBase {
 }
 impl ASTChildren for NamespaceDefinitionBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        cb.add_child(AST::Identifier(self.idf.clone()));
+        cb.add_child(self.idf.to_ast());
     }
 }
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
@@ -6222,7 +6615,7 @@ impl ConstructorOrFunctionDefinition {
             .collect();
         return_var_decls.iter_mut().for_each(|mut vd| {
             if let Identifier::Identifier(mut idf) = *vd.identifier_declaration_base.idf.clone() {
-                idf.ast_base.parent = Some(Box::new(AST::IdentifierDeclaration(
+                idf.ast_base.parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(AST::IdentifierDeclaration(
                     IdentifierDeclaration::VariableDeclaration(vd.clone()),
                 )));
                 vd.identifier_declaration_base.idf = Box::new(Identifier::Identifier(idf));
@@ -6377,21 +6770,15 @@ impl ConstructorOrFunctionDefinitionAttr for ConstructorOrFunctionDefinition {
 }
 impl ASTChildren for ConstructorOrFunctionDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
-        // super().process_children(f)
+        self.namespace_definition_base.process_children(cb);
         self.parameters.iter().for_each(|parameter| {
-            cb.add_child(AST::IdentifierDeclaration(
-                IdentifierDeclaration::Parameter(parameter.clone()),
-            ));
+            cb.add_child(parameter.to_ast());
         });
         self.return_parameters.iter().for_each(|parameter| {
-            cb.add_child(AST::IdentifierDeclaration(
-                IdentifierDeclaration::Parameter(parameter.clone()),
-            ));
+            cb.add_child(parameter.to_ast());
         });
         if let Some(body) = &self.body {
-            cb.add_child(AST::Statement(Statement::StatementList(
-                StatementList::Block(body.clone()),
-            )));
+            cb.add_child(body.to_ast());
         }
     }
 }
@@ -6431,7 +6818,7 @@ impl ASTChildren for StateVariableDeclaration {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.identifier_declaration_base.process_children(cb);
         if let Some(expr) = &self.expr {
-            cb.add_child(AST::Expression(expr.clone()));
+            cb.add_child(expr.to_ast());
         }
     }
 }
@@ -6467,7 +6854,7 @@ impl EnumValue {
 impl ASTChildren for EnumValue {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         if let Some(idf) = &self.idf {
-            cb.add_child(AST::Identifier(idf.clone()));
+            cb.add_child(idf.to_ast());
         }
     }
 }
@@ -6501,7 +6888,7 @@ impl ASTChildren for EnumDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.namespace_definition_base.process_children(cb);
         self.values.iter().for_each(|value| {
-            cb.add_child(AST::EnumValue(value.clone()));
+            cb.add_child(value.to_ast());
         });
     }
 }
@@ -6583,7 +6970,7 @@ impl ContractDefinition {
             if self.constructor_definitions.len() == 0 {
                 // # return empty constructor
                 let mut c = ConstructorOrFunctionDefinition::new(None, None, None, None, None);
-                c.ast_base_mut_ref().parent = Some(Box::new(self.to_ast()));
+                c.ast_base_mut_ref().parent_namespace.as_mut().unwrap().borrow_mut().parent = Some(Box::new(self.to_ast()));
                 Some(c.into_ast())
             } else if self.constructor_definitions.len() == 1 {
                 Some(self.constructor_definitions[0].to_ast())
@@ -6601,16 +6988,12 @@ impl ASTChildren for ContractDefinition {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.namespace_definition_base.process_children(cb);
         self.enum_definitions.iter().for_each(|enum_definition| {
-            cb.add_child(AST::NamespaceDefinition(
-                NamespaceDefinition::EnumDefinition(enum_definition.clone()),
-            ));
+            cb.add_child(enum_definition.to_ast());
         });
         self.struct_definitions
             .iter()
             .for_each(|struct_definition| {
-                cb.add_child(AST::NamespaceDefinition(
-                    NamespaceDefinition::StructDefinition(struct_definition.clone()),
-                ));
+                cb.add_child(struct_definition.to_ast());
             });
         self.state_variable_declarations
             .iter()
@@ -6620,20 +7003,12 @@ impl ASTChildren for ContractDefinition {
         self.constructor_definitions
             .iter()
             .for_each(|constructor_definition| {
-                cb.add_child(AST::NamespaceDefinition(
-                    NamespaceDefinition::ConstructorOrFunctionDefinition(
-                        constructor_definition.clone(),
-                    ),
-                ));
+                cb.add_child(constructor_definition.to_ast());
             });
         self.function_definitions
             .iter()
             .for_each(|function_definition| {
-                cb.add_child(AST::NamespaceDefinition(
-                    NamespaceDefinition::ConstructorOrFunctionDefinition(
-                        function_definition.clone(),
-                    ),
-                ));
+                cb.add_child(function_definition.to_ast());
             });
     }
 }
@@ -6693,9 +7068,7 @@ impl SourceUnit {
 impl ASTChildren for SourceUnit {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.contracts.iter().for_each(|contract| {
-            cb.add_child(AST::NamespaceDefinition(
-                NamespaceDefinition::ContractDefinition(contract.clone()),
-            ));
+            cb.add_child(contract.to_ast());
         });
     }
 }
@@ -6971,7 +7344,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
             .unwrap()
             .ast_base_ref()
             .unwrap()
-            .parent
+            .parent()
             .as_ref()
         {
             ctr = Some(*p.clone());
@@ -6987,7 +7360,7 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
             .unwrap()
             .ast_base_ref()
             .unwrap()
-            .parent
+            .parent()
             .as_ref()
             .map(|p| *p.clone());
     }

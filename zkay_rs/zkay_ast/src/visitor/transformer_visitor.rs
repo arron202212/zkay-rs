@@ -9,7 +9,8 @@
 use crate::ast::{Block, HybridArgumentIdf, AST};
 use dyn_clone::DynClone;
 // T = TypeVar("T")
-pub trait TransformerVisitorEx: DynClone + std::marker::Sync + AstTransformerVisitor {}
+// std::marker::Sync +
+pub trait TransformerVisitorEx: DynClone +  AstTransformerVisitor {}
 dyn_clone::clone_trait_object!(TransformerVisitorEx);
 pub struct AstTransformerVisitorBase {
     log: bool,

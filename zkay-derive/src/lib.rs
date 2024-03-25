@@ -72,6 +72,34 @@ impl AstVisitorBaseRef for {} {{
     panic!("no ident found")
 }
 
+#[proc_macro_derive(ASTChildrenImpl)]
+pub fn derive_ast_children(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    let struct_name = it.next().unwrap().to_string();
+                    return format!(
+                        r#"
+impl ASTChildren for {} {{
+    fn process_children(&mut self, _cb: &mut ChildListBuilder) {{
+        
+    }}
+}}
+                    "#,
+                        struct_name
+                    )
+                    .parse()
+                    .unwrap();
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("no ident found")
+}
+
 #[proc_macro_derive(ASTDebug)]
 pub fn derive_ast_debug(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter();

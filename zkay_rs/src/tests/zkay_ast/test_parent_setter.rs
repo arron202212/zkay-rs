@@ -53,7 +53,7 @@ mod tests {
             for c in ast.children() {
                 assert_eq!(
                     c.ast_base_ref().unwrap().parent(),
-                    &Some(Box::new(ast.clone()))
+                    Some(Box::new(ast.clone()))
                 );
             }
         }
@@ -62,12 +62,13 @@ mod tests {
     pub fn test_contract_identifier() {
         for (name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
+            // println!("{:?},====={:?}",name,ast);
             set_parents(&mut ast);
-
+            // println!("{:?},==after==={:?}",name,ast);
             // test
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
             let idf = contract.idf();
-            assert_eq!(idf.parent(), &Some(Box::new(contract.to_ast())));
+            assert_eq!(idf.parent(), Some(Box::new(contract.to_ast())));
         }
     }
     #[test]

@@ -37,6 +37,7 @@ use zkay_ast::visitor::deep_copy::deep_copy;
 use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
+use std::ops::{Deref,DerefMut};
 // class CircuitHelper
 
 // """
@@ -649,7 +650,7 @@ where
             .unwrap()
             .statement_list_base
             .statement_base
-            .ast_base
+            .ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut()
             .parent = Some(Box::new(fdef.to_ast()));
         fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();
 
@@ -1197,7 +1198,7 @@ where
                     &idf.location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
-                        .ast_base
+                        .ast_base.parent_namespace.as_ref().unwrap().deref().borrow()
                         .parent,
                 )
                 .as_type(AST::AnnotatedTypeName(*idf.annotated_type.unwrap()))
@@ -1426,7 +1427,7 @@ where
                 .clone();
             assert!(t.as_ref().unwrap().can_be_private());
             let mut nle = NumberLiteralExpr::new(0, false);
-            nle.literal_expr_base.expression_base.ast_base.parent = Some(Box::new(ast.to_ast()));
+            nle.literal_expr_base.expression_base.ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut().parent = Some(Box::new(ast.to_ast()));
             nle.literal_expr_base.expression_base.statement = Some(Box::new(ast.to_statement()));
             ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(
                 nle.to_expr(),
@@ -1559,14 +1560,14 @@ where
         assert!(ast
             .statement_list_base
             .statement_base
-            .ast_base
+            .ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut()
             .parent
             .is_some());
         let is_already_scoped = is_instances(
             &*ast
                 .statement_list_base
                 .statement_base
-                .ast_base
+                .ast_base.parent_namespace.as_mut().unwrap().deref_mut().borrow_mut()
                 .parent
                 .clone()
                 .unwrap(),

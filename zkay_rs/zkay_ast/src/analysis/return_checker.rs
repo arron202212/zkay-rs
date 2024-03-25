@@ -46,7 +46,7 @@ impl ReturnCheckVisitor {
         }
     }
     pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
-        let container = ast.statement_base.ast_base.parent.clone().unwrap();
+        let container = ast.parent().clone().unwrap();
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;
         if container
@@ -63,12 +63,12 @@ impl ReturnCheckVisitor {
             ok = false;
         }
         if !is_instance(
-            &**container.ast_base_ref().unwrap().parent.as_ref().unwrap(),
+            &**container.ast_base_ref().unwrap().parent().as_ref().unwrap(),
             ASTType::ConstructorOrFunctionDefinition,
         ) || container
             .ast_base_ref()
             .unwrap()
-            .parent
+            .parent()
             .as_ref()
             .unwrap()
             .try_as_namespace_definition_ref()
