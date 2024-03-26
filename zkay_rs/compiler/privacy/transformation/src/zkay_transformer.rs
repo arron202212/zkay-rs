@@ -474,8 +474,8 @@ impl ZkayStatementTransformer {
     // """
     {
         if ast.condition.annotated_type().as_ref().unwrap().is_public() {
-            if contains_private_expr(Some(ast.then_branch.to_ast()))
-                || contains_private_expr(ast.else_branch.as_ref().map(|v| v.to_ast()))
+            if contains_private_expr(&mut Some(ast.then_branch.to_ast()))
+                || contains_private_expr(&mut ast.else_branch.as_ref().map(|v| v.to_ast()))
             {
                 let before_if_state = self.gen.as_ref().unwrap()._remapper.0.get_state();
                 let guard_var = self
@@ -579,16 +579,16 @@ impl ZkayStatementTransformer {
     pub fn visitWhileStatement(&self, ast: WhileStatement) -> WhileStatement
 //Loops must always be purely public
     {
-        assert!(!contains_private_expr(Some(ast.condition.to_ast())));
-        assert!(!contains_private_expr(Some(ast.body.to_ast())));
+        assert!(!contains_private_expr(&mut Some(ast.condition.to_ast())));
+        assert!(!contains_private_expr(&mut Some(ast.body.to_ast())));
         ast
     }
 
     pub fn visitDoWhileStatement(&self, ast: DoWhileStatement) -> DoWhileStatement
 //Loops must always be purely public
     {
-        assert!(!contains_private_expr(Some(ast.condition.to_ast())));
-        assert!(!contains_private_expr(Some(ast.body.to_ast())));
+        assert!(!contains_private_expr(&mut Some(ast.condition.to_ast())));
+        assert!(!contains_private_expr(&mut Some(ast.body.to_ast())));
         ast
     }
 
@@ -610,12 +610,12 @@ impl ZkayStatementTransformer {
                 .pre_statements
                 .extend(ast.init.as_ref().unwrap().pre_statements().clone());
         }
-        assert!(!contains_private_expr(Some(ast.condition.to_ast())));
+        assert!(!contains_private_expr(&mut Some(ast.condition.to_ast())));
         assert!(
             !ast.update.is_some()
-                || !contains_private_expr(ast.update.as_ref().map(|v| v.to_ast()))
+                || !contains_private_expr(&mut ast.update.as_ref().map(|v| v.to_ast()))
         );
-        assert!(!contains_private_expr(Some(ast.body.to_ast()))); //OR fixed size loop -> static analysis can prove that loop terminates in fixed //iterations
+        assert!(!contains_private_expr(&mut Some(ast.body.to_ast()))); //OR fixed size loop -> static analysis can prove that loop terminates in fixed //iterations
         ast.clone()
     }
 
@@ -874,7 +874,7 @@ impl ZkayExpressionTransformer {
                     .has_shortcircuiting()
                     && args[1..]
                         .iter()
-                        .any(|arg| contains_private_expr(Some(arg.to_ast())))
+                        .any(|arg| contains_private_expr(&mut Some(arg.to_ast())))
                 {
                     let op = &ast.func().try_as_builtin_function_ref().unwrap().op;
                     let guard_var = self

@@ -32,10 +32,12 @@ use zkay_ast::ast::{
     Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
     TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
-use zkay_ast::pointers::parent_setter::set_parents;
-use zkay_ast::pointers::symbol_table::link_identifiers;
-use zkay_ast::visitor::deep_copy::deep_copy;
-use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
+use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers};
+use zkay_ast::visitor::{
+    deep_copy::deep_copy,
+    transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx},
+    visitor::AstVisitorMut,
+};
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
 pub fn transform_ast(

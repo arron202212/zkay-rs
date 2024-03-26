@@ -10,7 +10,7 @@ mod tests {
     // class TestBuildAST(TestExamples):
     #[test]
     fn test_build_ast() {
-        for (name, example) in ALL_EXAMPLES.iter() {
+        for (_name, example) in ALL_EXAMPLES.iter() {
             // println!("{:?}", name);
             let _ast = build_ast(&example.code());
             assert!(true);

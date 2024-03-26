@@ -1,7 +1,7 @@
 use ast_builder::build_ast::build_ast;
 use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTChildren, ASTType, IntoAST, NamespaceDefinitionBaseProperty,
-    SourceUnit, AST,
+    AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -45,7 +45,7 @@ mod tests {
     use super::*;
     #[test]
     pub fn test_root_children_have_parent() {
-        for (name, example) in ALL_EXAMPLES.iter() {
+        for (_name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
             set_parents(&mut ast);
 
@@ -60,7 +60,7 @@ mod tests {
     }
     #[test]
     pub fn test_contract_identifier() {
-        for (name, example) in ALL_EXAMPLES.iter() {
+        for (_name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
             // println!("{:?},====={:?}",name,ast);
             set_parents(&mut ast);
@@ -73,12 +73,12 @@ mod tests {
     }
     #[test]
     pub fn test_all_nodes_have_parent() {
-        for (name, example) in ALL_EXAMPLES.iter() {
+        for (_name, example) in ALL_EXAMPLES.iter() {
             let mut ast = build_ast(&example.code());
             set_parents(&mut ast);
 
             // test
-            let mut v = ParentChecker::new();
+            let v = ParentChecker::new();
             v.visit(&ast);
         }
     }

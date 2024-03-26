@@ -145,11 +145,11 @@ fn process_ast(
         r(&ast);
     }
     if alias_analysis {
-        a(&ast);
+        a(ast);
     }
     call_graph_analysis(ast);
     compute_modified_sets(ast);
-    check_for_undefined_behavior_due_to_eval_order(ast.clone());
+    check_for_undefined_behavior_due_to_eval_order(ast);
     // except AstException as e:
     //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
     if type_check {

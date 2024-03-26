@@ -93,7 +93,7 @@ mod tests {
         }
     }
     #[test]
-    pub fn test_fill_symbol_table() {
+    pub fn test_fill_symbol_table1() {
         let mut ast = build_ast(&SIMPLE.code());
         fill_symbol_table(&mut ast);
 
@@ -101,10 +101,10 @@ mod tests {
             contract,
             f,
             body,
-            decl_statement,
+            decl_statement: _,
             decl,
-            assignment,
-            identifier_expr,
+            assignment: _,
+            identifier_expr: _,
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
         let mut s = get_builtin_globals();
@@ -126,12 +126,12 @@ mod tests {
         link_identifiers(&mut ast);
 
         let ASTElements {
-            contract,
-            f,
-            body,
-            decl_statement,
+            contract: _,
+            f: _,
+            body: _,
+            decl_statement: _,
             decl,
-            assignment,
+            assignment: _,
             identifier_expr,
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
@@ -147,7 +147,7 @@ mod tests {
 
     // class TestSimpleStorageAST(ZkayTestCase):
     #[test]
-    pub fn _test_fill_symbol_tables() {
+    pub fn test_fill_symbol_tables() {
         let mut ast = build_ast(&SIMPLE_STORAGE.code());
         fill_symbol_table(&mut ast);
 

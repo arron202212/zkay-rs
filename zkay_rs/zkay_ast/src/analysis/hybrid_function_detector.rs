@@ -40,15 +40,49 @@ struct DirectHybridFunctionDetectionVisitor {
 }
 impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
 impl AstVisitorMut for DirectHybridFunctionDetectionVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::ReclassifyExpr == name
+            || &ASTType::PrimitiveCastExpr == name
+            || &ASTType::AllExpr == name
+            || &ASTType::FunctionCallExprBase == name
+            || &ASTType::ConstructorOrFunctionDefinition == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        None
+        match name {
+            ASTType::ReclassifyExpr => self.visitReclassifyExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_reclassify_expr_mut()
+                    .unwrap(),
+            ),
+            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_mut()
+                    .unwrap(),
+            ),
+            ASTType::AllExpr => self.visitAllExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_all_expr_mut()
+                    .unwrap(),
+            ),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_function_call_expr_mut()
+                    .unwrap(),
+            ),
+            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
+                ast.try_as_namespace_definition_mut()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl DirectHybridFunctionDetectionVisitor {
@@ -151,16 +185,22 @@ struct IndirectHybridFunctionDetectionVisitor {
 }
 impl FunctionVisitor for IndirectHybridFunctionDetectionVisitor {}
 impl AstVisitorMut for IndirectHybridFunctionDetectionVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::ConstructorOrFunctionDefinition == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        None
+        match name {
+            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
+                ast.try_as_namespace_definition_mut()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl IndirectHybridFunctionDetectionVisitor {
@@ -193,16 +233,23 @@ struct NonInlineableCallDetector {
 }
 impl FunctionVisitor for NonInlineableCallDetector {}
 impl AstVisitorMut for NonInlineableCallDetector {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::FunctionCallExprBase == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        None
+        match name {
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_function_call_expr_mut()
+                    .unwrap(),
+            ),
+
+            _ => {}
+        }
     }
 }
 impl NonInlineableCallDetector {

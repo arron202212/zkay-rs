@@ -28,15 +28,21 @@ struct ReturnCheckVisitor {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl AstVisitor for ReturnCheckVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::ReturnStatement == name
     }
     fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
-        None
+        match name {
+            ASTType::ReturnStatement => self.visitReturnStatement(
+                ast.try_as_statement_ref()
+                    .unwrap()
+                    .try_as_return_statement_ref()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl ReturnCheckVisitor {
@@ -45,7 +51,7 @@ impl ReturnCheckVisitor {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitReturnStatement(&self, ast: &mut ReturnStatement) {
+    pub fn visitReturnStatement(&self, ast: &ReturnStatement) {
         let container = ast.parent().clone().unwrap();
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;

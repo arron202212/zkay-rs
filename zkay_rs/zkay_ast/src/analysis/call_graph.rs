@@ -40,15 +40,35 @@ struct DirectCalledFunctionDetector {
 // class DirectCalledFunctionDetector(FunctionVisitor)
 impl FunctionVisitor for DirectCalledFunctionDetector {}
 impl AstVisitorMut for DirectCalledFunctionDetector {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::FunctionCallExprBase == name
+            || &ASTType::ForStatement == name
+            || &ASTType::WhileStatement == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        None
+        match name {
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
+                ast.try_as_expression_mut()
+                    .unwrap()
+                    .try_as_function_call_expr_mut()
+                    .unwrap(),
+            ),
+            ASTType::ForStatement => self.visitForStatement(
+                ast.try_as_statement_mut()
+                    .unwrap()
+                    .try_as_for_statement_mut()
+                    .unwrap(),
+            ),
+            ASTType::WhileStatement => self.visitWhileStatement(
+                ast.try_as_statement_mut()
+                    .unwrap()
+                    .try_as_while_statement_mut()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl DirectCalledFunctionDetector {
@@ -120,16 +140,22 @@ struct IndirectCalledFunctionDetector {
 }
 impl FunctionVisitor for IndirectCalledFunctionDetector {}
 impl AstVisitorMut for IndirectCalledFunctionDetector {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::ConstructorOrFunctionDefinition == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        None
+        match name {
+            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
+                ast.try_as_namespace_definition_mut()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl IndirectCalledFunctionDetector {
@@ -183,10 +209,18 @@ impl AstVisitorMut for IndirectDynamicBodyDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        false
+        &ASTType::ConstructorOrFunctionDefinition == name
     }
     fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        self.temper_result()
+        match name {
+            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
+                ast.try_as_namespace_definition_mut()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap(),
+            ),
+            _ => {}
+        }
     }
 }
 impl IndirectDynamicBodyDetector {
