@@ -320,6 +320,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.stateVariableDeclaration() {
                     v.accept(self);
+                    //println!("====stateVariableDeclaration======={:?}",self.temp_result().clone());
                     if let Some(AST::IdentifierDeclaration(
                         IdentifierDeclaration::StateVariableDeclaration(_),
                     )) = self.temp_result().clone()
@@ -339,6 +340,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.constructorDefinition() {
                     v.accept(self);
+                    //println!("====constructorDefinition======={:?}",self.temp_result().clone());
+
                     if let Some(AST::NamespaceDefinition(
                         NamespaceDefinition::ConstructorOrFunctionDefinition(a),
                     )) = self.temp_result().clone()
@@ -358,6 +361,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.functionDefinition() {
                     v.accept(self);
+                    //println!("==functionDefinition=={:?}==",self.temp_result().clone());
                     if let Some(AST::NamespaceDefinition(
                         NamespaceDefinition::ConstructorOrFunctionDefinition(a),
                     )) = self.temp_result().clone()
@@ -377,6 +381,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.enumDefinition() {
                     v.accept(self);
+                    //println!("==enumDefinition=={:?}==",self.temp_result().clone());
                     if let Some(AST::NamespaceDefinition(NamespaceDefinition::EnumDefinition(a))) =
                         self.temp_result().clone()
                     {
@@ -708,7 +713,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut homomorphism = String::from("NON_HOMOMORPHIC");
         if let Some(pa) = &ctx.privacy_annotation {
             pa.accept(self);
-            // println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
+            // //println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
             privacy_annotation = if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
@@ -738,10 +743,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.code
             );
         }
-        // println!("======{:?},{:?}",ctx,ctx.type_name);
+        // //println!("======{:?},{:?}",ctx,ctx.type_name);
         let type_name = if let Some(tn) = &ctx.type_name {
             tn.accept(self);
-            // println!("=type_name=={:?},{:?}",tn,self.temp_result().clone());
+            // //println!("=type_name=={:?},{:?}",tn,self.temp_result().clone());
             if let Some(AST::TypeName(tn)) = self.temp_result().clone() {
                 Some(tn)
             } else {
@@ -792,7 +797,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ElementaryTypeNameContext<'input>,
     ) -> Self::Return {
-        // println!("===========ctx.get_text()==={}==========",ctx.get_text());
+        // //println!("===========ctx.get_text()==={}==========",ctx.get_text());
         let t = ctx.get_text();
         match t.as_str() {
             "address" => Some(AddressTypeName::new().into_ast()),
@@ -879,9 +884,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // f = BuiltinFunction("sign" + ctx.op.text).override(line=ctx.op.line, column=ctx.op.column)
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
-        // println!("{:?},========{:?}",1,ctx.op.as_ref().unwrap());
+        // //println!("{:?},========{:?}",1,ctx.op.as_ref().unwrap());
         let op = ctx.op.as_ref().unwrap();
-        // println!("{:?},========{:?}",2,op.text);
+        // //println!("{:?},========{:?}",2,op.text);
         let mut f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
         f.expression_base.ast_base.line = op.line as i32;
         f.expression_base.ast_base.column = op.column as i32;
@@ -1086,7 +1091,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut func = if let Some(expr) = &ctx.func {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
-                // println!("{:?},==={:?}",expr,self.temp_result().clone()  );
+                // //println!("{:?},==={:?}",expr,self.temp_result().clone()  );
                 Some(expr)
             } else {
                 None
@@ -1113,7 +1118,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             LocationExpr::IdentifierExpr(func),
         ))) = &func
         {
-            //    println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
+            //    //println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
             if func.idf.name() == "reveal" {
                 assert!(
                     args.len() == 2,
@@ -1155,11 +1160,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        // println!("={:?}=then_branch=={:?}", ctx.then_branch, 1);
+        // //println!("={:?}=then_branch=={:?}", ctx.then_branch, 1);
 
         let then_branch = ctx.then_branch.as_ref().unwrap();
         then_branch.accept(self);
-        // println!(
+        // //println!(
         //     "={:?}=then_branch=={:?}",
         //     ctx.then_branch,
         //     self.temp_result().clone()
@@ -1549,12 +1554,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     }
         //     assert isinstance(e, ast.Expression)
         //     return ExpressionStatement(e)}
-        // println!("{:?}",ctx.expr );
+        // //println!("{:?}",ctx.expr );
         let mut expression = None;
         if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Statement(_)) = self.temp_result() {
-                //  println!("==self.temp_result().clone()======={:?}",self.temp_result().clone());
+                //  //println!("==self.temp_result().clone()======={:?}",self.temp_result().clone());
                 return self.temp_result().clone();
             }
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -1819,7 +1824,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_mapping(&mut self, ctx: &MappingContext<'input>) -> Self::Return {
         let key_type = if let Some(key_type) = &ctx.key_type {
             key_type.accept(self);
-            // println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
+            // //println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
             self.temp_result().clone().unwrap().try_as_type_name()
         } else {
             None
@@ -1858,21 +1863,23 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_block(&mut self, ctx: &BlockContext<'input>) -> Self::Return {
-        if let Some(statement) = &ctx.statement {
-            statement.accept(self);
-            Some(Block::new(vec![self.temp_result().clone().unwrap()], true).into_ast())
-        } else {
-            let statements: Vec<_> = ctx
-                .statements
-                .iter()
-                .map(|statement| {
-                    statement.accept(self);
-                    self.temp_result().clone().unwrap()
-                })
-                .collect();
-            let was_single_statement = statements.len() == 1;
-            Some(Block::new(statements, was_single_statement).into_ast())
-        }
+        // if let Some(statement) = &ctx.statement {
+        //     statement.accept(self);
+        //     //println!("==========statement==========BlockContext==={:?}",self.temp_result().clone());
+        //     Some(Block::new(vec![self.temp_result().clone().unwrap()], true).into_ast())
+        // } else {
+        let statements: Vec<_> = ctx
+            .statements
+            .iter()
+            .filter_map(|statement| {
+                statement.accept(self);
+                // //println!("====================BlockContext==={:?}",self.temp_result().clone());
+                self.temp_result().clone()
+            })
+            .collect();
+        let was_single_statement = statements.len() == 1;
+        Some(Block::new(statements, was_single_statement).into_ast())
+        // }
     }
 
     fn visit_statement(&mut self, ctx: &StatementContext<'input>) -> Self::Return {
@@ -1919,10 +1926,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_simpleStatement(&mut self, ctx: &SimpleStatementContext<'input>) -> Self::Return {
         if let Some(statement) = ctx.variableDeclarationStatement() {
             statement.accept(self);
+            //println!("==variableDeclarationStatement======={:?}===========",self.temp_result().clone());
             return self.temp_result().clone();
         }
         if let Some(statement) = ctx.expressionStatement() {
             statement.accept(self);
+            //println!("==expressionStatement======={:?}===========",self.temp_result().clone());
             return self.temp_result().clone();
         }
         None
@@ -1963,7 +1972,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         ctx: &VariableDeclarationStatementContext<'input>,
     ) -> Self::Return {
         ctx.variable_declaration.as_ref().unwrap().accept(self);
-        // println!("{:?}====={:?}", self
+        // //println!("{:?}====={:?}", self
         //     .temp_result(), ctx.variable_declaration);
         let variable_declaration = self
             .temp_result()

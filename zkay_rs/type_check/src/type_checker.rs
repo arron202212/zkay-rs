@@ -58,7 +58,7 @@ impl AstVisitor for TypeCheckVisitor {
 impl TypeCheckVisitor {
     pub fn new() -> Self {
         Self {
-            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+            ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
     pub fn get_rhs(

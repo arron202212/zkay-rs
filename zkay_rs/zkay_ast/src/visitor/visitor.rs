@@ -154,8 +154,8 @@ pub trait AstVisitorMut: AstVisitorBaseProperty {
         None
     }
     fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
-        let mut ast = ast.clone();
         for c in ast.children().iter_mut() {
+            // println!("===={:?}",c.get_ast_type());
             self.visit(c);
         }
         self.temper_result()

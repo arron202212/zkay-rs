@@ -9,13 +9,14 @@
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
-    is_instance, ASTType, AllExpr, AssignmentStatement, AssignmentStatementBaseProperty, Block,
-    BreakStatement, BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement,
-    DoWhileStatement, ExpressionStatement, ForStatement, FunctionCallExpr,
-    FunctionCallExprBaseProperty, IdentifierDeclarationBaseProperty, IfStatement, IntoAST,
-    IntoExpression, LocationExpr, MeExpr, RequireStatement, ReturnStatement, Statement,
-    StatementBaseMutRef, StatementBaseProperty, StatementBaseRef, StatementList,
-    StatementListBaseProperty, TupleExpr, VariableDeclarationStatement, WhileStatement, AST,
+    is_instance, ASTBaseProperty, ASTType, AllExpr, AssignmentStatement,
+    AssignmentStatementBaseProperty, Block, BreakStatement, BuiltinFunction,
+    ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
+    ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
+    IdentifierDeclarationBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
+    RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
+    StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -248,7 +249,7 @@ impl AliasAnalysisVisitor {
             .statement_list_base
             .statement_base
             .ast_base
-            .names
+            .names()
             .values()
         {
             last.insert(name.to_ast());
@@ -262,7 +263,7 @@ impl AliasAnalysisVisitor {
             .statement_list_base
             .statement_base
             .ast_base
-            .names
+            .names()
             .values()
         {
             ast.statement_list_base
@@ -396,7 +397,7 @@ impl AliasAnalysisVisitor {
         let mut last = ast.statement_base.before_analysis.clone().unwrap();
 
         // add names introduced in init
-        for name in ast.statement_base.ast_base.names.values() {
+        for name in ast.statement_base.ast_base.names().values() {
             last.insert(name.to_ast());
         }
 
@@ -462,7 +463,7 @@ impl AliasAnalysisVisitor {
         ast.statement_base.after_analysis = Some(skip_loop.join(&did_loop));
 
         // drop names introduced in init
-        for name in ast.statement_base.ast_base.names.values() {
+        for name in ast.statement_base.ast_base.names().values() {
             ast.statement_base
                 .after_analysis
                 .as_mut()

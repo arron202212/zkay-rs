@@ -34,8 +34,8 @@ use zkay_config::{
 };
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
-    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTKind, ASTVisitorBaseRefImpl,
-    ImplBaseTrait,
+    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
+    ASTVisitorBaseRefImpl, ImplBaseTrait,
 };
 use zkay_utils::progress_printer::warn_print;
 
@@ -73,7 +73,7 @@ impl ChildListBuilder {
         Self { children: vec![] }
     }
     pub fn add_child(&mut self, ast: AST) {
-        self.children.push(ast.clone());
+        self.children.push(ast);
     }
 }
 
@@ -191,6 +191,100 @@ pub enum ASTType {
     CircSymmEncConstraint,
     CircEqConstraint,
 }
+
+pub enum ASTFlatten<'a> {
+    ASTBase(&'a mut ASTBase),
+    IdentifierBase(&'a mut IdentifierBase),
+    CommentBase(&'a mut CommentBase),
+    ExpressionBase(&'a mut ExpressionBase),
+    StatementBase(&'a mut StatementBase),
+    TypeNameBase(&'a mut TypeNameBase),
+    AnnotatedTypeName(&'a mut AnnotatedTypeName),
+    IdentifierDeclarationBase(&'a mut IdentifierDeclarationBase),
+    NamespaceDefinitionBase(&'a mut NamespaceDefinitionBase),
+    EnumValue(&'a mut EnumValue),
+    SourceUnit(&'a mut SourceUnit),
+    // Pragma(&'a mut Pragma),
+    // VersionPragma(&'a mut VersionPragma),
+    // Modifier(&'a mut Modifier),
+    // Homomorphism(&'a mut Homomorphism),
+    BlankLine(&'a mut BlankLine),
+    BuiltinFunction(&'a mut BuiltinFunction),
+    FunctionCallExprBase(&'a mut FunctionCallExprBase),
+    NewExpr(&'a mut NewExpr),
+    PrimitiveCastExpr(&'a mut PrimitiveCastExpr),
+    LiteralExprBase(&'a mut LiteralExprBase),
+    TupleOrLocationExprBase(&'a mut TupleOrLocationExprBase),
+    MeExpr(&'a mut MeExpr),
+    AllExpr(&'a mut AllExpr),
+    ReclassifyExpr(&'a mut ReclassifyExpr),
+    BooleanLiteralExpr(&'a mut BooleanLiteralExpr),
+    NumberLiteralExpr(&'a mut NumberLiteralExpr),
+    StringLiteralExpr(&'a mut StringLiteralExpr),
+    ArrayLiteralExprBase(&'a mut ArrayLiteralExprBase),
+    KeyLiteralExpr(&'a mut KeyLiteralExpr),
+    TupleExpr(&'a mut TupleExpr),
+    LocationExprBase(&'a mut LocationExprBase),
+    IdentifierExpr(&'a mut IdentifierExpr),
+    MemberAccessExpr(&'a mut MemberAccessExpr),
+    IndexExpr(&'a mut IndexExpr),
+    SliceExpr(&'a mut SliceExpr),
+    ReclassifyExprBase(&'a mut ReclassifyExprBase),
+    RehomExpr(&'a mut RehomExpr),
+    EncryptionExpression(&'a mut EncryptionExpression),
+    HybridArgumentIdf(&'a mut HybridArgumentIdf),
+    CircuitDirectiveStatementBase(&'a mut CircuitDirectiveStatementBase),
+    IfStatement(&'a mut IfStatement),
+    WhileStatement(&'a mut WhileStatement),
+    DoWhileStatement(&'a mut DoWhileStatement),
+    ForStatement(&'a mut ForStatement),
+    BreakStatement(&'a mut BreakStatement),
+    ContinueStatement(&'a mut ContinueStatement),
+    ReturnStatement(&'a mut ReturnStatement),
+    SimpleStatementBase(&'a mut SimpleStatementBase),
+    StatementListBase(&'a mut StatementListBase),
+    CircuitComputationStatement(&'a mut CircuitComputationStatement),
+    EnterPrivateKeyStatement(&'a mut EnterPrivateKeyStatement),
+    ExpressionStatement(&'a mut ExpressionStatement),
+    RequireStatement(&'a mut RequireStatement),
+    AssignmentStatementBase(&'a mut AssignmentStatementBase),
+    VariableDeclarationStatement(&'a mut VariableDeclarationStatement),
+    CircuitInputStatement(&'a mut CircuitInputStatement),
+    Block(&'a mut Block),
+    IndentBlock(&'a mut IndentBlock),
+    ElementaryTypeNameBase(&'a mut ElementaryTypeNameBase),
+    UserDefinedTypeNameBase(&'a mut UserDefinedTypeNameBase),
+    Mapping(&'a mut Mapping),
+    TupleType(&'a mut TupleType),
+    FunctionTypeName(&'a mut FunctionTypeName),
+    // Literal(&'a mut Literal),
+    BoolTypeName(&'a mut BoolTypeName),
+    BooleanLiteralType(&'a mut BooleanLiteralType),
+    NumberLiteralType(&'a mut NumberLiteralType),
+    IntTypeName(&'a mut IntTypeName),
+    UintTypeName(&'a mut UintTypeName),
+    NumberTypeNameBase(&'a mut NumberTypeNameBase),
+    EnumTypeName(&'a mut EnumTypeName),
+    EnumValueTypeName(&'a mut EnumValueTypeName),
+    StructTypeName(&'a mut StructTypeName),
+    ContractTypeName(&'a mut ContractTypeName),
+    AddressTypeName(&'a mut AddressTypeName),
+    AddressPayableTypeName(&'a mut AddressPayableTypeName),
+    CipherText(&'a mut CipherText),
+    Randomness(&'a mut Randomness),
+    Key(&'a mut Key),
+    Proof(&'a mut Proof),
+    ArrayBase(&'a mut ArrayBase),
+    VariableDeclaration(&'a mut VariableDeclaration),
+    Parameter(&'a mut Parameter),
+    StateVariableDeclaration(&'a mut StateVariableDeclaration),
+    ConstructorOrFunctionDefinition(&'a mut ConstructorOrFunctionDefinition),
+    EnumDefinition(&'a mut EnumDefinition),
+    StructDefinition(&'a mut StructDefinition),
+    ContractDefinition(&'a mut ContractDefinition),
+    DummyAnnotation(&'a mut DummyAnnotation),
+    CircuitStatement(&'a mut CircuitStatement),
+}
 #[enum_dispatch]
 pub trait ASTChildren {
     fn children(&mut self) -> Vec<AST> {
@@ -200,6 +294,13 @@ pub trait ASTChildren {
     }
 
     fn process_children(&mut self, cb: &mut ChildListBuilder);
+    fn children_mut<'a>(&'a mut self) -> Vec<ASTFlatten<'a>> {
+        let mut cb = Vec::new();
+        self.process_children_mut(&mut cb);
+        cb
+    }
+
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>);
 }
 
 pub trait IntoStatement: Clone {
@@ -230,6 +331,10 @@ pub trait IntoAST: Clone {
         self.clone().into_ast()
     }
     fn into_ast(self) -> AST;
+}
+#[enum_dispatch]
+pub trait IntoASTFlatten {
+    fn to_ast_flatten<'a>(&'a mut self) -> ASTFlatten<'a>;
 }
 #[enum_dispatch]
 pub trait ASTInstanceOf {
@@ -293,6 +398,23 @@ impl IntoAST for AST {
         }
     }
 }
+impl AST {
+    fn to_ast_flatten<'a>(&'a mut self) -> Option<ASTFlatten<'a>> {
+        match self {
+            AST::Identifier(ast) => Some(ast.to_ast_flatten()),
+            AST::Comment(ast) => Some(ast.to_ast_flatten()),
+            AST::Expression(ast) => Some(ast.to_ast_flatten()),
+            AST::Statement(ast) => Some(ast.to_ast_flatten()),
+            AST::TypeName(ast) => ast.to_ast_flatten(),
+            AST::AnnotatedTypeName(ast) => Some(ast.to_ast_flatten()),
+            AST::IdentifierDeclaration(ast) => Some(ast.to_ast_flatten()),
+            AST::NamespaceDefinition(ast) => Some(ast.to_ast_flatten()),
+            AST::EnumValue(ast) => Some(ast.to_ast_flatten()),
+            AST::SourceUnit(ast) => Some(ast.to_ast_flatten()),
+            _ => None,
+        }
+    }
+}
 impl ASTInstanceOf for AST {
     fn get_ast_type(&self) -> ASTType {
         match self {
@@ -329,7 +451,23 @@ impl ASTChildren for AST {
             _ => {}
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        match self {
+            AST::Expression(ast) => ast.process_children_mut(cb),
+            AST::Statement(ast) => ast.process_children_mut(cb),
+            AST::SourceUnit(ast) => ast.process_children_mut(cb),
+            // AST::Identifier(ast) => ast.process_children_mut(cb),
+            // AST::Comment(ast) => ast.process_children_mut(cb),
+            AST::TypeName(ast) => ast.process_children_mut(cb),
+            AST::AnnotatedTypeName(ast) => ast.process_children_mut(cb),
+            AST::IdentifierDeclaration(ast) => ast.process_children_mut(cb),
+            AST::NamespaceDefinition(ast) => ast.process_children_mut(cb),
+            AST::EnumValue(ast) => ast.process_children_mut(cb),
+            _ => {}
+        }
+    }
 }
+
 #[macro_export]
 macro_rules! impl_base_ref {
     ($fn_name: ident,$self: ident) => {
@@ -530,7 +668,7 @@ pub trait ASTBaseRef {
 pub trait ASTBaseProperty {
     fn parent(&self) -> Option<Box<AST>>;
     fn namespace(&self) -> Option<Vec<Identifier>>;
-    fn names(&self) -> &BTreeMap<String, Identifier>;
+    fn names(&self) -> BTreeMap<String, Identifier>;
     fn line(&self) -> i32;
     fn column(&self) -> i32;
     fn modified_values(&self) -> &BTreeSet<InstanceTarget>;
@@ -555,8 +693,14 @@ impl<T: ASTBaseRef> ASTBaseProperty for T {
             .namespace
             .clone()
     }
-    fn names(&self) -> &BTreeMap<String, Identifier> {
-        &self.ast_base_ref().names
+    fn names(&self) -> BTreeMap<String, Identifier> {
+        self.ast_base_ref()
+            .parent_namespace
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .names
+            .clone()
     }
     fn line(&self) -> i32 {
         self.ast_base_ref().line
@@ -575,6 +719,7 @@ impl<T: ASTBaseRef> ASTBaseProperty for T {
 pub struct ASTParentNamespace {
     pub parent: Option<Box<AST>>,
     pub namespace: Option<Vec<Identifier>>,
+    pub names: BTreeMap<String, Identifier>,
 }
 #[derive(
     ImplBaseTrait, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
@@ -582,7 +727,6 @@ pub struct ASTParentNamespace {
 pub struct ASTBase {
     #[serde(skip)]
     pub parent_namespace: Option<RRWrapper<ASTParentNamespace>>,
-    pub names: BTreeMap<String, Identifier>,
     pub line: i32,
     pub column: i32,
     pub modified_values: BTreeSet<InstanceTarget>,
@@ -594,8 +738,9 @@ impl ASTBase {
             parent_namespace: Some(RRWrapper::new(ASTParentNamespace {
                 parent: None,
                 namespace: None,
+                names: BTreeMap::new(),
             })),
-            names: BTreeMap::new(),
+
             line: -1,
             column: -1,
             modified_values: BTreeSet::new(),
@@ -622,6 +767,7 @@ impl<T: IdentifierBaseRef> IdentifierBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -701,7 +847,14 @@ impl fmt::Display for IdentifierBase {
         write!(f, "{}", self.name)
     }
 }
-#[enum_dispatch(IntoAST, ASTInstanceOf, CommentBaseRef, ASTBaseRef, ASTBaseMutRef)]
+#[enum_dispatch(
+    IntoAST,
+    IntoASTFlatten,
+    ASTInstanceOf,
+    CommentBaseRef,
+    ASTBaseRef,
+    ASTBaseMutRef
+)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -731,6 +884,7 @@ impl<T: CommentBaseRef> CommentBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -750,6 +904,7 @@ impl IntoAST for CommentBase {
         AST::Comment(Comment::Comment(self))
     }
 }
+
 impl ASTBaseMutRef for CommentBase {
     fn ast_base_mut_ref(&mut self) -> &mut ASTBase {
         &mut self.ast_base
@@ -803,7 +958,19 @@ impl CommentBase {
 }
 
 #[impl_traits(CommentBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct BlankLine {
     pub comment_base: CommentBase,
 }
@@ -823,6 +990,7 @@ impl BlankLine {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
@@ -1313,6 +1481,7 @@ lazy_static! {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -1613,6 +1782,7 @@ impl HomomorphicBuiltinFunction {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     FunctionCallExprBaseRef,
     FunctionCallExprBaseMutRef,
@@ -1684,6 +1854,7 @@ impl<T: FunctionCallExprBaseRef> FunctionCallExprBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -1744,9 +1915,28 @@ impl ASTChildren for FunctionCallExprBase {
             cb.add_child(arg.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.func.to_ast_flatten());
+        self.args.iter_mut().for_each(|arg| {
+            cb.push(arg.to_ast_flatten());
+        });
+    }
 }
+
 #[impl_traits(FunctionCallExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct NewExpr {
     pub function_call_expr_base: FunctionCallExprBase,
     pub annotated_type: AnnotatedTypeName,
@@ -1799,9 +1989,30 @@ impl ASTChildren for NewExpr {
             cb.add_child(arg.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.annotated_type.to_ast_flatten());
+        self.function_call_expr_base
+            .args
+            .iter_mut()
+            .for_each(|arg| {
+                cb.push(arg.to_ast_flatten());
+            });
+    }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct PrimitiveCastExpr {
     pub expression_base: ExpressionBase,
     pub elem_type: Box<TypeName>,
@@ -1843,10 +2054,15 @@ impl ASTChildren for PrimitiveCastExpr {
         cb.add_child(self.elem_type.to_ast());
         cb.add_child(self.expr.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.elem_type.to_ast_flatten().unwrap());
+        cb.push(self.expr.to_ast_flatten());
+    }
 }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     LiteralExprBaseRef,
     ExpressionBaseRef,
@@ -1896,6 +2112,7 @@ impl LiteralExprBase {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -1950,6 +2167,7 @@ impl BooleanLiteralExpr {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2029,6 +2247,7 @@ impl NumberLiteralExpr {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2076,6 +2295,7 @@ impl StringLiteralExpr {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     ArrayLiteralExprBaseRef,
     LiteralExprBaseRef,
@@ -2124,6 +2344,7 @@ impl<T: ArrayLiteralExprBaseRef> ArrayLiteralExprBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2174,12 +2395,18 @@ impl ASTChildren for ArrayLiteralExprBase {
             cb.add_child(value.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.values.iter_mut().for_each(|value| {
+            cb.push(value.to_ast_flatten());
+        });
+    }
 }
 
 #[impl_traits(ArrayLiteralExprBase, LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2235,6 +2462,7 @@ impl KeyLiteralExpr {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     TupleOrLocationExprBaseRef,
     ExpressionBaseRef,
@@ -2364,7 +2592,19 @@ impl TupleOrLocationExprBase {
     }
 }
 #[impl_traits(TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct TupleExpr {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     pub elements: Vec<Expression>,
@@ -2419,10 +2659,16 @@ impl ASTChildren for TupleExpr {
             cb.add_child(element.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.elements.iter_mut().for_each(|element| {
+            cb.push(element.to_ast_flatten());
+        });
+    }
 }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     LocationExprBaseRef,
     TupleOrLocationExprBaseRef,
@@ -2643,7 +2889,19 @@ pub enum IdentifierExprUnion {
     Identifier(Identifier),
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IdentifierExpr {
     pub location_expr_base: LocationExprBase,
     pub idf: Box<Identifier>,
@@ -2710,9 +2968,24 @@ impl ASTChildren for IdentifierExpr {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(self.idf.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.idf.to_ast_flatten());
+    }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct MemberAccessExpr {
     pub location_expr_base: LocationExprBase,
     pub expr: Option<Box<LocationExpr>>,
@@ -2764,9 +3037,27 @@ impl ASTChildren for MemberAccessExpr {
         }
         cb.add_child(self.member.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(expr) = &mut self.expr {
+            cb.push(expr.to_ast_flatten());
+        }
+        cb.push(self.member.to_ast_flatten());
+    }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IndexExpr {
     pub location_expr_base: LocationExprBase,
     pub arr: Option<Box<LocationExpr>>,
@@ -2818,11 +3109,18 @@ impl ASTChildren for IndexExpr {
         }
         cb.add_child(self.key.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(arr) = &mut self.arr {
+            cb.push(arr.to_ast_flatten());
+        }
+        cb.push(self.key.to_ast_flatten());
+    }
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2894,6 +3192,7 @@ impl SliceExpr {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2947,6 +3246,7 @@ impl Immutable for MeExpr {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -2997,6 +3297,7 @@ impl Immutable for AllExpr {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     ReclassifyExprBaseRef,
     ReclassifyExprBaseMutRef,
@@ -3055,6 +3356,7 @@ impl<T: ReclassifyExprBaseRef> ReclassifyExprBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -3111,11 +3413,16 @@ impl ASTChildren for ReclassifyExprBase {
         cb.add_child(self.expr.to_ast());
         cb.add_child(self.privacy.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.expr.to_ast_flatten());
+        cb.push(self.privacy.to_ast_flatten());
+    }
 }
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -3176,7 +3483,19 @@ pub enum HybridArgType {
     TmpCircuitVal,
 }
 #[impl_traits(IdentifierBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct HybridArgumentIdf {
     pub identifier_base: IdentifierBase,
     pub t: Box<TypeName>,
@@ -3543,6 +3862,7 @@ impl HybridArgumentIdf {
 }
 #[enum_dispatch(
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     IdentifierBaseRef,
     IdentifierBaseMutRef,
@@ -3572,6 +3892,7 @@ impl Identifier {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -3619,7 +3940,7 @@ impl EncryptionExpression {
         selfs
     }
 }
-#[enum_dispatch(ASTChildren, IntoAST, ASTInstanceOf)]
+#[enum_dispatch(ASTChildren, IntoAST, IntoASTFlatten, ASTInstanceOf)]
 #[derive(
     EnumIs, EnumTryAs, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
 )]
@@ -3720,6 +4041,7 @@ impl StatementBase {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     CircuitComputationStatementBaseRef,
     StatementBaseRef,
@@ -3758,6 +4080,7 @@ impl CircuitDirectiveStatementBase {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -3793,6 +4116,7 @@ impl CircuitComputationStatement {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -3825,7 +4149,19 @@ impl EnterPrivateKeyStatement {
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IfStatement {
     pub statement_base: StatementBase,
     pub condition: Expression,
@@ -3853,11 +4189,32 @@ impl ASTChildren for IfStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(self.condition.to_ast());
         cb.add_child(self.then_branch.to_ast());
-        cb.add_child(self.then_branch.to_ast());
+        if let Some(else_branch) = &self.else_branch {
+            cb.add_child(else_branch.to_ast());
+        }
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.condition.to_ast_flatten());
+        cb.push(self.then_branch.to_ast_flatten());
+        if let Some(else_branch) = &mut self.else_branch {
+            cb.push(else_branch.to_ast_flatten());
+        }
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct WhileStatement {
     pub statement_base: StatementBase,
     pub condition: Expression,
@@ -3883,9 +4240,25 @@ impl ASTChildren for WhileStatement {
         cb.add_child(self.condition.to_ast());
         cb.add_child(self.body.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.condition.to_ast_flatten());
+        cb.push(self.body.to_ast_flatten());
+    }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct DoWhileStatement {
     pub statement_base: StatementBase,
     pub body: Block,
@@ -3911,9 +4284,25 @@ impl ASTChildren for DoWhileStatement {
         cb.add_child(self.body.to_ast());
         cb.add_child(self.condition.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.body.to_ast_flatten());
+        cb.push(self.condition.to_ast_flatten());
+    }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ForStatement {
     pub statement_base: StatementBase,
     pub init: Option<Box<SimpleStatement>>,
@@ -3964,11 +4353,23 @@ impl ASTChildren for ForStatement {
         }
         cb.add_child(self.body.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(init) = &mut self.init {
+            cb.push(init.to_ast_flatten());
+        }
+
+        cb.push(self.condition.to_ast_flatten());
+        if let Some(update) = &mut self.update {
+            cb.push(update.to_ast_flatten());
+        }
+        cb.push(self.body.to_ast_flatten());
+    }
 }
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4000,6 +4401,7 @@ impl BreakStatement {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4028,7 +4430,19 @@ impl ContinueStatement {
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ReturnStatement {
     pub statement_base: StatementBase,
     pub expr: Option<Expression>,
@@ -4053,10 +4467,16 @@ impl ASTChildren for ReturnStatement {
             cb.add_child(expr.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(expr) = &mut self.expr {
+            cb.push(expr.to_ast_flatten());
+        }
+    }
 }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     SimpleStatementBaseRef,
     StatementBaseRef,
@@ -4094,7 +4514,19 @@ impl SimpleStatementBase {
     }
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ExpressionStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub expr: Expression,
@@ -4120,10 +4552,24 @@ impl ASTChildren for ExpressionStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(self.expr.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.expr.to_ast_flatten());
+    }
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(
-    ASTDebug, ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash,
+    ASTDebug,
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
 )]
 pub struct RequireStatement {
     pub simple_statement_base: SimpleStatementBase,
@@ -4152,10 +4598,14 @@ impl ASTChildren for RequireStatement {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(self.condition.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.condition.to_ast_flatten());
+    }
 }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     AssignmentStatementBaseRef,
     AssignmentStatementBaseMutRef,
@@ -4198,6 +4648,7 @@ impl<T: AssignmentStatementBaseRef> AssignmentStatementBaseProperty for T {
     ASTDebug,
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4242,11 +4693,19 @@ impl ASTChildren for AssignmentStatementBase {
             cb.add_child(rhs.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(lhs) = &mut self.lhs {
+            cb.push(lhs.to_ast_flatten().unwrap());
+        }
+        if let Some(rhs) = &mut self.rhs {
+            cb.push(rhs.to_ast_flatten());
+        }
+    }
 }
 #[impl_traits(AssignmentStatementBase, SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4268,7 +4727,14 @@ impl IntoAST for CircuitInputStatement {
         ))
     }
 }
-
+impl ASTChildren for CircuitInputStatement {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.assignment_statement_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.assignment_statement_base.process_children_mut(cb);
+    }
+}
 impl CircuitInputStatement {
     pub fn new(lhs: AST, rhs: Expression, op: Option<String>) -> Self {
         Self {
@@ -4280,6 +4746,7 @@ impl CircuitInputStatement {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     StatementListBaseRef,
     StatementListBaseMutRef,
@@ -4340,6 +4807,7 @@ impl<T: StatementListBaseRef> StatementListBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4376,11 +4844,16 @@ impl ASTChildren for StatementListBase {
             cb.add_child(statement.clone());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.statements.iter_mut().for_each(|statement| {
+            cb.push(statement.to_ast_flatten().unwrap());
+        });
+    }
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4400,7 +4873,14 @@ impl IntoAST for Block {
         AST::Statement(Statement::StatementList(StatementList::Block(self)))
     }
 }
-
+impl ASTChildren for Block {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.statement_list_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.statement_list_base.process_children_mut(cb);
+    }
+}
 impl Block {
     pub fn new(statements: Vec<AST>, was_single_statement: bool) -> Self {
         Self {
@@ -4411,8 +4891,8 @@ impl Block {
 }
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4431,7 +4911,14 @@ impl IntoAST for IndentBlock {
         AST::Statement(Statement::StatementList(StatementList::IndentBlock(self)))
     }
 }
-
+impl ASTChildren for IndentBlock {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.statement_list_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.statement_list_base.process_children_mut(cb);
+    }
+}
 impl IndentBlock {
     pub fn new(statements: Vec<AST>) -> Self {
         Self {
@@ -4467,6 +4954,19 @@ impl IntoAST for TypeName {
         }
     }
 }
+impl TypeName {
+    fn to_ast_flatten<'a>(&'a mut self) -> Option<ASTFlatten<'a>> {
+        match self {
+            TypeName::ElementaryTypeName(ast) => Some(ast.to_ast_flatten()),
+            TypeName::UserDefinedTypeName(ast) => Some(ast.to_ast_flatten()),
+            TypeName::Mapping(ast) => Some(ast.to_ast_flatten()),
+            TypeName::Array(ast) => Some(ast.to_ast_flatten()),
+            TypeName::TupleType(ast) => Some(ast.to_ast_flatten()),
+            TypeName::FunctionTypeName(ast) => Some(ast.to_ast_flatten()),
+            _ => None,
+        }
+    }
+}
 impl ASTInstanceOf for TypeName {
     fn get_ast_type(&self) -> ASTType {
         match self {
@@ -4490,6 +4990,17 @@ impl ASTChildren for TypeName {
             TypeName::Array(ast) => ast.process_children(cb),
             // TypeName::TupleType(ast) => ast.process_children(cb),
             TypeName::FunctionTypeName(ast) => ast.process_children(cb),
+            _ => {}
+        }
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        match self {
+            TypeName::ElementaryTypeName(ast) => ast.process_children_mut(cb),
+            TypeName::UserDefinedTypeName(ast) => ast.process_children_mut(cb),
+            TypeName::Mapping(ast) => ast.process_children_mut(cb),
+            TypeName::Array(ast) => ast.process_children_mut(cb),
+            // TypeName::TupleType(ast) => ast.process_children_mut(cb),
+            TypeName::FunctionTypeName(ast) => ast.process_children_mut(cb),
             _ => {}
         }
     }
@@ -4689,6 +5200,7 @@ impl TypeNameBase {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     ElementaryTypeNameBaseRef,
     TypeNameBaseRef,
@@ -4737,6 +5249,7 @@ impl ElementaryTypeNameBase {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4774,6 +5287,7 @@ impl BoolTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4841,6 +5355,7 @@ impl BooleanLiteralType {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     NumberTypeNameBaseRef,
     ElementaryTypeNameBaseRef,
@@ -4898,6 +5413,7 @@ impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
     ASTChildrenImpl,
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -4992,6 +5508,7 @@ pub enum NumberLiteralTypeUnion {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5121,6 +5638,7 @@ impl NumberLiteralType {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5166,6 +5684,7 @@ impl IntTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5210,6 +5729,7 @@ impl UintTypeName {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     UserDefinedTypeNameBaseRef,
     UserDefinedTypeNameBaseMutRef,
@@ -5268,6 +5788,7 @@ impl UserDefinedTypeNameBase {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5306,6 +5827,7 @@ impl EnumTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5379,6 +5901,7 @@ impl EnumValueTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5417,6 +5940,7 @@ impl StructTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5452,6 +5976,7 @@ impl ContractTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5492,6 +6017,7 @@ impl AddressTypeName {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5543,7 +6069,19 @@ pub enum KeyLabelUnion {
     Identifier(Option<Identifier>),
 }
 #[impl_traits(TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct Mapping {
     pub type_name_base: TypeNameBase,
     pub key_type: Box<TypeName>,
@@ -5583,6 +6121,13 @@ impl ASTChildren for Mapping {
         }
         cb.add_child(self.value_type.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.key_type.to_ast_flatten().unwrap());
+        if let Some(idf) = self.key_label.as_mut() {
+            cb.push(idf.to_ast_flatten());
+        }
+        cb.push(self.value_type.to_ast_flatten());
+    }
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ExprUnion {
@@ -5593,6 +6138,7 @@ pub enum ExprUnion {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     ArrayBaseRef,
     TypeNameBaseRef,
@@ -5618,6 +6164,12 @@ impl ASTChildren for ArrayBase {
             cb.add_child(expr.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.value_type.to_ast_flatten());
+        if let Some(ExprUnion::Expression(expr)) = &mut self.expr {
+            cb.push(expr.to_ast_flatten());
+        }
+    }
 }
 #[enum_dispatch]
 pub trait ArrayBaseRef: TypeNameBaseRef {
@@ -5640,6 +6192,7 @@ impl<T: ArrayBaseRef> ArrayBaseProperty for T {
 #[derive(
     ImplBaseTrait,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5691,8 +6244,8 @@ impl ArrayBase {
 
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5713,7 +6266,14 @@ impl IntoAST for CipherText {
         AST::TypeName(TypeName::Array(Array::CipherText(self)))
     }
 }
-
+impl ASTChildren for CipherText {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.array_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.array_base.process_children_mut(cb);
+    }
+}
 impl CipherText {
     pub fn new(plain_type: AnnotatedTypeName, crypto_params: CryptoParams) -> Self {
         assert!(!plain_type.type_name.as_ref().unwrap().is_cipher());
@@ -5737,8 +6297,8 @@ impl CipherText {
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5758,7 +6318,14 @@ impl IntoAST for Randomness {
         AST::TypeName(TypeName::Array(Array::Randomness(self)))
     }
 }
-
+impl ASTChildren for Randomness {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.array_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.array_base.process_children_mut(cb);
+    }
+}
 impl Randomness {
     pub fn new(crypto_params: CryptoParams) -> Self {
         Self {
@@ -5781,8 +6348,8 @@ impl Randomness {
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5802,7 +6369,14 @@ impl IntoAST for Key {
         AST::TypeName(TypeName::Array(Array::Key(self)))
     }
 }
-
+impl ASTChildren for Key {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.array_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.array_base.process_children_mut(cb);
+    }
+}
 impl Key {
     pub fn new(crypto_params: CryptoParams) -> Self {
         Self {
@@ -5821,8 +6395,8 @@ impl Key {
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5841,7 +6415,14 @@ impl IntoAST for Proof {
         AST::TypeName(TypeName::Array(Array::Proof(self)))
     }
 }
-
+impl ASTChildren for Proof {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.array_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.array_base.process_children_mut(cb);
+    }
+}
 impl Proof {
     pub fn new() -> Self {
         Self {
@@ -5861,6 +6442,7 @@ impl Proof {
 #[derive(
     ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -5905,7 +6487,19 @@ impl CombinedPrivacyUnion {
 }
 //     """Does not appear in the syntax, but is necessary for type checking"""
 #[impl_traits(TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct TupleType {
     pub type_name_base: TypeNameBase,
     pub types: Vec<AnnotatedTypeName>,
@@ -6060,7 +6654,19 @@ impl TupleType {
     }
 }
 #[impl_traits(TypeNameBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct FunctionTypeName {
     pub type_name_base: TypeNameBase,
     pub parameters: Vec<Parameter>,
@@ -6096,9 +6702,29 @@ impl ASTChildren for FunctionTypeName {
             cb.add_child(parameter.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.parameters.iter_mut().for_each(|parameter| {
+            cb.push(parameter.to_ast_flatten());
+        });
+        self.return_parameters.iter_mut().for_each(|parameter| {
+            cb.push(parameter.to_ast_flatten());
+        });
+    }
 }
 
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct AnnotatedTypeName {
     pub ast_base: ASTBase,
     pub type_name: Option<Box<TypeName>>,
@@ -6332,10 +6958,19 @@ impl ASTChildren for AnnotatedTypeName {
             cb.add_child(privacy_annotation.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(type_name) = &mut self.type_name {
+            cb.push(type_name.to_ast_flatten().unwrap());
+        }
+        if let Some(privacy_annotation) = &mut self.privacy_annotation {
+            cb.push(privacy_annotation.to_ast_flatten().unwrap());
+        }
+    }
 }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     IdentifierDeclarationBaseRef,
     ASTBaseRef,
@@ -6412,11 +7047,15 @@ impl ASTChildren for IdentifierDeclarationBase {
         cb.add_child(self.annotated_type.to_ast());
         cb.add_child(self.idf.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.annotated_type.to_ast_flatten());
+        cb.push(self.idf.to_ast_flatten());
+    }
 }
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -6435,7 +7074,14 @@ impl IntoAST for VariableDeclaration {
         AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(self))
     }
 }
-
+impl ASTChildren for VariableDeclaration {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.identifier_declaration_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.identifier_declaration_base.process_children_mut(cb);
+    }
+}
 impl VariableDeclaration {
     pub fn new(
         keywords: Vec<String>,
@@ -6454,7 +7100,19 @@ impl VariableDeclaration {
     }
 }
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct VariableDeclarationStatement {
     pub simple_statement_base: SimpleStatementBase,
     pub variable_declaration: VariableDeclaration,
@@ -6485,11 +7143,17 @@ impl ASTChildren for VariableDeclarationStatement {
             cb.add_child(expr.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.variable_declaration.to_ast_flatten());
+        if let Some(expr) = &mut self.expr {
+            cb.push(expr.to_ast_flatten());
+        }
+    }
 }
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(
-    ASTChildrenImpl,
     ASTKind,
+    ASTFlattenImpl,
     Clone,
     Debug,
     Deserialize,
@@ -6508,7 +7172,14 @@ impl IntoAST for Parameter {
         AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(self))
     }
 }
-
+impl ASTChildren for Parameter {
+    fn process_children(&mut self, cb: &mut ChildListBuilder) {
+        self.identifier_declaration_base.process_children(cb);
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.identifier_declaration_base.process_children_mut(cb);
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ParameterUnion {
     Parameter(Parameter),
@@ -6540,6 +7211,7 @@ impl Parameter {
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
+    IntoASTFlatten,
     ASTInstanceOf,
     NamespaceDefinitionBaseRef,
     ASTBaseRef,
@@ -6587,9 +7259,24 @@ impl ASTChildren for NamespaceDefinitionBase {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         cb.add_child(self.idf.to_ast());
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        cb.push(self.idf.to_ast_flatten());
+    }
 }
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct ConstructorOrFunctionDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub parameters: Vec<Parameter>,
@@ -6827,9 +7514,33 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
             cb.add_child(body.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.namespace_definition_base.process_children_mut(cb);
+        self.parameters.iter_mut().for_each(|parameter| {
+            cb.push(parameter.to_ast_flatten());
+        });
+        self.return_parameters.iter_mut().for_each(|parameter| {
+            cb.push(parameter.to_ast_flatten());
+        });
+        if let Some(body) = &mut self.body {
+            cb.push(body.to_ast_flatten());
+        }
+    }
 }
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct StateVariableDeclaration {
     pub identifier_declaration_base: IdentifierDeclarationBase,
     pub expr: Option<Expression>,
@@ -6867,9 +7578,27 @@ impl ASTChildren for StateVariableDeclaration {
             cb.add_child(expr.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.identifier_declaration_base.process_children_mut(cb);
+        if let Some(expr) = &mut self.expr {
+            cb.push(expr.to_ast_flatten());
+        }
+    }
 }
 
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EnumValue {
     pub ast_base: ASTBase,
     pub idf: Option<Identifier>,
@@ -6903,9 +7632,26 @@ impl ASTChildren for EnumValue {
             cb.add_child(idf.to_ast());
         }
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        if let Some(idf) = &mut self.idf {
+            cb.push(idf.to_ast_flatten());
+        }
+    }
 }
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct EnumDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub values: Vec<EnumValue>,
@@ -6937,9 +7683,27 @@ impl ASTChildren for EnumDefinition {
             cb.add_child(value.to_ast());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.namespace_definition_base.process_children_mut(cb);
+        self.values.iter_mut().for_each(|value| {
+            cb.push(value.to_ast_flatten());
+        });
+    }
 }
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct StructDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
     pub members: Vec<AST>,
@@ -6968,9 +7732,27 @@ impl ASTChildren for StructDefinition {
             cb.add_child(member.clone());
         });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.namespace_definition_base.process_children_mut(cb);
+        self.members.iter_mut().for_each(|member| {
+            cb.push(member.to_ast_flatten().unwrap());
+        });
+    }
 }
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ContractDefinition {
     pub namespace_definition_base: NamespaceDefinitionBase,
@@ -7030,7 +7812,8 @@ impl ContractDefinition {
                 None
             }
         } else {
-            let d_identifier = self.names().get(key).unwrap();
+            let names = self.names();
+            let d_identifier = names.get(key).unwrap();
             d_identifier.parent().as_ref().map(|p| *p.clone())
         }
     }
@@ -7062,9 +7845,49 @@ impl ASTChildren for ContractDefinition {
                 cb.add_child(function_definition.to_ast());
             });
     }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.namespace_definition_base.process_children_mut(cb);
+        self.enum_definitions
+            .iter_mut()
+            .for_each(|enum_definition| {
+                cb.push(enum_definition.to_ast_flatten());
+            });
+        self.struct_definitions
+            .iter_mut()
+            .for_each(|struct_definition| {
+                cb.push(struct_definition.to_ast_flatten());
+            });
+        self.state_variable_declarations
+            .iter_mut()
+            .for_each(|state_variable_declarations| {
+                cb.push(state_variable_declarations.to_ast_flatten().unwrap());
+            });
+        self.constructor_definitions
+            .iter_mut()
+            .for_each(|constructor_definition| {
+                cb.push(constructor_definition.to_ast_flatten());
+            });
+        self.function_definitions
+            .iter_mut()
+            .for_each(|function_definition| {
+                cb.push(function_definition.to_ast_flatten());
+            });
+    }
 }
 
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ASTKind,
+    ASTFlattenImpl,
+    Clone,
+    Debug,
+    Deserialize,
+    Serialize,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceUnit {
     pub ast_base: ASTBase,
@@ -7106,7 +7929,7 @@ impl SourceUnit {
         }
     }
     pub fn get_item(&self, key: &String) -> Option<ContractDefinition> {
-        if let Some(c_identifier) = self.ast_base.names.get(key) {
+        if let Some(c_identifier) = self.ast_base.names().get(key) {
             if let Some(AST::NamespaceDefinition(NamespaceDefinition::ContractDefinition(c))) =
                 c_identifier.parent().as_ref().map(|p| *p.clone())
             {
@@ -7120,6 +7943,11 @@ impl ASTChildren for SourceUnit {
     fn process_children(&mut self, cb: &mut ChildListBuilder) {
         self.contracts.iter().for_each(|contract| {
             cb.add_child(contract.to_ast());
+        });
+    }
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {
+        self.contracts.iter_mut().for_each(|contract| {
+            cb.push(contract.to_ast_flatten());
         });
     }
 }

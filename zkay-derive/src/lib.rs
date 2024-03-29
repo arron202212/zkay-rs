@@ -44,6 +44,34 @@ impl ASTInstanceOf for {} {{
     panic!("no ident found")
 }
 
+#[proc_macro_derive(ASTFlattenImpl)]
+pub fn derive_ast_flatten_impl(item: TokenStream) -> TokenStream {
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if id.to_string() == "struct" {
+                    let struct_name = it.next().unwrap().to_string();
+                    return format!(
+                        r#"
+impl IntoASTFlatten for {} {{
+    fn to_ast_flatten<'a>(&'a mut self) -> ASTFlatten<'a>{{
+        ASTFlatten::{}(self)
+    }}
+}}
+                    "#,
+                        struct_name, struct_name
+                    )
+                    .parse()
+                    .unwrap();
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("no ident found")
+}
+
 #[proc_macro_derive(ASTVisitorBaseRefImpl)]
 pub fn derive_ast_visitor_base_ref(item: TokenStream) -> TokenStream {
     let mut it = item.into_iter();
@@ -84,6 +112,9 @@ pub fn derive_ast_children(item: TokenStream) -> TokenStream {
                         r#"
 impl ASTChildren for {} {{
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {{
+        
+    }}
+ fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {{
         
     }}
 }}
@@ -170,14 +201,6 @@ impl {}MutRef for {} {{
     }
     panic!("no ident found")
 }
-
-//                         r#"
-// impl {} for {} {{
-//     fn ast_base_ref(&self) -> &ASTBase2{{
-//         &self.ast_base
-//     }}
-// }}
-//                     "#,
 
 struct Args {
     vars: Vec<Ident>,

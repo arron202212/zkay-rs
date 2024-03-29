@@ -27,8 +27,9 @@
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
 use crate::ast::{
-    ASTChildren, ASTInstanceOf, ASTType, ChildListBuilder, ConstructorOrFunctionDefinition,
-    Expression, HybridArgumentIdf, IntoAST, Statement, AST,
+    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ChildListBuilder,
+    ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST, IntoASTFlatten,
+    Statement, AST,
 };
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
@@ -48,6 +49,11 @@ pub enum CircuitStatement {
     CircEncConstraint(CircEncConstraint),
     CircSymmEncConstraint(CircSymmEncConstraint),
     CircEqConstraint(CircEqConstraint),
+}
+impl IntoASTFlatten for CircuitStatement {
+    fn to_ast_flatten<'a>(&'a mut self) -> ASTFlatten<'a> {
+        ASTFlatten::CircuitStatement(self)
+    }
 }
 // impl IntoAST for CircuitStatement {
 //     fn into_ast(self) -> AST {
@@ -79,6 +85,7 @@ pub enum CircuitStatement {
 // }
 impl ASTChildren for CircuitStatement {
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
+    fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {}
 }
 // class CircComment(CircuitStatement)
 // """

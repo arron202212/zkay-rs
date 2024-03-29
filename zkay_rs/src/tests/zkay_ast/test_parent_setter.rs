@@ -14,7 +14,7 @@ struct ParentChecker {
 impl ParentChecker {
     pub fn new() -> Self {
         Self {
-            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+            ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
 }

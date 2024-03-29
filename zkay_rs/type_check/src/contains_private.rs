@@ -40,7 +40,7 @@ impl ContainsPrivateVisitor {
     //     self.contains_private = False
     pub fn new() -> Self {
         Self {
-            ast_visitor_base: AstVisitorBase::new("node-or-children", false),
+            ast_visitor_base: AstVisitorBase::new("post", false),
             contains_private: false,
         }
     }
