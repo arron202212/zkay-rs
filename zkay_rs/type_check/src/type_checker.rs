@@ -24,10 +24,11 @@ use zkay_ast::ast::{
     IdentifierExpr, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion,
     LocationExpr, LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
     NewExpr, NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr,
-    ReclassifyExpr, ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty,
-    RehomExpr, RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef,
-    StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
+    RRWrapper, ReclassifyExpr, ReclassifyExprBase, ReclassifyExprBaseMutRef,
+    ReclassifyExprBaseProperty, RehomExpr, RequireStatement, ReturnStatement,
+    StateVariableDeclaration, StatementBaseMutRef, StatementBaseProperty, TupleExpr, TupleType,
+    TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseProperty, VariableDeclarationStatement,
+    WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -1053,7 +1054,7 @@ impl TypeCheckVisitor {
         } else if ast.is_cast() {
             assert!(
                 is_instance(
-                    &**ast
+                    &*ast
                         .func()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
@@ -1223,6 +1224,10 @@ impl TypeCheckVisitor {
             .annotated_type = ast
             .location_expr_base
             .target
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .as_ref()
             .unwrap()
             .try_as_expression_ref()
             .unwrap()
@@ -1402,7 +1407,7 @@ impl TypeCheckVisitor {
     pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
-        let target = ast.location_expr_base.target.clone().map(|t| *t);
+        let target = ast.location_expr_base.target();
         if let Some(target) = target {
             assert!(
                 is_instance(&target, ASTType::ContractDefinition),
@@ -1510,7 +1515,7 @@ impl TypeCheckVisitor {
     }
     pub fn visitEnumDefinition(&self, mut ast: EnumDefinition) {
         let mut etn = EnumTypeName::new(ast.qualified_name(), None);
-        etn.user_defined_type_name_base.target = Some(Box::new(ast.to_ast()));
+        etn.user_defined_type_name_base.target = Some(RRWrapper::new(Some(ast.to_ast())));
         ast.annotated_type = Some(AnnotatedTypeName::new(
             Some(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumTypeName(etn),
@@ -1522,7 +1527,7 @@ impl TypeCheckVisitor {
 
     pub fn visitEnumValue(&self, mut ast: EnumValue) {
         let mut evtn = EnumValueTypeName::new(ast.qualified_name(), None);
-        evtn.user_defined_type_name_base.target = Some(Box::new(ast.to_ast()));
+        evtn.user_defined_type_name_base.target = Some(RRWrapper::new(Some(ast.to_ast())));
         ast.annotated_type = Some(AnnotatedTypeName::new(
             Some(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumValueTypeName(evtn),
@@ -1596,7 +1601,7 @@ impl TypeCheckVisitor {
         ) {
             assert!(
                 is_instance(
-                    &**ast
+                    &*ast
                         .type_name
                         .as_ref()
                         .unwrap()
@@ -1663,8 +1668,7 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
-                .target()
-                .as_ref();
+                .target();
             if let Some(t) = t {
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass

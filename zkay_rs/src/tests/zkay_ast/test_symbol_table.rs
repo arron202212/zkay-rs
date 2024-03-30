@@ -214,7 +214,7 @@ mod tests {
             .unwrap()
             .target();
         assert_eq!(
-            stored_data.as_ref().map(|s| *s.clone()),
+            stored_data.as_ref().map(|s| s.clone()),
             ast.try_as_source_unit_ref()
                 .as_ref()
                 .unwrap()

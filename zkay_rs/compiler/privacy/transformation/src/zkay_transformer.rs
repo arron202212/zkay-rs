@@ -27,7 +27,7 @@ use zkay_ast::ast::{
     IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
     IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
     LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr,
+    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr, RRWrapper,
     ReclassifyExpr, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementList, StatementListBaseMutRef, StatementListBaseProperty,
@@ -330,7 +330,7 @@ impl ZkayStatementTransformer {
                 modvals = modvals
                     .iter()
                     .filter_map(|mv| {
-                        if &mv.target()
+                        if mv.target().map(|t| *t.clone())
                             != ast
                                 .lhs()
                                 .as_ref()
@@ -665,7 +665,7 @@ impl ZkayStatementTransformer {
                         ),
                         None,
                     );
-                    idf.location_expr_base.target = Some(Box::new(vd.to_ast()));
+                    idf.location_expr_base.target = Some(RRWrapper::new(Some(vd.to_ast())));
                     idf.to_expr()
                 })
                 .collect();
@@ -923,8 +923,7 @@ impl ZkayExpressionTransformer {
         // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
         {
             assert!(is_instance(
-                &**ast
-                    .func()
+                ast.func()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -1004,8 +1003,7 @@ impl ZkayExpressionTransformer {
                     .idf
                     .identifier_base_mut_ref()
                     .name = CFG.lock().unwrap().get_internal_name(
-                    &**ast
-                        .function_call_expr_base_mut_ref()
+                    ast.function_call_expr_base_mut_ref()
                         .func
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
@@ -1445,7 +1443,7 @@ impl ZkayCircuitTransformer {
                 .unwrap();
         }
 
-        let fdef = &*ast
+        let fdef = ast
             .func()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
@@ -1453,7 +1451,8 @@ impl ZkayCircuitTransformer {
             .unwrap()
             .target()
             .as_ref()
-            .unwrap();
+            .unwrap()
+            .clone();
         assert!(fdef
             .try_as_namespace_definition_ref()
             .unwrap()

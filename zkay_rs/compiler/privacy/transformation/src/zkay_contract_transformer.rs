@@ -28,9 +28,10 @@ use zkay_ast::ast::{
     IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration,
     IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement,
     LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr, Parameter,
-    PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration,
-    Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
-    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    PrimitiveCastExpr, RRWrapper, RequireStatement, ReturnStatement, SourceUnit,
+    StateVariableDeclaration, Statement, StatementList, StatementListBase, StructDefinition,
+    StructTypeName, TupleExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers};
 use zkay_ast::visitor::{
@@ -885,7 +886,8 @@ impl ZkayTransformer {
                                     ),
                                     None,
                                 );
-                                idf.location_expr_base.target = Some(Box::new(vd.to_ast()));
+                                idf.location_expr_base.target =
+                                    Some(RRWrapper::new(Some(vd.to_ast())));
                                 idf.to_expr()
                             })
                             .collect(),
@@ -1348,7 +1350,7 @@ impl ZkayTransformer {
             IdentifierExprUnion::Identifier(int_fct.namespace_definition_base.idf.clone()),
             None,
         );
-        idf.location_expr_base.target = Some(Box::new(int_fct.to_ast()));
+        idf.location_expr_base.target = Some(RRWrapper::new(Some(int_fct.to_ast())));
         let mut internal_call = FunctionCallExprBase::new(idf.to_expr(), args.clone(), None);
         internal_call.sec_start_offset = Some(ext_circuit.priv_in_size());
 

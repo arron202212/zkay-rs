@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierDeclarationBaseRef,
-    IdentifierExpr, IfStatement, IntoAST, LocationExpr, StateVariableDeclaration,
-    TupleOrLocationExpr, AST,
+    IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty,
+    StateVariableDeclaration, TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -102,10 +102,11 @@ impl FinalVisitor {
             .unwrap()
             .try_as_identifier_expr_ref()
         {
-            let var: &AST = le.location_expr_base.target.as_ref().unwrap();
-            if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(var) {
-                assert!(!*v, "Tried to reassign final variable,{:?}", ast);
-                *v = true;
+            if let Some(var) = le.location_expr_base.target() {
+                if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(&var) {
+                    assert!(!*v, "Tried to reassign final variable,{:?}", ast);
+                    *v = true;
+                }
             }
         }
     }
@@ -141,12 +142,18 @@ impl FinalVisitor {
         if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ast.clone())).is_rvalue()
             && self.state_vars_assigned.is_some()
         {
-            if let Some(&v) = self
-                .state_vars_assigned
-                .as_ref()
-                .unwrap()
-                .get(&(*ast.location_expr_base.target.clone().unwrap()).into())
-            {
+            if let Some(&v) = self.state_vars_assigned.as_ref().unwrap().get(
+                &(ast
+                    .location_expr_base
+                    .target
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .clone())
+                .into(),
+            ) {
                 assert!(
                     v,
                     r#"{ast:?} is reading "final" state variable before writing it"#,

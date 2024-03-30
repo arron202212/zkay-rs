@@ -114,10 +114,7 @@ impl ASTChildren for {} {{
     fn process_children(&mut self, _cb: &mut ChildListBuilder) {{
         
     }}
- fn process_children_mut<'a>(&'a mut self, cb: &mut Vec<ASTFlatten<'a>>) {{
-        
-    }}
-}}
+                }}
                     "#,
                         struct_name
                     )

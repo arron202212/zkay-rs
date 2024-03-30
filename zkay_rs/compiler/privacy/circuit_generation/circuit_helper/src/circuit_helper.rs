@@ -24,7 +24,7 @@ use zkay_ast::ast::{
     IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
     IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
     LocationExprBaseProperty, MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
+    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, RRWrapper, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
     UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
@@ -595,7 +595,8 @@ where
                     ),
                     Some(Box::new(ret_t)),
                 );
-                idf.location_expr_base.target = var.target();
+                idf.location_expr_base.target =
+                    var.target().map(|t| RRWrapper::new(Some(*t.clone())));
                 let mut ret_param = idf;
                 ret_param
                     .location_expr_base
@@ -622,7 +623,10 @@ where
                             *ret.annotated_type.clone().unwrap(),
                             *ret.location_expr_base
                                 .target
-                                .clone()
+                                .as_ref()
+                                .unwrap()
+                                .borrow()
+                                .as_ref()
                                 .unwrap()
                                 .try_as_identifier_declaration_ref()
                                 .unwrap()
@@ -664,7 +668,7 @@ where
             IdentifierExprUnion::String(String::from("<stmt_fct>")),
             None,
         );
-        idf.location_expr_base.target = Some(Box::new(fdef.to_ast().into()));
+        idf.location_expr_base.target = Some(RRWrapper::new(Some(fdef.to_ast().into())));
         let mut fcall = FunctionCallExprBase::new(idf.to_expr(), vec![], None);
         fcall.expression_base.statement = Some(Box::new(astmt.to_statement()));
         let mut ret_args = self.inline_function_call_into_circuit(&mut fcall);
@@ -1176,7 +1180,11 @@ where
         //          or a loc expr for the HybridArgumentIdf which references the most recent value of idf
         // """
     {
-        let target: Option<AST> = idf.location_expr_base.target.clone().map(|v| (*v).into());
+        let target: Option<AST> = idf
+            .location_expr_base
+            .target
+            .clone()
+            .map(|v| v.borrow().as_ref().unwrap().clone().into());
         assert!(target.is_some());
         assert!(!is_instance(&*idf.idf, ASTType::HybridArgumentIdf));
         if self._remapper.0.is_remapped(
@@ -1261,7 +1269,7 @@ where
             .clone();
         //with
         self._remapper.0.remap_scope(Some(
-            (*fcall
+            (fcall
                 .func
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()

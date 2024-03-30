@@ -267,7 +267,6 @@ impl NonInlineableCallDetector {
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
-                .as_ref()
                 .unwrap();
             assert!(
                 !(ast1

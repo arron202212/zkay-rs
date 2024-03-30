@@ -21,6 +21,7 @@ use crate::ast::{
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars};
 use serde::{Deserialize, Serialize};
+use std::ops::DerefMut;
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
 use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -700,8 +701,22 @@ impl SymbolTableLinker {
 
     pub fn visitIdentifierExpr(&mut self, ast: &mut IdentifierExpr) {
         let decl = self.find_identifier_declaration(ast);
-        ast.location_expr_base.target = Some(Box::new(decl.to_ast()));
-        assert!(ast.location_expr_base.target.as_ref().is_some());
+        *ast.location_expr_base
+            .target
+            .as_mut()
+            .unwrap()
+            .deref_mut()
+            .borrow_mut() = Some(decl.to_ast());
+        assert!(
+            ast.location_expr_base.target.as_ref().is_some()
+                && ast
+                    .location_expr_base
+                    .target
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .is_some()
+        );
         // ast.clone()
     }
 
@@ -716,8 +731,12 @@ impl SymbolTableLinker {
                 }
             }
         }
-        ast.user_defined_type_name_base_mut_ref().target =
-            Some(Box::new(type_def.unwrap().to_ast()));
+        *ast.user_defined_type_name_base_mut_ref()
+            .target
+            .as_mut()
+            .unwrap()
+            .deref_mut()
+            .borrow_mut() = Some(type_def.unwrap().to_ast());
 
         // ast
     }
@@ -736,7 +755,12 @@ impl SymbolTableLinker {
             .try_as_namespace_definition_ref()
         {
             if let Some(idf) = target.names().get(ast.member.name()) {
-                ast.location_expr_base.target = idf.parent().clone();
+                *ast.location_expr_base
+                    .target
+                    .as_mut()
+                    .unwrap()
+                    .deref_mut()
+                    .borrow_mut() = idf.parent().as_ref().map(|f| *f.clone());
             }
         } else {
             let mut t = *ast
@@ -756,7 +780,12 @@ impl SymbolTableLinker {
                 .unwrap();
             if let TypeName::Array(_) = &t {
                 assert!(ast.member.name() == "length");
-                ast.location_expr_base.target = Some(Box::new(array_length_member().into_ast()));
+                *ast.location_expr_base
+                    .target
+                    .as_mut()
+                    .unwrap()
+                    .deref_mut()
+                    .borrow_mut() = Some(array_length_member().into_ast());
             } else if let TypeName::UserDefinedTypeName(ref mut t) = t {
                 // assert!(isinstance(t, UserDefinedTypeName));
                 if let Some(target) = t.target() {
@@ -766,7 +795,12 @@ impl SymbolTableLinker {
                         .names()
                         .get(ast.member.name())
                     {
-                        ast.location_expr_base.target = idf.parent().clone();
+                        *ast.location_expr_base
+                            .target
+                            .as_mut()
+                            .unwrap()
+                            .deref_mut()
+                            .borrow_mut() = idf.parent().map(|p| *p.clone());
                     }
                 } else {
                     *t = t.clone();
@@ -805,7 +839,12 @@ impl SymbolTableLinker {
             .type_name
             .clone()
             .unwrap();
-        ast.location_expr_base.target = Some(Box::new(
+        *ast.location_expr_base
+            .target
+            .as_mut()
+            .unwrap()
+            .deref_mut()
+            .borrow_mut() = Some(
             VariableDeclaration::new(
                 vec![],
                 *source_t.try_as_mapping_ref().unwrap().value_type.clone(),
@@ -813,7 +852,7 @@ impl SymbolTableLinker {
                 None,
             )
             .to_ast(),
-        ));
+        );
         // ast
     }
 }

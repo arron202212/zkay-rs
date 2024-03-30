@@ -428,8 +428,7 @@ impl JsnarkVisitor
             };
         } else if ast.is_cast()
             && is_instance(
-                &**ast
-                    .func()
+                ast.func()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()

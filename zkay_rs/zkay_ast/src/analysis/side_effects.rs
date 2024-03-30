@@ -211,10 +211,10 @@ impl DirectModificationDetector {
     pub fn visitLocationExpr(&mut self, ast: &mut LocationExpr) {
         let ast2: LocationExpr = ast.clone();
         self.visitAST(&mut (*ast).to_ast());
-        let ast1 = ast.target().as_ref().unwrap();
+        let ast1 = ast.target().unwrap();
         if TupleOrLocationExpr::LocationExpr(ast.clone()).is_rvalue()
             && is_instances(
-                &**ast1,
+                &ast1,
                 vec![
                     ASTType::VariableDeclaration,
                     ASTType::StateVariableDeclaration,
@@ -311,7 +311,6 @@ impl IndirectModificationDetector {
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
-                .as_ref()
                 .unwrap();
             let mut ast = ast.to_ast();
             let rlen = ast.ast_base_ref().unwrap().read_values.len();
