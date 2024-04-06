@@ -1,4 +1,5 @@
 use ast_builder::build_ast::build_ast;
+use rccell::{RcCell, WeakCell};
 use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTChildren, ASTType, IntoAST, NamespaceDefinitionBaseProperty,
     AST,
@@ -68,7 +69,10 @@ mod tests {
             // test
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
             let idf = contract.idf();
-            assert_eq!(idf.parent(), Some(Box::new(contract.to_ast())));
+            assert_eq!(
+                idf.upgrade().unwrap().borrow().parent().map(|p| p.to_ast()),
+                Some(contract.to_ast())
+            );
         }
     }
     #[test]

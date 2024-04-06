@@ -7,9 +7,9 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTType, ConstructorOrFunctionDefinition,
-    Expression, ExpressionBaseMutRef, Identifier, IntoAST, NamespaceDefinition,
-    NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,
+    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTChildren, ASTInstanceOf, ASTType,
+    ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, Identifier, IntoAST,
+    NamespaceDefinition, NamespaceDefinitionBaseProperty, SourceUnit, Statement, AST,
 };
 use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -23,28 +23,32 @@ impl AstVisitorMut for ParentSetterVisitor {
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::SourceUnit == name
-            || &ASTType::NamespaceDefinitionBase == name
+            || &ASTType::EnumDefinition == name
+            || &ASTType::ContractDefinition == name
+            || &ASTType::StructDefinition == name
             || &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        match name {
-            ASTType::SourceUnit => self.visitSourceUnit(ast.try_as_source_unit_mut().unwrap()),
-            ASTType::NamespaceDefinitionBase => {
+    fn get_attr(&mut self, _name: &ASTType, ast: &mut AST) -> Self::Return {
+        match ast {
+            AST::SourceUnit(_) => self.visitSourceUnit(ast.try_as_source_unit_mut().unwrap()),
+            AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(_)) => {
+                self.visitConstructorOrFunctionDefinition(
+                    ast.try_as_namespace_definition_mut()
+                        .unwrap()
+                        .try_as_constructor_or_function_definition_mut()
+                        .unwrap(),
+                )
+            }
+            AST::NamespaceDefinition(_) => {
                 self.visitNamespaceDefinition(ast.try_as_namespace_definition_mut().unwrap())
             }
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
             _ => {}
         }
     }
 
     fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
         for c in ast.children().iter_mut() {
-            // println!("============{:?}", c);
+            // println!("=={:?}==={:?}===children=={:?}======={:?}",ast.get_ast_type(),c.get_ast_type(),ast.to_string(), c.to_string());
             c.ast_base_mut_ref()
                 .unwrap()
                 .parent_namespace
@@ -101,7 +105,7 @@ impl ParentSetterVisitor {
                 .chain([ast.idf().clone()])
                 .collect()
         } else {
-            vec![ast.idf().clone()]
+            vec![ast.idf()]
         });
     }
 
@@ -120,11 +124,11 @@ impl ParentSetterVisitor {
                 .as_ref()
                 .unwrap()
                 .into_iter()
-                .chain([&ast.namespace_definition_base.idf.clone()])
+                .chain([&ast.namespace_definition_base.idf().clone()])
                 .cloned()
                 .collect()
         } else {
-            vec![ast.namespace_definition_base.idf.clone()]
+            vec![ast.namespace_definition_base.idf().clone()]
         });
     }
 }
@@ -139,10 +143,10 @@ impl AstVisitorMut for ExpressionToStatementVisitor {
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ExpressionBase == name || &ASTType::StatementBase == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
-        match name {
-            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_mut().unwrap()),
-            ASTType::StatementBase => self.visitStatement(ast.try_as_statement_mut().unwrap()),
+    fn get_attr(&mut self, _name: &ASTType, ast: &mut AST) -> Self::Return {
+        match ast {
+            AST::Expression(_) => self.visitExpression(ast.try_as_expression_mut().unwrap()),
+            AST::Statement(_) => self.visitStatement(ast.try_as_statement_mut().unwrap()),
             _ => {}
         }
     }
@@ -176,10 +180,7 @@ impl ExpressionToStatementVisitor {
     pub fn visitStatement(&self, ast: &mut Statement) {
         let mut parent = Some(ast.to_ast());
         while let Some(p) = &parent {
-            if let AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
-                _,
-            )) = p
-            {
+            if is_instance(p, ASTType::ConstructorOrFunctionDefinition) {
                 break;
             }
             parent = p

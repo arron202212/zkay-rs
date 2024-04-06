@@ -1,11 +1,11 @@
 use ast_builder::build_ast::build_ast;
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTType, AssignmentStatement, AssignmentStatementBaseProperty,
-    Block, ConstructorOrFunctionDefinition, ContractDefinition, IdentifierBaseProperty,
-    IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST, LocationExprBaseProperty,
-    NamespaceDefinitionBaseProperty, SourceUnit, StatementListBaseProperty, VariableDeclaration,
-    VariableDeclarationStatement,
+    is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
+    AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
+    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr,
+    LocationExprBaseProperty, NamespaceDefinitionBaseProperty, SourceUnit,
+    StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
 };
 use zkay_ast::pointers::{
     parent_setter::set_parents,
@@ -116,14 +116,20 @@ mod tests {
         println!("==len=={:?},{:?}", s.len(), s.len());
         for (k, v) in &ss {
             if let Some(v2) = s.get(k) {
-                assert_eq!(v.to_string(), v2.to_string());
+                assert_eq!(
+                    v.upgrade().unwrap().borrow().to_string(),
+                    v2.upgrade().unwrap().borrow().to_string()
+                );
             } else {
                 assert!(false);
             }
         }
         for (k, v) in &s {
             if let Some(v2) = ss.get(k) {
-                assert_eq!(v.to_string(), v2.to_string());
+                assert_eq!(
+                    v.upgrade().unwrap().borrow().to_string(),
+                    v2.upgrade().unwrap().borrow().to_string()
+                );
             } else {
                 assert!(false);
             }
@@ -134,7 +140,7 @@ mod tests {
         );
         assert_eq!(
             body.unwrap().names(),
-            BTreeMap::from([(String::from("x"), *decl.idf().clone())])
+            BTreeMap::from([(String::from("x"), decl.idf().clone())])
         );
     }
     #[test]
@@ -150,14 +156,11 @@ mod tests {
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
         assert_eq!(
-            identifier_expr
-                .target()
-                .as_ref()
-                .map(|t| t.clone().to_string()),
-            Some(decl.to_ast().to_string())
+            identifier_expr.target().as_ref().unwrap().get_ast_type(),
+            decl.get_ast_type()
         );
         assert_eq!(
-            identifier_expr.annotated_type(),
+            identifier_expr.get_annotated_type(),
             Some(*decl.annotated_type().clone())
         );
     }
@@ -244,8 +247,11 @@ mod tests {
                 .try_as_identifier_declaration_ref()
                 .unwrap()
                 .idf()
+                .upgrade()
+                .unwrap()
+                .borrow()
                 .name(),
-            &String::from("x")
+            String::from("x")
         );
     }
 
@@ -259,7 +265,7 @@ mod tests {
             fill_symbol_table(&mut ast);
             link_identifiers(&mut ast);
             let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
-            assert_eq!(contract.idf().name(), name);
+            assert_eq!(&contract.idf().upgrade().unwrap().borrow().name(), name);
         }
     }
 }

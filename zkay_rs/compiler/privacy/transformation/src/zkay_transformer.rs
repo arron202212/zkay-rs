@@ -11,6 +11,7 @@
 // """
 
 use circuit_helper::circuit_helper::CircuitHelper;
+use rccell::{RcCell, WeakCell};
 use regex::Regex;
 use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
@@ -143,9 +144,8 @@ impl ZkayVarDeclTransformer {
 
     pub fn visitMapping(&self, ast: &mut Mapping) -> AST {
         if ast.key_label.is_some() {
-            ast.key_label = Some(Identifier::Identifier(IdentifierBase::new(
-                ast.key_label.as_ref().unwrap().name().clone(),
-            )));
+            let kl = ast.key_label.as_ref().unwrap().borrow().name().clone();
+            ast.key_label = Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(kl))));
         }
         self.visit_children(Some(ast.to_ast())).unwrap()
     }
@@ -367,7 +367,8 @@ impl ZkayStatementTransformer {
                         .unwrap(),
                     ASTType::EncryptionExpression,
                 ) {
-                    *ast.rhs()
+                    (*ast
+                        .rhs()
                         .as_ref()
                         .unwrap()
                         .try_as_tuple_or_location_expr_ref()
@@ -389,9 +390,13 @@ impl ZkayStatementTransformer {
                         .try_as_identifier_expr_ref()
                         .unwrap()
                         .idf
-                        .clone()
+                        .as_ref()
+                        .unwrap()
+                        .borrow())
+                    .clone()
                 } else {
-                    *ast.rhs()
+                    (*ast
+                        .rhs()
                         .as_ref()
                         .unwrap()
                         .try_as_tuple_or_location_expr_ref()
@@ -413,12 +418,16 @@ impl ZkayStatementTransformer {
                         .try_as_identifier_expr_ref()
                         .unwrap()
                         .idf
-                        .clone()
+                        .as_ref()
+                        .unwrap()
+                        .borrow())
+                    .clone()
                 };
                 assert!(is_instance(&ridf, ASTType::HybridArgumentIdf));
                 if let Identifier::HybridArgumentIdf(ridf) = ridf {
                     self.gen.as_mut().unwrap()._remapper.0.remap(
-                        *ast.lhs()
+                        (*ast
+                            .lhs()
                             .as_ref()
                             .unwrap()
                             .try_as_expression_ref()
@@ -433,7 +442,10 @@ impl ZkayStatementTransformer {
                             .try_as_identifier_declaration_ref()
                             .unwrap()
                             .idf()
-                            .clone(),
+                            .upgrade()
+                            .unwrap()
+                            .borrow())
+                        .clone(),
                         ridf,
                     );
                 }
@@ -446,14 +458,17 @@ impl ZkayStatementTransformer {
             for val in modvals {
                 if val.key().is_none() {
                     self.gen.as_mut().unwrap().invalidate_idf(
-                        &*val
+                        &(*val
                             .target()
                             .as_ref()
                             .unwrap()
                             .try_as_identifier_declaration_ref()
                             .unwrap()
                             .idf()
-                            .clone(),
+                            .upgrade()
+                            .unwrap()
+                            .borrow())
+                        .clone(),
                     );
                 }
             }
@@ -528,14 +543,17 @@ impl ZkayStatementTransformer {
                 for val in &ast.statement_base.ast_base.modified_values {
                     if val.key().is_none() {
                         self.gen.as_mut().unwrap().invalidate_idf(
-                            &*val
+                            &(*val
                                 .target()
                                 .as_ref()
                                 .unwrap()
                                 .try_as_identifier_declaration_ref()
                                 .unwrap()
                                 .idf()
-                                .clone(),
+                                .upgrade()
+                                .unwrap()
+                                .borrow())
+                            .clone(),
                         );
                     }
                 }
@@ -661,7 +679,12 @@ impl ZkayStatementTransformer {
                 .map(|vd| {
                     let mut idf = IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(
-                            *vd.identifier_declaration_base.idf.clone(),
+                            (*vd.identifier_declaration_base
+                                .idf
+                                .as_ref()
+                                .unwrap()
+                                .borrow())
+                            .clone(),
                         ),
                         None,
                     );
@@ -1001,6 +1024,9 @@ impl ZkayExpressionTransformer {
                     .try_as_identifier_expr_mut()
                     .unwrap()
                     .idf
+                    .as_mut()
+                    .unwrap()
+                    .borrow_mut()
                     .identifier_base_mut_ref()
                     .name = CFG.lock().unwrap().get_internal_name(
                     ast.function_call_expr_base_mut_ref()
@@ -1062,14 +1088,17 @@ impl ZkayExpressionTransformer {
                         )
                     {
                         self.gen.as_mut().unwrap().invalidate_idf(
-                            &*val
+                            &(*val
                                 .target()
                                 .as_ref()
                                 .unwrap()
                                 .try_as_identifier_declaration_ref()
                                 .unwrap()
                                 .idf()
-                                .clone(),
+                                .upgrade()
+                                .unwrap()
+                                .borrow())
+                            .clone(),
                         );
                     }
                 }
@@ -1242,17 +1271,29 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIdentifierExpr(&mut self, mut ast: IdentifierExpr) -> LocationExpr {
-        if !is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
+        if !is_instance(
+            &*ast.idf.as_ref().unwrap().borrow(),
+            ASTType::HybridArgumentIdf,
+        )
         //If ast is not already transformed, get current SSA version
         {
             ast = self.gen.as_ref().unwrap().get_remapped_idf_expr(ast);
         }
         if is_instance(&ast, ASTType::IdentifierExpr)
-            && is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
+            && is_instance(
+                &*ast.idf.as_ref().unwrap().borrow(),
+                ASTType::HybridArgumentIdf,
+            )
         //The current version of ast.idf is already in the circuit
         {
             assert!(
-                ast.idf.try_as_hybrid_argument_idf_ref().unwrap().arg_type
+                ast.idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_hybrid_argument_idf_ref()
+                    .unwrap()
+                    .arg_type
                     != HybridArgType::PubContractVal
             );
             LocationExpr::IdentifierExpr(ast)

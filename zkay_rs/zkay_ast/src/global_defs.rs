@@ -9,11 +9,13 @@
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
     ASTBaseMutRef, AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName,
-    Identifier, IdentifierBase, IntoAST, Parameter, StateVariableDeclaration, StructDefinition,
-    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
+    Identifier, IdentifierBase, IntoAST, NamespaceDefinitionBaseProperty, Parameter,
+    StateVariableDeclaration, StructDefinition, StructTypeName, TypeName, UserDefinedTypeName,
+    VariableDeclaration,
 };
 use crate::pointers::parent_setter::set_parents;
 use lazy_static::lazy_static;
+use rccell::{RcCell, WeakCell};
 use std::sync::{Arc, Mutex};
 pub fn array_length_member() -> VariableDeclaration {
     VariableDeclaration::new(
@@ -256,6 +258,9 @@ impl GlobalVars {
                         .msg_struct
                         .namespace_definition_base
                         .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
                         .clone()],
                     Some(global_defs().msg_struct.to_namespace_definition()),
                 )
@@ -267,6 +272,9 @@ impl GlobalVars {
         );
         msg.identifier_declaration_base
             .idf
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .ast_base_mut_ref()
             .parent_namespace
             .as_mut()
@@ -281,6 +289,9 @@ impl GlobalVars {
                         .block_struct
                         .namespace_definition_base
                         .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
                         .clone()],
                     Some(global_defs().block_struct.to_namespace_definition()),
                 )
@@ -293,6 +304,9 @@ impl GlobalVars {
         block
             .identifier_declaration_base
             .idf
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .ast_base_mut_ref()
             .parent_namespace
             .as_mut()
@@ -306,7 +320,10 @@ impl GlobalVars {
                     vec![global_defs()
                         .tx_struct
                         .namespace_definition_base
-                        .idf
+                        .idf()
+                        .upgrade()
+                        .unwrap()
+                        .borrow()
                         .clone()],
                     Some(global_defs().tx_struct.to_namespace_definition()),
                 )
@@ -318,6 +335,9 @@ impl GlobalVars {
         );
         tx.identifier_declaration_base
             .idf
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .ast_base_mut_ref()
             .parent_namespace
             .as_mut()
@@ -333,6 +353,9 @@ impl GlobalVars {
         );
         now.identifier_declaration_base
             .idf
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
             .ast_base_mut_ref()
             .parent_namespace
             .as_mut()

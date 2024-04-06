@@ -17,6 +17,7 @@ use crate::zkay_transformer::{
 };
 use circuit_helper::circuit_helper::CircuitHelper;
 use privacy::library_contracts::BN128_SCALAR_FIELD;
+use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
@@ -289,7 +290,13 @@ impl ZkayTransformer {
         {
             if f.requires_verification_when_external && f.has_side_effects() {
                 let name = CFG.lock().unwrap().get_verification_contract_name(
-                    c.namespace_definition_base.idf.name().clone(),
+                    c.namespace_definition_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone(),
                     f.name(),
                 );
                 Self::import_contract(&name, su, self.circuits.get_mut(&f));
@@ -394,7 +401,15 @@ impl ZkayTransformer {
                     && (var.identifier_declaration_base.is_final()
                         || var.identifier_declaration_base.is_constant())
                 {
-                    global_owners.push((*var.identifier_declaration_base.idf).to_expr());
+                    global_owners.push(
+                        (*var
+                            .identifier_declaration_base
+                            .idf
+                            .as_ref()
+                            .unwrap()
+                            .borrow())
+                        .to_expr(),
+                    );
                 }
             }
         }
@@ -882,7 +897,12 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 let mut idf = IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        *vd.identifier_declaration_base.idf.clone(),
+                                        (*vd.identifier_declaration_base
+                                            .idf
+                                            .as_ref()
+                                            .unwrap()
+                                            .borrow())
+                                        .clone(),
                                     ),
                                     None,
                                 );
@@ -951,7 +971,7 @@ impl ZkayTransformer {
             new_modifiers.push(String::from("view"));
         }
         let mut new_f = ConstructorOrFunctionDefinition::new(
-            Some(f.namespace_definition_base.idf.clone()),
+            Some((*f.namespace_definition_base.idf.as_ref().unwrap().borrow()).clone()),
             Some(original_params.clone()),
             Some(new_modifiers),
             Some(f.return_parameters.clone()),
@@ -959,9 +979,9 @@ impl ZkayTransformer {
         );
 
         // Make original function internal
-        f.namespace_definition_base.idf = Identifier::Identifier(IdentifierBase::new(
-            CFG.lock().unwrap().get_internal_name(f),
-        ));
+        f.namespace_definition_base.idf = Some(RcCell::new(Identifier::Identifier(
+            IdentifierBase::new(CFG.lock().unwrap().get_internal_name(f)),
+        )));
         f.modifiers = f
             .modifiers
             .iter()
@@ -1219,7 +1239,8 @@ impl ZkayTransformer {
                     .assign(
                         IdentifierExpr::new(
                             IdentifierExprUnion::Identifier(
-                                *p.identifier_declaration_base.idf.clone(),
+                                (*p.identifier_declaration_base.idf.as_ref().unwrap().borrow())
+                                    .clone(),
                             ),
                             None,
                         )
@@ -1265,7 +1286,9 @@ impl ZkayTransformer {
                                 .crypto_params],
                         ));
                     let idf = IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(*p.identifier_declaration_base.idf.clone()),
+                        IdentifierExprUnion::Identifier(
+                            (*p.identifier_declaration_base.idf.as_ref().unwrap().borrow()).clone(),
+                        ),
                         None,
                     )
                     .as_type(AST::AnnotatedTypeName(
@@ -1294,7 +1317,8 @@ impl ZkayTransformer {
                             VariableDeclaration::new(
                                 vec![],
                                 *p.identifier_declaration_base.annotated_type.clone(),
-                                *p.identifier_declaration_base.idf.clone(),
+                                (*p.identifier_declaration_base.idf.as_ref().unwrap().borrow())
+                                    .clone(),
                                 None,
                             ),
                             Some(lit.to_expr()),
@@ -1320,10 +1344,12 @@ impl ZkayTransformer {
             AnnotatedTypeName::new(Some(TypeName::dyn_uint_array()), None, String::from("NON_")),
             vec![NumberLiteralExpr::new(ext_circuit.in_size_trans(), false).to_expr()],
         );
-        let in_var_decl = (*in_arr_var.idf.clone()).identifier_base_ref().decl_var(
-            AST::TypeName(TypeName::dyn_uint_array()),
-            Some(new_in_array_expr.to_expr()),
-        );
+        let in_var_decl = ((*in_arr_var.idf.as_ref().unwrap().borrow()).clone())
+            .identifier_base_ref()
+            .decl_var(
+                AST::TypeName(TypeName::dyn_uint_array()),
+                Some(new_in_array_expr.to_expr()),
+            );
         stmts.push(in_var_decl.into_ast());
         stmts.push(CommentBase::new(String::new()).to_ast());
         stmts.extend(CommentBase::comment_wrap_block(
@@ -1340,14 +1366,30 @@ impl ZkayTransformer {
             .iter()
             .map(|param| {
                 IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(*param.identifier_declaration_base.idf.clone()),
+                    IdentifierExprUnion::Identifier(
+                        (*param
+                            .identifier_declaration_base
+                            .idf
+                            .as_ref()
+                            .unwrap()
+                            .borrow())
+                        .clone(),
+                    ),
                     None,
                 )
                 .to_expr()
             })
             .collect();
         let mut idf = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(int_fct.namespace_definition_base.idf.clone()),
+            IdentifierExprUnion::Identifier(
+                (*int_fct
+                    .namespace_definition_base
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow())
+                .clone(),
+            ),
             None,
         );
         idf.location_expr_base.target = Some(RRWrapper::new(Some(int_fct.to_ast())));
@@ -1396,7 +1438,12 @@ impl ZkayTransformer {
                     .map(|vd| {
                         IdentifierExpr::new(
                             IdentifierExprUnion::Identifier(
-                                *vd.identifier_declaration_base.idf.clone(),
+                                (*vd.identifier_declaration_base
+                                    .idf
+                                    .as_ref()
+                                    .unwrap()
+                                    .borrow())
+                                .clone(),
                             ),
                             None,
                         )
@@ -1478,7 +1525,12 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        *vd.identifier_declaration_base.idf.clone(),
+                                        (*vd.identifier_declaration_base
+                                            .idf
+                                            .as_ref()
+                                            .unwrap()
+                                            .borrow())
+                                        .clone(),
                                     ),
                                     None,
                                 )

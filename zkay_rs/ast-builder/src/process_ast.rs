@@ -174,7 +174,13 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
     let ast = ast.unwrap();
     let mut vc_names = vec![];
     for contract in &ast.try_as_source_unit_ref().unwrap().contracts {
-        let cname = contract.namespace_definition_base.idf.name();
+        let cname = contract
+            .namespace_definition_base
+            .idf
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .name();
         let fcts: Vec<_> = contract
             .function_definitions
             .iter()

@@ -320,7 +320,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.stateVariableDeclaration() {
                     v.accept(self);
-                    //println!("====stateVariableDeclaration======={:?}",self.temp_result().clone());
+                    ////println!("====stateVariableDeclaration======={:?}",self.temp_result().clone());
                     if let Some(AST::IdentifierDeclaration(
                         IdentifierDeclaration::StateVariableDeclaration(_),
                     )) = self.temp_result().clone()
@@ -340,7 +340,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.constructorDefinition() {
                     v.accept(self);
-                    //println!("====constructorDefinition======={:?}",self.temp_result().clone());
+                    ////println!("====constructorDefinition======={:?}",self.temp_result().clone());
 
                     if let Some(AST::NamespaceDefinition(
                         NamespaceDefinition::ConstructorOrFunctionDefinition(a),
@@ -361,7 +361,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.functionDefinition() {
                     v.accept(self);
-                    //println!("==functionDefinition=={:?}==",self.temp_result().clone());
+                    ////println!("==functionDefinition=={:?}==",self.temp_result().clone());
                     if let Some(AST::NamespaceDefinition(
                         NamespaceDefinition::ConstructorOrFunctionDefinition(a),
                     )) = self.temp_result().clone()
@@ -381,7 +381,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|p| {
                 if let Some(v) = p.enumDefinition() {
                     v.accept(self);
-                    //println!("==enumDefinition=={:?}==",self.temp_result().clone());
+                    ////println!("==enumDefinition=={:?}==",self.temp_result().clone());
                     if let Some(AST::NamespaceDefinition(NamespaceDefinition::EnumDefinition(a))) =
                         self.temp_result().clone()
                     {
@@ -462,20 +462,50 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let parameters = Some(if let Some(p) = &ctx.parameters {
             p.params
                 .iter()
-                .filter_map(|param| {
-                    param.accept(self);
-                    if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
-                        self.temp_result().clone()
-                    {
-                        Some(a)
+                .map(|param| {
+                    // param.accept(self);
+                    // //println!("=====parameter==== self.temp_result()====={:?}", self.temp_result());
+                    let annotated_type = if let Some(at) = &param.annotated_type {
+                        at.accept(self);
+                        self.temp_result()
+                            .clone()
+                            .unwrap()
+                            .try_as_annotated_type_name()
                     } else {
                         None
-                    }
+                    };
+                    let idf = if let Some(idf) = &param.idf {
+                        idf.accept(self);
+                        self.temp_result().clone().unwrap().try_as_identifier()
+                    } else {
+                        None
+                    };
+                    let keywords: Vec<_> = param
+                        .keywords
+                        .iter()
+                        .map(|kw| kw.get_text().to_string())
+                        .collect();
+                    // //println!("===functdefini===Parameter==========={:?},{:?},{:?}",keywords,annotated_type,idf);
+                    println!(
+                        "==functdefini==keywords.len()==={:?}=={:?}==={}=====",
+                        annotated_type,
+                        idf,
+                        keywords.len()
+                    );
+                    Parameter::new(keywords, annotated_type.unwrap(), idf.unwrap(), None)
+                    // if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
+                    //     self.temp_result().clone()
+                    // {
+                    //     Some(a)
+                    // } else {
+                    // None
+                    // }
                 })
                 .collect()
         } else {
             vec![]
         });
+        // println!("=====parameters=====len===={:?}",parameters.as_ref().unwrap().len());
         let modifiers = Some(if let Some(p) = &ctx.modifiers {
             p.modifiers
                 .iter()
@@ -539,6 +569,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
+        //  //println!("==visit_constructorDefinition===parameters========={:?}",parameters);
         let modifiers = if let Some(p) = &ctx.modifiers {
             p.modifiers
                 .iter()
@@ -713,7 +744,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut homomorphism = String::from("NON_HOMOMORPHIC");
         if let Some(pa) = &ctx.privacy_annotation {
             pa.accept(self);
-            // //println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
+            // ////println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
             privacy_annotation = if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(expr)
             } else {
@@ -736,17 +767,17 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.code
             );
             assert!(
-                !is_instance(privacy_annotation.as_ref().unwrap(), ASTType::AllExpr)
-                    || homomorphism == String::from("NON_HOMOMORPHIC"),
+                !(is_instance(privacy_annotation.as_ref().unwrap(), ASTType::AllExpr)
+                    && homomorphism != String::from("NON_HOMOMORPHIC")),
                 "Public types cannot be homomorphic,{:?},{:?}",
                 homomorphism,
                 self.code
             );
         }
-        // //println!("======{:?},{:?}",ctx,ctx.type_name);
+        // ////println!("======{:?},{:?}",ctx,ctx.type_name);
         let type_name = if let Some(tn) = &ctx.type_name {
             tn.accept(self);
-            // //println!("=type_name=={:?},{:?}",tn,self.temp_result().clone());
+            // ////println!("=type_name=={:?},{:?}",tn,self.temp_result().clone());
             if let Some(AST::TypeName(tn)) = self.temp_result().clone() {
                 Some(tn)
             } else {
@@ -797,7 +828,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ElementaryTypeNameContext<'input>,
     ) -> Self::Return {
-        // //println!("===========ctx.get_text()==={}==========",ctx.get_text());
+        // ////println!("===========ctx.get_text()==={}==========",ctx.get_text());
         let t = ctx.get_text();
         match t.as_str() {
             "address" => Some(AddressTypeName::new().into_ast()),
@@ -884,9 +915,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // f = BuiltinFunction("sign" + ctx.op.text).override(line=ctx.op.line, column=ctx.op.column)
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
-        // //println!("{:?},========{:?}",1,ctx.op.as_ref().unwrap());
+        // ////println!("{:?},========{:?}",1,ctx.op.as_ref().unwrap());
         let op = ctx.op.as_ref().unwrap();
-        // //println!("{:?},========{:?}",2,op.text);
+        // ////println!("{:?},========{:?}",2,op.text);
         let mut f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
         f.expression_base.ast_base.line = op.line as i32;
         f.expression_base.ast_base.column = op.column as i32;
@@ -1091,7 +1122,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut func = if let Some(expr) = &ctx.func {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
-                // //println!("{:?},==={:?}",expr,self.temp_result().clone()  );
+                // ////println!("{:?},==={:?}",expr,self.temp_result().clone()  );
                 Some(expr)
             } else {
                 None
@@ -1118,8 +1149,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             LocationExpr::IdentifierExpr(func),
         ))) = &func
         {
-            //    //println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
-            if func.idf.name() == "reveal" {
+            //    ////println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
+            if func.idf.as_ref().unwrap().borrow().name() == "reveal" {
                 assert!(
                     args.len() == 2,
                     "Invalid number of arguments for reveal: {args:?},{:?},{:?}",
@@ -1130,8 +1161,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 return Some(
                     ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None).into_ast(),
                 );
-            } else if let Some(homomorphism) =
-                REHOM_EXPRESSIONS.lock().unwrap().get(func.idf.name())
+            } else if let Some(homomorphism) = REHOM_EXPRESSIONS
+                .lock()
+                .unwrap()
+                .get(&func.idf.as_ref().unwrap().borrow().name())
             {
                 assert!(
                     args.len() == 1,
@@ -1160,11 +1193,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        // //println!("={:?}=then_branch=={:?}", ctx.then_branch, 1);
+        // ////println!("={:?}=then_branch=={:?}", ctx.then_branch, 1);
 
         let then_branch = ctx.then_branch.as_ref().unwrap();
         then_branch.accept(self);
-        // //println!(
+        // ////println!(
         //     "={:?}=then_branch=={:?}",
         //     ctx.then_branch,
         //     self.temp_result().clone()
@@ -1554,12 +1587,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     }
         //     assert isinstance(e, ast.Expression)
         //     return ExpressionStatement(e)}
-        // //println!("{:?}",ctx.expr );
+        // ////println!("{:?}",ctx.expr );
         let mut expression = None;
         if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Statement(_)) = self.temp_result() {
-                //  //println!("==self.temp_result().clone()======={:?}",self.temp_result().clone());
+                //  ////println!("==self.temp_result().clone()======={:?}",self.temp_result().clone());
                 return self.temp_result().clone();
             }
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -1581,7 +1614,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .unwrap()
                 .try_as_identifier_expr_ref()
             {
-                if f.idf.name() == "require" {
+                if f.idf.as_ref().unwrap().borrow().name() == "require" {
                     assert!(
                         e.args().len() == 1,
                         "Invalid number of arguments for require: {:?},{:?},{:?}",
@@ -1736,15 +1769,35 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .params
             .iter()
             .map(|p| {
-                p.accept(self);
-                self.temp_result().clone()
+                let annotated_type = if let Some(at) = &p.annotated_type {
+                    at.accept(self);
+                    self.temp_result()
+                        .clone()
+                        .unwrap()
+                        .try_as_annotated_type_name()
+                } else {
+                    None
+                };
+                let idf = if let Some(idf) = &p.idf {
+                    idf.accept(self);
+                    self.temp_result().clone().unwrap().try_as_identifier()
+                } else {
+                    None
+                };
+                let keywords: Vec<_> = p.keywords.iter().map(|kw| kw.to_string()).collect();
+                // //println!("{:?},{:?},{:?}",keywords,annotated_type,idf);
+
+                (keywords, annotated_type, idf)
             })
             .collect();
-        if rp.is_empty() {
-            None
-        } else {
-            rp[0].clone()
-        }
+        // //println!("=={:?}==ctx
+        //     .params======={:?}============",ctx.parameter,ctx
+        //     .params);
+        // if rp.is_empty() {
+        None
+        // } else {
+        //     rp[0].clone()
+        // }
     }
     fn visit_variableDeclaration(
         &mut self,
@@ -1824,7 +1877,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_mapping(&mut self, ctx: &MappingContext<'input>) -> Self::Return {
         let key_type = if let Some(key_type) = &ctx.key_type {
             key_type.accept(self);
-            // //println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
+            // ////println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
             self.temp_result().clone().unwrap().try_as_type_name()
         } else {
             None
@@ -1865,7 +1918,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_block(&mut self, ctx: &BlockContext<'input>) -> Self::Return {
         // if let Some(statement) = &ctx.statement {
         //     statement.accept(self);
-        //     //println!("==========statement==========BlockContext==={:?}",self.temp_result().clone());
+        //     ////println!("==========statement==========BlockContext==={:?}",self.temp_result().clone());
         //     Some(Block::new(vec![self.temp_result().clone().unwrap()], true).into_ast())
         // } else {
         let statements: Vec<_> = ctx
@@ -1873,7 +1926,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .iter()
             .filter_map(|statement| {
                 statement.accept(self);
-                // //println!("====================BlockContext==={:?}",self.temp_result().clone());
+                // ////println!("====================BlockContext==={:?}",self.temp_result().clone());
                 self.temp_result().clone()
             })
             .collect();
@@ -1926,12 +1979,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_simpleStatement(&mut self, ctx: &SimpleStatementContext<'input>) -> Self::Return {
         if let Some(statement) = ctx.variableDeclarationStatement() {
             statement.accept(self);
-            //println!("==variableDeclarationStatement======={:?}===========",self.temp_result().clone());
+            ////println!("==variableDeclarationStatement======={:?}===========",self.temp_result().clone());
             return self.temp_result().clone();
         }
         if let Some(statement) = ctx.expressionStatement() {
             statement.accept(self);
-            //println!("==expressionStatement======={:?}===========",self.temp_result().clone());
+            ////println!("==expressionStatement======={:?}===========",self.temp_result().clone());
             return self.temp_result().clone();
         }
         None
@@ -1972,7 +2025,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         ctx: &VariableDeclarationStatementContext<'input>,
     ) -> Self::Return {
         ctx.variable_declaration.as_ref().unwrap().accept(self);
-        // //println!("{:?}====={:?}", self
+        // ////println!("{:?}====={:?}", self
         //     .temp_result(), ctx.variable_declaration);
         let variable_declaration = self
             .temp_result()

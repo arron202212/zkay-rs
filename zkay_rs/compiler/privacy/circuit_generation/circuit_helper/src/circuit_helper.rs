@@ -5,9 +5,9 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
 use crate::name_factory::NameFactory;
 use crate::name_remapper::CircVarRemapper;
+use rccell::{RcCell, WeakCell};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Deref, DerefMut};
 use type_check::type_checker::TypeCheckVisitor;
@@ -414,7 +414,14 @@ where
         assert!(param.identifier_declaration_base.annotated_type.is_cipher());
 
         let plain_idf = self._secret_input_name_factory.add_idf(
-            param.identifier_declaration_base.idf.name().clone(),
+            param
+                .identifier_declaration_base
+                .idf
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .name()
+                .clone(),
             *param
                 .identifier_declaration_base
                 .annotated_type
@@ -435,7 +442,13 @@ where
                     .unwrap(),
                 false
             ),
-            param.identifier_declaration_base.idf.name()
+            param
+                .identifier_declaration_base
+                .idf
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .name()
         );
         let cipher_idf = self._in_name_factory.add_idf(
             name,
@@ -586,11 +599,14 @@ where
                 ); //t, but @me
                 let mut idf = IdentifierExpr::new(
                     IdentifierExprUnion::Identifier(
-                        *var.target()
+                        var.target()
                             .unwrap()
                             .try_as_identifier_declaration_ref()
                             .unwrap()
                             .idf()
+                            .upgrade()
+                            .unwrap()
+                            .borrow()
                             .clone(),
                     ),
                     Some(Box::new(ret_t)),
@@ -621,7 +637,7 @@ where
                         Parameter::new(
                             vec![],
                             *ret.annotated_type.clone().unwrap(),
-                            *ret.location_expr_base
+                            ret.location_expr_base
                                 .target
                                 .as_ref()
                                 .unwrap()
@@ -631,6 +647,9 @@ where
                                 .try_as_identifier_declaration_ref()
                                 .unwrap()
                                 .idf()
+                                .upgrade()
+                                .unwrap()
+                                .borrow()
                                 .clone(),
                             None,
                         )
@@ -972,10 +991,13 @@ where
                     .unwrap()
                     .try_as_identifier_declaration_ref()
                     .unwrap()
-                    .idf(),
+                    .idf()
+                    .upgrade()
+                    .unwrap()
+                    .borrow(),
             ) {
                 return self._remapper.0.get_current(
-                    *expr
+                    (*expr
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()
@@ -986,7 +1008,10 @@ where
                         .try_as_identifier_declaration_ref()
                         .unwrap()
                         .idf()
-                        .clone(),
+                        .upgrade()
+                        .unwrap()
+                        .borrow())
+                    .clone(),
                     None,
                 );
             }
@@ -1003,6 +1028,9 @@ where
                     .try_as_identifier_declaration_ref()
                     .unwrap()
                     .idf()
+                    .upgrade()
+                    .unwrap()
+                    .borrow()
                     .name()
             );
         }
@@ -1153,7 +1181,7 @@ where
         //      This works for now because we never perform homomorphic operations on variables we can decrypt.
         {
             self._remapper.0.remap(
-                *expr
+                (*expr
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -1164,7 +1192,10 @@ where
                     .try_as_identifier_declaration_ref()
                     .unwrap()
                     .idf()
-                    .clone(),
+                    .upgrade()
+                    .unwrap()
+                    .borrow())
+                .clone(),
                 return_idf.clone(),
             );
         }
@@ -1186,7 +1217,10 @@ where
             .clone()
             .map(|v| v.borrow().as_ref().unwrap().clone().into());
         assert!(target.is_some());
-        assert!(!is_instance(&*idf.idf, ASTType::HybridArgumentIdf));
+        assert!(!is_instance(
+            &*idf.idf.as_ref().unwrap().borrow(),
+            ASTType::HybridArgumentIdf
+        ));
         if self._remapper.0.is_remapped(
             &target
                 .as_ref()
@@ -1194,16 +1228,22 @@ where
                 .try_as_identifier_declaration_ref()
                 .unwrap()
                 .idf()
+                .upgrade()
+                .unwrap()
+                .borrow()
                 .clone(),
         ) {
             let remapped_idf = self._remapper.0.get_current(
-                *target
+                (*target
                     .as_ref()
                     .unwrap()
                     .try_as_identifier_declaration_ref()
                     .unwrap()
                     .idf()
-                    .clone(),
+                    .upgrade()
+                    .unwrap()
+                    .borrow())
+                .clone(),
                 None,
             );
             remapped_idf
@@ -1301,6 +1341,9 @@ where
             .try_as_namespace_definition()
             .unwrap()
             .idf()
+            .upgrade()
+            .unwrap()
+            .borrow()
             .name()
             != "<stmt_fct>"
         {
@@ -1322,14 +1365,26 @@ where
             self._phi
                 .push(CircuitStatement::CircComment(CircComment::new(format!(
                     "ARG {}: {}",
-                    param.identifier_declaration_base.idf.name(),
+                    param
+                        .identifier_declaration_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name(),
                     arg.to_ast().code()
                 ))));
             // with
             self.circ_indent_block("");
             {
                 self.create_new_idf_version_from_value(
-                    *param.identifier_declaration_base.idf.clone(),
+                    (*param
+                        .identifier_declaration_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow())
+                    .clone(),
                     arg.clone(),
                 );
             }
@@ -1378,9 +1433,15 @@ where
             .return_var_decls
             .iter()
             .map(|vd| {
-                self._remapper
-                    .0
-                    .get_current((*vd.identifier_declaration_base.idf).clone(), None)
+                self._remapper.0.get_current(
+                    (*vd.identifier_declaration_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow())
+                    .clone(),
+                    None,
+                )
             })
             .collect();
         let mut ret = TupleExpr::new(
@@ -1461,10 +1522,14 @@ where
             ));
         }
         self.create_new_idf_version_from_value(
-            *ast.variable_declaration
+            (*ast
+                .variable_declaration
                 .identifier_declaration_base
                 .idf
-                .clone(),
+                .as_ref()
+                .unwrap()
+                .borrow())
+            .clone(),
             ast.expr.clone().unwrap(),
         );
     }
@@ -1499,7 +1564,12 @@ where
         {
             //Assign return value to new version of return variable
             self.create_new_idf_version_from_value(
-                *vd.identifier_declaration_base.idf.clone(),
+                (*vd.identifier_declaration_base
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow())
+                .clone(),
                 expr.clone(),
             );
         }
@@ -1704,7 +1774,8 @@ where
                 .target()
                 .is_some());
             self.create_new_idf_version_from_value(
-                *lhs.try_as_tuple_or_location_expr_ref()
+                (*lhs
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
                     .unwrap()
@@ -1714,7 +1785,10 @@ where
                     .try_as_identifier_declaration_ref()
                     .unwrap()
                     .idf()
-                    .clone(),
+                    .upgrade()
+                    .unwrap()
+                    .borrow())
+                .clone(),
                 rhs.clone(),
             );
         } else if is_instance(&lhs, ASTType::IndexExpr) {
@@ -1792,7 +1866,10 @@ where
                     .unwrap()
                     .try_as_identifier_expr_ref()
                     .unwrap()
-                    .idf,
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow(),
                 ASTType::HybridArgumentIdf,
             )
             && expr
@@ -1803,6 +1880,9 @@ where
                 .try_as_identifier_expr_ref()
                 .unwrap()
                 .idf
+                .as_ref()
+                .unwrap()
+                .borrow()
                 .try_as_hybrid_argument_idf_ref()
                 .unwrap()
                 .arg_type
@@ -1855,6 +1935,9 @@ where
                     .try_as_identifier_expr_ref()
                     .unwrap()
                     .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
                     .name()
             );
         }
@@ -2015,7 +2098,10 @@ where
                     .unwrap()
                     .try_as_identifier_expr_ref()
                     .unwrap()
-                    .idf,
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow(),
                 ASTType::HybridArgumentIdf,
             )
             && expr
@@ -2026,6 +2112,9 @@ where
                 .try_as_identifier_expr_ref()
                 .unwrap()
                 .idf
+                .as_ref()
+                .unwrap()
+                .borrow()
                 .try_as_hybrid_argument_idf_ref()
                 .unwrap()
                 .arg_type
@@ -2040,6 +2129,9 @@ where
                 .try_as_identifier_expr_ref()
                 .unwrap()
                 .idf
+                .as_ref()
+                .unwrap()
+                .borrow()
                 .clone()
                 .try_as_hybrid_argument_idf();
         }

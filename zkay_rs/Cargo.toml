@@ -16,6 +16,7 @@ rust-version.workspace = true
 name = "zkay"
 path = "src/main.rs"
 [dependencies]
+rccell = { workspace = true }
 zkay-derive = { workspace = true }
 circuit_helper={workspace=true}
  circuit_generation={workspace = true }

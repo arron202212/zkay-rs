@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "rccell",
    "zkay_rs",
    "zkay-derive",
    "zkay-derive-core",
@@ -43,6 +44,7 @@ rust-version = "1.64"
 # [lib]
 # proc-macro = true
 [workspace.dependencies]
+rccell={path="rccell"}
 zkay-derive={path="zkay-derive"}
 zkay-derive-core={path="zkay-derive-core"}
  circuit_helper={path="zkay_rs/compiler/privacy/circuit_generation/circuit_helper"}

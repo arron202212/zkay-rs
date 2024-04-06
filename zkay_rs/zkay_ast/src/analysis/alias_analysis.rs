@@ -186,11 +186,21 @@ impl AliasAnalysisVisitor {
                     .try_as_state_variable_declaration_ref()
                     .unwrap()
                     .idf()
+                    .upgrade()
+                    .unwrap()
+                    .borrow()
                     .to_ast(),
             );
         }
         for p in &ast.parameters {
-            s.insert(p.identifier_declaration_base.idf.to_ast());
+            s.insert(
+                p.identifier_declaration_base
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .to_ast(),
+            );
         }
         ast.body
             .as_mut()
@@ -252,7 +262,7 @@ impl AliasAnalysisVisitor {
             .names()
             .values()
         {
-            last.insert(name.to_ast());
+            last.insert(name.upgrade().unwrap().borrow().to_ast());
         }
 
         ast.statement_list_base.statement_base.after_analysis =
@@ -271,7 +281,7 @@ impl AliasAnalysisVisitor {
                 .after_analysis
                 .as_mut()
                 .unwrap()
-                .remove(&name.to_ast());
+                .remove(&name.upgrade().unwrap().borrow().to_ast());
         }
     }
     pub fn visitIfStatement(&mut self, ast: &mut IfStatement) {
@@ -398,7 +408,7 @@ impl AliasAnalysisVisitor {
 
         // add names introduced in init
         for name in ast.statement_base.ast_base.names().values() {
-            last.insert(name.to_ast());
+            last.insert(name.upgrade().unwrap().borrow().to_ast());
         }
 
         if ast.init.is_some() {
@@ -468,7 +478,7 @@ impl AliasAnalysisVisitor {
                 .after_analysis
                 .as_mut()
                 .unwrap()
-                .remove(&name.to_ast());
+                .remove(&name.upgrade().unwrap().borrow().to_ast());
         }
     }
     pub fn visitVariableDeclarationStatement(&mut self, ast: &mut VariableDeclarationStatement) {
@@ -498,12 +508,18 @@ impl AliasAnalysisVisitor {
 
         // name of variable is already in list
         let name = &ast.variable_declaration.identifier_declaration_base.idf;
-        assert!(after.as_ref().unwrap().has(&name.to_ast()));
+        assert!(after
+            .as_ref()
+            .unwrap()
+            .has(&name.as_ref().unwrap().borrow().to_ast()));
 
         // make state more precise
         if let Some(e) = e {
             if let Some(pal) = e.privacy_annotation_label() {
-                after.clone().unwrap().merge(&name.to_ast(), &pal.into());
+                after
+                    .clone()
+                    .unwrap()
+                    .merge(&name.as_ref().unwrap().borrow().to_ast(), &pal.into());
             }
         }
 

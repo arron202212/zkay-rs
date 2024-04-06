@@ -10,11 +10,11 @@
 
 // import os
 // from typing import List, Optional, Union, Tuple
-
 use crate::circuit_generator::{CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType};
 use circuit_helper::circuit_helper::CircuitHelper;
 use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
 use proving_scheme::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta};
+use rccell::{RcCell, WeakCell};
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
@@ -258,17 +258,25 @@ impl JsnarkVisitor
     }
 
     pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) -> String {
-        if is_instance(&*ast.idf, ASTType::HybridArgumentIdf)
-            && ast
-                .idf
-                .try_as_hybrid_argument_idf_ref()
-                .unwrap()
-                .t
-                .is_cipher()
+        if is_instance(
+            &*ast.idf.as_ref().unwrap().borrow(),
+            ASTType::HybridArgumentIdf,
+        ) && ast
+            .idf
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .try_as_hybrid_argument_idf_ref()
+            .unwrap()
+            .t
+            .is_cipher()
         {
-            format!(r#"getCipher("{}")"#, ast.idf.name())
+            format!(
+                r#"getCipher("{}")"#,
+                ast.idf.as_ref().unwrap().borrow().name()
+            )
         } else {
-            format!(r#"get("{}")"#, ast.idf.name())
+            format!(r#"get("{}")"#, ast.idf.as_ref().unwrap().borrow().name())
         }
     }
 
