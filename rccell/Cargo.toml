@@ -1,0 +1,17 @@
+[package]
+name = "rccell"
+version = "0.1.3"
+authors = ["Román Cárdenas <rcardenas.rod@gmail.com>"]
+edition = "2021"
+description = "A convenient wrapper for Rc<RefCell<T>>"
+readme = "README.md"
+homepage = "https://github.com/romancardenas/rccell"
+repository = "https://github.com/romancardenas/rccell.git"
+license = "MIT"
+keywords = ["cell", "rc", "refcell"]
+categories = ["memory-management"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
