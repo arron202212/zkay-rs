@@ -9,8 +9,8 @@
 use circuit_helper::circuit_helper::CircuitHelper;
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
-    ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseProperty, Identifier,
-    IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement,
+    ASTFlatten, ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseProperty,
+    Identifier, IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression, IntoStatement,
     LocationExprBaseProperty, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,
 };
 use zkay_config::config::CFG;

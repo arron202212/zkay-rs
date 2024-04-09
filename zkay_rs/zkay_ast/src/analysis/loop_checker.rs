@@ -9,14 +9,16 @@
 // use type_check::type_exceptions::TypeException
 use crate::analysis::contains_private_checker::contains_private_expr;
 
-use crate::ast::{ASTType, DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST};
+use crate::ast::{
+    ASTFlatten, ASTType, DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST,
+};
 
 use crate::visitor::{
     function_visitor::FunctionVisitor,
-    visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn check_loops(ast: &mut AST) {
+pub fn check_loops(ast: &ASTFlatten) {
     // """
     // Checks if loops don't contain private expressions
     // """
@@ -31,35 +33,21 @@ struct LoopChecker {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for LoopChecker {}
-impl AstVisitorMut for LoopChecker {
+impl AstVisitor for LoopChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::WhileStatement == name
-            || &ASTType::DoWhileStatement == name
-            || &ASTType::ForStatement == name
+        matches!(
+            name,
+            ASTType::WhileStatement | ASTType::DoWhileStatement | ASTType::ForStatement
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::WhileStatement => self.visitWhileStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_while_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::DoWhileStatement => self.visitDoWhileStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_do_while_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::ForStatement => self.visitForStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_for_statement_mut()
-                    .unwrap(),
-            ),
+            ASTType::WhileStatement => self.visitWhileStatement(ast),
+            ASTType::DoWhileStatement => self.visitDoWhileStatement(ast),
+            ASTType::ForStatement => self.visitForStatement(ast),
             _ => {}
         }
     }
@@ -70,7 +58,21 @@ impl LoopChecker {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitWhileStatement(&mut self, ast: &mut WhileStatement) {
+    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
+        assert!(
+            !contains_private_expr(&mut Some(ast.condition.borrow().to_ast())),
+            "Loop condition cannot contain private expressions {:?}",
+            ast.condition
+        );
+        assert!(
+            !contains_private_expr(&mut Some(ast.body.borrow().to_ast())),
+            "Loop body cannot contain private expressions {:?}",
+            ast.body
+        );
+        self.visit_children(ast);
+    }
+
+    pub fn visitDoWhileStatement(&self, ast: &ASTFlatten) {
         assert!(
             !contains_private_expr(&mut Some(ast.condition.to_ast())),
             "Loop condition cannot contain private expressions {:?}",
@@ -81,24 +83,10 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.body
         );
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 
-    pub fn visitDoWhileStatement(&mut self, ast: &mut DoWhileStatement) {
-        assert!(
-            !contains_private_expr(&mut Some(ast.condition.to_ast())),
-            "Loop condition cannot contain private expressions {:?}",
-            ast.condition
-        );
-        assert!(
-            !contains_private_expr(&mut Some(ast.body.to_ast())),
-            "Loop body cannot contain private expressions {:?}",
-            ast.body
-        );
-        self.visit_children(&mut ast.to_ast());
-    }
-
-    pub fn visitForStatement(&mut self, ast: &mut ForStatement) {
+    pub fn visitForStatement(&self, ast: &ASTFlatten) {
         assert!(
             !contains_private_expr(&mut Some(ast.condition.to_ast())),
             "Loop condition cannot contain private expressions {:?}",
@@ -115,6 +103,6 @@ impl LoopChecker {
             "Loop update statement cannot contain private expressions {:?}",
             ast.update
         );
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 }

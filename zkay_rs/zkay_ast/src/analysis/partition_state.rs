@@ -4,7 +4,7 @@
 // T = TypeVar('T')
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Default, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct PartitionState<T: Ord> {
     pub _partitions: BTreeMap<i32, BTreeSet<T>>,
     pub _next_unused: i32,

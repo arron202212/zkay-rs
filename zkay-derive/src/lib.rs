@@ -50,17 +50,16 @@ pub fn derive_ast_flatten_impl(item: TokenStream) -> TokenStream {
     while let Some(tt) = it.next() {
         match tt {
             TokenTree::Ident(id) => {
-                if id.to_string() == "struct" {
+                if id.to_string() == "struct" || id.to_string() == "enum" {
                     let struct_name = it.next().unwrap().to_string();
                     return format!(
                         r#"
-impl IntoASTFlatten for {} {{
-    fn to_ast_flatten<'a>(&'a mut self) -> ASTFlatten<'a>{{
-        ASTFlatten::{}(self)
+impl From<RcCell<{struct_name}>> for ASTFlatten {{
+    fn from(f:RcCell<{struct_name}>) -> ASTFlatten{{
+        ASTFlatten::{struct_name}(f)
     }}
 }}
-                    "#,
-                        struct_name, struct_name
+                    "#
                     )
                     .parse()
                     .unwrap();

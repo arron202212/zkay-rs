@@ -20,7 +20,7 @@ impl ParentChecker {
     }
 }
 impl AstVisitor for ParentChecker {
-    fn visit(&self, ast: &AST) -> Self::Return {
+    fn visit(&self, ast: &ASTFlatten) -> Self::Return {
         if !is_instance(ast, ASTType::SourceUnit) {
             assert!(ast.ast_base_ref().unwrap().parent().is_some());
         }
@@ -34,7 +34,7 @@ impl AstVisitor for ParentChecker {
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         self.temper_result()
     }
 }

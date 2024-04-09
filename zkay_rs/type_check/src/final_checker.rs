@@ -9,7 +9,7 @@
 // use type_check::type_exceptions::TypeException
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
+    is_instance, ASTFlatten, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierDeclarationBaseRef,
     IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty,
     StateVariableDeclaration, TupleOrLocationExpr, AST,
@@ -32,11 +32,26 @@ impl AstVisitor for FinalVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn has_attr(&self, _name: &ASTType) -> bool {
-        false
+    fn has_attr(&self, name: &ASTType) -> bool {
+        matches! {name,
+         ASTType::ContractDefinition|
+         ASTType::ConstructorOrFunctionDefinition|
+         ASTType::AssignmentStatement|
+         ASTType::IfStatement|
+         ASTType::IdentifierExpr
+        }
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
-        self.temper_result()
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+        match name {
+            ASTType::ContractDefinition => self.visitContractDefinition(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
+            ASTType::AssignmentStatement => self.visitAssignmentStatement(ast),
+            ASTType::IfStatement => self.visitIfStatement(ast),
+            ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
+            _ => {}
+        }
     }
 }
 impl FinalVisitor {
@@ -49,7 +64,7 @@ impl FinalVisitor {
             state_vars_assigned: None,
         }
     }
-    pub fn visitContractDefinition(&mut self, ast: ContractDefinition) {
+    pub fn visitContractDefinition(&self, ast: &ASTFlatten) {
         self.state_vars_assigned = Some(BTreeMap::new());
         for v in &ast.state_variable_declarations {
             if v.try_as_identifier_declaration_ref()
@@ -73,7 +88,7 @@ impl FinalVisitor {
         if ast.constructor_definitions.len() > 0 {
             assert!(ast.constructor_definitions.len() == 1);
             let c = &ast.constructor_definitions[0];
-            self.visit(&c.body.as_ref().unwrap().to_ast());
+            self.visit(c.body.clone().into());
         }
 
         for (sv, assigned) in self.state_vars_assigned.as_ref().unwrap() {
@@ -84,12 +99,12 @@ impl FinalVisitor {
 
         self.state_vars_assigned = None;
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition) {
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
         assert!(ast.is_function());
     }
 
-    pub fn visitAssignmentStatement(&mut self, ast: AssignmentStatement) {
-        self.visit(&ast.rhs().as_ref().unwrap().to_ast());
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
+        self.visit(ast.rhs().clone().into());
         if let Some(le) = ast
             .lhs()
             .as_ref()
@@ -111,14 +126,14 @@ impl FinalVisitor {
         }
     }
 
-    pub fn visitIfStatement(&mut self, ast: IfStatement) {
-        self.visit(&ast.condition.to_ast());
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
+        self.visit(ast.condition.clone().into());
         let prev = self.state_vars_assigned.as_ref().unwrap().clone();
-        self.visit(&ast.then_branch.to_ast());
+        self.visit(ast.then_branch.clone().into());
         let then_b = self.state_vars_assigned.as_ref().unwrap().clone();
         self.state_vars_assigned = Some(prev);
         if let Some(else_branch) = &ast.else_branch {
-            self.visit(&else_branch.to_ast());
+            self.visit(else_branch.clone().into());
         }
 
         assert!(
@@ -138,7 +153,7 @@ impl FinalVisitor {
             );
         }
     }
-    pub fn visitIdentifierExpr(&self, ast: IdentifierExpr) {
+    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) {
         if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ast.clone())).is_rvalue()
             && self.state_vars_assigned.is_some()
         {

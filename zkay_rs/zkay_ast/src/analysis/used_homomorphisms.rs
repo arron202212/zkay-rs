@@ -7,12 +7,12 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTChildren, ASTType, AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition,
-    Expression, ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit,
+    ASTChildren, ASTFlatten, ASTType, AnnotatedTypeName, ConstructorOrFunctionDefinition,
+    EnumDefinition, Expression, ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit,
     StructDefinition, AST,
 };
 use crate::homomorphism::Homomorphism;
-use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
@@ -22,22 +22,25 @@ use zkay_derive::ASTVisitorBaseRefImpl;
 pub struct UsedHomomorphismsVisitor {
     pub ast_visitor_base: AstVisitorBase,
 }
-impl AstVisitorMut for UsedHomomorphismsVisitor {
+impl AstVisitor for UsedHomomorphismsVisitor {
     type Return = BTreeSet<String>;
     fn temper_result(&self) -> Self::Return {
         BTreeSet::new()
     }
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::AnnotatedTypeName == name
-            || &ASTType::ExpressionBase == name
-            || &ASTType::IdentifierDeclarationBase == name
-            || &ASTType::ConstructorOrFunctionDefinition == name
-            || &ASTType::EnumDefinition == name
-            || &ASTType::StructDefinition == name
-            || &ASTType::SourceUnit == name
+        matches!(
+            name,
+            ASTType::AnnotatedTypeName
+                | ASTType::ExpressionBase
+                | ASTType::IdentifierDeclarationBase
+                | ASTType::ConstructorOrFunctionDefinition
+                | ASTType::EnumDefinition
+                | ASTType::StructDefinition
+                | ASTType::SourceUnit
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
             ASTType::SourceUnit => self.visitSourceUnit(ast.try_as_source_unit_mut().unwrap()),
             ASTType::AnnotatedTypeName => {
@@ -69,14 +72,14 @@ impl AstVisitorMut for UsedHomomorphismsVisitor {
             _ => BTreeSet::new(),
         }
     }
-    fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
+    fn visit_children(&self, ast: &mut AST) -> Self::Return {
         let mut all_homs = BTreeSet::new();
         for c in ast.children().iter_mut() {
             all_homs = all_homs.union(&self.visit(c)).cloned().collect();
         }
         return all_homs;
     }
-    fn visit(&mut self, ast: &mut AST) -> Self::Return {
+    fn visit(&self, ast: &mut AST) -> Self::Return {
         let all_homs = BTreeSet::new(); //self.visit(ast); //TODO super()
         if let Some(mut ast) = ast
             .try_as_namespace_definition_mut()
@@ -100,7 +103,7 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitAnnotatedTypeName(&mut self, ast: &mut AnnotatedTypeName) -> BTreeSet<String> {
+    pub fn visitAnnotatedTypeName(&self, ast: RcCell<AnnotatedTypeName>) -> BTreeSet<String> {
         if ast.is_private() {
             BTreeSet::from([ast.homomorphism.clone()])
         } else {
@@ -108,7 +111,7 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitExpression(&mut self, ast: &mut Expression) -> BTreeSet<String> {
+    pub fn visitExpression(&self, ast: RcCell<Expression>) -> BTreeSet<String> {
         if ast.annotated_type().is_some() && ast.annotated_type().as_ref().unwrap().is_private() {
             BTreeSet::from([ast.annotated_type().as_ref().unwrap().homomorphism.clone()])
                 .union(&self.visit_children(&mut ast.to_ast()))
@@ -119,36 +122,24 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitIdentifierDeclaration(
-        &mut self,
-        ast: &mut IdentifierDeclaration,
-    ) -> BTreeSet<String> {
-        self.visit_children(&mut ast.to_ast())
+    pub fn visitIdentifierDeclaration(&self, ast: &ASTFlatten) -> BTreeSet<String> {
+        self.visit_children(ast)
     }
     // Visits annotated type of identifier (and initial value expression)
-    pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
-    ) -> BTreeSet<String> {
-        self.visit_children(&mut ast.to_ast())
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) -> BTreeSet<String> {
+        self.visit_children(ast)
     } // Parameter and return types are children; don"t bother with "function type"
 
-    pub fn visitEnumDefinition(
-        &mut self,
-        _ast: &mut EnumDefinition,
-    ) -> <Self as AstVisitorMut>::Return {
+    pub fn visitEnumDefinition(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         BTreeSet::new()
     } // Neither the enum type nor the types of the enum values can be private
 
-    pub fn visitStructDefinition(
-        &mut self,
-        ast: &mut StructDefinition,
-    ) -> <Self as AstVisitorMut>::Return {
-        self.visit_children(&mut ast.to_ast())
+    pub fn visitStructDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        self.visit_children(ast)
     } // Struct types are never private, but they may have private members
 
-    pub fn visitSourceUnit(&mut self, ast: &mut SourceUnit) -> <Self as AstVisitorMut>::Return {
-        let used_homs = self.visit_children(&mut ast.to_ast());
+    pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        let used_homs = self.visit_children(ast);
         // Now all constructors or functions have been visited and we can do some post-processing
         // If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
         // We have to do this for all transitively called functions g, being careful around recursive function calls
@@ -230,7 +221,7 @@ impl UsedHomomorphismsVisitor {
             }
         }
     }
-    pub fn visitAST(&mut self, ast: &mut AST) -> <Self as AstVisitorMut>::Return
+    pub fn visitAST(&self, ast: &mut AST) -> <Self as AstVisitor>::Return
 // Base case, make sure we don"t miss any annotated types
     {
         assert!(

@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use crate::ast::{AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
+use crate::ast::{ASTFlatten, AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
 use crate::visitor::visitor::AstVisitor;
 use zkay_config::config::CFG;
 

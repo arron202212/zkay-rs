@@ -7,24 +7,24 @@
 #![allow(unused_braces)]
 
 use crate::ast::{IntoAST, Parameter, SourceUnit};
-use crate::visitor::visitor::AstVisitorMut;
+use crate::visitor::visitor::AstVisitor;
 // class FunctionVisitor(AstVisitor)
-pub trait FunctionVisitor: AstVisitorMut {
+pub trait FunctionVisitor: AstVisitor {
     // pub fn __init__(self)
     //     super().__init__('node-or-children')
     // fn traversal(&self) -> &'static str {
     //     "node-or-children"
     // }
-    fn visitSourceUnit(&mut self, ast: &mut SourceUnit) {
-        for c in ast.contracts.iter_mut() {
+    fn visitSourceUnit(&self, ast: RcCell<SourceUnit>) {
+        for c in &ast.borrow().contracts {
             for cd in &c.constructor_definitions {
-                self.visit(&mut cd.to_ast());
+                self.visit(cd.clone().into());
             }
             for fd in &c.function_definitions {
-                self.visit(&mut fd.to_ast());
+                self.visit(fd.clone().into());
             }
         }
     }
 
-    fn visitParameter(&mut self, _ast: &mut Parameter) {}
+    fn visitParameter(&self, _ast: RcCell<Parameter>) {}
 }

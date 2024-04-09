@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTType, Block, ConstructorOrFunctionDefinition, IntoAST,
-    ReturnStatement, StatementListBaseProperty, AST,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTType, Block, ConstructorOrFunctionDefinition,
+    IntoAST, ReturnStatement, StatementListBaseProperty, AST,
 }; //, AstException
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -33,14 +33,9 @@ impl AstVisitor for ReturnCheckVisitor {
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ReturnStatement == name
     }
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ReturnStatement => self.visitReturnStatement(
-                ast.try_as_statement_ref()
-                    .unwrap()
-                    .try_as_return_statement_ref()
-                    .unwrap(),
-            ),
+            ASTType::ReturnStatement => self.visitReturnStatement(ast),
             _ => {}
         }
     }
@@ -51,7 +46,7 @@ impl ReturnCheckVisitor {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitReturnStatement(&self, ast: &ReturnStatement) {
+    pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
         let container = ast.parent().clone().unwrap();
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;

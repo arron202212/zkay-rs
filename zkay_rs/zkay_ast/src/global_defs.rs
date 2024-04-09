@@ -276,10 +276,6 @@ impl GlobalVars {
             .unwrap()
             .borrow_mut()
             .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
             .parent = Some(Box::new(msg.to_ast()));
 
         let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -308,10 +304,6 @@ impl GlobalVars {
             .unwrap()
             .borrow_mut()
             .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
             .parent = Some(Box::new(block.to_ast()));
 
         let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -339,10 +331,6 @@ impl GlobalVars {
             .unwrap()
             .borrow_mut()
             .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
             .parent = Some(Box::new(tx.to_ast()));
 
         let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
@@ -357,10 +345,6 @@ impl GlobalVars {
             .unwrap()
             .borrow_mut()
             .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
             .parent = Some(Box::new(now.to_ast()));
         Self {
             msg,

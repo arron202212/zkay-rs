@@ -27,8 +27,8 @@
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
 use crate::ast::{
-    ASTChildren, ASTInstanceOf, ASTType, ChildListBuilder, ConstructorOrFunctionDefinition,
-    Expression, HybridArgumentIdf, IntoAST, Statement, AST,
+    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ChildListBuilder,
+    ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use enum_dispatch::enum_dispatch;
 use serde::{Deserialize, Serialize};
@@ -37,8 +37,8 @@ use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
 #[enum_dispatch(IntoAST, IntoASTFlatten, ASTInstanceOf)]
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[serde(untagged)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+
 pub enum CircuitStatement {
     CircComment(CircComment),
     CircIndentBlock(CircIndentBlock),
@@ -98,7 +98,7 @@ impl ASTChildren for CircuitStatement {
 // def __init__(self, text: str)
 //     super().__init__()
 //     self.text = text
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircComment {
     pub text: String,
 }
@@ -132,7 +132,7 @@ impl CircComment {
 //     super().__init__()
 //     self.name = name
 //     self.statements = statements
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircIndentBlock {
     pub name: String,
     pub statements: Vec<CircuitStatement>,
@@ -181,7 +181,7 @@ impl CircIndentBlock {
 // def __init__(self, fct: ConstructorOrFunctionDefinition)
 //     super().__init__()
 //     self.fct = fct
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircCall {
     pub fct: ConstructorOrFunctionDefinition,
 }
@@ -216,7 +216,7 @@ impl CircCall {
 //     super().__init__()
 //     self.lhs = lhs
 //     self.expr = expr
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircVarDecl {
     pub lhs: HybridArgumentIdf,
     pub expr: Expression,
@@ -260,7 +260,7 @@ impl CircVarDecl {
 //     super().__init__()
 //     self.new_cond = new_cond
 //     self.is_true = is_true
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircGuardModification {
     pub new_cond: Option<HybridArgumentIdf>,
     pub is_true: Option<bool>,
@@ -327,7 +327,7 @@ impl CircGuardModification {
 //     self.pk = pk
 //     self.cipher = cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEncConstraint {
     pub plain: HybridArgumentIdf,
     pub rnd: HybridArgumentIdf,
@@ -381,7 +381,7 @@ impl CircEncConstraint {
 //     self.other_pk = other_pk
 //     self.iv_cipher = iv_cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircSymmEncConstraint {
     pub plain: HybridArgumentIdf,
     pub other_pk: HybridArgumentIdf,
@@ -425,7 +425,7 @@ impl CircSymmEncConstraint {
 //     super().__init__()
 //     self.tgt = tgt
 //     self.val = val
-#[derive(ASTKind, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEqConstraint {
     pub tgt: HybridArgumentIdf,
     pub val: HybridArgumentIdf,

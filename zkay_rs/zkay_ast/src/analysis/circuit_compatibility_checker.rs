@@ -11,16 +11,17 @@ use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
-    is_instance, is_instances, ASTType, AssignmentStatement, BooleanLiteralType, BuiltinFunction,
-    ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
-    FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr,
-    IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty, NumberLiteralType,
-    PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty, ReturnStatement, Statement,
-    StatementBaseProperty, StatementList, VariableDeclarationStatement, AST,
+    is_instance, is_instances, ASTFlatten, ASTType, AssignmentStatement, BooleanLiteralType,
+    BuiltinFunction, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
+    ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
+    NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty,
+    ReturnStatement, Statement, StatementBaseProperty, StatementList, VariableDeclarationStatement,
+    AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
-    visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_circuit_compliance(ast: &mut AST) {
@@ -44,77 +45,34 @@ struct DirectCanBePrivateDetector {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for DirectCanBePrivateDetector {}
-impl AstVisitorMut for DirectCanBePrivateDetector {
+impl AstVisitor for DirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
-            || &ASTType::LocationExprBase == name
-            || &ASTType::ReclassifyExpr == name
-            || &ASTType::AssignmentStatementBase == name
-            || &ASTType::VariableDeclarationStatement == name
-            || &ASTType::ReturnStatement == name
-            || &ASTType::IfStatement == name
-            || &ASTType::StatementListBase == name
-            || &ASTType::StatementBase == name
+        matches!(
+            name,
+            ASTType::FunctionCallExprBase
+                | ASTType::LocationExprBase
+                | ASTType::ReclassifyExpr
+                | ASTType::AssignmentStatementBase
+                | ASTType::VariableDeclarationStatement
+                | ASTType::ReturnStatement
+                | ASTType::IfStatement
+                | ASTType::StatementListBase
+                | ASTType::StatementBase
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::LocationExprBase => self.visitLocationExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_mut()
-                    .unwrap()
-                    .try_as_location_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_reclassify_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_simple_statement_mut()
-                    .unwrap()
-                    .try_as_assignment_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_simple_statement_mut()
-                    .unwrap()
-                    .try_as_variable_declaration_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::ReturnStatement => self.visitReturnStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_return_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::IfStatement => self.visitIfStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_if_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::StatementListBase => self.visitStatementList(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_statement_list_mut()
-                    .unwrap(),
-            ),
-            ASTType::StatementBase => self.visitStatement(ast.try_as_statement_mut().unwrap()),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::LocationExprBase => self.visitLocationExpr(ast),
+            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
+            ASTType::ReturnStatement => self.visitReturnStatement(ast),
+            ASTType::IfStatement => self.visitIfStatement(ast),
+            ASTType::StatementListBase => self.visitStatementList(ast),
+            ASTType::StatementBase => self.visitStatement(ast),
 
             _ => {}
         }
@@ -126,7 +84,7 @@ impl DirectCanBePrivateDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
             if !ast.func().try_as_builtin_function_ref().unwrap().is_private {
                 let mut can_be_private = ast
@@ -161,11 +119,11 @@ impl DirectCanBePrivateDetector {
             }
         }
         for arg in ast.args() {
-            self.visit(&mut arg.to_ast());
+            self.visit(arg.into());
         }
     }
 
-    pub fn visitLocationExpr(&mut self, ast: &mut LocationExpr) {
+    pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
         let t = &ast.annotated_type().as_ref().unwrap().type_name;
         ast.expression_base_mut_ref()
             .statement
@@ -177,34 +135,34 @@ impl DirectCanBePrivateDetector {
             .as_mut()
             .unwrap()
             .can_be_private &= t.as_ref().unwrap().can_be_private();
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 
-    pub fn visitReclassifyExpr(&mut self, ast: &mut ReclassifyExpr) {
-        self.visit(&mut ast.expr().to_ast());
+    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
+        self.visit(&ast.expr().into());
     }
 
-    pub fn visitAssignmentStatement(&mut self, ast: &mut AssignmentStatement) {
-        self.visit_children(&mut ast.to_ast());
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
+        self.visit_children(ast);
     }
 
-    pub fn visitVariableDeclarationStatement(&mut self, ast: &mut VariableDeclarationStatement) {
-        self.visit_children(&mut ast.to_ast());
+    pub fn visitVariableDeclarationStatement(&self, ast: &ASTFlatten) {
+        self.visit_children(ast);
     }
 
-    pub fn visitReturnStatement(&mut self, ast: &mut ReturnStatement) {
-        self.visit_children(&mut ast.to_ast());
+    pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
+        self.visit_children(ast);
     }
 
-    pub fn visitIfStatement(&mut self, ast: &mut IfStatement) {
-        self.visit_children(&mut ast.to_ast());
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
+        self.visit_children(ast);
     }
 
-    pub fn visitStatementList(&mut self, ast: &mut StatementList) {
-        self.visit_children(&mut ast.to_ast());
+    pub fn visitStatementList(&self, ast: &ASTFlatten) {
+        self.visit_children(ast);
     }
 
-    pub fn visitStatement(&mut self, ast: &mut Statement) {
+    pub fn visitStatement(&self, ast: &ASTFlatten) {
         //All other statement types are not supported inside circuit (for now)
         ast.statement_base_mut_ref()
             .unwrap()
@@ -220,20 +178,17 @@ struct IndirectCanBePrivateDetector {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for IndirectCanBePrivateDetector {}
-impl AstVisitorMut for IndirectCanBePrivateDetector {
+impl AstVisitor for IndirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -244,10 +199,7 @@ impl IndirectCanBePrivateDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
-    ) {
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
         if ast.can_be_private {
             for fct in &ast.called_functions {
                 if !fct.can_be_private {
@@ -267,52 +219,26 @@ pub struct CircuitComplianceChecker {
 }
 
 impl FunctionVisitor for CircuitComplianceChecker {}
-impl AstVisitorMut for CircuitComplianceChecker {
+impl AstVisitor for CircuitComplianceChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::IndexExpr == name
-            || &ASTType::ReclassifyExpr == name
-            || &ASTType::FunctionCallExprBase == name
-            || &ASTType::PrimitiveCastExpr == name
-            || &ASTType::IfStatement == name
+        matches!(
+            name,
+            ASTType::IndexExpr
+                | ASTType::ReclassifyExpr
+                | ASTType::FunctionCallExprBase
+                | ASTType::PrimitiveCastExpr
+                | ASTType::IfStatement
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::IndexExpr => self.visitIndexExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_mut()
-                    .unwrap()
-                    .try_as_location_expr_mut()
-                    .unwrap()
-                    .try_as_index_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_reclassify_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_primitive_cast_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::IfStatement => self.visitIfStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_if_statement_mut()
-                    .unwrap(),
-            ),
+            ASTType::IndexExpr => self.visitIndexExpr(ast),
+            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
+            ASTType::IfStatement => self.visitIfStatement(ast),
             _ => {}
         }
     }
@@ -384,7 +310,7 @@ impl CircuitComplianceChecker {
         false
     }
 
-    pub fn visitIndexExpr(&mut self, ast: &mut IndexExpr) {
+    pub fn visitIndexExpr(&self, ast: &ASTFlatten) {
         if ast
             .location_expr_base
             .tuple_or_location_expr_base
@@ -395,10 +321,10 @@ impl CircuitComplianceChecker {
             self.priv_setter
                 .set_evaluation(&mut (*ast.key).to_ast(), false);
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 
-    pub fn visitReclassifyExpr(&mut self, ast: &mut ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
         assert!(!self.inside_privif_stmt
             || ast.statement().as_ref().unwrap().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
                 &ast.privacy().privacy_annotation_label().unwrap(),
@@ -418,10 +344,10 @@ impl CircuitComplianceChecker {
         } else {
             self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
         }
-        self.visit(&mut ast.expr().to_ast());
+        self.visit(ast.expr().into());
     }
 
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction)
             && ast.func().try_as_builtin_function_ref().unwrap().is_private
         {
@@ -429,17 +355,17 @@ impl CircuitComplianceChecker {
         } else if ast.is_cast() && ast.annotated_type().as_ref().unwrap().is_private() {
             self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 
-    pub fn visitPrimitiveCastExpr(&mut self, ast: &mut PrimitiveCastExpr) {
+    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) {
         if ast.expr.annotated_type().as_ref().unwrap().is_private() {
             self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 
-    pub fn visitIfStatement(&mut self, ast: &mut IfStatement) {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
         let old_in_privif_stmt = self.inside_privif_stmt.clone();
         if ast
             .condition
@@ -450,6 +376,7 @@ impl CircuitComplianceChecker {
         {
             let mut mod_vals = ast
                 .then_branch
+                .borrow()
                 .statement_list_base
                 .statement_base
                 .ast_base
@@ -461,6 +388,7 @@ impl CircuitComplianceChecker {
                         &ast.else_branch
                             .as_ref()
                             .unwrap()
+                            .borrow()
                             .statement_list_base
                             .statement_base
                             .ast_base
@@ -500,9 +428,9 @@ impl CircuitComplianceChecker {
                 }
             }
             self.inside_privif_stmt = true;
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
+            self.priv_setter.set_evaluation(ast, true);
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
         self.inside_privif_stmt = old_in_privif_stmt;
     }
 }
@@ -514,14 +442,17 @@ pub struct PrivateSetter {
 }
 
 impl FunctionVisitor for PrivateSetter {}
-impl AstVisitorMut for PrivateSetter {
+impl AstVisitor for PrivateSetter {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name || &ASTType::ExpressionBase == name
+        matches!(
+            name,
+            ASTType::FunctionCallExprBase | ASTType::ExpressionBase
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
             ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
                 ast.try_as_expression_mut()
@@ -545,13 +476,13 @@ impl PrivateSetter {
             evaluate_privately: None,
         }
     }
-    pub fn set_evaluation(&mut self, ast: &mut AST, evaluate_privately: bool) {
+    pub fn set_evaluation(&self, ast: &ASTFlatten, evaluate_privately: bool) {
         self.evaluate_privately = Some(evaluate_privately);
         self.visit(ast);
         self.evaluate_privately = None;
     }
 
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if self.evaluate_privately.is_some()
             && is_instance(&**ast.func(), ASTType::LocationExprBase)
             && !ast.is_cast()
@@ -576,13 +507,13 @@ impl PrivateSetter {
                 ast
             )
         }
-        self.visitExpression(&mut ast.to_expr());
+        self.visitExpression(ast);
     }
 
-    pub fn visitExpression(&mut self, ast: &mut Expression) {
+    pub fn visitExpression(&self, ast: &ASTFlatten) {
         assert!(self.evaluate_privately.is_some());
         ast.expression_base_mut_ref().evaluate_privately = self.evaluate_privately.unwrap();
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(&ast);
     }
 }
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(
@@ -598,20 +529,15 @@ struct NonstaticOrIncompatibilityDetector {
 }
 
 impl FunctionVisitor for NonstaticOrIncompatibilityDetector {}
-impl AstVisitorMut for NonstaticOrIncompatibilityDetector {
+impl AstVisitor for NonstaticOrIncompatibilityDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::FunctionCallExprBase == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
 
             _ => {}
         }
@@ -623,7 +549,7 @@ impl NonstaticOrIncompatibilityDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
         if ast.evaluate_privately() && !ast.is_cast() {
@@ -639,6 +565,7 @@ impl NonstaticOrIncompatibilityDetector {
                 assert!(is_instance(
                     &**ast
                         .func()
+                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()
@@ -697,6 +624,7 @@ impl NonstaticOrIncompatibilityDetector {
                         .type_name
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .is_literal();
                 if ast.func().try_as_builtin_function_ref().unwrap().is_eq()
                     || ast.func().try_as_builtin_function_ref().unwrap().is_ite()
@@ -708,6 +636,7 @@ impl NonstaticOrIncompatibilityDetector {
                         .type_name
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .can_be_private();
                 }
             }
@@ -719,6 +648,6 @@ impl NonstaticOrIncompatibilityDetector {
             );
         assert!(can_be_private,
                 "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions {:?}", ast);
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 }

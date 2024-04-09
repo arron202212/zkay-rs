@@ -5,14 +5,14 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
 use crate::ast::{
-    ASTBaseProperty, ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty, IntoAST,
-    Statement, UserDefinedTypeName, AST,
+    ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty,
+    IntoAST, Statement, UserDefinedTypeName, AST,
 };
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -28,7 +28,7 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
     // Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
     // """
 {
-    // assert!(isinstance(ast, AST));
+    // assert!(isinstance(ast,AST,ASTFlatten,));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
     let mut ast_copy = v.visit(&ast.clone().unwrap());
     ast_copy
@@ -36,10 +36,6 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
         .unwrap()
         .ast_base_mut_ref()
         .unwrap()
-        .parent_namespace
-        .as_mut()
-        .unwrap()
-        .borrow_mut()
         .parent = ast.unwrap().ast_base_ref().unwrap().parent().clone();
     set_parents(ast_copy.as_mut().unwrap());
     link_identifiers(ast_copy.as_mut().unwrap());
@@ -63,14 +59,7 @@ pub fn replace_expr(
 }
 
 pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast
-        .ast_base_mut_ref()
-        .unwrap()
-        .parent_namespace
-        .as_mut()
-        .unwrap()
-        .borrow_mut()
-        .parent = old_ast
+    new_ast.ast_base_mut_ref().unwrap().parent = old_ast
         .as_ref()
         .unwrap()
         .ast_base_ref()
@@ -143,7 +132,6 @@ const setting_later: [&str; 42] = [
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct DeepCopyVisitor {
     pub ast_visitor_base: AstVisitorBase,
-
     with_types: bool,
     with_analysis: bool,
 }
@@ -156,7 +144,7 @@ impl AstVisitor for DeepCopyVisitor {
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         None
     }
 }

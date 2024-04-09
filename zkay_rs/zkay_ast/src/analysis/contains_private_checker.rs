@@ -11,18 +11,18 @@ use crate::ast::{
     FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
     AST,
 };
-use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn contains_private_expr(ast: &mut Option<AST>) -> bool {
-    if ast.is_none() {
-        return false;
-    }
+pub fn contains_private_expr(ast: &ASTFlatten) -> bool {
+    // if ast.is_none() {
+    //     return false;
+    // }
     let mut v = ContainsPrivVisitor::new();
-    v.visit(ast.as_mut().unwrap());
+    v.visit(ast);
     v.contains_private
 }
 
-// class ContainsPrivVisitor(AstVisitorMut)
+// class ContainsPrivVisitor(AstVisitor)
 // pub fn __init__(self)
 //     super().__init__('node-or-children')
 //     self.contains_private = False
@@ -32,23 +32,20 @@ pub struct ContainsPrivVisitor {
     pub contains_private: bool,
 }
 
-impl AstVisitorMut for ContainsPrivVisitor {
+impl AstVisitor for ContainsPrivVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name || &ASTType::ExpressionBase == name
+        matches!(
+            name,
+            ASTType::FunctionCallExprBase | ASTType::ExpressionBase
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_mut().unwrap()),
-
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::ExpressionBase => self.visitExpression(ast),
             _ => {}
         }
     }
@@ -60,7 +57,7 @@ impl ContainsPrivVisitor {
             contains_private: false,
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(&**ast.func(), ASTType::LocationExprBase) && !ast.is_cast() {
             self.contains_private |= ast
                 .func()
@@ -77,17 +74,17 @@ impl ContainsPrivVisitor {
                 .unwrap()
                 .requires_verification;
         }
-        self.visitExpression(&mut ast.to_expr())
+        self.visitExpression(ast)
     }
 
-    pub fn visitExpression(&mut self, ast: &mut Expression) {
+    pub fn visitExpression(&self, ast: &ASTFlatten) {
         if ast.evaluate_privately() {
             self.contains_private = true;
         }
-        self.visitAST(&mut ast.to_ast())
+        self.visitAST(ast)
     }
 
-    pub fn visitAST(&mut self, ast: &mut AST) {
+    pub fn visitAST(&self, ast: &ASTFlatten) {
         if self.contains_private {
             return;
         }

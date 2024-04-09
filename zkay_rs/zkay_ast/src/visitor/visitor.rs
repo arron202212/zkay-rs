@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use crate::ast::{ASTChildren, ASTInstanceOf, ASTType, AST};
+use crate::ast::{ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, AST};
 
 pub struct AstVisitorBase {
     pub traversal: String,
@@ -42,13 +42,13 @@ impl<T: AstVisitorBaseRef> AstVisitorBaseProperty for T {
 }
 pub trait AstVisitor: AstVisitorBaseProperty {
     type Return;
-    fn visit(&self, ast: &AST) -> Self::Return {
+    fn visit(&self, ast: &ASTFlatten) -> Self::Return {
         self._visit_internal(ast).unwrap()
     }
     fn has_attr(&self, name: &ASTType) -> bool;
-    fn get_attr(&self, name: &ASTType, ast: &AST) -> Self::Return;
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return;
     fn temper_result(&self) -> Self::Return;
-    fn _visit_internal(&self, ast: &AST) -> Option<Self::Return> {
+    fn _visit_internal(&self, ast: &ASTFlatten) -> Option<Self::Return> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
             print!("Visiting {:?}", ast);
@@ -78,7 +78,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         }
     }
 
-    fn get_visit_function(&self, c: ASTType, ast: &AST) -> Option<Self::Return>
+    fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<Self::Return>
 // std::any::type_name::<Option<String>>(),
     {
         // let _visitor_function = c; // String::from("visit") +
@@ -92,7 +92,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         }
         None
     }
-    fn visit_children(&self, ast: &AST) -> Self::Return {
+    fn visit_children(&self, ast: &ASTFlatten) -> Self::Return {
         let mut ast = ast.clone();
         for c in ast.children() {
             self.visit(&c);
@@ -100,130 +100,3 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         self.temper_result()
     }
 }
-
-pub trait AstVisitorMut: AstVisitorBaseProperty {
-    type Return;
-    fn visit(&mut self, ast: &mut AST) -> Self::Return {
-        self._visit_internal(ast).unwrap()
-    }
-    fn has_attr(&self, name: &ASTType) -> bool;
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return;
-    fn temper_result(&self) -> Self::Return;
-    fn _visit_internal(&mut self, ast: &mut AST) -> Option<Self::Return> {
-        if self.log() {
-            // std::any::type_name::<Option<String>>(),
-            print!("Visiting {:?}", ast);
-        }
-        let mut ret = None;
-        let mut ret_children = None;
-
-        if self.traversal() == "post" {
-            ret_children = Some(self.visit_children(ast));
-        }
-        let f = self.get_visit_function(ast.get_ast_type(), ast);
-        if f.is_some() {
-            ret = f;
-        } else if self.traversal() == "node-or-children" {
-            ret_children = Some(self.visit_children(ast));
-        }
-        if self.traversal() == "pre" {
-            ret_children = Some(self.visit_children(ast));
-        }
-        if ret.is_some() {
-            // Some(ret)
-            ret
-        } else if ret_children.is_some() {
-            ret_children
-        } else {
-            None
-        }
-    }
-
-    fn get_visit_function(&mut self, c: ASTType, ast: &mut AST) -> Option<Self::Return> {
-        if self.has_attr(&c) {
-            return Some(self.get_attr(&c, ast));
-        } else if let Some(c) = AST::bases(c) {
-            let f = self.get_visit_function(c, ast);
-            if f.is_some() {
-                return f;
-            }
-        }
-        None
-    }
-    fn visit_children(&mut self, ast: &mut AST) -> Self::Return {
-        for c in ast.children().iter_mut() {
-            self.visit(c);
-        }
-        self.temper_result()
-    }
-}
-
-// pub trait AstFlattenVisitorMut: AstVisitorBaseProperty {
-//     type Return;
-//     fn visit<'a>(&self, ast: &'a mut ASTFlatten<'a>) -> Self::Return {
-//         self._visit_internal(ast).unwrap()
-//     }
-//     fn has_attr(&self, name: &ASTType) -> bool;
-//     fn get_attr<'a>(&self, name: &ASTType, ast: &'a mut ASTFlatten<'a>) -> Self::Return;
-//     fn temper_result(&self) -> Self::Return;
-//     fn _visit_internal<'a>(&self, ast: &'a mut ASTFlatten<'a>) -> Option<Self::Return> {
-//         if self.log() {
-//             // std::any::type_name::<Option<String>>(),
-//             print!("Visiting {:?}", ast);
-//         }
-//         let mut ret = None;
-//         let mut ret_children = None;
-//         let mut _ast=ast.clone();
-//         if self.traversal() == "post" {
-//             ret_children = Some(self.visit_children(&mut _ast));
-//             *ast=_ast;
-//         }
-//         let mut _ast=ast.clone();
-//         let astt=_ast.get_ast_type();
-//         let f = self.get_visit_function(astt, &mut _ast);
-//         *ast=_ast;
-//         if f.is_some() {
-//             ret = f;
-//         } else if self.traversal() == "node-or-children" {
-//   let mut _ast=ast.clone();
-//             ret_children = Some(self.visit_children(&mut _ast));
-//    *ast=_ast;
-//         }
-//         if self.traversal() == "pre" {
-//             ret_children = Some(self.visit_children(ast));
-//         }
-//         if ret.is_some() {
-//             // Some(ret)
-//             ret
-//         } else if ret_children.is_some() {
-//             ret_children
-//         } else {
-//             None
-//         }
-//     }
-
-//     fn get_visit_function<'a>(
-//         &self,
-//         c: ASTType,
-//         ast: &'a mut ASTFlatten<'a>,
-//     ) -> Option<Self::Return>
-// // std::any::type_name::<Option<String>>(),
-//     {
-//         // let _visitor_function = c; // String::from("visit") +
-//         if self.has_attr(&c) {
-//             return Some(self.get_attr(&c, ast));
-//         } else if let Some(c) = AST::bases(c) {
-//             let f = self.get_visit_function(c, ast);
-//             if f.is_some() {
-//                 return f;
-//             }
-//         }
-//         None
-//     }
-//     fn visit_children<'a>(&self, ast: &'a mut ASTFlatten<'a>) -> Self::Return {
-//         for c in ast.children_mut().iter_mut() {
-//             self.visit(c);
-//         }
-//         self.temper_result()
-//     }
-// }

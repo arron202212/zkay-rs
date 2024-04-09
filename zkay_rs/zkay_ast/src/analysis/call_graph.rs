@@ -7,14 +7,14 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, ExpressionBaseMutRef,
-    ExpressionBaseProperty, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
-    WhileStatement, AST,
+    is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition,
+    ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
+    FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST, LocationExpr,
+    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
-    visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn call_graph_analysis(ast: &mut AST)
@@ -39,34 +39,20 @@ struct DirectCalledFunctionDetector {
 
 // class DirectCalledFunctionDetector(FunctionVisitor)
 impl FunctionVisitor for DirectCalledFunctionDetector {}
-impl AstVisitorMut for DirectCalledFunctionDetector {
+impl AstVisitor for DirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
-            || &ASTType::ForStatement == name
-            || &ASTType::WhileStatement == name
+        matches!(
+            name,
+            ASTType::FunctionCallExprBase | ASTType::ForStatement | ASTType::WhileStatement
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ForStatement => self.visitForStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_for_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::WhileStatement => self.visitWhileStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_while_statement_mut()
-                    .unwrap(),
-            ),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::ForStatement => self.visitForStatement(ast),
+            ASTType::WhileStatement => self.visitWhileStatement(ast),
             _ => {}
         }
     }
@@ -77,7 +63,7 @@ impl DirectCalledFunctionDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if !is_instance(&**ast.func(), ASTType::BuiltinFunction) && !ast.is_cast() {
             assert!(is_instance(&**ast.func(), ASTType::LocationExprBase));
             let fdef = ast
@@ -113,23 +99,23 @@ impl DirectCalledFunctionDetector {
                     .insert(cofd);
             }
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
-    pub fn visitForStatement(&mut self, ast: &mut ForStatement) {
+    pub fn visitForStatement(&self, ast: &ASTFlatten) {
         ast.statement_base
             .function
             .as_mut()
             .unwrap()
             .has_static_body = false;
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
-    pub fn visitWhileStatement(&mut self, ast: &mut WhileStatement) {
+    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
         ast.statement_base
             .function
             .as_mut()
             .unwrap()
             .has_static_body = false;
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 }
 // class IndirectCalledFunctionDetector(FunctionVisitor)
@@ -138,21 +124,18 @@ struct IndirectCalledFunctionDetector {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for IndirectCalledFunctionDetector {}
-impl AstVisitorMut for IndirectCalledFunctionDetector {
+impl AstVisitor for IndirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -163,10 +146,7 @@ impl IndirectCalledFunctionDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
-    )
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten)
     //Fixed point iteration
     {
         let mut size = 0;
@@ -204,20 +184,17 @@ struct IndirectDynamicBodyDetector {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for IndirectDynamicBodyDetector {}
-impl AstVisitorMut for IndirectDynamicBodyDetector {
+impl AstVisitor for IndirectDynamicBodyDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -228,10 +205,7 @@ impl IndirectDynamicBodyDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
-    ) {
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
         if !ast.has_static_body {
             return;
         }

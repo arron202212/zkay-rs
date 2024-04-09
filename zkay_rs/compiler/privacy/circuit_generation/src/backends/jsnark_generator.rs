@@ -27,10 +27,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
-    indent, is_instance, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression,
-    ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf,
-    IdentifierBaseProperty, IdentifierExpr, IndexExpr, IntoAST, LocationExprBaseProperty, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName, AST,
+    indent, is_instance, ASTFlatten, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition,
+    Expression, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
+    HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
+    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,
+    TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::AstVisitor;

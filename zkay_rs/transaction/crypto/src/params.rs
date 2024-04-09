@@ -10,7 +10,7 @@
 
 use crate::meta::CRYPTOPARAMS;
 use serde::{Deserialize, Serialize};
-#[derive(Default, Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Default, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CryptoParams {
     pub crypto_name: String,
 }

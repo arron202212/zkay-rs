@@ -27,12 +27,13 @@
 
 use std::cell::{BorrowError, BorrowMutError, Ref, RefCell, RefMut};
 use std::cmp::Ordering;
-use std::cmp::PartialEq;
+// use std::cmp::PartialEq;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::pin::Pin;
 use std::rc::{Rc, Weak};
+
 /// Wrapper for `Rc<RefCell<T>>`.
 #[derive(Debug, Default, Eq)]
 pub struct RcCell<T>(Rc<RefCell<T>>);

@@ -8,7 +8,7 @@
 
 // from typing import Tuple, Dict, Union
 use crate::ast::{
-    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren,
+    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
     ASTInstanceOf, ASTType, AnnotatedTypeName, Array, Block, Comment,
     ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
     ExpressionBaseProperty, ForStatement, Identifier, IdentifierBase, IdentifierBaseProperty,
@@ -25,19 +25,19 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::DerefMut;
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
-use crate::visitor::visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut};
+use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn fill_symbol_table(ast: &mut AST) {
+pub fn fill_symbol_table(ast: &ASTFlatten) {
     let mut v = SymbolTableFiller::new();
     v.visit(ast);
 }
 
-pub fn link_symbol_table(ast: &mut AST) {
+pub fn link_symbol_table(ast: &ASTFlatten) {
     let mut v = SymbolTableLinker::new();
     v.visit(ast);
 }
 
-pub fn link_identifiers(ast: &mut AST) {
+pub fn link_identifiers(ast: &ASTFlatten) {
     fill_symbol_table(ast);
     link_symbol_table(ast);
 }
@@ -65,7 +65,7 @@ pub fn merge_dicts(
     result
 }
 
-pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, WeakCell<Identifier>> {
+pub fn collect_children_names(ast: &ASTFlatten) -> BTreeMap<String, WeakCell<Identifier>> {
     let mut children: Vec<_> = ast
         .children()
         .iter()
@@ -86,14 +86,7 @@ pub fn collect_children_names(ast: &mut AST) -> BTreeMap<String, WeakCell<Identi
     for c in children.iter_mut()
     //declared names are not available within the declaration statements
     {
-        c.ast_base_mut_ref()
-            .unwrap()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names
-            .clear();
+        c.ast_base_mut_ref().unwrap().names.clear();
     }
     ret
 }
@@ -108,98 +101,59 @@ struct SymbolTableFiller {
     pub ast_visitor_base: AstVisitorBase,
 }
 
-impl AstVisitorMut for SymbolTableFiller {
+impl AstVisitor for SymbolTableFiller {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::SourceUnit == name
-            || &ASTType::ContractDefinition == name
-            || &ASTType::ConstructorOrFunctionDefinition == name
-            || &ASTType::StructDefinition == name
-            || &ASTType::EnumDefinition == name
-            || &ASTType::VariableDeclaration == name
-            || &ASTType::StatementListBase == name
-            || &ASTType::Block == name
-            || &ASTType::IndentBlock == name
-            || &ASTType::SimpleStatementBase == name
-            || &ASTType::ExpressionStatement == name
-            || &ASTType::RequireStatement == name
-            || &ASTType::AssignmentStatementBase == name
-            || &ASTType::CircuitInputStatement == name
-            || &ASTType::VariableDeclarationStatement == name
-            || &ASTType::ForStatement == name
-            || &ASTType::Mapping == name
+        matches!(
+            name,
+            ASTType::SourceUnit
+                | ASTType::ContractDefinition
+                | ASTType::ConstructorOrFunctionDefinition
+                | ASTType::StructDefinition
+                | ASTType::EnumDefinition
+                | ASTType::VariableDeclaration
+                | ASTType::StatementListBase
+                | ASTType::Block
+                | ASTType::IndentBlock
+                | ASTType::SimpleStatementBase
+                | ASTType::ExpressionStatement
+                | ASTType::RequireStatement
+                | ASTType::AssignmentStatementBase
+                | ASTType::CircuitInputStatement
+                | ASTType::VariableDeclarationStatement
+                | ASTType::ForStatement
+                | ASTType::Mapping
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::SourceUnit => self.visitSourceUnit(ast.try_as_source_unit_mut().unwrap()),
-            ASTType::ContractDefinition => self.visitContractDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_contract_definition_mut()
-                    .unwrap(),
-            ),
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
-            ASTType::StructDefinition => self.visitStructDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_struct_definition_mut()
-                    .unwrap(),
-            ),
-            ASTType::EnumDefinition => self.visitEnumDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_enum_definition_mut()
-                    .unwrap(),
-            ),
-            ASTType::EnumValue => self.visitEnumValue(ast.try_as_enum_value_mut().unwrap()),
-            ASTType::VariableDeclaration => self.visitVariableDeclaration(
-                ast.try_as_identifier_declaration_mut()
-                    .unwrap()
-                    .try_as_variable_declaration_mut()
-                    .unwrap(),
-            ),
-            ASTType::StatementListBase | ASTType::Block | ASTType::IndentBlock => self
-                .visitStatementList(
-                    ast.try_as_statement_mut()
-                        .unwrap()
-                        .try_as_statement_list_mut()
-                        .unwrap(),
-                ),
+            ASTType::SourceUnit => self.visitSourceUnit(ast),
+            ASTType::ContractDefinition => self.visitContractDefinition(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
+            ASTType::StructDefinition => self.visitStructDefinition(ast),
+            ASTType::EnumDefinition => self.visitEnumDefinition(ast),
+            ASTType::EnumValue => self.visitEnumValue(ast),
+            ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
+            ASTType::StatementListBase | ASTType::Block | ASTType::IndentBlock => {
+                self.visitStatementList(ast)
+            }
             ASTType::SimpleStatementBase
             | ASTType::ExpressionStatement
             | ASTType::RequireStatement
             | ASTType::AssignmentStatementBase
             | ASTType::CircuitInputStatement
-            | ASTType::VariableDeclarationStatement => self.visitSimpleStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_simple_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::ForStatement => self.visitForStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_for_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::Mapping => self.visitMapping(
-                ast.try_as_type_name_mut()
-                    .unwrap()
-                    .try_as_mapping_mut()
-                    .unwrap(),
-            ),
+            | ASTType::VariableDeclarationStatement => self.visitSimpleStatement(ast),
+            ASTType::ForStatement => self.visitForStatement(ast),
+            ASTType::Mapping => self.visitMapping(ast),
             _ => {}
         }
     }
 }
-// class SymbolTableFiller(AstVisitorMut)
+// class SymbolTableFiller(AstVisitor)
 impl SymbolTableFiller {
     pub fn new() -> Self {
         Self {
@@ -249,13 +203,8 @@ impl SymbolTableFiller {
         merge_dicts(vec![global_defs, global_vars])
     }
 
-    pub fn visitSourceUnit(&mut self, ast: &mut SourceUnit) {
-        ast.ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = ast
+    pub fn visitSourceUnit(&self, ast: RcCell<SourceUnit>) {
+        ast.ast_base.names = ast
             .contracts
             .iter()
             .map(|d| {
@@ -277,17 +226,11 @@ impl SymbolTableFiller {
             .collect();
         // println!("==ast
         //     .contracts==s=={:?}====",s.len());
-        ast.ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names
-            .append(&mut self.get_builtin_globals());
+        ast.ast_base.names.append(&mut self.get_builtin_globals());
         // println!("====ast.visitSourceUnit.names.len()========{:?}",ast.ast_base.names().len());
     }
 
-    pub fn visitContractDefinition(&mut self, ast: &mut ContractDefinition) {
+    pub fn visitContractDefinition(&self, ast: RcCell<ContractDefinition>) {
         let state_vars = ast
             .state_variable_declarations
             .iter()
@@ -380,27 +323,16 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        ast.namespace_definition_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = merge_dicts(vec![state_vars, funcs, structs, enums]);
+        ast.namespace_definition_base.ast_base.names =
+            merge_dicts(vec![state_vars, funcs, structs, enums]);
         // println!("====visitContractDefinition========{:?}",ast.ast_base_ref().names().len());
     }
 
     pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
+        &self,
+        ast: RcCell<ConstructorOrFunctionDefinition>,
     ) {
-        ast.namespace_definition_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = ast
+        ast.namespace_definition_base.ast_base.names = ast
             .parameters
             .iter()
             .map(|d| {
@@ -420,14 +352,8 @@ impl SymbolTableFiller {
         // println!("====visitConstructorOrFunctionDefinition========{:?}",ast.ast_base_ref().names().len());
     }
 
-    pub fn visitStructDefinition(&mut self, ast: &mut StructDefinition) {
-        ast.namespace_definition_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = ast
+    pub fn visitStructDefinition(&self, ast: RcCell<StructDefinition>) {
+        ast.namespace_definition_base.ast_base.names = ast
             .members
             .iter()
             .filter_map(|d| {
@@ -441,14 +367,8 @@ impl SymbolTableFiller {
             .collect();
         // println!("====visitStructDefinition========{:?}",ast.ast_base_ref().names().len());
     }
-    pub fn visitEnumDefinition(&mut self, ast: &mut EnumDefinition) {
-        ast.namespace_definition_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = ast
+    pub fn visitEnumDefinition(&self, ast: RcCell<EnumDefinition>) {
+        ast.namespace_definition_base.ast_base.names = ast
             .values
             .iter()
             .map(|d| {
@@ -460,16 +380,10 @@ impl SymbolTableFiller {
             .collect();
         // println!("====visitEnumDefinition========{:?}",ast.ast_base_ref().names().len());
     }
-    pub fn visitEnumValue(&mut self, _ast: &mut EnumValue) {}
+    pub fn visitEnumValue(&self, _ast: RcCell<EnumValue>) {}
 
-    pub fn visitVariableDeclaration(&mut self, ast: &mut VariableDeclaration) {
-        ast.identifier_declaration_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = BTreeMap::from([(
+    pub fn visitVariableDeclaration(&self, ast: RcCell<VariableDeclaration>) {
+        ast.identifier_declaration_base.ast_base.names = BTreeMap::from([(
             ast.identifier_declaration_base
                 .idf
                 .as_ref()
@@ -482,56 +396,29 @@ impl SymbolTableFiller {
         // println!("=={:?}==visitVariableDeclaration========{:?}",ast.identifier_declaration_base.idf.name(),ast.ast_base_ref().names().len());
     }
 
-    pub fn visitStatementList(&mut self, ast: &mut StatementList) {
-        ast.ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = collect_children_names(&mut ast.to_ast());
+    pub fn visitStatementList(&self, ast: RcCell<StatementList>) {
+        ast.ast_base_mut_ref().names = collect_children_names(&mut ast.to_ast());
         // println!("=={:?}==visitStatementList========{:?}",ast.get_ast_type(),ast.ast_base_ref().names().len());
     }
 
-    pub fn visitSimpleStatement(&mut self, ast: &mut SimpleStatement) {
-        ast.ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = collect_children_names(&mut ast.to_ast());
+    pub fn visitSimpleStatement(&self, ast: RcCell<SimpleStatement>) {
+        ast.ast_base_mut_ref().names = collect_children_names(&mut ast.to_ast());
         // println!("=={:?}==visitSimpleStatement========{:?}",ast.get_ast_type(),ast.ast_base_ref().names().len());
     }
 
-    pub fn visitForStatement(&mut self, ast: &mut ForStatement) {
-        ast.ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = collect_children_names(&mut ast.to_ast());
+    pub fn visitForStatement(&self, ast: RcCell<ForStatement>) {
+        ast.ast_base_mut_ref().names = collect_children_names(ast.clone().into());
         // println!("====visitForStatement========{:?}",ast.ast_base_ref().names().len());
     }
 
-    pub fn visitMapping(&mut self, ast: &mut Mapping) {
-        ast.type_name_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .borrow_mut()
-            .names = BTreeMap::new();
+    pub fn visitMapping(&self, ast: RcCell<Mapping>) {
+        ast.type_name_base.ast_base.names = BTreeMap::new();
         // println!("====visitMapping===1====={:?}",ast.ast_base_ref().names().len());
         if is_instance(
             &*ast.key_label.as_ref().unwrap().borrow(),
             ASTType::IdentifierBase,
         ) {
-            ast.type_name_base
-                .ast_base
-                .parent_namespace
-                .as_mut()
-                .unwrap()
-                .borrow_mut()
-                .names = BTreeMap::from([(
+            ast.type_name_base.ast_base.names = BTreeMap::from([(
                 ast.key_label.as_ref().unwrap().borrow().name().clone(),
                 ast.key_label.as_ref().map(|kl| kl.downgrade()).unwrap(),
             )]);
@@ -544,17 +431,20 @@ impl SymbolTableFiller {
 pub struct SymbolTableLinker {
     pub ast_visitor_base: AstVisitorBase,
 }
-// class SymbolTableLinker(AstVisitorMut)
-impl AstVisitorMut for SymbolTableLinker {
+// class SymbolTableLinker(AstVisitor)
+impl AstVisitor for SymbolTableLinker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::IdentifierExpr == name
-            || &ASTType::UserDefinedTypeNameBase == name
-            || &ASTType::MemberAccessExpr == name
-            || &ASTType::IndexExpr == name
+        matches!(
+            name,
+            ASTType::IdentifierExpr
+                | ASTType::UserDefinedTypeNameBase
+                | ASTType::MemberAccessExpr
+                | ASTType::IndexExpr
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
             ASTType::IdentifierExpr => self.visitIdentifierExpr(
                 ast.try_as_expression_mut()
@@ -642,7 +532,11 @@ impl SymbolTableLinker {
         (None, None)
     }
 
-    pub fn _find_lca(ast1: &AST, ast2: &AST, root: &AST) -> (StatementList, AST, AST) {
+    pub fn _find_lca(
+        ast1: &AST,
+        ast2: &AST,
+        root: &AST,
+    ) -> (StatementList, AST, ASTFlatten, AST, ASTFlatten) {
         assert!(ast1 != ast2);
         let (mut ast1, mut ast2) = (ast1.clone(), ast2.clone());
         // Gather ast1"s ancestors + immediate child towards ast1 (for each)
@@ -837,7 +731,7 @@ impl SymbolTableLinker {
         false
     }
 
-    pub fn visitIdentifierExpr(&mut self, ast: &mut IdentifierExpr) {
+    pub fn visitIdentifierExpr(&self, ast: &mut IdentifierExpr) {
         println!(
             "====visitIdentifierExpr================{:?}",
             (*ast).to_string()
@@ -864,7 +758,7 @@ impl SymbolTableLinker {
         }
     }
 
-    pub fn visitUserDefinedTypeName(&mut self, ast: &mut UserDefinedTypeName) {
+    pub fn visitUserDefinedTypeName(&self, ast: &mut UserDefinedTypeName) {
         let mut type_def = self.find_type_declaration(&*ast);
         for idf in &ast.user_defined_type_name_base_ref().names[1..] {
             if let Some(_idf) = type_def.as_ref().unwrap().names().get(&idf.borrow().name()) {
@@ -884,7 +778,7 @@ impl SymbolTableLinker {
 
         // ast
     }
-    pub fn visitMemberAccessExpr(&mut self, ast: &mut MemberAccessExpr) {
+    pub fn visitMemberAccessExpr(&self, ast: &mut MemberAccessExpr) {
         assert!(
             is_instance(&**ast.expr.as_ref().unwrap(), ASTType::LocationExprBase),
             "Function call return value member access not yet supported"
@@ -955,12 +849,7 @@ impl SymbolTableLinker {
                     }
                 } else {
                     *t = t.clone();
-                    t.ast_base_mut_ref()
-                        .parent_namespace
-                        .as_mut()
-                        .unwrap()
-                        .borrow_mut()
-                        .parent = Some(Box::new(ast.to_ast()));
+                    t.ast_base_mut_ref().parent = Some(Box::new(ast.to_ast()));
                     self.visit(&mut t.to_ast());
                 }
             } else {
@@ -970,7 +859,7 @@ impl SymbolTableLinker {
         // ast
     }
 
-    pub fn visitIndexExpr(&mut self, ast: &mut IndexExpr) {
+    pub fn visitIndexExpr(&self, ast: &mut IndexExpr) {
         assert!(
             is_instance(&**ast.arr.as_ref().unwrap(), ASTType::LocationExprBase),
             "Function call return value indexing not yet supported"

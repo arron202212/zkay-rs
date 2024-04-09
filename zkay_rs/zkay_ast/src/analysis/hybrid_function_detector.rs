@@ -8,13 +8,13 @@
 
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
+    is_instance, ASTFlatten, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
     IntoAST, LocationExpr, LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
-    visitor::{AstVisitorBase, AstVisitorBaseRef, AstVisitorMut},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn detect_hybrid_functions(ast: &mut AST)
@@ -39,48 +39,28 @@ struct DirectHybridFunctionDetectionVisitor {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
-impl AstVisitorMut for DirectHybridFunctionDetectionVisitor {
+impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ReclassifyExpr == name
-            || &ASTType::PrimitiveCastExpr == name
-            || &ASTType::AllExpr == name
-            || &ASTType::FunctionCallExprBase == name
-            || &ASTType::ConstructorOrFunctionDefinition == name
+        matches!(
+            name,
+            ASTType::ReclassifyExpr
+                | ASTType::PrimitiveCastExpr
+                | ASTType::AllExpr
+                | ASTType::FunctionCallExprBase
+                | ASTType::ConstructorOrFunctionDefinition
+        )
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_reclassify_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_primitive_cast_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::AllExpr => self.visitAllExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_all_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
+            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
+            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
+            ASTType::AllExpr => self.visitAllExpr(ast),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -91,7 +71,7 @@ impl DirectHybridFunctionDetectionVisitor {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitReclassifyExpr(&mut self, ast: &mut ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
         if let ReclassifyExpr::ReclassifyExpr(re) = ast {
             re.expression_base
                 .statement
@@ -106,8 +86,8 @@ impl DirectHybridFunctionDetectionVisitor {
         }
     }
 
-    pub fn visitPrimitiveCastExpr(&mut self, ast: &mut PrimitiveCastExpr) {
-        if ast.expr.evaluate_privately() {
+    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) {
+        if ast.expr.borrow().evaluate_privately() {
             ast.expression_base
                 .statement
                 .as_mut()
@@ -119,12 +99,12 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .requires_verification = true;
         } else {
-            self.visit_children(&mut ast.to_ast());
+            self.visit_children(ast);
         }
     }
 
-    pub fn visitAllExpr(&mut self, _ast: &mut AllExpr) {}
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitAllExpr(&self, _ast: &mut AllExpr) {}
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction)
             && ast.func().try_as_builtin_function_ref().unwrap().is_private
         {
@@ -151,14 +131,14 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .requires_verification = true;
         } else {
-            self.visit_children(&mut ast.to_ast());
+            self.visit_children(ast);
         }
     }
     pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
+        &self,
+        ast: RcCell<ConstructorOrFunctionDefinition>,
     ) {
-        self.visit(&mut ast.body.as_ref().unwrap().to_ast());
+        self.visit(ast.body.clone().into());
 
         if ast.can_be_external() {
             if ast.requires_verification {
@@ -166,6 +146,7 @@ impl DirectHybridFunctionDetectionVisitor {
             } else {
                 for param in &ast.parameters {
                     if param
+                        .borrow()
                         .identifier_declaration_base
                         .annotated_type
                         .is_private()
@@ -184,21 +165,18 @@ struct IndirectHybridFunctionDetectionVisitor {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for IndirectHybridFunctionDetectionVisitor {}
-impl AstVisitorMut for IndirectHybridFunctionDetectionVisitor {
+impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::ConstructorOrFunctionDefinition == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ConstructorOrFunctionDefinition => self.visitConstructorOrFunctionDefinition(
-                ast.try_as_namespace_definition_mut()
-                    .unwrap()
-                    .try_as_constructor_or_function_definition_mut()
-                    .unwrap(),
-            ),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -210,8 +188,8 @@ impl IndirectHybridFunctionDetectionVisitor {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(
-        &mut self,
-        ast: &mut ConstructorOrFunctionDefinition,
+        &self,
+        ast: RcCell<ConstructorOrFunctionDefinition>,
     ) {
         if !ast.requires_verification {
             for fct in &ast.called_functions {
@@ -232,14 +210,14 @@ struct NonInlineableCallDetector {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl FunctionVisitor for NonInlineableCallDetector {}
-impl AstVisitorMut for NonInlineableCallDetector {
+impl AstVisitor for NonInlineableCallDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, name: &ASTType) -> bool {
         &ASTType::FunctionCallExprBase == name
     }
-    fn get_attr(&mut self, name: &ASTType, ast: &mut AST) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
             ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
                 ast.try_as_expression_mut()
@@ -258,7 +236,7 @@ impl NonInlineableCallDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&mut self, ast: &mut FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if !ast.is_cast() && is_instance(&**ast.func(), ASTType::LocationExprBase) {
             let ast1 = ast
                 .func()
@@ -285,6 +263,6 @@ impl NonInlineableCallDetector {
                 ast.func()
             )
         }
-        self.visit_children(&mut ast.to_ast());
+        self.visit_children(ast);
     }
 }

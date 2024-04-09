@@ -14,8 +14,7 @@ use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTType, Block, BuiltinFunction, Expression,
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBase, HybridArgType,
     HybridArgumentIdf, Identifier, IdentifierBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IfStatement, IntoAST, IntoExpression, IntoStatement, RRWrapper, VariableDeclarationStatement,
-    AST,
+    IfStatement, IntoAST, IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")
@@ -276,19 +275,16 @@ impl Remapper {
                                     .unwrap()
                                     .zkay_type(),
                             ));
-                    prev_val.location_expr_base.target =
-                        key_decl.map(|kd| RRWrapper::new(Some(*kd.clone())));
-                    prev_val
+                    prev_val.location_expr_base.target = key_decl.clone();
+                    (*prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent_namespace
+                        .parent
                         .as_mut()
                         .unwrap()
-                        .deref_mut()
-                        .borrow_mut()
-                        .parent = Some(Box::new(stmt.to_ast()));
+                        .borrow_mut()) = stmt.to_ast();
                     prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base
@@ -363,19 +359,17 @@ impl Remapper {
                                     .unwrap()
                                     .zkay_type(),
                             ));
-                    prev_val.location_expr_base.target =
-                        key_decl.map(|kd| RRWrapper::new(Some(*kd.clone())));
-                    prev_val
+                    prev_val.location_expr_base.target = key_decl.clone();
+                    (*prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent_namespace
+                        .parent
                         .as_mut()
                         .unwrap()
                         .deref_mut()
-                        .borrow_mut()
-                        .parent = Some(Box::new(stmt.to_ast()));
+                        .borrow_mut()) = stmt.to_ast();
                     prev_val
                         .location_expr_base
                         .tuple_or_location_expr_base

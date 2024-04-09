@@ -13,8 +13,8 @@ use std::ops::{Deref, DerefMut};
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
-    get_privacy_expr_from_label, is_instance, is_instances, ASTType, AllExpr, AnnotatedTypeName,
-    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
+    get_privacy_expr_from_label, is_instance, is_instances, ASTFlatten, ASTType, AllExpr,
+    AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, Block, BooleanLiteralType, BuiltinFunction,
     CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
     ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
@@ -24,7 +24,7 @@ use zkay_ast::ast::{
     IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
     IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
     LocationExprBaseProperty, MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, RRWrapper, ReturnStatement,
+    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
     SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
     UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
@@ -204,7 +204,6 @@ where
     }
 
     //Properties #
-
     pub fn get_verification_contract_name(&self) -> String {
         assert!(self.verifier_contract_type.is_some());
         self.verifier_contract_type
@@ -611,8 +610,7 @@ where
                     ),
                     Some(Box::new(ret_t)),
                 );
-                idf.location_expr_base.target =
-                    var.target().map(|t| RRWrapper::new(Some(*t.clone())));
+                idf.location_expr_base.target = var.target();
                 let mut ret_param = idf;
                 ret_param
                     .location_expr_base
@@ -668,18 +666,16 @@ where
             )),
         );
         fdef.original_body = fdef.body.clone();
-        fdef.body
+        (*fdef
+            .body
             .as_mut()
             .unwrap()
             .statement_list_base
             .statement_base
             .ast_base
-            .parent_namespace
             .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new(fdef.to_ast()));
+            .parent
+            .borrow_mut()) = Some(Box::new(fdef.to_ast()));
         fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();
 
         //inline "Call" to the imaginary function
@@ -687,7 +683,7 @@ where
             IdentifierExprUnion::String(String::from("<stmt_fct>")),
             None,
         );
-        idf.location_expr_base.target = Some(RRWrapper::new(Some(fdef.to_ast().into())));
+        idf.location_expr_base.target = Some(RcCell::new(fdef.to_ast()));
         let mut fcall = FunctionCallExprBase::new(idf.to_expr(), vec![], None);
         fcall.expression_base.statement = Some(Box::new(astmt.to_statement()));
         let mut ret_args = self.inline_function_call_into_circuit(&mut fcall);
@@ -1252,12 +1248,10 @@ where
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent_namespace
+                        .parent
                         .as_ref()
                         .unwrap()
-                        .deref()
-                        .borrow()
-                        .parent,
+                        .borrow(),
                 )
                 .as_type(AST::AnnotatedTypeName(*idf.annotated_type.unwrap()))
         } else {
@@ -1506,15 +1500,14 @@ where
                 .clone();
             assert!(t.as_ref().unwrap().can_be_private());
             let mut nle = NumberLiteralExpr::new(0, false);
-            nle.literal_expr_base
+            (*nle
+                .literal_expr_base
                 .expression_base
                 .ast_base
-                .parent_namespace
+                .parent
                 .as_mut()
                 .unwrap()
-                .deref_mut()
-                .borrow_mut()
-                .parent = Some(Box::new(ast.to_ast()));
+                .borrow_mut()) = Some(Box::new(ast.to_ast()));
             nle.literal_expr_base.expression_base.statement = Some(Box::new(ast.to_statement()));
             ast.expr = Some(TypeCheckVisitor::implicitly_converted_to(
                 nle.to_expr(),
@@ -1657,11 +1650,6 @@ where
             .statement_list_base
             .statement_base
             .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
             .parent
             .is_some());
         let is_already_scoped = is_instances(
@@ -1669,14 +1657,12 @@ where
                 .statement_list_base
                 .statement_base
                 .ast_base
-                .parent_namespace
-                .as_mut()
-                .unwrap()
-                .deref_mut()
-                .borrow_mut()
                 .parent
-                .clone()
-                .unwrap(),
+                .as_ref()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .borrow(),
             vec![
                 ASTType::ConstructorOrFunctionDefinition,
                 ASTType::IfStatement,

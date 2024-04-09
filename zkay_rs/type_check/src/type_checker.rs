@@ -5,36 +5,36 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
 use crate::contains_private::contains_private;
 use crate::final_checker::check_final;
+use rccell::{RcCell, WeakCell};
 // use crate::type_exceptions::{TypeMismatchException, TypeException};
 use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 
 use std::ops::DerefMut;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTBaseMutRef,
-    ASTBaseProperty, ASTBaseRef, ASTType, AllExpr, AnnotatedTypeName, Array, ArrayBaseProperty,
-    AssignmentStatement, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty,
-    BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion, ConstructorOrFunctionDefinition,
-    ContractDefinition, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue,
-    EnumValueTypeName, Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef,
-    ForStatement, FunctionCallExpr, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseRef,
-    IdentifierExpr, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion,
-    LocationExpr, LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
-    NewExpr, NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr,
-    RRWrapper, ReclassifyExpr, ReclassifyExprBase, ReclassifyExprBaseMutRef,
-    ReclassifyExprBaseProperty, RehomExpr, RequireStatement, ReturnStatement,
-    StateVariableDeclaration, StatementBaseMutRef, StatementBaseProperty, TupleExpr, TupleType,
-    TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseProperty, VariableDeclarationStatement,
-    WhileStatement, AST,
+    ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, AllExpr, AnnotatedTypeName, Array,
+    ArrayBaseProperty, AssignmentStatement, AssignmentStatementBaseMutRef,
+    AssignmentStatementBaseProperty, BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion,
+    ConstructorOrFunctionDefinition, ContractDefinition, ElementaryTypeName, EnumDefinition,
+    EnumTypeName, EnumValue, EnumValueTypeName, Expression, ExpressionBaseMutRef,
+    ExpressionBaseProperty, ExpressionBaseRef, ForStatement, FunctionCallExpr,
+    FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
+    FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseRef, IdentifierExpr,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion, LocationExpr,
+    LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NewExpr,
+    NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr, ReclassifyExpr,
+    ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr,
+    RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef,
+    StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
+    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn type_check(ast: AST) {
-    check_final(ast.clone());
+pub fn type_check(ast: &ASTFlatten) {
+    check_final(ast);
     let v = TypeCheckVisitor::new();
     v.visit(&ast);
 }
@@ -49,11 +49,61 @@ impl AstVisitor for TypeCheckVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn has_attr(&self, _name: &ASTType) -> bool {
-        false
+    fn has_attr(&self, name: &ASTType) -> bool {
+        matches!(
+            name,
+            ASTType::AssignmentStatement
+                | ASTType::VariableDeclarationStatement
+                | ASTType::FunctionCallExpr
+                | ASTType::PrimitiveCastExpr
+                | ASTType::NewExpr
+                | ASTType::MemberAccessExpr
+                | ASTType::ReclassifyExpr
+                | ASTType::IfStatement
+                | ASTType::WhileStatement
+                | ASTType::ForStatement
+                | ASTType::ReturnStatement
+                | ASTType::TupleExpr
+                | ASTType::MeExpr
+                | ASTType::IdentifierExpr
+                | ASTType::IndexExpr
+                | ASTType::ConstructorOrFunctionDefinition
+                | ASTType::EnumDefinition
+                | ASTType::EnumValue
+                | ASTType::StateVariableDeclaration
+                | ASTType::Mapping
+                | ASTType::RequireStatement
+                | ASTType::AnnotatedTypeName
+        )
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &AST) -> Self::Return {
-        self.temper_result()
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+        match name {
+            ASTType::AssignmentStatement => self.visitAssignmentStatement(ast),
+            ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
+            ASTType::FunctionCallExpr => self.visitFunctionCallExpr(ast),
+            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
+            ASTType::NewExpr => self.visitNewExpr(ast),
+            ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
+            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
+            ASTType::IfStatement => self.visitIfStatement(ast),
+            ASTType::WhileStatement => self.visitWhileStatement(ast),
+            ASTType::ForStatement => self.visitForStatement(ast),
+            ASTType::ReturnStatement => self.visitReturnStatement(ast),
+            ASTType::TupleExpr => self.visitTupleExpr(ast),
+            ASTType::MeExpr => self.visitMeExpr(ast),
+            ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
+            ASTType::IndexExpr => self.visitIndexExpr(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visitConstructorOrFunctionDefinition(ast)
+            }
+            ASTType::EnumDefinition => self.visitEnumDefinition(ast),
+            ASTType::EnumValue => self.visitEnumValue(ast),
+            ASTType::StateVariableDeclaration => self.visitStateVariableDeclaration(ast),
+            ASTType::Mapping => self.visitMapping(ast),
+            ASTType::RequireStatement => self.visitRequireStatement(ast),
+            ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
+            _ => {}
+        }
     }
 }
 impl TypeCheckVisitor {
@@ -222,7 +272,7 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitAssignmentStatement(&self, mut ast: AssignmentStatement) {
+    pub fn visitAssignmentStatement(&self, mut ast: &ASTFlatten) {
         assert!(
             ast.lhs().is_some(),
             "Assignment target is not a location {:?}",
@@ -258,7 +308,7 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitVariableDeclarationStatement(&self, mut ast: VariableDeclarationStatement) {
+    pub fn visitVariableDeclarationStatement(&self, mut ast: &ASTFlatten) {
         if ast.expr.is_some() {
             ast.expr = self.get_rhs(
                 ast.expr.unwrap(),
@@ -289,9 +339,9 @@ impl TypeCheckVisitor {
         )
     }
     pub fn handle_builtin_function_call(
-        &mut self,
-        mut ast: FunctionCallExpr,
-        func: &mut BuiltinFunction,
+        &self,
+        mut ast: RcCell<FunctionCallExpr>,
+        func: RcCell<BuiltinFunction>,
     ) {
         if func.is_parenthesis() {
             ast.expression_base_mut_ref().annotated_type = ast.args()[0].annotated_type().clone();
@@ -315,8 +365,8 @@ impl TypeCheckVisitor {
 
     pub fn handle_unhom_builtin_function_call(
         &self,
-        mut ast: FunctionCallExpr,
-        mut func: &mut BuiltinFunction,
+        mut ast: RcCell<FunctionCallExpr>,
+        mut func: RcCell<BuiltinFunction>,
     ) {
         let mut args = ast.args().clone();
         //handle special cases
@@ -651,8 +701,8 @@ impl TypeCheckVisitor {
     }
     pub fn handle_homomorphic_builtin_function_call(
         &self,
-        mut ast: FunctionCallExpr,
-        mut func: BuiltinFunction,
+        mut ast: RcCell<FunctionCallExpr>,
+        mut func: RcCell<BuiltinFunction>,
     ) {
         //First - same as non-homomorphic - check that argument types conform to op signature
         if !func.is_eq() {
@@ -911,39 +961,16 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn assign_location(target: &mut Expression, source: &mut Expression) {
+    pub fn assign_location(target: RcCell<Expression>, source: RcCell<Expression>) {
         //set statement
-        target.expression_base_mut_ref().statement = source.statement().clone();
-
+        target.borrow_mut().expression_base_mut_ref().statement = source.statement().clone();
+        let t = ASTFlatten::from(target.clone()).downgrade();
         //set parents
-        target
-            .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = source.parent().clone();
+        target.borrow_mut().ast_base_mut_ref().parent = source.borrow().parent().clone();
         let mut annotated_type = target.annotated_type().clone();
-        annotated_type
-            .as_mut()
-            .unwrap()
-            .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new((*target).to_ast()));
+        annotated_type.as_mut().unwrap().ast_base.parent = Some(t.clone());
         target.expression_base_mut_ref().annotated_type = annotated_type;
-        source
-            .ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new(target.clone().to_ast()));
+        source.ast_base_mut_ref().parent = Some(t);
 
         //set source location
         target.ast_base_mut_ref().line = source.ast_base_ref().line;
@@ -951,24 +978,33 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn implicitly_converted_to(mut expr: Expression, t: &TypeName) -> Expression {
-        if is_instance(&expr, ASTType::ReclassifyExpr)
+    pub fn implicitly_converted_to(expr: RcCell<Expression>, t: &TypeName) -> RcCell<Expression> {
+        if is_instance(&(*expr.borrow().clone()), ASTType::ReclassifyExpr)
             && !expr
+                .borrow()
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .privacy()
                 .is_all_expr()
         {
             //Cast the argument of the ReclassifyExpr instead
-            expr.try_as_reclassify_expr_mut()
+            let exp = Self::implicitly_converted_to(
+                *expr
+                    .borrow()
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .expr()
+                    .clone(),
+                t,
+            );
+            expr.borrow_mut()
+                .try_as_reclassify_expr_mut()
                 .unwrap()
                 .reclassify_expr_base_mut_ref()
-                .expr = Box::new(Self::implicitly_converted_to(
-                *expr.try_as_reclassify_expr_ref().unwrap().expr().clone(),
-                t,
-            ));
-            let mut expr_annotated_type = expr.annotated_type().clone();
+                .expr = exp;
+            let mut expr_annotated_type = expr.borrow().annotated_type().clone();
             expr_annotated_type.as_mut().unwrap().type_name = expr
+                .borrow()
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .expr()
@@ -978,11 +1014,12 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .type_name
                 .clone();
-            expr.expression_base_mut_ref().annotated_type = expr_annotated_type;
+            expr.borrow_mut().expression_base_mut_ref().annotated_type = expr_annotated_type;
             return expr;
         }
 
         assert!(expr
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
@@ -990,35 +1027,22 @@ impl TypeCheckVisitor {
             .as_ref()
             .unwrap()
             .is_primitive_type());
-        let mut cast = PrimitiveCastExpr::new(t.clone(), expr.clone(), true);
-        cast.expression_base
-            .ast_base
-            .parent_namespace
-            .as_mut()
+        let mut cast =
+            RcCell::new(PrimitiveCastExpr::new(t.clone(), expr.clone(), true).into_expr());
+        let cast_weak = ASTFlatten::from(cast.clone()).downgrade();
+        cast.borrow_mut().ast_base_mut_ref().parent = expr.parent().clone();
+        cast.borrow_mut().expression_base_mut_ref().statement = expr.statement().clone();
+        cast.borrow_mut().ast_base_mut_ref().line = expr.line();
+        cast.borrow_mut().ast_base_mut_ref().column = expr.column();
+        cast.borrow_mut()
+            .try_as_primitive_cast_expr_mut()
             .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = expr.parent().clone();
-        cast.expression_base.statement = expr.statement().clone();
-        cast.expression_base.ast_base.line = expr.line();
-        cast.expression_base.ast_base.column = expr.column();
-        cast.elem_type
+            .elem_type
             .ast_base_mut_ref()
             .unwrap()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new(cast.to_ast()));
-        expr.ast_base_mut_ref()
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new(cast.to_ast()));
-        cast.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+            .parent = Some(cast_weak.clone());
+        expr.borrow_mut().ast_base_mut_ref().parent = Some(cast_weak.clone());
+        cast.borrow_mut().expression_base_mut_ref().annotated_type = Some(AnnotatedTypeName::new(
             Some(t.clone()),
             expr.annotated_type()
                 .as_ref()
@@ -1028,21 +1052,17 @@ impl TypeCheckVisitor {
                 .map(|p| *p.clone()),
             expr.annotated_type().as_ref().unwrap().homomorphism.clone(),
         ));
-        cast.expression_base
+        cast.borrow_mut()
+            .expression_base_mut_ref()
             .annotated_type
             .as_mut()
             .unwrap()
             .ast_base
-            .parent_namespace
-            .as_mut()
-            .unwrap()
-            .deref_mut()
-            .borrow_mut()
-            .parent = Some(Box::new(cast.to_ast()));
-        Expression::PrimitiveCastExpr(cast)
+            .parent = Some(cast_weak);
+        cast
     }
 
-    pub fn visitFunctionCallExpr(&mut self, mut ast: FunctionCallExpr) {
+    pub fn visitFunctionCallExpr(&self, mut ast: &ASTFlatten) {
         if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
             self.handle_builtin_function_call(
                 ast.clone(),
@@ -1155,7 +1175,7 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitPrimitiveCastExpr(&self, mut ast: PrimitiveCastExpr) {
+    pub fn visitPrimitiveCastExpr(&self, mut ast: &ASTFlatten) {
         ast.expression_base.annotated_type = Some(self.handle_cast(*ast.expr, *ast.elem_type));
     }
 
@@ -1191,11 +1211,11 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitNewExpr(&self, _ast: NewExpr) { //already has correct type
-                                                // pass
+    pub fn visitNewExpr(&self, _ast: &ASTFlatten) { //already has correct type
+                                                    // pass
     }
 
-    pub fn visitMemberAccessExpr(&self, mut ast: MemberAccessExpr) {
+    pub fn visitMemberAccessExpr(&self, mut ast: &ASTFlatten) {
         assert!(ast.location_expr_base.target.is_some());
 
         assert!(
@@ -1235,7 +1255,7 @@ impl TypeCheckVisitor {
             .clone();
     }
 
-    pub fn visitReclassifyExpr(&self, mut ast: ReclassifyExpr) {
+    pub fn visitReclassifyExpr(&self, mut ast: &ASTFlatten) {
         assert!(
             ast.privacy().privacy_annotation_label().is_none(),
             r#"Second argument of "reveal" cannot be used as a privacy type{:?}"#,
@@ -1313,7 +1333,7 @@ impl TypeCheckVisitor {
         Self::check_for_invalid_private_type(ast.to_ast());
     }
 
-    pub fn visitIfStatement(&self, ast: IfStatement) {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
         let b = &ast.condition;
         assert!(
             b.instanceof_data_type(&TypeName::bool_type()),
@@ -1344,7 +1364,7 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitWhileStatement(&self, ast: WhileStatement) {
+    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
         assert!(
             Some(String::from("true")) == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
@@ -1355,7 +1375,7 @@ impl TypeCheckVisitor {
         //must also later check that body and condition do not contain private expressions
     }
 
-    pub fn visitForStatement(&self, ast: ForStatement) {
+    pub fn visitForStatement(&self, ast: &ASTFlatten) {
         assert!(
             Some(String::from("true")) == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
@@ -1365,7 +1385,7 @@ impl TypeCheckVisitor {
         )
         //must also later check that body, update and condition do not contain private expressions
     }
-    pub fn visitReturnStatement(&self, mut ast: ReturnStatement) {
+    pub fn visitReturnStatement(&self, mut ast: &ASTFlatten) {
         assert!(ast.statement_base.function.as_ref().unwrap().is_function());
         let rt = AnnotatedTypeName::new(
             Some(TypeName::TupleType(
@@ -1385,7 +1405,7 @@ impl TypeCheckVisitor {
             ast.expr = self.get_rhs(ast.expr.clone().unwrap(), &rt);
         }
     }
-    pub fn visitTupleExpr(&self, mut ast: TupleExpr) {
+    pub fn visitTupleExpr(&self, mut ast: &ASTFlatten) {
         ast.tuple_or_location_expr_base
             .expression_base
             .annotated_type = Some(AnnotatedTypeName::new(
@@ -1400,11 +1420,11 @@ impl TypeCheckVisitor {
         ));
     }
 
-    pub fn visitMeExpr(&self, mut ast: MeExpr) {
+    pub fn visitMeExpr(&self, mut ast: &ASTFlatten) {
         ast.expression_base.annotated_type = Some(AnnotatedTypeName::address_all());
     }
 
-    pub fn visitIdentifierExpr(&self, mut ast: IdentifierExpr) {
+    pub fn visitIdentifierExpr(&self, mut ast: &ASTFlatten) {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
         let target = ast.location_expr_base.target();
@@ -1424,7 +1444,7 @@ impl TypeCheckVisitor {
             assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         }
     }
-    pub fn visitIndexExpr(&self, mut ast: IndexExpr) {
+    pub fn visitIndexExpr(&self, mut ast: &ASTFlatten) {
         let arr = ast.arr.clone().unwrap();
         let index = ast.key.clone();
         let mut map_t = arr.annotated_type().as_ref().unwrap();
@@ -1492,7 +1512,7 @@ impl TypeCheckVisitor {
             assert!(false, "Indexing into non-mapping{:?}", ast);
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: ConstructorOrFunctionDefinition) {
+    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
         for t in ast.parameter_types().types {
             assert!(
                 is_instances(
@@ -1513,9 +1533,9 @@ impl TypeCheckVisitor {
             }
         }
     }
-    pub fn visitEnumDefinition(&self, mut ast: EnumDefinition) {
+    pub fn visitEnumDefinition(&self, mut ast: &ASTFlatten) {
         let mut etn = EnumTypeName::new(ast.qualified_name(), None);
-        etn.user_defined_type_name_base.target = Some(RRWrapper::new(Some(ast.to_ast())));
+        etn.user_defined_type_name_base.target = Some(RcCell::new(ast.to_ast()));
         ast.annotated_type = Some(AnnotatedTypeName::new(
             Some(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumTypeName(etn),
@@ -1525,9 +1545,9 @@ impl TypeCheckVisitor {
         ));
     }
 
-    pub fn visitEnumValue(&self, mut ast: EnumValue) {
+    pub fn visitEnumValue(&self, mut ast: &ASTFlatten) {
         let mut evtn = EnumValueTypeName::new(ast.qualified_name(), None);
-        evtn.user_defined_type_name_base.target = Some(RRWrapper::new(Some(ast.to_ast())));
+        evtn.user_defined_type_name_base.target = Some(RcCell::new(Some(ast.to_ast())));
         ast.annotated_type = Some(AnnotatedTypeName::new(
             Some(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumValueTypeName(evtn),
@@ -1537,7 +1557,7 @@ impl TypeCheckVisitor {
         ));
     }
 
-    pub fn visitStateVariableDeclaration(&self, ast: StateVariableDeclaration) {
+    pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) {
         if let Some(expr) = &ast.expr {
             //prevent private operations in declaration
             assert!(
@@ -1567,7 +1587,7 @@ impl TypeCheckVisitor {
         );
     }
 
-    pub fn visitMapping(&self, ast: Mapping) {
+    pub fn visitMapping(&self, ast: &ASTFlatten) {
         if ast.key_label.is_some() {
             assert!(
                 *ast.key_type.clone() == TypeName::address_type(),
@@ -1577,7 +1597,7 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitRequireStatement(&self, ast: RequireStatement) {
+    pub fn visitRequireStatement(&self, ast: &ASTFlatten) {
         assert!(
             ast.condition
                 .annotated_type()
@@ -1594,7 +1614,7 @@ impl TypeCheckVisitor {
         );
     }
 
-    pub fn visitAnnotatedTypeName(&mut self, mut ast: AnnotatedTypeName) {
+    pub fn visitAnnotatedTypeName(&self, mut ast: &ASTFlatten) {
         if is_instance(
             &**ast.type_name.as_ref().unwrap(),
             ASTType::UserDefinedTypeNameBase,
