@@ -12,7 +12,7 @@ use crate::ast::{
 }; //, AstException
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn check_return(ast: &AST) {
+pub fn check_return(ast: &ASTFlatten) {
     let v = ReturnCheckVisitor::new();
     v.visit(ast);
 }
@@ -47,33 +47,59 @@ impl ReturnCheckVisitor {
         }
     }
     pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
-        let container = ast.parent().clone().unwrap();
+        let container = ast
+            .try_as_return_statement_ref()
+            .unwrap()
+            .borrow()
+            .parent()
+            .unwrap()
+            .upgrade()
+            .unwrap();
         // assert!(is_instance(&*container,ASTType::Block));
         let mut ok = true;
         if container
             .try_as_statement_ref()
             .unwrap()
+            .borrow()
             .try_as_statement_list_ref()
             .unwrap()
             .statements()
             .last()
             .map(|v| v.clone())
             .unwrap()
-            != ast.to_ast()
+            != *ast.try_as_ast_ref().unwrap()
         {
             ok = false;
         }
         if !is_instance(
-            &**container.ast_base_ref().unwrap().parent().as_ref().unwrap(),
+            &container
+                .try_as_statement_ref()
+                .unwrap()
+                .borrow()
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .parent()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap(),
             ASTType::ConstructorOrFunctionDefinition,
         ) || container
+            .try_as_statement_ref()
+            .unwrap()
+            .borrow()
             .ast_base_ref()
             .unwrap()
+            .borrow()
             .parent()
-            .as_ref()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_namespace_definition_ref()
             .unwrap()
+            .borrow()
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .is_constructor()

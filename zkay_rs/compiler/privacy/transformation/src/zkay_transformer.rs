@@ -87,7 +87,7 @@ impl ZkayVarDeclTransformer {
         Self { expr_trafo: None }
     }
 
-    pub fn visitAnnotatedTypeName(&self, ast: AnnotatedTypeName) -> AnnotatedTypeName {
+    pub fn visitAnnotatedTypeName(&self, ast: &ASTFlatten) -> AnnotatedTypeName {
         let t = if ast.is_private() {
             Some(TypeName::cipher_type(ast.clone(), ast.homomorphism.clone()))
         } else {
@@ -668,11 +668,11 @@ impl ZkayStatementTransformer {
         ast.clone()
     }
 
-    pub fn visitContinueStatement(&self, ast: &ASTFlatten) {}
+    pub fn visitContinueStatement(&self, _ast: &ASTFlatten) {}
 
-    pub fn visitBreakStatement(&self, ast: BreakStatement) {}
+    pub fn visitBreakStatement(&self, _ast: &ASTFlatten) {}
 
-    pub fn visitReturnStatement(&self, ast: &mut ReturnStatement)
+    pub fn visitReturnStatement(&self, ast: &ASTFlatten)
     // """
     // Handle return statement.
 
@@ -1226,7 +1226,7 @@ impl ZkayExpressionTransformer {
         ret.unwrap()
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: PrimitiveCastExpr) -> AST
+    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) -> AST
 // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
     {
         if ast.expression_base.evaluate_privately {
@@ -1385,7 +1385,7 @@ impl ZkayCircuitTransformer {
         )
     }
 
-    pub fn visitReclassifyExpr(&self, mut ast: ReclassifyExpr)
+    pub fn visitReclassifyExpr(&self, mut ast: &ASTFlatten)
     // """Rule (15), boundary crossing if analysis determined that it is """
     {
         if ast.annotated_type().as_ref().unwrap().is_cipher()

@@ -5,9 +5,9 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
-use crate::ast::{IntoAST, Parameter, SourceUnit};
+use crate::ast::{ASTFlatten, IntoAST, Parameter, SourceUnit};
 use crate::visitor::visitor::AstVisitor;
+use rccell::RcCell;
 // class FunctionVisitor(AstVisitor)
 pub trait FunctionVisitor: AstVisitor {
     // pub fn __init__(self)
@@ -15,16 +15,16 @@ pub trait FunctionVisitor: AstVisitor {
     // fn traversal(&self) -> &'static str {
     //     "node-or-children"
     // }
-    fn visitSourceUnit(&self, ast: RcCell<SourceUnit>) {
-        for c in &ast.borrow().contracts {
-            for cd in &c.constructor_definitions {
-                self.visit(cd.clone().into());
+    fn visitSourceUnit(&self, ast: &ASTFlatten) {
+        for c in &ast.try_as_source_unit_ref().unwrap().borrow().contracts {
+            for cd in &c.borrow().constructor_definitions {
+                self.visit(&cd.clone().into());
             }
-            for fd in &c.function_definitions {
-                self.visit(fd.clone().into());
+            for fd in &c.borrow().function_definitions {
+                self.visit(&fd.clone().into());
             }
         }
     }
 
-    fn visitParameter(&self, _ast: RcCell<Parameter>) {}
+    fn visitParameter(&self, _ast: &ASTFlatten) {}
 }

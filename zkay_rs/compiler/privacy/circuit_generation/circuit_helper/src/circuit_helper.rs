@@ -1248,10 +1248,7 @@ where
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
-                        .parent
-                        .as_ref()
-                        .unwrap()
-                        .borrow(),
+                        .parent,
                 )
                 .as_type(AST::AnnotatedTypeName(*idf.annotated_type.unwrap()))
         } else {
@@ -1568,7 +1565,7 @@ where
         }
     }
 
-    pub fn add_if_statement_to_circuit(&mut self, ast: &mut IfStatement)
+    pub fn add_if_statement_to_circuit(&mut self, ast: &ASTFlatten)
     // """Include private if statement in this circuit."""
     {
         //Handle if branch
@@ -1629,7 +1626,7 @@ where
             "JOIN [{}]",
             cond.as_ref().unwrap().identifier_base.name
         ));
-        let cond_idf_expr = cond.unwrap().get_idf_expr(&Some(Box::new(ast.to_ast())));
+        let cond_idf_expr = cond.unwrap().get_idf_expr(ast);
         assert!(is_instance(&cond_idf_expr, ASTType::IdentifierExpr));
         let mut selfs = self.clone();
         self._remapper.0.join_branch(
@@ -1716,7 +1713,7 @@ where
 
     pub fn _get_canonical_privacy_label(
         &self,
-        analysis: &PartitionState<AST>,
+        analysis: &PartitionState<ASTFlatten>,
         privacy: &AST,
     ) -> AST
 // """

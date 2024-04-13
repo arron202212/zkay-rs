@@ -18,7 +18,7 @@ use zkay_crypto::params::CryptoParams;
 use zkay_derive::ASTVisitorBaseRefImpl;
 // T = TypeVar("T")
 
-pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Option<AST>
+pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Option<ASTFlatten>
 // """
 
     // :param ast
@@ -30,51 +30,36 @@ pub fn deep_copy(ast: Option<AST>, with_types: bool, with_analysis: bool) -> Opt
 {
     // assert!(isinstance(ast,AST,ASTFlatten,));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
-    let mut ast_copy = v.visit(&ast.clone().unwrap());
+    let mut ast_copy = v.visit(ast);
     ast_copy
         .as_mut()
         .unwrap()
-        .ast_base_mut_ref()
+        .ast_base_ref()
         .unwrap()
-        .parent = ast.unwrap().ast_base_ref().unwrap().parent().clone();
+        .borrow_mut()
+        .parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
     set_parents(ast_copy.as_mut().unwrap());
     link_identifiers(ast_copy.as_mut().unwrap());
     ast_copy
 }
 
-pub fn replace_expr(
-    old_expr: &Expression,
-    new_expr: &mut Expression,
-    copy_type: bool,
-) -> Expression
+pub fn replace_expr(old_expr: &ASTFlatten, new_expr: &ASTFlatten, copy_type: bool) -> ASTFlatten
 // """
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
 {
-    _replace_ast(Some(old_expr.to_ast()), &mut (*new_expr).to_ast());
+    _replace_ast(old_expr, new_expr);
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
     new_expr.clone()
 }
 
-pub fn _replace_ast(old_ast: Option<AST>, mut new_ast: &mut AST) {
-    new_ast.ast_base_mut_ref().unwrap().parent = old_ast
-        .as_ref()
-        .unwrap()
-        .ast_base_ref()
-        .unwrap()
-        .parent()
-        .clone();
-    DeepCopyVisitor::copy_ast_fields(old_ast.clone(), &mut new_ast.clone());
-    if old_ast
-        .as_ref()
-        .unwrap()
-        .ast_base_ref()
-        .unwrap()
-        .parent()
-        .is_some()
-    {
+pub fn _replace_ast(old_ast: &ASTFlatten, mut new_ast: &ASTFlatten) {
+    new_ast.ast_base_ref().unwrap().borrow_mut().parent =
+        old_ast.ast_base_ref().unwrap().borrow().parent().clone();
+    DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
+    if old_ast.ast_base_ref().unwrap().borrow().parent().is_some() {
         set_parents(&mut new_ast);
         link_identifiers(new_ast);
     }
@@ -137,14 +122,14 @@ pub struct DeepCopyVisitor {
 }
 
 impl AstVisitor for DeepCopyVisitor {
-    type Return = Option<AST>;
+    type Return = Option<ASTFlatten>;
     fn temper_result(&self) -> Self::Return {
         None
     }
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {
         None
     }
 }
@@ -162,14 +147,14 @@ impl DeepCopyVisitor {
     }
 
     // @staticmethod
-    pub fn copy_ast_fields(_ast: Option<AST>, _ast_copy: &mut AST) {
+    pub fn copy_ast_fields(_ast: &ASTFlatten, _ast_copy: &ASTFlatten) {
         // ast_copy.line = ast.line;
         // ast_copy.column = ast.column;
         // ast_copy.modified_values = ast.modified_values;
         // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, _ast: Option<AST>) -> Option<AST> {
+    pub fn visitChildren(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();
@@ -192,43 +177,50 @@ impl DeepCopyVisitor {
         None
     }
 
-    pub fn visitAnnotatedTypeName(self, ast: Option<AST>) -> Option<AST> {
+    pub fn visitAnnotatedTypeName(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         let mut ast_copy = self.visitChildren(ast);
         // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
         ast_copy
     }
 
-    pub fn visitUserDefinedTypeName(self, ast: UserDefinedTypeName) -> Option<AST> {
-        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
+    pub fn visitUserDefinedTypeName(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        let mut ast_copy = self.visitChildren(ast);
         // ast_copy.target = ast.target;
         ast_copy
     }
 
-    pub fn visitBuiltinFunction(self, ast: Option<AST>) -> Option<AST> {
+    pub fn visitBuiltinFunction(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         let mut ast_copy = self.visitChildren(ast);
         // ast_copy.is_private = ast.is_private;
         // ast_copy.homomorphism = ast.homomorphism;
         ast_copy
     }
 
-    pub fn visitExpression(self, ast: Expression) -> Option<AST> {
-        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
-        if self.with_types && ast.annotated_type().is_some() {
+    pub fn visitExpression(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        let mut ast_copy = self.visitChildren(ast);
+        if self.with_types
+            && ast
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .is_some()
+        {
             // ast_copy.annotated_type = ast.annotated_type.clone();
         }
         // ast_copy.evaluate_privately = ast.evaluate_privately();
         ast_copy
     }
 
-    pub fn visitStatement(self, ast: Statement) -> Option<AST> {
-        let mut ast_copy = self.visitChildren(Some(ast.to_ast()));
+    pub fn visitStatement(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        let mut ast_copy = self.visitChildren(ast);
         if self.with_analysis {
             // ast_copy.before_analysis = ast.before_analysis();
         }
         ast_copy
     }
 
-    pub fn copy_field(self, field: Option<AST>) -> Option<AST> {
+    pub fn copy_field(self, field: &ASTFlatten) -> <Self as AstVisitor>::Return {
         // if field.is_none() {
         //     None
         // } else if isinstance(field, str)
@@ -243,6 +235,6 @@ impl DeepCopyVisitor {
         // } else {
         //     self.visit(field)
         // }
-        field.clone()
+        Some(field.clone())
     }
 }

@@ -110,7 +110,7 @@ pub fn derive_ast_children(item: TokenStream) -> TokenStream {
                     return format!(
                         r#"
 impl ASTChildren for {} {{
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {{
+    fn process_children(&self, _cb: &mut ChildListBuilder) {{
         
     }}
                 }}
@@ -166,28 +166,50 @@ pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
                     let fn_name = struct_name.to_snake_case();
                     let mut impl_traits_str = format!(
                         r#"
-impl {}Ref for {} {{
-        fn {}_ref(&self)->&{}{{
-        self }}
+impl {struct_name}Ref for {struct_name} {{
+        fn {fn_name}_ref(&self)->{}{{
+        {} }}
     }}                    "#,
-                        struct_name, struct_name, fn_name, struct_name
+                        if &struct_name == "ASTBase" {
+                            "RcCell<ASTBase>".to_owned()
+                        } else {
+                            "&".to_owned() + &struct_name
+                        },
+                        if &struct_name == "ASTBase" {
+                            "RcCell::new(self.clone())"
+                        } else {
+                            "self"
+                        }
                     );
                     impl_traits_str += &format!(
                         r#"
 #[enum_dispatch]
-pub trait {}MutRef {{
-        fn {}_mut_ref(&mut self)->&mut {};
+pub trait {struct_name}MutRef {{
+        fn {fn_name}_mut_ref(&mut self)->{};
  }} 
                   "#,
-                        struct_name, fn_name, struct_name
+                        if &struct_name == "ASTBase" {
+                            "RcCell<ASTBase>".to_owned()
+                        } else {
+                            "&mut ".to_owned() + &struct_name
+                        }
                     );
                     impl_traits_str += &format!(
                         r#"
-impl {}MutRef for {} {{
-        fn {}_mut_ref(&mut self)->&mut {}{{
-        self }}
+impl {struct_name}MutRef for {struct_name} {{
+        fn {fn_name}_mut_ref(&mut self)->{}{{
+        {} }}
     }}                    "#,
-                        struct_name, struct_name, fn_name, struct_name
+                        if &struct_name == "ASTBase" {
+                            "RcCell<ASTBase>".to_owned()
+                        } else {
+                            "&mut ".to_owned() + &struct_name
+                        },
+                        if &struct_name == "ASTBase" {
+                            "RcCell::new(self.clone())"
+                        } else {
+                            "self"
+                        }
                     );
                     return impl_traits_str.parse().unwrap();
                 }
@@ -241,19 +263,37 @@ pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
         struct_vairent += &fn_name;
 
         let s = format!(
-            "impl {}Ref for {} {{
-        fn {}_ref(&self)->&{}{{
-        &{} }}
+            "impl {base_struct_name}Ref for {struct_name} {{
+        fn {fn_name}_ref(&self)->{}{{
+            {} }}
     }}\n",
-            base_struct_name, struct_name, fn_name, base_struct_name, struct_vairent
+            if &base_struct_name == "ASTBase" {
+                "RcCell<ASTBase>".to_owned()
+            } else {
+                "&".to_owned() + &base_struct_name
+            },
+            if &base_struct_name == "ASTBase" {
+                struct_vairent.clone() + ".clone()"
+            } else {
+                "&".to_owned() + &struct_vairent
+            },
         );
         impls += &s;
         let s = format!(
-            "impl {}MutRef for {} {{
-        fn {}_mut_ref(&mut self)->&mut {}{{
-        &mut {} }}
+            "impl {base_struct_name}MutRef for {struct_name} {{
+        fn {fn_name}_mut_ref(&mut self)-> {}{{
+             {} }}
     }}\n",
-            base_struct_name, struct_name, fn_name, base_struct_name, struct_vairent
+            if &base_struct_name == "ASTBase" {
+                "RcCell<ASTBase>".to_owned()
+            } else {
+                "&mut ".to_owned() + &base_struct_name
+            },
+            if &base_struct_name == "ASTBase" {
+                struct_vairent.clone() + ".clone()"
+            } else {
+                "&mut ".to_owned() + &struct_vairent
+            },
         );
         impls += &s;
     }
@@ -296,11 +336,20 @@ pub fn impl_trait(attr: TokenStream, item: TokenStream) -> TokenStream {
     while let Some(struct_name) = at.next() {
         let struct_name = struct_name.to_string();
         let s = format!(
-            "impl {} for {} {{
-        fn {}(&self)->&{}{{
-        &self.{} }}
+            "impl {trait_name} for {struct_name} {{
+        fn {fn_name}(&self)->{}{{
+        {} }}
     }}\n",
-            trait_name, struct_name, fn_name, struct_ref, struct_vairent
+            if struct_ref == "ASTBase" {
+                "RcCell<ASTBase>".to_owned()
+            } else {
+                "&".to_owned() + &struct_ref
+            },
+            if struct_ref == "ASTBase" {
+                "self.ast_base.clone()".to_owned()
+            } else {
+                "&self.".to_owned() + &struct_vairent
+            },
         );
         impls += &s;
     }

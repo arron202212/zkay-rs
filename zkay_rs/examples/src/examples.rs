@@ -184,7 +184,7 @@ mod tests {
 
     #[test]
     pub fn test_examples_abs_path_env() {
-        use std::path::Path;
+        // use std::path::Path;
 
         // println!("FILE: {:?}", FILE);
         // println!("src path: {:?}", Path::new(FILE).parent());
@@ -200,7 +200,7 @@ mod tests {
         // let this_file = file!();
         // println!("defined in file: {this_file}");
         //         println!("{:?}", *EXAMPLES_DIR);
-        for (name, _example) in ALL_EXAMPLES.iter() {
+        for (_name, _example) in ALL_EXAMPLES.iter() {
             // println!("{:?}", name);
             // let  _ast = get_processed_ast(&example.code(), Some(!0b00001000));
             assert!(true);

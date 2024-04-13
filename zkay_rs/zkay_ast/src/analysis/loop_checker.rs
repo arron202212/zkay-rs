@@ -60,48 +60,105 @@ impl LoopChecker {
     }
     pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
         assert!(
-            !contains_private_expr(&mut Some(ast.condition.borrow().to_ast())),
+            !contains_private_expr(
+                &ast.try_as_while_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .condition
+                    .clone()
+                    .into()
+            ),
             "Loop condition cannot contain private expressions {:?}",
-            ast.condition
+            ast.try_as_while_statement_ref().unwrap().borrow().condition
         );
         assert!(
-            !contains_private_expr(&mut Some(ast.body.borrow().to_ast())),
+            !contains_private_expr(
+                &ast.try_as_while_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .body
+                    .clone()
+                    .into()
+            ),
             "Loop body cannot contain private expressions {:?}",
-            ast.body
+            ast.try_as_while_statement_ref().unwrap().borrow().body
         );
         self.visit_children(ast);
     }
 
     pub fn visitDoWhileStatement(&self, ast: &ASTFlatten) {
         assert!(
-            !contains_private_expr(&mut Some(ast.condition.to_ast())),
+            !contains_private_expr(
+                &ast.try_as_do_while_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .condition
+                    .clone()
+                    .into()
+            ),
             "Loop condition cannot contain private expressions {:?}",
-            ast.condition
+            ast.try_as_do_while_statement_ref()
+                .unwrap()
+                .borrow()
+                .condition
         );
         assert!(
-            !contains_private_expr(&mut Some(ast.body.to_ast())),
+            !contains_private_expr(
+                &ast.try_as_do_while_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .body
+                    .clone()
+                    .into()
+            ),
             "Loop body cannot contain private expressions {:?}",
-            ast.body
+            ast.try_as_do_while_statement_ref().unwrap().borrow().body
         );
         self.visit_children(ast);
     }
 
     pub fn visitForStatement(&self, ast: &ASTFlatten) {
         assert!(
-            !contains_private_expr(&mut Some(ast.condition.to_ast())),
+            !contains_private_expr(
+                &ast.try_as_for_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .condition
+                    .clone()
+                    .into()
+            ),
             "Loop condition cannot contain private expressions {:?}",
-            ast.condition
+            ast.try_as_for_statement_ref().unwrap().borrow().condition
         );
         assert!(
-            !contains_private_expr(&mut Some(ast.body.to_ast())),
+            !contains_private_expr(
+                &ast.try_as_for_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .body
+                    .clone()
+                    .into()
+            ),
             "Loop body cannot contain private expressions {:?}",
-            ast.body
+            ast.try_as_for_statement_ref().unwrap().borrow().body
         );
         assert!(
-            ast.update.is_none()
-                || contains_private_expr(&mut ast.update.as_ref().map(|u| u.to_ast())),
+            ast.try_as_for_statement_ref()
+                .unwrap()
+                .borrow()
+                .update
+                .is_none()
+                || contains_private_expr(
+                    &ast.try_as_for_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .update
+                        .clone()
+                        .unwrap()
+                        .into()
+                ),
             "Loop update statement cannot contain private expressions {:?}",
-            ast.update
+            ast.try_as_for_statement_ref().unwrap().borrow().update
         );
         self.visit_children(ast);
     }

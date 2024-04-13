@@ -5,7 +5,6 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
 use crate::ast::{
     is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition,
     ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
@@ -16,8 +15,9 @@ use crate::visitor::{
     function_visitor::FunctionVisitor,
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
+use rccell::RcCell;
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn call_graph_analysis(ast: &mut AST)
+pub fn call_graph_analysis(ast: &ASTFlatten)
 // """
 // determines (indirectly) called functions for every function
 // and concludes from that whether a function has a static body
@@ -64,56 +64,105 @@ impl DirectCalledFunctionDetector {
         }
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
-        if !is_instance(&**ast.func(), ASTType::BuiltinFunction) && !ast.is_cast() {
-            assert!(is_instance(&**ast.func(), ASTType::LocationExprBase));
-            let fdef = ast
+        if !is_instance(
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) && !ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .is_cast()
+        {
+            assert!(is_instance(
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ASTType::LocationExprBase
+            ));
+            let fdef = &ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
-                .unwrap();
+                .as_ref()
+                .unwrap()
+                .clone();
             assert!(fdef
+                .clone()
+                .upgrade()
+                .unwrap()
                 .try_as_namespace_definition_ref()
                 .unwrap()
+                .borrow()
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .is_function());
             if let Some(cofd) = fdef
+                .clone()
+                .upgrade()
+                .unwrap()
                 .try_as_namespace_definition_ref()
                 .unwrap()
+                .borrow()
                 .try_as_constructor_or_function_definition_ref()
             {
                 let cofd = cofd.clone();
-                ast.expression_base_mut_ref()
-                    .statement
-                    .as_mut()
+                ast.try_as_function_call_expr_ref()
                     .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .borrow_mut()
                     .statement_base_mut_ref()
                     .unwrap()
                     .function
                     .as_mut()
                     .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap()
+                    .borrow_mut()
                     .called_functions
-                    .insert(cofd);
+                    .insert(RcCell::new(cofd));
             }
         }
         self.visit_children(ast);
     }
     pub fn visitForStatement(&self, ast: &ASTFlatten) {
-        ast.statement_base
+        ast.try_as_for_statement_ref()
+            .unwrap()
+            .borrow_mut()
+            .statement_base
             .function
             .as_mut()
             .unwrap()
+            .try_as_constructor_or_function_definition_mut()
+            .unwrap()
+            .borrow_mut()
             .has_static_body = false;
         self.visit_children(ast);
     }
     pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
-        ast.statement_base
+        ast.try_as_while_statement_ref()
+            .unwrap()
+            .borrow_mut()
+            .statement_base
             .function
             .as_mut()
             .unwrap()
+            .try_as_constructor_or_function_definition_mut()
+            .unwrap()
+            .borrow_mut()
             .has_static_body = false;
         self.visit_children(ast);
     }
@@ -150,16 +199,40 @@ impl IndirectCalledFunctionDetector {
     //Fixed point iteration
     {
         let mut size = 0;
-        let mut leaves = ast.called_functions.clone();
-        while ast.called_functions.len() > size {
-            size = ast.called_functions.len();
+        let mut leaves = ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .called_functions
+            .clone();
+        while ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .called_functions
+            .len()
+            > size
+        {
+            size = ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .called_functions
+                .len();
             leaves = leaves
                 .iter()
                 .map(|leaf| {
-                    leaf.called_functions
+                    leaf.borrow()
+                        .called_functions
                         .iter()
                         .filter_map(|fct| {
-                            if !ast.called_functions.contains(fct) {
+                            if !ast
+                                .try_as_constructor_or_function_definition_ref()
+                                .unwrap()
+                                .borrow()
+                                .called_functions
+                                .contains(fct)
+                            {
                                 Some(fct.clone())
                             } else {
                                 None
@@ -169,12 +242,34 @@ impl IndirectCalledFunctionDetector {
                 })
                 .flatten()
                 .collect();
-            ast.called_functions = ast.called_functions.union(&leaves).cloned().collect();
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .called_functions = ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .called_functions
+                .union(&leaves)
+                .cloned()
+                .collect();
         }
 
-        if ast.called_functions.contains(&ast) {
-            ast.is_recursive = true;
-            ast.has_static_body = false;
+        if ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .called_functions
+            .contains(&ast.try_as_constructor_or_function_definition_ref().unwrap())
+        {
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .is_recursive = true;
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .has_static_body = false;
         }
     }
 }
@@ -206,15 +301,28 @@ impl IndirectDynamicBodyDetector {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        if !ast.has_static_body {
+        if !ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .has_static_body
+        {
             return;
         }
 
-        for fct in &ast.called_functions {
-            if !fct.has_static_body
+        for fct in &ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .called_functions
+        {
+            if !fct.borrow().has_static_body
             // This function (directly or indirectly) calls a recursive function
             {
-                ast.has_static_body = false;
+                ast.try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .has_static_body = false;
                 return;
             }
         }

@@ -8,23 +8,28 @@
 
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
-    ASTBaseMutRef, AnnotatedTypeName, Block, ConstructorOrFunctionDefinition, FunctionTypeName,
-    Identifier, IdentifierBase, IntoAST, NamespaceDefinitionBaseProperty, Parameter,
-    StateVariableDeclaration, StructDefinition, StructTypeName, TypeName, UserDefinedTypeName,
-    VariableDeclaration,
+    ASTBaseMutRef, ASTBaseRef, ASTFlatten, AnnotatedTypeName, Block,
+    ConstructorOrFunctionDefinition, FunctionTypeName, Identifier, IdentifierBase, IntoAST,
+    NamespaceDefinitionBaseProperty, Parameter, StateVariableDeclaration, StructDefinition,
+    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
 };
 use crate::pointers::parent_setter::set_parents;
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
+use std::collections::BTreeSet;
 use std::sync::{Arc, Mutex};
-pub fn array_length_member() -> VariableDeclaration {
-    VariableDeclaration::new(
+// lazy_static! {
+// pub static ref VARIABLE_DECLARATIONS_CACHE:Mutex<BTreeSet<RcCell<VariableDeclaration>>>=Mutex::new(BTreeSet::new());
+pub fn array_length_member() -> ASTFlatten {
+    RcCell::new(VariableDeclaration::new(
         vec![],
         AnnotatedTypeName::uint_all(),
         Identifier::identifier("length"),
         None,
-    )
+    ))
+    .into()
 }
+
 pub fn global_defs() -> GlobalDefs {
     GlobalDefs::new()
 }
@@ -42,11 +47,11 @@ pub fn global_vars() -> GlobalVars {
 // pub static ref global_vars(): GlobalVars = GlobalVars::new();
 // }
 pub struct GlobalDefs {
-    address_struct: StructDefinition,
-    address_payable_struct: StructDefinition,
-    msg_struct: StructDefinition,
-    block_struct: StructDefinition,
-    tx_struct: StructDefinition,
+    address_struct: RcCell<StructDefinition>,
+    address_payable_struct: RcCell<StructDefinition>,
+    msg_struct: RcCell<StructDefinition>,
+    block_struct: RcCell<StructDefinition>,
+    tx_struct: RcCell<StructDefinition>,
 }
 // class GlobalDefs:
 // # gasleft: FunctionDefinition = FunctionDefinition(
@@ -59,7 +64,7 @@ pub struct GlobalDefs {
 // # gasleft.idf.parent = gasleft
 impl GlobalDefs {
     pub fn new() -> Self {
-        let address_struct: StructDefinition = StructDefinition::new(
+        let address_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<address>"),
             vec![VariableDeclaration::new(
                 vec![],
@@ -68,10 +73,10 @@ impl GlobalDefs {
                 None,
             )
             .to_ast()],
-        );
-        set_parents(&mut address_struct.clone().into_ast());
+        ));
+        set_parents(&address_struct.clone().into());
 
-        let mut address_payable_struct: StructDefinition = StructDefinition::new(
+        let mut address_payable_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<address_payable>"),
             vec![
                 VariableDeclaration::new(
@@ -83,61 +88,63 @@ impl GlobalDefs {
                 .to_ast(),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("send")),
-                    Some(vec![Parameter::new(
+                    Some(vec![RcCell::new(Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
                         Identifier::identifier(""),
                         None,
-                    )]),
+                    ))]),
                     Some(vec![String::from("public")]),
-                    Some(vec![Parameter::new(
+                    Some(vec![RcCell::new(Parameter::new(
                         vec![],
                         AnnotatedTypeName::bool_all(),
                         Identifier::identifier(""),
                         None,
-                    )]),
+                    ))]),
                     Some(Block::new(vec![], false)),
                 )
                 .to_ast(),
                 ConstructorOrFunctionDefinition::new(
                     Some(Identifier::identifier("transfer")),
-                    Some(vec![Parameter::new(
+                    Some(vec![RcCell::new(Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
                         Identifier::identifier(""),
                         None,
-                    )]),
+                    ))]),
                     Some(vec![String::from("public")]),
                     Some(vec![]),
                     Some(Block::new(vec![], false)),
                 )
                 .to_ast(),
             ],
-        );
-        address_payable_struct.members[1]
+        ));
+        address_payable_struct.borrow_mut().members[1]
+            .borrow_mut()
             .try_as_namespace_definition_mut()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
-        address_payable_struct.members[2]
+        address_payable_struct.borrow_mut().members[2]
+            .borrow_mut()
             .try_as_namespace_definition_mut()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
-        set_parents(&mut address_payable_struct.clone().into_ast());
+        set_parents(&address_payable_struct.clone().into());
 
-        let msg_struct: StructDefinition = StructDefinition::new(
+        let msg_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<msg>"),
             vec![
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
+                    RcCell::new(AnnotatedTypeName::new(
                         Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    ),
+                    )),
                     Identifier::identifier("sender"),
                     None,
                 )
@@ -150,19 +157,19 @@ impl GlobalDefs {
                 )
                 .to_ast(),
             ],
-        );
-        set_parents(&mut msg_struct.clone().into_ast());
+        ));
+        set_parents(&msg_struct.clone().into());
 
-        let block_struct: StructDefinition = StructDefinition::new(
+        let block_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<block>"),
             vec![
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
+                    RcCell::new(AnnotatedTypeName::new(
                         Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    ),
+                    )),
                     Identifier::identifier("coinbase"),
                     None,
                 )
@@ -196,10 +203,10 @@ impl GlobalDefs {
                 )
                 .to_ast(),
             ],
-        );
-        set_parents(&mut block_struct.clone().into_ast());
+        ));
+        set_parents(&block_struct.clone().into());
 
-        let tx_struct: StructDefinition = StructDefinition::new(
+        let tx_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<tx>"),
             vec![
                 VariableDeclaration::new(
@@ -211,18 +218,18 @@ impl GlobalDefs {
                 .to_ast(),
                 VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::new(
+                    RcCell::new(AnnotatedTypeName::new(
                         Some(TypeName::address_payable_type()),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    ),
+                    )),
                     Identifier::identifier("origin"),
                     None,
                 )
                 .to_ast(),
             ],
-        );
-        set_parents(&mut tx_struct.clone().into_ast());
+        ));
+        set_parents(&tx_struct.clone().into());
         Self {
             address_struct,
             address_payable_struct,
@@ -231,7 +238,7 @@ impl GlobalDefs {
             tx_struct,
         }
     }
-    pub fn vars(&self) -> Vec<StructDefinition> {
+    pub fn vars(&self) -> Vec<RcCell<StructDefinition>> {
         vec![
             self.address_struct.clone(),
             self.address_payable_struct.clone(),
@@ -243,109 +250,120 @@ impl GlobalDefs {
 }
 
 pub struct GlobalVars {
-    msg: StateVariableDeclaration,
-    block: StateVariableDeclaration,
-    tx: StateVariableDeclaration,
-    now: StateVariableDeclaration,
+    msg: RcCell<StateVariableDeclaration>,
+    block: RcCell<StateVariableDeclaration>,
+    tx: RcCell<StateVariableDeclaration>,
+    now: RcCell<StateVariableDeclaration>,
 }
 // class GlobalVars:
 impl GlobalVars {
     pub fn new() -> Self {
-        let mut msg: StateVariableDeclaration = StateVariableDeclaration::new(
+        let mut msg = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs()
                         .msg_struct
+                        .borrow()
                         .namespace_definition_base
                         .idf
                         .as_ref()
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(global_defs().msg_struct.to_namespace_definition()),
+                    Some(ASTFlatten::from(global_defs().msg_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
             vec![],
             Identifier::identifier("msg"),
             None,
-        );
-        msg.identifier_declaration_base
+        ));
+        msg.borrow_mut()
+            .identifier_declaration_base
             .idf
-            .as_mut()
+            .as_ref()
             .unwrap()
             .borrow_mut()
-            .ast_base_mut_ref()
-            .parent = Some(Box::new(msg.to_ast()));
+            .ast_base_ref()
+            .borrow_mut()
+            .parent = Some(ASTFlatten::from(msg.clone()).downgrade());
 
-        let mut block: StateVariableDeclaration = StateVariableDeclaration::new(
+        let mut block = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs()
                         .block_struct
+                        .borrow()
                         .namespace_definition_base
                         .idf
                         .as_ref()
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(global_defs().block_struct.to_namespace_definition()),
+                    Some(ASTFlatten::from(global_defs().block_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
             vec![],
             Identifier::identifier("block"),
             None,
-        );
+        ));
         block
+            .borrow_mut()
             .identifier_declaration_base
             .idf
             .as_mut()
             .unwrap()
             .borrow_mut()
-            .ast_base_mut_ref()
-            .parent = Some(Box::new(block.to_ast()));
+            .ast_base_ref()
+            .borrow_mut()
+            .parent = Some(ASTFlatten::from(block.clone()).downgrade());
 
-        let mut tx: StateVariableDeclaration = StateVariableDeclaration::new(
+        let mut tx = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs()
                         .tx_struct
+                        .borrow()
                         .namespace_definition_base
                         .idf()
                         .upgrade()
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(global_defs().tx_struct.to_namespace_definition()),
+                    Some(ASTFlatten::from(global_defs().tx_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
             vec![],
             Identifier::identifier("tx"),
             None,
-        );
-        tx.identifier_declaration_base
+        ));
+        tx.borrow_mut()
+            .identifier_declaration_base
             .idf
             .as_mut()
             .unwrap()
             .borrow_mut()
-            .ast_base_mut_ref()
-            .parent = Some(Box::new(tx.to_ast()));
+            .ast_base_ref()
+            .borrow_mut()
+            .parent = Some(ASTFlatten::from(tx.clone()).downgrade());
 
-        let mut now: StateVariableDeclaration = StateVariableDeclaration::new(
+        let mut now = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::uint_all(),
             vec![],
             Identifier::identifier("now"),
             None,
-        );
-        now.identifier_declaration_base
+        ));
+        now.borrow_mut()
+            .identifier_declaration_base
             .idf
             .as_mut()
             .unwrap()
             .borrow_mut()
-            .ast_base_mut_ref()
-            .parent = Some(Box::new(now.to_ast()));
+            .ast_base_ref()
+            .borrow_mut()
+            .parent = Some(ASTFlatten::from(now.clone()).downgrade());
         Self {
             msg,
             block,
@@ -353,7 +371,7 @@ impl GlobalVars {
             now,
         }
     }
-    pub fn vars(&self) -> Vec<StateVariableDeclaration> {
+    pub fn vars(&self) -> Vec<RcCell<StateVariableDeclaration>> {
         vec![
             self.msg.clone(),
             self.block.clone(),

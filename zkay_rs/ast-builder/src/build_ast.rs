@@ -877,7 +877,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let index = if let Some(index) = &ctx.index {
             index.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
-                Some(expr)
+                Some(RcCell::new(expr))
             } else {
                 None
             }

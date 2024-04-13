@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
+use rccell::RcCell;
 use std::collections::BTreeSet;
 use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
@@ -24,7 +24,7 @@ use crate::visitor::{
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn check_circuit_compliance(ast: &mut AST) {
+pub fn check_circuit_compliance(ast: &ASTFlatten) {
     // """
     // determines for every function whether it can be used inside a circuit
     // """
@@ -85,61 +85,135 @@ impl DirectCanBePrivateDetector {
         }
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
-        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
-            if !ast.func().try_as_builtin_function_ref().unwrap().is_private {
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) {
+            if !ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .func()
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_private
+            {
                 let mut can_be_private = ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .func()
+                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
                     .can_be_private();
-                if ast.func().try_as_builtin_function_ref().unwrap().is_eq()
-                    || ast.func().try_as_builtin_function_ref().unwrap().is_ite()
+                if ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .func()
+                    .borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .is_eq()
+                    || ast
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .func()
+                        .borrow()
+                        .try_as_builtin_function_ref()
+                        .unwrap()
+                        .is_ite()
                 {
-                    can_be_private &= ast.args()[1]
-                        .annotated_type()
-                        .as_ref()
-                        .unwrap()
-                        .type_name
-                        .as_ref()
-                        .unwrap()
-                        .can_be_private();
+                    can_be_private &= ast.try_as_function_call_expr_ref().unwrap().borrow().args()
+                        [1]
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .can_be_private();
                 }
-                ast.expression_base_mut_ref()
+                ast.try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
                     .statement
                     .as_mut()
                     .unwrap()
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_statement_mut()
+                    .unwrap()
+                    .borrow_mut()
                     .statement_base_mut_ref()
                     .unwrap()
                     .function
                     .as_mut()
                     .unwrap()
+                    .try_as_constructor_or_function_definition_mut()
+                    .unwrap()
+                    .borrow_mut()
                     .can_be_private &= can_be_private;
                 //TODO to relax this for public expressions,
                 // public identifiers must use SSA remapped values (since the function is inlined)
             }
         }
-        for arg in ast.args() {
-            self.visit(arg.into());
+        for arg in ast.try_as_function_call_expr_ref().unwrap().borrow().args() {
+            self.visit(&arg.clone().into());
         }
     }
 
     pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
-        let t = &ast.annotated_type().as_ref().unwrap().type_name;
-        ast.expression_base_mut_ref()
+        let t = &ast
+            .try_as_location_expr_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .type_name
+            .clone();
+        ast.try_as_location_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
             .statement
             .as_mut()
             .unwrap()
+            .clone()
+            .upgrade()
+            .unwrap()
+            .try_as_statement_ref()
+            .unwrap()
+            .borrow_mut()
             .statement_base_mut_ref()
             .unwrap()
             .function
             .as_mut()
             .unwrap()
-            .can_be_private &= t.as_ref().unwrap().can_be_private();
+            .try_as_constructor_or_function_definition_mut()
+            .unwrap()
+            .borrow_mut()
+            .can_be_private &= t.as_ref().unwrap().borrow().can_be_private();
         self.visit_children(ast);
     }
 
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
-        self.visit(&ast.expr().into());
+        self.visit(
+            &ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .expr()
+                .clone()
+                .into(),
+        );
     }
 
     pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
@@ -164,11 +238,17 @@ impl DirectCanBePrivateDetector {
 
     pub fn visitStatement(&self, ast: &ASTFlatten) {
         //All other statement types are not supported inside circuit (for now)
-        ast.statement_base_mut_ref()
+        ast.try_as_statement_ref()
+            .unwrap()
+            .borrow_mut()
+            .statement_base_mut_ref()
             .unwrap()
             .function
             .as_mut()
             .unwrap()
+            .try_as_constructor_or_function_definition_mut()
+            .unwrap()
+            .borrow_mut()
             .can_be_private = false;
     }
 }
@@ -200,10 +280,23 @@ impl IndirectCanBePrivateDetector {
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        if ast.can_be_private {
-            for fct in &ast.called_functions {
-                if !fct.can_be_private {
-                    ast.can_be_private = false;
+        if ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .can_be_private
+        {
+            for fct in &ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .called_functions
+            {
+                if !fct.borrow().can_be_private {
+                    ast.try_as_constructor_or_function_definition_ref()
+                        .unwrap()
+                        .borrow_mut()
+                        .can_be_private = false;
                     return;
                 }
             }
@@ -214,8 +307,8 @@ impl IndirectCanBePrivateDetector {
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct CircuitComplianceChecker {
     pub ast_visitor_base: AstVisitorBase,
-    pub priv_setter: PrivateSetter,
-    pub inside_privif_stmt: bool,
+    pub priv_setter: RcCell<PrivateSetter>,
+    pub inside_privif_stmt: RcCell<bool>,
 }
 
 impl FunctionVisitor for CircuitComplianceChecker {}
@@ -251,12 +344,12 @@ impl CircuitComplianceChecker {
     pub fn new() -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
-            priv_setter: PrivateSetter::new(),
-            inside_privif_stmt: false,
+            priv_setter: RcCell::new(PrivateSetter::new()),
+            inside_privif_stmt: RcCell::new(false),
         }
     }
     // @staticmethod
-    pub fn should_evaluate_public_expr_in_circuit(expr: Expression) -> bool {
+    pub fn should_evaluate_public_expr_in_circuit(expr: &ASTFlatten) -> bool {
         // assert!(expr.annotated_type());
         if CFG
             .lock()
@@ -266,6 +359,9 @@ impl CircuitComplianceChecker {
         {
             if is_instances(
                 &**expr
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -278,9 +374,12 @@ impl CircuitComplianceChecker {
                 return true;
             }
 
-            if is_instance(&expr, ASTType::PrimitiveCastExpr)
+            if is_instance(expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
                     &**expr
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
                         .try_as_primitive_cast_expr_ref()
                         .unwrap()
                         .annotated_type()
@@ -298,9 +397,7 @@ impl CircuitComplianceChecker {
         }
 
         // try
-        check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(
-            &mut expr.to_ast(),
-        );
+        check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(expr);
         // except TypeException
         //     //Cannot evaluate inside circuit -> never do it
         //     return false
@@ -312,86 +409,188 @@ impl CircuitComplianceChecker {
 
     pub fn visitIndexExpr(&self, ast: &ASTFlatten) {
         if ast
+            .try_as_index_expr_ref()
+            .unwrap()
+            .borrow()
             .location_expr_base
             .tuple_or_location_expr_base
             .expression_base
             .evaluate_privately
         {
-            assert!(ast.key.annotated_type().as_ref().unwrap().is_public());
-            self.priv_setter
-                .set_evaluation(&mut (*ast.key).to_ast(), false);
+            assert!(ast
+                .try_as_index_expr_ref()
+                .unwrap()
+                .borrow()
+                .key
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .is_public());
+            self.priv_setter.borrow_mut().set_evaluation(
+                &ast.try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .key
+                    .clone()
+                    .into(),
+                false,
+            );
         }
         self.visit_children(ast);
     }
 
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
-        assert!(!self.inside_privif_stmt
-            || ast.statement().as_ref().unwrap().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
-                &ast.privacy().privacy_annotation_label().unwrap(),
-                &Expression::me_expr(None).to_ast(),
+        assert!(!*self.inside_privif_stmt.borrow()
+            || ast.try_as_reclassify_expr_ref().unwrap().borrow().statement().as_ref().unwrap().clone().upgrade().unwrap().try_as_statement_ref().unwrap().borrow().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
+                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().borrow().privacy_annotation_label().unwrap(),
+                &RcCell::new(Expression::me_expr(None)).into(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
-        if ast.expr().annotated_type().as_ref().unwrap().is_public() {
+        if ast
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .borrow()
+            .expr()
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .is_public()
+        {
             let eval_in_public = false;
             // try
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
             // except TypeException
             //     eval_in_public = true
-            if eval_in_public || !Self::should_evaluate_public_expr_in_circuit(*ast.expr().clone())
+            if eval_in_public
+                || !Self::should_evaluate_public_expr_in_circuit(
+                    &ast.try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr()
+                        .clone()
+                        .into(),
+                )
             {
-                self.priv_setter
-                    .set_evaluation(&mut ast.expr().to_ast(), false);
+                self.priv_setter.borrow_mut().set_evaluation(
+                    &ast.try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr()
+                        .clone()
+                        .into(),
+                    false,
+                );
             }
         } else {
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit(ast.expr().into());
+        self.visit(
+            &ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .expr()
+                .clone()
+                .into(),
+        );
     }
 
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
-        if is_instance(&**ast.func(), ASTType::BuiltinFunction)
-            && ast.func().try_as_builtin_function_ref().unwrap().is_private
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) && ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .func()
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .is_private
         {
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
-        } else if ast.is_cast() && ast.annotated_type().as_ref().unwrap().is_private() {
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
+        } else if ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .is_cast()
+            && ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .is_private()
+        {
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
         self.visit_children(ast);
     }
 
     pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) {
-        if ast.expr.annotated_type().as_ref().unwrap().is_private() {
-            self.priv_setter.set_evaluation(&mut ast.to_ast(), true);
+        if ast
+            .try_as_primitive_cast_expr_ref()
+            .unwrap()
+            .borrow()
+            .expr
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .is_private()
+        {
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
         self.visit_children(ast);
     }
 
     pub fn visitIfStatement(&self, ast: &ASTFlatten) {
-        let old_in_privif_stmt = self.inside_privif_stmt.clone();
+        let old_in_privif_stmt = *self.inside_privif_stmt.borrow();
         if ast
+            .try_as_if_statement_ref()
+            .unwrap()
+            .borrow()
             .condition
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
             .is_private()
         {
             let mut mod_vals = ast
+                .try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
                 .then_branch
                 .borrow()
                 .statement_list_base
                 .statement_base
                 .ast_base
+                .borrow()
                 .modified_values
                 .clone();
-            if ast.else_branch.is_some() {
+            if ast
+                .try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
+                .else_branch
+                .is_some()
+            {
                 mod_vals = mod_vals
                     .union(
-                        &ast.else_branch
+                        &ast.try_as_if_statement_ref()
+                            .unwrap()
+                            .borrow()
+                            .else_branch
                             .as_ref()
                             .unwrap()
                             .borrow()
                             .statement_list_base
                             .statement_base
                             .ast_base
+                            .borrow()
                             .modified_values,
                     )
                     .cloned()
@@ -403,42 +602,47 @@ impl CircuitComplianceChecker {
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
                     .zkay_type()
                     .type_name
                     .unwrap()
+                    .borrow()
                     .is_primitive_type()
                 {
                     assert!(false,"Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
                 }
-                if val.in_scope_at(ast.to_ast())
+                if val.in_scope_at(ast)
                     && !ast
+                        .try_as_if_statement_ref()
+                        .unwrap()
+                        .borrow()
                         .statement_base
                         .before_analysis
                         .as_ref()
                         .unwrap()
                         .same_partition(
                             &val.privacy().unwrap(),
-                            &Expression::me_expr(None).to_ast(),
+                            &RcCell::new(Expression::me_expr(None)).into(),
                         )
                 {
                     assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
                 }
             }
-            self.inside_privif_stmt = true;
-            self.priv_setter.set_evaluation(ast, true);
+            *self.inside_privif_stmt.borrow_mut() = true;
+            self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
         self.visit_children(ast);
-        self.inside_privif_stmt = old_in_privif_stmt;
+        *self.inside_privif_stmt.borrow_mut() = old_in_privif_stmt;
     }
 }
 // class PrivateSetter(FunctionVisitor)
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct PrivateSetter {
     pub ast_visitor_base: AstVisitorBase,
-    pub evaluate_privately: Option<bool>,
+    pub evaluate_privately: RcCell<Option<bool>>,
 }
 
 impl FunctionVisitor for PrivateSetter {}
@@ -454,13 +658,8 @@ impl AstVisitor for PrivateSetter {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_mut().unwrap()),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::ExpressionBase => self.visitExpression(ast),
 
             _ => {}
         }
@@ -473,33 +672,48 @@ impl PrivateSetter {
     pub fn new() -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
-            evaluate_privately: None,
+            evaluate_privately: RcCell::new(None),
         }
     }
     pub fn set_evaluation(&self, ast: &ASTFlatten, evaluate_privately: bool) {
-        self.evaluate_privately = Some(evaluate_privately);
+        *self.evaluate_privately.borrow_mut() = Some(evaluate_privately);
         self.visit(ast);
-        self.evaluate_privately = None;
+        *self.evaluate_privately.borrow_mut() = None;
     }
 
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
-        if self.evaluate_privately.is_some()
-            && is_instance(&**ast.func(), ASTType::LocationExprBase)
-            && !ast.is_cast()
-            && (*ast
+        if self.evaluate_privately.borrow().is_some()
+            && is_instance(
+                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ASTType::LocationExprBase,
+            )
+            && !ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .is_cast()
+            && ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
                 .as_ref()
-                .unwrap())
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .has_side_effects()
+                .unwrap()
+                .clone()
+                .upgrade()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .borrow()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .has_side_effects()
         {
             assert!(
                 false,
@@ -511,13 +725,17 @@ impl PrivateSetter {
     }
 
     pub fn visitExpression(&self, ast: &ASTFlatten) {
-        assert!(self.evaluate_privately.is_some());
-        ast.expression_base_mut_ref().evaluate_privately = self.evaluate_privately.unwrap();
+        assert!(self.evaluate_privately.borrow().is_some());
+        ast.try_as_expression_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
+            .evaluate_privately = self.evaluate_privately.borrow().unwrap();
         self.visit_children(&ast);
     }
 }
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(
-    ast: &mut AST,
+    ast: &ASTFlatten,
 ) {
     NonstaticOrIncompatibilityDetector::new().visit(ast);
 }
@@ -552,10 +770,27 @@ impl NonstaticOrIncompatibilityDetector {
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
-        if ast.evaluate_privately() && !ast.is_cast() {
-            if is_instance(&**ast.func(), ASTType::LocationExprBase) {
+        if ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .evaluate_privately()
+            && !ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .is_cast()
+        {
+            if is_instance(
+                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ASTType::LocationExprBase,
+            ) {
                 assert!(ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .func()
+                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -564,6 +799,9 @@ impl NonstaticOrIncompatibilityDetector {
                     .is_some());
                 assert!(is_instance(
                     &**ast
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
                         .func()
                         .borrow()
                         .try_as_tuple_or_location_expr_ref()
@@ -573,8 +811,12 @@ impl NonstaticOrIncompatibilityDetector {
                         .target()
                         .as_ref()
                         .unwrap()
+                        .clone()
+                        .upgrade()
+                        .unwrap()
                         .try_as_expression_ref()
                         .unwrap()
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
@@ -583,41 +825,67 @@ impl NonstaticOrIncompatibilityDetector {
                         .unwrap(),
                     ASTType::FunctionTypeName
                 ));
-                has_nonstatic_call |= !(*ast
+                has_nonstatic_call |= !ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .func()
+                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
                     .as_ref()
-                    .unwrap())
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .has_static_body;
-                can_be_private &= (ast
-                    .func()
-                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
-                    .try_as_location_expr_ref()
+                    .clone()
+                    .upgrade()
                     .unwrap()
-                    .target()
-                    .as_ref()
-                    .unwrap())
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .can_be_private;
-            } else if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+                    .try_as_namespace_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .has_static_body;
                 can_be_private &= ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .func()
+                    .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .target()
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_namespace_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .can_be_private;
+            } else if is_instance(
+                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ASTType::BuiltinFunction,
+            ) {
+                can_be_private &= ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .func()
+                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
                     .can_be_private()
                     || ast
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
@@ -626,18 +894,36 @@ impl NonstaticOrIncompatibilityDetector {
                         .unwrap()
                         .borrow()
                         .is_literal();
-                if ast.func().try_as_builtin_function_ref().unwrap().is_eq()
-                    || ast.func().try_as_builtin_function_ref().unwrap().is_ite()
-                {
-                    can_be_private &= ast.args()[1]
-                        .annotated_type()
-                        .as_ref()
-                        .unwrap()
-                        .type_name
-                        .as_ref()
+                if ast
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .func()
+                    .borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .is_eq()
+                    || ast
+                        .try_as_function_call_expr_ref()
                         .unwrap()
                         .borrow()
-                        .can_be_private();
+                        .func()
+                        .borrow()
+                        .try_as_builtin_function_ref()
+                        .unwrap()
+                        .is_ite()
+                {
+                    can_be_private &= ast.try_as_function_call_expr_ref().unwrap().borrow().args()
+                        [1]
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .can_be_private();
                 }
             }
         }

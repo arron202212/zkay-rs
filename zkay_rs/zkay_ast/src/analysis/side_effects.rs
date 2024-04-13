@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
+use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, is_instances, ASTBaseMutRef, ASTChildren, ASTFlatten, ASTType,
@@ -16,16 +16,16 @@ use crate::ast::{
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
-    visitor::{AstVisitor, AstVisitor, AstVisitorBase, AstVisitorBaseRef},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
 use zkay_derive::ASTVisitorBaseRefImpl;
 
 use std::collections::BTreeSet;
-pub fn has_side_effects(ast: AST) -> bool {
-    SideEffectsDetector::new().visit(&ast)
+pub fn has_side_effects(ast: &ASTFlatten) -> bool {
+    SideEffectsDetector::new().visit(ast)
 }
 
-pub fn compute_modified_sets(ast: &mut AST) {
+pub fn compute_modified_sets(ast: &ASTFlatten) {
     let mut v = DirectModificationDetector::new();
     v.visit(ast);
 
@@ -33,7 +33,7 @@ pub fn compute_modified_sets(ast: &mut AST) {
     v.iterate_until_fixed_point(ast);
 }
 
-pub fn check_for_undefined_behavior_due_to_eval_order(ast: &mut AST) {
+pub fn check_for_undefined_behavior_due_to_eval_order(ast: &ASTFlatten) {
     EvalOrderUBChecker::new().visit(ast);
 }
 
@@ -59,22 +59,10 @@ impl AstVisitor for SideEffectsDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_ref()
-                    .unwrap()
-                    .try_as_function_call_expr_ref()
-                    .unwrap(),
-            ),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(
-                ast.try_as_statement_ref()
-                    .unwrap()
-                    .try_as_simple_statement_ref()
-                    .unwrap()
-                    .try_as_assignment_statement_ref()
-                    .unwrap(),
-            ),
-            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_ref().unwrap()),
-            ASTType::StatementBase => self.visitStatement(ast.try_as_statement_ref().unwrap()),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            ASTType::ExpressionBase => self.visitExpression(ast),
+            ASTType::StatementBase => self.visitStatement(ast),
 
             _ => false,
         }
@@ -86,43 +74,55 @@ impl SideEffectsDetector {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &FunctionCallExpr) -> bool {
-        if is_instance(&**ast.func(), ASTType::LocationExprBase)
-            && !ast.is_cast()
-            && (*ast
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> bool {
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::LocationExprBase,
+        ) && !ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .is_cast()
+            && ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
-                .as_ref()
-                .unwrap())
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .has_side_effects()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .borrow()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .has_side_effects()
         {
             true
         } else {
-            self.visitExpression(&ast.to_expr())
+            self.visitExpression(ast)
         }
     }
-    pub fn visitAssignmentStatement(&self, _ast: &AssignmentStatement) -> bool {
+    pub fn visitAssignmentStatement(&self, _ast: &ASTFlatten) -> bool {
         true
     }
 
-    pub fn visitExpression(&self, ast: &Expression) -> bool {
-        self.visitAST(&ast.to_ast())
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> bool {
+        self.visitAST(ast)
     }
 
-    pub fn visitStatement(&self, ast: &Statement) -> bool {
-        self.visitAST(&ast.to_ast())
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> bool {
+        self.visitAST(ast)
     }
 
-    pub fn visitAST(&self, ast: &AST) -> bool {
-        let mut ast = ast.clone();
+    pub fn visitAST(&self, ast: &ASTFlatten) -> bool {
         ast.children().iter().any(|c| self.visit(&c))
     }
 }
@@ -140,34 +140,15 @@ impl AstVisitor for DirectModificationDetector {
         matches!(
             name,
             ASTType::LocationExprBase
-                || &ASTType::VariableDeclaration
-                || &ASTType::AssignmentStatementBase
+                | ASTType::VariableDeclaration
+                | ASTType::AssignmentStatementBase
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::LocationExprBase => self.visitLocationExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_mut()
-                    .unwrap()
-                    .try_as_location_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_simple_statement_mut()
-                    .unwrap()
-                    .try_as_assignment_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::VariableDeclaration => self.visitVariableDeclaration(
-                ast.try_as_identifier_declaration_mut()
-                    .unwrap()
-                    .try_as_variable_declaration_mut()
-                    .unwrap(),
-            ),
+            ASTType::LocationExprBase => self.visitLocationExpr(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
 
             _ => {}
         }
@@ -181,44 +162,64 @@ impl DirectModificationDetector {
     }
     pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
         self.visitAST(ast);
-        self.collect_modified_values(ast, *ast.lhs().clone().unwrap());
+        self.collect_modified_values(
+            ast,
+            &ast.try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .lhs()
+                .clone()
+                .unwrap()
+                .into(),
+        );
     }
 
-    pub fn collect_modified_values(&self, target: &ASTFlatten, expr: AST) {
-        if is_instance(&expr, ASTType::TupleExpr) {
+    pub fn collect_modified_values(&self, target: &ASTFlatten, expr: &ASTFlatten) {
+        if is_instance(expr, ASTType::TupleExpr) {
             for elem in &expr
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_tuple_expr_ref()
                 .unwrap()
                 .elements
             {
-                self.collect_modified_values(target, elem.to_ast());
+                self.collect_modified_values(target, &elem.clone().into());
             }
         } else {
-            let mod_value = InstanceTarget::new(vec![Some(Box::new(expr.to_ast()))]);
-            if target
+            let mod_value = InstanceTarget::new(vec![Some((expr.clone()).into())]);
+            assert!(!target
+                .ast_base_ref()
+                .unwrap().borrow()
+                .modified_values
+                .contains(&mod_value),"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
+
+            target
                 .ast_base_ref()
                 .unwrap()
-                .modified_values
-                .contains(&mod_value)
-            {
-                assert!(false,"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
-            }
-            target
-                .ast_base_mut_ref()
-                .unwrap()
+                .borrow_mut()
                 .modified_values
                 .insert(mod_value);
         }
     }
     pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
-        let ast2: LocationExpr = ast.clone();
+        let ast2: LocationExpr = ast.try_as_location_expr_ref().unwrap().borrow().clone();
         self.visitAST(ast);
-        let ast1 = ast.target().unwrap();
-        if TupleOrLocationExpr::LocationExpr(ast.clone()).is_rvalue()
+        let ast1 = ast
+            .try_as_location_expr_ref()
+            .unwrap()
+            .borrow()
+            .target()
+            .clone()
+            .unwrap()
+            .upgrade()
+            .unwrap();
+        if TupleOrLocationExpr::LocationExpr(
+            ast.try_as_location_expr_ref().unwrap().borrow().clone(),
+        )
+        .is_rvalue()
             && is_instances(
                 &ast1,
                 vec![
@@ -228,41 +229,47 @@ impl DirectModificationDetector {
                 ],
             )
         {
-            ast.ast_base_mut_ref()
+            ast.ast_base_ref()
+                .unwrap()
+                .borrow_mut()
                 .read_values
-                .insert(InstanceTarget::new(vec![Some(Box::new(ast2.to_ast()))]));
+                .insert(InstanceTarget::new(vec![Some(ast.clone())]));
         }
     }
     pub fn visitVariableDeclaration(&self, ast: &ASTFlatten) {
-        ast.identifier_declaration_base
+        ast.try_as_variable_declaration_ref()
+            .unwrap()
+            .borrow_mut()
+            .identifier_declaration_base
             .ast_base
+            .borrow_mut()
             .modified_values
-            .insert(InstanceTarget::new(vec![Some(Box::new(ast.to_ast()))]));
+            .insert(InstanceTarget::new(vec![Some(ast.clone())]));
     }
 
     pub fn visitAST(&self, ast: &ASTFlatten) {
         let mut modified_values = BTreeSet::new();
         let mut read_values = BTreeSet::new();
-        for child in ast.children().iter_mut() {
-            self.visit(child);
+        for child in ast.children() {
+            self.visit(&child);
             modified_values = modified_values
-                .union(&child.ast_base_mut_ref().unwrap().modified_values)
+                .union(&child.ast_base_ref().unwrap().borrow().modified_values)
                 .cloned()
                 .collect();
             read_values = read_values
-                .union(&child.ast_base_ref().unwrap().read_values)
+                .union(&child.ast_base_ref().unwrap().borrow().read_values)
                 .cloned()
                 .collect();
         }
-        ast.ast_base_mut_ref().unwrap().modified_values = modified_values;
-        ast.ast_base_mut_ref().unwrap().read_values = read_values;
+        ast.ast_base_ref().unwrap().borrow_mut().modified_values = modified_values;
+        ast.ast_base_ref().unwrap().borrow_mut().read_values = read_values;
     }
 }
 // class IndirectModificationDetector(FunctionVisitor)
 #[derive(ASTVisitorBaseRefImpl)]
 struct IndirectModificationDetector {
     pub ast_visitor_base: AstVisitorBase,
-    pub fixed_point_reached: bool,
+    pub fixed_point_reached: RcCell<bool>,
 }
 impl FunctionVisitor for IndirectModificationDetector {}
 impl AstVisitor for IndirectModificationDetector {
@@ -274,12 +281,7 @@ impl AstVisitor for IndirectModificationDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
 
             _ => {}
         }
@@ -292,48 +294,59 @@ impl IndirectModificationDetector {
     pub fn new() -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
-            fixed_point_reached: true,
+            fixed_point_reached: RcCell::new(true),
         }
     }
-    pub fn iterate_until_fixed_point(&self, ast: &mut AST) {
+    pub fn iterate_until_fixed_point(&self, ast: &ASTFlatten) {
         loop {
             self.visit(ast);
-            if self.fixed_point_reached {
+            if *self.fixed_point_reached.borrow() {
                 break;
             } else {
-                self.fixed_point_reached = true;
+                *self.fixed_point_reached.borrow_mut() = true;
             }
         }
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &mut FunctionCallExpr) {
-        self.visitAST(&mut ast.to_ast());
-        if is_instance(&**ast.func(), ASTType::LocationExprBase) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+        self.visitAST(ast);
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::LocationExprBase,
+        ) {
             //for now no reference types -> only state could have been modified
             let mut fdef = ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
-                .unwrap();
-            let mut ast = ast.to_ast();
-            let rlen = ast.ast_base_ref().unwrap().read_values.len();
-            ast.ast_base_mut_ref().unwrap().read_values = ast
-                .ast_base_mut_ref()
+                .clone()
                 .unwrap()
+                .upgrade()
+                .unwrap();
+            let rlen = ast.ast_base_ref().unwrap().borrow().read_values.len();
+            ast.ast_base_ref().unwrap().borrow_mut().read_values = ast
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
                 .read_values
                 .union(
                     &fdef
                         .ast_base_ref()
                         .unwrap()
+                        .borrow()
                         .read_values
                         .iter()
                         .filter_map(|v| {
                             if v.target().is_some()
                                 && is_instance(
-                                    &v.target().map(|t| *t).unwrap(),
+                                    &v.target().unwrap(),
                                     ASTType::StateVariableDeclaration,
                                 )
                             {
@@ -347,46 +360,50 @@ impl IndirectModificationDetector {
                 )
                 .cloned()
                 .collect();
-            self.fixed_point_reached &= rlen == ast.ast_base_ref().unwrap().read_values.len();
+            *self.fixed_point_reached.borrow_mut() &=
+                rlen == ast.ast_base_ref().unwrap().borrow().read_values.len();
 
             //update modified values if any
-            let mlen = ast.ast_base_ref().unwrap().modified_values.len();
-            for v in &fdef.ast_base_ref().unwrap().modified_values {
-                if is_instance(
-                    &v.target().map(|t| *t).unwrap(),
-                    ASTType::StateVariableDeclaration,
-                ) {
-                    ast.ast_base_mut_ref()
+            let mlen = ast.ast_base_ref().unwrap().borrow().modified_values.len();
+            for v in &fdef.ast_base_ref().unwrap().borrow().modified_values {
+                if is_instance(&v.target().unwrap(), ASTType::StateVariableDeclaration) {
+                    ast.ast_base_ref()
                         .unwrap()
+                        .borrow_mut()
                         .modified_values
                         .insert(v.clone());
                 }
             }
-            self.fixed_point_reached &= mlen == ast.ast_base_ref().unwrap().modified_values.len();
+            *self.fixed_point_reached.borrow_mut() &=
+                mlen == ast.ast_base_ref().unwrap().borrow().modified_values.len();
         }
     }
-    pub fn visitAST(&self, ast: &mut AST) {
-        let mlen = ast.ast_base_ref().unwrap().modified_values.len();
-        let rlen = ast.ast_base_ref().unwrap().read_values.len();
+    pub fn visitAST(&self, ast: &ASTFlatten) {
+        let mlen = ast.ast_base_ref().unwrap().borrow().modified_values.len();
+        let rlen = ast.ast_base_ref().unwrap().borrow().read_values.len();
         for child in ast.children().iter_mut() {
             self.visit(child);
-            ast.ast_base_mut_ref().unwrap().modified_values = ast
-                .ast_base_mut_ref()
+            ast.ast_base_ref().unwrap().borrow_mut().modified_values = ast
+                .ast_base_ref()
                 .unwrap()
+                .borrow()
                 .modified_values
-                .union(&child.ast_base_ref().unwrap().modified_values)
+                .union(&child.ast_base_ref().unwrap().borrow().modified_values)
                 .cloned()
                 .collect();
-            ast.ast_base_mut_ref().unwrap().read_values = ast
-                .ast_base_mut_ref()
+            ast.ast_base_ref().unwrap().borrow_mut().read_values = ast
+                .ast_base_ref()
                 .unwrap()
+                .borrow()
                 .read_values
-                .union(&child.ast_base_ref().unwrap().read_values)
+                .union(&child.ast_base_ref().unwrap().borrow().read_values)
                 .cloned()
                 .collect();
         }
-        self.fixed_point_reached &= mlen == ast.ast_base_ref().unwrap().modified_values.len();
-        self.fixed_point_reached &= rlen == ast.ast_base_ref().unwrap().read_values.len();
+        *self.fixed_point_reached.borrow_mut() &=
+            mlen == ast.ast_base_ref().unwrap().borrow().modified_values.len();
+        *self.fixed_point_reached.borrow_mut() &=
+            rlen == ast.ast_base_ref().unwrap().borrow().read_values.len();
     }
 }
 // class EvalOrderUBChecker(AstVisitor)
@@ -408,21 +425,9 @@ impl AstVisitor for EvalOrderUBChecker {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(
-                ast.try_as_expression_mut()
-                    .unwrap()
-                    .try_as_function_call_expr_mut()
-                    .unwrap(),
-            ),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(
-                ast.try_as_statement_mut()
-                    .unwrap()
-                    .try_as_simple_statement_mut()
-                    .unwrap()
-                    .try_as_assignment_statement_mut()
-                    .unwrap(),
-            ),
-            ASTType::ExpressionBase => self.visitExpression(ast.try_as_expression_mut().unwrap()),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            ASTType::ExpressionBase => self.visitExpression(ast),
 
             _ => {}
         }
@@ -435,11 +440,16 @@ impl EvalOrderUBChecker {
         }
     }
     // @staticmethod
-    pub fn visit_child_expressions(parent: AST, exprs: Vec<ASTFlatten>) {
+    pub fn visit_child_expressions(parent: &ASTFlatten, exprs: &Vec<ASTFlatten>) {
         if exprs.len() > 1 {
-            let mut modset: BTreeSet<_> = exprs[0].ast_base_ref().unwrap().modified_values.clone();
+            let mut modset: BTreeSet<_> = exprs[0]
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .modified_values
+                .clone();
             for arg in &exprs[1..] {
-                let modified_values = arg.ast_base_ref().unwrap().modified_values.clone();
+                let modified_values = arg.ast_base_ref().unwrap().borrow().modified_values.clone();
                 let diffset: BTreeSet<_> = modset.intersection(&modified_values).collect();
 
                 assert!(
@@ -460,15 +470,15 @@ impl EvalOrderUBChecker {
             }
 
             for arg in &*exprs {
-                let modset: BTreeSet<_> = arg.ast_base_ref().unwrap().modified_values.clone();
+                let modset: BTreeSet<_> =
+                    arg.ast_base_ref().unwrap().borrow().modified_values.clone();
                 let other_args: BTreeSet<_> = exprs
                     .iter()
                     .filter_map(|e| if e != arg { Some(e) } else { None })
                     .collect();
                 for arg2 in &other_args {
-                    let diffset: BTreeSet<_> = modset
-                        .intersection(&arg2.ast_base_ref().unwrap().read_values)
-                        .collect();
+                    let read_values = arg2.ast_base_ref().unwrap().borrow().read_values.clone();
+                    let diffset: BTreeSet<_> = modset.intersection(&read_values).collect();
                     if !diffset.is_empty() {
                         let setstr = format!(
                             r#"{{{}}}"#,
@@ -477,11 +487,9 @@ impl EvalOrderUBChecker {
                                 .map(|it| format!(
                                     "{:?}{}",
                                     it.target_key[0].as_ref().unwrap(),
-                                    if let Some(member) = it.target_key[1].clone().map(|t| *t) {
-                                        format!(".{:?}", member)
-                                    } else {
-                                        String::new()
-                                    }
+                                    it.target_key[1]
+                                        .clone()
+                                        .map_or(String::new(), |member| format!(".{:?}", member))
                                 ))
                                 .collect::<Vec<_>>()
                                 .join(", ")
@@ -498,10 +506,17 @@ impl EvalOrderUBChecker {
             }
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &mut FunctionCallExpr) {
-        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) {
             if ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
                 .has_shortcircuiting()
@@ -510,16 +525,22 @@ impl EvalOrderUBChecker {
             }
         }
         Self::visit_child_expressions(
-            ast.to_ast(),
-            &mut ast.args().into_iter().map(|v| v.to_ast()).collect(),
+            ast,
+            &ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .args()
+                .into_iter()
+                .map(|arg| arg.clone().into())
+                .collect(),
         );
     }
 
-    pub fn visitExpression(&self, ast: &mut Expression) {
-        Self::visit_child_expressions(ast.to_ast(), &mut ast.children());
+    pub fn visitExpression(&self, ast: &ASTFlatten) {
+        Self::visit_child_expressions(ast, &ast.children());
     }
 
-    pub fn visitAssignmentStatement(&self, ast: &mut AssignmentStatement) {
-        Self::visit_child_expressions(ast.to_ast(), &mut ast.children());
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
+        Self::visit_child_expressions(ast, &ast.children());
     }
 }

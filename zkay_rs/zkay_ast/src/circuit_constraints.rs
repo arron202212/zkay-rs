@@ -83,7 +83,7 @@ pub enum CircuitStatement {
 //     }
 // }
 impl ASTChildren for CircuitStatement {
-    fn process_children(&mut self, _cb: &mut ChildListBuilder) {}
+    fn process_children(&self, _cb: &mut ChildListBuilder) {}
 }
 // impl ASTChildrenMut for CircuitStatement {
 //     fn process_children_mut<'a>(&'a mut self, _cb: &mut Vec<ASTFlatten<'a>>) {}
