@@ -5,24 +5,25 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
+use rccell::RcCell;
 use zkay_ast::ast::{
     is_instance, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty, AST,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 
-pub fn contains_private(ast: AST) -> bool {
+pub fn contains_private(ast: &ASTFlatten) -> bool {
     let v = ContainsPrivateVisitor::new();
-    v.visit(&ast);
-    v.contains_private
+    v.visit(ast);
+    let contains_private = *v.contains_private.borrow();
+    contains_private
 }
 
 // class ContainsPrivateVisitor(AstVisitor)
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct ContainsPrivateVisitor {
     pub ast_visitor_base: AstVisitorBase,
-    pub contains_private: bool,
+    pub contains_private: RcCell<bool>,
 }
 impl AstVisitor for ContainsPrivateVisitor {
     type Return = ();
@@ -39,22 +40,29 @@ impl ContainsPrivateVisitor {
     pub fn new() -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("post", false),
-            contains_private: false,
+            contains_private: RcCell::new(false),
         }
     }
     pub fn visitAST(&self, ast: &ASTFlatten) {
-        if let Some(t) = ast.try_as_expression_ref().unwrap().annotated_type() {
+        if let Some(t) = ast
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type()
+        {
             assert!(is_instance(t, ASTType::AnnotatedTypeName));
 
             if !t
+                .borrow()
                 .privacy_annotation
                 .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .is_all_expr()
             {
-                self.contains_private = true;
+                *self.contains_private.borrow_mut() = true;
             }
         }
     }

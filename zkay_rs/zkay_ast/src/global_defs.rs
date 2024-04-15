@@ -87,7 +87,7 @@ impl GlobalDefs {
                 )
                 .to_ast(),
                 ConstructorOrFunctionDefinition::new(
-                    Some(Identifier::identifier("send")),
+                    Identifier::identifier("send"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
@@ -105,7 +105,7 @@ impl GlobalDefs {
                 )
                 .to_ast(),
                 ConstructorOrFunctionDefinition::new(
-                    Some(Identifier::identifier("transfer")),
+                    Identifier::identifier("transfer"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
                         AnnotatedTypeName::uint_all(),
@@ -141,7 +141,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
-                        Some(TypeName::address_payable_type()),
+                        Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     )),
@@ -166,7 +166,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
-                        Some(TypeName::address_payable_type()),
+                        Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     )),
@@ -219,7 +219,7 @@ impl GlobalDefs {
                 VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
-                        Some(TypeName::address_payable_type()),
+                        Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
                     )),

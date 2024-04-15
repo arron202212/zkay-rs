@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
+use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
@@ -16,27 +16,25 @@ use zkay_ast::ast::{
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn check_final(ast: AST) {
+pub fn check_final(ast: &ASTFlatten) {
     let v = FinalVisitor::new();
-    v.visit(&ast);
+    v.visit(ast);
 }
 
 // class FinalVisitor(AstVisitor)
 #[derive(ASTVisitorBaseRefImpl)]
 struct FinalVisitor {
     pub ast_visitor_base: AstVisitorBase,
-    state_vars_assigned: Option<BTreeMap<AST, bool>>,
+    pub state_vars_assigned: RcCell<Option<BTreeMap<AST, bool>>>,
 }
 impl AstVisitor for FinalVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         matches! {name,
          ASTType::ContractDefinition|
          ASTType::ConstructorOrFunctionDefinition|
-         ASTType::AssignmentStatement|
+         ASTType::AssignmentStatementBase|
          ASTType::IfStatement|
          ASTType::IdentifierExpr
         }
@@ -47,7 +45,7 @@ impl AstVisitor for FinalVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            ASTType::AssignmentStatement => self.visitAssignmentStatement(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             _ => {}
@@ -61,17 +59,24 @@ impl FinalVisitor {
     pub fn new() -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
-            state_vars_assigned: None,
+            state_vars_assigned: RcCell::new(None),
         }
     }
-    pub fn visitContractDefinition(&self, ast: &ASTFlatten) {
-        self.state_vars_assigned = Some(BTreeMap::new());
-        for v in &ast.state_variable_declarations {
-            if v.try_as_identifier_declaration_ref()
+    pub fn visitContractDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        *self.state_vars_assigned.borrow_mut() = Some(BTreeMap::new());
+        for v in &ast
+            .try_as_contract_definition_ref()
+            .unwrap()
+            .borrow()
+            .state_variable_declarations
+        {
+            if v.borrow()
+                .try_as_identifier_declaration_ref()
                 .unwrap()
                 .identifier_declaration_base_ref()
                 .is_final()
-                && v.try_as_identifier_declaration_ref()
+                && v.borrow()
+                    .try_as_identifier_declaration_ref()
                     .unwrap()
                     .try_as_state_variable_declaration_ref()
                     .unwrap()
@@ -79,38 +84,74 @@ impl FinalVisitor {
                     .is_some()
             {
                 self.state_vars_assigned
+                    .borrow_mut()
                     .as_mut()
                     .unwrap()
-                    .insert(v.clone(), false);
+                    .insert(v.borrow().clone(), false);
             }
         }
 
-        if ast.constructor_definitions.len() > 0 {
-            assert!(ast.constructor_definitions.len() == 1);
-            let c = &ast.constructor_definitions[0];
-            self.visit(c.body.clone().into());
+        if ast
+            .try_as_contract_definition_ref()
+            .unwrap()
+            .borrow()
+            .constructor_definitions
+            .len()
+            > 0
+        {
+            assert!(
+                ast.try_as_contract_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .constructor_definitions
+                    .len()
+                    == 1
+            );
+            let c = &ast
+                .try_as_contract_definition_ref()
+                .unwrap()
+                .borrow()
+                .constructor_definitions[0];
+            self.visit(&c.borrow().body.clone().unwrap().into());
         }
 
-        for (sv, assigned) in self.state_vars_assigned.as_ref().unwrap() {
+        for (sv, assigned) in self.state_vars_assigned.borrow().as_ref().unwrap() {
             if !assigned {
                 assert!(false, "Did not set all final state variables {}", sv)
             }
         }
 
-        self.state_vars_assigned = None;
+        *self.state_vars_assigned.borrow_mut() = None;
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        assert!(ast.is_function());
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> <Self as AstVisitor>::Return {
+        assert!(ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .is_function());
     }
 
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
-        self.visit(ast.rhs().clone().into());
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        self.visit(
+            &ast.try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .rhs()
+                .clone()
+                .unwrap()
+                .into(),
+        );
         if let Some(le) = ast
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .borrow()
             .lhs()
             .as_ref()
             .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
+            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
             .try_as_location_expr_ref()
@@ -118,7 +159,21 @@ impl FinalVisitor {
             .try_as_identifier_expr_ref()
         {
             if let Some(var) = le.location_expr_base.target() {
-                if let Some(v) = self.state_vars_assigned.as_mut().unwrap().get_mut(&var) {
+                if let Some(v) = self
+                    .state_vars_assigned
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .get_mut(
+                        &var.clone()
+                            .upgrade()
+                            .unwrap()
+                            .try_as_ast()
+                            .unwrap()
+                            .borrow()
+                            .clone(),
+                    )
+                {
                     assert!(!*v, "Tried to reassign final variable,{:?}", ast);
                     *v = true;
                 }
@@ -126,20 +181,35 @@ impl FinalVisitor {
         }
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
-        self.visit(ast.condition.clone().into());
-        let prev = self.state_vars_assigned.as_ref().unwrap().clone();
-        self.visit(ast.then_branch.clone().into());
-        let then_b = self.state_vars_assigned.as_ref().unwrap().clone();
-        self.state_vars_assigned = Some(prev);
-        if let Some(else_branch) = &ast.else_branch {
-            self.visit(else_branch.clone().into());
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        self.visit(
+            &ast.try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
+                .condition
+                .clone()
+                .into(),
+        );
+        let prev = self.state_vars_assigned.borrow().as_ref().unwrap().clone();
+        self.visit(
+            &ast.try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
+                .then_branch
+                .clone()
+                .into(),
+        );
+        let then_b = self.state_vars_assigned.borrow().as_ref().unwrap().clone();
+        *self.state_vars_assigned.borrow_mut() = Some(prev);
+        if let Some(else_branch) = &ast.try_as_if_statement_ref().unwrap().borrow().else_branch {
+            self.visit(&else_branch.clone().into());
         }
 
         assert!(
             then_b.keys().collect::<Vec<_>>()
                 == self
                     .state_vars_assigned
+                    .borrow()
                     .as_ref()
                     .unwrap()
                     .keys()
@@ -147,25 +217,39 @@ impl FinalVisitor {
         );
         for (var, flag) in &then_b {
             assert!(
-                flag == self.state_vars_assigned.as_ref().unwrap().get(var).unwrap(),
+                flag == self
+                    .state_vars_assigned
+                    .borrow()
+                    .as_ref()
+                    .unwrap()
+                    .get(var)
+                    .unwrap(),
                 "Final value is not assigned in both branches,{:?}",
                 ast
             );
         }
     }
-    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) {
-        if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(ast.clone())).is_rvalue()
-            && self.state_vars_assigned.is_some()
+    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
+            ast.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+        ))
+        .is_rvalue()
+            && self.state_vars_assigned.borrow().is_some()
         {
-            if let Some(&v) = self.state_vars_assigned.as_ref().unwrap().get(
+            if let Some(&v) = self.state_vars_assigned.borrow().as_ref().unwrap().get(
                 &(ast
-                    .location_expr_base
-                    .target
-                    .as_ref()
+                    .try_as_identifier_expr_ref()
                     .unwrap()
                     .borrow()
-                    .as_ref()
+                    .location_expr_base
+                    .target
+                    .clone()
                     .unwrap()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_ast_ref()
+                    .unwrap()
+                    .borrow()
                     .clone())
                 .into(),
             ) {

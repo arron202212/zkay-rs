@@ -45,16 +45,14 @@ pub struct TypeCheckVisitor {
     pub ast_visitor_base: AstVisitorBase,
 }
 impl AstVisitor for TypeCheckVisitor {
-    type Return = Option<String>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, name: &ASTType) -> bool {
         matches!(
             name,
-            ASTType::AssignmentStatement
+            ASTType::AssignmentStatementBase
                 | ASTType::VariableDeclarationStatement
-                | ASTType::FunctionCallExpr
+                | ASTType::FunctionCallExprBase
                 | ASTType::PrimitiveCastExpr
                 | ASTType::NewExpr
                 | ASTType::MemberAccessExpr
@@ -78,9 +76,9 @@ impl AstVisitor for TypeCheckVisitor {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::AssignmentStatement => self.visitAssignmentStatement(ast),
+            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
-            ASTType::FunctionCallExpr => self.visitFunctionCallExpr(ast),
+            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::NewExpr => self.visitNewExpr(ast),
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
@@ -114,122 +112,159 @@ impl TypeCheckVisitor {
     }
     pub fn get_rhs(
         &self,
-        mut rhs: Expression,
-        expected_type: &AnnotatedTypeName,
-    ) -> Option<Expression> {
-        if is_instance(&rhs, ASTType::TupleExpr) {
-            if !is_instance(&rhs, ASTType::TupleExpr)
-                || !is_instance(
-                    &**expected_type.type_name.as_ref().unwrap(),
+        mut rhs: &RcCell<Expression>,
+        expected_type: &RcCell<AnnotatedTypeName>,
+    ) -> Option<RcCell<Expression>> {
+        if is_instance(rhs, ASTType::TupleExpr) {
+            assert!(
+                is_instance(
+                    &**expected_type.borrow().type_name.as_ref().unwrap(),
                     ASTType::TupleType,
-                )
-                || rhs
+                ) && rhs
+                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_tuple_expr_ref()
                     .unwrap()
                     .elements
                     .len()
-                    != expected_type
+                    == expected_type
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_tuple_type_ref()
                         .unwrap()
                         .types
-                        .len()
-            {
-                assert!(
-                    false,
-                    "{:?},{:?},{:?}",
-                    expected_type,
-                    rhs.annotated_type(),
-                    rhs
-                )
-            }
+                        .len(),
+                "{:?},{:?},{:?}",
+                expected_type,
+                rhs.borrow().annotated_type(),
+                rhs
+            );
             let exprs: Vec<_> = expected_type
+                .borrow()
                 .type_name
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .try_as_tuple_type_ref()
                 .unwrap()
                 .types
                 .iter()
                 .zip(
-                    rhs.try_as_tuple_or_location_expr_ref()
+                    rhs.borrow()
+                        .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_tuple_expr_ref()
                         .unwrap()
                         .elements
                         .clone(),
                 )
-                .map(|(e, a)| self.get_rhs(a, e).unwrap())
+                .filter_map(|(e, a)| self.get_rhs(&a, e))
                 .collect();
-            return Some(
-                replace_expr(&rhs, &mut TupleExpr::new(exprs.clone()).to_expr(), false).as_type(
-                    AST::TypeName(TypeName::TupleType(TupleType::new(
-                        exprs
-                            .iter()
-                            .map(|e| e.annotated_type().clone().unwrap())
-                            .collect(),
-                    ))),
-                ),
-            );
+            return replace_expr(
+                &rhs.clone().into(),
+                &RcCell::new(TupleExpr::new(exprs.clone())).into(),
+                false,
+            )
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .as_type(
+                &RcCell::new(TupleType::new(
+                    exprs
+                        .iter()
+                        .map(|e| e.borrow().annotated_type().clone().unwrap())
+                        .collect(),
+                ))
+                .into(),
+            )
+            .try_as_expression();
         }
 
         let mut require_rehom = false;
-        let mut instance = rhs.instance_of(expected_type);
+        let mut instance = rhs.borrow().instance_of(expected_type);
         if instance.is_none() {
             require_rehom = true;
-            let expected_matching_hom = expected_type
-                .with_homomorphism(rhs.annotated_type().as_ref().unwrap().clone().homomorphism);
-            instance = rhs.instance_of(&expected_matching_hom);
+            let expected_matching_hom = expected_type.borrow().with_homomorphism(
+                rhs.borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .borrow()
+                    .homomorphism
+                    .clone(),
+            );
+            instance = rhs.borrow().instance_of(&expected_matching_hom);
         }
 
         assert!(
             instance.is_some(),
             "{:?},{:?}, {:?}",
             expected_type,
-            rhs.annotated_type(),
+            rhs.borrow().annotated_type(),
             rhs
         );
-        if rhs.annotated_type().as_ref().unwrap().type_name != expected_type.type_name {
-            rhs = Self::implicitly_converted_to(rhs, &**expected_type.type_name.as_ref().unwrap());
-        }
-
+        let rhs = if rhs
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .type_name
+            != expected_type.borrow().type_name
+        {
+            Self::implicitly_converted_to(rhs, expected_type.borrow().type_name.as_ref().unwrap())
+                .clone()
+        } else {
+            rhs.clone()
+        };
+        let rhs = &rhs;
         Some(if instance == Some(String::from("make-private")) {
             Self::make_private(
                 rhs,
-                expected_type
-                    .privacy_annotation
-                    .as_ref()
-                    .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap(),
-                &expected_type.homomorphism,
+                &expected_type.borrow().privacy_annotation,
+                &expected_type.borrow().homomorphism,
             )
         } else if require_rehom {
             Self::try_rehom(rhs, expected_type)
         } else {
-            rhs
+            rhs.clone()
         })
     }
     //@staticmethod
-    pub fn check_for_invalid_private_type(ast: AST) {
-        if let Some(at) = &ast.try_as_expression_ref().unwrap().annotated_type() {
-            if at.is_private() && !at.type_name.as_ref().unwrap().can_be_private() {
-                assert!(
-                    false,
-                    "Type {:?} cannot be private {:?}",
-                    at.type_name,
-                    ast.try_as_expression_ref().unwrap().annotated_type()
-                );
-            }
+    pub fn check_for_invalid_private_type(ast: &ASTFlatten) {
+        if let Some(at) = &ast
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type()
+        {
+            assert!(
+                !(at.borrow().is_private()
+                    && !at
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .can_be_private()),
+                "Type {:?} cannot be private {:?}",
+                at.borrow().type_name,
+                ast.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+            );
         }
     }
-    pub fn check_final(&self, fct: ConstructorOrFunctionDefinition, ast: Expression) {
-        if is_instance(&ast, ASTType::IdentifierExpr) {
+    pub fn check_final(&self, fct: &ASTFlatten, ast: &RcCell<Expression>) {
+        if is_instance(ast, ASTType::IdentifierExpr) {
             if let Some(target) = ast
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
@@ -237,10 +272,13 @@ impl TypeCheckVisitor {
                 .try_as_identifier_expr_ref()
                 .unwrap()
                 .target()
-                .as_ref()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_identifier_declaration_ref()
                 .unwrap()
+                .borrow()
                 .try_as_state_variable_declaration_ref()
             {
                 if target
@@ -252,68 +290,129 @@ impl TypeCheckVisitor {
                     // pass
                     assert!(
                         is_instance(target, ASTType::StateVariableDeclaration)
-                            && fct.is_constructor(),
+                            && fct
+                                .try_as_constructor_or_function_definition_ref()
+                                .unwrap()
+                                .borrow()
+                                .is_constructor(),
                         r#"Modifying "final" variable{:?}"#,
                         ast
                     );
                 }
             }
         } else {
-            assert!(is_instance(&ast, ASTType::TupleExpr));
+            assert!(is_instance(ast, ASTType::TupleExpr));
             for elem in &ast
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_tuple_expr_ref()
                 .unwrap()
                 .elements
             {
-                self.check_final(fct.clone(), elem.clone());
+                self.check_final(fct, elem);
             }
         }
     }
 
     pub fn visitAssignmentStatement(&self, mut ast: &ASTFlatten) {
         assert!(
-            ast.lhs().is_some(),
+            ast.try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .lhs()
+                .is_some(),
             "Assignment target is not a location {:?}",
-            ast.lhs()
+            ast.try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .lhs()
         );
 
-        let expected_type = &ast
+        let expected_type = ast
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .borrow()
             .lhs()
             .as_ref()
             .unwrap()
-            .try_as_expression_ref()
+            .borrow()
+            .annotated_type()
+            .clone();
+        ast.try_as_assignment_statement_ref()
             .unwrap()
-            .annotated_type();
-        ast.assignment_statement_base_mut_ref().rhs = self.get_rhs(
-            ast.rhs().as_ref().unwrap().clone(),
+            .borrow_mut()
+            .assignment_statement_base_mut_ref()
+            .rhs = self.get_rhs(
+            ast.try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .rhs()
+                .as_ref()
+                .unwrap(),
             expected_type.as_ref().unwrap(),
         );
 
         //prevent modifying final
-        let f = ast.function().as_ref().unwrap();
-        if is_instance(&**ast.lhs().as_ref().unwrap(), ASTType::TupleExpr)
-            || is_instance(&**ast.lhs().as_ref().unwrap(), ASTType::LocationExprBase)
-        {
+        if is_instance(
+            &**ast
+                .try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .lhs()
+                .as_ref()
+                .unwrap(),
+            ASTType::TupleExpr,
+        ) || is_instance(
+            &**ast
+                .try_as_assignment_statement_ref()
+                .unwrap()
+                .borrow()
+                .lhs()
+                .as_ref()
+                .unwrap(),
+            ASTType::LocationExprBase,
+        ) {
             self.check_final(
-                *f.clone(),
-                ast.lhs()
+                ast.try_as_assignment_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .function()
                     .as_ref()
+                    .unwrap(),
+                ast.try_as_assignment_statement_ref()
                     .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .clone(),
+                    .borrow()
+                    .lhs()
+                    .as_ref()
+                    .unwrap(),
             );
         }
     }
 
     pub fn visitVariableDeclarationStatement(&self, mut ast: &ASTFlatten) {
-        if ast.expr.is_some() {
-            ast.expr = self.get_rhs(
-                ast.expr.unwrap(),
-                &*ast
+        if ast
+            .try_as_variable_declaration_statement_ref()
+            .unwrap()
+            .borrow()
+            .expr
+            .is_some()
+        {
+            ast.try_as_variable_declaration_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .expr = self.get_rhs(
+                ast.try_as_variable_declaration_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .expr
+                    .as_ref()
+                    .unwrap(),
+                &ast.try_as_variable_declaration_statement_ref()
+                    .unwrap()
+                    .borrow()
                     .variable_declaration
+                    .borrow()
                     .identifier_declaration_base
                     .annotated_type,
             );
@@ -321,8 +420,13 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn has_private_type(ast: &Expression) -> bool {
-        ast.annotated_type().as_ref().unwrap().is_private()
+    pub fn has_private_type(ast: &RcCell<Expression>) -> bool {
+        ast.borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .is_private()
     }
 
     //@staticmethod
@@ -332,6 +436,7 @@ impl TypeCheckVisitor {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .as_ref()
                 .unwrap(),
@@ -340,123 +445,180 @@ impl TypeCheckVisitor {
     }
     pub fn handle_builtin_function_call(
         &self,
-        mut ast: RcCell<FunctionCallExpr>,
-        func: RcCell<BuiltinFunction>,
+        mut ast: &RcCell<FunctionCallExpr>,
+        func: &RcCell<Expression>,
     ) {
-        if func.is_parenthesis() {
-            ast.expression_base_mut_ref().annotated_type = ast.args()[0].annotated_type().clone();
+        if func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .is_parenthesis()
+        {
+            ast.borrow_mut().expression_base_mut_ref().annotated_type =
+                ast.borrow().args()[0].borrow().annotated_type().clone();
             return;
         }
 
-        let all_args_all_or_me = ast.args().iter().all(|x| {
-            x.annotated_type()
+        let all_args_all_or_me = ast.borrow().args().iter().all(|x| {
+            x.borrow()
+                .annotated_type()
                 .as_ref()
                 .unwrap()
-                .is_accessible(&ast.to_expr().analysis())
+                .borrow()
+                .is_accessible(&ast.borrow().to_expr().analysis())
         });
-        let is_public_ite =
-            func.is_ite() && ast.args()[0].annotated_type().as_ref().unwrap().is_public();
+        let is_public_ite = func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .is_ite()
+            && ast.borrow().args()[0]
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_public();
         if all_args_all_or_me || is_public_ite {
-            self.handle_unhom_builtin_function_call(ast, func);
+            self.handle_unhom_builtin_function_call(&ast, &func);
         } else {
-            self.handle_homomorphic_builtin_function_call(ast, func.clone());
+            self.handle_homomorphic_builtin_function_call(&ast, &func);
         }
     }
 
     pub fn handle_unhom_builtin_function_call(
         &self,
-        mut ast: RcCell<FunctionCallExpr>,
-        mut func: RcCell<BuiltinFunction>,
+        mut ast: &RcCell<FunctionCallExpr>,
+        mut func: &RcCell<Expression>,
     ) {
-        let mut args = ast.args().clone();
+        let mut args = ast.borrow().args().clone();
         //handle special cases
-        if func.is_ite() {
-            let cond_t = &args[0].annotated_type();
+        if func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .is_ite()
+        {
+            let cond_t = &args[0].borrow().annotated_type().clone();
 
             //Ensure that condition is boolean
             assert!(
                 cond_t
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .implicitly_convertible_to(&TypeName::bool_type()),
+                    .borrow()
+                    .implicitly_convertible_to(&RcCell::new(TypeName::bool_type())),
                 "{:?}, {:?}, {:?}",
                 TypeName::bool_type(),
-                cond_t.as_ref().unwrap().type_name,
+                cond_t.as_ref().unwrap().borrow().type_name,
                 args[0]
             );
 
             let res_t = args[1]
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .combined_type(
-                    *args[2]
+                    &args[2]
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .clone()
                         .unwrap(),
                     true,
                 );
 
-            let a = if cond_t.as_ref().unwrap().is_private()
+            let a = if cond_t.as_ref().unwrap().borrow().is_private()
             //Everything is turned private
             {
-                func.is_private = true;
-                res_t.unwrap().annotate(CombinedPrivacyUnion::AST(Some(
-                    Expression::me_expr(None).to_ast(),
-                )))
+                func.borrow_mut()
+                    .try_as_builtin_function_mut()
+                    .unwrap()
+                    .is_private = true;
+                res_t
+                    .unwrap()
+                    .borrow()
+                    .annotate(CombinedPrivacyUnion::AST(Some(
+                        RcCell::new(Expression::me_expr(None)).into(),
+                    )))
             } else {
                 let hom = Self::combine_homomorphism(args[1].clone(), args[2].clone());
                 let true_type = args[1]
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .with_homomorphism(hom.clone());
                 let false_type = args[2]
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .with_homomorphism(hom.clone());
                 let p = true_type
-                    .combined_privacy(ast.to_expr().analysis(), false_type)
+                    .borrow()
+                    .combined_privacy(ast.borrow().to_expr().analysis(), &false_type)
                     .unwrap();
-                res_t.unwrap().annotate(p).with_homomorphism(hom)
+                res_t
+                    .unwrap()
+                    .borrow()
+                    .annotate(p)
+                    .borrow()
+                    .with_homomorphism(hom)
             };
-            args[1] = self.get_rhs(args[1].clone(), &a).unwrap();
-            args[2] = self.get_rhs(args[2].clone(), &a).unwrap();
-            ast.function_call_expr_base_mut_ref().args = args;
-            ast.expression_base_mut_ref().annotated_type = Some(a);
+            args[1] = self.get_rhs(&args[1], &a).unwrap();
+            args[2] = self.get_rhs(&args[2], &a).unwrap();
+            ast.borrow_mut().function_call_expr_base_mut_ref().args = args;
+            ast.borrow_mut().expression_base_mut_ref().annotated_type = Some(a);
             return;
         }
 
         //Check that argument types conform to op signature
-        let parameter_types = func.input_types();
-        if !func.is_eq() {
+        let parameter_types = func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .input_types();
+        if !func.borrow().try_as_builtin_function_ref().unwrap().is_eq() {
             for (arg, t) in args.iter().zip(&parameter_types) {
-                if !arg.instanceof_data_type(t.as_ref().unwrap()) {
+                if !arg.borrow().instanceof_data_type(t.as_ref().unwrap()) {
                     assert!(
                         false,
                         "{:?},{:?}, {:?}",
                         t,
-                        arg.annotated_type().as_ref().unwrap().type_name,
+                        arg.borrow()
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .type_name,
                         arg
                     );
                 }
             }
         }
 
-        let t1 = *args[0]
+        let t1 = args[0]
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .clone()
             .unwrap();
@@ -464,10 +626,12 @@ impl TypeCheckVisitor {
             None
         } else {
             Some(
-                *args[1]
+                args[1]
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .clone()
                     .unwrap(),
@@ -477,63 +641,92 @@ impl TypeCheckVisitor {
         let mut arg_t = if args.len() == 1 {
             Some(
                 if args[0]
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .is_literal()
                 {
-                    TypeName::Literal(String::from("lit"))
+                    RcCell::new(TypeName::Literal(String::from("lit")))
                 } else {
                     t1.clone()
                 },
             )
         } else {
             assert!(args.len() == 2);
-            let is_eq_with_tuples = func.is_eq() && is_instance(&t1, ASTType::TupleType);
-            t1.combined_type(t2.clone().unwrap(), is_eq_with_tuples)
+            let is_eq_with_tuples = func.borrow().try_as_builtin_function_ref().unwrap().is_eq()
+                && is_instance(&t1, ASTType::TupleType);
+            t1.borrow()
+                .combined_type(t2.as_ref().unwrap(), is_eq_with_tuples)
         };
         //Infer argument and output types
-        let out_t = if arg_t == Some(TypeName::Literal(String::from("lit"))) {
-            let res = func.op_func(
-                args.iter()
-                    .map(|arg| {
-                        arg.annotated_type()
-                            .as_ref()
-                            .unwrap()
-                            .type_name
-                            .as_ref()
-                            .unwrap()
-                            .try_as_elementary_type_name_ref()
-                            .unwrap()
-                            .try_as_number_type_name_ref()
-                            .unwrap()
-                            .try_as_number_literal_type_ref()
-                            .unwrap()
-                            .value()
-                    })
-                    .collect(),
-            );
+        let out_t = if arg_t == Some(RcCell::new(TypeName::Literal(String::from("lit")))) {
+            let res = func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .op_func(
+                    args.iter()
+                        .map(|arg| {
+                            arg.borrow()
+                                .annotated_type()
+                                .as_ref()
+                                .unwrap()
+                                .borrow()
+                                .type_name
+                                .as_ref()
+                                .unwrap()
+                                .borrow()
+                                .try_as_elementary_type_name_ref()
+                                .unwrap()
+                                .try_as_number_type_name_ref()
+                                .unwrap()
+                                .try_as_number_literal_type_ref()
+                                .unwrap()
+                                .value()
+                        })
+                        .collect(),
+                );
             let out_t = match res {
                 LiteralUnion::Bool(value) => {
-                    assert!(func.output_type() == Some(TypeName::bool_type()));
-                    TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(
-                        BooleanLiteralType::new(value),
-                    ))
+                    assert!(
+                        func.borrow()
+                            .try_as_builtin_function_ref()
+                            .unwrap()
+                            .output_type()
+                            == Some(TypeName::bool_type())
+                    );
+                    RcCell::new(
+                        BooleanLiteralType::new(value)
+                            .into_ast()
+                            .try_as_type_name()
+                            .unwrap(),
+                    )
                 }
                 LiteralUnion::Number(value) => {
-                    assert!(func.output_type() == Some(TypeName::number_type()));
-                    TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                        NumberTypeName::NumberLiteralType(NumberLiteralType::new(
-                            NumberLiteralTypeUnion::I32(value),
-                        )),
-                    ))
+                    assert!(
+                        func.borrow()
+                            .try_as_builtin_function_ref()
+                            .unwrap()
+                            .output_type()
+                            == Some(TypeName::number_type())
+                    );
+                    RcCell::new(
+                        NumberLiteralType::new(NumberLiteralTypeUnion::I32(value))
+                            .into_ast()
+                            .try_as_type_name()
+                            .unwrap(),
+                    )
                 }
             };
-            if func.is_eq() {
+            if func.borrow().try_as_builtin_function_ref().unwrap().is_eq() {
                 arg_t = t1
+                    .borrow()
                     .try_as_elementary_type_name_ref()
                     .unwrap()
                     .try_as_number_type_name_ref()
@@ -541,8 +734,10 @@ impl TypeCheckVisitor {
                     .try_as_number_literal_type_ref()
                     .unwrap()
                     .to_abstract_type()
+                    .borrow()
                     .combined_type(
-                        t2.unwrap()
+                        &t2.unwrap()
+                            .borrow()
                             .try_as_elementary_type_name_ref()
                             .unwrap()
                             .try_as_number_type_name_ref()
@@ -554,44 +749,70 @@ impl TypeCheckVisitor {
                     );
             }
             Some(out_t)
-        } else if func.output_type() == Some(TypeName::bool_type()) {
-            Some(TypeName::bool_type())
+        } else if func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .output_type()
+            == Some(TypeName::bool_type())
+        {
+            Some(RcCell::new(TypeName::bool_type()))
         } else {
             arg_t.clone()
         };
 
         assert!(
             arg_t.is_some()
-                && (arg_t != Some(TypeName::Literal(String::from("lit"))) || !func.is_eq())
+                && (arg_t != Some(RcCell::new(TypeName::Literal(String::from("lit"))))
+                    || !func.borrow().try_as_builtin_function_ref().unwrap().is_eq())
         );
         let mut p = None;
         let private_args = args.iter().any(|arg| Self::has_private_type(arg));
         if private_args {
-            assert!(arg_t != Some(TypeName::Literal(String::from("lit"))));
-            if func.can_be_private() {
-                if func.is_shiftop() {
-                    if !args[1]
+            assert!(arg_t != Some(RcCell::new(TypeName::Literal(String::from("lit")))));
+            assert!(
+                func.borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .can_be_private(),
+                r#"Operation \"{}\" does not support private operands{:?}"#,
+                func.borrow().try_as_builtin_function_ref().unwrap().op,
+                ast
+            );
+
+            if func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_shiftop()
+            {
+                assert!(
+                    args[1]
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
-                        .is_literal()
-                    {
-                        assert!(
-                            false,
-                            "Private shift expressions must use a constant (literal) shift amount {:?}",
-                            args[1]
-                        )
-                    }
-                    if args[1]
+                        .borrow()
+                        .is_literal(),
+                    "Private shift expressions must use a constant (literal) shift amount {:?}",
+                    args[1]
+                );
+
+                assert!(
+                    args[1]
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_elementary_type_name_ref()
                         .unwrap()
                         .try_as_number_type_name_ref()
@@ -599,151 +820,214 @@ impl TypeCheckVisitor {
                         .try_as_number_literal_type_ref()
                         .unwrap()
                         .value()
-                        < 0
-                    {
-                        assert!(false, "Cannot shift by negative amount {:?}", args[1]);
-                    }
-                }
-                if func.is_bitop() || func.is_shiftop() {
-                    for arg in &args {
-                        if arg
-                            .annotated_type()
-                            .as_ref()
-                            .unwrap()
-                            .type_name
-                            .as_ref()
-                            .unwrap()
-                            .elem_bitwidth()
-                            == 256
-                        {
-                            assert!(false,"Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type {:?}", arg)
-                        }
-                    }
-                }
-
-                if func.is_arithmetic() {
-                    for a in &args {
-                        if a.annotated_type()
-                            .as_ref()
-                            .unwrap()
-                            .type_name
-                            .as_ref()
-                            .unwrap()
-                            .elem_bitwidth()
-                            == 256
-                        {
-                            issue_compiler_warning(
-                                func.to_ast(),
-                                String::from("Possible field prime overflow"),
-                                String::from(
-                                    r#"Private arithmetic 256bit operations overflow at FIELD_PRIME.\nIf you need correct overflow behavior, use a smaller integer type."#,
-                                ),
-                            );
-                            break;
-                        }
-                    }
-                } else if func.is_comp() {
-                    for a in &args {
-                        if a.annotated_type()
-                            .as_ref()
-                            .unwrap()
-                            .type_name
-                            .as_ref()
-                            .unwrap()
-                            .elem_bitwidth()
-                            == 256
-                        {
-                            issue_compiler_warning(
-                                func.to_ast(),
-                                String::from("Possible private comparison failure"),
-                                String::from(
-                                    r#"Private 256bit comparison operations will fail for values >= 2^252.\n If you cannot guarantee that the value stays in range, you must use a smaller integer type to ensure correctness."#,
-                                ),
-                            );
-                            break;
-                        }
-                    }
-                }
-
-                func.is_private = true;
-                p = Some(Expression::me_expr(None));
-            } else {
-                assert!(
-                    false,
-                    r#"Operation \"{}\" does not support private operands{:?}"#,
-                    func.op, ast
+                        >= 0,
+                    "Cannot shift by negative amount {:?}",
+                    args[1]
                 );
             }
+            if func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_bitop()
+                || func
+                    .borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .is_shiftop()
+            {
+                for arg in &args {
+                    assert!(arg.borrow()
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap().borrow()
+                            .type_name
+                            .as_ref()
+                            .unwrap().borrow()
+                            .elem_bitwidth()
+                            != 256,"Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type {:?}", arg)
+                }
+            }
+
+            if func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_arithmetic()
+            {
+                for a in &args {
+                    if a.borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .elem_bitwidth()
+                        == 256
+                    {
+                        issue_compiler_warning(
+                            func.borrow()
+                                .try_as_builtin_function_ref()
+                                .unwrap()
+                                .to_ast(),
+                            String::from("Possible field prime overflow"),
+                            String::from(
+                                r#"Private arithmetic 256bit operations overflow at FIELD_PRIME.\nIf you need correct overflow behavior, use a smaller integer type."#,
+                            ),
+                        );
+                        break;
+                    }
+                }
+            } else if func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_comp()
+            {
+                for a in &args {
+                    if a.borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .elem_bitwidth()
+                        == 256
+                    {
+                        issue_compiler_warning(
+                            func.borrow()
+                                .try_as_builtin_function_ref()
+                                .unwrap()
+                                .to_ast(),
+                            String::from("Possible private comparison failure"),
+                            String::from(
+                                r#"Private 256bit comparison operations will fail for values >= 2^252.\n If you cannot guarantee that the value stays in range, you must use a smaller integer type to ensure correctness."#,
+                            ),
+                        );
+                        break;
+                    }
+                }
+            }
+
+            func.borrow_mut()
+                .try_as_builtin_function_mut()
+                .unwrap()
+                .is_private = true;
+            p = Some(Expression::me_expr(None));
         }
 
-        if arg_t != Some(TypeName::Literal(String::from("lit"))) {
+        if arg_t != Some(RcCell::new(TypeName::Literal(String::from("lit")))) {
             //Add implicit casts for arguments
-            let arg_pt = arg_t.unwrap().annotate(CombinedPrivacyUnion::AST(Some(
-                p.as_ref().unwrap().to_ast(),
-            )));
-            if func.is_shiftop() && p.is_some() {
-                args[0] = self.get_rhs(args[0].clone(), &arg_pt).unwrap();
+            let arg_pt = arg_t
+                .unwrap()
+                .borrow()
+                .annotate(CombinedPrivacyUnion::AST(Some(
+                    RcCell::new(p.as_ref().unwrap().clone()).into(),
+                )));
+            if func
+                .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .is_shiftop()
+                && p.is_some()
+            {
+                args[0] = self.get_rhs(&args[0], &arg_pt).unwrap();
             } else {
                 args = ast
+                    .borrow()
                     .args()
                     .iter()
-                    .map(|argument| self.get_rhs(argument.clone(), &arg_pt).unwrap())
+                    .map(|argument| self.get_rhs(argument, &arg_pt).unwrap())
                     .collect();
             }
-            ast.function_call_expr_base_mut_ref().args = args;
+            ast.borrow_mut().function_call_expr_base_mut_ref().args = args;
         }
 
-        ast.expression_base_mut_ref().annotated_type = Some(
+        ast.borrow_mut().expression_base_mut_ref().annotated_type = Some(
             out_t
                 .unwrap()
-                .annotate(CombinedPrivacyUnion::AST(Some(p.unwrap().to_ast()))),
+                .borrow()
+                .annotate(CombinedPrivacyUnion::AST(Some(
+                    RcCell::new(p.unwrap().clone()).into(),
+                ))),
         );
     }
     pub fn handle_homomorphic_builtin_function_call(
         &self,
-        mut ast: RcCell<FunctionCallExpr>,
-        mut func: RcCell<BuiltinFunction>,
+        mut ast: &RcCell<FunctionCallExpr>,
+        mut func: &RcCell<Expression>,
     ) {
         //First - same as non-homomorphic - check that argument types conform to op signature
-        if !func.is_eq() {
-            for (arg, t) in ast.args().iter().zip(&func.input_types()) {
-                if !arg.instanceof_data_type(t.as_ref().unwrap()) {
-                    assert!(
-                        false,
-                        "{:?},{:?}, {:?}",
-                        t,
-                        arg.annotated_type().as_ref().unwrap().type_name,
-                        arg
-                    )
-                }
+        if !func.borrow().try_as_builtin_function_ref().unwrap().is_eq() {
+            for (arg, t) in ast.borrow().args().iter().zip(
+                &func
+                    .borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .input_types(),
+            ) {
+                assert!(
+                    arg.borrow().instanceof_data_type(t.as_ref().unwrap()),
+                    "{:?},{:?}, {:?}",
+                    t,
+                    arg.borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name,
+                    arg
+                );
             }
         }
 
-        let homomorphic_func =
-            func.select_homomorphic_overload(ast.args(), ast.to_expr().analysis());
-        if homomorphic_func.is_none() {
-            assert!(
-                false,
-                r#"Operation \"{}\" requires all arguments to be accessible, i.e. @all or provably equal to @me{:?}"#,
-                func.op, ast
-            );
-        }
+        let homomorphic_func = func
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .select_homomorphic_overload(ast.borrow().args(), ast.borrow().to_expr().analysis());
+        assert!(
+            homomorphic_func.is_some(),
+            r#"Operation \"{}\" requires all arguments to be accessible, i.e. @all or provably equal to @me{:?}"#,
+            func.borrow().try_as_builtin_function_ref().unwrap().op,
+            ast
+        );
 
         //We could perform homomorphic operations on-chain by using some Solidity arbitrary precision math library.
         //For now, keep it simple and evaluate homomorphic operations in Python and check the result in the circuit.
-        func.is_private = true;
+        func.borrow_mut()
+            .try_as_builtin_function_mut()
+            .unwrap()
+            .is_private = true;
 
-        ast.expression_base_mut_ref().annotated_type =
+        ast.borrow_mut().expression_base_mut_ref().annotated_type =
             Some(homomorphic_func.clone().unwrap().output_type());
-        func.homomorphism = ast.annotated_type().as_ref().unwrap().homomorphism.clone();
+        func.borrow_mut()
+            .try_as_builtin_function_mut()
+            .unwrap()
+            .homomorphism = ast
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .homomorphism
+            .clone();
         let expected_arg_types = homomorphic_func.unwrap().input_types();
 
         //Check that the argument types are correct
-        ast.function_call_expr_base_mut_ref().args = ast
+        ast.borrow_mut().function_call_expr_base_mut_ref().args = ast
+            .borrow()
             .args()
             .iter()
             .zip(expected_arg_types)
-            .map(|(arg, arg_pt)| self.get_rhs(arg.clone(), &arg_pt).unwrap())
+            .map(|(arg, arg_pt)| self.get_rhs(arg, &arg_pt).unwrap())
             .collect();
     }
     //@staticmethod
@@ -753,25 +1037,57 @@ impl TypeCheckVisitor {
         true
     }
     //@staticmethod
-    pub fn combine_homomorphism(lhs: Expression, rhs: Expression) -> String {
-        if lhs.annotated_type().as_ref().unwrap().homomorphism
-            == rhs.annotated_type().as_ref().unwrap().homomorphism
+    pub fn combine_homomorphism(lhs: RcCell<Expression>, rhs: RcCell<Expression>) -> String {
+        if lhs
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .homomorphism
+            == rhs
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
         {
-            lhs.annotated_type().as_ref().unwrap().homomorphism.clone()
+            lhs.borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
+                .clone()
         } else if Self::can_rehom(&lhs) {
-            rhs.annotated_type().as_ref().unwrap().homomorphism.clone()
+            rhs.borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
+                .clone()
         } else {
-            lhs.annotated_type().as_ref().unwrap().homomorphism.clone()
+            lhs.borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
+                .clone()
         }
     }
 
     //@staticmethod
-    pub fn can_rehom(ast: &Expression) -> bool {
+    pub fn can_rehom(ast: &RcCell<Expression>) -> bool {
         if ast
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
-            .is_accessible(&ast.analysis())
+            .borrow()
+            .is_accessible(&ast.borrow().analysis())
         {
             return true;
         }
@@ -783,81 +1099,111 @@ impl TypeCheckVisitor {
         }
         if is_instance(ast, ASTType::FunctionCallExprBase)
             && is_instance(
-                &**ast.try_as_function_call_expr_ref().unwrap().func(),
+                &**ast.borrow().try_as_function_call_expr_ref().unwrap().func(),
                 ASTType::BuiltinFunction,
             )
             && ast
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
+                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
                 .is_ite()
-            && ast.try_as_function_call_expr_ref().unwrap().args()[0]
+            && ast.borrow().try_as_function_call_expr_ref().unwrap().args()[0]
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_public()
         {
-            return Self::can_rehom(&ast.try_as_function_call_expr_ref().unwrap().args()[1])
-                && Self::can_rehom(&ast.try_as_function_call_expr_ref().unwrap().args()[2]);
+            return Self::can_rehom(
+                &ast.borrow().try_as_function_call_expr_ref().unwrap().args()[1],
+            ) && Self::can_rehom(
+                &ast.borrow().try_as_function_call_expr_ref().unwrap().args()[2],
+            );
         }
 
         false
     }
 
     //@staticmethod
-    pub fn try_rehom(mut rhs: Expression, expected_type: &AnnotatedTypeName) -> Expression {
+    pub fn try_rehom(
+        mut rhs: &RcCell<Expression>,
+        expected_type: &RcCell<AnnotatedTypeName>,
+    ) -> RcCell<Expression> {
         assert!(
-            !rhs.annotated_type().as_ref().unwrap().is_public(),
+            !rhs.borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_public(),
             "Cannot change the homomorphism of a public value"
         );
 
         if rhs
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
-            .is_private_at_me(&rhs.analysis())
+            .borrow()
+            .is_private_at_me(&rhs.borrow().analysis())
         {
             //The value is @me, so we can just insert a ReclassifyExpr to change
             //the homomorphism of this value, just like we do for public values.
             return Self::make_rehom(rhs, expected_type);
         }
-        if is_instance(&rhs, ASTType::ReclassifyExpr) && !is_instance(&rhs, ASTType::RehomExpr) {
+        if is_instance(rhs, ASTType::ReclassifyExpr) && !is_instance(rhs, ASTType::RehomExpr) {
             //rhs is a valid ReclassifyExpr, i.e. the argument is public or @me-private
             //To create an expression with the correct homomorphism,
             //just change the ReclassifyExpr"s output homomorphism
-            rhs.try_as_reclassify_expr_mut()
+            rhs.borrow_mut()
+                .try_as_reclassify_expr_mut()
                 .unwrap()
                 .reclassify_expr_base_mut_ref()
-                .homomorphism = Some(expected_type.homomorphism.clone());
-        } else if is_instance(&rhs, ASTType::PrimitiveCastExpr) {
+                .homomorphism = Some(expected_type.borrow().homomorphism.clone());
+        } else if is_instance(rhs, ASTType::PrimitiveCastExpr) {
             //Ignore primitive cast & recurse
-            rhs.try_as_primitive_cast_expr_mut().unwrap().expr =
-                Box::new(Self::try_rehom(rhs.clone(), expected_type));
-        } else if is_instance(&rhs, ASTType::FunctionCallExprBase)
+            rhs.borrow_mut()
+                .try_as_primitive_cast_expr_mut()
+                .unwrap()
+                .expr = Self::try_rehom(rhs, expected_type);
+        } else if is_instance(rhs, ASTType::FunctionCallExprBase)
             && is_instance(
-                &**rhs.try_as_function_call_expr_ref().unwrap().func(),
+                &**rhs.borrow().try_as_function_call_expr_ref().unwrap().func(),
                 ASTType::BuiltinFunction,
             )
             && rhs
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
+                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
                 .is_ite()
-            && rhs.try_as_function_call_expr_ref().unwrap().args()[0]
+            && rhs.borrow().try_as_function_call_expr_ref().unwrap().args()[0]
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_public()
         {
             //Argument is public_cond ? true_val : false_val. Try to rehom both true_val and false_val
-            let mut args = rhs.try_as_function_call_expr_ref().unwrap().args().clone();
-            args[1] = Self::try_rehom(args[1].clone(), expected_type);
-            args[2] = Self::try_rehom(args[2].clone(), expected_type);
-            rhs.try_as_function_call_expr_mut()
+            let mut args = rhs
+                .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .args()
+                .clone();
+            args[1] = Self::try_rehom(&args[1], expected_type);
+            args[2] = Self::try_rehom(&args[2], expected_type);
+            rhs.borrow_mut()
+                .try_as_function_call_expr_mut()
                 .unwrap()
                 .function_call_expr_base_mut_ref()
                 .args = args;
@@ -866,135 +1212,189 @@ impl TypeCheckVisitor {
                 false,
                 "{:?}, {:?} ,{:?}",
                 expected_type,
-                rhs.annotated_type(),
+                rhs.borrow().annotated_type(),
                 rhs
             )
         }
 
         //Rehom worked without throwing, change annotated_type and return
-        rhs.expression_base_mut_ref().annotated_type = Some(
-            rhs.annotated_type()
+        rhs.borrow_mut().expression_base_mut_ref().annotated_type = Some(
+            rhs.borrow()
+                .annotated_type()
                 .as_ref()
                 .unwrap()
-                .with_homomorphism(expected_type.homomorphism.clone()),
+                .borrow()
+                .with_homomorphism(expected_type.borrow().homomorphism.clone()),
         );
-        rhs
+        rhs.clone()
     }
 
     //@staticmethod
-    pub fn make_rehom(mut expr: Expression, expected_type: &AnnotatedTypeName) -> Expression {
+    pub fn make_rehom(
+        mut expr: &RcCell<Expression>,
+        expected_type: &RcCell<AnnotatedTypeName>,
+    ) -> RcCell<Expression> {
         assert!(expected_type
+            .borrow()
             .privacy_annotation
             .as_ref()
             .unwrap()
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .privacy_annotation_label()
             .is_some());
         assert!(expr
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
-            .is_private_at_me(&expr.analysis()));
-        assert!(expected_type.is_private_at_me(&expr.analysis()));
+            .borrow()
+            .is_private_at_me(&expr.borrow().analysis()));
+        assert!(expected_type
+            .borrow()
+            .is_private_at_me(&expr.borrow().analysis()));
 
-        let mut r = RehomExpr::new(expr.clone(), Some(expected_type.homomorphism.clone()));
+        let mut r = RcCell::new(
+            RehomExpr::new(
+                expr.clone(),
+                Some(expected_type.borrow().homomorphism.clone()),
+            )
+            .into_expr(),
+        );
 
         //set type
         let pl = get_privacy_expr_from_label(
             expected_type
+                .borrow()
                 .privacy_annotation
                 .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .privacy_annotation_label()
-                .unwrap()
-                .into(),
+                .unwrap(),
         );
-        r.reclassify_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-            expr.annotated_type()
-                .as_ref()
-                .unwrap()
-                .type_name
-                .as_ref()
-                .map(|t| *t.clone()),
-            Some(pl.into_ast()),
-            expected_type.homomorphism.clone(),
-        ));
-        Self::check_for_invalid_private_type(r.to_ast());
+        r.borrow_mut().expression_base_mut_ref().annotated_type =
+            Some(RcCell::new(AnnotatedTypeName::new(
+                expr.borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .clone(),
+                Some(pl),
+                expected_type.borrow().homomorphism.clone(),
+            )));
+        Self::check_for_invalid_private_type(&r.clone().into());
 
         //set statement, parents, location
-        Self::assign_location(&mut r.to_expr(), &mut expr);
-
-        r.to_expr()
-    }
-
-    //@staticmethod
-    pub fn make_private(
-        mut expr: Expression,
-        privacy: &Expression,
-        homomorphism: &String,
-    ) -> Expression {
-        assert!(privacy.privacy_annotation_label().is_some());
-
-        let pl = get_privacy_expr_from_label(privacy.privacy_annotation_label().unwrap().into());
-        let mut r = ReclassifyExprBase::new(expr.clone(), pl.clone(), Some(homomorphism.clone()));
-
-        //set type
-        r.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-            expr.annotated_type()
-                .as_ref()
-                .unwrap()
-                .type_name
-                .as_ref()
-                .map(|t| *t.clone()),
-            Some(pl.to_ast()),
-            homomorphism.clone(),
-        ));
-        Self::check_for_invalid_private_type(r.to_ast());
-        let mut r = r.to_expr();
-        //set statement, parents, location
-        Self::assign_location(&mut r, &mut expr);
+        Self::assign_location(&r.clone().into(), expr);
 
         r
     }
 
     //@staticmethod
-    pub fn assign_location(target: RcCell<Expression>, source: RcCell<Expression>) {
-        //set statement
-        target.borrow_mut().expression_base_mut_ref().statement = source.statement().clone();
-        let t = ASTFlatten::from(target.clone()).downgrade();
-        //set parents
-        target.borrow_mut().ast_base_mut_ref().parent = source.borrow().parent().clone();
-        let mut annotated_type = target.annotated_type().clone();
-        annotated_type.as_mut().unwrap().ast_base.parent = Some(t.clone());
-        target.expression_base_mut_ref().annotated_type = annotated_type;
-        source.ast_base_mut_ref().parent = Some(t);
+    pub fn make_private(
+        mut expr: &RcCell<Expression>,
+        privacy: &Option<ASTFlatten>,
+        homomorphism: &String,
+    ) -> RcCell<Expression> {
+        assert!(privacy
+            .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .privacy_annotation_label()
+            .is_some());
 
-        //set source location
-        target.ast_base_mut_ref().line = source.ast_base_ref().line;
-        target.ast_base_mut_ref().column = source.ast_base_ref().column;
+        let pl = get_privacy_expr_from_label(
+            privacy
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .privacy_annotation_label()
+                .unwrap()
+                .into(),
+        );
+        let mut r = RcCell::new(
+            ReclassifyExprBase::new(
+                expr.clone(),
+                pl.try_as_expression_ref().unwrap().clone(),
+                Some(homomorphism.clone()),
+            )
+            .into_expr(),
+        );
+
+        //set type
+        r.borrow_mut().expression_base_mut_ref().annotated_type =
+            Some(RcCell::new(AnnotatedTypeName::new(
+                expr.borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .clone(),
+                Some(pl),
+                homomorphism.clone(),
+            )));
+        Self::check_for_invalid_private_type(&r.clone().into());
+        //set statement, parents, location
+        Self::assign_location(&r, expr);
+
+        r
     }
 
     //@staticmethod
-    pub fn implicitly_converted_to(expr: RcCell<Expression>, t: &TypeName) -> RcCell<Expression> {
-        if is_instance(&(*expr.borrow().clone()), ASTType::ReclassifyExpr)
+    pub fn assign_location(target: &RcCell<Expression>, source: &RcCell<Expression>) {
+        //set statement
+        target.borrow_mut().expression_base_mut_ref().statement =
+            source.borrow().statement().clone();
+        let t = ASTFlatten::from(target.clone()).downgrade();
+        //set parents
+        target.borrow_mut().ast_base_mut_ref().borrow_mut().parent =
+            source.borrow().parent().clone();
+        let mut annotated_type = target.borrow().annotated_type().clone();
+        annotated_type
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .ast_base
+            .borrow_mut()
+            .parent = Some(t.clone());
+        target.borrow_mut().expression_base_mut_ref().annotated_type = annotated_type;
+        source.borrow_mut().ast_base_mut_ref().borrow_mut().parent = Some(t);
+
+        //set source location
+        target.borrow_mut().ast_base_mut_ref().borrow_mut().line =
+            source.borrow().ast_base_ref().borrow().line;
+        target.borrow_mut().ast_base_mut_ref().borrow_mut().column =
+            source.borrow().ast_base_ref().borrow().column;
+    }
+
+    //@staticmethod
+    pub fn implicitly_converted_to(
+        expr: &RcCell<Expression>,
+        t: &RcCell<TypeName>,
+    ) -> RcCell<Expression> {
+        if is_instance(expr, ASTType::ReclassifyExpr)
             && !expr
                 .borrow()
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .privacy()
+                .borrow()
                 .is_all_expr()
         {
             //Cast the argument of the ReclassifyExpr instead
             let exp = Self::implicitly_converted_to(
-                *expr
-                    .borrow()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr()
-                    .clone(),
+                expr.borrow().try_as_reclassify_expr_ref().unwrap().expr(),
                 t,
             );
             expr.borrow_mut()
@@ -1003,19 +1403,20 @@ impl TypeCheckVisitor {
                 .reclassify_expr_base_mut_ref()
                 .expr = exp;
             let mut expr_annotated_type = expr.borrow().annotated_type().clone();
-            expr_annotated_type.as_mut().unwrap().type_name = expr
+            expr_annotated_type.as_mut().unwrap().borrow_mut().type_name = expr
                 .borrow()
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .expr()
-                .as_ref()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .clone();
             expr.borrow_mut().expression_base_mut_ref().annotated_type = expr_annotated_type;
-            return expr;
+            return expr.clone();
         }
 
         assert!(expr
@@ -1023,151 +1424,241 @@ impl TypeCheckVisitor {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .as_ref()
             .unwrap()
+            .borrow()
             .is_primitive_type());
         let mut cast =
             RcCell::new(PrimitiveCastExpr::new(t.clone(), expr.clone(), true).into_expr());
         let cast_weak = ASTFlatten::from(cast.clone()).downgrade();
-        cast.borrow_mut().ast_base_mut_ref().parent = expr.parent().clone();
-        cast.borrow_mut().expression_base_mut_ref().statement = expr.statement().clone();
-        cast.borrow_mut().ast_base_mut_ref().line = expr.line();
-        cast.borrow_mut().ast_base_mut_ref().column = expr.column();
+        cast.borrow_mut().ast_base_mut_ref().borrow_mut().parent = expr.borrow().parent().clone();
+        cast.borrow_mut().expression_base_mut_ref().statement = expr.borrow().statement().clone();
+        cast.borrow_mut().ast_base_mut_ref().borrow_mut().line = expr.borrow().line();
+        cast.borrow_mut().ast_base_mut_ref().borrow_mut().column = expr.borrow().column();
         cast.borrow_mut()
             .try_as_primitive_cast_expr_mut()
             .unwrap()
             .elem_type
+            .borrow_mut()
             .ast_base_mut_ref()
             .unwrap()
+            .borrow_mut()
             .parent = Some(cast_weak.clone());
-        expr.borrow_mut().ast_base_mut_ref().parent = Some(cast_weak.clone());
-        cast.borrow_mut().expression_base_mut_ref().annotated_type = Some(AnnotatedTypeName::new(
-            Some(t.clone()),
-            expr.annotated_type()
-                .as_ref()
-                .unwrap()
-                .privacy_annotation
-                .as_ref()
-                .map(|p| *p.clone()),
-            expr.annotated_type().as_ref().unwrap().homomorphism.clone(),
-        ));
+        expr.borrow_mut().ast_base_mut_ref().borrow_mut().parent = Some(cast_weak.clone());
+        cast.borrow_mut().expression_base_mut_ref().annotated_type =
+            Some(RcCell::new(AnnotatedTypeName::new(
+                Some(t.clone()),
+                expr.borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .privacy_annotation
+                    .clone(),
+                expr.borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .homomorphism
+                    .clone(),
+            )));
         cast.borrow_mut()
             .expression_base_mut_ref()
             .annotated_type
             .as_mut()
             .unwrap()
+            .borrow_mut()
             .ast_base
+            .borrow_mut()
             .parent = Some(cast_weak);
         cast
     }
 
     pub fn visitFunctionCallExpr(&self, mut ast: &ASTFlatten) {
-        if is_instance(&**ast.func(), ASTType::BuiltinFunction) {
+        if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) {
             self.handle_builtin_function_call(
-                ast.clone(),
-                ast.function_call_expr_base_mut_ref()
-                    .func
-                    .try_as_builtin_function_mut()
-                    .unwrap(),
+                ast.try_as_function_call_expr_ref().unwrap(),
+                &ast.try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .function_call_expr_base_ref()
+                    .func,
             );
-        } else if ast.is_cast() {
+        } else if ast
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .borrow()
+            .is_cast()
+        {
             assert!(
                 is_instance(
-                    &*ast
+                    &ast.try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
                         .func()
+                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .target()
-                        .as_ref()
+                        .clone()
+                        .unwrap()
+                        .upgrade()
                         .unwrap(),
                     ASTType::EnumDefinition
                 ),
                 "User type casts only implemented for enums"
             );
-            ast.expression_base_mut_ref().annotated_type = Some(
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .annotated_type = Some(
                 self.handle_cast(
-                    ast.args()[0].clone(),
-                    *ast.func()
+                    &ast.try_as_function_call_expr_ref().unwrap().borrow().args()[0],
+                    ast.try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .func()
+                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .target()
-                        .as_ref()
+                        .clone()
+                        .unwrap()
+                        .upgrade()
                         .unwrap()
                         .try_as_expression_ref()
                         .unwrap()
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
-                        .clone()
+                        .as_ref()
                         .unwrap(),
                 ),
             );
-        } else if is_instance(&**ast.func(), ASTType::LocationExprBase) {
-            let ft = *ast
+        } else if is_instance(
+            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::LocationExprBase,
+        ) {
+            let ft = ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
                 .func()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .clone()
                 .unwrap();
             assert!(is_instance(&ft, ASTType::FunctionTypeName));
 
             assert!(
-                ft.try_as_function_type_name_ref().unwrap().parameters.len() == ast.args().len(),
+                ft.borrow()
+                    .try_as_function_type_name_ref()
+                    .unwrap()
+                    .parameters
+                    .len()
+                    == ast
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .args()
+                        .len(),
                 "Wrong number of arguments {:?}",
-                ast.func()
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func()
             );
 
             //Check arguments
-            let mut args = ast.args().clone();
-            for i in 0..ast.args().len() {
+            let mut args = ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .args()
+                .clone();
+            for i in 0..ast
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .args()
+                .len()
+            {
                 args[i] = self
                     .get_rhs(
-                        args[i].clone(),
-                        &*ft.try_as_function_type_name_ref().unwrap().parameters[i]
+                        &args[i],
+                        &ft.borrow()
+                            .try_as_function_type_name_ref()
+                            .unwrap()
+                            .parameters[i]
+                            .borrow()
                             .identifier_declaration_base
                             .annotated_type,
                     )
                     .unwrap();
             }
-            ast.function_call_expr_base_mut_ref().args = args;
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .function_call_expr_base_mut_ref()
+                .args = args;
 
             //Set expression type to return type
-            ast.expression_base_mut_ref().annotated_type = Some(
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .annotated_type = Some(
                 if ft
+                    .borrow()
                     .try_as_function_type_name_ref()
                     .unwrap()
                     .return_parameters
                     .len()
                     == 1
                 {
-                    *ft.try_as_function_type_name_ref()
+                    ft.borrow()
+                        .try_as_function_type_name_ref()
                         .unwrap()
                         .return_parameters[0]
+                        .borrow()
                         .identifier_declaration_base
                         .annotated_type
                         .clone()
                 } else {
                     //TODO maybe not None label in the future
-                    AnnotatedTypeName::new(
-                        Some(TypeName::TupleType(TupleType::new(
-                            ft.try_as_function_type_name_ref()
+                    RcCell::new(AnnotatedTypeName::new(
+                        Some(RcCell::new(TypeName::TupleType(TupleType::new(
+                            ft.borrow()
+                                .try_as_function_type_name_ref()
                                 .unwrap()
                                 .return_parameters
                                 .iter()
-                                .map(|t| *t.identifier_declaration_base.annotated_type.clone())
+                                .map(|t| {
+                                    t.borrow()
+                                        .identifier_declaration_base
+                                        .annotated_type
+                                        .clone()
+                                })
                                 .collect(),
-                        ))),
+                        )))),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    )
+                    ))
                 },
             );
         } else {
@@ -1176,39 +1667,63 @@ impl TypeCheckVisitor {
     }
 
     pub fn visitPrimitiveCastExpr(&self, mut ast: &ASTFlatten) {
-        ast.expression_base.annotated_type = Some(self.handle_cast(*ast.expr, *ast.elem_type));
+        ast.try_as_primitive_cast_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base
+            .annotated_type = Some(
+            self.handle_cast(
+                &ast.try_as_primitive_cast_expr_ref().unwrap().borrow().expr,
+                &ast.try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .elem_type,
+            ),
+        );
     }
 
-    pub fn handle_cast(&self, expr: Expression, t: TypeName) -> AnnotatedTypeName {
+    pub fn handle_cast(
+        &self,
+        expr: &RcCell<Expression>,
+        t: &RcCell<TypeName>,
+    ) -> RcCell<AnnotatedTypeName> {
         //because of the fake solidity check we already know that the cast is possible -> don"t have to check if cast possible
-        if expr.annotated_type().as_ref().unwrap().is_private() {
-            let expected = AnnotatedTypeName::new(
-                expr.annotated_type()
-                    .as_ref()
-                    .unwrap()
-                    .type_name
-                    .as_ref()
-                    .map(|t| *t.clone()),
-                Some(Expression::me_expr(None).into_ast()),
-                String::from("NON_HOMOMORPHISM"),
-            );
-            if Some(String::from("true")) == expr.instance_of(&expected) {
+        RcCell::new(
+            if expr
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_private()
+            {
+                let expected = RcCell::new(AnnotatedTypeName::new(
+                    expr.borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .clone(),
+                    Some(RcCell::new(Expression::me_expr(None)).into()),
+                    String::from("NON_HOMOMORPHISM"),
+                ));
                 assert!(
-                    false,
+                    Some(String::from("true")) != expr.borrow().instance_of(&expected),
                     "{:?}, {:?}, {:?}",
                     expected,
-                    expr.annotated_type(),
+                    expr.borrow().annotated_type(),
                     expr
+                );
+                AnnotatedTypeName::new(
+                    Some(t.clone()),
+                    Some(RcCell::new(Expression::me_expr(None)).into()),
+                    String::from("NON_HOMOMORPHISM"),
                 )
-            }
-            AnnotatedTypeName::new(
-                Some(t.clone()),
-                Some(Expression::me_expr(None).into_ast()),
-                String::from("NON_HOMOMORPHISM"),
-            )
-        } else {
-            AnnotatedTypeName::new(Some(t.clone()), None, String::from("NON_HOMOMORPHISM"))
-        }
+            } else {
+                AnnotatedTypeName::new(Some(t.clone()), None, String::from("NON_HOMOMORPHISM"))
+            },
+        )
     }
 
     pub fn visitNewExpr(&self, _ast: &ASTFlatten) { //already has correct type
@@ -1216,48 +1731,73 @@ impl TypeCheckVisitor {
     }
 
     pub fn visitMemberAccessExpr(&self, mut ast: &ASTFlatten) {
-        assert!(ast.location_expr_base.target.is_some());
+        assert!(ast
+            .try_as_member_access_expr_ref()
+            .unwrap()
+            .borrow()
+            .location_expr_base
+            .target
+            .is_some());
 
         assert!(
             !(ast
+                .try_as_member_access_expr_ref()
+                .unwrap()
+                .borrow()
                 .expr
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_address()
                 && ast
+                    .try_as_member_access_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .expr
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .is_private()),
             "Cannot access members of private address variable{:?}",
             ast
         );
-        ast.location_expr_base
-            .tuple_or_location_expr_base
-            .expression_base
+        ast.try_as_member_access_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
             .annotated_type = ast
-            .location_expr_base
-            .target
-            .as_ref()
+            .try_as_member_access_expr_ref()
             .unwrap()
             .borrow()
-            .as_ref()
+            .target()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .annotated_type()
             .clone();
     }
 
     pub fn visitReclassifyExpr(&self, mut ast: &ASTFlatten) {
         assert!(
-            ast.privacy().privacy_annotation_label().is_none(),
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .privacy()
+                .borrow()
+                .privacy_annotation_label()
+                .is_none(),
             r#"Second argument of "reveal" cannot be used as a privacy type{:?}"#,
             ast
         );
@@ -1266,28 +1806,77 @@ impl TypeCheckVisitor {
         assert!(!homomorphism.is_empty());
 
         //Prevent ReclassifyExpr to all with homomorphic type
-        if ast.privacy().is_all_expr()
-            && (ast.homomorphism() != &Some(Homomorphism::non_homomorphic())
-                || ast.expr().annotated_type().as_ref().unwrap().homomorphism
+        if ast
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .borrow()
+            .privacy()
+            .borrow()
+            .is_all_expr()
+            && (ast
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism()
+                != &Some(Homomorphism::non_homomorphic())
+                || ast
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .expr()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .homomorphism
                     != Homomorphism::non_homomorphic())
         {
             //If the target privacy is all, we infer a target homomorphism of NonHomomorphic
             homomorphism = Homomorphism::non_homomorphic();
-            ast.reclassify_expr_base_mut_ref().homomorphism = Some(homomorphism.clone());
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .reclassify_expr_base_mut_ref()
+                .homomorphism = Some(homomorphism.clone());
         }
 
         //Make sure the first argument to reveal / rehom is public or private provably equal to @me
-        let is_expr_at_all = ast.expr().annotated_type().as_ref().unwrap().is_public();
-        let is_expr_at_me = ast
+        let is_expr_at_all = ast
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .borrow()
             .expr()
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
-            .is_private_at_me(&ast.to_expr().analysis());
+            .borrow()
+            .is_public();
+        let is_expr_at_me = ast
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .borrow()
+            .expr()
+            .borrow()
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .is_private_at_me(
+                &ast.try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .to_expr()
+                    .analysis(),
+            );
         assert!(
             is_expr_at_all || is_expr_at_me,
             r#"First argument of "{}" must be accessible,"i.e. @all or provably equal to @me{:?}"#,
-            ast.func_name(),
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .func_name(),
             ast
         );
 
@@ -1295,70 +1884,122 @@ impl TypeCheckVisitor {
 
         assert!(
             !(is_expr_at_all
-                && is_instance(&ast, ASTType::RehomExpr)
-                && ast.homomorphism() == &Some(Homomorphism::non_homomorphic())),
+                && is_instance(ast, ASTType::RehomExpr)
+                && ast
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .homomorphism()
+                    == &Some(Homomorphism::non_homomorphic())),
             r#"Cannot use "{}" on a public value{:?}"#,
             HOMOMORPHISM_STORE
                 .lock()
                 .unwrap()
-                .get(ast.homomorphism().as_ref().unwrap())
+                .get(
+                    ast.try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .homomorphism()
+                        .as_ref()
+                        .unwrap()
+                )
                 .unwrap()
                 .rehom_expr_name,
             ast
         );
 
         //NB prevent any redundant reveal (not just for public)
-        ast.expression_base_mut_ref().annotated_type = Some(AnnotatedTypeName::new(
-            ast.expr()
+        ast.try_as_reclassify_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
+            .annotated_type = Some(RcCell::new(AnnotatedTypeName::new(
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .expr()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
-                .as_ref()
-                .map(|t| *t.clone()),
-            Some(ast.privacy().to_ast()),
+                .clone(),
+            Some(ast.clone()),
             homomorphism.clone(),
-        ));
+        )));
 
         assert!(
             Some(String::from("true"))
                 != ast
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .borrow()
                     .to_expr()
-                    .instance_of(&ast.expr().annotated_type().as_ref().unwrap()),
+                    .instance_of(
+                        &ast.try_as_reclassify_expr_ref()
+                            .unwrap()
+                            .borrow()
+                            .expr()
+                            .borrow()
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                    ),
             r#"Redundant "{}": Expression is already @{}{homomorphism}"{:?}"#,
-            ast.func_name(),
-            ast.privacy().to_ast().code(),
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .func_name(),
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow()
+                .privacy()
+                .borrow()
+                .to_ast()
+                .code(),
             ast
         );
-        Self::check_for_invalid_private_type(ast.to_ast());
+        Self::check_for_invalid_private_type(ast);
     }
 
     pub fn visitIfStatement(&self, ast: &ASTFlatten) {
-        let b = &ast.condition;
+        let b = &ast.try_as_if_statement_ref().unwrap().borrow().condition;
         assert!(
-            b.instanceof_data_type(&TypeName::bool_type()),
+            b.borrow()
+                .instanceof_data_type(&RcCell::new(TypeName::bool_type())),
             "{:?}, {:?} ,{:?}",
             TypeName::bool_type(),
-            b.annotated_type().as_ref().unwrap().type_name,
+            b.borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .type_name,
             b
         );
         if ast
+            .try_as_if_statement_ref()
+            .unwrap()
+            .borrow()
             .condition
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .is_private()
         {
-            let expected = AnnotatedTypeName::new(
-                Some(TypeName::bool_type()),
-                Some(Expression::me_expr(None).into_ast()),
+            let expected = RcCell::new(AnnotatedTypeName::new(
+                Some(RcCell::new(TypeName::bool_type())),
+                Some(RcCell::new(Expression::me_expr(None)).into()),
                 String::from("NON_HOMOMORPHISM"),
-            );
+            ));
             assert!(
-                Some(String::from("true")) == b.instance_of(&expected),
+                Some(String::from("true")) == b.borrow().instance_of(&expected),
                 "{:?}, {:?} ,{:?}",
                 expected,
-                b.annotated_type(),
+                b.borrow().annotated_type(),
                 b
             )
         }
@@ -1366,157 +2007,294 @@ impl TypeCheckVisitor {
 
     pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
         assert!(
-            Some(String::from("true")) == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
+            Some(String::from("true"))
+                == ast
+                    .try_as_while_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .condition
+                    .borrow()
+                    .instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
             AnnotatedTypeName::bool_all(),
-            ast.condition.annotated_type(),
-            ast.condition
+            ast.try_as_while_statement_ref()
+                .unwrap()
+                .borrow()
+                .condition
+                .borrow()
+                .annotated_type(),
+            ast.try_as_while_statement_ref().unwrap().borrow().condition
         )
         //must also later check that body and condition do not contain private expressions
     }
 
     pub fn visitForStatement(&self, ast: &ASTFlatten) {
         assert!(
-            Some(String::from("true")) == ast.condition.instance_of(&AnnotatedTypeName::bool_all()),
+            Some(String::from("true"))
+                == ast
+                    .try_as_for_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .condition
+                    .borrow()
+                    .instance_of(&AnnotatedTypeName::bool_all()),
             "{:?}, {:?} ,{:?}",
             AnnotatedTypeName::bool_all(),
-            ast.condition.annotated_type(),
-            ast.condition
+            ast.try_as_for_statement_ref()
+                .unwrap()
+                .borrow()
+                .condition
+                .borrow()
+                .annotated_type(),
+            ast.try_as_for_statement_ref().unwrap().borrow().condition
         )
         //must also later check that body, update and condition do not contain private expressions
     }
     pub fn visitReturnStatement(&self, mut ast: &ASTFlatten) {
-        assert!(ast.statement_base.function.as_ref().unwrap().is_function());
-        let rt = AnnotatedTypeName::new(
-            Some(TypeName::TupleType(
-                (*ast.statement_base.function.as_ref().unwrap()).return_type(),
-            )),
-            None,
-            String::from("NON_HOMOMORPHISM"),
-        );
-        if ast.expr.is_some() {
-            self.get_rhs(TupleExpr::new(vec![]).to_expr(), &rt);
-        } else if !is_instance(ast.expr.as_ref().unwrap(), ASTType::TupleExpr) {
-            ast.expr = self.get_rhs(
-                TupleExpr::new(vec![ast.expr.clone().unwrap()]).to_expr(),
-                &rt,
-            );
-        } else {
-            ast.expr = self.get_rhs(ast.expr.clone().unwrap(), &rt);
-        }
-    }
-    pub fn visitTupleExpr(&self, mut ast: &ASTFlatten) {
-        ast.tuple_or_location_expr_base
-            .expression_base
-            .annotated_type = Some(AnnotatedTypeName::new(
-            Some(TypeName::TupleType(TupleType::new(
-                ast.elements
-                    .iter()
-                    .map(|elem| elem.annotated_type().as_ref().unwrap().clone())
-                    .collect(),
+        assert!(ast
+            .try_as_return_statement_ref()
+            .unwrap()
+            .borrow()
+            .statement_base
+            .function
+            .as_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .is_function());
+        let rt = RcCell::new(AnnotatedTypeName::new(
+            Some(RcCell::new(TypeName::TupleType(
+                ast.try_as_return_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .statement_base
+                    .function
+                    .as_ref()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .return_type(),
             ))),
             None,
             String::from("NON_HOMOMORPHISM"),
         ));
+        if ast
+            .try_as_return_statement_ref()
+            .unwrap()
+            .borrow()
+            .expr
+            .is_some()
+        {
+            self.get_rhs(&RcCell::new(TupleExpr::new(vec![]).into_expr()), &rt);
+        } else if !is_instance(
+            ast.try_as_return_statement_ref()
+                .unwrap()
+                .borrow()
+                .expr
+                .as_ref()
+                .unwrap(),
+            ASTType::TupleExpr,
+        ) {
+            ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = self.get_rhs(
+                &RcCell::new(
+                    TupleExpr::new(vec![ast
+                        .try_as_return_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr
+                        .clone()
+                        .unwrap()])
+                    .into_expr(),
+                ),
+                &rt,
+            );
+        } else {
+            ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = self.get_rhs(
+                ast.try_as_return_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .expr
+                    .as_ref()
+                    .unwrap(),
+                &rt,
+            );
+        }
+    }
+    pub fn visitTupleExpr(&self, mut ast: &ASTFlatten) {
+        ast.try_as_tuple_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
+            .annotated_type = Some(RcCell::new(AnnotatedTypeName::new(
+            Some(RcCell::new(TypeName::TupleType(TupleType::new(
+                ast.try_as_tuple_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .elements
+                    .iter()
+                    .map(|elem| elem.borrow().annotated_type().as_ref().unwrap().clone())
+                    .collect(),
+            )))),
+            None,
+            String::from("NON_HOMOMORPHISM"),
+        )));
     }
 
     pub fn visitMeExpr(&self, mut ast: &ASTFlatten) {
-        ast.expression_base.annotated_type = Some(AnnotatedTypeName::address_all());
+        ast.try_as_me_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base
+            .annotated_type = Some(AnnotatedTypeName::address_all());
     }
 
     pub fn visitIdentifierExpr(&self, mut ast: &ASTFlatten) {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
-        let target = ast.location_expr_base.target();
+        let target = ast
+            .try_as_identifier_expr_ref()
+            .unwrap()
+            .borrow()
+            .location_expr_base
+            .target()
+            .as_ref()
+            .map(|t| t.clone().upgrade())
+            .flatten();
         if let Some(target) = target {
             assert!(
                 is_instance(&target, ASTType::ContractDefinition),
                 "Unsupported use of contract type in expression{:?}",
                 ast
             );
-            ast.annotated_type = target
+            ast.try_as_identifier_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .annotated_type = target
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .annotated_type()
-                .as_ref()
-                .map(|t| Box::new(t.clone()));
+                .clone();
 
-            assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
+            assert!(Self::is_accessible_by_invoker(&ast.try_as_identifier_expr_ref().unwrap().borrow().to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         }
     }
     pub fn visitIndexExpr(&self, mut ast: &ASTFlatten) {
-        let arr = ast.arr.clone().unwrap();
-        let index = ast.key.clone();
-        let mut map_t = arr.annotated_type().as_ref().unwrap();
+        let arr = ast
+            .try_as_index_expr_ref()
+            .unwrap()
+            .borrow()
+            .arr
+            .clone()
+            .unwrap();
+        let index = ast.try_as_index_expr_ref().unwrap().borrow().key.clone();
+        let mut map_t = arr.borrow().annotated_type().as_ref().unwrap().clone();
         //should have already been checked
         assert!(map_t
+            .borrow()
             .privacy_annotation
             .as_ref()
             .unwrap()
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .is_all_expr());
-        let mut tn = *map_t.type_name.clone().unwrap();
+        let mut tn = map_t.borrow().type_name.clone().unwrap();
         //do actual type checking
-        if let TypeName::Mapping(ref mut type_name) = tn {
-            let key_type = *type_name.key_type.clone();
-            let expected = AnnotatedTypeName::new(
+        if is_instance(&tn, ASTType::Mapping) {
+            let key_type = tn.borrow().try_as_mapping_ref().unwrap().key_type.clone();
+            let expected = RcCell::new(AnnotatedTypeName::new(
                 Some(key_type),
-                Some(Expression::all_expr().into_ast()),
+                Some(RcCell::new(Expression::all_expr()).into()),
                 String::from("NON_HOMOMORPHISM"),
-            );
-            let instance = index.instance_of(&expected);
+            ));
+            let instance = index.borrow().instance_of(&expected);
             assert!(
                 Some(String::from("true")) == instance,
                 "{:?}, {:?} ,{:?}",
                 expected,
-                index.annotated_type(),
+                index.borrow().annotated_type(),
                 ast
             );
 
             //record indexing information
-            if type_name.key_label.is_some()
+            if tn
+                .borrow()
+                .try_as_mapping_ref()
+                .unwrap()
+                .key_label
+                .is_some()
             //TODO modification correct?
             {
                 assert!(
-                    index.privacy_annotation_label().is_some(),
+                    index.borrow().privacy_annotation_label().is_some(),
                     "Index cannot be used as a privacy type for array of type {:?}{:?}",
                     map_t,
                     ast
                 );
-                type_name.instantiated_key = Some(*index);
+                tn.borrow_mut()
+                    .try_as_mapping_mut()
+                    .unwrap()
+                    .instantiated_key = Some(index);
             }
             //determine value type
-            ast.location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(*type_name.value_type.clone());
+            ast.try_as_index_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .annotated_type =
+                Some(tn.borrow().try_as_mapping_ref().unwrap().value_type.clone());
 
-            assert!(Self::is_accessible_by_invoker(&ast.to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
-        } else if let TypeName::Array(type_name) = &**map_t.type_name.as_ref().unwrap() {
+            assert!(Self::is_accessible_by_invoker(&ast.try_as_index_expr_ref().unwrap().borrow().to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
+        } else if let TypeName::Array(type_name) =
+            &*map_t.borrow().type_name.as_ref().unwrap().borrow()
+        {
             assert!(
-                !ast.key.annotated_type().as_ref().unwrap().is_private(),
+                !ast.try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .key
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .is_private(),
                 "No private array index{:?}",
                 ast
             );
             assert!(
-                ast.key.instanceof_data_type(&TypeName::number_type()),
+                ast.try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .key
+                    .borrow()
+                    .instanceof_data_type(&RcCell::new(TypeName::number_type())),
                 "Array index must be numeric{:?}",
                 ast
             );
-            ast.location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
+            ast.try_as_index_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
                 .annotated_type = Some(type_name.value_type().clone());
         } else {
             assert!(false, "Indexing into non-mapping{:?}", ast);
         }
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        for t in ast.parameter_types().types {
+        for t in ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .parameter_types()
+            .types
+        {
             assert!(
                 is_instances(
-                    &*t.privacy_annotation.unwrap(),
+                    t.borrow().privacy_annotation.as_ref().unwrap(),
                     vec![ASTType::MeExpr, ASTType::AllExpr],
                 ),
                 "Only me/all accepted as privacy type of function parameters{:?}",
@@ -1524,73 +2302,123 @@ impl TypeCheckVisitor {
             );
         }
 
-        if ast.can_be_external() {
-            for t in ast.return_type().types {
+        if ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .can_be_external()
+        {
+            for t in ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .return_type()
+                .types
+            {
                 assert!(is_instances(
-                    &*t.privacy_annotation.unwrap(),
+                    t.borrow().privacy_annotation.as_ref().unwrap(),
                     vec![ASTType::MeExpr, ASTType::AllExpr],
                 ),"Only me/all accepted as privacy type of return values for public functions{:?}", ast);
             }
         }
     }
-    pub fn visitEnumDefinition(&self, mut ast: &ASTFlatten) {
-        let mut etn = EnumTypeName::new(ast.qualified_name(), None);
-        etn.user_defined_type_name_base.target = Some(RcCell::new(ast.to_ast()));
-        ast.annotated_type = Some(AnnotatedTypeName::new(
-            Some(TypeName::UserDefinedTypeName(
+    pub fn visitEnumDefinition(&self, ast: &ASTFlatten) {
+        let mut etn = EnumTypeName::new(
+            ast.try_as_enum_definition_ref()
+                .unwrap()
+                .borrow()
+                .qualified_name(),
+            None,
+        );
+        etn.user_defined_type_name_base.target = Some(ast.clone().downgrade());
+        ast.try_as_enum_definition_ref()
+            .unwrap()
+            .borrow_mut()
+            .annotated_type = Some(AnnotatedTypeName::new(
+            Some(RcCell::new(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumTypeName(etn),
-            )),
+            ))),
             None,
             String::from("NON_HOMOMORPHIM"),
         ));
     }
 
-    pub fn visitEnumValue(&self, mut ast: &ASTFlatten) {
-        let mut evtn = EnumValueTypeName::new(ast.qualified_name(), None);
-        evtn.user_defined_type_name_base.target = Some(RcCell::new(Some(ast.to_ast())));
-        ast.annotated_type = Some(AnnotatedTypeName::new(
-            Some(TypeName::UserDefinedTypeName(
+    pub fn visitEnumValue(&self, ast: &ASTFlatten) {
+        let mut evtn = EnumValueTypeName::new(
+            ast.try_as_enum_value_ref()
+                .unwrap()
+                .borrow()
+                .qualified_name(),
+            None,
+        );
+        evtn.user_defined_type_name_base.target = Some(ast.clone().downgrade());
+        ast.try_as_enum_value_ref()
+            .unwrap()
+            .borrow_mut()
+            .annotated_type = Some(AnnotatedTypeName::new(
+            Some(RcCell::new(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::EnumValueTypeName(evtn),
-            )),
+            ))),
             None,
             String::from("NON_HOMOMORPHISM"),
         ));
     }
 
     pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) {
-        if let Some(expr) = &ast.expr {
+        if let Some(expr) = &ast
+            .try_as_state_variable_declaration_ref()
+            .unwrap()
+            .borrow()
+            .expr
+        {
             //prevent private operations in declaration
             assert!(
-                !contains_private(ast.to_ast()),
+                !contains_private(ast),
                 "Private assignments to state variables must be in the constructor{:?}",
                 ast
             );
 
             //check type
             self.get_rhs(
-                expr.clone(),
-                &*ast.identifier_declaration_base.annotated_type,
+                expr,
+                &ast.try_as_state_variable_declaration_ref()
+                    .unwrap()
+                    .borrow()
+                    .identifier_declaration_base
+                    .annotated_type,
             );
         }
 
         //prevent "me" annotation
         let p = ast
+            .try_as_state_variable_declaration_ref()
+            .unwrap()
+            .borrow()
             .identifier_declaration_base
             .annotated_type
+            .borrow()
             .privacy_annotation
             .as_ref()
-            .unwrap();
+            .unwrap()
+            .clone();
         assert!(
-            !p.try_as_expression_ref().unwrap().is_me_expr(),
+            !p.try_as_expression_ref().unwrap().borrow().is_me_expr(),
             "State variables cannot be annotated as me{:?}",
             ast
         );
     }
 
     pub fn visitMapping(&self, ast: &ASTFlatten) {
-        if ast.key_label.is_some() {
+        if ast
+            .try_as_mapping_ref()
+            .unwrap()
+            .borrow()
+            .key_label
+            .is_some()
+        {
             assert!(
-                *ast.key_type.clone() == TypeName::address_type(),
+                ast.try_as_mapping_ref().unwrap().borrow().key_type
+                    == RcCell::new(TypeName::address_type()),
                 "Only addresses can be annotated{:?}",
                 ast
             );
@@ -1599,15 +2427,21 @@ impl TypeCheckVisitor {
 
     pub fn visitRequireStatement(&self, ast: &ASTFlatten) {
         assert!(
-            ast.condition
+            ast.try_as_require_statement_ref()
+                .unwrap()
+                .borrow()
+                .condition
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .privacy_annotation
                 .as_ref()
                 .unwrap()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .is_all_expr(),
             "require needs public argument{:?}",
             ast
@@ -1616,36 +2450,60 @@ impl TypeCheckVisitor {
 
     pub fn visitAnnotatedTypeName(&self, mut ast: &ASTFlatten) {
         if is_instance(
-            &**ast.type_name.as_ref().unwrap(),
+            &**ast
+                .try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow()
+                .type_name
+                .as_ref()
+                .unwrap(),
             ASTType::UserDefinedTypeNameBase,
         ) {
             assert!(
                 is_instance(
-                    &*ast
+                    &ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_user_defined_type_name_ref()
                         .unwrap()
                         .target()
-                        .as_ref()
+                        .clone()
+                        .unwrap()
+                        .upgrade()
                         .unwrap(),
                     ASTType::EnumDefinition
                 ),
                 "Unsupported use of user-defined type {:?}",
-                ast.type_name
+                ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
             );
-            ast.type_name = ast
+            ast.try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow_mut()
+                .type_name = ast
+                .try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow()
                 .type_name
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .try_as_user_defined_type_name_ref()
                 .unwrap()
                 .target()
-                .as_ref()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_namespace_definition_ref()
                 .unwrap()
+                .borrow()
                 .try_as_enum_definition_ref()
                 .unwrap()
                 .annotated_type
@@ -1655,60 +2513,115 @@ impl TypeCheckVisitor {
                 .clone();
         }
 
-        if ast.privacy_annotation != Some(Box::new(Expression::all_expr().into_ast())) {
+        if ast
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow()
+            .privacy_annotation
+            != Some(RcCell::new(Expression::all_expr()).into())
+        {
             assert!(
-                ast.type_name.as_ref().unwrap().can_be_private(),
+                ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .can_be_private(),
                 "Currently, we do not support private {:?},{:?}",
-                ast.type_name,
+                ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name,
                 ast
             );
-            if ast.homomorphism != Homomorphism::non_homomorphic() {
+            if ast
+                .try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
+                != Homomorphism::non_homomorphic()
+            {
                 //only support uint8, uint16, uint24, uint32 homomorphic data types
                 assert!(
-                    ast.type_name.as_ref().unwrap().is_numeric(),
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .is_numeric(),
                     "Homomorphic type not supported for {:?}: Only numeric types supported{:?}",
-                    ast.type_name,
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name,
                     ast
                 );
                 assert!(
-                    !ast.type_name.as_ref().unwrap().signed(),
+                    !ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .signed(),
                     "Homomorphic type not supported for {:?}: Only unsigned types supported{:?}",
-                    ast.type_name,
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name,
                     ast
                 );
-                assert!(ast.type_name.as_ref().unwrap().elem_bitwidth() <= 32,"Homomorphic type not supported for {:?}: Only up to 32-bit numeric types supported{:?}", ast.type_name,ast);
+                assert!(ast.try_as_annotated_type_name_ref().unwrap().borrow().type_name.as_ref().unwrap().borrow().elem_bitwidth() <= 32,"Homomorphic type not supported for {:?}: Only up to 32-bit numeric types supported{:?}", ast.try_as_annotated_type_name_ref().unwrap().borrow().type_name,ast);
             }
         }
-        let p = *ast.privacy_annotation.unwrap();
+        let p = ast
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow()
+            .privacy_annotation
+            .as_ref()
+            .unwrap()
+            .clone();
         if is_instance(&p, ASTType::IdentifierExpr) {
             let t = p
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
-                .target();
+                .target()
+                .as_ref()
+                .map(|t| t.clone().upgrade())
+                .flatten();
             if let Some(t) = t {
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass
                 assert!(
                     t.try_as_identifier_declaration_ref()
                         .unwrap()
+                        .borrow()
                         .identifier_declaration_base_ref()
                         .is_final()
                         || t.try_as_identifier_declaration_ref()
                             .unwrap()
+                            .borrow()
                             .identifier_declaration_base_ref()
                             .is_constant(),
                     r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}"#,
                     p
                 );
                 assert!(
-                    t.try_as_expression_ref().unwrap().annotated_type()
+                    t.try_as_expression_ref().unwrap().borrow().annotated_type()
                         == &Some(AnnotatedTypeName::address_all()),
                     r#"Privacy type is not a public address, but {:?},{:?}"#,
-                    t.try_as_expression_ref().unwrap().annotated_type(),
+                    t.try_as_expression_ref().unwrap().borrow().annotated_type(),
                     p
                 );
             }

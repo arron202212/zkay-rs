@@ -133,6 +133,7 @@ impl DirectCanBePrivateDetector {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
@@ -178,6 +179,7 @@ impl DirectCanBePrivateDetector {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .clone();
         ast.try_as_location_expr_ref()
@@ -358,16 +360,18 @@ impl CircuitComplianceChecker {
             .opt_eval_constexpr_in_circuit()
         {
             if is_instances(
-                &**expr
+                &*expr
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
-                    .unwrap(),
+                    .unwrap()
+                    .borrow(),
                 vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
             ) {
                 //Expressions for which the value is known at compile time -> embed constant expression value into the circuit
@@ -385,6 +389,7 @@ impl CircuitComplianceChecker {
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap(),
@@ -426,6 +431,7 @@ impl CircuitComplianceChecker {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_public());
             self.priv_setter.borrow_mut().set_evaluation(
                 &ast.try_as_index_expr_ref()
@@ -455,6 +461,7 @@ impl CircuitComplianceChecker {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .is_public()
         {
             let eval_in_public = false;
@@ -522,6 +529,7 @@ impl CircuitComplianceChecker {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_private()
         {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
@@ -539,6 +547,7 @@ impl CircuitComplianceChecker {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .is_private()
         {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
@@ -557,6 +566,7 @@ impl CircuitComplianceChecker {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .is_private()
         {
             let mut mod_vals = ast
@@ -606,6 +616,7 @@ impl CircuitComplianceChecker {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .zkay_type()
                     .type_name
                     .unwrap()
@@ -820,6 +831,7 @@ impl NonstaticOrIncompatibilityDetector {
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap(),
@@ -889,6 +901,7 @@ impl NonstaticOrIncompatibilityDetector {
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
@@ -919,6 +932,7 @@ impl NonstaticOrIncompatibilityDetector {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()

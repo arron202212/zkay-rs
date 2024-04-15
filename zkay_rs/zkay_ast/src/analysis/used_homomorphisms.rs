@@ -132,6 +132,7 @@ impl UsedHomomorphismsVisitor {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_private()
         {
             BTreeSet::from([ast
@@ -141,6 +142,7 @@ impl UsedHomomorphismsVisitor {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .homomorphism
                 .clone()])
             .union(&self.visit_children(ast))

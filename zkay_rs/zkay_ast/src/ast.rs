@@ -1297,7 +1297,7 @@ pub trait ASTInstanceOf {
 trait ASTProperty {
     fn get_idf(&self) -> Option<Identifier>;
     fn get_namespace(&self) -> Option<Vec<Identifier>>;
-    fn qualified_name(&mut self) -> Vec<Identifier> {
+    fn qualified_name(&self) -> Vec<Identifier> {
         if let Some(idf) = self.get_idf() {
             if let Some(namespace) = self.get_namespace() {
                 if !namespace.is_empty() && namespace.last().unwrap() == &idf {
@@ -1671,7 +1671,7 @@ impl IdentifierBase {
     pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Statement {
         let t = match t {
             AST::TypeName(t) => Some(AnnotatedTypeName::new(
-                Some(t),
+                Some(RcCell::new(t)),
                 None,
                 Homomorphism::non_homomorphic(),
             )),
@@ -1689,7 +1689,7 @@ impl IdentifierBase {
             VariableDeclaration::new(
                 vec![],
                 RcCell::new(t),
-                Identifier::Identifier(self.clone()),
+                Some(RcCell::new(Identifier::Identifier(self.clone()))),
                 Some(storage_loc),
             ),
             expr,
@@ -1871,9 +1871,10 @@ impl Expression {
         me_expr.expression_base.statement = statement.map(|s| s.downgrade());
         Expression::MeExpr(me_expr)
     }
-    pub fn explicitly_converted(&self, expected: TypeName) -> AST {
+    pub fn explicitly_converted(&self, expected: &RcCell<TypeName>) -> ASTFlatten {
         let mut ret;
-        if expected == TypeName::bool_type() && !self.instanceof_data_type(&TypeName::bool_type()) {
+        let bool_type = RcCell::new(TypeName::bool_type());
+        if expected == &bool_type && !self.instanceof_data_type(&bool_type) {
             ret = Some(FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("!=")),
                 vec![
@@ -1884,7 +1885,7 @@ impl Expression {
                 ],
                 None,
             ));
-        } else if expected.is_numeric() && self.instanceof_data_type(&TypeName::bool_type()) {
+        } else if expected.borrow().is_numeric() && self.instanceof_data_type(&bool_type) {
             ret = Some(FunctionCallExprBase::new(
                 Expression::BuiltinFunction(BuiltinFunction::new("ite")),
                 vec![
@@ -1903,57 +1904,63 @@ impl Expression {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .as_ref()
-                .unwrap();
+                .unwrap()
+                .clone();
 
-            if &*t.borrow() == &expected {
-                return self.clone().into_ast();
+            if &t == expected {
+                return RcCell::new(self.clone()).into();
             }
 
             // Explicit casts
-            let cast = is_instance(&**t, ASTType::NumberTypeNameBase)
-                && is_instances(
-                    &expected,
-                    vec![
-                        ASTType::NumberTypeNameBase,
-                        ASTType::AddressTypeName,
-                        ASTType::AddressPayableTypeName,
-                        ASTType::EnumTypeName,
-                    ],
-                )
-                || is_instance(&**t, ASTType::AddressTypeName)
-                    && is_instance(&expected, ASTType::NumberTypeNameBase)
-                || is_instance(&**t, ASTType::AddressPayableTypeName)
+            assert!(
+                is_instance(&t, ASTType::NumberTypeNameBase)
                     && is_instances(
-                        &expected,
-                        vec![ASTType::NumberTypeNameBase, ASTType::AddressTypeName],
+                        expected,
+                        vec![
+                            ASTType::NumberTypeNameBase,
+                            ASTType::AddressTypeName,
+                            ASTType::AddressPayableTypeName,
+                            ASTType::EnumTypeName,
+                        ],
                     )
-                || is_instance(&**t, ASTType::EnumTypeName)
-                    && is_instance(&expected, ASTType::NumberTypeNameBase);
-            assert!(cast);
+                    || is_instance(&t, ASTType::AddressTypeName)
+                        && is_instance(expected, ASTType::NumberTypeNameBase)
+                    || is_instance(&t, ASTType::AddressPayableTypeName)
+                        && is_instances(
+                            expected,
+                            vec![ASTType::NumberTypeNameBase, ASTType::AddressTypeName],
+                        )
+                    || is_instance(&t, ASTType::EnumTypeName)
+                        && is_instance(expected, ASTType::NumberTypeNameBase)
+            );
             return Expression::PrimitiveCastExpr(PrimitiveCastExpr::new(
                 expected.clone(),
-                self.clone(),
+                RcCell::new(self.clone()),
                 false,
             ))
-            .as_type(AST::TypeName(expected))
-            .into_ast();
+            .as_type(&expected.clone().into());
         }
         assert!(ret.is_some());
         let mut ret = ret.unwrap();
-        ret.expression_base.annotated_type = Some(AnnotatedTypeName::new(
+        ret.expression_base.annotated_type = Some(RcCell::new(AnnotatedTypeName::new(
             Some(expected.clone()),
-            if let Some(privacy_annotation) =
-                &self.annotated_type().as_ref().unwrap().privacy_annotation
-            {
-                Some((*privacy_annotation.borrow()).clone())
-            } else {
-                None
-            },
-            self.annotated_type().as_ref().unwrap().homomorphism.clone(),
-        ));
-        ret.into_ast()
+            self.annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .privacy_annotation
+                .clone(),
+            self.annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .homomorphism
+                .clone(),
+        )));
+        RcCell::new(ret).into()
     }
 
     pub fn privacy_annotation_label(&self) -> Option<ASTFlatten> {
@@ -1976,6 +1983,7 @@ impl Expression {
                         .instantiated_key
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .privacy_annotation_label();
                 }
                 if let Some(id) = target.try_as_identifier_declaration_ref() {
@@ -1993,10 +2001,11 @@ impl Expression {
             None
         }
     }
-    pub fn instanceof_data_type(&self, expected: &TypeName) -> bool {
+    pub fn instanceof_data_type(&self, expected: &RcCell<TypeName>) -> bool {
         self.annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .as_ref()
             .unwrap()
@@ -2021,7 +2030,12 @@ impl Expression {
 
     pub fn ite(&self, e_true: Expression, e_false: Expression) -> FunctionCallExpr {
         let mut bf = BuiltinFunction::new("ite");
-        bf.is_private = self.annotated_type().as_ref().unwrap().is_private();
+        bf.is_private = self
+            .annotated_type()
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .is_private();
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
             Expression::BuiltinFunction(bf),
             vec![self.clone(), e_true, e_false],
@@ -2029,7 +2043,7 @@ impl Expression {
         ))
     }
 
-    pub fn instance_of(&self, expected: &AnnotatedTypeName) -> Option<String> {
+    pub fn instance_of(&self, expected: &RcCell<AnnotatedTypeName>) -> Option<String> {
         // """
         // :param expected:
         // :return: true, false, or "make-private"
@@ -2038,7 +2052,7 @@ impl Expression {
 
         let actual = self.annotated_type();
 
-        if !self.instanceof_data_type(&*expected.type_name.as_ref().unwrap().borrow()) {
+        if !self.instanceof_data_type(&expected.borrow().type_name.as_ref().unwrap()) {
             return Some(String::from("false"));
         }
 
@@ -2046,7 +2060,8 @@ impl Expression {
         let combined_label = actual
             .as_ref()
             .unwrap()
-            .combined_privacy(self.analysis(), expected.clone());
+            .borrow()
+            .combined_privacy(self.analysis(), expected);
         if let Some(combined_label) = combined_label {
             if let CombinedPrivacyUnion::Vec(combined_label) = combined_label {
                 assert!(
@@ -2054,6 +2069,7 @@ impl Expression {
                         .annotated_type()
                         .as_ref()
                         .unwrap()
+                        .borrow()
                         .type_name
                         .as_ref()
                         .unwrap()
@@ -2078,6 +2094,7 @@ impl Expression {
                             .annotated_type()
                             .as_ref()
                             .unwrap()
+                            .borrow()
                             .type_name
                             .as_ref()
                             .unwrap()
@@ -2091,7 +2108,7 @@ impl Expression {
                                     t.borrow()
                                         .privacy_annotation
                                         .as_ref()
-                                        .map(|pa| pa.borrow().clone()),
+                                        .map(|pa| pa.clone().into()),
                                 )
                             })
                             .collect::<Vec<_>>())
@@ -2101,16 +2118,18 @@ impl Expression {
                 .clone()
                 .as_expression()
                 .unwrap()
+                .borrow()
                 .privacy_annotation_label()
                 == actual
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .privacy_annotation
                     .as_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_expression_ref()
                     .unwrap()
+                    .borrow()
                     .privacy_annotation_label()
             {
                 Some(String::from("true"))
@@ -2122,17 +2141,17 @@ impl Expression {
         }
     }
 
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            Expression::BuiltinFunction(ast) => Expression::BuiltinFunction(ast.as_type(t)),
-            Expression::FunctionCallExpr(ast) => Expression::FunctionCallExpr(ast.as_type(t)),
-            Expression::PrimitiveCastExpr(ast) => Expression::PrimitiveCastExpr(ast.as_type(t)),
-            Expression::LiteralExpr(ast) => Expression::LiteralExpr(ast.as_type(t)),
-            Expression::TupleOrLocationExpr(ast) => Expression::TupleOrLocationExpr(ast.as_type(t)),
-            Expression::MeExpr(ast) => Expression::MeExpr(ast.as_type(t)),
-            Expression::AllExpr(ast) => Expression::AllExpr(ast.as_type(t)),
-            Expression::ReclassifyExpr(ast) => Expression::ReclassifyExpr(ast.as_type(t)),
-            Expression::DummyAnnotation(ast) => Expression::DummyAnnotation(ast.clone()),
+            Expression::BuiltinFunction(ast) => ast.as_type(t).into(),
+            Expression::FunctionCallExpr(ast) => ast.as_type(t).into(),
+            Expression::PrimitiveCastExpr(ast) => ast.as_type(t).into(),
+            Expression::LiteralExpr(ast) => ast.as_type(t).into(),
+            Expression::TupleOrLocationExpr(ast) => ast.as_type(t).into(),
+            Expression::MeExpr(ast) => ast.as_type(t).into(),
+            Expression::AllExpr(ast) => ast.as_type(t).into(),
+            Expression::ReclassifyExpr(ast) => ast.as_type(t).into(),
+            Expression::DummyAnnotation(ast) => RcCell::new(ast.clone()).into(),
         }
     }
 
@@ -2160,12 +2179,12 @@ pub trait ExpressionBaseRef: ASTBaseRef {
     fn expression_base_ref(&self) -> &ExpressionBase;
 }
 pub trait ExpressionBaseProperty {
-    fn annotated_type(&self) -> &Option<AnnotatedTypeName>;
+    fn annotated_type(&self) -> &Option<RcCell<AnnotatedTypeName>>;
     fn statement(&self) -> &Option<ASTFlattenWeak>;
     fn evaluate_privately(&self) -> bool;
 }
 impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
-    fn annotated_type(&self) -> &Option<AnnotatedTypeName> {
+    fn annotated_type(&self) -> &Option<RcCell<AnnotatedTypeName>> {
         &self.expression_base_ref().annotated_type
     }
     fn statement(&self) -> &Option<ASTFlattenWeak> {
@@ -2178,7 +2197,7 @@ impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
 #[derive(ImplBaseTrait, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionBase {
     pub ast_base: RcCell<ASTBase>,
-    pub annotated_type: Option<AnnotatedTypeName>,
+    pub annotated_type: Option<RcCell<AnnotatedTypeName>>,
     pub statement: Option<ASTFlattenWeak>,
     pub evaluate_privately: bool,
 }
@@ -2451,18 +2470,12 @@ impl BuiltinFunction {
     pub fn arity(&self) -> i32 {
         BUILTIN_FUNCTIONS[&self.op].matches("{}").count() as i32
     }
-    pub fn input_types(&self) -> Vec<Option<TypeName>> {
+    pub fn input_types(&self) -> Vec<Option<RcCell<TypeName>>> {
         // :return: None if the type is generic
-        let t = if self.is_arithmetic() {
-            Some(TypeName::number_type())
-        } else if self.is_comp() {
-            Some(TypeName::number_type())
+        let t = if self.is_arithmetic() || self.is_comp() || self.is_bitop() || self.is_shiftop() {
+            Some(RcCell::new(TypeName::number_type()))
         } else if self.is_bop() {
-            Some(TypeName::bool_type())
-        } else if self.is_bitop() {
-            Some(TypeName::number_type())
-        } else if self.is_shiftop() {
-            Some(TypeName::number_type())
+            Some(RcCell::new(TypeName::bool_type()))
         } else
         // eq, parenthesis, ite
         {
@@ -2473,18 +2486,10 @@ impl BuiltinFunction {
     }
     pub fn output_type(&self) -> Option<TypeName> {
         // :return: None if the type is generic
-        if self.is_arithmetic() {
+        if self.is_arithmetic() || self.is_bitop() || self.is_shiftop() {
             Some(TypeName::number_type())
-        } else if self.is_comp() {
+        } else if self.is_comp() || self.is_bop() || self.is_eq() {
             Some(TypeName::bool_type())
-        } else if self.is_bop() {
-            Some(TypeName::bool_type())
-        } else if self.is_eq() {
-            Some(TypeName::bool_type())
-        } else if self.is_bitop() {
-            Some(TypeName::number_type())
-        } else if self.is_shiftop() {
-            Some(TypeName::number_type())
         } else
         // parenthesis, ite
         {
@@ -2500,7 +2505,7 @@ impl BuiltinFunction {
 
     pub fn select_homomorphic_overload(
         &self,
-        args: &Vec<Expression>,
+        args: &Vec<RcCell<Expression>>,
         analysis: Option<PartitionState<ASTFlatten>>,
     ) -> Option<HomomorphicBuiltinFunction> {
         // """
@@ -2515,10 +2520,13 @@ impl BuiltinFunction {
         // self.op and the public arguments determine which homomorphic builtin is selected
         // We may want to rethink this in the future if we also implement other homomorphisms (e.g. multiplicative)
 
-        let arg_types: Vec<_> = args.iter().map(|x| x.annotated_type()).collect();
+        let arg_types: Vec<_> = args
+            .iter()
+            .map(|x| x.borrow().annotated_type().clone())
+            .collect();
         let inaccessible_arg_types: Vec<_> = arg_types
             .iter()
-            .filter(|x| !x.as_ref().unwrap().is_accessible(&analysis))
+            .filter(|x| !x.as_ref().unwrap().borrow().is_accessible(&analysis))
             .collect();
         if inaccessible_arg_types.is_empty()
         // Else we would not have selected a homomorphic operation
@@ -2528,22 +2536,22 @@ impl BuiltinFunction {
         }
         let elem_type = arg_types
             .iter()
-            .map(|a| a.as_ref().unwrap().type_name.clone().unwrap())
-            .reduce(|l, r| RcCell::new(l.borrow().combined_type(r.borrow().clone(), true).unwrap()))
+            .map(|a| a.as_ref().unwrap().borrow().type_name.clone().unwrap())
+            .reduce(|l, r| l.borrow().combined_type(&r, true).unwrap())
             .unwrap();
         let base_type = AnnotatedTypeName::new(
-            Some((*elem_type.borrow()).clone()),
+            Some(elem_type),
             inaccessible_arg_types[0]
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .privacy_annotation
-                .as_ref()
-                .map(|pr| pr.borrow().clone()),
+                .clone(),
             Homomorphism::non_homomorphic(),
         );
         let public_args: Vec<_> = arg_types
             .iter()
-            .map(|a| a.as_ref().unwrap().is_public())
+            .map(|a| a.as_ref().unwrap().borrow().is_public())
             .collect();
 
         for hom in HOMOMORPHIC_BUILTIN_FUNCTIONS.iter() {
@@ -2561,28 +2569,23 @@ impl BuiltinFunction {
                 ));
             }
         }
-        let isinstance = |arg: &Expression| {
-            if let Expression::ReclassifyExpr(_) = arg {
-                true
-            } else {
-                false
-            }
-        };
         if self.op == "*"
             && !args[0]
-                .clone()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_accessible(&analysis)
             && !args[1]
-                .clone()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .is_accessible(&analysis)
-            && (isinstance(&args[0]) && !isinstance(&args[1]))
-            || (isinstance(&args[1]) && !isinstance(&args[0]))
+            && (is_instance(&args[0], ASTType::ReclassifyExpr)
+                ^ is_instance(&args[1], ASTType::ReclassifyExpr))
         {
             // special case: private scalar multiplication using additive homomorphism
             let target_type = base_type.with_homomorphism(Homomorphism::additive());
@@ -2596,19 +2599,20 @@ impl BuiltinFunction {
             None
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 
@@ -2691,12 +2695,10 @@ impl FunctionCallExpr {
                 vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
             )
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            FunctionCallExpr::FunctionCallExpr(ast) => {
-                FunctionCallExpr::FunctionCallExpr(ast.as_type(t))
-            }
-            FunctionCallExpr::NewExpr(ast) => FunctionCallExpr::NewExpr(ast.as_type(t)),
+            FunctionCallExpr::FunctionCallExpr(ast) => ast.as_type(t),
+            FunctionCallExpr::NewExpr(ast) => ast.as_type(t),
         }
     }
 }
@@ -2766,19 +2768,20 @@ impl FunctionCallExprBase {
         }
     }
 
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 
@@ -2821,17 +2824,20 @@ impl NewExpr {
             annotated_type: RcCell::new(annotated_type),
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.function_call_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.function_call_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
-            );
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for NewExpr {
@@ -2858,27 +2864,28 @@ impl IntoAST for PrimitiveCastExpr {
 }
 
 impl PrimitiveCastExpr {
-    pub fn new(elem_type: TypeName, expr: Expression, is_implicit: bool) -> Self {
+    pub fn new(elem_type: RcCell<TypeName>, expr: RcCell<Expression>, is_implicit: bool) -> Self {
         Self {
             expression_base: ExpressionBase::new(),
-            elem_type: RcCell::new(elem_type),
-            expr: RcCell::new(expr),
+            elem_type,
+            expr,
             is_implicit,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for PrimitiveCastExpr {
@@ -2907,12 +2914,12 @@ pub enum LiteralExpr {
     ArrayLiteralExpr(ArrayLiteralExpr),
 }
 impl LiteralExpr {
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            LiteralExpr::BooleanLiteralExpr(ast) => LiteralExpr::BooleanLiteralExpr(ast.as_type(t)),
-            LiteralExpr::NumberLiteralExpr(ast) => LiteralExpr::NumberLiteralExpr(ast.as_type(t)),
-            LiteralExpr::StringLiteralExpr(ast) => LiteralExpr::StringLiteralExpr(ast.as_type(t)),
-            LiteralExpr::ArrayLiteralExpr(ast) => LiteralExpr::ArrayLiteralExpr(ast.as_type(t)),
+            LiteralExpr::BooleanLiteralExpr(ast) => ast.as_type(t),
+            LiteralExpr::NumberLiteralExpr(ast) => ast.as_type(t),
+            LiteralExpr::StringLiteralExpr(ast) => ast.as_type(t),
+            LiteralExpr::ArrayLiteralExpr(ast) => ast.as_type(t),
         }
     }
 }
@@ -2965,25 +2972,29 @@ impl BooleanLiteralExpr {
             literal_expr_base: LiteralExprBase::new(),
             value,
             annotated_type: Some(RcCell::new(AnnotatedTypeName::new(
-                BooleanLiteralType::new(value).into_ast().try_as_type_name(),
+                BooleanLiteralType::new(value)
+                    .into_ast()
+                    .try_as_type_name()
+                    .map(RcCell::new),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
@@ -3026,7 +3037,8 @@ impl NumberLiteralExpr {
             annotated_type: Some(RcCell::new(AnnotatedTypeName::new(
                 NumberLiteralType::new(NumberLiteralTypeUnion::I32(value))
                     .into_ast()
-                    .try_as_type_name(),
+                    .try_as_type_name()
+                    .map(RcCell::new),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
@@ -3041,25 +3053,27 @@ impl NumberLiteralExpr {
             annotated_type: Some(RcCell::new(AnnotatedTypeName::new(
                 NumberLiteralType::new(NumberLiteralTypeUnion::String(value_string))
                     .into_ast()
-                    .try_as_type_name(),
+                    .try_as_type_name()
+                    .map(RcCell::new),
                 None,
                 Homomorphism::non_homomorphic(),
             ))),
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
     pub fn value(&self) -> i32 {
         0
@@ -3098,19 +3112,20 @@ impl StringLiteralExpr {
             value,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 #[enum_dispatch(
@@ -3131,14 +3146,10 @@ pub enum ArrayLiteralExpr {
     KeyLiteralExpr(KeyLiteralExpr),
 }
 impl ArrayLiteralExpr {
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            ArrayLiteralExpr::ArrayLiteralExpr(ast) => {
-                ArrayLiteralExpr::ArrayLiteralExpr(ast.as_type(t))
-            }
-            ArrayLiteralExpr::KeyLiteralExpr(ast) => {
-                ArrayLiteralExpr::KeyLiteralExpr(ast.as_type(t))
-            }
+            ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.as_type(t),
+            ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.as_type(t),
         }
     }
 }
@@ -3188,19 +3199,20 @@ impl ArrayLiteralExprBase {
             values: values.into_iter().map(RcCell::new).collect(),
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.literal_expr_base.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for ArrayLiteralExprBase {
@@ -3244,27 +3256,20 @@ impl KeyLiteralExpr {
             crypto_params,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs
-                .array_literal_expr_base
-                .literal_expr_base
-                .expression_base
-                .annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs
-                .array_literal_expr_base
-                .literal_expr_base
-                .expression_base
-                .annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 #[enum_dispatch(
@@ -3305,8 +3310,6 @@ impl TupleOrLocationExpr {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_expression_ref()
-                    .unwrap()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap();
         }
@@ -3386,12 +3389,10 @@ impl TupleOrLocationExpr {
     pub fn is_rvalue(&self) -> bool {
         !self.is_lvalue()
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            TupleOrLocationExpr::TupleExpr(ast) => TupleOrLocationExpr::TupleExpr(ast.as_type(t)),
-            TupleOrLocationExpr::LocationExpr(ast) => {
-                TupleOrLocationExpr::LocationExpr(ast.as_type(t))
-            }
+            TupleOrLocationExpr::TupleExpr(ast) => ast.as_type(t),
+            TupleOrLocationExpr::LocationExpr(ast) => ast.as_type(t),
         }
     }
 }
@@ -3427,38 +3428,33 @@ impl IntoAST for TupleExpr {
 }
 
 impl TupleExpr {
-    pub fn new(elements: Vec<Expression>) -> Self {
+    pub fn new(elements: Vec<RcCell<Expression>>) -> Self {
         Self {
             tuple_or_location_expr_base: TupleOrLocationExprBase::new(),
-            elements: elements.into_iter().map(RcCell::new).collect(),
+            elements,
         }
     }
-    pub fn assign(&self, val: Expression) -> AssignmentStatement {
+    pub fn assign(&self, val: RcCell<Expression>) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(self.to_ast()),
+            Some(RcCell::new(self.to_expr())),
             Some(val),
             None,
         ))
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for TupleExpr {
@@ -3493,22 +3489,16 @@ impl LocationExpr {
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                    LocationExpr::MemberAccessExpr(MemberAccessExpr::new(
-                        Some(self.clone()),
-                        member,
-                    )),
-                )),
+                MemberAccessExpr::new(Some(RcCell::new(self.clone())), member).into_expr(),
                 args,
                 None,
             ),
             IdentifierExprUnion::String(member) => FunctionCallExprBase::new(
-                Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                    LocationExpr::MemberAccessExpr(MemberAccessExpr::new(
-                        Some(self.clone()),
-                        Identifier::Identifier(IdentifierBase::new(member)),
-                    )),
-                )),
+                MemberAccessExpr::new(
+                    Some(RcCell::new(self.clone())),
+                    RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
+                )
+                .into_expr(),
                 args,
                 None,
             ),
@@ -3523,45 +3513,48 @@ impl LocationExpr {
     pub fn dot(&self, member: IdentifierExprUnion) -> MemberAccessExpr {
         match member {
             IdentifierExprUnion::Identifier(member) => {
-                MemberAccessExpr::new(Some(self.clone()), member)
+                MemberAccessExpr::new(Some(RcCell::new(self.clone())), member)
             }
             IdentifierExprUnion::String(member) => MemberAccessExpr::new(
-                Some(self.clone()),
-                Identifier::Identifier(IdentifierBase::new(member)),
+                Some(RcCell::new(self.clone())),
+                RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
             ),
         }
     }
 
-    pub fn index(&self, item: ExprUnion) -> IndexExpr {
-        let type_name = self.annotated_type().as_ref().map(|t| t.type_name.clone());
-        let value_type = type_name.map(|type_name| match type_name.map(|t| t.borrow().clone()) {
-            Some(TypeName::Array(a)) => Some(a.value_type().borrow().to_ast()),
-            Some(TypeName::Mapping(a)) => {
-                Some(AST::AnnotatedTypeName(a.value_type.borrow().clone()))
-            }
-            _ => None,
-        });
+    pub fn index(&self, item: ExprUnion) -> ASTFlatten {
+        let type_name = self
+            .annotated_type()
+            .as_ref()
+            .map(|t| t.borrow().type_name.clone());
+        let value_type = type_name
+            .map(|type_name| match type_name.map(|t| t.borrow().clone()) {
+                Some(TypeName::Array(a)) => Some(a.value_type().clone().into()),
+                Some(TypeName::Mapping(a)) => Some(a.value_type.clone().into()),
+                _ => None,
+            })
+            .flatten();
         assert!(value_type.is_some());
         let item = match item {
             ExprUnion::I32(item) => RcCell::new(NumberLiteralExpr::new(item, false).into_expr()),
             ExprUnion::Expression(item) => item,
         };
 
-        IndexExpr::new(Some(self.clone()), item).as_type(value_type.unwrap().unwrap())
+        IndexExpr::new(Some(self.clone()), item).as_type(&value_type.unwrap())
     }
-    pub fn assign(&self, val: Expression) -> AssignmentStatement {
+    pub fn assign(&self, val: RcCell<Expression>) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(self.clone().into_ast()),
+            Some(RcCell::new(self.to_expr())),
             Some(val),
             None,
         ))
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            LocationExpr::IdentifierExpr(ast) => LocationExpr::IdentifierExpr(ast.as_type(t)),
-            LocationExpr::MemberAccessExpr(ast) => LocationExpr::MemberAccessExpr(ast.as_type(t)),
-            LocationExpr::IndexExpr(ast) => LocationExpr::IndexExpr(ast.as_type(t)),
-            LocationExpr::SliceExpr(ast) => LocationExpr::SliceExpr(ast.as_type(t)),
+            LocationExpr::IdentifierExpr(ast) => ast.as_type(t),
+            LocationExpr::MemberAccessExpr(ast) => ast.as_type(t),
+            LocationExpr::IndexExpr(ast) => ast.as_type(t),
+            LocationExpr::SliceExpr(ast) => ast.as_type(t),
         }
     }
 }
@@ -3598,7 +3591,7 @@ impl LocationExprBase {
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum IdentifierExprUnion {
     String(String),
-    Identifier(Identifier),
+    Identifier(RcCell<Identifier>),
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -3623,12 +3616,12 @@ impl IdentifierExpr {
     ) -> Self {
         Self {
             location_expr_base: LocationExprBase::new(),
-            idf: Some(RcCell::new(match idf {
+            idf: Some(match idf {
                 IdentifierExprUnion::Identifier(idf) => idf,
                 IdentifierExprUnion::String(idf) => {
-                    Identifier::Identifier(IdentifierBase::new(idf))
-                } // _ => Identifier::Identifier(IdentifierBase::new(String::new())),
-            })),
+                    RcCell::new(Identifier::Identifier(IdentifierBase::new(idf)))
+                }
+            }),
             annotated_type,
         }
     }
@@ -3657,19 +3650,20 @@ impl IdentifierExpr {
             size,
         )
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.annotated_type = Some(RcCell::new(at));
-        } else if let AST::TypeName(tn) = t {
-            selfs.annotated_type = Some(RcCell::new(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            )));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for IdentifierExpr {
@@ -3696,34 +3690,27 @@ impl IntoAST for MemberAccessExpr {
 }
 
 impl MemberAccessExpr {
-    pub fn new(expr: Option<LocationExpr>, member: Identifier) -> Self {
+    pub fn new(expr: Option<RcCell<LocationExpr>>, member: RcCell<Identifier>) -> Self {
         Self {
             location_expr_base: LocationExprBase::new(),
-            expr: expr.map(RcCell::new),
-            member: RcCell::new(member),
+            expr,
+            member,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for MemberAccessExpr {
@@ -3758,27 +3745,20 @@ impl IndexExpr {
             key,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for IndexExpr {
@@ -3834,27 +3814,20 @@ impl SliceExpr {
             size,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs
-                .location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
@@ -3890,19 +3863,20 @@ impl MeExpr {
         }
     }
 
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl Immutable for MeExpr {
@@ -3941,19 +3915,20 @@ impl AllExpr {
             name: String::from("all"),
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl Immutable for AllExpr {
@@ -3981,13 +3956,11 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         match self {
-            ReclassifyExpr::ReclassifyExpr(ast) => ReclassifyExpr::ReclassifyExpr(ast.as_type(t)),
-            ReclassifyExpr::RehomExpr(ast) => ReclassifyExpr::RehomExpr(ast.as_type(t)),
-            ReclassifyExpr::EncryptionExpression(ast) => {
-                ReclassifyExpr::EncryptionExpression(ast.as_type(t))
-            }
+            ReclassifyExpr::ReclassifyExpr(ast) => ast.as_type(t),
+            ReclassifyExpr::RehomExpr(ast) => ast.as_type(t),
+            ReclassifyExpr::EncryptionExpression(ast) => ast.as_type(t),
         }
     }
 
@@ -4045,30 +4018,35 @@ impl IntoAST for ReclassifyExprBase {
 }
 
 impl ReclassifyExprBase {
-    pub fn new(expr: Expression, privacy: Expression, homomorphism: Option<String>) -> Self {
+    pub fn new(
+        expr: RcCell<Expression>,
+        privacy: RcCell<Expression>,
+        homomorphism: Option<String>,
+    ) -> Self {
         Self {
             expression_base: ExpressionBase::new(),
-            expr: RcCell::new(expr),
-            privacy: RcCell::new(privacy),
+            expr,
+            privacy,
             homomorphism,
         }
     }
     pub fn func_name(&self) -> String {
         String::from("reveal")
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.expression_base.annotated_type = Some(AnnotatedTypeName::new(
-                Some(tn),
-                None,
-                Homomorphism::non_homomorphic(),
-            ));
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for ReclassifyExprBase {
@@ -4102,11 +4080,11 @@ impl IntoAST for RehomExpr {
 }
 
 impl RehomExpr {
-    pub fn new(expr: Expression, homomorphism: Option<String>) -> Self {
+    pub fn new(expr: RcCell<Expression>, homomorphism: Option<String>) -> Self {
         Self {
             reclassify_expr_base: ReclassifyExprBase::new(
                 expr,
-                Expression::MeExpr(MeExpr::new()),
+                RcCell::new(Expression::MeExpr(MeExpr::new())),
                 homomorphism,
             ),
         }
@@ -4120,17 +4098,20 @@ impl RehomExpr {
             .rehom_expr_name
             .clone()
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
-            );
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 
@@ -4159,14 +4140,15 @@ impl IntoAST for HybridArgumentIdf {
 impl HybridArgumentIdf {
     pub fn new(
         name: String,
-        mut t: TypeName,
+        mut t: RcCell<TypeName>,
         arg_type: HybridArgType,
         corresponding_priv_expression: Option<Expression>,
     ) -> Self {
         if is_instance(&t, ASTType::BooleanLiteralType) {
-            t = TypeName::bool_type();
+            t = RcCell::new(TypeName::bool_type());
         } else if is_instance(&t, ASTType::NumberLiteralType) {
-            t = t
+            let tt = t
+                .borrow()
                 .try_as_elementary_type_name_ref()
                 .unwrap()
                 .try_as_number_type_name_ref()
@@ -4174,18 +4156,21 @@ impl HybridArgumentIdf {
                 .try_as_number_literal_type_ref()
                 .unwrap()
                 .to_abstract_type();
+            t = tt;
         } else if is_instance(&t, ASTType::EnumValueTypeName) {
-            t = t
+            let tt = t
+                .borrow()
                 .try_as_user_defined_type_name_ref()
                 .unwrap()
                 .try_as_enum_value_type_name_ref()
                 .unwrap()
                 .to_abstract_type();
+            t = tt;
         }
 
         Self {
             identifier_base: IdentifierBase::new(name),
-            t: RcCell::new(t),
+            t,
             arg_type,
             corresponding_priv_expression,
             serialized_loc: SliceExpr::new(
@@ -4200,7 +4185,7 @@ impl HybridArgumentIdf {
         }
     }
 
-    pub fn get_loc_expr(&self, parent: Option<ASTFlatten>) -> AST {
+    pub fn get_loc_expr(&self, parent: Option<ASTFlatten>) -> ASTFlatten {
         if self.arg_type == HybridArgType::TmpCircuitVal
             && self.corresponding_priv_expression.is_some()
             && is_instance(
@@ -4211,6 +4196,7 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
@@ -4218,13 +4204,14 @@ impl HybridArgumentIdf {
                 ASTType::BooleanLiteralType,
             )
         {
-            BooleanLiteralExpr::new(
+            RcCell::new(BooleanLiteralExpr::new(
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
@@ -4234,8 +4221,8 @@ impl HybridArgumentIdf {
                     .try_as_boolean_literal_type_ref()
                     .unwrap()
                     .value(),
-            )
-            .into_ast()
+            ))
+            .into()
         } else if self.arg_type == HybridArgType::TmpCircuitVal
             && self.corresponding_priv_expression.is_some()
             && is_instance(
@@ -4245,19 +4232,21 @@ impl HybridArgumentIdf {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap(),
                 ASTType::NumberLiteralType,
             )
         {
-            NumberLiteralExpr::new(
+            RcCell::new(NumberLiteralExpr::new(
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
@@ -4270,27 +4259,23 @@ impl HybridArgumentIdf {
                     .unwrap()
                     .value(),
                 false,
-            )
-            .into_ast()
+            ))
+            .into()
         } else {
             assert!(self.arg_type == HybridArgType::PubCircuitArg);
             let mut ma = LocationExpr::IdentifierExpr(IdentifierExpr::new(
                 IdentifierExprUnion::String(CFG.lock().unwrap().zk_data_var_name()),
                 None,
             ))
-            .dot(IdentifierExprUnion::Identifier(
+            .dot(IdentifierExprUnion::Identifier(RcCell::new(
                 Identifier::HybridArgumentIdf(self.clone()),
-            ))
-            .as_type(AST::TypeName(self.t.borrow().clone()));
-            ma.location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
-                .ast_base
+            )))
+            .as_type(&self.t.clone().into());
+            ma.ast_base_ref().unwrap().borrow_mut().parent = parent.clone().map(|p| p.downgrade());
+            ma.try_as_identifier_expr_ref()
+                .unwrap()
                 .borrow_mut()
-                .parent = parent.clone().map(|p| p.downgrade());
-            ma.location_expr_base
-                .tuple_or_location_expr_base
-                .expression_base
+                .expression_base_mut_ref()
                 .statement = parent
                 .as_ref()
                 .map(|p| {
@@ -4305,25 +4290,33 @@ impl HybridArgumentIdf {
                     }
                 })
                 .flatten();
-            LocationExpr::MemberAccessExpr(ma).into_ast()
+            ma
         }
     }
-    pub fn get_idf_expr(&self, parent: &Option<ASTFlattenWeak>) -> IdentifierExpr {
+    pub fn get_idf_expr(&self, parent: &Option<ASTFlattenWeak>) -> ASTFlatten {
         let mut ie = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(Identifier::HybridArgumentIdf(self.clone())),
+            IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(
+                self.clone(),
+            ))),
             None,
         )
-        .as_type(AST::TypeName(self.t.borrow().clone()));
-        if let Some(Identifier::Identifier(mut idf)) =
-            ie.idf.as_ref().map(|f| (*f.borrow()).clone())
-        {
-            idf.ast_base.borrow_mut().parent = parent.clone();
-            ie.idf = Some(RcCell::new(Identifier::Identifier(idf)));
-        }
+        .as_type(&self.t.clone().into());
 
-        ie.location_expr_base
-            .tuple_or_location_expr_base
-            .expression_base
+        ie.try_as_identifier_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .idf
+            .as_mut()
+            .unwrap()
+            .borrow_mut()
+            .ast_base_ref()
+            .borrow_mut()
+            .parent = parent.clone();
+
+        ie.try_as_identifier_expr_ref()
+            .unwrap()
+            .borrow_mut()
+            .expression_base_mut_ref()
             .statement = parent
             .as_ref()
             .map(|p| {
@@ -4370,15 +4363,18 @@ impl HybridArgumentIdf {
         self._set_serialized_loc(source_idf.clone(), base.clone(), start_offset);
 
         let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None)
-            .as_type(ArrayBase::new(AnnotatedTypeName::uint_all(), None).into_ast());
+            .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_a) = self.t.borrow().clone() {
             SliceExpr::new(
                 self.get_loc_expr(None)
-                    .try_as_expression()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr()
+                    .borrow()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
-                    .try_as_location_expr(),
+                    .try_as_location_expr_ref()
+                    .clone()
+                    .cloned(),
                 None,
                 0,
                 self.t.borrow().size_in_uints(),
@@ -4386,44 +4382,52 @@ impl HybridArgumentIdf {
             .arr
             .unwrap()
             .borrow_mut()
-            .assign(self.serialized_loc.to_expr())
+            .assign(RcCell::new(self.serialized_loc.to_expr()))
         } else if let Some(base) = &base {
             self.get_loc_expr(None)
                 .try_as_expression_mut()
                 .unwrap()
+                .borrow_mut()
                 .try_as_tuple_or_location_expr_mut()
                 .unwrap()
                 .try_as_location_expr_mut()
                 .unwrap()
                 .assign(
-                    LocationExpr::IdentifierExpr(src)
-                        .index(ExprUnion::Expression(RcCell::new(
-                            base.binop(
-                                String::from("+"),
-                                NumberLiteralExpr::new(start_offset, false).to_expr(),
-                            )
-                            .to_expr(),
-                        )))
-                        .to_expr()
-                        .explicitly_converted(self.t.borrow().clone())
-                        .try_as_expression()
-                        .unwrap(),
+                    LocationExpr::IdentifierExpr(
+                        src.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                    )
+                    .index(ExprUnion::Expression(RcCell::new(
+                        base.binop(
+                            String::from("+"),
+                            NumberLiteralExpr::new(start_offset, false).to_expr(),
+                        )
+                        .to_expr(),
+                    )))
+                    .try_as_expression()
+                    .unwrap()
+                    .borrow()
+                    .explicitly_converted(&self.t)
+                    .try_as_expression()
+                    .unwrap(),
                 )
         } else {
             self.get_loc_expr(None)
                 .try_as_expression_mut()
                 .unwrap()
+                .borrow_mut()
                 .try_as_tuple_or_location_expr_mut()
                 .unwrap()
                 .try_as_location_expr_mut()
                 .unwrap()
                 .assign(
-                    Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                        LocationExpr::IndexExpr(
-                            LocationExpr::IdentifierExpr(src).index(ExprUnion::I32(start_offset)),
-                        ),
-                    ))
-                    .explicitly_converted(self.t.borrow().clone())
+                    LocationExpr::IdentifierExpr(
+                        src.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                    )
+                    .index(ExprUnion::I32(start_offset))
+                    .try_as_expression()
+                    .unwrap()
+                    .borrow()
+                    .explicitly_converted(&self.t)
                     .try_as_expression()
                     .unwrap(),
                 )
@@ -4438,39 +4442,45 @@ impl HybridArgumentIdf {
     ) -> AssignmentStatement {
         self._set_serialized_loc(target_idf.clone(), base.clone(), start_offset);
 
-        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None).as_type(
-            AST::TypeName(TypeName::Array(Array::Array(ArrayBase::new(
-                AnnotatedTypeName::uint_all(),
-                None,
-            )))),
-        );
+        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None)
+            .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_t) = self.t.borrow().clone() {
             let loc = self
                 .get_loc_expr(None)
-                .try_as_expression()
+                .try_as_expression_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr()
+                .borrow()
+                .clone()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_location_expr();
+                .try_as_location_expr_ref()
+                .clone()
+                .cloned();
             self.serialized_loc
                 .arr
                 .as_mut()
                 .unwrap()
                 .borrow_mut()
-                .assign(SliceExpr::new(loc, None, 0, self.t.borrow().size_in_uints()).to_expr())
+                .assign(RcCell::new(
+                    SliceExpr::new(loc, None, 0, self.t.borrow().size_in_uints()).to_expr(),
+                ))
         } else {
             let expr = self.get_loc_expr(None);
             let expr = if self.t.borrow().is_signed_numeric() {
                 // Cast to same size uint to prevent sign extension
-                expr.try_as_expression().unwrap().explicitly_converted(
-                    UintTypeName::new(format!("uint{}", self.t.borrow().elem_bitwidth()))
-                        .into_ast()
-                        .try_as_type_name()
-                        .unwrap(),
-                )
+                expr.try_as_expression()
+                    .unwrap()
+                    .borrow()
+                    .explicitly_converted(&RcCell::new(
+                        UintTypeName::new(format!("uint{}", self.t.borrow().elem_bitwidth()))
+                            .into_ast()
+                            .try_as_type_name()
+                            .unwrap(),
+                    ))
             } else if self.t.borrow().is_numeric() && self.t.borrow().elem_bitwidth() == 256 {
                 expr.try_as_expression()
                     .unwrap()
+                    .borrow()
                     .binop(
                         String::from("%"),
                         IdentifierExpr::new(
@@ -4479,31 +4489,43 @@ impl HybridArgumentIdf {
                         )
                         .into_expr(),
                     )
-                    .as_type(AST::TypeName(self.t.borrow().clone()))
-                    .into_ast()
+                    .as_type(&self.t.clone().into())
             } else {
                 expr.try_as_expression()
                     .unwrap()
-                    .explicitly_converted(TypeName::uint_type())
+                    .borrow()
+                    .explicitly_converted(&RcCell::new(TypeName::uint_type()))
                 //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
             };
 
             if let Some(base) = &base {
                 LocationExpr::IndexExpr(
-                    LocationExpr::IdentifierExpr(tgt.clone()).index(ExprUnion::Expression(
-                        RcCell::new(
-                            base.binop(
-                                String::from("+"),
-                                NumberLiteralExpr::new(start_offset, false).to_expr(),
-                            )
-                            .to_expr(),
-                        ),
-                    )),
+                    LocationExpr::IdentifierExpr(
+                        tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                    )
+                    .index(ExprUnion::Expression(RcCell::new(
+                        base.binop(
+                            String::from("+"),
+                            NumberLiteralExpr::new(start_offset, false).to_expr(),
+                        )
+                        .to_expr(),
+                    )))
+                    .try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone(),
                 )
                 .assign(expr.try_as_expression().unwrap())
             } else {
                 LocationExpr::IndexExpr(
-                    LocationExpr::IdentifierExpr(tgt.clone()).index(ExprUnion::I32(start_offset)),
+                    LocationExpr::IdentifierExpr(
+                        tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                    )
+                    .index(ExprUnion::I32(start_offset))
+                    .try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone(),
                 )
                 .assign(expr.try_as_expression().unwrap())
             }
@@ -4536,8 +4558,10 @@ impl fmt::Display for Identifier {
     }
 }
 impl Identifier {
-    pub fn identifier(name: &str) -> Self {
-        Self::Identifier(IdentifierBase::new(String::from(name)))
+    pub fn identifier(name: &str) -> Option<RcCell<Self>> {
+        Some(RcCell::new(Self::Identifier(IdentifierBase::new(
+            String::from(name),
+        ))))
     }
 }
 
@@ -4568,10 +4592,13 @@ impl IntoAST for EncryptionExpression {
 }
 
 impl EncryptionExpression {
-    pub fn new(expr: Expression, privacy: AST, homomorphism: Option<String>) -> Self {
-        let privacy = privacy.try_as_expression().unwrap();
+    pub fn new(
+        expr: RcCell<Expression>,
+        privacy: RcCell<Expression>,
+        homomorphism: Option<String>,
+    ) -> Self {
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
-            expr.annotated_type().as_ref().unwrap().clone(),
+            expr.borrow().annotated_type().as_ref().unwrap().clone(),
             homomorphism.clone(),
         ));
         Self {
@@ -4579,17 +4606,20 @@ impl EncryptionExpression {
             annotated_type,
         }
     }
-    pub fn as_type(&self, t: AST) -> Self {
+    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
         let mut selfs = self.clone();
-        if let AST::AnnotatedTypeName(at) = t {
-            selfs.reclassify_expr_base.expression_base.annotated_type = Some(at);
-        } else if let AST::TypeName(tn) = t {
-            selfs.reclassify_expr_base.expression_base.annotated_type = Some(
-                AnnotatedTypeName::new(Some(tn), None, Homomorphism::non_homomorphic()),
-            );
+        if is_instance(t, ASTType::AnnotatedTypeName) {
+            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+        } else if t.try_as_type_name_ref().is_some() {
+            selfs.expression_base_mut_ref().annotated_type =
+                Some(RcCell::new(AnnotatedTypeName::new(
+                    t.clone().try_as_type_name(),
+                    None,
+                    Homomorphism::non_homomorphic(),
+                )));
         }
 
-        selfs
+        RcCell::new(selfs).into()
     }
 }
 #[enum_dispatch(ASTChildren, IntoAST, ASTFlattenImpl, ASTInstanceOf)]
@@ -5184,12 +5214,12 @@ pub trait AssignmentStatementBaseRef: SimpleStatementBaseRef {
     fn assignment_statement_base_ref(&self) -> &AssignmentStatementBase;
 }
 pub trait AssignmentStatementBaseProperty {
-    fn lhs(&self) -> &Option<RcCell<AST>>;
+    fn lhs(&self) -> &Option<RcCell<Expression>>;
     fn rhs(&self) -> &Option<RcCell<Expression>>;
     fn op(&self) -> &String;
 }
 impl<T: AssignmentStatementBaseRef> AssignmentStatementBaseProperty for T {
-    fn lhs(&self) -> &Option<RcCell<AST>> {
+    fn lhs(&self) -> &Option<RcCell<Expression>> {
         &self.assignment_statement_base_ref().lhs
     }
     fn rhs(&self) -> &Option<RcCell<Expression>> {
@@ -5215,7 +5245,7 @@ impl<T: AssignmentStatementBaseRef> AssignmentStatementBaseProperty for T {
 )]
 pub struct AssignmentStatementBase {
     pub simple_statement_base: SimpleStatementBase,
-    pub lhs: Option<RcCell<AST>>,
+    pub lhs: Option<RcCell<Expression>>,
     pub rhs: Option<RcCell<Expression>>,
     pub op: String,
 }
@@ -5229,11 +5259,15 @@ impl IntoAST for AssignmentStatementBase {
 }
 
 impl AssignmentStatementBase {
-    pub fn new(lhs: Option<AST>, rhs: Option<Expression>, op: Option<String>) -> Self {
+    pub fn new(
+        lhs: Option<RcCell<Expression>>,
+        rhs: Option<RcCell<Expression>>,
+        op: Option<String>,
+    ) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
-            lhs: lhs.map(RcCell::new),
-            rhs: rhs.map(RcCell::new),
+            lhs,
+            rhs,
             op: op.unwrap_or(String::new()),
         }
     }
@@ -5278,7 +5312,7 @@ impl ASTChildren for CircuitInputStatement {
 }
 
 impl CircuitInputStatement {
-    pub fn new(lhs: AST, rhs: Expression, op: Option<String>) -> Self {
+    pub fn new(lhs: RcCell<Expression>, rhs: RcCell<Expression>, op: Option<String>) -> Self {
         Self {
             assignment_statement_base: AssignmentStatementBase::new(Some(lhs), Some(rhs), op),
         }
@@ -5559,11 +5593,13 @@ impl TypeName {
         ))
     }
 
-    pub fn cipher_type(plain_type: AnnotatedTypeName, hom: String) -> Self {
+    pub fn cipher_type(plain_type: RcCell<AnnotatedTypeName>, hom: String) -> Self {
         let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(&hom);
-        let mut pt = plain_type.clone();
-        pt.homomorphism = hom; // Just for display purposes
-        TypeName::Array(Array::CipherText(CipherText::new(pt, crypto_params)))
+        plain_type.borrow_mut().homomorphism = hom; // Just for display purposes
+        TypeName::Array(Array::CipherText(CipherText::new(
+            plain_type,
+            crypto_params,
+        )))
     }
 
     pub fn rnd_type(crypto_params: CryptoParams) -> Self {
@@ -5659,24 +5695,32 @@ impl TypeName {
         self.is_primitive_type() && !(self.is_signed_numeric() && self.elem_bitwidth() == 256)
     }
 
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-        &expected == &self
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
+        &*expected.borrow() == self
     }
-    pub fn compatible_with(self, other_type: &TypeName) -> bool {
-        self.implicitly_convertible_to(&other_type) || other_type.implicitly_convertible_to(&self)
+    pub fn compatible_with(self, other_type: &RcCell<TypeName>) -> bool {
+        self.implicitly_convertible_to(&other_type)
+            || other_type
+                .borrow()
+                .implicitly_convertible_to(&RcCell::new(self.clone()))
     }
-    pub fn combined_type(&self, other_type: TypeName, _convert_literals: bool) -> Option<Self> {
-        if other_type.implicitly_convertible_to(&self) {
-            Some(self.clone())
+    pub fn combined_type(
+        &self,
+        other_type: &RcCell<TypeName>,
+        _convert_literals: bool,
+    ) -> Option<RcCell<Self>> {
+        let selfs = RcCell::new(self.clone());
+        if other_type.borrow().implicitly_convertible_to(&selfs) {
+            Some(selfs)
         } else if self.implicitly_convertible_to(&other_type) {
-            Some(other_type)
+            Some(other_type.clone())
         } else {
             None
         }
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> RcCell<AnnotatedTypeName> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(self.clone()),
+            Some(RcCell::new(self.clone())),
             if let CombinedPrivacyUnion::AST(expr) = privacy_annotation {
                 expr
             } else {
@@ -5815,26 +5859,29 @@ impl BooleanLiteralType {
             elementary_type_name_base: ElementaryTypeNameBase::new(name),
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         self.to_ast()
             .try_as_type_name_ref()
             .unwrap()
             .implicitly_convertible_to(expected)
             || is_instance(expected, ASTType::BoolTypeName)
     }
-    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
-        if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(_)) = &other_type
-        {
-            if convert_literals {
+    pub fn combined_type(
+        &self,
+        other_type: RcCell<TypeName>,
+        convert_literals: bool,
+    ) -> RcCell<TypeName> {
+        if is_instance(&other_type, ASTType::BooleanLiteralType) {
+            RcCell::new(if convert_literals {
                 TypeName::bool_type()
             } else {
                 TypeName::Literal(String::from("lit"))
-            }
+            })
         } else {
             self.to_ast()
                 .try_as_type_name_ref()
                 .unwrap()
-                .combined_type(other_type, convert_literals)
+                .combined_type(&other_type, convert_literals)
                 .unwrap()
         }
     }
@@ -5846,8 +5893,8 @@ impl BooleanLiteralType {
         // raise NotImplementedError()
         1
     }
-    pub fn to_abstract_type(&self) -> TypeName {
-        TypeName::bool_type()
+    pub fn to_abstract_type(&self) -> RcCell<TypeName> {
+        RcCell::new(TypeName::bool_type())
     }
 }
 #[enum_dispatch(
@@ -5954,18 +6001,12 @@ impl NumberTypeNameBase {
             _size_in_bits,
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         self.to_ast()
             .try_as_type_name_ref()
             .unwrap()
             .implicitly_convertible_to(expected)
-            || if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(_)) =
-                &expected
-            {
-                true
-            } else {
-                false
-            }
+            || is_instance(expected, ASTType::NumberTypeNameBase)
     }
     pub fn elem_bitwidth(&self) -> i32 {
         // Bitwidth, only defined for primitive types
@@ -6050,18 +6091,19 @@ impl NumberLiteralType {
             number_type_name_base: NumberTypeNameBase::new(name, prefix, signed, Some(bitwidth)),
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
-        if expected.is_numeric() && !expected.is_literals()
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
+        if expected.borrow().is_numeric() && !expected.borrow().is_literals()
         // Allow implicit conversion only if it fits
         {
             expected
+                .borrow()
                 .try_as_elementary_type_name_ref()
                 .unwrap()
                 .try_as_number_type_name_ref()
                 .unwrap()
                 .number_type_name_base_ref()
                 .can_represent(self.value())
-        } else if expected.is_address()
+        } else if expected.borrow().is_address()
             && self.number_type_name_base.elem_bitwidth() == 160
             && !self.number_type_name_base.signed
         // Address literal case (fake solidity check will catch the cases where this is too permissive)
@@ -6072,15 +6114,18 @@ impl NumberLiteralType {
                 .implicitly_convertible_to(expected)
         }
     }
-    pub fn combined_type(&self, other_type: TypeName, convert_literals: bool) -> TypeName {
-        if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-            NumberTypeName::NumberLiteralType(_),
-        )) = &other_type
-        {
+    pub fn combined_type(
+        &self,
+        other_type: RcCell<TypeName>,
+        convert_literals: bool,
+    ) -> RcCell<TypeName> {
+        if is_instance(&other_type, ASTType::NumberLiteralType) {
             if convert_literals {
                 self.to_abstract_type()
+                    .borrow()
                     .combined_type(
-                        other_type
+                        &other_type
+                            .borrow()
                             .try_as_elementary_type_name_ref()
                             .unwrap()
                             .try_as_number_type_name_ref()
@@ -6092,18 +6137,18 @@ impl NumberLiteralType {
                     )
                     .unwrap()
             } else {
-                TypeName::Literal(String::from("lit"))
+                RcCell::new(TypeName::Literal(String::from("lit")))
             }
         } else {
             self.to_ast()
                 .try_as_type_name_ref()
                 .unwrap()
-                .combined_type(other_type, convert_literals)
+                .combined_type(&other_type, convert_literals)
                 .unwrap()
         }
     }
-    pub fn to_abstract_type(&self) -> TypeName {
-        if self.value() < 0 {
+    pub fn to_abstract_type(&self) -> RcCell<TypeName> {
+        RcCell::new(if self.value() < 0 {
             TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
                 NumberTypeName::IntTypeName(IntTypeName::new(format!(
                     "i32{}",
@@ -6117,7 +6162,7 @@ impl NumberLiteralType {
                     self.number_type_name_base.elem_bitwidth()
                 ))),
             ))
-        }
+        })
     }
     pub fn value(&self) -> i32 {
         self.number_type_name_base
@@ -6158,18 +6203,12 @@ impl IntTypeName {
             number_type_name_base: NumberTypeNameBase::new(name, String::from("int"), true, None),
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
         self.number_type_name_base
             .implicitly_convertible_to(expected)
-            || (if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                NumberTypeName::IntTypeName(_),
-            )) = &expected
-            {
-                true
-            } else {
-                false
-            } && expected.elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
+            || is_instance(expected, ASTType::IntTypeName)
+                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth()
     }
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
@@ -6203,18 +6242,12 @@ impl UintTypeName {
             number_type_name_base: NumberTypeNameBase::new(name, String::from("uint"), false, None),
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
         self.number_type_name_base
             .implicitly_convertible_to(expected)
-            || (if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
-                NumberTypeName::UintTypeName(_),
-            )) = &expected
-            {
-                true
-            } else {
-                false
-            } && expected.elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
+            || is_instance(expected, ASTType::UintTypeName)
+                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth()
     }
 }
 #[enum_dispatch(
@@ -6339,7 +6372,7 @@ impl EnumValueTypeName {
     pub fn elem_bitwidth(&self) -> i32 {
         256
     }
-    pub fn to_abstract_type(&self) -> TypeName {
+    pub fn to_abstract_type(&self) -> RcCell<TypeName> {
         let mut names: Vec<_> = self
             .user_defined_type_name_base
             .names
@@ -6347,24 +6380,26 @@ impl EnumValueTypeName {
             .map(|name| name.borrow().clone())
             .collect();
         names.pop();
-        EnumTypeName::new(
-            names,
-            self.user_defined_type_name_base
-                .target
-                .clone()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .ast_base_ref()
-                .unwrap()
-                .borrow()
-                .parent(),
+        RcCell::new(
+            EnumTypeName::new(
+                names,
+                self.user_defined_type_name_base
+                    .target
+                    .clone()
+                    .unwrap()
+                    .upgrade()
+                    .unwrap()
+                    .ast_base_ref()
+                    .unwrap()
+                    .borrow()
+                    .parent(),
+            )
+            .into_ast()
+            .try_as_type_name()
+            .unwrap(),
         )
-        .into_ast()
-        .try_as_type_name()
-        .unwrap()
     }
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
         self.to_ast()
             .try_as_type_name_ref()
@@ -6372,6 +6407,7 @@ impl EnumValueTypeName {
             .implicitly_convertible_to(expected)
             || (is_instance(expected, ASTType::EnumTypeName)
                 && expected
+                    .borrow()
                     .try_as_user_defined_type_name_ref()
                     .unwrap()
                     .try_as_enum_type_name_ref()
@@ -6528,13 +6564,13 @@ impl AddressPayableTypeName {
         }
     }
 
-    pub fn implicitly_convertible_to(&self, expected: &TypeName) -> bool {
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
         self.to_ast()
             .try_as_type_name_ref()
             .unwrap()
             .implicitly_convertible_to(expected)
-            || expected == &TypeName::address_type()
+            || &*expected.borrow() == &TypeName::address_type()
     }
     pub fn elem_bitwidth(&self) -> i32 {
         160
@@ -6552,7 +6588,7 @@ pub struct Mapping {
     pub key_type: RcCell<TypeName>,
     pub key_label: Option<RcCell<Identifier>>,
     pub value_type: RcCell<AnnotatedTypeName>,
-    pub instantiated_key: Option<Expression>,
+    pub instantiated_key: Option<RcCell<Expression>>,
 }
 impl IntoAST for Mapping {
     fn into_ast(self) -> AST {
@@ -6707,7 +6743,7 @@ impl ArrayBase {
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CipherText {
     pub array_base: ArrayBase,
-    pub plain_type: AnnotatedTypeName,
+    pub plain_type: RcCell<AnnotatedTypeName>,
     pub crypto_params: CryptoParams,
 }
 impl IntoAST for CipherText {
@@ -6722,8 +6758,14 @@ impl ASTChildren for CipherText {
 }
 
 impl CipherText {
-    pub fn new(plain_type: AnnotatedTypeName, crypto_params: CryptoParams) -> Self {
-        assert!(!plain_type.type_name.as_ref().unwrap().borrow().is_cipher());
+    pub fn new(plain_type: RcCell<AnnotatedTypeName>, crypto_params: CryptoParams) -> Self {
+        assert!(!plain_type
+            .borrow()
+            .type_name
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .is_cipher());
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
@@ -6865,12 +6907,12 @@ impl DummyAnnotation {
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CombinedPrivacyUnion {
     Vec(Vec<CombinedPrivacyUnion>),
-    AST(Option<AST>),
+    AST(Option<ASTFlatten>),
 }
 impl CombinedPrivacyUnion {
-    pub fn as_expression(self) -> Option<Expression> {
-        if let CombinedPrivacyUnion::AST(Some(AST::Expression(expr))) = self {
-            Some(expr)
+    pub fn as_expression(self) -> Option<RcCell<Expression>> {
+        if let CombinedPrivacyUnion::AST(expr) = self {
+            expr.map(|exp| exp.try_as_expression()).flatten()
         } else {
             None
         }
@@ -6918,14 +6960,17 @@ impl TupleType {
 
     pub fn check_component_wise(
         &self,
-        other: &Self,
+        other: &RcCell<TypeName>,
         f: impl FnOnce(RcCell<AnnotatedTypeName>, RcCell<AnnotatedTypeName>) -> bool + std::marker::Copy,
     ) -> bool {
-        if self.len() != other.len() {
+        if self.len() != other.borrow().try_as_tuple_type_ref().unwrap().len() {
             false
         } else {
             for i in 0..self.len() {
-                if !f(self.get_item(i), other.get_item(i)) {
+                if !f(
+                    self.get_item(i),
+                    other.borrow().try_as_tuple_type_ref().unwrap().get_item(i),
+                ) {
                     return false;
                 }
             }
@@ -6933,25 +6978,23 @@ impl TupleType {
         }
     }
 
-    pub fn implicitly_convertible_to(&self, expected: TypeName) -> bool {
-        if let TypeName::TupleType(expected) = expected {
+    pub fn implicitly_convertible_to(&self, expected: RcCell<TypeName>) -> bool {
+        if expected.borrow().is_tuple_type() {
             self.check_component_wise(&expected, |x, y| {
                 x.borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .implicitly_convertible_to(
-                        &y.borrow().type_name.as_ref().unwrap().borrow().clone(),
-                    )
+                    .implicitly_convertible_to(y.borrow().type_name.as_ref().unwrap())
             })
         } else {
             false
         }
     }
 
-    pub fn compatible_with(&self, other_type: TypeName) -> bool {
-        if let TypeName::TupleType(other_type) = other_type {
+    pub fn compatible_with(&self, other_type: RcCell<TypeName>) -> bool {
+        if other_type.borrow().is_tuple_type() {
             self.check_component_wise(&other_type, |x, y| {
                 x.borrow()
                     .type_name
@@ -6959,7 +7002,7 @@ impl TupleType {
                     .unwrap()
                     .borrow()
                     .clone()
-                    .compatible_with(&y.borrow().type_name.as_ref().unwrap().borrow().clone())
+                    .compatible_with(y.borrow().type_name.as_ref().unwrap())
             })
         } else {
             false
@@ -6986,15 +7029,13 @@ impl TupleType {
                                 .unwrap()
                                 .borrow()
                                 .combined_type(
-                                    e2.borrow().type_name.as_ref().unwrap().borrow().clone(),
+                                    e2.borrow().type_name.as_ref().unwrap(),
                                     convert_literals,
-                                )
-                                .unwrap()
-                                .try_as_tuple_type()
-                                .unwrap()
-                                .into_ast()
-                                .try_as_type_name(),
-                            Some(Expression::DummyAnnotation(DummyAnnotation::new()).into_ast()),
+                                ),
+                            Some(
+                                RcCell::new(Expression::DummyAnnotation(DummyAnnotation::new()))
+                                    .into(),
+                            ),
                             Homomorphism::non_homomorphic(),
                         ))
                     })
@@ -7004,43 +7045,49 @@ impl TupleType {
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> CombinedPrivacyUnion {
         CombinedPrivacyUnion::AST(match privacy_annotation {
-            CombinedPrivacyUnion::AST(_) => Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
-                Some(TypeName::TupleType(TupleType::new(
-                    self.types
-                        .iter()
-                        .map(|t| {
-                            t.borrow()
-                                .type_name
-                                .as_ref()
-                                .unwrap()
-                                .borrow()
-                                .annotate(privacy_annotation.clone())
-                        })
-                        .collect(),
-                ))),
-                None,
-                Homomorphism::non_homomorphic(),
-            ))),
-            CombinedPrivacyUnion::Vec(privacy_annotation) => {
-                assert!(self.types.len() == privacy_annotation.len());
-                Some(AST::AnnotatedTypeName(AnnotatedTypeName::new(
-                    Some(TypeName::TupleType(TupleType::new(
+            CombinedPrivacyUnion::AST(_) => Some(
+                RcCell::new(AnnotatedTypeName::new(
+                    Some(RcCell::new(TypeName::TupleType(TupleType::new(
                         self.types
                             .iter()
-                            .zip(privacy_annotation)
-                            .map(|(t, a)| {
+                            .map(|t| {
                                 t.borrow()
                                     .type_name
                                     .as_ref()
                                     .unwrap()
                                     .borrow()
-                                    .annotate(a.clone())
+                                    .annotate(privacy_annotation.clone())
                             })
                             .collect(),
-                    ))),
+                    )))),
                     None,
                     Homomorphism::non_homomorphic(),
-                )))
+                ))
+                .into(),
+            ),
+            CombinedPrivacyUnion::Vec(privacy_annotation) => {
+                assert!(self.types.len() == privacy_annotation.len());
+                Some(
+                    RcCell::new(AnnotatedTypeName::new(
+                        Some(RcCell::new(TypeName::TupleType(TupleType::new(
+                            self.types
+                                .iter()
+                                .zip(privacy_annotation)
+                                .map(|(t, a)| {
+                                    t.borrow()
+                                        .type_name
+                                        .as_ref()
+                                        .unwrap()
+                                        .borrow()
+                                        .annotate(a.clone())
+                                })
+                                .collect(),
+                        )))),
+                        None,
+                        Homomorphism::non_homomorphic(),
+                    ))
+                    .into(),
+                )
             }
         })
     }
@@ -7052,7 +7099,10 @@ impl TupleType {
             selfs.borrow().privacy_annotation == other.borrow().privacy_annotation
         }
 
-        self.check_component_wise(other, privacy_match)
+        self.check_component_wise(
+            &RcCell::new(TypeName::TupleType(other.clone())),
+            privacy_match,
+        )
     }
 
     pub fn empty() -> TupleType {
@@ -7103,7 +7153,7 @@ pub struct AnnotatedTypeName {
     pub ast_base: RcCell<ASTBase>,
     pub type_name: Option<RcCell<TypeName>>,
     pub had_privacy_annotation: bool,
-    pub privacy_annotation: Option<RcCell<AST>>,
+    pub privacy_annotation: Option<ASTFlatten>,
     pub homomorphism: String,
 }
 impl IntoAST for AnnotatedTypeName {
@@ -7114,8 +7164,8 @@ impl IntoAST for AnnotatedTypeName {
 
 impl AnnotatedTypeName {
     pub fn new(
-        type_name: Option<TypeName>,
-        privacy_annotation: Option<AST>,
+        type_name: Option<RcCell<TypeName>>,
+        privacy_annotation: Option<ASTFlatten>,
         homomorphism: String,
     ) -> Self {
         assert!(
@@ -7127,13 +7177,11 @@ impl AnnotatedTypeName {
         );
         Self {
             ast_base: RcCell::new(ASTBase::new()),
-            type_name: type_name.map(RcCell::new),
+            type_name,
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
-            privacy_annotation: privacy_annotation
-                .map(|p| RcCell::new(p))
-                .or(Some(RcCell::new(
-                    Expression::AllExpr(AllExpr::new()).into_ast(),
-                ))),
+            privacy_annotation: privacy_annotation.or(Some(
+                RcCell::new(Expression::AllExpr(AllExpr::new())).into(),
+            )),
             homomorphism,
         }
     }
@@ -7144,7 +7192,7 @@ impl AnnotatedTypeName {
         if let Some(TypeName::Array(Array::CipherText(ct))) =
             self.type_name.as_ref().map(|t| t.borrow().clone())
         {
-            ct.plain_type.clone()
+            ct.plain_type.borrow().clone()
         } else {
             self.clone()
         }
@@ -7152,11 +7200,15 @@ impl AnnotatedTypeName {
     pub fn combined_privacy(
         &self,
         analysis: Option<PartitionState<ASTFlatten>>,
-        other: AnnotatedTypeName,
+        other: &RcCell<AnnotatedTypeName>,
     ) -> Option<CombinedPrivacyUnion> {
         if let (Some(TypeName::TupleType(selfs)), Some(TypeName::TupleType(others))) = (
             self.type_name.as_ref().map(|t| t.borrow().clone()),
-            other.type_name.as_ref().map(|t| t.borrow().clone()),
+            other
+                .borrow()
+                .type_name
+                .as_ref()
+                .map(|t| t.borrow().clone()),
         ) {
             assert!(selfs.types.len() == others.types.len());
             return Some(CombinedPrivacyUnion::Vec(
@@ -7164,32 +7216,29 @@ impl AnnotatedTypeName {
                     .types
                     .iter()
                     .zip(others.types.clone())
-                    .filter_map(|(e1, e2)| {
-                        e1.borrow()
-                            .combined_privacy(analysis.clone(), e2.borrow().clone())
-                    })
+                    .filter_map(|(e1, e2)| e1.borrow().combined_privacy(analysis.clone(), &e2))
                     .collect(),
             ));
         }
-        if self.homomorphism != other.homomorphism && !self.is_public() {
+        if self.homomorphism != other.borrow().homomorphism && !self.is_public() {
             return None;
         }
-        if other.privacy_annotation.is_none() || self.privacy_annotation.is_none() {
+        if other.borrow().privacy_annotation.is_none() || self.privacy_annotation.is_none() {
             return None;
         }
         let (other_privacy_annotation, self_privacy_annotation) = (
-            other.privacy_annotation.clone().unwrap(),
+            other.borrow().privacy_annotation.clone().unwrap(),
             self.privacy_annotation.clone().unwrap(),
         );
         let p_expected = other_privacy_annotation
-            .borrow()
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .privacy_annotation_label();
         let p_actual = self_privacy_annotation
-            .borrow()
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .privacy_annotation_label();
         if let (Some(p_expected), Some(p_actual)) = (p_expected, p_actual) {
             if p_expected == p_actual
@@ -7199,16 +7248,16 @@ impl AnnotatedTypeName {
                         .same_partition(&p_expected.into(), &p_actual.into()))
             {
                 Some(CombinedPrivacyUnion::AST(Some(
-                    self_privacy_annotation.borrow().clone(),
+                    self_privacy_annotation.clone(),
                 )))
             } else if self_privacy_annotation
-                .borrow()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .is_all_expr()
             {
                 Some(CombinedPrivacyUnion::AST(Some(
-                    other_privacy_annotation.borrow().clone(),
+                    other_privacy_annotation.clone(),
                 )))
             } else {
                 None
@@ -7218,35 +7267,26 @@ impl AnnotatedTypeName {
         }
     }
     pub fn is_public(&self) -> bool {
-        if let Some(AST::Expression(pa)) = &self
-            .privacy_annotation
-            .as_ref()
-            .map(|pa| pa.borrow().clone())
-        {
-            pa.is_all_expr()
-        } else {
-            false
-        }
+        self.privacy_annotation.as_ref().map_or(false, |pa| {
+            pa.try_as_expression_ref()
+                .map_or(false, |expr| expr.borrow().is_all_expr())
+        })
     }
 
     pub fn is_private(&self) -> bool {
         !self.is_public()
     }
     pub fn is_private_at_me(&self, analysis: &Option<PartitionState<ASTFlatten>>) -> bool {
-        if let Some(AST::Expression(p)) = &self
-            .privacy_annotation
-            .as_ref()
-            .map(|pa| pa.borrow().clone())
-        {
-            p.is_me_expr()
-                || (analysis.is_some()
-                    && analysis.as_ref().unwrap().same_partition(
-                        &p.privacy_annotation_label().unwrap().into(),
-                        &RcCell::new(MeExpr::new()).into(),
-                    ))
-        } else {
-            false
-        }
+        self.privacy_annotation.as_ref().map_or(false, |pa| {
+            pa.try_as_expression_ref().map_or(false, |p| {
+                p.borrow().is_me_expr()
+                    || (analysis.is_some()
+                        && analysis.as_ref().unwrap().same_partition(
+                            &p.borrow().privacy_annotation_label().unwrap().into(),
+                            &RcCell::new(MeExpr::new()).into(),
+                        ))
+            })
+        })
     }
     pub fn is_accessible(&self, analysis: &Option<PartitionState<ASTFlatten>>) -> bool {
         self.is_public() || self.is_private_at_me(analysis)
@@ -7263,14 +7303,14 @@ impl AnnotatedTypeName {
     }
     pub fn with_homomorphism(&self, hom: String) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            self.type_name.as_ref().map(|t| t.borrow().clone()),
-            self.privacy_annotation.clone().map(|p| p.borrow().clone()),
+            self.type_name.clone(),
+            self.privacy_annotation.clone(),
             hom,
         ))
     }
     pub fn uint_all() -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::uint_type()),
+            Some(RcCell::new(TypeName::uint_type())),
             None,
             Homomorphism::non_homomorphic(),
         ))
@@ -7278,7 +7318,7 @@ impl AnnotatedTypeName {
 
     pub fn bool_all() -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::bool_type()),
+            Some(RcCell::new(TypeName::bool_type())),
             None,
             Homomorphism::non_homomorphic(),
         ))
@@ -7286,15 +7326,15 @@ impl AnnotatedTypeName {
 
     pub fn address_all() -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::address_type()),
+            Some(RcCell::new(TypeName::address_type())),
             None,
             Homomorphism::non_homomorphic(),
         ))
     }
 
-    pub fn cipher_type(plain_type: AnnotatedTypeName, hom: Option<String>) -> RcCell<Self> {
+    pub fn cipher_type(plain_type: RcCell<AnnotatedTypeName>, hom: Option<String>) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::cipher_type(plain_type, hom.unwrap())),
+            Some(RcCell::new(TypeName::cipher_type(plain_type, hom.unwrap()))),
             None,
             Homomorphism::non_homomorphic(),
         ))
@@ -7302,7 +7342,7 @@ impl AnnotatedTypeName {
 
     pub fn key_type(crypto_params: CryptoParams) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::key_type(crypto_params)),
+            Some(RcCell::new(TypeName::key_type(crypto_params))),
             None,
             Homomorphism::non_homomorphic(),
         ))
@@ -7310,22 +7350,22 @@ impl AnnotatedTypeName {
 
     pub fn proof_type() -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(TypeName::proof_type()),
+            Some(RcCell::new(TypeName::proof_type())),
             None,
             Homomorphism::non_homomorphic(),
         ))
     }
     pub fn all(type_name: TypeName) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(type_name),
-            Some(Expression::all_expr().into_ast()),
+            Some(RcCell::new(type_name)),
+            Some(RcCell::new(Expression::all_expr()).into()),
             Homomorphism::non_homomorphic(),
         ))
     }
     pub fn me(type_name: TypeName) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
-            Some(type_name),
-            Some(Expression::me_expr(None).into_ast()),
+            Some(RcCell::new(type_name)),
+            Some(RcCell::new(Expression::me_expr(None)).into()),
             Homomorphism::non_homomorphic(),
         ))
     }
@@ -7333,10 +7373,10 @@ impl AnnotatedTypeName {
         let mut t = value_type;
         for &l in &length {
             t = RcCell::new(AnnotatedTypeName::new(
-                Some(TypeName::Array(Array::Array(ArrayBase::new(
+                Some(RcCell::new(TypeName::Array(Array::Array(ArrayBase::new(
                     t,
                     Some(ExprUnion::I32(l)),
-                )))),
+                ))))),
                 None,
                 Homomorphism::non_homomorphic(),
             ));
@@ -7420,14 +7460,14 @@ impl IdentifierDeclarationBase {
     fn new(
         keywords: Vec<String>,
         annotated_type: RcCell<AnnotatedTypeName>,
-        idf: Identifier,
+        idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
         Self {
             ast_base: RcCell::new(ASTBase::new()),
             keywords,
             annotated_type: annotated_type,
-            idf: Some(RcCell::new(idf)),
+            idf,
             storage_location,
         }
     }
@@ -7467,7 +7507,7 @@ impl VariableDeclaration {
     pub fn new(
         keywords: Vec<String>,
         annotated_type: RcCell<AnnotatedTypeName>,
-        idf: Identifier,
+        idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
         Self {
@@ -7539,7 +7579,7 @@ impl Parameter {
     pub fn new(
         keywords: Vec<String>,
         annotated_type: RcCell<AnnotatedTypeName>,
-        idf: Identifier,
+        idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
         Self {
@@ -7597,10 +7637,10 @@ pub struct NamespaceDefinitionBase {
     pub idf: Option<RcCell<Identifier>>,
 }
 impl NamespaceDefinitionBase {
-    pub fn new(idf: Identifier) -> Self {
+    pub fn new(idf: Option<RcCell<Identifier>>) -> Self {
         Self {
             ast_base: RcCell::new(ASTBase::new()),
-            idf: Some(RcCell::new(idf)),
+            idf,
         }
     }
 }
@@ -7643,21 +7683,19 @@ impl IntoAST for ConstructorOrFunctionDefinition {
 
 impl ConstructorOrFunctionDefinition {
     pub fn new(
-        idf: Option<Identifier>,
+        idf: Option<RcCell<Identifier>>,
         parameters: Option<Vec<RcCell<Parameter>>>,
         modifiers: Option<Vec<String>>,
         return_parameters: Option<Vec<RcCell<Parameter>>>,
         body: Option<Block>,
     ) -> Self {
         assert!(
-            idf.is_some() && idf.as_ref().unwrap().name() != "constructor"
+            idf.is_some() && idf.as_ref().unwrap().borrow().name() != "constructor"
                 || return_parameters.is_none()
         );
-        let idf = if let Some(idf) = idf {
-            idf
-        } else {
-            Identifier::Identifier(IdentifierBase::new(String::from("constructor")))
-        };
+        let idf = idf.or(Some(RcCell::new(Identifier::Identifier(
+            IdentifierBase::new(String::from("constructor")),
+        ))));
         let return_parameters = if let Some(return_parameters) = return_parameters {
             return_parameters
         } else {
@@ -7673,10 +7711,9 @@ impl ConstructorOrFunctionDefinition {
                         .identifier_declaration_base
                         .annotated_type
                         .clone(),
-                    Identifier::Identifier(IdentifierBase::new(format!(
-                        "{}_{idx}",
-                        CFG.lock().unwrap().return_var_name()
-                    ))),
+                    Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
+                        format!("{}_{idx}", CFG.lock().unwrap().return_var_name()),
+                    )))),
                     rp.borrow()
                         .identifier_declaration_base
                         .storage_location
@@ -7705,10 +7742,12 @@ impl ConstructorOrFunctionDefinition {
             parent: None,
             original_body: None,
             annotated_type: Some(AnnotatedTypeName::new(
-                Some(TypeName::FunctionTypeName(FunctionTypeName::new(
-                    parameters.clone().unwrap_or(vec![]),
-                    modifiers.unwrap_or(vec![]),
-                    return_parameters,
+                Some(RcCell::new(TypeName::FunctionTypeName(
+                    FunctionTypeName::new(
+                        parameters.clone().unwrap_or(vec![]),
+                        modifiers.unwrap_or(vec![]),
+                        return_parameters,
+                    ),
                 ))),
                 None,
                 Homomorphism::non_homomorphic(),
@@ -7805,10 +7844,12 @@ impl ConstructorOrFunctionDefinition {
 
     pub fn _update_fct_type(&mut self) {
         self.annotated_type = Some(AnnotatedTypeName::new(
-            Some(TypeName::FunctionTypeName(FunctionTypeName::new(
-                self.parameters.clone(),
-                self.modifiers.clone(),
-                self.return_parameters.clone(),
+            Some(RcCell::new(TypeName::FunctionTypeName(
+                FunctionTypeName::new(
+                    self.parameters.clone(),
+                    self.modifiers.clone(),
+                    self.return_parameters.clone(),
+                ),
             ))),
             None,
             Homomorphism::non_homomorphic(),
@@ -7821,7 +7862,7 @@ impl ConstructorOrFunctionDefinition {
             Some(t)
         } else if let AST::TypeName(t) = t {
             Some(AnnotatedTypeName::new(
-                Some(t),
+                Some(RcCell::new(t)),
                 None,
                 Homomorphism::non_homomorphic(),
             ))
@@ -7829,7 +7870,9 @@ impl ConstructorOrFunctionDefinition {
             None
         };
         let idf = if let IdentifierExprUnion::String(idf) = idf {
-            Some(Identifier::Identifier(IdentifierBase::new(idf)))
+            Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
+                idf,
+            ))))
         } else if let IdentifierExprUnion::Identifier(idf) = idf {
             Some(idf.clone())
         } else {
@@ -7851,7 +7894,7 @@ impl ConstructorOrFunctionDefinition {
         self.parameters.push(RcCell::new(Parameter::new(
             vec![],
             RcCell::new(t.unwrap()),
-            idf.as_ref().unwrap().clone(),
+            Some(idf.as_ref().unwrap().clone()),
             storage_loc,
         )));
         self._update_fct_type();
@@ -7912,7 +7955,7 @@ impl StateVariableDeclaration {
     pub fn new(
         annotated_type: RcCell<AnnotatedTypeName>,
         keywords: Vec<String>,
-        idf: Identifier,
+        idf: Option<RcCell<Identifier>>,
         expr: Option<Expression>,
     ) -> Self {
         Self {
@@ -7955,7 +7998,7 @@ impl EnumValue {
             annotated_type: None,
         }
     }
-    pub fn qualified_name(&mut self) -> Vec<Identifier> {
+    pub fn qualified_name(&self) -> Vec<Identifier> {
         vec![]
     }
     pub fn ast_base_ref(&self) -> RcCell<ASTBase> {
@@ -7984,14 +8027,14 @@ impl IntoAST for EnumDefinition {
 }
 
 impl EnumDefinition {
-    pub fn new(idf: Option<Identifier>, values: Vec<EnumValue>) -> Self {
+    pub fn new(idf: Option<RcCell<Identifier>>, values: Vec<EnumValue>) -> Self {
         Self {
-            namespace_definition_base: NamespaceDefinitionBase::new(idf.as_ref().unwrap().clone()),
+            namespace_definition_base: NamespaceDefinitionBase::new(idf),
             values: values.into_iter().map(RcCell::new).collect(),
             annotated_type: None,
         }
     }
-    pub fn qualified_name(&mut self) -> Vec<Identifier> {
+    pub fn qualified_name(&self) -> Vec<Identifier> {
         vec![]
     }
 }
@@ -8018,7 +8061,7 @@ impl IntoAST for StructDefinition {
 }
 
 impl StructDefinition {
-    pub fn new(idf: Identifier, members: Vec<AST>) -> Self {
+    pub fn new(idf: Option<RcCell<Identifier>>, members: Vec<AST>) -> Self {
         Self {
             namespace_definition_base: NamespaceDefinitionBase::new(idf),
             members: members.into_iter().map(RcCell::new).collect(),
@@ -8057,7 +8100,7 @@ impl IntoAST for ContractDefinition {
 
 impl ContractDefinition {
     pub fn new(
-        idf: Option<Identifier>,
+        idf: Option<RcCell<Identifier>>,
         state_variable_declarations: Vec<AST>,
         constructor_definitions: Vec<ConstructorOrFunctionDefinition>,
         function_definitions: Vec<ConstructorOrFunctionDefinition>,
@@ -8066,7 +8109,7 @@ impl ContractDefinition {
         used_crypto_backends: Option<Vec<CryptoParams>>,
     ) -> Self {
         Self {
-            namespace_definition_base: NamespaceDefinitionBase::new(idf.as_ref().unwrap().clone()),
+            namespace_definition_base: NamespaceDefinitionBase::new(idf),
             state_variable_declarations: state_variable_declarations
                 .into_iter()
                 .map(RcCell::new)
@@ -8222,18 +8265,18 @@ impl ConstructorOrFunctionDefinitionAttr for AST {
         String::new()
     }
 }
-pub fn get_privacy_expr_from_label(plabel: AST) -> Expression
+pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
 {
-    if let Some(idf) = plabel.try_as_identifier_ref() {
+    if plabel.is_identifier() {
         let mut ie = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(idf.clone()),
+            IdentifierExprUnion::Identifier(plabel.try_as_identifier_ref().unwrap().clone()),
             Some(AnnotatedTypeName::address_all()),
         );
-        ie.location_expr_base.target = idf.parent();
-        ie.into_expr()
+        ie.location_expr_base.target = plabel.try_as_identifier_ref().unwrap().borrow().parent();
+        RcCell::new(ie.into_expr()).into()
     } else {
-        plabel.try_as_expression().unwrap()
+        plabel
     }
 }
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -8330,6 +8373,7 @@ impl InstanceTarget {
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap(),
@@ -8344,12 +8388,13 @@ impl InstanceTarget {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .zkay_type()
                 .privacy_annotation
                 .unwrap()
-                .borrow()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .privacy_annotation_label()
         } else {
             let t = self
@@ -8361,6 +8406,7 @@ impl InstanceTarget {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .zkay_type()
                 .type_name
                 .unwrap();
@@ -8383,9 +8429,9 @@ impl InstanceTarget {
                     .privacy_annotation
                     .as_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_expression_ref()
                     .unwrap()
+                    .borrow()
                     .privacy_annotation_label()
                     .map(|x| x.clone().into())
             }
@@ -9247,8 +9293,6 @@ impl CodeVisitor {
             .as_ref()
             .unwrap()
             .borrow()
-            .try_as_expression_ref()
-            .unwrap()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
             .try_as_tuple_expr_ref()
@@ -9258,7 +9302,7 @@ impl CodeVisitor {
                 .expression_base
                 .annotated_type
             {
-                if at.is_private() {
+                if at.borrow().is_private() {
                     op = String::new();
                 }
             }
@@ -9267,14 +9311,12 @@ impl CodeVisitor {
             .as_ref()
             .unwrap()
             .borrow()
-            .try_as_expression_ref()
-            .unwrap()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
             .try_as_location_expr_ref()
         {
             if let Some(at) = le.annotated_type() {
-                if at.is_private() {
+                if at.borrow().is_private() {
                     op = String::new();
                 }
             }
@@ -9318,8 +9360,6 @@ impl CodeVisitor {
             lhs.clone()
                 .unwrap()
                 .borrow()
-                .try_as_expression_ref()
-                .unwrap()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref(),
@@ -9609,6 +9649,7 @@ impl CodeVisitor {
                 .unwrap()
                 .borrow()
                 .plain_type
+                .borrow()
                 .to_ast()
                 .code()
         )

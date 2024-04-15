@@ -1047,6 +1047,7 @@ impl SymbolTableLinker {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .type_name
                 .clone();
             if t.clone()
@@ -1158,6 +1159,7 @@ impl SymbolTableLinker {
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .clone()
             .unwrap();
@@ -1169,7 +1171,7 @@ impl SymbolTableLinker {
                 .unwrap()
                 .value_type
                 .clone(),
-            Identifier::Identifier(IdentifierBase::new(String::new())),
+            Identifier::identifier(""),
             None,
         ))
         .into();
