@@ -13,15 +13,13 @@ impl BaseNameFactory {
             count: 0,
         }
     }
+    // """
+    // Generate a fresh name for a value of type t.
 
-    pub fn get_new_name(&mut self, t: &TypeName, inc: bool) -> String
-// """
-        // Generate a fresh name for a value of type t.
-
-        // :param t: transformed type
-        // :param inc: if true, the internal counter, which is used as part of fresh ids, is incremented
-        // """
-    {
+    // :param t: transformed type
+    // :param inc: if true, the internal counter, which is used as part of fresh ids, is incremented
+    // """
+    pub fn get_new_name(&mut self, t: &TypeName, inc: bool) -> String {
         let postfix = if t.is_key() {
             "key"
         } else if t.is_cipher() {

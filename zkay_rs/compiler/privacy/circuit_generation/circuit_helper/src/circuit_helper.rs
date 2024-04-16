@@ -13,21 +13,22 @@ use std::ops::{Deref, DerefMut};
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
-    get_privacy_expr_from_label, is_instance, is_instances, ASTFlatten, ASTType, AllExpr,
-    AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
-    AssignmentStatementBaseProperty, Block, BooleanLiteralType, BuiltinFunction,
-    CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
-    ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
-    ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
-    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
-    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
-    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    get_privacy_expr_from_label, is_instance, is_instances, ASTBaseMutRef, ASTFlatten, ASTType,
+    AllExpr, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase,
+    AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, Block, BooleanLiteralType,
+    BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
+    ConstructorOrFunctionDefinition, ElementaryTypeName, EncryptionExpression,
+    EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
+    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
+    FunctionCallExprBaseProperty, FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf,
+    Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
+    IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression,
+    IntoStatement, KeyLiteralExpr, LocationExpr, LocationExprBaseProperty, MeExpr,
+    MemberAccessExpr, NamespaceDefinitionBaseProperty, NumberLiteralExpr, NumberLiteralType,
+    NumberTypeName, Parameter, ReturnStatement, SimpleStatement, StateVariableDeclaration,
+    Statement, StatementBaseMutRef, StatementBaseProperty, StatementBaseRef, TupleExpr,
+    TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -410,7 +411,11 @@ where
     // Make circuit prove that the encryption of the specified parameter is correct.
     // """
     {
-        assert!(param.identifier_declaration_base.annotated_type.is_cipher());
+        assert!(param
+            .identifier_declaration_base
+            .annotated_type
+            .borrow()
+            .is_cipher());
 
         let plain_idf = self._secret_input_name_factory.add_idf(
             param
@@ -421,24 +426,30 @@ where
                 .borrow()
                 .name()
                 .clone(),
-            *param
+            param
                 .identifier_declaration_base
                 .annotated_type
+                .borrow()
                 .zkay_type()
                 .type_name
-                .clone()
-                .unwrap(),
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .clone(),
             None,
         );
         let name = format!(
             "{}_{}",
             self._in_name_factory.base_name_factory.get_new_name(
-                &*param
+                &param
                     .identifier_declaration_base
                     .annotated_type
+                    .borrow()
                     .type_name
                     .as_ref()
-                    .unwrap(),
+                    .unwrap()
+                    .borrow()
+                    .clone(),
                 false
             ),
             param
@@ -451,24 +462,29 @@ where
         );
         let cipher_idf = self._in_name_factory.add_idf(
             name,
-            *param
+            param
                 .identifier_declaration_base
                 .annotated_type
+                .borrow()
                 .type_name
-                .clone()
-                .unwrap(),
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .clone(),
             None,
         );
         self._ensure_encryption(
             insert_loc_stmt,
             plain_idf,
-            Expression::me_expr(None).to_ast(),
+            &RcCell::new(Expression::me_expr(None)).into(),
             param
                 .identifier_declaration_base
                 .annotated_type
+                .borrow()
                 .type_name
                 .as_ref()
                 .unwrap()
+                .borrow()
                 .try_as_array_ref()
                 .unwrap()
                 .try_as_cipher_text_ref()
@@ -487,9 +503,11 @@ where
                 expr.annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .type_name
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_array_ref()
                     .unwrap()
                     .try_as_randomness_ref()
@@ -500,15 +518,15 @@ where
             None,
         );
         IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(Identifier::HybridArgumentIdf(idf)),
+            IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(idf))),
             None,
         )
     }
 
     pub fn evaluate_expr_in_circuit(
         &mut self,
-        expr: &mut Expression,
-        new_privacy: &AST,
+        expr: &RcCell<Expression>,
+        new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> LocationExpr
 // """
@@ -520,7 +538,7 @@ where
         // :return: Location expression which references the encrypted circuit result
         // """
     {
-        self.circ_indent_block(&expr.to_ast().code());
+        self.circ_indent_block(&expr.borrow().to_ast().code());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
             .unwrap()
     }
@@ -545,8 +563,8 @@ where
         let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
             NumberLiteralExpr::new(0, false).to_expr(),
         ));
-        for var in &ast.ast_base_ref().unwrap().modified_values {
-            if var.in_scope_at(ast.to_ast()) {
+        for var in &ast.ast_base_ref().unwrap().borrow().modified_values {
+            if var.in_scope_at(&RcCell::new(ast.to_ast()).into()) {
                 astmt =
                     SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
                         AssignmentStatementBase::new(None, None, None),
@@ -559,8 +577,8 @@ where
 
         //External values written inside statement -> function return values
         let mut ret_params = vec![];
-        for var in &ast.ast_base_ref().unwrap().modified_values {
-            if var.in_scope_at(ast.to_ast()) {
+        for var in &ast.ast_base_ref().unwrap().borrow().modified_values {
+            if var.in_scope_at(&RcCell::new(ast.to_ast()).into()) {
                 //side effect affects location outside statement and has privacy @me
                 assert!(ast
                     .statement_base_ref()
@@ -568,9 +586,12 @@ where
                     .before_analysis
                     .as_ref()
                     .unwrap()
-                    .same_partition(&var.privacy().unwrap(), &Expression::me_expr(None).to_ast()));
+                    .same_partition(
+                        &var.privacy().unwrap(),
+                        &RcCell::new(Expression::me_expr(None)).into()
+                    ));
                 assert!(is_instances(
-                    &*var.target().unwrap(),
+                    &var.target().unwrap(),
                     vec![
                         ASTType::Parameter,
                         ASTType::VariableDeclaration,
@@ -582,18 +603,20 @@ where
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .zkay_type();
-                if !t.type_name.as_ref().unwrap().is_primitive_type() {
+                if !t.type_name.as_ref().unwrap().borrow().is_primitive_type() {
                     unimplemented!(
                         "Reference types inside private if statements are not supported"
                     );
                 }
                 let ret_t = AnnotatedTypeName::new(
-                    t.type_name.as_ref().map(|t| *t.clone()),
-                    Some(Expression::me_expr(None).into_ast()),
+                    t.type_name.clone(),
+                    Some(RcCell::new(Expression::me_expr(None)).into()),
                     t.homomorphism,
                 ); //t, but @me
                 let mut idf = IdentifierExpr::new(
@@ -602,29 +625,29 @@ where
                             .unwrap()
                             .try_as_identifier_declaration_ref()
                             .unwrap()
+                            .borrow()
                             .idf()
                             .upgrade()
-                            .unwrap()
-                            .borrow()
-                            .clone(),
+                            .unwrap(),
                     ),
-                    Some(Box::new(ret_t)),
+                    Some(RcCell::new(ret_t)),
                 );
-                idf.location_expr_base.target = var.target();
+                idf.location_expr_base.target = var.target().map(|p| p.downgrade());
                 let mut ret_param = idf;
                 ret_param
                     .location_expr_base
                     .tuple_or_location_expr_base
                     .expression_base
-                    .statement = Some(Box::new(astmt.to_statement()));
+                    .statement =
+                    Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
                 ret_params.push(ret_param);
             }
         }
 
         //Build the imaginary function
         let mut fdef = ConstructorOrFunctionDefinition::new(
-            Some(Identifier::Identifier(IdentifierBase::new(String::from(
-                "<stmt_fct>",
+            Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
+                String::from("<stmt_fct>"),
             )))),
             Some(vec![]),
             Some(zkay_config::lc_vec_s!["private"]),
@@ -632,25 +655,22 @@ where
                 ret_params
                     .iter()
                     .map(|ret| {
-                        Parameter::new(
+                        RcCell::new(Parameter::new(
                             vec![],
-                            *ret.annotated_type.clone().unwrap(),
+                            ret.annotated_type.clone().unwrap(),
                             ret.location_expr_base
                                 .target
-                                .as_ref()
+                                .clone()
                                 .unwrap()
-                                .borrow()
-                                .as_ref()
+                                .upgrade()
                                 .unwrap()
                                 .try_as_identifier_declaration_ref()
                                 .unwrap()
-                                .idf()
-                                .upgrade()
-                                .unwrap()
                                 .borrow()
-                                .clone(),
+                                .idf()
+                                .upgrade(),
                             None,
-                        )
+                        ))
                     })
                     .collect(),
             ),
@@ -658,7 +678,13 @@ where
                 vec![
                     ast.to_ast(),
                     ReturnStatement::new(Some(
-                        TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_expr(),
+                        TupleExpr::new(
+                            ret_params
+                                .iter()
+                                .map(|r| RcCell::new(r.to_expr()))
+                                .collect(),
+                        )
+                        .to_expr(),
                     ))
                     .to_ast(),
                 ],
@@ -666,16 +692,13 @@ where
             )),
         );
         fdef.original_body = fdef.body.clone();
-        (*fdef
-            .body
+        fdef.body
             .as_mut()
             .unwrap()
-            .statement_list_base
-            .statement_base
-            .ast_base
-            .as_mut()
-            .parent
-            .borrow_mut()) = Some(Box::new(fdef.to_ast()));
+            .borrow()
+            .ast_base_mut_ref()
+            .borrow_mut()
+            .parent = Some(ASTFlatten::from(RcCell::new(fdef.clone())).downgrade());
         fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();
 
         //inline "Call" to the imaginary function
@@ -683,15 +706,17 @@ where
             IdentifierExprUnion::String(String::from("<stmt_fct>")),
             None,
         );
-        idf.location_expr_base.target = Some(RcCell::new(fdef.to_ast()));
+        idf.location_expr_base.target =
+            Some(ASTFlatten::from(RcCell::new(fdef.clone())).downgrade());
         let mut fcall = FunctionCallExprBase::new(idf.to_expr(), vec![], None);
-        fcall.expression_base.statement = Some(Box::new(astmt.to_statement()));
+        fcall.expression_base.statement =
+            Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
         let mut ret_args = self.inline_function_call_into_circuit(&mut fcall);
         assert!(ret_args.is_some());
         let mut ret_args = ret_args.unwrap();
         //Move all return values out of the circuit
         let mut ret_args = if !is_instance(&ret_args, ASTType::TupleExpr) {
-            TupleExpr::new(vec![ret_args.try_as_expression().unwrap()]).into_ast()
+            TupleExpr::new(vec![RcCell::new(ret_args.try_as_expression().unwrap())]).into_ast()
         } else {
             ret_args
         };
@@ -705,7 +730,8 @@ where
             .elements
             .iter_mut()
         {
-            ret_arg.expression_base_mut_ref().statement = Some(Box::new(astmt.to_statement()));
+            ret_arg.borrow_mut().expression_base_mut_ref().statement =
+                Some(ASTFlatten::from(RcCell::new(astmt.to_statement())));
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
@@ -723,8 +749,13 @@ where
             .map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
-                    &Expression::me_expr(None).to_ast(),
-                    &ret_param.annotated_type.clone().unwrap().homomorphism,
+                    &RcCell::new(Expression::me_expr(None)).into(),
+                    &ret_param
+                        .annotated_type
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .homomorphism,
                 )
                 .unwrap()
             })
@@ -736,15 +767,22 @@ where
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .lhs = Some(Box::new(
-                TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).to_ast(),
+                .lhs = Some(RcCell::new(
+                TupleExpr::new(ret_params.iter().map(|r| r.to_expr()).collect()).into_expr(),
             ));
             astmt
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .rhs =
-                Some(TupleExpr::new(ret_arg_outs.iter().map(|r| r.to_expr()).collect()).to_expr());
+                .rhs = Some(
+                TupleExpr::new(
+                    ret_arg_outs
+                        .iter()
+                        .map(|r| RcCell::new(r.to_expr()))
+                        .collect(),
+                )
+                .to_expr(),
+            );
             astmt
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
@@ -766,6 +804,7 @@ where
     {
         assert!(
             ast.func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
@@ -782,6 +821,7 @@ where
         self.function_calls_with_verification.push(ast.clone());
         self._phi.push(CircuitStatement::CircCall(CircCall::new(
             ast.func()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
@@ -800,7 +840,7 @@ where
     pub fn request_public_key(
         &mut self,
         crypto_params: &CryptoParams,
-        plabel: Option<AST>,
+        plabel: Option<ASTFlatten>,
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) //(Identifier,CircuitInputStatement)
     // """
@@ -831,6 +871,7 @@ where
         let le = if let Some(le) = le
             .try_as_expression_ref()
             .unwrap()
+            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
             .try_as_location_expr_ref()
@@ -900,7 +941,7 @@ where
     }
 
     //Circuit-side interface #
-    pub fn add_to_circuit_inputs(&mut self, expr: &mut Expression) -> HybridArgumentIdf
+    pub fn add_to_circuit_inputs(&mut self, expr: &RcCell<Expression>) -> HybridArgumentIdf
 // """
         // Add the provided expression to the public circuit inputs.
 
@@ -1161,7 +1202,7 @@ where
             self._ensure_encryption(
                 &mut statement,
                 locally_decrypted_idf.clone().unwrap(),
-                Expression::me_expr(None).to_ast(),
+                RcCell::new(Expression::me_expr(None)).into(),
                 crypto_params,
                 input_idf,
                 false,
@@ -1826,8 +1867,8 @@ where
 
     pub fn _get_circuit_output_for_private_expression(
         &mut self,
-        expr: &mut Expression,
-        new_privacy: &AST,
+        expr: &RcCell<Expression>,
+        new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> Option<LocationExpr>
 // """
@@ -2172,7 +2213,7 @@ where
         &mut self,
         stmt: &mut Statement,
         plain: HybridArgumentIdf,
-        new_privacy: AST,
+        new_privacy: &ASTFlatten,
         crypto_params: CryptoParams,
         cipher: HybridArgumentIdf,
         is_param: bool,
@@ -2199,13 +2240,13 @@ where
             self._require_secret_key(&crypto_params);
             let my_pk = self._require_public_key_for_label_at(
                 Some(stmt),
-                &Expression::me_expr(None).to_ast(),
+                &RcCell::new(Expression::me_expr(None)).into(),
                 &crypto_params,
             );
             let other_pk = if is_dec {
                 self._get_public_key_in_sender_field(stmt, cipher.clone(), crypto_params)
             } else {
-                if new_privacy == Expression::me_expr(None).to_ast() {
+                if new_privacy == RcCell::new(Expression::me_expr(None)).into() {
                     my_pk
                 } else {
                     self._require_public_key_for_label_at(Some(stmt), &new_privacy, &crypto_params)

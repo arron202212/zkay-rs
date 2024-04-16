@@ -7662,7 +7662,7 @@ pub struct ConstructorOrFunctionDefinition {
     pub body: Option<RcCell<Block>>,
     pub return_var_decls: Vec<RcCell<VariableDeclaration>>,
     pub parent: Option<ContractDefinition>,
-    pub original_body: Option<Block>,
+    pub original_body: Option<RcCell<Block>>,
     pub annotated_type: Option<AnnotatedTypeName>,
     pub called_functions: BTreeSet<RcCell<ConstructorOrFunctionDefinition>>,
     pub is_recursive: bool,
