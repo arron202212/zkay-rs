@@ -13,6 +13,7 @@ rust-version.workspace = true
 [lib]
 [dependencies]
 rccell = { workspace = true }
+zkay-derive={workspace=true}
 circuit_helper={workspace=true}
  proving_scheme={workspace = true }
  zkay-compiler={workspace = true }

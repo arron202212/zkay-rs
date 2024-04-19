@@ -10,8 +10,18 @@ use crate::ast::{ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, Block, HybridA
 use dyn_clone::DynClone;
 // T = TypeVar("T")
 // std::marker::Sync +
-pub trait TransformerVisitorEx: DynClone + AstTransformerVisitor {}
+pub trait TransformerVisitorEx: DynClone + AstTransformerVisitor {
+    fn visitBlock(
+        &self,
+        _ast: Option<ASTFlatten>,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
+    ) -> Option<ASTFlatten> {
+        None
+    }
+}
 dyn_clone::clone_trait_object!(TransformerVisitorEx);
+#[derive(Clone)]
 pub struct AstTransformerVisitorBase {
     log: bool,
 }

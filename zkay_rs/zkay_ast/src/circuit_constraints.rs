@@ -26,19 +26,20 @@
 // Additionally, abstract circuits use static-single assignment, which means that any HybridArgumentIdf can be regarded as a final variable.
 // (That's why it is called CircVarDecl rather than CircAssign)
 // """
+
 use crate::ast::{
     ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ChildListBuilder,
     ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use enum_dispatch::enum_dispatch;
+use rccell::RcCell;
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumIs, EnumTryAs};
-use zkay_derive::{impl_trait, impl_traits, ASTKind, ImplBaseTrait};
+use zkay_derive::{impl_trait, impl_traits, ASTFlattenImpl, ASTKind, ImplBaseTrait};
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
 #[enum_dispatch(IntoAST, IntoASTFlatten, ASTInstanceOf)]
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-
 pub enum CircuitStatement {
     CircComment(CircComment),
     CircIndentBlock(CircIndentBlock),
@@ -49,11 +50,12 @@ pub enum CircuitStatement {
     CircSymmEncConstraint(CircSymmEncConstraint),
     CircEqConstraint(CircEqConstraint),
 }
-// impl IntoASTFlatten for CircuitStatement {
-//     fn to_ast_flatten<'a>(&'a mut self) -> ASTFlatten<'a> {
-//         ASTFlatten::CircuitStatement(self)
-//     }
-// }
+
+impl From<RcCell<CircuitStatement>> for ASTFlatten {
+    fn from(a: RcCell<CircuitStatement>) -> ASTFlatten {
+        ASTFlatten::CircuitStatement(a)
+    }
+}
 // impl IntoAST for CircuitStatement {
 //     fn into_ast(self) -> AST {
 //         match self {
@@ -98,7 +100,7 @@ impl ASTChildren for CircuitStatement {
 // def __init__(self, text: str)
 //     super().__init__()
 //     self.text = text
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircComment {
     pub text: String,
 }
@@ -132,10 +134,10 @@ impl CircComment {
 //     super().__init__()
 //     self.name = name
 //     self.statements = statements
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircIndentBlock {
     pub name: String,
-    pub statements: Vec<CircuitStatement>,
+    pub statements: Vec<RcCell<CircuitStatement>>,
 }
 impl IntoAST for CircIndentBlock {
     fn into_ast(self) -> AST {
@@ -150,7 +152,7 @@ impl IntoAST for CircIndentBlock {
 //     }
 // }
 impl CircIndentBlock {
-    pub fn new(name: String, statements: Vec<CircuitStatement>) -> Self {
+    pub fn new(name: String, statements: Vec<RcCell<CircuitStatement>>) -> Self {
         Self { name, statements }
     }
 }
@@ -181,7 +183,7 @@ impl CircIndentBlock {
 // def __init__(self, fct: ConstructorOrFunctionDefinition)
 //     super().__init__()
 //     self.fct = fct
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircCall {
     pub fct: ConstructorOrFunctionDefinition,
 }
@@ -216,10 +218,10 @@ impl CircCall {
 //     super().__init__()
 //     self.lhs = lhs
 //     self.expr = expr
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircVarDecl {
     pub lhs: HybridArgumentIdf,
-    pub expr: Expression,
+    pub expr: RcCell<Expression>,
 }
 
 impl IntoAST for CircVarDecl {
@@ -235,7 +237,7 @@ impl IntoAST for CircVarDecl {
 //     }
 // }
 impl CircVarDecl {
-    pub fn new(lhs: HybridArgumentIdf, expr: Expression) -> Self {
+    pub fn new(lhs: HybridArgumentIdf, expr: RcCell<Expression>) -> Self {
         Self { lhs, expr }
     }
 }
@@ -260,7 +262,7 @@ impl CircVarDecl {
 //     super().__init__()
 //     self.new_cond = new_cond
 //     self.is_true = is_true
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircGuardModification {
     pub new_cond: Option<HybridArgumentIdf>,
     pub is_true: Option<bool>,
@@ -284,7 +286,6 @@ impl CircGuardModification {
 
     // @staticmethod
     // @contextmanager
-    pub fn guarded(phi: &mut Vec<CircuitStatement>, guard_idf: HybridArgumentIdf, is_true: bool)
     // """
     // Return a context manager which manages the lifetime of a guarded scope.
 
@@ -293,14 +294,18 @@ impl CircGuardModification {
     // :param is_true: assertions and assignments inside the guarded scope are ignored unless guard_idf is equal to is_true at
     //                 proof generation time
     // """
-    {
-        phi.push(CircuitStatement::CircGuardModification(
+    pub fn guarded(
+        phi: &mut Vec<RcCell<CircuitStatement>>,
+        guard_idf: HybridArgumentIdf,
+        is_true: bool,
+    ) {
+        phi.push(RcCell::new(CircuitStatement::CircGuardModification(
             CircGuardModification::new(Some(guard_idf), Some(is_true)),
-        ));
+        )));
         // yield
-        phi.push(CircuitStatement::CircGuardModification(
+        phi.push(RcCell::new(CircuitStatement::CircGuardModification(
             CircGuardModification::new(None, None),
-        ));
+        )));
     }
 }
 // class CircEncConstraint(CircuitStatement)
@@ -327,7 +332,7 @@ impl CircGuardModification {
 //     self.pk = pk
 //     self.cipher = cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEncConstraint {
     pub plain: HybridArgumentIdf,
     pub rnd: HybridArgumentIdf,
@@ -381,7 +386,7 @@ impl CircEncConstraint {
 //     self.other_pk = other_pk
 //     self.iv_cipher = iv_cipher
 //     self.is_dec = is_dec # True if this is an inverted decryption
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircSymmEncConstraint {
     pub plain: HybridArgumentIdf,
     pub other_pk: HybridArgumentIdf,
@@ -425,7 +430,7 @@ impl CircSymmEncConstraint {
 //     super().__init__()
 //     self.tgt = tgt
 //     self.val = val
-#[derive(ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircEqConstraint {
     pub tgt: HybridArgumentIdf,
     pub val: HybridArgumentIdf,

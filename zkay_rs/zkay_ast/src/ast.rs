@@ -310,6 +310,7 @@ pub enum ASTFlatten {
     StructDefinition(RcCell<StructDefinition>),
     ContractDefinition(RcCell<ContractDefinition>),
     DummyAnnotation(RcCell<DummyAnnotation>),
+    CircuitStatement(RcCell<CircuitStatement>),
     CircComment(RcCell<CircComment>),
     CircIndentBlock(RcCell<CircIndentBlock>),
     CircCall(RcCell<CircCall>),
@@ -415,6 +416,7 @@ pub enum ASTFlattenWeak {
     StructDefinition(WeakCell<StructDefinition>),
     ContractDefinition(WeakCell<ContractDefinition>),
     DummyAnnotation(WeakCell<DummyAnnotation>),
+    CircuitStatement(WeakCell<CircuitStatement>),
     CircComment(WeakCell<CircComment>),
     CircIndentBlock(WeakCell<CircIndentBlock>),
     CircCall(WeakCell<CircCall>),
@@ -628,6 +630,7 @@ impl ASTInstanceOf for ASTFlatten {
             Self::StructDefinition(astf) => astf.borrow().get_ast_type(),
             Self::ContractDefinition(astf) => astf.borrow().get_ast_type(),
             Self::DummyAnnotation(astf) => astf.borrow().get_ast_type(),
+            Self::CircuitStatement(astf) => astf.borrow().get_ast_type(),
             Self::CircComment(astf) => astf.borrow().get_ast_type(),
             Self::CircIndentBlock(astf) => astf.borrow().get_ast_type(),
             Self::CircCall(astf) => astf.borrow().get_ast_type(),
@@ -1003,6 +1006,7 @@ impl ASTFlatten {
             Self::StructDefinition(astf) => ASTFlattenWeak::StructDefinition(astf.downgrade()),
             Self::ContractDefinition(astf) => ASTFlattenWeak::ContractDefinition(astf.downgrade()),
             Self::DummyAnnotation(astf) => ASTFlattenWeak::DummyAnnotation(astf.downgrade()),
+            Self::CircuitStatement(astf) => ASTFlattenWeak::CircuitStatement(astf.downgrade()),
             Self::CircComment(astf) => ASTFlattenWeak::CircComment(astf.downgrade()),
             Self::CircIndentBlock(astf) => ASTFlattenWeak::CircIndentBlock(astf.downgrade()),
             Self::CircCall(astf) => ASTFlattenWeak::CircCall(astf.downgrade()),
@@ -1227,6 +1231,9 @@ impl ASTFlattenWeak {
             Self::DummyAnnotation(astf) => {
                 astf.upgrade().map(|astf| ASTFlatten::DummyAnnotation(astf))
             }
+            Self::CircuitStatement(astf) => astf
+                .upgrade()
+                .map(|astf| ASTFlatten::CircuitStatement(astf)),
             Self::CircComment(astf) => astf.upgrade().map(|astf| ASTFlatten::CircComment(astf)),
             Self::CircIndentBlock(astf) => {
                 astf.upgrade().map(|astf| ASTFlatten::CircIndentBlock(astf))
@@ -1668,7 +1675,7 @@ impl IdentifierBase {
     pub fn ast_base_ref(&self) -> RcCell<ASTBase> {
         self.ast_base.clone()
     }
-    pub fn decl_var(&self, t: AST, expr: Option<Expression>) -> Statement {
+    pub fn decl_var(&self, t: AST, expr: Option<RcCell<Expression>>) -> Statement {
         let t = match t {
             AST::TypeName(t) => Some(AnnotatedTypeName::new(
                 Some(RcCell::new(t)),
@@ -1686,12 +1693,12 @@ impl IdentifierBase {
             String::from("memory")
         };
         VariableDeclarationStatement::new(
-            VariableDeclaration::new(
+            RcCell::new(VariableDeclaration::new(
                 vec![],
                 RcCell::new(t),
                 Some(RcCell::new(Identifier::Identifier(self.clone()))),
                 Some(storage_loc),
-            ),
+            )),
             expr,
         )
         .to_statement()
@@ -1781,16 +1788,12 @@ impl CommentBase {
     pub fn ast_base_ref(&self) -> RcCell<ASTBase> {
         self.ast_base.clone()
     }
-    pub fn comment_list(text: String, block: Vec<AST>) -> Vec<AST> {
+    pub fn comment_list(text: String, mut block: Vec<AST>) -> Vec<AST> {
         if !block.is_empty() {
-            block
-        } else {
-            [AST::Comment(Comment::Comment(CommentBase::new(text)))]
-                .into_iter()
-                .chain(block)
-                .chain([AST::Comment(Comment::BlankLine(BlankLine::new()))])
-                .collect()
+            block.insert(0, CommentBase::new(text).into_ast());
+            block.push(BlankLine::new().into_ast());
         }
+        block
     }
 
     pub fn comment_wrap_block(text: String, block: Vec<AST>) -> Vec<AST> {
@@ -1876,19 +1879,22 @@ impl Expression {
         let bool_type = RcCell::new(TypeName::bool_type());
         if expected == &bool_type && !self.instanceof_data_type(&bool_type) {
             ret = Some(FunctionCallExprBase::new(
-                Expression::BuiltinFunction(BuiltinFunction::new("!=")),
-                vec![
+                RcCell::new(Expression::BuiltinFunction(BuiltinFunction::new("!="))),
+                [
                     self.clone(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(0, false),
                     )),
-                ],
+                ]
+                .into_iter()
+                .map(RcCell::new)
+                .collect(),
                 None,
             ));
         } else if expected.borrow().is_numeric() && self.instanceof_data_type(&bool_type) {
             ret = Some(FunctionCallExprBase::new(
-                Expression::BuiltinFunction(BuiltinFunction::new("ite")),
-                vec![
+                RcCell::new(Expression::BuiltinFunction(BuiltinFunction::new("ite"))),
+                [
                     self.clone(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(1, false),
@@ -1896,7 +1902,10 @@ impl Expression {
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(
                         NumberLiteralExpr::new(0, false),
                     )),
-                ],
+                ]
+                .into_iter()
+                .map(RcCell::new)
+                .collect(),
                 None,
             ));
         } else {
@@ -2014,16 +2023,16 @@ impl Expression {
     }
     pub fn unop(&self, op: String) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
-            Expression::BuiltinFunction(BuiltinFunction::new(&op)),
-            vec![self.clone()],
+            RcCell::new(Expression::BuiltinFunction(BuiltinFunction::new(&op))),
+            vec![RcCell::new(self.clone())],
             None,
         ))
     }
 
     pub fn binop(&self, op: String, rhs: Expression) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
-            Expression::BuiltinFunction(BuiltinFunction::new(&op)),
-            vec![self.clone(), rhs],
+            RcCell::new(Expression::BuiltinFunction(BuiltinFunction::new(&op))),
+            [self.clone(), rhs].into_iter().map(RcCell::new).collect(),
             None,
         ))
     }
@@ -2037,8 +2046,11 @@ impl Expression {
             .borrow()
             .is_private();
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
-            Expression::BuiltinFunction(bf),
-            vec![self.clone(), e_true, e_false],
+            RcCell::new(Expression::BuiltinFunction(bf)),
+            [self.clone(), e_true, e_false]
+                .into_iter()
+                .map(RcCell::new)
+                .collect(),
             None,
         ))
     }
@@ -2758,11 +2770,15 @@ impl IntoAST for FunctionCallExprBase {
 }
 
 impl FunctionCallExprBase {
-    pub fn new(func: Expression, args: Vec<Expression>, sec_start_offset: Option<i32>) -> Self {
+    pub fn new(
+        func: RcCell<Expression>,
+        args: Vec<RcCell<Expression>>,
+        sec_start_offset: Option<i32>,
+    ) -> Self {
         Self {
             expression_base: ExpressionBase::new(),
-            func: RcCell::new(func),
-            args: args.into_iter().map(RcCell::new).collect(),
+            func,
+            args,
             sec_start_offset,
             public_key: None,
         }
@@ -2809,15 +2825,20 @@ impl IntoAST for NewExpr {
 }
 
 impl NewExpr {
-    pub fn new(annotated_type: AnnotatedTypeName, args: Vec<Expression>) -> Self {
+    pub fn new(annotated_type: AnnotatedTypeName, args: Vec<RcCell<Expression>>) -> Self {
         // assert not isinstance(annotated_type, ElementaryTypeName)
         Self {
             function_call_expr_base: FunctionCallExprBase::new(
-                IdentifierExpr::new(
-                    IdentifierExprUnion::String(format!("new {}", annotated_type.to_ast().code())),
-                    None,
-                )
-                .into_expr(),
+                RcCell::new(
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(format!(
+                            "new {}",
+                            annotated_type.to_ast().code()
+                        )),
+                        None,
+                    )
+                    .into_expr(),
+                ),
                 args,
                 None,
             ),
@@ -3193,10 +3214,10 @@ impl IntoAST for ArrayLiteralExprBase {
 }
 
 impl ArrayLiteralExprBase {
-    pub fn new(values: Vec<Expression>) -> Self {
+    pub fn new(values: Vec<RcCell<Expression>>) -> Self {
         Self {
             literal_expr_base: LiteralExprBase::new(),
-            values: values.into_iter().map(RcCell::new).collect(),
+            values,
         }
     }
     pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
@@ -3250,7 +3271,7 @@ impl IntoAST for KeyLiteralExpr {
 }
 
 impl KeyLiteralExpr {
-    pub fn new(values: Vec<Expression>, crypto_params: CryptoParams) -> Self {
+    pub fn new(values: Vec<RcCell<Expression>>, crypto_params: CryptoParams) -> Self {
         Self {
             array_literal_expr_base: ArrayLiteralExprBase::new(values),
             crypto_params,
@@ -3486,19 +3507,27 @@ pub enum LocationExpr {
 }
 
 impl LocationExpr {
-    pub fn call(&self, member: IdentifierExprUnion, args: Vec<Expression>) -> FunctionCallExpr {
+    pub fn call(
+        &self,
+        member: IdentifierExprUnion,
+        args: Vec<RcCell<Expression>>,
+    ) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
-                MemberAccessExpr::new(Some(RcCell::new(self.clone())), member).into_expr(),
+                RcCell::new(
+                    MemberAccessExpr::new(Some(RcCell::new(self.clone())), member).into_expr(),
+                ),
                 args,
                 None,
             ),
             IdentifierExprUnion::String(member) => FunctionCallExprBase::new(
-                MemberAccessExpr::new(
-                    Some(RcCell::new(self.clone())),
-                    RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
-                )
-                .into_expr(),
+                RcCell::new(
+                    MemberAccessExpr::new(
+                        Some(RcCell::new(self.clone())),
+                        RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
+                    )
+                    .into_expr(),
+                ),
                 args,
                 None,
             ),
@@ -4128,7 +4157,7 @@ pub struct HybridArgumentIdf {
     pub identifier_base: IdentifierBase,
     pub t: RcCell<TypeName>,
     pub arg_type: HybridArgType,
-    pub corresponding_priv_expression: Option<Expression>,
+    pub corresponding_priv_expression: Option<RcCell<Expression>>,
     pub serialized_loc: SliceExpr,
 }
 impl IntoAST for HybridArgumentIdf {
@@ -4142,7 +4171,7 @@ impl HybridArgumentIdf {
         name: String,
         mut t: RcCell<TypeName>,
         arg_type: HybridArgType,
-        corresponding_priv_expression: Option<Expression>,
+        corresponding_priv_expression: Option<RcCell<Expression>>,
     ) -> Self {
         if is_instance(&t, ASTType::BooleanLiteralType) {
             t = RcCell::new(TypeName::bool_type());
@@ -4185,7 +4214,7 @@ impl HybridArgumentIdf {
         }
     }
 
-    pub fn get_loc_expr(&self, parent: Option<ASTFlatten>) -> ASTFlatten {
+    pub fn get_loc_expr(&self, parent: Option<&ASTFlatten>) -> ASTFlatten {
         if self.arg_type == HybridArgType::TmpCircuitVal
             && self.corresponding_priv_expression.is_some()
             && is_instance(
@@ -4193,6 +4222,7 @@ impl HybridArgumentIdf {
                     .corresponding_priv_expression
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -4208,6 +4238,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -4229,6 +4260,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -4243,6 +4275,7 @@ impl HybridArgumentIdf {
                 self.corresponding_priv_expression
                     .as_ref()
                     .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -4271,14 +4304,15 @@ impl HybridArgumentIdf {
                 Identifier::HybridArgumentIdf(self.clone()),
             )))
             .as_type(&self.t.clone().into());
-            ma.ast_base_ref().unwrap().borrow_mut().parent = parent.clone().map(|p| p.downgrade());
+            ma.ast_base_ref().unwrap().borrow_mut().parent =
+                parent.clone().map(|p| p.clone().downgrade());
             ma.try_as_identifier_expr_ref()
                 .unwrap()
                 .borrow_mut()
                 .expression_base_mut_ref()
                 .statement = parent
                 .as_ref()
-                .map(|p| {
+                .map(|&p| {
                     if is_instance(p, ASTType::ExpressionBase) {
                         p.try_as_expression_ref()
                             .unwrap()
@@ -4293,7 +4327,7 @@ impl HybridArgumentIdf {
             ma
         }
     }
-    pub fn get_idf_expr(&self, parent: &Option<ASTFlattenWeak>) -> ASTFlatten {
+    pub fn get_idf_expr(&self, parent: Option<&ASTFlatten>) -> ASTFlatten {
         let mut ie = IdentifierExpr::new(
             IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(
                 self.clone(),
@@ -4311,7 +4345,7 @@ impl HybridArgumentIdf {
             .borrow_mut()
             .ast_base_ref()
             .borrow_mut()
-            .parent = parent.clone();
+            .parent = parent.clone().map(|p| p.clone().downgrade());
 
         ie.try_as_identifier_expr_ref()
             .unwrap()
@@ -4319,16 +4353,15 @@ impl HybridArgumentIdf {
             .expression_base_mut_ref()
             .statement = parent
             .as_ref()
-            .map(|p| {
-                let p = p.clone().upgrade().unwrap();
-                if is_instance(&p, ASTType::ExpressionBase) {
+            .map(|&p| {
+                if is_instance(p, ASTType::ExpressionBase) {
                     p.try_as_expression_ref()
                         .unwrap()
                         .borrow()
                         .statement()
                         .clone()
                 } else {
-                    Some(p.downgrade())
+                    Some(p.clone().downgrade())
                 }
             })
             .flatten();
@@ -5146,10 +5179,10 @@ impl IntoAST for ExpressionStatement {
 }
 
 impl ExpressionStatement {
-    pub fn new(expr: Expression) -> Self {
+    pub fn new(expr: RcCell<Expression>) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
-            expr: RcCell::new(expr),
+            expr,
         }
     }
 }
@@ -7537,11 +7570,14 @@ impl IntoAST for VariableDeclarationStatement {
 }
 
 impl VariableDeclarationStatement {
-    pub fn new(variable_declaration: VariableDeclaration, expr: Option<Expression>) -> Self {
+    pub fn new(
+        variable_declaration: RcCell<VariableDeclaration>,
+        expr: Option<RcCell<Expression>>,
+    ) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
-            variable_declaration: RcCell::new(variable_declaration),
-            expr: expr.map(RcCell::new),
+            variable_declaration,
+            expr,
         }
     }
 }
@@ -7856,18 +7892,20 @@ impl ConstructorOrFunctionDefinition {
         ));
         // AnnotatedTypeName(FunctionTypeName(&self.parameters, self.modifiers, self.return_parameters));
     }
-    pub fn add_param(&mut self, t: AST, idf: IdentifierExprUnion, ref_storage_loc: Option<String>) {
+    pub fn add_param(
+        &mut self,
+        mut t: ASTFlatten,
+        idf: IdentifierExprUnion,
+        ref_storage_loc: Option<String>,
+    ) {
         let ref_storage_loc = ref_storage_loc.unwrap_or(String::from("memory"));
-        let t = if let AST::AnnotatedTypeName(t) = t {
-            Some(t)
-        } else if let AST::TypeName(t) = t {
-            Some(AnnotatedTypeName::new(
-                Some(RcCell::new(t)),
+        if is_instance(&t, ASTType::TypeNameBase) {
+            t = RcCell::new(AnnotatedTypeName::new(
+                t.try_as_type_name(),
                 None,
                 Homomorphism::non_homomorphic(),
             ))
-        } else {
-            None
+            .into();
         };
         let idf = if let IdentifierExprUnion::String(idf) = idf {
             Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
@@ -7879,8 +7917,9 @@ impl ConstructorOrFunctionDefinition {
             None
         };
         let storage_loc = if t
-            .as_ref()
+            .try_as_annotated_type_name_ref()
             .unwrap()
+            .borrow()
             .type_name
             .as_ref()
             .unwrap()
@@ -7893,7 +7932,7 @@ impl ConstructorOrFunctionDefinition {
         };
         self.parameters.push(RcCell::new(Parameter::new(
             vec![],
-            RcCell::new(t.unwrap()),
+            t.try_as_annotated_type_name().unwrap(),
             Some(idf.as_ref().unwrap().clone()),
             storage_loc,
         )));
@@ -7956,7 +7995,7 @@ impl StateVariableDeclaration {
         annotated_type: RcCell<AnnotatedTypeName>,
         keywords: Vec<String>,
         idf: Option<RcCell<Identifier>>,
-        expr: Option<Expression>,
+        expr: Option<RcCell<Expression>>,
     ) -> Self {
         Self {
             identifier_declaration_base: IdentifierDeclarationBase::new(
@@ -7965,7 +8004,7 @@ impl StateVariableDeclaration {
                 idf,
                 None,
             ),
-            expr: expr.map(RcCell::new),
+            expr,
         }
     }
 }
@@ -8440,8 +8479,7 @@ impl InstanceTarget {
 
     pub fn in_scope_at(&self, ast: &ASTFlatten) -> bool {
         crate::pointers::symbol_table::SymbolTableLinker::in_scope_at(
-            &*self
-                .target()
+            self.target()
                 .unwrap()
                 .try_as_identifier_declaration_ref()
                 .unwrap()
@@ -8449,8 +8487,7 @@ impl InstanceTarget {
                 .idf()
                 .upgrade()
                 .as_ref()
-                .unwrap()
-                .borrow(),
+                .unwrap(),
             ast,
         )
     }

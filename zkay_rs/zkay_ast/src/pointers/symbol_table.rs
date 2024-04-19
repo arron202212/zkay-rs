@@ -862,7 +862,7 @@ impl SymbolTableLinker {
         None
     }
 
-    pub fn in_scope_at(target_idf: &Identifier, mut ast: &ASTFlatten) -> bool {
+    pub fn in_scope_at(target_idf: &RcCell<Identifier>, mut ast: &ASTFlatten) -> bool {
         let mut ancestor = ast.ast_base_ref().unwrap().borrow().parent().clone();
         while let Some(_ancestor) = ancestor {
             if let Some(name) = _ancestor
@@ -873,10 +873,10 @@ impl SymbolTableLinker {
                 .unwrap()
                 .borrow()
                 .names()
-                .get(&target_idf.name())
+                .get(&target_idf.borrow().name())
             // found name
             {
-                if *name.upgrade().as_ref().unwrap().borrow() == *target_idf {
+                if name.upgrade().as_ref().unwrap() == target_idf {
                     return true;
                 }
             }

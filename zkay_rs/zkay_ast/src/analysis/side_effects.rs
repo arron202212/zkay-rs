@@ -205,7 +205,7 @@ impl DirectModificationDetector {
         }
     }
     pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
-        let ast2: LocationExpr = ast.try_as_location_expr_ref().unwrap().borrow().clone();
+        let _ast2: LocationExpr = ast.try_as_location_expr_ref().unwrap().borrow().clone();
         self.visitAST(ast);
         let ast1 = ast
             .try_as_location_expr_ref()

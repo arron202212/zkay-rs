@@ -63,7 +63,7 @@ impl AstVisitor for UsedHomomorphismsVisitor {
         return all_homs;
     }
     fn visit(&self, ast: &ASTFlatten) -> Self::Return {
-        let all_homs = AstVisitor::visit(self, ast); //TODO super()
+        let all_homs = BTreeSet::new(); //AstVisitor::visit(self, ast); //TODO super()
         if is_instance(ast, ASTType::ConstructorOrFunctionDefinition) {
             if ast
                 .try_as_constructor_or_function_definition_ref()

@@ -31,7 +31,7 @@ impl AstVisitor for ContainsPrivateVisitor {
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {}
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}
 }
 impl ContainsPrivateVisitor {
     // pub fn __init__(self)

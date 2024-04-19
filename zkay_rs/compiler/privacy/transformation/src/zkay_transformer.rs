@@ -36,8 +36,12 @@ use zkay_ast::ast::{
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
-use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
+use zkay_ast::visitor::transformer_visitor::{
+    AstTransformerVisitor, AstTransformerVisitorBase, AstTransformerVisitorBaseRef,
+    TransformerVisitorEx,
+};
 use zkay_config::config::CFG;
+use zkay_derive::AstTransformerVisitorBaseRefImpl;
 
 // class ZkayVarDeclTransformer(AstTransformerVisitor)
 // """
@@ -50,17 +54,18 @@ use zkay_config::config::CFG;
 // pub fn __init__(self)
 //     super().__init__()
 //     self.expr_trafo = ZkayExpressionTransformer(None)
-#[derive(Clone)]
+#[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayVarDeclTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     expr_trafo: Option<ZkayExpressionTransformer>,
 }
+
 impl AstTransformerVisitor for ZkayVarDeclTransformer {
     fn default() -> Self {
         Self::new()
     }
-    type Return = Option<ASTFlatten>;
-    fn temper_result(&self) -> Self::Return {}
+    // type Return = Option<ASTFlatten>;
+    // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
     fn has_attr(&self, name: &ASTType) -> bool {
         matches!(
@@ -72,7 +77,7 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
                 | ASTType::Mapping
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
             ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
             ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
@@ -91,10 +96,7 @@ impl ZkayVarDeclTransformer {
         }
     }
 
-    pub fn visitAnnotatedTypeName(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitAnnotatedTypeName(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let t = if ast
             .try_as_annotated_type_name_ref()
             .unwrap()
@@ -127,10 +129,7 @@ impl ZkayVarDeclTransformer {
         .into()
     }
 
-    pub fn visitVariableDeclaration(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitVariableDeclaration(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_variable_declaration_ref()
             .unwrap()
@@ -148,7 +147,7 @@ impl ZkayVarDeclTransformer {
         self.visit_children(ast)
     }
 
-    pub fn visitParameter(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitParameter(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let ast = self.visit_children(ast);
         if is_instance(&ast, ASTType::Parameter) {
             if !ast
@@ -174,10 +173,7 @@ impl ZkayVarDeclTransformer {
         }
     }
 
-    pub fn visitStateVariableDeclaration(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         ast.try_as_state_variable_declaration_ref()
             .unwrap()
             .borrow_mut()
@@ -212,7 +208,7 @@ impl ZkayVarDeclTransformer {
         self.visit_children(ast)
     }
 
-    pub fn visitMapping(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitMapping(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_mapping_ref()
             .unwrap()
@@ -238,7 +234,7 @@ impl ZkayVarDeclTransformer {
 }
 // class ZkayStatementTransformer(AstTransformerVisitor)
 // """Corresponds to T from paper, (with additional handling of return statement and loops)."""
-#[derive(Clone)]
+#[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayStatementTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     gen: Option<RcCell<CircuitHelper>>,
@@ -250,10 +246,10 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
         Self::new(None)
     }
 
-    type Return = Option<ASTFlatten>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    // type Return = Option<ASTFlatten>;
+    // fn temper_result(&self) -> Option<ASTFlatten> {
+    //     None
+    // }
 
     fn has_attr(&self, name: &ASTType) -> bool {
         matches!(
@@ -271,7 +267,7 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
                 | ASTType::Expression
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
             ASTType::StatementList => self.visitStatementList(ast),
             ASTType::Statement => self.visitStatement(ast),
@@ -313,7 +309,7 @@ impl ZkayStatementTransformer {
     // If transformation changes the appearance of a statement (apart from type changes),
     // the statement is wrapped in a comment block which displays the original statement"s code.
     // """
-    pub fn visitStatementList(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitStatementList(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut new_statements = vec![];
         for (_idx, stmt) in ast
             .try_as_statement_list_ref()
@@ -371,10 +367,7 @@ impl ZkayStatementTransformer {
         Some(ast.clone())
     }
     // """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
-    pub fn process_statement_child(
-        &self,
-        child: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn process_statement_child(&self, child: &ASTFlatten) -> Option<ASTFlatten> {
         if is_instance(child, ASTType::ExpressionBase) {
             self.expr_trafo.visit(child)
         } else {
@@ -387,7 +380,7 @@ impl ZkayStatementTransformer {
 
     // This is for all the statements where the statements themselves remain untouched and only the children are altered.
     // """
-    pub fn visitStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         assert!(
             is_instance(ast, ASTType::SimpleStatementBase)
                 || is_instance(ast, ASTType::VariableDeclarationStatement)
@@ -402,10 +395,7 @@ impl ZkayStatementTransformer {
         Some(ast.clone())
     }
     // """Rule (2)"""
-    pub fn visitAssignmentStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let a = self.expr_trafo.visit(
             &ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -657,7 +647,7 @@ impl ZkayStatementTransformer {
     // The if statement will be replaced by an assignment statement where the lhs is a tuple of all locations which are written
     // in either branch and rhs is a tuple of the corresponding circuit outputs.
     // """
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_if_statement_ref()
             .unwrap()
@@ -867,7 +857,7 @@ impl ZkayStatementTransformer {
                 .evaluate_stmt_in_circuit(ast)
         }
     }
-    pub fn visitWhileStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return
+    pub fn visitWhileStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten>
 //Loops must always be purely public
     {
         assert!(!contains_private_expr(
@@ -889,10 +879,7 @@ impl ZkayStatementTransformer {
         Some(ast.clone())
     }
     //Loops must always be purely public
-    pub fn visitDoWhileStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitDoWhileStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         assert!(!contains_private_expr(
             &ast.try_as_do_while_statement_ref()
                 .unwrap()
@@ -912,7 +899,7 @@ impl ZkayStatementTransformer {
         Some(ast.clone())
     }
 
-    pub fn visitForStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitForStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_for_statement_ref()
             .unwrap()
@@ -969,7 +956,12 @@ impl ZkayStatementTransformer {
                 .update
                 .is_some()
                 || !contains_private_expr(
-                    &ast.try_as_for_statement_ref().unwrap().borrow().update..clone().into()
+                    &ast.try_as_for_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .update
+                        .clone()
+                        .into()
                 )
         );
         assert!(!contains_private_expr(
@@ -983,14 +975,11 @@ impl ZkayStatementTransformer {
         Some(ast.clone())
     }
 
-    pub fn visitContinueStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitContinueStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
 
-    pub fn visitBreakStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitBreakStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
     // """
@@ -1000,10 +989,7 @@ impl ZkayStatementTransformer {
     // (which will be returned at the very end of the function body, after any verification wrapper code).
     // Otherwise only the expression is transformed.
     // """
-    pub fn visitReturnStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitReturnStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_return_statement_ref()
             .unwrap()
@@ -1084,7 +1070,7 @@ impl ZkayStatementTransformer {
         }
     }
     // """Fail if there are any untransformed expressions left."""
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         assert!(false, "Missed an expression of type {:?}", ast);
         Some(ast.clone())
     }
@@ -1097,7 +1083,7 @@ impl ZkayStatementTransformer {
 // In addition to the features described in the paper, this transformer also supports primitive type casting,
 // tuples (multiple return values), operations with short-circuiting and function calls.
 // """
-#[derive(Clone)]
+#[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayExpressionTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     gen: Option<RcCell<CircuitHelper>>,
@@ -1108,10 +1094,10 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
         Self::new(None)
     }
 
-    type Return = Option<ASTFlatten>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    // type Return = Option<ASTFlatten>;
+    // fn temper_result(&self) -> Option<ASTFlatten> {
+    //     None
+    // }
 
     fn has_attr(&self, name: &ASTType) -> bool {
         matches!(
@@ -1129,7 +1115,7 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
                 | ASTType::Expression
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
             ASTType::MeExpr => self.visitMeExpr(ast),
             ASTType::LiteralExpr => self.visitLiteralExpr(ast),
@@ -1160,7 +1146,7 @@ impl ZkayExpressionTransformer {
 
     // @staticmethod
     // """Replace me with msg.sender."""
-    pub fn visitMeExpr(ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitMeExpr(ast: &ASTFlatten) -> Option<ASTFlatten> {
         replace_expr(
             ast,
             &RcCell::new(LocationExpr::IdentifierExpr(IdentifierExpr::new(
@@ -1179,20 +1165,17 @@ impl ZkayExpressionTransformer {
     }
     // """Rule (7), don"t modify constants."""
 
-    pub fn visitLiteralExpr(&self, _ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitLiteralExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
     // """Rule (8), don"t modify identifiers."""
 
-    pub fn visitIdentifierExpr(
-        &self,
-        _ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
     // """Rule (9), transform location and index expressions separately."""
 
-    pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         replace_expr(
             ast,
             &self
@@ -1228,14 +1211,11 @@ impl ZkayExpressionTransformer {
         )
     }
 
-    pub fn visitMemberAccessExpr(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitMemberAccessExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.visit_children(ast)
     }
 
-    pub fn visitTupleExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitTupleExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.visit_children(ast)
     }
     // """
@@ -1243,7 +1223,7 @@ impl ZkayExpressionTransformer {
 
     // The reclassified expression is evaluated in the circuit and its result is made available in solidity.
     // """
-    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut expr = ast
             .try_as_reclassify_expr_ref()
             .unwrap()
@@ -1275,17 +1255,11 @@ impl ZkayExpressionTransformer {
             )
     }
 
-    pub fn visitBuiltinFunction(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitBuiltinFunction(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
 
-    pub fn visitFunctionCallExpr(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if is_instance(
             &ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -1564,7 +1538,7 @@ impl ZkayExpressionTransformer {
                 // } else {
                 //     None
                 // };
-                self.gen.as_ref().unwrap().borrow_mut().call_function(&ast);
+                self.gen.as_ref().unwrap().borrow_mut().call_function(ast);
             } else if ast
                 .try_as_function_call_expr_ref()
                 .unwrap()
@@ -1583,8 +1557,9 @@ impl ZkayExpressionTransformer {
                 .unwrap()
                 .has_side_effects()
                 && self.gen.is_some()
-            //Invalidate modified state variables for the current circuit
             {
+                //Invalidate modified state variables for the current circuit
+
                 for val in &ast
                     .try_as_function_call_expr_ref()
                     .unwrap()
@@ -1624,7 +1599,7 @@ impl ZkayExpressionTransformer {
         guard_var: HybridArgumentIdf,
         if_true: bool,
         expr: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    ) -> Option<ASTFlatten> {
         let prelen = expr
             .try_as_expression_ref()
             .unwrap()
@@ -1705,10 +1680,7 @@ impl ZkayExpressionTransformer {
         ret
     }
     // """Casts are handled either in public or inside the circuit depending on the privacy of the casted expression."""
-    pub fn visitPrimitiveCastExpr(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_primitive_cast_expr_ref()
             .unwrap()
@@ -1750,7 +1722,7 @@ impl ZkayExpressionTransformer {
         }
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         // raise NotImplementedError()
         unimplemented!();
         Some(ast.clone())
@@ -1764,7 +1736,7 @@ impl ZkayExpressionTransformer {
 // Private expressions can never have side effects.
 // Private statements may contain assignment statements with lhs@me (no other types of side effects are allowed).
 // """
-#[derive(Clone)]
+#[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayCircuitTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     gen: Option<RcCell<CircuitHelper>>,
@@ -1776,8 +1748,8 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         Self::new(None)
     }
 
-    type Return = Option<ASTFlatten>;
-    fn temper_result(&self) -> Self::Return {}
+    // type Return = Option<ASTFlatten>;
+    // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
     fn has_attr(&self, name: &ASTType) -> bool {
         matches!(
@@ -1796,7 +1768,7 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
                 | ASTType::Statement
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
             ASTType::LiteralExpr => self.visitLiteralExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
@@ -1824,15 +1796,15 @@ impl ZkayCircuitTransformer {
         }
     }
     // """Rule (13), don"t modify constants."""
-    pub fn visitLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitLiteralExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         Some(ast.clone())
     }
 
-    pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.transform_location(ast)
     }
 
-    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut ast = ast.clone();
         if !is_instance(
             ast.try_as_identifier_expr_ref()
@@ -1879,17 +1851,17 @@ impl ZkayCircuitTransformer {
         }
     }
     // """Rule (14), move location into the circuit."""
-    pub fn transform_location(&self, loc: LocationExpr) -> <Self as AstTransformerVisitor>::Return {
+    pub fn transform_location(&self, loc: LocationExpr) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
             .borrow_mut()
             .add_to_circuit_inputs(&mut loc.to_expr())
-            .get_idf_expr(&None)
+            .get_idf_expr(None)
     }
     // """Rule (15), boundary crossing if analysis determined that it is """
 
-    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if ast
             .try_as_reclassify_expr_ref()
             .unwrap()
@@ -1967,20 +1939,17 @@ impl ZkayCircuitTransformer {
                         .reclassify_expr_base_mut_ref()
                         .expr,
                 )
-                .get_idf_expr(&None)
+                .get_idf_expr(None)
                 .clone()
                 .into()
         }
     }
     // """Rule (16), other expressions don"t need special treatment."""
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.visit_children(ast)
     }
 
-    pub fn visitFunctionCallExpr(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let t = ast
             .try_as_function_call_expr_ref()
             .unwrap()
@@ -2190,10 +2159,7 @@ impl ZkayCircuitTransformer {
             .inline_function_call_into_circuit(ast);
     }
 
-    pub fn visitReturnStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitReturnStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
@@ -2201,10 +2167,7 @@ impl ZkayCircuitTransformer {
             .add_return_stmt_to_circuit(ast)
     }
 
-    pub fn visitAssignmentStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
@@ -2212,10 +2175,7 @@ impl ZkayCircuitTransformer {
             .add_assignment_to_circuit(ast)
     }
 
-    pub fn visitVariableDeclarationStatement(
-        &self,
-        ast: &ASTFlatten,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitVariableDeclarationStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
@@ -2223,7 +2183,7 @@ impl ZkayCircuitTransformer {
             .add_var_decl_to_circuit(ast)
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
@@ -2236,7 +2196,7 @@ impl ZkayCircuitTransformer {
         ast: &ASTFlatten,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) -> <Self as AstTransformerVisitor>::Return {
+    ) -> Option<ASTFlatten> {
         self.gen
             .as_ref()
             .unwrap()
@@ -2245,7 +2205,7 @@ impl ZkayCircuitTransformer {
     }
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
-    pub fn visitStatement(&self, ast: &ASTFlatten) -> <Self as AstTransformerVisitor>::Return {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         unimplemented!("Unsupported statement");
         Some(ast.clone())
     }
