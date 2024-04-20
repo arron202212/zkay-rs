@@ -60,7 +60,7 @@ impl ContainsPrivVisitor {
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
         ) && !ast
             .try_as_function_call_expr_ref()
@@ -73,9 +73,9 @@ impl ContainsPrivVisitor {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()

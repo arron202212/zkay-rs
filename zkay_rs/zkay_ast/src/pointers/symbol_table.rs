@@ -262,18 +262,18 @@ impl SymbolTableFiller {
                     None
                 } else {
                     Some((
-                        d.borrow()
-                            .try_as_identifier_declaration_ref()
+                        d.try_as_identifier_declaration_ref()
                             .unwrap()
+                            .borrow()
                             .idf()
                             .upgrade()
                             .unwrap()
                             .borrow()
                             .name()
                             .clone(),
-                        d.borrow()
-                            .try_as_identifier_declaration_ref()
+                        d.try_as_identifier_declaration_ref()
                             .unwrap()
+                            .borrow()
                             .idf()
                             .clone(),
                     ))
@@ -424,8 +424,8 @@ impl SymbolTableFiller {
             .members
             .iter()
             .filter_map(|d| {
-                if let Some(id) = d.borrow().try_as_identifier_declaration_ref() {
-                    let idf = id.idf();
+                if let Some(id) = d.try_as_identifier_declaration_ref() {
+                    let idf = id.borrow().idf().clone();
                     Some((idf.upgrade().unwrap().borrow().name().clone(), idf.clone()))
                 } else {
                     None

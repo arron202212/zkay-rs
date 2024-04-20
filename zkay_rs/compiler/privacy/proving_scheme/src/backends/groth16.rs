@@ -6,7 +6,7 @@
 // """
 
 // from typing import List
-
+use rccell::RcCell;
 use zkay_config::config::CFG;
 
 use crate::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK};
@@ -54,7 +54,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
 
     fn generate_verification_contract(
         verification_key: <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX,
-        circuit: &CircuitHelper,
+        circuit: &RcCell<CircuitHelper>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {
@@ -62,7 +62,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
         let should_hash = CFG
             .lock()
             .unwrap()
-            .should_use_hash(circuit.trans_in_size + circuit.trans_out_size);
+            .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size);
 
         let query_length = vk.gamma_abc.len();
         assert!(query_length == primary_inputs.len() + 1);
@@ -87,7 +87,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
 
         import {{ Pairing, G1Point as G1, G2Point as G2 }} from "{verify_libs_contract_filename}";
 
-        contract {get_verification_contract_name} {{"#,zkay_solc_version_compatibility=CFG.lock().unwrap().zkay_solc_version_compatibility(),verify_libs_contract_filename= <Self as ProvingScheme>::verify_libs_contract_filename(),get_verification_contract_name=circuit.get_verification_contract_name())).truediv(format!(r#"
+        contract {get_verification_contract_name} {{"#,zkay_solc_version_compatibility=CFG.lock().unwrap().zkay_solc_version_compatibility(),verify_libs_contract_filename= <Self as ProvingScheme>::verify_libs_contract_filename(),get_verification_contract_name=circuit.borrow().get_verification_contract_name())).truediv(format!(r#"
             using Pairing for G1;
             using Pairing for G2;
 
@@ -122,7 +122,7 @@ vk.gamma_abc.iter().enumerate().map(|(idx, g )|format!("vk.gamma_abc[{idx}] = G1
                 require({zk_in_name}.length == {in_size_trans});
 
                 // Check if output size correct
-                require({zk_out_name}.length == {out_size_trans});"#, zk_in_name=CFG.lock().unwrap().zk_in_name(),in_size_trans=circuit.in_size_trans(),zk_out_name=CFG.lock().unwrap().zk_out_name(),out_size_trans=circuit.out_size_trans())).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
+                require({zk_out_name}.length == {out_size_trans});"#, zk_in_name=CFG.lock().unwrap().zk_in_name(),in_size_trans=circuit.borrow().in_size_trans(),zk_out_name=CFG.lock().unwrap().zk_out_name(),out_size_trans=circuit.borrow().out_size_trans())).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
                 \n// Check that inputs do not overflow\n{}\n",
 potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self as ProvingScheme>::snark_scalar_field_var_name())).collect::<Vec<_>>().concat())}).mul(r#"
                 // Create proof and vk data structures

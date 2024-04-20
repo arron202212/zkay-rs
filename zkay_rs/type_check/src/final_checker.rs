@@ -25,7 +25,7 @@ pub fn check_final(ast: &ASTFlatten) {
 #[derive(ASTVisitorBaseRefImpl)]
 struct FinalVisitor {
     pub ast_visitor_base: AstVisitorBase,
-    pub state_vars_assigned: RcCell<Option<BTreeMap<AST, bool>>>,
+    pub state_vars_assigned: RcCell<Option<BTreeMap<ASTFlatten, bool>>>,
 }
 impl AstVisitor for FinalVisitor {
     type Return = ();
@@ -70,14 +70,14 @@ impl FinalVisitor {
             .borrow()
             .state_variable_declarations
         {
-            if v.borrow()
-                .try_as_identifier_declaration_ref()
+            if v.try_as_identifier_declaration_ref()
                 .unwrap()
+                .borrow()
                 .identifier_declaration_base_ref()
                 .is_final()
-                && v.borrow()
-                    .try_as_identifier_declaration_ref()
+                && v.try_as_identifier_declaration_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_state_variable_declaration_ref()
                     .unwrap()
                     .expr
@@ -87,7 +87,7 @@ impl FinalVisitor {
                     .borrow_mut()
                     .as_mut()
                     .unwrap()
-                    .insert(v.borrow().clone(), false);
+                    .insert(v.clone(), false);
             }
         }
 
@@ -164,15 +164,7 @@ impl FinalVisitor {
                     .borrow_mut()
                     .as_mut()
                     .unwrap()
-                    .get_mut(
-                        &var.clone()
-                            .upgrade()
-                            .unwrap()
-                            .try_as_ast()
-                            .unwrap()
-                            .borrow()
-                            .clone(),
-                    )
+                    .get_mut(&var.clone().upgrade().unwrap())
                 {
                     assert!(!*v, "Tried to reassign final variable,{:?}", ast);
                     *v = true;
@@ -237,8 +229,7 @@ impl FinalVisitor {
             && self.state_vars_assigned.borrow().is_some()
         {
             if let Some(&v) = self.state_vars_assigned.borrow().as_ref().unwrap().get(
-                &(ast
-                    .try_as_identifier_expr_ref()
+                &ast.try_as_identifier_expr_ref()
                     .unwrap()
                     .borrow()
                     .location_expr_base
@@ -246,12 +237,7 @@ impl FinalVisitor {
                     .clone()
                     .unwrap()
                     .upgrade()
-                    .unwrap()
-                    .try_as_ast_ref()
-                    .unwrap()
-                    .borrow()
-                    .clone())
-                .into(),
+                    .unwrap(),
             ) {
                 assert!(
                     v,

@@ -118,15 +118,18 @@ impl ZkayVarDeclTransformer {
                     .borrow()
                     .type_name
                     .clone()
+                    .unwrap()
                     .into(),
             )
         };
-        RcCell::new(AnnotatedTypeName::new(
-            t,
-            None,
-            String::from("NON_HOMOMORPHISM"),
-        ))
-        .into()
+        Some(
+            RcCell::new(AnnotatedTypeName::new(
+                t,
+                None,
+                String::from("NON_HOMOMORPHISM"),
+            ))
+            .into(),
+        )
     }
 
     pub fn visitVariableDeclaration(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
@@ -136,6 +139,7 @@ impl ZkayVarDeclTransformer {
             .borrow()
             .identifier_declaration_base
             .annotated_type
+            .borrow()
             .is_private()
         {
             ast.try_as_variable_declaration_ref()
@@ -149,28 +153,31 @@ impl ZkayVarDeclTransformer {
 
     pub fn visitParameter(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let ast = self.visit_children(ast);
-        if is_instance(&ast, ASTType::Parameter) {
-            if !ast
+        if ast.is_none() || !is_instance(ast.as_ref().unwrap(), ASTType::Parameter) {
+            return None;
+        }
+        if !ast
+            .as_ref()
+            .unwrap()
+            .try_as_parameter_ref()
+            .unwrap()
+            .borrow()
+            .identifier_declaration_base
+            .annotated_type
+            .type_name
+            .as_ref()
+            .unwrap()
+            .is_primitive_type()
+        {
+            ast.as_ref()
+                .unwrap()
                 .try_as_parameter_ref()
                 .unwrap()
-                .borrow()
+                .borrow_mut()
                 .identifier_declaration_base
-                .annotated_type
-                .type_name
-                .as_ref()
-                .unwrap()
-                .is_primitive_type()
-            {
-                ast.try_as_parameter_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .identifier_declaration_base
-                    .storage_location = Some(String::from("memory"));
-            }
-            Some(ast)
-        } else {
-            None
+                .storage_location = Some(String::from("memory"));
         }
+        Some(ast)
     }
 
     pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
@@ -1312,8 +1319,6 @@ impl ZkayExpressionTransformer {
                             .clone()
                             .into()),
                     )
-                    .clone()
-                    .into()
             } else {
                 // """
                 // Rule (10) with additional short-circuit handling.
@@ -1439,8 +1444,6 @@ impl ZkayExpressionTransformer {
                         &privacy_label.unwrap().into(),
                         &ast.annotated_type().as_ref().unwrap().homomorphism,
                     )
-                    .clone()
-                    .into()
             } else {
                 self.visit_children(ast)
             }
@@ -1715,8 +1718,6 @@ impl ZkayExpressionTransformer {
                         .unwrap()
                         .homomorphism,
                 )
-                .clone()
-                .into()
         } else {
             self.visit_children(ast)
         }
@@ -1901,8 +1902,6 @@ impl ZkayCircuitTransformer {
                     &orig_privacy.unwrap().into(),
                     &orig_homomorphism,
                 )
-                .clone()
-                .into()
         } else if ast
             .try_as_reclassify_expr_ref()
             .unwrap()
@@ -1917,7 +1916,6 @@ impl ZkayCircuitTransformer {
                     .expr()
                     .into(),
             )
-            .unwrap()
         } else {
             assert!(ast
                 .try_as_reclassify_expr_ref()
@@ -1940,8 +1938,6 @@ impl ZkayCircuitTransformer {
                         .expr,
                 )
                 .get_idf_expr(None)
-                .clone()
-                .into()
         }
     }
     // """Rule (16), other expressions don"t need special treatment."""

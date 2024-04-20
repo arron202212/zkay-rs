@@ -1,22 +1,21 @@
 //::os
 // from typing::List
-
 use circuit_helper::circuit_helper::CircuitHelper;
 use lazy_static::lazy_static;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
+use rccell::RcCell;
+use std::{fs::File, io::Write, path::Path};
 use zkay_ast::ast::indent;
 use zkay_config::config::CFG;
-use zkay_utils::helpers::hash_file;
-use zkay_utils::run_command::{run_command, run_commands};
+use zkay_utils::{
+    helpers::hash_file,
+    run_command::{run_command, run_commands},
+};
 //path to jsnark interface jar
 const CIRCUIT_BUILDER_JAR: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
     pub static ref CIRCUIT_BUILDER_JAR_HASH: String =
         hex::encode(hash_file(CIRCUIT_BUILDER_JAR, 0));
 }
-pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // """
 // Compile the given circuit java code and then compile the circuit which it describes using jsnark.
 
@@ -24,7 +23,7 @@ pub fn compile_circuit(circuit_dir: &str, javacode: &str)
 // :param javacode: circuit code (java class which uses the custom jsnark wrapper API)
 // :raise SubprocessError: if compilation fails
 // """
-{
+pub fn compile_circuit(circuit_dir: &str, javacode: &str) {
     let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let jfile = Path::new(circuit_dir).join(class_name.clone() + ".java");
     let mut f = File::open(jfile.clone()).expect("");
@@ -37,15 +36,14 @@ pub fn compile_circuit(circuit_dir: &str, javacode: &str)
         vec!["compile"],
     );
 }
+//Compile the circuit java file
 
 pub fn compile_and_run_with_circuit_builder(
     working_dir: &str,
     class_name: &str,
     java_file_name: &str,
     args: Vec<&str>,
-) -> (Option<String>, Option<String>)
-//Compile the circuit java file
-{
+) -> (Option<String>, Option<String>) {
     run_command(
         vec![
             "javac",
@@ -73,12 +71,6 @@ pub fn compile_and_run_with_circuit_builder(
         true,
     );
 }
-
-pub fn prepare_proof(
-    circuit_dir: &str,
-    output_dir: &str,
-    serialized_args: Vec<i32>,
-) -> (Option<String>, Option<String>)
 // """
 // Generate a libsnark circuit input file by evaluating the circuit in jsnark using the provided input values.
 
@@ -87,7 +79,11 @@ pub fn prepare_proof(
 // :param serialized_args: public inputs, public outputs and private inputs in the order in which they are defined in the circuit
 // :raise SubprocessError: if circuit evaluation fails
 // """
-{
+pub fn prepare_proof(
+    circuit_dir: &str,
+    output_dir: &str,
+    serialized_args: Vec<i32>,
+) -> (Option<String>, Option<String>) {
     let serialized_arg_str: Vec<_> = serialized_args
         .iter()
         .map(|arg| format!("{:x}", arg))
@@ -114,23 +110,21 @@ pub fn prepare_proof(
 }
 
 // """Java circuit code template"""
+// """
+// Inject circuit and input code into jsnark-wrapper skeleton.
 
+// :param circuit: the abstract circuit to which this java code corresponds
+// :param fdefs: java code that calls addCryptoBackend for each used crypto backend
+// :param fdefs: java function definition with circuit code for each transitively called function (public calls in this circuit"s function)
+// :param circuit_statements: the java code corresponding to this circuit
+// :return: complete java file as string
+// """
 pub fn get_jsnark_circuit_class_str(
-    circuit: &CircuitHelper,
+    circuit: &RcCell<CircuitHelper>,
     crypto_init_stmts: Vec<String>,
     fdefs: Vec<String>,
     circuit_statements: Vec<String>,
-) -> String
-// """
-    // Inject circuit and input code into jsnark-wrapper skeleton.
-
-    // :param circuit: the abstract circuit to which this java code corresponds
-    // :param fdefs: java code that calls addCryptoBackend for each used crypto backend
-    // :param fdefs: java function definition with circuit code for each transitively called function (public calls in this circuit"s function)
-    // :param circuit_statements: the java code corresponding to this circuit
-    // :return: complete java file as string
-    // """
-{
+) -> String {
     let mut function_definitions = fdefs.join("\n\n");
     if function_definitions.is_empty() {
         function_definitions = format!("\n{function_definitions}\n");
@@ -163,15 +157,15 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
 }}
 "#,
         circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname(),
-        circuit_name = circuit.get_verification_contract_name(),
+        circuit_name = circuit.borrow().get_verification_contract_name(),
         crypto_init_stmts = indent(indent(crypto_init_stmts.join("\n"))),
-        pub_in_size = circuit.in_size_trans(),
-        pub_out_size = circuit.out_size_trans(),
-        priv_in_size = circuit.priv_in_size_trans(),
+        pub_in_size = circuit.borrow().in_size_trans(),
+        pub_out_size = circuit.borrow().out_size_trans(),
+        priv_in_size = circuit.borrow().priv_in_size_trans(),
         use_input_hashing = CFG
             .lock()
             .unwrap()
-            .should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
+            .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
             .to_string()
             .to_ascii_lowercase(),
         fdefs = indent(function_definitions),

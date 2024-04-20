@@ -480,6 +480,7 @@ impl JsnarkVisitor {
                     .unwrap()
                     .borrow()
                     .new_cond
+                    .as_ref()
                     .unwrap()
                     .identifier_base
                     .name,
@@ -703,7 +704,8 @@ impl JsnarkVisitor {
                 .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
-                .op;
+                .op
+                .clone();
             let op = if op == "sign-" { "-" } else { op };
             if op == "sign+" {
                 unimplemented!()
@@ -881,9 +883,9 @@ impl JsnarkVisitor {
     }
 }
 // """Generate java code which adds circuit IO as described by circuit"""
-pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String> {
+pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<String> {
     let mut input_init_stmts = vec![];
-    for sec_input in circuit.sec_idfs() {
+    for sec_input in circuit.borrow().sec_idfs() {
         input_init_stmts.push(format!(
             r#"addS("{}", {}, {});"#,
             sec_input.identifier_base.name,
@@ -892,7 +894,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String> {
         ));
     }
 
-    for pub_input in circuit.input_idfs() {
+    for pub_input in circuit.borrow().input_idfs() {
         input_init_stmts.push(if pub_input.t.borrow().is_key() {
             let backend = pub_input
                 .t
@@ -914,11 +916,11 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String> {
                 r#"addIn("{}", {}, {});"#,
                 pub_input.identifier_base.name,
                 pub_input.t.borrow().size_in_uints(),
-                _get_t(Some(pub_input.t.clone().unwrap().into()))
+                _get_t(Some(RcCell::new(pub_input.t.clone().unwrap()).into()))
             )
         });
     }
-    for pub_output in circuit.output_idfs() {
+    for pub_output in circuit.borrow().output_idfs() {
         input_init_stmts.push(format!(
             r#"addOut("{}", {}, {});"#,
             pub_output.identifier_base.name,
@@ -928,6 +930,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String> {
     }
 
     let sec_input_names: Vec<_> = circuit
+        .borrow()
         .sec_idfs()
         .iter()
         .map(|sec_input| sec_input.identifier_base.name.clone())
@@ -938,6 +941,7 @@ pub fn add_function_circuit_arguments(circuit: &CircuitHelper) -> Vec<String> {
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
+                .borrow()
                 .input_idfs()
                 .iter()
                 .map(|pub_input| pub_input.identifier_base.name.clone())
@@ -982,7 +986,7 @@ impl JsnarkGenerator {
         }
     }
     //Create output directory
-    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &CircuitHelper) -> bool {
+    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &RcCell<CircuitHelper>) -> bool {
         let p = self.circuit_generator_base._get_circuit_output_dir(circuit);
         let output_dir = Path::new(&p);
         if let Err(_) | Ok(false) = output_dir.try_exists() {
@@ -991,7 +995,14 @@ impl JsnarkGenerator {
 
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
-        for params in &circuit.fct.borrow().used_crypto_backends.clone().unwrap() {
+        for params in &circuit
+            .borrow()
+            .fct
+            .borrow()
+            .used_crypto_backends
+            .clone()
+            .unwrap()
+        {
             let init_stmt = format!(
                 r#"addCryptoBackend("{}", "{}", {});"#,
                 params.crypto_name,
@@ -1004,11 +1015,11 @@ impl JsnarkGenerator {
         //Generate java code for all functions which are transitively called by the fct corresponding to this circuit
         //(outside private expressions)
         let mut fdefs = vec![];
-        for fct in &circuit.transitively_called_functions {
+        for fct in &circuit.borrow().transitively_called_functions {
             let target_circuit = &self.circuit_generator_base.circuits[fct];
-            let body_stmts = JsnarkVisitor::new(target_circuit.phi()).visitCircuit();
+            let body_stmts = JsnarkVisitor::new(target_circuit.borrow().phi()).visitCircuit();
 
-            let body = [format!(r#"stepIn("{}");"#, fct.name())]
+            let body = [format!(r#"stepIn("{}");"#, fct.borrow().name())]
                 .into_iter()
                 .chain(add_function_circuit_arguments(target_circuit))
                 .chain([String::new()])
@@ -1019,14 +1030,14 @@ impl JsnarkGenerator {
             let fdef = format!(
                 r#"private void _{name}() {{\n {body} \n}}"#,
                 body = indent(body),
-                name = fct.name()
+                name = fct.borrow().name()
             );
             fdefs.push(format!(r#"{fdef}"#))
         }
 
         //Generate java code for the function corresponding to this circuit
         let input_init_stmts = add_function_circuit_arguments(circuit);
-        let constraints = JsnarkVisitor::new(circuit.phi()).visitCircuit();
+        let constraints = JsnarkVisitor::new(circuit.borrow().phi()).visitCircuit();
 
         //Inject the function definitions into the java template
         let code = jsnark::get_jsnark_circuit_class_str(
@@ -1060,7 +1071,7 @@ impl JsnarkGenerator {
         //Invoke jsnark compilation if either the jsnark-wrapper or the current circuit was modified (based on hash comparison)
         if oldhash != digest
             || output_dir
-                .join("circuit.arith")
+                .join("circuit.borrow().arith")
                 .try_exists()
                 .map_or(false, |v| v)
         {
@@ -1078,13 +1089,13 @@ impl JsnarkGenerator {
         } else {
             zk_print!(
                 r#"Circuit \"{}\" not modified, skipping compilation"#,
-                circuit.get_verification_contract_name()
+                circuit.borrow().get_verification_contract_name()
             );
             false
         }
     }
     //Invoke the custom libsnark interface to generate keys
-    pub fn _generate_keys(&self, circuit: &CircuitHelper) {
+    pub fn _generate_keys(&self, circuit: &RcCell<CircuitHelper>) {
         let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
         libsnark::generate_keys(
             &output_dir,
@@ -1101,7 +1112,10 @@ impl JsnarkGenerator {
             .collect()
     }
 
-    pub fn _parse_verification_key(&self, circuit: &CircuitHelper) -> Option<VerifyingKeyType> {
+    pub fn _parse_verification_key(
+        &self,
+        circuit: &RcCell<CircuitHelper>,
+    ) -> Option<VerifyingKeyType> {
         let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
         let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
@@ -1149,7 +1163,7 @@ impl JsnarkGenerator {
         None
     }
 
-    pub fn _get_prover_key_hash(&self, circuit: &CircuitHelper) -> Vec<u8> {
+    pub fn _get_prover_key_hash(&self, circuit: &RcCell<CircuitHelper>) -> Vec<u8> {
         hash_file(
             &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
             0,
@@ -1157,7 +1171,7 @@ impl JsnarkGenerator {
     }
 
     //Jsnark requires an additional public input with the value 1 as first input
-    pub fn _get_primary_inputs(&self, circuit: &CircuitHelper) -> Vec<String> {
+    pub fn _get_primary_inputs(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
         [String::from("1")]
             .into_iter()
             .chain(self.circuit_generator_base._get_primary_inputs(circuit))

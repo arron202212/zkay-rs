@@ -15,6 +15,7 @@ use circuit_helper::circuit_helper::CircuitHelper;
 use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use rayon::prelude::*;
+use rccell::RcCell;
 use std::path::{Path, PathBuf};
 use zkay_ast::ast::ConstructorOrFunctionDefinition;
 use zkay_ast::ast::IntoAST;
@@ -37,15 +38,14 @@ lazy_static! {
 }
 
 pub trait CircuitGenerator {}
-// class CircuitGeneratorBase(metaclass=ABCMeta)
-pub struct CircuitGeneratorBase
 //<T, VK>
 // where
 //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
 //     VK: VerifyingKeyMeta<Output = VK>,
-{
-    pub circuits: BTreeMap<ConstructorOrFunctionDefinition, CircuitHelper>,
-    pub circuits_to_prove: Vec<CircuitHelper>,
+// class CircuitGeneratorBase(metaclass=ABCMeta)
+pub struct CircuitGeneratorBase {
+    pub circuits: BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
+    pub circuits_to_prove: Vec<RcCell<CircuitHelper>>,
     pub proving_scheme: String,
     pub output_dir: String,
     pub parallel_keygen: bool,
@@ -56,7 +56,7 @@ pub struct CircuitGeneratorBase
 //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
 //     VK: VerifyingKeyMeta<Output = VK>,
 // """
-// A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.
+// A circuit generator takes an abstract circuit representation and turns it into a concrete zk-snark circuit.borrow().
 
 // It also handles prover/verification key generation and parsing, and generates the verification contracts using the supplied
 // proving scheme.
@@ -71,27 +71,25 @@ impl CircuitGeneratorBase {
     // :param parallel_keygen: if true, multiple python processes are used to generate keys in parallel
     // """
     pub fn new(
-        circuits: Vec<CircuitHelper>,
+        circuits: Vec<RcCell<CircuitHelper>>,
         proving_scheme: String,
         output_dir: String,
         parallel_keygen: bool,
     ) -> Self {
         let circuits_to_prove: Vec<_> = circuits
             .iter()
-            .filter_map(|c| {
-                if c.requires_verification() && c.fct.can_be_external() && c.fct.has_side_effects()
-                {
-                    Some(c.clone())
-                } else {
-                    None
-                }
+            .filter(|c| {
+                c.borrow().requires_verification()
+                    && c.borrow().fct.borrow().can_be_external()
+                    && c.borrow().fct.borrow().has_side_effects()
             })
+            .cloned()
             .collect();
         let p_count = (circuits_to_prove.len() as i32).min(num_cpus::get() as i32);
         Self {
             circuits: circuits
                 .into_iter()
-                .map(|circ| (circ.fct.clone(), circ.clone()))
+                .map(|circ| (circ.borrow().fct.clone(), circ.clone()))
                 .collect(),
             circuits_to_prove,
             proving_scheme,
@@ -113,8 +111,9 @@ impl CircuitGeneratorBase {
         let _c_count = self.circuits_to_prove.len();
         zk_print!("Compiling {} circuits...", c_count.lock().unwrap());
 
-        let gen_circs =
-            |circuit: &CircuitHelper| -> bool { self._generate_zkcircuit(import_keys, circuit) };
+        let gen_circs = |circuit: &RcCell<CircuitHelper>| -> bool {
+            self._generate_zkcircuit(import_keys, circuit)
+        };
         // with
         time_measure("circuit_compilation", true, false);
         let modified: Vec<_> = if CFG.lock().unwrap().is_unit_test() {
@@ -181,7 +180,7 @@ impl CircuitGeneratorBase {
                 let pk_hash = self._get_prover_key_hash(circuit);
                 let mut f = File::create(Path::new(
                     &PathBuf::from(&self.output_dir)
-                        .join(&circuit.verifier_contract_filename.clone().unwrap()),
+                        .join(&circuit.borrow().verifier_contract_filename.clone().unwrap()),
                 ))
                 .expect("");
                 let primary_inputs = self._get_primary_inputs(circuit);
@@ -248,7 +247,7 @@ impl CircuitGeneratorBase {
             .iter()
             .map(|circuit| {
                 Path::new(&self.output_dir)
-                    .join(&circuit.verifier_contract_filename.clone().unwrap())
+                    .join(&circuit.borrow().verifier_contract_filename.clone().unwrap())
                     .to_str()
                     .unwrap()
                     .to_string()
@@ -262,13 +261,14 @@ impl CircuitGeneratorBase {
         *c_count.lock().unwrap() = total_count;
     }
 
-    pub fn _generate_keys_par(&self, circuit: &CircuitHelper) {
+    pub fn _generate_keys_par(&self, circuit: &RcCell<CircuitHelper>) {
         self._generate_keys(circuit);
 
         *finish_counter.lock().unwrap() += 1;
         zk_print!(
             r#"Generated keys for circuit "\"{}\" [{}/{}]"#,
             circuit
+                .borrow()
                 .verifier_contract_type
                 .as_ref()
                 .unwrap()
@@ -279,12 +279,12 @@ impl CircuitGeneratorBase {
         );
     }
     // """Return the output directory for an individual circuit"""
-    pub fn _get_circuit_output_dir(&self, circuit: &CircuitHelper) -> String {
+    pub fn _get_circuit_output_dir(&self, circuit: &RcCell<CircuitHelper>) -> String {
         PathBuf::from(&self.output_dir)
             .join(
                 &CFG.lock()
                     .unwrap()
-                    .get_circuit_output_dir_name(circuit.get_verification_contract_name()),
+                    .get_circuit_output_dir_name(circuit.borrow().get_verification_contract_name()),
             )
             .to_str()
             .unwrap()
@@ -292,7 +292,7 @@ impl CircuitGeneratorBase {
     }
 
     // """Return a tuple which contains the paths to the verification and prover key files."""
-    pub fn _get_vk_and_pk_paths(&self, circuit: &CircuitHelper) -> Vec<String> {
+    pub fn _get_vk_and_pk_paths(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
         let output_dir = self._get_circuit_output_dir(circuit);
         Self::get_vk_and_pk_filenames()
             .iter()
@@ -308,12 +308,12 @@ impl CircuitGeneratorBase {
 
     // @abstractmethod
     // """
-    // Generate code and compile a single circuit.
+    // Generate code and compile a single circuit.borrow().
 
     // When implementing a new backend, this function should generate a concrete circuit representation, which has
-    // a) circuit IO corresponding to circuit.sec_idfs/output_idfs/input_idfs
-    // b) logic corresponding to the non-CircCall statements in circuit.phi
-    // c) a), b) and c) for the circuit associated with the target function for every CircCall statement in circuit.phi
+    // a) circuit IO corresponding to circuit.borrow().sec_idfs/output_idfs/input_idfs
+    // b) logic corresponding to the non-CircCall statements in circuit.borrow().phi
+    // c) a), b) and c) for the circuit associated with the target function for every CircCall statement in circuit.borrow().phi
 
     // The output of this function should be in a state where key generation can be invoked immediately without further transformations
     // (i.e. any intermediary compilation steps should also happen here).
@@ -323,12 +323,16 @@ impl CircuitGeneratorBase {
     // :return: true if the circuit was modified since last generation (need to generate new keys)
     // """
     // pass
-    pub fn _generate_zkcircuit(&self, _import_keys: bool, _circuit: &CircuitHelper) -> bool {
+    pub fn _generate_zkcircuit(
+        &self,
+        _import_keys: bool,
+        _circuit: &RcCell<CircuitHelper>,
+    ) -> bool {
         false
     }
 
     // @abstractmethod
-    pub fn _generate_keys(&self, _circuit: &CircuitHelper) {}
+    pub fn _generate_keys(&self, _circuit: &RcCell<CircuitHelper>) {}
     // """Generate prover and verification keys for the circuit stored in self._get_circuit_output_dir(circuit)."""
     // pass
 
@@ -342,7 +346,7 @@ impl CircuitGeneratorBase {
     // @abstractmethod
     //     pub fn _parse_verification_key(
     //         &self,
-    //         circuit: &CircuitHelper,
+    //         circuit: &RcCell<CircuitHelper>,
     //     ) -> <T as ProvingScheme>::VerifyingKeyX
     // // """Parse the generated verificaton key file and return a verification key object compatible with self.proving_scheme"""
     //     {
@@ -350,7 +354,7 @@ impl CircuitGeneratorBase {
     //     }
 
     // @abstractmethod
-    pub fn _get_prover_key_hash(&self, _circuit: &CircuitHelper) -> Vec<u8> {
+    pub fn _get_prover_key_hash(&self, _circuit: &RcCell<CircuitHelper>) -> Vec<u8> {
         vec![]
     }
     // pass
@@ -359,13 +363,13 @@ impl CircuitGeneratorBase {
     // :param circuit: abstract circuit representation
     // :return: list of location strings, a location is either an identifier name or an array index
     // """
-    pub fn _get_primary_inputs(&self, circuit: &CircuitHelper) -> Vec<String> {
-        let inputs = circuit.public_arg_arrays().clone();
+    pub fn _get_primary_inputs(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
+        let inputs = circuit.borrow().public_arg_arrays().clone();
 
         if CFG
             .lock()
             .unwrap()
-            .should_use_hash(circuit.trans_in_size + circuit.trans_out_size)
+            .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
         {
             vec![match self.proving_scheme.as_str() {
                 "groth16" => <ProvingSchemeGroth16 as ProvingScheme>::hash_var_name(),

@@ -112,18 +112,18 @@ impl TypeCheckVisitor {
     }
     pub fn get_rhs(
         &self,
-        mut rhs: &RcCell<Expression>,
+        mut rhs: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
-    ) -> Option<RcCell<Expression>> {
+    ) -> Option<ASTFlatten> {
         if is_instance(rhs, ASTType::TupleExpr) {
             assert!(
                 is_instance(
                     &**expected_type.borrow().type_name.as_ref().unwrap(),
                     ASTType::TupleType,
                 ) && rhs
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_tuple_expr_ref()
                     .unwrap()
                     .elements
@@ -140,7 +140,10 @@ impl TypeCheckVisitor {
                         .len(),
                 "{:?},{:?},{:?}",
                 expected_type,
-                rhs.borrow().annotated_type(),
+                rhs.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type(),
                 rhs
             );
             let exprs: Vec<_> = expected_type
@@ -154,9 +157,9 @@ impl TypeCheckVisitor {
                 .types
                 .iter()
                 .zip(
-                    rhs.borrow()
-                        .try_as_tuple_or_location_expr_ref()
+                    rhs.try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_tuple_expr_ref()
                         .unwrap()
                         .elements
@@ -176,20 +179,32 @@ impl TypeCheckVisitor {
                 &RcCell::new(TupleType::new(
                     exprs
                         .iter()
-                        .map(|e| e.borrow().annotated_type().clone().unwrap())
+                        .map(|e| {
+                            e.try_as_expression_ref()
+                                .unwrap()
+                                .borrow()
+                                .annotated_type()
+                                .clone()
+                                .unwrap()
+                        })
                         .collect(),
                 ))
                 .into(),
-            )
-            .try_as_expression();
+            );
         }
 
         let mut require_rehom = false;
-        let mut instance = rhs.borrow().instance_of(expected_type);
+        let mut instance = rhs
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .instance_of(expected_type);
         if instance.is_none() {
             require_rehom = true;
             let expected_matching_hom = expected_type.borrow().with_homomorphism(
-                rhs.borrow()
+                rhs.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -198,17 +213,26 @@ impl TypeCheckVisitor {
                     .homomorphism
                     .clone(),
             );
-            instance = rhs.borrow().instance_of(&expected_matching_hom);
+            instance = rhs
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .instance_of(&expected_matching_hom);
         }
 
         assert!(
             instance.is_some(),
             "{:?},{:?}, {:?}",
             expected_type,
-            rhs.borrow().annotated_type(),
+            rhs.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type(),
             rhs
         );
         let rhs = if rhs
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
@@ -261,9 +285,11 @@ impl TypeCheckVisitor {
             );
         }
     }
-    pub fn check_final(&self, fct: &ASTFlatten, ast: &RcCell<Expression>) {
+    pub fn check_final(&self, fct: &ASTFlatten, ast: &ASTFlatten) {
         if is_instance(ast, ASTType::IdentifierExpr) {
             if let Some(target) = ast
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
@@ -303,6 +329,8 @@ impl TypeCheckVisitor {
         } else {
             assert!(is_instance(ast, ASTType::TupleExpr));
             for elem in &ast
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
@@ -420,7 +448,7 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn has_private_type(ast: &RcCell<Expression>) -> bool {
+    pub fn has_private_type(ast: &ASTFlatten) -> bool {
         ast.borrow()
             .annotated_type()
             .as_ref()
@@ -446,7 +474,7 @@ impl TypeCheckVisitor {
     pub fn handle_builtin_function_call(
         &self,
         mut ast: &RcCell<FunctionCallExpr>,
-        func: &RcCell<Expression>,
+        func: &ASTFlatten,
     ) {
         if func
             .borrow()
@@ -489,7 +517,7 @@ impl TypeCheckVisitor {
     pub fn handle_unhom_builtin_function_call(
         &self,
         mut ast: &RcCell<FunctionCallExpr>,
-        mut func: &RcCell<Expression>,
+        mut func: &ASTFlatten,
     ) {
         let mut args = ast.borrow().args().clone();
         //handle special cases
@@ -961,7 +989,7 @@ impl TypeCheckVisitor {
     pub fn handle_homomorphic_builtin_function_call(
         &self,
         mut ast: &RcCell<FunctionCallExpr>,
-        mut func: &RcCell<Expression>,
+        mut func: &ASTFlatten,
     ) {
         //First - same as non-homomorphic - check that argument types conform to op signature
         if !func.borrow().try_as_builtin_function_ref().unwrap().is_eq() {
@@ -1037,7 +1065,7 @@ impl TypeCheckVisitor {
         true
     }
     //@staticmethod
-    pub fn combine_homomorphism(lhs: RcCell<Expression>, rhs: RcCell<Expression>) -> String {
+    pub fn combine_homomorphism(lhs: ASTFlatten, rhs: ASTFlatten) -> String {
         if lhs
             .borrow()
             .annotated_type()
@@ -1080,7 +1108,7 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn can_rehom(ast: &RcCell<Expression>) -> bool {
+    pub fn can_rehom(ast: &ASTFlatten) -> bool {
         if ast
             .borrow()
             .annotated_type()
@@ -1131,9 +1159,9 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn try_rehom(
-        mut rhs: &RcCell<Expression>,
+        mut rhs: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
-    ) -> RcCell<Expression> {
+    ) -> ASTFlatten {
         assert!(
             !rhs.borrow()
                 .annotated_type()
@@ -1231,9 +1259,9 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn make_rehom(
-        mut expr: &RcCell<Expression>,
+        mut expr: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
-    ) -> RcCell<Expression> {
+    ) -> ASTFlatten {
         assert!(expected_type
             .borrow()
             .privacy_annotation
@@ -1298,10 +1326,10 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn make_private(
-        mut expr: &RcCell<Expression>,
+        mut expr: &ASTFlatten,
         privacy: &Option<ASTFlatten>,
         homomorphism: &String,
-    ) -> RcCell<Expression> {
+    ) -> ASTFlatten {
         assert!(privacy
             .as_ref()
             .unwrap()
@@ -1352,7 +1380,7 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn assign_location(target: &RcCell<Expression>, source: &RcCell<Expression>) {
+    pub fn assign_location(target: &ASTFlatten, source: &ASTFlatten) {
         //set statement
         target.borrow_mut().expression_base_mut_ref().statement =
             source.borrow().statement().clone();
@@ -1379,10 +1407,7 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn implicitly_converted_to(
-        expr: &RcCell<Expression>,
-        t: &RcCell<TypeName>,
-    ) -> RcCell<Expression> {
+    pub fn implicitly_converted_to(expr: &ASTFlatten, t: &RcCell<TypeName>) -> ASTFlatten {
         if is_instance(expr, ASTType::ReclassifyExpr)
             && !expr
                 .borrow()
@@ -1684,7 +1709,7 @@ impl TypeCheckVisitor {
 
     pub fn handle_cast(
         &self,
-        expr: &RcCell<Expression>,
+        expr: &ASTFlatten,
         t: &RcCell<TypeName>,
     ) -> RcCell<AnnotatedTypeName> {
         //because of the fake solidity check we already know that the cast is possible -> don"t have to check if cast possible
@@ -2105,7 +2130,8 @@ impl TypeCheckVisitor {
                         .borrow()
                         .expr
                         .clone()
-                        .unwrap()])
+                        .unwrap()
+                        .into()])
                     .into_expr(),
                 ),
                 &rt,
@@ -2134,7 +2160,15 @@ impl TypeCheckVisitor {
                     .borrow()
                     .elements
                     .iter()
-                    .map(|elem| elem.borrow().annotated_type().as_ref().unwrap().clone())
+                    .map(|elem| {
+                        elem.try_as_expression_ref()
+                            .unwrap()
+                            .borrow()
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .clone()
+                    })
                     .collect(),
             )))),
             None,

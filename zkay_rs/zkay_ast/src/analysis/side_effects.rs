@@ -76,7 +76,7 @@ impl SideEffectsDetector {
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> bool {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
         ) && !ast
             .try_as_function_call_expr_ref()
@@ -88,9 +88,9 @@ impl SideEffectsDetector {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -311,7 +311,7 @@ impl IndirectModificationDetector {
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         self.visitAST(ast);
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
         ) {
             //for now no reference types -> only state could have been modified
@@ -320,9 +320,9 @@ impl IndirectModificationDetector {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -508,7 +508,7 @@ impl EvalOrderUBChecker {
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
         ) {
             if ast
@@ -516,9 +516,9 @@ impl EvalOrderUBChecker {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .has_shortcircuiting()
             {
                 return;

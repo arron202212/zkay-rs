@@ -66,27 +66,27 @@ impl GlobalDefs {
     pub fn new() -> Self {
         let address_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<address>"),
-            vec![VariableDeclaration::new(
+            vec![RcCell::new(VariableDeclaration::new(
                 vec![],
                 AnnotatedTypeName::uint_all(),
                 Identifier::identifier("balance"),
                 None,
-            )
-            .to_ast()],
+            ))
+            .into()],
         ));
         set_parents(&address_struct.clone().into());
 
         let mut address_payable_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<address_payable>"),
             vec![
-                VariableDeclaration::new(
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("balance"),
                     None,
-                )
-                .to_ast(),
-                ConstructorOrFunctionDefinition::new(
+                ))
+                .into(),
+                RcCell::new(ConstructorOrFunctionDefinition::new(
                     Identifier::identifier("send"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
@@ -102,9 +102,9 @@ impl GlobalDefs {
                         None,
                     ))]),
                     Some(Block::new(vec![], false)),
-                )
-                .to_ast(),
-                ConstructorOrFunctionDefinition::new(
+                ))
+                .into(),
+                RcCell::new(ConstructorOrFunctionDefinition::new(
                     Identifier::identifier("transfer"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
@@ -115,21 +115,21 @@ impl GlobalDefs {
                     Some(vec![String::from("public")]),
                     Some(vec![]),
                     Some(Block::new(vec![], false)),
-                )
-                .to_ast(),
+                ))
+                .into(),
             ],
         ));
         address_payable_struct.borrow_mut().members[1]
-            .borrow_mut()
             .try_as_namespace_definition_mut()
             .unwrap()
+            .borrow_mut()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
         address_payable_struct.borrow_mut().members[2]
-            .borrow_mut()
             .try_as_namespace_definition_mut()
             .unwrap()
+            .borrow_mut()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .can_be_private = false;
@@ -138,7 +138,7 @@ impl GlobalDefs {
         let msg_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<msg>"),
             vec![
-                VariableDeclaration::new(
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
@@ -147,15 +147,15 @@ impl GlobalDefs {
                     )),
                     Identifier::identifier("sender"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("value"),
                     None,
-                )
-                .to_ast(),
+                ))
+                .into(),
             ],
         ));
         set_parents(&msg_struct.clone().into());
@@ -163,7 +163,7 @@ impl GlobalDefs {
         let block_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<block>"),
             vec![
-                VariableDeclaration::new(
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
@@ -172,36 +172,36 @@ impl GlobalDefs {
                     )),
                     Identifier::identifier("coinbase"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("difficulty"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("gaslimit"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("number"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("timestamp"),
                     None,
-                )
-                .to_ast(),
+                ))
+                .into(),
             ],
         ));
         set_parents(&block_struct.clone().into());
@@ -209,14 +209,14 @@ impl GlobalDefs {
         let tx_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<tx>"),
             vec![
-                VariableDeclaration::new(
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     AnnotatedTypeName::uint_all(),
                     Identifier::identifier("gasprice"),
                     None,
-                )
-                .to_ast(),
-                VariableDeclaration::new(
+                ))
+                .into(),
+                RcCell::new(VariableDeclaration::new(
                     vec![],
                     RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
@@ -225,8 +225,8 @@ impl GlobalDefs {
                     )),
                     Identifier::identifier("origin"),
                     None,
-                )
-                .to_ast(),
+                ))
+                .into(),
             ],
         ));
         set_parents(&tx_struct.clone().into());

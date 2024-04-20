@@ -104,6 +104,8 @@ impl DirectHybridFunctionDetectionVisitor {
             .unwrap()
             .borrow()
             .expr
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .evaluate_privately()
         {
@@ -136,16 +138,16 @@ impl DirectHybridFunctionDetectionVisitor {
     pub fn visitAllExpr(&self, _ast: &ASTFlatten) {}
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
         ) && ast
             .try_as_function_call_expr_ref()
             .unwrap()
             .borrow()
             .func()
-            .borrow()
             .try_as_builtin_function_ref()
             .unwrap()
+            .borrow()
             .is_private
         {
             ast.try_as_function_call_expr_ref()
@@ -354,7 +356,7 @@ impl NonInlineableCallDetector {
             .borrow()
             .is_cast()
             && is_instance(
-                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
                 ASTType::LocationExprBase,
             )
         {
@@ -363,9 +365,9 @@ impl NonInlineableCallDetector {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()

@@ -99,9 +99,9 @@ impl AliasAnalysisVisitor {
             .state_variable_declarations
         {
             s.insert(
-                d.borrow()
-                    .try_as_identifier_declaration_ref()
+                d.try_as_identifier_declaration_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_state_variable_declaration_ref()
                     .unwrap()
                     .idf()
@@ -148,25 +148,25 @@ impl AliasAnalysisVisitor {
 
     pub fn propagate(
         &self,
-        statements: &Vec<RcCell<AST>>,
+        statements: &Vec<ASTFlatten>,
         before_analysis: &PartitionState<ASTFlatten>,
     ) -> PartitionState<ASTFlatten> {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements {
             statement
-                .borrow_mut()
-                .try_as_statement_mut()
+                .try_as_statement_ref()
                 .unwrap()
+                .borrow_mut()
                 .statement_base_mut_ref()
                 .unwrap()
                 .before_analysis = Some(last.clone());
             print!("before  {:?},{:?}", statement, last);
-            self.visit(&ASTFlatten::AST(statement.clone()));
+            self.visit(&statement);
             last = statement
-                .borrow()
                 .try_as_statement_ref()
                 .unwrap()
+                .borrow()
                 .statement_base_ref()
                 .unwrap()
                 .after_analysis
@@ -338,6 +338,8 @@ impl AliasAnalysisVisitor {
                             .unwrap()
                             .borrow()
                             .condition
+                            .try_as_expression_ref()
+                            .unwrap()
                             .borrow()
                             .unop(String::from("!")),
                     )
@@ -463,6 +465,8 @@ impl AliasAnalysisVisitor {
                     .unwrap()
                     .borrow()
                     .condition
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
@@ -481,6 +485,8 @@ impl AliasAnalysisVisitor {
                     .unwrap()
                     .borrow()
                     .condition
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
@@ -594,6 +600,8 @@ impl AliasAnalysisVisitor {
                         .unwrap()
                         .borrow()
                         .condition
+                        .try_as_expression_ref()
+                        .unwrap()
                         .borrow()
                         .unop(String::from("!")),
                 )
@@ -764,6 +772,8 @@ impl AliasAnalysisVisitor {
                     .unwrap()
                     .borrow()
                     .condition
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
@@ -800,6 +810,8 @@ impl AliasAnalysisVisitor {
                     .unwrap()
                     .borrow_mut()
                     .condition
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
@@ -892,7 +904,12 @@ impl AliasAnalysisVisitor {
 
         // make state more precise
         if let Some(e) = e {
-            if let Some(pal) = e.borrow().privacy_annotation_label() {
+            if let Some(pal) = e
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .privacy_annotation_label()
+            {
                 after
                     .clone()
                     .unwrap()
@@ -961,24 +978,28 @@ impl AliasAnalysisVisitor {
             .condition;
         if is_instance(c, ASTType::FunctionCallExprBase)
             && is_instance(
-                &**c.borrow().try_as_function_call_expr_ref().unwrap().func(),
+                c.try_as_function_call_expr_ref().unwrap().borrow().func(),
                 ASTType::BuiltinFunction,
             )
             && &c
-                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .func()
                 .borrow()
+                .func()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .op
                 == "=="
         {
-            let lhs = c.borrow().try_as_function_call_expr_ref().unwrap().args()[0]
+            let lhs = c.try_as_function_call_expr_ref().unwrap().borrow().args()[0]
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .privacy_annotation_label();
-            let rhs = c.borrow().try_as_function_call_expr_ref().unwrap().args()[1]
+            let rhs = c.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .privacy_annotation_label();
             if lhs.is_some() && rhs.is_some() {
@@ -1216,7 +1237,7 @@ impl GuardConditionAnalyzer {
 
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
         ) {
             let args = ast
@@ -1230,9 +1251,9 @@ impl GuardConditionAnalyzer {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .op
                 .clone();
             if op == "!" {

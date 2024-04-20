@@ -86,7 +86,7 @@ impl DirectCanBePrivateDetector {
     }
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
         ) {
             if !ast
@@ -94,9 +94,9 @@ impl DirectCanBePrivateDetector {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .is_private
             {
                 let mut can_be_private = ast
@@ -104,31 +104,33 @@ impl DirectCanBePrivateDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
+                    .borrow()
                     .can_be_private();
                 if ast
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
+                    .borrow()
                     .is_eq()
                     || ast
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .borrow()
                         .func()
-                        .borrow()
                         .try_as_builtin_function_ref()
                         .unwrap()
+                        .borrow()
                         .is_ite()
                 {
                     can_be_private &= ast.try_as_function_call_expr_ref().unwrap().borrow().args()
                         [1]
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
@@ -427,6 +429,8 @@ impl CircuitComplianceChecker {
                 .unwrap()
                 .borrow()
                 .key
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .annotated_type()
                 .as_ref()
@@ -449,7 +453,7 @@ impl CircuitComplianceChecker {
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
         assert!(!*self.inside_privif_stmt.borrow()
             || ast.try_as_reclassify_expr_ref().unwrap().borrow().statement().as_ref().unwrap().clone().upgrade().unwrap().try_as_statement_ref().unwrap().borrow().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
-                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().borrow().privacy_annotation_label().unwrap(),
+                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().try_as_expression_ref().unwrap().borrow().privacy_annotation_label().unwrap(),
                 &RcCell::new(Expression::me_expr(None)).into(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast
@@ -457,6 +461,8 @@ impl CircuitComplianceChecker {
             .unwrap()
             .borrow()
             .expr()
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
@@ -504,16 +510,16 @@ impl CircuitComplianceChecker {
 
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if is_instance(
-            &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
         ) && ast
             .try_as_function_call_expr_ref()
             .unwrap()
             .borrow()
             .func()
-            .borrow()
             .try_as_builtin_function_ref()
             .unwrap()
+            .borrow()
             .is_private
         {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
@@ -543,6 +549,8 @@ impl CircuitComplianceChecker {
             .unwrap()
             .borrow()
             .expr
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
@@ -562,6 +570,8 @@ impl CircuitComplianceChecker {
             .unwrap()
             .borrow()
             .condition
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
@@ -695,7 +705,7 @@ impl PrivateSetter {
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
         if self.evaluate_privately.borrow().is_some()
             && is_instance(
-                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
                 ASTType::LocationExprBase,
             )
             && !ast
@@ -708,9 +718,9 @@ impl PrivateSetter {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -793,7 +803,7 @@ impl NonstaticOrIncompatibilityDetector {
                 .is_cast()
         {
             if is_instance(
-                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
                 ASTType::LocationExprBase,
             ) {
                 assert!(ast
@@ -801,9 +811,9 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -814,9 +824,9 @@ impl NonstaticOrIncompatibilityDetector {
                         .unwrap()
                         .borrow()
                         .func()
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .target()
@@ -842,9 +852,9 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -864,9 +874,9 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -882,7 +892,7 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .can_be_private;
             } else if is_instance(
-                &**ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
                 ASTType::BuiltinFunction,
             ) {
                 can_be_private &= ast
@@ -890,9 +900,9 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
+                    .borrow()
                     .can_be_private()
                     || ast
                         .try_as_function_call_expr_ref()
@@ -912,22 +922,24 @@ impl NonstaticOrIncompatibilityDetector {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_builtin_function_ref()
                     .unwrap()
+                    .borrow()
                     .is_eq()
                     || ast
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .borrow()
                         .func()
-                        .borrow()
                         .try_as_builtin_function_ref()
                         .unwrap()
+                        .borrow()
                         .is_ite()
                 {
                     can_be_private &= ast.try_as_function_call_expr_ref().unwrap().borrow().args()
                         [1]
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()

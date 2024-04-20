@@ -9,6 +9,7 @@
 // from abc import ABCMeta, abstractmethod
 // from typing import List
 use circuit_helper::circuit_helper::CircuitHelper;
+use rccell::RcCell;
 use std::fs::File;
 use std::io::Lines;
 use std::io::{BufRead, BufReader};
@@ -204,12 +205,12 @@ pub trait ProvingScheme {
     // @abstractmethod
     fn generate_verification_contract(
         verification_key: Self::VerifyingKeyX,
-        circuit: &CircuitHelper,
+        circuit: &RcCell<CircuitHelper>,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String;
     // """
-    // Generate a verification contract for the zk-snark corresponding to circuit.
+    // Generate a verification contract for the zk-snark corresponding to circuit.borrow().
 
     // :param verification_key: parsed verification key which was previously generated for circuit
     // :param circuit: the circuit for which to generate the verification contract

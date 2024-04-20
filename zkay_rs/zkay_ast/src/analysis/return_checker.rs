@@ -65,9 +65,8 @@ impl ReturnCheckVisitor {
             .unwrap()
             .statements()
             .last()
-            .map(|v| v.clone())
             .unwrap()
-            != *ast.try_as_ast_ref().unwrap()
+            != ast
         {
             ok = false;
         }

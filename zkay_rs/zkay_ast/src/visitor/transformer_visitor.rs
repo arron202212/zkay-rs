@@ -55,10 +55,11 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     fn visit_list(&self, ast_list: &Vec<ASTFlatten>) -> Vec<ASTFlatten> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
-    fn visit_children(&self, ast: &ASTFlatten) {
+    fn visit_children(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         for c in ast.children() {
             self.visit(&c);
         }
+        Some(ast.clone())
     }
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.log() {
@@ -79,7 +80,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
         }
     }
 
-    fn visitAST(&self, ast: &ASTFlatten) {
+    fn visitAST(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self.visit_children(ast)
     }
 }

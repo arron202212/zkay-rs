@@ -389,8 +389,13 @@ where
     // """
     // Make circuit prove that the encryption of the specified parameter is correct.
     // """
-    pub fn ensure_parameter_encryption(&mut self, insert_loc_stmt: &ASTFlatten, param: &Parameter) {
+    pub fn ensure_parameter_encryption(
+        &mut self,
+        insert_loc_stmt: &ASTFlatten,
+        param: &RcCell<Parameter>,
+    ) {
         assert!(param
+            .borrow()
             .identifier_declaration_base
             .annotated_type
             .borrow()
@@ -398,6 +403,7 @@ where
 
         let plain_idf = self._secret_input_name_factory.add_idf(
             param
+                .borrow()
                 .identifier_declaration_base
                 .idf
                 .as_ref()
@@ -406,6 +412,7 @@ where
                 .name()
                 .clone(),
             param
+                .borrow()
                 .identifier_declaration_base
                 .annotated_type
                 .borrow()
@@ -419,6 +426,7 @@ where
             "{}_{}",
             self._in_name_factory.base_name_factory.get_new_name(
                 param
+                    .borrow()
                     .identifier_declaration_base
                     .annotated_type
                     .borrow()
@@ -428,6 +436,7 @@ where
                 false
             ),
             param
+                .borrow()
                 .identifier_declaration_base
                 .idf
                 .as_ref()
@@ -438,6 +447,7 @@ where
         let cipher_idf = self._in_name_factory.add_idf(
             name,
             param
+                .borrow()
                 .identifier_declaration_base
                 .annotated_type
                 .borrow()
@@ -451,6 +461,7 @@ where
             plain_idf,
             &RcCell::new(Expression::me_expr(None)).into(),
             param
+                .borrow()
                 .identifier_declaration_base
                 .annotated_type
                 .borrow()
@@ -508,10 +519,9 @@ where
         expr: &RcCell<Expression>,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
-    ) -> LocationExpr {
+    ) -> Option<ASTFlatten> {
         self.circ_indent_block(&expr.borrow().to_ast().code());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
-            .unwrap()
     }
     // """
     // Evaluate an entire statement privately.
@@ -528,12 +538,20 @@ where
     // :param ast: the statement to evaluate inside the circuit
     // :return: AssignmentStatement as described above
     // """
-    pub fn evaluate_stmt_in_circuit(&mut self, mut ast: Statement) -> SimpleStatement {
+    pub fn evaluate_stmt_in_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
             RcCell::new(NumberLiteralExpr::new(0, false).to_expr()),
         ));
-        for var in &ast.ast_base_ref().unwrap().borrow().modified_values {
-            if var.in_scope_at(&RcCell::new(ast.to_ast()).into()) {
+        for var in &ast
+            .try_as_statement_ref()
+            .unwrap()
+            .borrow()
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .modified_values
+        {
+            if var.in_scope_at(ast) {
                 astmt =
                     SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
                         AssignmentStatementBase::new(None, None, None),
@@ -541,15 +559,32 @@ where
                 break;
             }
         }
-        astmt.statement_base_mut_ref().before_analysis =
-            ast.statement_base_ref().unwrap().before_analysis().clone();
+        astmt.statement_base_mut_ref().before_analysis = ast
+            .try_as_statement_ref()
+            .unwrap()
+            .borrow()
+            .statement_base_ref()
+            .unwrap()
+            .before_analysis()
+            .clone();
 
         //External values written inside statement -> function return values
         let mut ret_params = vec![];
-        for var in &ast.ast_base_ref().unwrap().borrow().modified_values {
-            if var.in_scope_at(&RcCell::new(ast.to_ast()).into()) {
+        for var in &ast
+            .try_as_statement_ref()
+            .unwrap()
+            .borrow()
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .modified_values
+        {
+            if var.in_scope_at(ast) {
                 //side effect affects location outside statement and has privacy @me
                 assert!(ast
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .borrow()
                     .statement_base_ref()
                     .unwrap()
                     .before_analysis
@@ -645,8 +680,8 @@ where
             ),
             Some(Block::new(
                 vec![
-                    ast.to_ast(),
-                    ReturnStatement::new(Some(
+                    ast.clone(),
+                    RcCell::new(ReturnStatement::new(Some(
                         TupleExpr::new(
                             ret_params
                                 .iter()
@@ -654,8 +689,8 @@ where
                                 .collect(),
                         )
                         .to_expr(),
-                    ))
-                    .to_ast(),
+                    )))
+                    .into(),
                 ],
                 false,
             )),
@@ -718,7 +753,7 @@ where
                     .elements
                     .iter_mut(),
             )
-            .map(|(ret_param, ret_arg)| {
+            .filter_map(|(ret_param, ret_arg)| {
                 self._get_circuit_output_for_private_expression(
                     ret_arg,
                     &RcCell::new(Expression::me_expr(None)).into(),
@@ -729,7 +764,6 @@ where
                         .borrow()
                         .homomorphism,
                 )
-                .unwrap()
             })
             .collect();
 
@@ -752,20 +786,11 @@ where
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .rhs = Some(RcCell::new(
-                TupleExpr::new(
-                    ret_arg_outs
-                        .iter()
-                        .map(|r| RcCell::new(r.to_expr()))
-                        .collect(),
-                )
-                .to_expr(),
-            ));
-            astmt
+                .rhs = Some(RcCell::new(TupleExpr::new(ret_arg_outs).to_expr()));
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
-            astmt
         }
+        Some(RcCell::new(astmt).into())
     }
     pub fn invalidate_idf(&mut self, target_idf: &RcCell<Identifier>) {
         if self._remapper.0.is_remapped(target_idf) {
@@ -1223,12 +1248,12 @@ where
             .unwrap()
             .pre_statements
             .push(
-                CircuitInputStatement::new(
+                RcCell::new(CircuitInputStatement::new(
                     input_idf.get_loc_expr(None).try_as_expression().unwrap(),
                     input_expr.unwrap(),
                     None,
-                )
-                .into_ast(),
+                ))
+                .into(),
             );
 
         if !is_public {
@@ -1544,9 +1569,7 @@ where
                     .unwrap()
                     .borrow()
                     .pre_statements()
-                    .iter()
-                    .map(|ps| ps.try_as_statement_ref().unwrap().to_ast())
-                    .collect::<Vec<_>>(),
+                    .clone(),
             );
 
         //Create TupleExpr with location expressions corresponding to the function return values as elements
@@ -1912,9 +1935,9 @@ where
                 //Bubble up nested pre statements
                 statements.append(
                     &mut stmt
-                        .borrow_mut()
                         .try_as_statement_mut()
                         .unwrap()
+                        .borrow_mut()
                         .statement_base_mut_ref()
                         .unwrap()
                         .pre_statements
@@ -2066,7 +2089,7 @@ where
         expr: &RcCell<Expression>,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
-    ) -> Option<LocationExpr> {
+    ) -> Option<ASTFlatten> {
         let is_circ_val = is_instance(expr, ASTType::IdentifierExpr)
             && is_instance(
                 expr.borrow()
@@ -2294,17 +2317,9 @@ where
             .statement_base_mut_ref()
             .unwrap()
             .pre_statements
-            .push(CircuitComputationStatement::new(new_out_param).into_ast());
+            .push(RcCell::new(CircuitComputationStatement::new(new_out_param)).into());
         if is_instance(&out_var, ASTType::LocationExprBase) {
-            out_var
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .clone()
-                .cloned()
+            Some(out_var)
         } else {
             None
         }
@@ -2647,10 +2662,7 @@ where
                 .unwrap()
                 .try_as_location_expr_ref()
             {
-                vec![le
-                    .index(ExprUnion::I32(cipher_payload_len))
-                    .try_as_expression()
-                    .unwrap()]
+                vec![le.index(ExprUnion::I32(cipher_payload_len))]
             } else {
                 vec![]
             },
@@ -2664,12 +2676,12 @@ where
             .unwrap()
             .pre_statements
             .push(
-                AssignmentStatementBase::new(
+                RcCell::new(AssignmentStatementBase::new(
                     key_idf.get_loc_expr(None).try_as_expression(),
                     key_expr.try_as_expression(),
                     None,
-                )
-                .into_ast(),
+                ))
+                .into(),
             );
         key_idf
     }
