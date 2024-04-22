@@ -20,7 +20,7 @@ use crate::ast::{
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn alias_analysis(ast: &&ASTFlatten) {
+pub fn alias_analysis(ast: &ASTFlatten) {
     let mut v = AliasAnalysisVisitor::new(false);
     v.cond_analyzer.visit(ast);
 }

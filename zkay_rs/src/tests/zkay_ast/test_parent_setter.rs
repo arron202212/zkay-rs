@@ -1,8 +1,8 @@
 use ast_builder::build_ast::build_ast;
 use rccell::{RcCell, WeakCell};
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTChildren, ASTType, IntoAST, NamespaceDefinitionBaseProperty,
-    AST,
+    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, IntoAST,
+    NamespaceDefinitionBaseProperty, AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -22,7 +22,7 @@ impl ParentChecker {
 impl AstVisitor for ParentChecker {
     fn visit(&self, ast: &ASTFlatten) -> Self::Return {
         if !is_instance(ast, ASTType::SourceUnit) {
-            assert!(ast.ast_base_ref().unwrap().parent().is_some());
+            assert!(ast.ast_base_ref().unwrap().borrow().parent().is_some());
         }
         self._visit_internal(ast);
         None
@@ -53,8 +53,8 @@ mod tests {
             // test
             for c in ast.children() {
                 assert_eq!(
-                    c.ast_base_ref().unwrap().parent(),
-                    Some(Box::new(ast.clone()))
+                    c.ast_base_ref().unwrap().borrow().parent(),
+                    Some(ast.clone().downgrade())
                 );
             }
         }
@@ -67,11 +67,17 @@ mod tests {
             set_parents(&mut ast);
             // println!("{:?},==after==={:?}",name,ast);
             // test
-            let contract = &ast.try_as_source_unit_ref().unwrap().contracts[0];
-            let idf = contract.idf();
+            let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
+            let idf = contract.borrow().idf();
             assert_eq!(
-                idf.upgrade().unwrap().borrow().parent().map(|p| p.to_ast()),
-                Some(contract.to_ast())
+                idf.upgrade()
+                    .unwrap()
+                    .borrow()
+                    .parent()
+                    .as_ref()
+                    .map(|p| p.clone().upgrade())
+                    .flatten(),
+                Some(contract.clone().into())
             );
         }
     }

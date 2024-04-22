@@ -2714,9 +2714,9 @@ impl FunctionCallExpr {
             && is_instances(
                 &self
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -3338,7 +3338,7 @@ impl TupleOrLocationExpr {
         assert!(parent.is_some());
         if is_instance(parent.as_ref().unwrap(), ASTType::AssignmentStatementBase) {
             return self
-                == parent
+                == &*parent
                     .as_ref()
                     .unwrap()
                     .try_as_assignment_statement_ref()
@@ -3349,8 +3349,7 @@ impl TupleOrLocationExpr {
                     .unwrap()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
-                    .borrow()
-                    .clone();
+                    .borrow();
         }
         if is_instance(parent.as_ref().unwrap(), ASTType::IndexExpr) {
             if self
@@ -3475,7 +3474,7 @@ impl TupleExpr {
     }
     pub fn assign(&self, val: ASTFlatten) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(RcCell::new(self.to_expr())).into(),
+            Some(RcCell::new(self.to_expr()).into()),
             Some(val),
             None,
         ))
@@ -3689,9 +3688,9 @@ impl IdentifierExpr {
             })
     }
 
-    pub fn slice(&self, offset: i32, size: i32, base: Option<Expression>) -> SliceExpr {
+    pub fn slice(&self, offset: i32, size: i32, base: Option<ASTFlatten>) -> SliceExpr {
         SliceExpr::new(
-            Some(LocationExpr::IdentifierExpr(self.clone())),
+            Some(RcCell::new(LocationExpr::IdentifierExpr(self.clone()))),
             base,
             offset,
             size,
@@ -4127,7 +4126,7 @@ impl RehomExpr {
         Self {
             reclassify_expr_base: ReclassifyExprBase::new(
                 expr,
-                RcCell::new(Expression::MeExpr(MeExpr::new())),
+                RcCell::new(Expression::MeExpr(MeExpr::new())).into(),
                 homomorphism,
             ),
         }
@@ -4217,9 +4216,8 @@ impl HybridArgumentIdf {
             arg_type,
             corresponding_priv_expression,
             serialized_loc: SliceExpr::new(
-                Some(LocationExpr::IdentifierExpr(IdentifierExpr::new(
-                    IdentifierExprUnion::String(String::new()),
-                    None,
+                Some(RcCell::new(LocationExpr::IdentifierExpr(
+                    IdentifierExpr::new(IdentifierExprUnion::String(String::new()), None),
                 ))),
                 None,
                 -1,
@@ -4393,7 +4391,7 @@ impl HybridArgumentIdf {
     pub fn _set_serialized_loc(
         &mut self,
         idf: String,
-        base: Option<RcCell<Expression>>,
+        base: Option<ASTFlatten>,
         start_offset: i32,
     ) {
         assert!(self.serialized_loc.start_offset == -1);
@@ -4408,7 +4406,7 @@ impl HybridArgumentIdf {
     pub fn deserialize(
         &mut self,
         source_idf: String,
-        base: Option<Expression>,
+        base: Option<ASTFlatten>,
         start_offset: i32,
     ) -> AssignmentStatement {
         self._set_serialized_loc(source_idf.clone(), base.clone(), start_offset);
@@ -4417,15 +4415,7 @@ impl HybridArgumentIdf {
             .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_a) = self.t.borrow().clone() {
             SliceExpr::new(
-                self.get_loc_expr(None)
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .clone()
-                    .cloned(),
+                self.get_loc_expr(None).try_as_location_expr(),
                 None,
                 0,
                 self.t.borrow().size_in_uints(),
@@ -4433,7 +4423,7 @@ impl HybridArgumentIdf {
             .arr
             .unwrap()
             .borrow_mut()
-            .assign(RcCell::new(self.serialized_loc.to_expr()))
+            .assign(RcCell::new(self.serialized_loc.to_expr()).into())
         } else if let Some(base) = &base {
             self.get_loc_expr(None)
                 .try_as_expression_mut()
@@ -4447,19 +4437,23 @@ impl HybridArgumentIdf {
                     LocationExpr::IdentifierExpr(
                         src.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
-                    .index(ExprUnion::Expression(RcCell::new(
-                        base.binop(
-                            String::from("+"),
-                            NumberLiteralExpr::new(start_offset, false).to_expr(),
+                    .index(ExprUnion::Expression(
+                        RcCell::new(
+                            base.try_as_expression_ref()
+                                .unwrap()
+                                .borrow()
+                                .binop(
+                                    String::from("+"),
+                                    NumberLiteralExpr::new(start_offset, false).to_expr(),
+                                )
+                                .to_expr(),
                         )
-                        .to_expr(),
-                    )))
+                        .into(),
+                    ))
                     .try_as_expression()
                     .unwrap()
                     .borrow()
-                    .explicitly_converted(&self.t)
-                    .try_as_expression()
-                    .unwrap(),
+                    .explicitly_converted(&self.t),
                 )
         } else {
             self.get_loc_expr(None)
@@ -4478,9 +4472,7 @@ impl HybridArgumentIdf {
                     .try_as_expression()
                     .unwrap()
                     .borrow()
-                    .explicitly_converted(&self.t)
-                    .try_as_expression()
-                    .unwrap(),
+                    .explicitly_converted(&self.t),
                 )
         }
     }
@@ -4488,7 +4480,7 @@ impl HybridArgumentIdf {
     pub fn serialize(
         &mut self,
         target_idf: String,
-        base: Option<Expression>,
+        base: Option<ASTFlatten>,
         start_offset: i32,
     ) -> AssignmentStatement {
         self._set_serialized_loc(target_idf.clone(), base.clone(), start_offset);
@@ -4496,25 +4488,24 @@ impl HybridArgumentIdf {
         let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None)
             .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_t) = self.t.borrow().clone() {
-            let loc = self
-                .get_loc_expr(None)
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .clone()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .clone()
-                .cloned();
+            let loc = self.get_loc_expr(None);
             self.serialized_loc
                 .arr
                 .as_mut()
                 .unwrap()
                 .borrow_mut()
-                .assign(RcCell::new(
-                    SliceExpr::new(loc, None, 0, self.t.borrow().size_in_uints()).to_expr(),
-                ))
+                .assign(
+                    RcCell::new(
+                        SliceExpr::new(
+                            loc.try_as_location_expr(),
+                            None,
+                            0,
+                            self.t.borrow().size_in_uints(),
+                        )
+                        .to_expr(),
+                    )
+                    .into(),
+                )
         } else {
             let expr = self.get_loc_expr(None);
             let expr = if self.t.borrow().is_signed_numeric() {
@@ -4554,19 +4545,25 @@ impl HybridArgumentIdf {
                     LocationExpr::IdentifierExpr(
                         tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
-                    .index(ExprUnion::Expression(RcCell::new(
-                        base.binop(
-                            String::from("+"),
-                            NumberLiteralExpr::new(start_offset, false).to_expr(),
+                    .index(ExprUnion::Expression(
+                        RcCell::new(
+                            base.try_as_expression_ref()
+                                .unwrap()
+                                .borrow()
+                                .binop(
+                                    String::from("+"),
+                                    NumberLiteralExpr::new(start_offset, false).to_expr(),
+                                )
+                                .to_expr(),
                         )
-                        .to_expr(),
-                    )))
+                        .into(),
+                    ))
                     .try_as_index_expr_ref()
                     .unwrap()
                     .borrow()
                     .clone(),
                 )
-                .assign(expr.try_as_expression().unwrap())
+                .assign(expr)
             } else {
                 LocationExpr::IndexExpr(
                     LocationExpr::IdentifierExpr(
@@ -4578,7 +4575,7 @@ impl HybridArgumentIdf {
                     .borrow()
                     .clone(),
                 )
-                .assign(expr.try_as_expression().unwrap())
+                .assign(expr)
             }
         }
     }
@@ -4645,7 +4642,13 @@ impl IntoAST for EncryptionExpression {
 impl EncryptionExpression {
     pub fn new(expr: ASTFlatten, privacy: ASTFlatten, homomorphism: Option<String>) -> Self {
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
-            expr.borrow().annotated_type().as_ref().unwrap().clone(),
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .clone(),
             homomorphism.clone(),
         ));
         Self {
@@ -4884,10 +4887,10 @@ impl IntoAST for IfStatement {
 }
 
 impl IfStatement {
-    pub fn new(condition: Expression, then_branch: Block, else_branch: Option<Block>) -> Self {
+    pub fn new(condition: ASTFlatten, then_branch: Block, else_branch: Option<Block>) -> Self {
         Self {
             statement_base: StatementBase::new(),
-            condition: RcCell::new(condition),
+            condition,
             then_branch: RcCell::new(then_branch),
             else_branch: else_branch.map(RcCell::new),
         }
@@ -4925,10 +4928,10 @@ impl IntoAST for WhileStatement {
 }
 
 impl WhileStatement {
-    pub fn new(condition: Expression, body: Block) -> Self {
+    pub fn new(condition: ASTFlatten, body: Block) -> Self {
         Self {
             statement_base: StatementBase::new(),
-            condition: RcCell::new(condition),
+            condition,
             body: RcCell::new(body),
         }
     }
@@ -4959,11 +4962,11 @@ impl IntoAST for DoWhileStatement {
 }
 
 impl DoWhileStatement {
-    pub fn new(body: Block, condition: Expression) -> Self {
+    pub fn new(body: Block, condition: ASTFlatten) -> Self {
         Self {
             statement_base: StatementBase::new(),
             body: RcCell::new(body),
-            condition: RcCell::new(condition),
+            condition,
         }
     }
 }
@@ -4997,14 +5000,14 @@ impl IntoAST for ForStatement {
 impl ForStatement {
     pub fn new(
         init: Option<SimpleStatement>,
-        condition: Expression,
+        condition: ASTFlatten,
         update: Option<SimpleStatement>,
         body: Block,
     ) -> Self {
         Self {
             statement_base: StatementBase::new(),
             init: init.map(RcCell::new),
-            condition: RcCell::new(condition),
+            condition,
             update: update.map(RcCell::new),
             body: RcCell::new(body),
         }
@@ -5016,7 +5019,11 @@ impl ForStatement {
                 .as_ref()
                 .map(|i| i.borrow().to_statement())
                 .unwrap(),
-            self.condition.borrow().to_statement(),
+            self.condition
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .to_statement(),
             self.update
                 .as_ref()
                 .map(|u| u.borrow().to_statement())
@@ -5126,10 +5133,10 @@ impl IntoAST for ReturnStatement {
 }
 
 impl ReturnStatement {
-    pub fn new(expr: Option<Expression>) -> Self {
+    pub fn new(expr: Option<ASTFlatten>) -> Self {
         Self {
             statement_base: StatementBase::new(),
-            expr: expr.map(RcCell::new),
+            expr,
         }
     }
 }
@@ -5223,10 +5230,10 @@ impl IntoAST for RequireStatement {
 }
 
 impl RequireStatement {
-    pub fn new(condition: Expression, unmodified_code: Option<String>) -> Self {
+    pub fn new(condition: ASTFlatten, unmodified_code: Option<String>) -> Self {
         Self {
             simple_statement_base: SimpleStatementBase::new(),
-            condition: RcCell::new(condition),
+            condition,
             unmodified_code: unmodified_code.unwrap_or(String::new()), //self.code()
         }
     }
@@ -6749,7 +6756,9 @@ impl ArrayBase {
             type_name_base: TypeNameBase::new(),
             value_type,
             expr: expr.map(|_expr| match _expr {
-                ExprUnion::I32(exp) => RcCell::new(NumberLiteralExpr::new(exp, false).into_expr()),
+                ExprUnion::I32(exp) => {
+                    RcCell::new(NumberLiteralExpr::new(exp, false).into_expr()).into()
+                }
                 ExprUnion::Expression(exp) => exp,
             }),
         }
@@ -6760,9 +6769,9 @@ impl ArrayBase {
                 .expr
                 .as_ref()
                 .unwrap()
-                .borrow()
                 .try_as_literal_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_number_literal_expr_ref()
                 .unwrap()
                 .value
@@ -6812,9 +6821,12 @@ impl CipherText {
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                Some(ExprUnion::Expression(RcCell::new(
-                    NumberLiteralExpr::new(crypto_params.cipher_len(), false).into_expr(),
-                ))),
+                Some(ExprUnion::Expression(
+                    RcCell::new(
+                        NumberLiteralExpr::new(crypto_params.cipher_len(), false).into_expr(),
+                    )
+                    .into(),
+                )),
             ),
             plain_type,
             crypto_params,
@@ -6847,9 +6859,10 @@ impl Randomness {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 if let Some(randomness_len) = crypto_params.randomness_len() {
-                    Some(ExprUnion::Expression(RcCell::new(
-                        NumberLiteralExpr::new(randomness_len, false).into_expr(),
-                    )))
+                    Some(ExprUnion::Expression(
+                        RcCell::new(NumberLiteralExpr::new(randomness_len, false).into_expr())
+                            .into(),
+                    ))
                 } else {
                     None
                 },
@@ -6880,9 +6893,10 @@ impl Key {
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                Some(ExprUnion::Expression(RcCell::new(
-                    NumberLiteralExpr::new(crypto_params.key_len(), false).into_expr(),
-                ))),
+                Some(ExprUnion::Expression(
+                    RcCell::new(NumberLiteralExpr::new(crypto_params.key_len(), false).into_expr())
+                        .into(),
+                )),
             ),
             crypto_params,
         }
@@ -6909,9 +6923,12 @@ impl Proof {
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
-                Some(ExprUnion::Expression(RcCell::new(
-                    NumberLiteralExpr::new(CFG.lock().unwrap().proof_len(), false).into_expr(),
-                ))),
+                Some(ExprUnion::Expression(
+                    RcCell::new(
+                        NumberLiteralExpr::new(CFG.lock().unwrap().proof_len(), false).into_expr(),
+                    )
+                    .into(),
+                )),
             ),
         }
     }
@@ -6955,7 +6972,7 @@ pub enum CombinedPrivacyUnion {
 impl CombinedPrivacyUnion {
     pub fn as_expression(self) -> Option<ASTFlatten> {
         if let CombinedPrivacyUnion::AST(expr) = self {
-            expr.map(|exp| exp.try_as_expression()).flatten()
+            expr.map(|exp| exp.into())
         } else {
             None
         }
@@ -8297,18 +8314,50 @@ impl ASTChildren for SourceUnit {
 
 impl ConstructorOrFunctionDefinitionAttr for AST {
     fn get_requires_verification_when_external(&self) -> bool {
-        if let Some(c) = self
-            .try_as_namespace_definition_ref()
+        self.try_as_namespace_definition_ref()
             .unwrap()
             .try_as_constructor_or_function_definition_ref()
-        {
-            c.requires_verification_when_external
-        } else {
-            false
-        }
+            .map_or(false, |c| c.requires_verification_when_external)
     }
     fn get_name(&self) -> String {
-        String::new()
+        self.try_as_namespace_definition_ref()
+            .unwrap()
+            .try_as_constructor_or_function_definition_ref()
+            .map_or(String::new(), |c| c.name().clone())
+    }
+}
+impl ConstructorOrFunctionDefinitionAttr for ASTFlatten {
+    fn get_requires_verification_when_external(&self) -> bool {
+        let v = self
+            .try_as_ast_ref()
+            .map(|a| {
+                a.borrow()
+                    .clone()
+                    .try_as_namespace_definition()
+                    .map(|a| a.try_as_constructor_or_function_definition())
+            })
+            .flatten()
+            .flatten()
+            .map_or(false, |c| c.requires_verification_when_external);
+        v || self
+            .try_as_constructor_or_function_definition_ref()
+            .map_or(false, |c| c.borrow().requires_verification_when_external)
+    }
+    fn get_name(&self) -> String {
+        let v = self
+            .try_as_ast_ref()
+            .map(|a| {
+                a.borrow()
+                    .clone()
+                    .try_as_namespace_definition()
+                    .map(|a| a.try_as_constructor_or_function_definition())
+            })
+            .flatten()
+            .flatten()
+            .map_or(String::new(), |c| c.name().clone());
+        v + &self
+            .try_as_constructor_or_function_definition_ref()
+            .map_or(String::new(), |c| c.borrow().name().clone())
     }
 }
 pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten
@@ -8884,13 +8933,10 @@ impl CodeVisitor {
     }
 
     pub fn visit_FunctionCallExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if let Expression::BuiltinFunction(func) = &*ast
-            .try_as_function_call_expr_ref()
-            .unwrap()
-            .borrow()
-            .func()
-            .borrow()
-        {
+        if is_instance(
+            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ASTType::BuiltinFunction,
+        ) {
             let args: Vec<_> = ast
                 .try_as_function_call_expr_ref()
                 .unwrap()
@@ -8899,7 +8945,14 @@ impl CodeVisitor {
                 .iter()
                 .map(|a| self.visit(&a.clone().into()))
                 .collect();
-            func.format_string(&args)
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .func()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .borrow()
+                .format_string(&args)
         } else {
             let f = self.visit(
                 &ast.try_as_function_call_expr_ref()
@@ -9336,9 +9389,9 @@ impl CodeVisitor {
         if let Some(asu) = lhs
             .as_ref()
             .unwrap()
-            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow()
             .try_as_tuple_expr_ref()
         {
             if let Some(at) = &asu
@@ -9354,9 +9407,9 @@ impl CodeVisitor {
         if let Some(le) = lhs
             .as_ref()
             .unwrap()
-            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow()
             .try_as_location_expr_ref()
         {
             if let Some(at) = le.annotated_type() {
@@ -9372,7 +9425,7 @@ impl CodeVisitor {
                 .borrow()
                 .rhs()
                 .clone()
-                .map(|fce| fce.borrow().try_as_function_call_expr_ref().unwrap().args()[1].clone())
+                .map(|fce| fce.try_as_function_call_expr_ref().unwrap().borrow().args()[1].clone())
         } else {
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -9395,20 +9448,23 @@ impl CodeVisitor {
             "{0}{1};" => format!("{0}{1};", ls, rs),
             _ => format!("{} {}= {};", ls, op, rs),
         };
-        if let (
-            Some(LocationExpr::SliceExpr(lhs)),
-            Some(Expression::TupleOrLocationExpr(TupleOrLocationExpr::LocationExpr(
-                LocationExpr::SliceExpr(rhs),
-            ))),
-        ) = (
-            lhs.clone()
-                .unwrap()
-                .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref(),
-            rhs.clone().map(|r| r.borrow().clone()),
-        ) {
+        if is_instance(lhs.as_ref().unwrap(), ASTType::SliceExpr)
+            && is_instance(rhs.as_ref().unwrap(), ASTType::SliceExpr)
+        {
+            let (lhs, rhs) = (
+                lhs.as_ref()
+                    .unwrap()
+                    .try_as_slice_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone(),
+                rhs.as_ref()
+                    .unwrap()
+                    .try_as_slice_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone(),
+            );
             assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
             let mut s = String::new();
             let (lexpr, rexpr) = (

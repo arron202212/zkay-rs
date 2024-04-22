@@ -5,13 +5,13 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
 use antlr_rust::{
     common_token_stream::CommonTokenStream,
     input_stream::InputStream,
     token::{CommonToken, Token},
     tree::{ParseTree, Visitable},
 };
+use rccell::RcCell;
 use solidity_parser::{
     emit::Emitter,
     generated::{
@@ -74,8 +74,8 @@ macro_rules! _visit_binary_expr {
     ($ctx: expr,$self: expr) => {{
         let op = ($ctx).op.as_ref().unwrap();
         let mut f = BuiltinFunction::new(&op.text);
-        f.expression_base.ast_base.line = op.line as i32;
-        f.expression_base.ast_base.column = op.column as i32;
+        f.expression_base.ast_base.borrow_mut().line = op.line as i32;
+        f.expression_base.ast_base.borrow_mut().column = op.column as i32;
         let lhs = if let Some(expr) = &($ctx).lhs {
             expr.accept($self);
             if let Some(AST::Expression(expr)) = ($self).temp_result().clone() {
@@ -98,8 +98,12 @@ macro_rules! _visit_binary_expr {
         };
         Some(
             FunctionCallExprBase::new(
-                Expression::BuiltinFunction(f),
-                vec![lhs.unwrap(), rhs.unwrap()],
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                [lhs.unwrap(), rhs.unwrap()]
+                    .into_iter()
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
+                    .collect(),
                 Some(0),
             )
             .into_ast(),
@@ -114,7 +118,7 @@ macro_rules! _visit_bool_expr {
     };
 }
 
-pub fn build_ast_from_parse_tree(code: &str) -> Option<AST> {
+pub fn build_ast_from_parse_tree(code: &str) -> Option<ASTFlatten> {
     let mut lexer = SolidityLexer::new(InputStream::new(code));
     lexer.add_error_listener(Box::new(MyErrorListener {
         code: code.to_string(),
@@ -125,16 +129,22 @@ pub fn build_ast_from_parse_tree(code: &str) -> Option<AST> {
     // parser.add_error_listener(MyErrorListener{code:code.to_string()}));
     let mut v = BuildASTVisitor::new(code.to_string());
     root.accept(&mut v);
-    v.temp_result().clone()
+    v.temp_result()
+        .clone()
+        .map(RcCell::new)
+        .map(Into::<ASTFlatten>::into)
 }
 
-pub fn build_ast(code: &str) -> AST {
+pub fn build_ast(code: &str) -> ASTFlatten {
     let mut full_ast = build_ast_from_parse_tree(code);
     assert!(full_ast.is_some());
     // assert isinstance(full_ast, ast.SourceUnit)
     full_ast
         .as_mut()
         .unwrap()
+        .try_as_ast_mut()
+        .unwrap()
+        .borrow_mut()
         .try_as_source_unit_mut()
         .unwrap()
         .original_code = code.split("\n").map(String::from).collect();
@@ -325,7 +335,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         IdentifierDeclaration::StateVariableDeclaration(_),
                     )) = self.temp_result().clone()
                     {
-                        Some(self.temp_result().clone())
+                        self.temp_result().clone()
                     } else {
                         None
                     }
@@ -397,10 +407,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
         Some(
             ContractDefinition::new(
-                idf,
+                idf.map(RcCell::new),
                 state_variable_declarations
                     .into_iter()
-                    .filter_map(|a| a)
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
                     .collect(),
                 constructor_definitions,
                 function_definitions,
@@ -452,6 +463,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             None
                         }
                     })
+                    .map(RcCell::new)
                     .collect()
             } else {
                 vec![]
@@ -492,7 +504,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         idf,
                         keywords.len()
                     );
-                    Parameter::new(keywords, annotated_type.unwrap(), idf.unwrap(), None)
+                    Parameter::new(
+                        keywords,
+                        RcCell::new(annotated_type.unwrap()),
+                        idf.map(RcCell::new),
+                        None,
+                    )
                     // if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
                     //     self.temp_result().clone()
                     // {
@@ -501,6 +518,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     // None
                     // }
                 })
+                .map(RcCell::new)
                 .collect()
         } else {
             vec![]
@@ -535,7 +553,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         Some(
             ConstructorOrFunctionDefinition::new(
-                idf,
+                idf.map(RcCell::new),
                 parameters,
                 modifiers,
                 return_parameters,
@@ -560,7 +578,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
                         self.temp_result().clone()
                     {
-                        Some(a)
+                        Some(RcCell::new(a))
                     } else {
                         None
                     }
@@ -637,7 +655,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 }
             })
             .collect();
-        Some(EnumDefinition::new(idf, values).into_ast())
+        Some(EnumDefinition::new(idf.map(RcCell::new), values).into_ast())
     }
 
     fn visit_enumValue(&mut self, ctx: &EnumValueContext<'input>) -> Self::Return {
@@ -718,7 +736,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // for idx in range(0, len(contents), 2){
         //     elements.append(self.visit(contents[idx]))
         // return ast.TupleExpr(elements)
-        Some(TupleExpr::new(elements).into_ast())
+        Some(
+            TupleExpr::new(
+                elements
+                    .into_iter()
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
+                    .collect(),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_modifier(&mut self, ctx: &ModifierContext<'input>) -> Self::Return {
@@ -788,8 +815,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         Some(
             AnnotatedTypeName::new(
-                type_name,
-                privacy_annotation.map(|p| p.into_ast()),
+                type_name.map(RcCell::new),
+                privacy_annotation
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into),
                 homomorphism,
             )
             .into_ast(),
@@ -885,7 +914,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
 
-        Some(IndexExpr::new(arr, index.unwrap()).into_ast())
+        Some(IndexExpr::new(arr, index.unwrap().into()).into_ast())
     }
 
     fn visit_ParenthesisExpr(&mut self, ctx: &ParenthesisExprContext<'input>) -> Self::Return {
@@ -893,8 +922,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("parenthesis");
-        f.expression_base.ast_base.line = ctx.start().line as i32;
-        f.expression_base.ast_base.column = ctx.start().column as i32;
+        f.expression_base.ast_base.borrow_mut().line = ctx.start().line as i32;
+        f.expression_base.ast_base.borrow_mut().column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -906,8 +935,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
-                .into_ast(),
+            FunctionCallExprBase::new(
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                vec![RcCell::new(expr.unwrap()).into()],
+                Some(0),
+            )
+            .into_ast(),
         )
     }
 
@@ -919,8 +952,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let op = ctx.op.as_ref().unwrap();
         // ////println!("{:?},========{:?}",2,op.text);
         let mut f = BuiltinFunction::new(("sign".to_string() + &op.text).as_str());
-        f.expression_base.ast_base.line = op.line as i32;
-        f.expression_base.ast_base.column = op.column as i32;
+        f.expression_base.ast_base.borrow_mut().line = op.line as i32;
+        f.expression_base.ast_base.borrow_mut().column = op.column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -932,8 +965,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
-                .into_ast(),
+            FunctionCallExprBase::new(
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                vec![RcCell::new(expr.unwrap()).into()],
+                Some(0),
+            )
+            .into_ast(),
         )
     }
 
@@ -942,8 +979,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("!");
-        f.expression_base.ast_base.line = ctx.start().line as i32;
-        f.expression_base.ast_base.column = ctx.start().column as i32;
+        f.expression_base.ast_base.borrow_mut().line = ctx.start().line as i32;
+        f.expression_base.ast_base.borrow_mut().column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -955,8 +992,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
-                .into_ast(),
+            FunctionCallExprBase::new(
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                vec![RcCell::new(expr.unwrap()).into()],
+                Some(0),
+            )
+            .into_ast(),
         )
     }
 
@@ -965,8 +1006,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // expr = self.visit(ctx.expr)
         // return FunctionCallExpr(f, [expr])
         let mut f = BuiltinFunction::new("~");
-        f.expression_base.ast_base.line = ctx.start().line as i32;
-        f.expression_base.ast_base.column = ctx.start().column as i32;
+        f.expression_base.ast_base.borrow_mut().line = ctx.start().line as i32;
+        f.expression_base.ast_base.borrow_mut().column = ctx.start().column as i32;
         let expr = if let Some(expr) = &ctx.expr {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
@@ -978,8 +1019,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
         Some(
-            FunctionCallExprBase::new(Expression::BuiltinFunction(f), vec![expr.unwrap()], Some(0))
-                .into_ast(),
+            FunctionCallExprBase::new(
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                vec![RcCell::new(expr.unwrap()).into()],
+                Some(0),
+            )
+            .into_ast(),
         )
     }
 
@@ -1089,8 +1134,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         Some(
             FunctionCallExprBase::new(
-                Expression::BuiltinFunction(f),
-                vec![cond.unwrap(), then_expr.unwrap(), else_expr.unwrap()],
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                [cond.unwrap(), then_expr.unwrap(), else_expr.unwrap()]
+                    .into_iter()
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
+                    .collect(),
                 Some(0),
             )
             .into_ast(),
@@ -1159,7 +1208,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 );
                 // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
                 return Some(
-                    ReclassifyExprBase::new(args[0].clone(), args[1].clone(), None).into_ast(),
+                    ReclassifyExprBase::new(
+                        RcCell::new(args[0].clone()).into(),
+                        RcCell::new(args[1].clone()).into(),
+                        None,
+                    )
+                    .into_ast(),
                 );
             } else if let Some(homomorphism) = REHOM_EXPRESSIONS
                 .lock()
@@ -1175,11 +1229,25 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 );
                 // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
                 return Some(
-                    RehomExpr::new(args[0].clone(), Some(homomorphism.value.clone())).into_ast(),
+                    RehomExpr::new(
+                        RcCell::new(args[0].clone()).into(),
+                        Some(homomorphism.value.clone()),
+                    )
+                    .into_ast(),
                 );
             }
         }
-        Some(FunctionCallExprBase::new(func.unwrap(), args, Some(0)).into_ast())
+        Some(
+            FunctionCallExprBase::new(
+                RcCell::new(func.unwrap()).into(),
+                args.into_iter()
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
+                    .collect(),
+                Some(0),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_ifStatement(&mut self, ctx: &IfStatementContext<'input>) -> Self::Return {
@@ -1203,7 +1271,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         //     self.temp_result().clone()
         // );
         let then_branch = if !is_instance(self.temp_result().as_ref().unwrap(), ASTType::Block) {
-            Some(Block::new(vec![self.temp_result().clone().unwrap()], true))
+            Some(Block::new(
+                vec![RcCell::new(self.temp_result().clone().unwrap()).into()],
+                true,
+            ))
         } else {
             self.temp_result()
                 .clone()
@@ -1222,14 +1293,21 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             {
                 Some(expr)
             } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
-                Some(Block::new(vec![expr.to_ast()], true))
+                Some(Block::new(vec![RcCell::new(expr.to_ast()).into()], true))
             } else {
                 None
             }
         } else {
             None
         };
-        Some(IfStatement::new(cond.unwrap(), then_branch.unwrap(), else_branch).into_ast())
+        Some(
+            IfStatement::new(
+                RcCell::new(cond.unwrap()).into(),
+                then_branch.unwrap(),
+                else_branch,
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_whileStatement(&mut self, ctx: &WhileStatementContext<'input>) -> Self::Return {
@@ -1255,7 +1333,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             {
                 Some(expr)
             } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
-                Some(Block::new(vec![expr.to_ast()], true))
+                Some(Block::new(vec![RcCell::new(expr.to_ast()).into()], true))
             } else {
                 None
             }
@@ -1263,7 +1341,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
 
-        Some(WhileStatement::new(cond.unwrap(), body.unwrap()).into_ast())
+        Some(WhileStatement::new(RcCell::new(cond.unwrap()).into(), body.unwrap()).into_ast())
     }
 
     fn visit_doWhileStatement(&mut self, ctx: &DoWhileStatementContext<'input>) -> Self::Return {
@@ -1279,7 +1357,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             {
                 Some(expr)
             } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
-                Some(Block::new(vec![expr.to_ast()], true))
+                Some(Block::new(vec![RcCell::new(expr.to_ast()).into()], true))
             } else {
                 None
             }
@@ -1297,7 +1375,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             None
         };
 
-        Some(DoWhileStatement::new(body.unwrap(), cond.unwrap()).into_ast())
+        Some(DoWhileStatement::new(body.unwrap(), RcCell::new(cond.unwrap()).into()).into_ast())
     }
 
     fn visit_forStatement(&mut self, ctx: &ForStatementContext<'input>) -> Self::Return {
@@ -1336,7 +1414,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             expr.accept(self);
             if let Some(AST::Expression(expr)) = self.temp_result().clone() {
                 Some(SimpleStatement::ExpressionStatement(
-                    ExpressionStatement::new(expr),
+                    ExpressionStatement::new(RcCell::new(expr).into()),
                 ))
             } else {
                 None
@@ -1351,7 +1429,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             {
                 Some(expr)
             } else if let Some(AST::Statement(expr)) = self.temp_result().clone() {
-                Some(Block::new(vec![expr.to_ast()], true))
+                Some(Block::new(vec![RcCell::new(expr.to_ast()).into()], true))
             } else {
                 None
             }
@@ -1361,7 +1439,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
         Some(AST::Statement(Statement::ForStatement(ForStatement::new(
             init,
-            cond.unwrap(),
+            RcCell::new(cond.unwrap()).into(),
             update,
             body.unwrap(),
         ))))
@@ -1421,15 +1499,19 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             if !op.is_empty() {
                 // If the assignment contains an additional operator -> replace lhs = rhs with lhs = lhs "op" rhs
                 let mut f = BuiltinFunction::new(&op);
-                f.expression_base.ast_base.line = line;
-                f.expression_base.ast_base.column = column;
+                f.expression_base.ast_base.borrow_mut().line = line;
+                f.expression_base.ast_base.borrow_mut().column = column;
                 let mut fce = FunctionCallExprBase::new(
-                    Expression::BuiltinFunction(f),
-                    vec![lhs.clone().unwrap(), rhs.unwrap()],
+                    RcCell::new(Expression::BuiltinFunction(f)).into(),
+                    [lhs.clone().unwrap(), rhs.unwrap()]
+                        .into_iter()
+                        .map(RcCell::new)
+                        .map(Into::<ASTFlatten>::into)
+                        .collect(),
                     Some(0),
                 );
-                fce.expression_base.ast_base.line = line;
-                fce.expression_base.ast_base.column = column + 1;
+                fce.expression_base.ast_base.borrow_mut().line = line;
+                fce.expression_base.ast_base.borrow_mut().column = column + 1;
                 rhs = Some(Expression::FunctionCallExpr(
                     FunctionCallExpr::FunctionCallExpr(fce),
                 ));
@@ -1441,7 +1523,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         let lhs = lhs.map(|l| l.into_ast());
 
-        Some(AssignmentStatementBase::new(lhs, rhs, Some(op)).into_ast())
+        Some(
+            AssignmentStatementBase::new(
+                lhs.map(RcCell::new).map(Into::<ASTFlatten>::into),
+                rhs.map(RcCell::new).map(Into::<ASTFlatten>::into),
+                Some(op),
+            )
+            .into_ast(),
+        )
     }
 
     //     fn  _handle_crement_expr(self, ctx, kind: str){
@@ -1482,30 +1571,45 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 "-"
             });
             let mut one = NumberLiteralExpr::new(1, false);
-            one.literal_expr_base.expression_base.ast_base.line = line;
-            one.literal_expr_base.expression_base.ast_base.column = column + 1;
+            one.literal_expr_base
+                .expression_base
+                .ast_base
+                .borrow_mut()
+                .line = line;
+            one.literal_expr_base
+                .expression_base
+                .ast_base
+                .borrow_mut()
+                .column = column + 1;
             let mut f = BuiltinFunction::new(&optext);
-            f.expression_base.ast_base.line = line;
-            f.expression_base.ast_base.column = column;
+            f.expression_base.ast_base.borrow_mut().line = line;
+            f.expression_base.ast_base.borrow_mut().column = column;
             let mut fce = FunctionCallExprBase::new(
-                Expression::BuiltinFunction(f),
-                vec![
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                [
                     expr.clone().unwrap(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(one)),
-                ],
+                ]
+                .into_iter()
+                .map(RcCell::new)
+                .map(Into::<ASTFlatten>::into)
+                .collect(),
                 Some(0),
             );
-            fce.expression_base.ast_base.line = line;
-            fce.expression_base.ast_base.column = column + 1;
+            fce.expression_base.ast_base.borrow_mut().line = line;
+            fce.expression_base.ast_base.borrow_mut().column = column + 1;
 
             let expr = expr.map(|e| e.to_ast());
 
             Some(
                 AssignmentStatementBase::new(
-                    expr,
-                    Some(Expression::FunctionCallExpr(
-                        FunctionCallExpr::FunctionCallExpr(fce),
-                    )),
+                    expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
+                    Some(
+                        RcCell::new(Expression::FunctionCallExpr(
+                            FunctionCallExpr::FunctionCallExpr(fce),
+                        ))
+                        .into(),
+                    ),
                     Some(format!("{kind}{}", op.text)),
                 )
                 .into_ast(),
@@ -1536,27 +1640,39 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 "-"
             });
             let mut one = NumberLiteralExpr::new(1, false);
-            one.literal_expr_base.expression_base.ast_base.line = line;
-            one.literal_expr_base.expression_base.ast_base.column = column + 1;
+            one.literal_expr_base
+                .expression_base
+                .ast_base
+                .borrow_mut()
+                .line = line;
+            one.literal_expr_base
+                .expression_base
+                .ast_base
+                .borrow_mut()
+                .column = column + 1;
             let mut f = BuiltinFunction::new(&optext);
-            f.expression_base.ast_base.line = line;
-            f.expression_base.ast_base.column = column;
+            f.expression_base.ast_base.borrow_mut().line = line;
+            f.expression_base.ast_base.borrow_mut().column = column;
             let mut fce = FunctionCallExprBase::new(
-                Expression::BuiltinFunction(f),
-                vec![
+                RcCell::new(Expression::BuiltinFunction(f)).into(),
+                [
                     expr.clone().unwrap(),
                     Expression::LiteralExpr(LiteralExpr::NumberLiteralExpr(one)),
-                ],
+                ]
+                .into_iter()
+                .map(RcCell::new)
+                .map(Into::<ASTFlatten>::into)
+                .collect(),
                 Some(0),
             );
-            fce.expression_base.ast_base.line = line;
-            fce.expression_base.ast_base.column = column + 1;
+            fce.expression_base.ast_base.borrow_mut().line = line;
+            fce.expression_base.ast_base.borrow_mut().column = column + 1;
 
             let expr = expr.map(|e| e.into_ast());
             Some(
                 AssignmentStatementBase::new(
-                    expr,
-                    Some(fce.to_expr()),
+                    expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
+                    Some(RcCell::new(fce.to_expr()).into()),
                     Some(format!("{kind}{}", op.text)),
                 )
                 .into_ast(),
@@ -1605,9 +1721,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         if let Some(Expression::FunctionCallExpr(e)) = &expression {
             if let Some(f) = e
                 .func()
-                .to_ast()
+                .clone()
                 .try_as_expression_ref()
                 .unwrap()
+                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
@@ -1628,7 +1745,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             }
         }
 
-        Some(ExpressionStatement::new(expression.unwrap()).into_ast())
+        Some(ExpressionStatement::new(RcCell::new(expression.unwrap()).into()).into_ast())
     }
 
     fn visit_sourceUnit(&mut self, ctx: &SourceUnitContext<'input>) -> Self::Return {
@@ -1724,8 +1841,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
         Some(
-            StateVariableDeclaration::new(annotated_type.unwrap(), keywords, idf.unwrap(), expr)
-                .into_ast(),
+            StateVariableDeclaration::new(
+                RcCell::new(annotated_type.unwrap()),
+                keywords,
+                idf.map(RcCell::new),
+                expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
+            )
+            .into_ast(),
         )
     }
 
@@ -1820,8 +1942,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         };
         let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
         Some(
-            VariableDeclaration::new(keywords, annotated_type.unwrap(), idf.unwrap(), None)
-                .into_ast(),
+            VariableDeclaration::new(
+                keywords,
+                RcCell::new(annotated_type.unwrap()),
+                idf.map(RcCell::new),
+                None,
+            )
+            .into_ast(),
         )
     }
     fn visit_typeName(&mut self, ctx: &TypeNameContext<'input>) -> Self::Return {
@@ -1931,7 +2058,17 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             })
             .collect();
         let was_single_statement = statements.len() == 1;
-        Some(Block::new(statements, was_single_statement).into_ast())
+        Some(
+            Block::new(
+                statements
+                    .into_iter()
+                    .map(RcCell::new)
+                    .map(Into::<ASTFlatten>::into)
+                    .collect(),
+                was_single_statement,
+            )
+            .into_ast(),
+        )
         // }
     }
 
@@ -2017,7 +2154,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(ReturnStatement::new(expr).into_ast())
+        Some(ReturnStatement::new(expr.map(RcCell::new).map(Into::<ASTFlatten>::into)).into_ast())
     }
 
     fn visit_variableDeclarationStatement(
@@ -2044,7 +2181,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(VariableDeclarationStatement::new(variable_declaration.unwrap(), expr).into_ast())
+        Some(
+            VariableDeclarationStatement::new(
+                RcCell::new(variable_declaration.unwrap()),
+                expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_AllExpr(&mut self, ctx: &AllExprContext<'input>) -> Self::Return {
@@ -2059,7 +2202,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         if let Some(idf) = &ctx.idf {
             idf.accept(self);
             if let Some(AST::Identifier(v)) = self.temp_result().clone() {
-                Some(IdentifierExpr::new(IdentifierExprUnion::Identifier(v), None).into_ast())
+                Some(
+                    IdentifierExpr::new(IdentifierExprUnion::Identifier(RcCell::new(v)), None)
+                        .into_ast(),
+                )
             } else {
                 None
             }
@@ -2089,7 +2235,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         } else {
             None
         };
-        Some(PrimitiveCastExpr::new(elem_type.unwrap(), expr.unwrap(), false).into_ast())
+        Some(
+            PrimitiveCastExpr::new(
+                elem_type.map(RcCell::new).unwrap(),
+                expr.map(RcCell::new).map(Into::<ASTFlatten>::into).unwrap(),
+                false,
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_MemberAccessExpr(&mut self, ctx: &MemberAccessExprContext<'input>) -> Self::Return {
@@ -2112,8 +2265,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         .unwrap()
                         .try_as_location_expr()
                         .unwrap()
-                }),
-                member.unwrap(),
+                })
+                .map(RcCell::new),
+                member.map(RcCell::new).unwrap(),
             )
             .into_ast(),
         )

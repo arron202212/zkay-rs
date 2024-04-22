@@ -17,17 +17,15 @@ use std::collections::BTreeMap;
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::ASTVisitorBaseRefImpl;
 // T = TypeVar("T")
-
-pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Option<ASTFlatten>
 // """
 
-    // :param ast
-    // :param with_types: (optional)
-    // :return: a deep copy of `ast`
+// :param ast
+// :param with_types: (optional)
+// :return: a deep copy of `ast`
 
-    // Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
-    // """
-{
+// Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
+// """
+pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Option<ASTFlatten> {
     // assert!(isinstance(ast,AST,ASTFlatten,));
     let v = DeepCopyVisitor::new(with_types, with_analysis);
     let mut ast_copy = v.visit(ast);
@@ -42,17 +40,19 @@ pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Opt
     link_identifiers(ast_copy.as_mut().unwrap());
     ast_copy
 }
-
-pub fn replace_expr(old_expr: &ASTFlatten, new_expr: &ASTFlatten, copy_type: bool) -> ASTFlatten
 // """
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
 // """
-{
+pub fn replace_expr(
+    old_expr: &ASTFlatten,
+    new_expr: &ASTFlatten,
+    copy_type: bool,
+) -> Option<ASTFlatten> {
     _replace_ast(old_expr, new_expr);
     if copy_type {
         // new_expr.annotated_type = old_expr.annotated_type;
     }
-    new_expr.clone()
+    Some(new_expr.clone())
 }
 
 pub fn _replace_ast(old_ast: &ASTFlatten, mut new_ast: &ASTFlatten) {
@@ -134,11 +134,10 @@ impl AstVisitor for DeepCopyVisitor {
     }
 }
 impl DeepCopyVisitor {
-    pub fn new(with_types: bool, with_analysis: bool) -> Self
-// super().__init__("node-or-children")
+    pub fn new(with_types: bool, with_analysis: bool) -> Self {
+        // super().__init__("node-or-children")
         // self.with_types = with_types
         // self.with_analysis = with_analysis
-    {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             with_types,

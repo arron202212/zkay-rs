@@ -481,10 +481,13 @@ where
         );
     }
 
-    pub fn get_randomness_for_rerand(&mut self, expr: Expression) -> IdentifierExpr {
+    pub fn get_randomness_for_rerand(&mut self, expr: &ASTFlatten) -> RcCell<IdentifierExpr> {
         let idf = self._secret_input_name_factory.get_new_idf(
             &RcCell::new(TypeName::rnd_type(
-                expr.annotated_type()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -501,10 +504,10 @@ where
             )),
             None,
         );
-        IdentifierExpr::new(
+        RcCell::new(IdentifierExpr::new(
             IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(idf))),
             None,
-        )
+        ))
     }
     // """
     // Evaluate private expression and return result as a fresh out variable.
@@ -516,11 +519,18 @@ where
     // """
     pub fn evaluate_expr_in_circuit(
         &mut self,
-        expr: &RcCell<Expression>,
+        expr: &ASTFlatten,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
-        self.circ_indent_block(&expr.borrow().to_ast().code());
+        self.circ_indent_block(
+            &expr
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .to_ast()
+                .code(),
+        );
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
     }
     // """
@@ -540,7 +550,7 @@ where
     // """
     pub fn evaluate_stmt_in_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
-            RcCell::new(NumberLiteralExpr::new(0, false).to_expr()),
+            RcCell::new(NumberLiteralExpr::new(0, false).to_expr()).into(),
         ));
         for var in &ast
             .try_as_statement_ref()
@@ -682,13 +692,16 @@ where
                 vec![
                     ast.clone(),
                     RcCell::new(ReturnStatement::new(Some(
-                        TupleExpr::new(
-                            ret_params
-                                .iter()
-                                .map(|r| RcCell::new(r.to_expr()))
-                                .collect(),
+                        RcCell::new(
+                            TupleExpr::new(
+                                ret_params
+                                    .iter()
+                                    .map(|r| RcCell::new(r.to_expr()).into())
+                                    .collect(),
+                            )
+                            .to_expr(),
                         )
-                        .to_expr(),
+                        .into(),
                     )))
                     .into(),
                 ],
@@ -717,37 +730,41 @@ where
             .target_rc
             .as_ref()
             .map(|t| t.clone().downgrade());
-        let mut fcall = FunctionCallExprBase::new(RcCell::new(idf.to_expr()), vec![], None);
+        let mut fcall = FunctionCallExprBase::new(RcCell::new(idf.to_expr()).into(), vec![], None);
         fcall.expression_base.statement =
             Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
-        let mut ret_args = self.inline_function_call_into_circuit(&RcCell::new(fcall));
+        let mut ret_args = self.inline_function_call_into_circuit(&RcCell::new(fcall).into());
         assert!(ret_args.is_some());
         let mut ret_args = ret_args.unwrap();
         //Move all return values out of the circuit
         let mut ret_args = if !is_instance(&ret_args, ASTType::TupleExpr) {
-            RcCell::new(TupleExpr::new(vec![ret_args]).into_expr())
+            RcCell::new(TupleExpr::new(vec![ret_args.into()]).into_expr()).into()
         } else {
             ret_args
         };
         for ret_arg in ret_args
-            .borrow_mut()
-            .try_as_tuple_or_location_expr_mut()
+            .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow_mut()
             .try_as_tuple_expr_mut()
             .unwrap()
             .elements
             .iter_mut()
         {
-            ret_arg.borrow_mut().expression_base_mut_ref().statement =
-                Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
+            ret_arg
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
             .zip(
                 ret_args
-                    .borrow_mut()
-                    .try_as_tuple_or_location_expr_mut()
+                    .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow_mut()
                     .try_as_tuple_expr_mut()
                     .unwrap()
                     .elements
@@ -773,20 +790,23 @@ where
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .lhs = Some(RcCell::new(
-                TupleExpr::new(
-                    ret_params
-                        .iter()
-                        .map(|r| RcCell::new(r.to_expr()))
-                        .collect(),
+                .lhs = Some(
+                RcCell::new(
+                    TupleExpr::new(
+                        ret_params
+                            .iter()
+                            .map(|r| RcCell::new(r.to_expr()).into())
+                            .collect(),
+                    )
+                    .into_expr(),
                 )
-                .into_expr(),
-            ));
+                .into(),
+            );
             astmt
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .rhs = Some(RcCell::new(TupleExpr::new(ret_arg_outs).to_expr()));
+                .rhs = Some(RcCell::new(TupleExpr::new(ret_arg_outs).to_expr()).into());
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
         }
@@ -808,9 +828,9 @@ where
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -833,9 +853,9 @@ where
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -891,20 +911,21 @@ where
             .unwrap()
             .try_as_location_expr_ref()
             .unwrap()
-            .assign(RcCell::new(
-                LocationExpr::IdentifierExpr(pki)
-                    .call(
-                        IdentifierExprUnion::String(String::from("getPk")),
-                        self._expr_trafo
-                            .as_ref()
-                            .unwrap()
-                            .visit(&privacy_label_expr.clone().into())
-                            .map(|expr| expr.try_as_expression())
-                            .flatten()
-                            .map_or(vec![], |expr| vec![expr]),
-                    )
-                    .to_expr(),
-            ));
+            .assign(
+                RcCell::new(
+                    LocationExpr::IdentifierExpr(pki)
+                        .call(
+                            IdentifierExprUnion::String(String::from("getPk")),
+                            self._expr_trafo
+                                .as_ref()
+                                .unwrap()
+                                .visit(&privacy_label_expr.clone().into())
+                                .map_or(vec![], |expr| vec![expr]),
+                        )
+                        .to_expr(),
+                )
+                .into(),
+            );
         (idf, le)
     }
 
@@ -973,8 +994,10 @@ where
     // :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
     // :return: HybridArgumentIdf which references the plaintext value of the newly added input
     // """
-    pub fn add_to_circuit_inputs(&mut self, expr: &RcCell<Expression>) -> HybridArgumentIdf {
+    pub fn add_to_circuit_inputs(&mut self, expr: &ASTFlatten) -> HybridArgumentIdf {
         let privacy = if expr
+            .try_as_expression_ref()
+            .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
@@ -982,7 +1005,9 @@ where
             .borrow()
             .is_private()
         {
-            expr.borrow()
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
@@ -999,16 +1024,21 @@ where
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
 
-        let expr_text = expr.borrow().to_ast().code();
+        let expr_text = expr
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .to_ast()
+            .code();
         let input_expr = self
             ._expr_trafo
             .as_ref()
             .unwrap()
-            .visit(&expr.clone().into())
-            .map(|a| a.try_as_expression())
-            .flatten();
+            .visit(&expr.clone().into());
         let t = input_expr
             .as_ref()
+            .unwrap()
+            .try_as_expression_ref()
             .unwrap()
             .borrow()
             .annotated_type()
@@ -1061,6 +1091,8 @@ where
         {
             if self._remapper.0.is_remapped(
                 &expr
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
@@ -1080,9 +1112,9 @@ where
             ) {
                 return self._remapper.0.get_current(
                     &expr
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .target()
@@ -1102,9 +1134,9 @@ where
 
             t_suffix = format!(
                 "_{}",
-                expr.borrow()
-                    .try_as_tuple_or_location_expr_ref()
+                expr.try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -1129,6 +1161,8 @@ where
                 "{}{t_suffix}",
                 self._in_name_factory.base_name_factory.get_new_name(
                     &expr
+                        .try_as_expression_ref()
+                        .unwrap()
                         .borrow()
                         .annotated_type()
                         .as_ref()
@@ -1142,7 +1176,9 @@ where
             );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -1166,6 +1202,8 @@ where
                     .base_name_factory
                     .get_new_name(
                         &*expr
+                            .try_as_expression_ref()
+                            .unwrap()
                             .borrow()
                             .annotated_type()
                             .as_ref()
@@ -1179,7 +1217,9 @@ where
             );
             let locally_decrypted_idf = self._secret_input_name_factory.add_idf(
                 tname,
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -1194,12 +1234,16 @@ where
                 input_expr
                     .as_ref()
                     .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
                     .clone(),
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -1234,7 +1278,9 @@ where
 
         //Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         //but also signals the offchain simulator to perform decryption if necessary
-        expr.borrow_mut()
+        expr.try_as_expression_ref()
+            .unwrap()
+            .borrow_mut()
             .expression_base_mut_ref()
             .statement
             .clone()
@@ -1249,7 +1295,7 @@ where
             .pre_statements
             .push(
                 RcCell::new(CircuitInputStatement::new(
-                    input_idf.get_loc_expr(None).try_as_expression().unwrap(),
+                    input_idf.get_loc_expr(None),
                     input_expr.unwrap(),
                     None,
                 ))
@@ -1260,6 +1306,8 @@ where
             //Check if the secret plain input corresponds to the decrypted cipher value
             let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(
                 &expr
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
@@ -1275,6 +1323,8 @@ where
                 )),
             )));
             let mut statement = expr
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .expression_base_ref()
                 .statement
@@ -1289,7 +1339,11 @@ where
                 false,
                 true,
             );
-            expr.borrow_mut().expression_base_mut_ref().statement = Some(statement);
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = Some(statement);
         }
 
         //Cache circuit input for later reuse if possible
@@ -1300,6 +1354,8 @@ where
         {
             self._remapper.0.remap(
                 &expr
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
@@ -1329,8 +1385,11 @@ where
     // :return: Either idf itself (not currently remapped)
     //          or a loc expr for the HybridArgumentIdf which references the most recent value of idf
     // """
-    pub fn get_remapped_idf_expr(&self, idf: IdentifierExpr) -> ASTFlatten {
+    pub fn get_remapped_idf_expr(&self, idf: ASTFlatten) -> ASTFlatten {
         let target = idf
+            .try_as_identifier_expr_ref()
+            .unwrap()
+            .borrow()
             .location_expr_base
             .target
             .clone()
@@ -1338,7 +1397,12 @@ where
             .flatten();
         assert!(target.is_some());
         assert!(!is_instance(
-            &*idf.idf.as_ref().unwrap().borrow(),
+            idf.try_as_identifier_expr_ref()
+                .unwrap()
+                .borrow()
+                .idf
+                .as_ref()
+                .unwrap(),
             ASTType::HybridArgumentIdf
         ));
         if self._remapper.0.is_remapped(
@@ -1366,7 +1430,10 @@ where
             );
             remapped_idf
                 .get_idf_expr(
-                    idf.location_expr_base
+                    idf.try_as_identifier_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .location_expr_base
                         .tuple_or_location_expr_base
                         .expression_base
                         .ast_base
@@ -1377,12 +1444,22 @@ where
                         .upgrade()
                         .as_ref(),
                 )
-                .try_as_identifier_expr()
+                .as_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
                 .unwrap()
                 .borrow()
-                .as_type(&idf.annotated_type.clone().unwrap().into())
+                .as_type(
+                    &idf.try_as_identifier_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type
+                        .clone()
+                        .unwrap()
+                        .into(),
+                )
         } else {
-            RcCell::new(idf).into()
+            idf.clone()
         }
     }
     // """
@@ -1395,7 +1472,7 @@ where
     pub fn create_new_idf_version_from_value(
         &mut self,
         orig_idf: &RcCell<Identifier>,
-        expr: &RcCell<Expression>,
+        expr: &ASTFlatten,
     ) {
         let tmp_var = self._create_temp_var(&orig_idf.borrow().name(), expr);
         self._remapper.0.remap(orig_idf, tmp_var);
@@ -1407,41 +1484,50 @@ where
     // :param fcall: Function call to inline
     // :return: Expression (1 retval) / TupleExpr (multiple retvals) with return value(s)
     // """
-    pub fn inline_function_call_into_circuit(
-        &mut self,
-        fcall: &RcCell<FunctionCallExprBase>,
-    ) -> Option<RcCell<Expression>> {
+    pub fn inline_function_call_into_circuit(&mut self, fcall: &ASTFlatten) -> Option<ASTFlatten> {
         assert!(
-            is_instance(&*fcall.borrow().func, ASTType::LocationExprBase)
-                && fcall
-                    .borrow()
-                    .func
-                    .borrow()
-                    .try_as_tuple_or_location_expr_ref()
+            is_instance(
+                fcall
+                    .try_as_function_call_expr_ref()
                     .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
-                    .is_some()
+                    .borrow()
+                    .func(),
+                ASTType::LocationExprBase
+            ) && fcall
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .func()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .borrow()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .target()
+                .is_some()
         );
         let fdef = fcall
+            .try_as_function_call_expr_ref()
+            .unwrap()
             .borrow()
-            .func
-            .borrow()
+            .func()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow()
             .try_as_location_expr_ref()
             .unwrap()
             .target()
             .clone();
         //with
         self._remapper.0.remap_scope(Some(
-            fcall
+            &fcall
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .borrow()
-                .func
-                .borrow()
+                .func()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -1455,17 +1541,20 @@ where
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .body
-                .as_ref()
-                .unwrap(),
+                .clone()
+                .unwrap()
+                .into(),
         ));
 
         //with
         if fcall
+            .try_as_function_call_expr_ref()
+            .unwrap()
             .borrow()
-            .func
-            .borrow()
+            .func()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow()
             .try_as_location_expr_ref()
             .unwrap()
             .target()
@@ -1483,7 +1572,15 @@ where
             .name()
             != "<stmt_fct>"
         {
-            self.circ_indent_block(&format!("INLINED {}", fcall.borrow().to_ast().code()));
+            self.circ_indent_block(&format!(
+                "INLINED {}",
+                fcall
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .to_ast()
+                    .code()
+            ));
         }
 
         //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
@@ -1499,7 +1596,13 @@ where
             .unwrap()
             .parameters
             .iter()
-            .zip(&fcall.borrow().args)
+            .zip(
+                fcall
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .args(),
+            )
         {
             self._phi.push(RcCell::new(CircuitStatement::CircComment(
                 CircComment::new(format!(
@@ -1512,7 +1615,11 @@ where
                         .unwrap()
                         .borrow()
                         .name(),
-                    arg.borrow().to_ast().code()
+                    arg.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .to_ast()
+                        .code()
                 )),
             )));
             // with
@@ -1550,8 +1657,10 @@ where
             .visit(&inlined_body.clone().unwrap().into());
 
         fcall
+            .try_as_function_call_expr_ref()
+            .unwrap()
             .borrow_mut()
-            .expression_base
+            .expression_base_mut_ref()
             .statement
             .clone()
             .unwrap()
@@ -1599,7 +1708,7 @@ where
         let mut ret = TupleExpr::new(
             ret_idfs
                 .iter()
-                .filter_map(|idf| {
+                .map(|idf| {
                     IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(RcCell::new(
                             Identifier::HybridArgumentIdf(idf.clone()),
@@ -1607,7 +1716,6 @@ where
                         None,
                     )
                     .as_type(&idf.t.clone().into())
-                    .try_as_expression()
                 })
                 .collect(),
         );
@@ -1617,12 +1725,12 @@ where
             // ret = if let Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(ret))=&ret.elements[0]{ret.clone()}else{TupleExpr::default()};
             ret.elements[0].clone()
         } else {
-            RcCell::new(ret.into_expr())
+            RcCell::new(ret.into_expr()).into()
         })
     }
     // """Include private assignment statement in this circuit."""
 
-    pub fn add_assignment_to_circuit(&mut self, ast: &ASTFlatten) {
+    pub fn add_assignment_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
             CircComment::new(
                 ast.try_as_assignment_statement_ref()
@@ -1647,9 +1755,10 @@ where
                 .as_ref()
                 .unwrap(),
         );
+        Some(ast.clone())
     }
 
-    pub fn add_var_decl_to_circuit(&mut self, ast: &ASTFlatten) {
+    pub fn add_var_decl_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
             CircComment::new(
                 ast.try_as_variable_declaration_statement_ref()
@@ -1687,7 +1796,7 @@ where
                 .unwrap()
                 .borrow_mut()
                 .expr = Some(TypeCheckVisitor::implicitly_converted_to(
-                &RcCell::new(nle.to_expr()),
+                &RcCell::new(nle.to_expr()).into(),
                 t.as_ref().unwrap(),
             ));
         }
@@ -1708,20 +1817,53 @@ where
                 .as_ref()
                 .unwrap(),
         );
+        Some(ast.clone())
     }
 
-    pub fn add_return_stmt_to_circuit(&mut self, ast: &mut ReturnStatement) {
+    pub fn add_return_stmt_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(ast.to_ast().code()),
+            CircComment::new(
+                ast.try_as_return_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .to_ast()
+                    .code(),
+            ),
         )));
-        assert!(ast.expr.is_some());
-        if !is_instance(ast.expr.as_ref().unwrap(), ASTType::TupleExpr) {
-            ast.expr = Some(RcCell::new(
-                TupleExpr::new(vec![ast.expr.clone().unwrap()]).to_expr(),
-            ));
+        assert!(ast
+            .try_as_return_statement_ref()
+            .unwrap()
+            .borrow()
+            .expr
+            .is_some());
+        if !is_instance(
+            ast.try_as_return_statement_ref()
+                .unwrap()
+                .borrow()
+                .expr
+                .as_ref()
+                .unwrap(),
+            ASTType::TupleExpr,
+        ) {
+            ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = Some(
+                RcCell::new(
+                    TupleExpr::new(vec![ast
+                        .try_as_return_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr
+                        .clone()
+                        .unwrap()])
+                    .to_expr(),
+                )
+                .into(),
+            );
         }
 
         for (vd, expr) in ast
+            .try_as_return_statement_ref()
+            .unwrap()
+            .borrow_mut()
             .statement_base
             .function
             .as_mut()
@@ -1732,12 +1874,15 @@ where
             .return_var_decls
             .iter()
             .zip(
-                &ast.expr
-                    .as_ref()
+                &ast.try_as_return_statement_ref()
                     .unwrap()
                     .borrow()
+                    .expr
+                    .as_ref()
+                    .unwrap()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_tuple_expr_ref()
                     .unwrap()
                     .elements,
@@ -1753,9 +1898,10 @@ where
                 &expr,
             );
         }
+        Some(ast.clone())
     }
     // """Include private if statement in this circuit."""
-    pub fn add_if_statement_to_circuit(&mut self, ast: &ASTFlatten) {
+    pub fn add_if_statement_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         //Handle if branch
         // with
         self._remapper.0.remap_scope(None);
@@ -1765,6 +1911,8 @@ where
                 .unwrap()
                 .borrow()
                 .condition
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .to_ast()
                 .code()
@@ -1872,23 +2020,29 @@ where
             cond.as_ref().unwrap().identifier_base.name
         ));
         let cond_idf_expr = cond.unwrap().get_idf_expr(Some(ast));
-        assert!(is_instance(&cond_idf_expr, ASTType::IdentifierExpr));
+        assert!(is_instance(
+            cond_idf_expr.as_ref().unwrap(),
+            ASTType::IdentifierExpr
+        ));
         let mut selfs = RcCell::new(self.clone());
         self._remapper.0.join_branch(
             ast,
-            &cond_idf_expr,
+            cond_idf_expr.as_ref().unwrap(),
             then_remap,
             // |s: String, e: Expression| -> HybridArgumentIdf { selfs._create_temp_var(&s, e) },
             &selfs,
         );
+        Some(ast.clone())
     }
     pub fn add_block_to_circuit(
         &mut self,
-        ast: &RcCell<Block>,
+        ast: &ASTFlatten,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
-    ) {
+    ) -> Option<ASTFlatten> {
         assert!(ast
+            .try_as_block_ref()
+            .unwrap()
             .borrow()
             .statement_list_base
             .statement_base
@@ -1897,7 +2051,9 @@ where
             .parent
             .is_some());
         let is_already_scoped = is_instances(
-            &ast.borrow()
+            &ast.try_as_block_ref()
+                .unwrap()
+                .borrow()
                 .statement_list_base
                 .statement_base
                 .ast_base
@@ -1926,7 +2082,14 @@ where
             self._remapper.0.remap_scope(Some(ast));
         }
         let mut statements = vec![];
-        for stmt in ast.borrow_mut().statement_list_base.statements.iter_mut() {
+        for stmt in ast
+            .try_as_block_ref()
+            .unwrap()
+            .borrow_mut()
+            .statement_list_base
+            .statements
+            .iter_mut()
+        {
             if is_instance(stmt, ASTType::StatementBase) {
                 self._circ_trafo
                     .as_ref()
@@ -1947,7 +2110,9 @@ where
             }
             // stmt.pre_statements = vec![];
         }
-        ast.borrow_mut()
+        ast.try_as_block_ref()
+            .unwrap()
+            .borrow_mut()
             .statement_list_base
             .statement_base
             .pre_statements
@@ -1956,6 +2121,7 @@ where
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
             CircComment::new(String::from("}")),
         )));
+        Some(ast.clone())
     }
 
     //Internal functionality #
@@ -1978,7 +2144,7 @@ where
         privacy.clone()
     }
     // """Assign expression to a fresh temporary circuit variable."""
-    pub fn _create_temp_var(&mut self, tag: &str, expr: &RcCell<Expression>) -> HybridArgumentIdf {
+    pub fn _create_temp_var(&mut self, tag: &str, expr: &ASTFlatten) -> HybridArgumentIdf {
         self._evaluate_private_expression(expr, &format!("_{tag}"))
             .unwrap()
     }
@@ -1988,21 +2154,21 @@ where
     // :param lhs: destination
     // :param rhs: source
     // """
-    pub fn _add_assign(&mut self, lhs: &RcCell<Expression>, rhs: &RcCell<Expression>) {
+    pub fn _add_assign(&mut self, lhs: &ASTFlatten, rhs: &ASTFlatten) {
         if is_instance(lhs, ASTType::IdentifierExpr) {
             //for now no ref types
             assert!(lhs
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
                 .is_some());
             self.create_new_idf_version_from_value(
-                &lhs.borrow()
-                    .try_as_tuple_or_location_expr_ref()
+                &lhs.try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -2029,43 +2195,45 @@ where
                     .as_ref()
                     .unwrap()
                     .visit(&rhs.clone().into())
-                    .map(|e| e.try_as_expression())
-                    .flatten()
                 {
-                    *rhs.borrow_mut() = expr.borrow().clone();
+                    *rhs.try_as_function_call_expr_ref().unwrap().borrow_mut() = expr
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .clone();
                 }
             }
             assert!(
                 is_instance(rhs, ASTType::TupleExpr)
                     && lhs
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_tuple_expr_ref()
                         .unwrap()
                         .elements
                         .len()
                         == rhs
-                            .borrow()
                             .try_as_tuple_or_location_expr_ref()
                             .unwrap()
+                            .borrow()
                             .try_as_tuple_expr_ref()
                             .unwrap()
                             .elements
                             .len()
             );
             for (e_l, e_r) in lhs
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_tuple_expr_ref()
                 .unwrap()
                 .elements
                 .iter()
                 .zip(
-                    &rhs.borrow()
-                        .try_as_tuple_or_location_expr_ref()
+                    &rhs.try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_tuple_expr_ref()
                         .unwrap()
                         .elements,
@@ -2086,13 +2254,15 @@ where
     // """
     pub fn _get_circuit_output_for_private_expression(
         &mut self,
-        expr: &RcCell<Expression>,
+        expr: &ASTFlatten,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
         let is_circ_val = is_instance(expr, ASTType::IdentifierExpr)
             && is_instance(
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -2105,6 +2275,8 @@ where
                 ASTType::HybridArgumentIdf,
             )
             && expr
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
@@ -2120,46 +2292,64 @@ where
                 .unwrap()
                 .arg_type
                 != HybridArgType::PubContractVal;
-        let is_hom_comp = is_instance(&(*expr), ASTType::FunctionCallExprBase)
+        let is_hom_comp = is_instance(expr, ASTType::FunctionCallExprBase)
             && is_instance(
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .func(),
                 ASTType::BuiltinFunction,
             )
             && expr
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .homomorphism
                 != Homomorphism::non_homomorphic();
         if is_hom_comp {
             //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
 
-            expr.borrow_mut()
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
                 .try_as_function_call_expr_mut()
                 .unwrap()
                 .expression_base_mut_ref()
                 .annotated_type = Some(AnnotatedTypeName::cipher_type(
-                expr.borrow().annotated_type().as_ref().unwrap().clone(),
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .clone(),
                 Some(homomorphism.clone()),
             ));
         }
 
         let priv_result_idf = if is_circ_val
             || expr
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .annotated_type()
                 .as_ref()
                 .unwrap()
                 .borrow()
                 .is_private()
-            || expr.borrow().evaluate_privately()
+            || expr
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .evaluate_privately()
         {
             self._evaluate_private_expression(expr, "").unwrap()
         } else {
@@ -2173,7 +2363,9 @@ where
         if is_instance(expr, ASTType::IdentifierExpr) && !is_circ_val {
             t_suffix += &format!(
                 "_{}",
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -2190,6 +2382,8 @@ where
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
             || expr
+                .try_as_expression_ref()
+                .unwrap()
                 .borrow()
                 .annotated_type()
                 .as_ref()
@@ -2206,7 +2400,9 @@ where
             let tname = format!(
                 "{}{t_suffix}",
                 self._out_name_factory.base_name_factory.get_new_name(
-                    expr.borrow()
+                    expr.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
@@ -2219,7 +2415,9 @@ where
             );
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
-                expr.borrow()
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -2227,7 +2425,7 @@ where
                     .type_name
                     .as_ref()
                     .unwrap(),
-                Some(&private_expr),
+                private_expr.as_ref(),
             );
             self._phi
                 .push(RcCell::new(CircuitStatement::CircEqConstraint(
@@ -2241,7 +2439,9 @@ where
                     .unwrap()
                     .borrow()
                     .explicitly_converted(
-                        expr.borrow()
+                        expr.try_as_expression_ref()
+                            .unwrap()
+                            .borrow()
                             .annotated_type()
                             .as_ref()
                             .unwrap()
@@ -2255,11 +2455,24 @@ where
         } else {
             //If the result is encrypted, add an encryption constraint to ensure that the user supplied encrypted output
             //is equal to the correctly encrypted circuit evaluation result
-            let new_privacy =
-                self._get_canonical_privacy_label(&expr.borrow().analysis().unwrap(), new_privacy);
+            let new_privacy = self._get_canonical_privacy_label(
+                &expr
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .analysis()
+                    .unwrap(),
+                new_privacy,
+            );
             let privacy_label_expr = get_privacy_expr_from_label(new_privacy.clone());
             let cipher_t = RcCell::new(TypeName::cipher_type(
-                expr.borrow().annotated_type().as_ref().unwrap().clone(),
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .clone(),
                 homomorphism.clone(),
             ));
             let tname = format!(
@@ -2269,8 +2482,8 @@ where
                     .get_new_name(&cipher_t, false)
             );
             let enc_expr = EncryptionExpression::new(
-                private_expr.try_as_expression_ref().unwrap().clone(),
-                privacy_label_expr.try_as_expression().unwrap(),
+                private_expr.clone().unwrap(),
+                privacy_label_expr.clone(),
                 Some(homomorphism.clone()),
             );
             let new_out_param = self._out_name_factory.add_idf(
@@ -2285,6 +2498,8 @@ where
                 .get_crypto_params(homomorphism);
             self._ensure_encryption(
                 &expr
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .expression_base_ref()
                     .statement
@@ -2304,7 +2519,9 @@ where
 
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
-        expr.borrow_mut()
+        expr.try_as_expression_ref()
+            .unwrap()
+            .borrow_mut()
             .expression_base_mut_ref()
             .statement
             .clone()
@@ -2333,16 +2550,16 @@ where
     // """
     pub fn _evaluate_private_expression(
         &mut self,
-        expr: &RcCell<Expression>,
+        expr: &ASTFlatten,
         tmp_idf_suffix: &str,
     ) -> Option<HybridArgumentIdf> {
         assert!(
             !(is_instance(expr, ASTType::MemberAccessExpr)
                 && is_instance(
                     &*expr
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
+                        .borrow()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .try_as_member_access_expr_ref()
@@ -2355,9 +2572,9 @@ where
         if is_instance(expr, ASTType::IdentifierExpr)
             && is_instance(
                 &*expr
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .try_as_identifier_expr_ref()
@@ -2369,9 +2586,9 @@ where
                 ASTType::HybridArgumentIdf,
             )
             && expr
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .try_as_identifier_expr_ref()
@@ -2387,9 +2604,9 @@ where
         //Already evaluated in circuit
         {
             return expr
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .try_as_identifier_expr_ref()
@@ -2402,11 +2619,7 @@ where
                 .try_as_hybrid_argument_idf();
         }
 
-        let priv_expr = self
-            ._circ_trafo
-            .as_ref()
-            .unwrap()
-            .visit(&expr.clone().into());
+        let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory.base_name_factory.get_new_name(
@@ -2618,7 +2831,7 @@ where
             .statement_base_mut_ref()
             .unwrap()
             .pre_statements
-            .push(get_key_stmt.to_ast());
+            .push(RcCell::new(get_key_stmt).into());
         if let Some(requested_dynamic_pks) = self
             ._requested_dynamic_pks
             .get_mut(stmt.as_ref().unwrap().try_as_statement_ref().unwrap())
@@ -2677,8 +2890,8 @@ where
             .pre_statements
             .push(
                 RcCell::new(AssignmentStatementBase::new(
-                    key_idf.get_loc_expr(None).try_as_expression(),
-                    key_expr.try_as_expression(),
+                    Some(RcCell::new(key_idf.clone()).into()),
+                    Some(key_expr),
                     None,
                 ))
                 .into(),

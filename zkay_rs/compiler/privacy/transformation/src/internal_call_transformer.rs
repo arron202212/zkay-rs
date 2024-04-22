@@ -55,7 +55,7 @@ pub fn compute_transitive_circuit_io_sizes(
 }
 
 pub fn _compute_transitive_circuit_io_sizes(
-    cgens: &mut BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
+    cgens: &BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
     fct: &RcCell<ConstructorOrFunctionDefinition>,
     gkeys: &mut BTreeSet<(Option<ASTFlatten>, CryptoParams)>,
     called_fcts: &mut BTreeSet<RcCell<ConstructorOrFunctionDefinition>>,
@@ -86,9 +86,9 @@ pub fn _compute_transitive_circuit_io_sizes(
         if let Some(cofd) = call
             .borrow()
             .func()
-            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
+            .borrow()
             .try_as_location_expr_ref()
             .unwrap()
             .target()
@@ -110,9 +110,9 @@ pub fn _compute_transitive_circuit_io_sizes(
             if let Some(ref mut t) = f
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -178,7 +178,8 @@ pub fn transform_internal_calls(
                             None,
                         )
                         .to_expr(),
-                    ),
+                    )
+                    .into(),
                     RcCell::new(
                         IdentifierExpr::new(
                             IdentifierExprUnion::String(format!(
@@ -193,14 +194,16 @@ pub fn transform_internal_calls(
                             NumberLiteralExpr::new(in_size + i, false).to_expr(),
                         )
                         .to_expr(),
-                    ),
+                    )
+                    .into(),
                     RcCell::new(
                         IdentifierExpr::new(
                             IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
                             None,
                         )
                         .to_expr(),
-                    ),
+                    )
+                    .into(),
                     RcCell::new(
                         IdentifierExpr::new(
                             IdentifierExprUnion::String(format!(
@@ -215,14 +218,15 @@ pub fn transform_internal_calls(
                             NumberLiteralExpr::new(out_size + o, false).to_expr(),
                         )
                         .to_expr(),
-                    ),
+                    )
+                    .into(),
                 ]);
             if let Some(t) = fc
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
+                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()

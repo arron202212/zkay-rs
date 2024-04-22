@@ -641,9 +641,9 @@ impl JsnarkVisitor {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .can_be_private());
             let mut args: Vec<_> = ast
                 .try_as_function_call_expr_ref()
@@ -658,13 +658,15 @@ impl JsnarkVisitor {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .is_shiftop()
             {
                 assert!(
                     ast.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
+                        .try_as_expression_ref()
+                        .unwrap()
                         .borrow()
                         .annotated_type()
                         .as_ref()
@@ -677,6 +679,8 @@ impl JsnarkVisitor {
                         .is_literal()
                 );
                 args[1] = ast.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
+                    .try_as_expression_ref()
+                    .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
@@ -701,9 +705,9 @@ impl JsnarkVisitor {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .op
                 .clone();
             let op = if op == "sign-" { "-" } else { op };
@@ -715,9 +719,9 @@ impl JsnarkVisitor {
                 .unwrap()
                 .borrow()
                 .func()
-                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
+                .borrow()
                 .homomorphism
                 .clone();
             let (f_start, crypto_backend, public_key_name) =
@@ -776,9 +780,9 @@ impl JsnarkVisitor {
                             .unwrap()
                             .borrow()
                             .func()
-                            .borrow()
                             .try_as_builtin_function_ref()
                             .unwrap()
+                            .borrow()
                             .rerand_using
                             .is_some()
                     {
@@ -788,9 +792,9 @@ impl JsnarkVisitor {
                                 .unwrap()
                                 .borrow()
                                 .func()
-                                .borrow()
                                 .try_as_builtin_function_ref()
                                 .unwrap()
+                                .borrow()
                                 .rerand_using
                                 .clone()
                                 .unwrap()
@@ -815,9 +819,9 @@ impl JsnarkVisitor {
                     .unwrap()
                     .borrow()
                     .func()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
+                    .borrow()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()

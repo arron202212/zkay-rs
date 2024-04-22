@@ -27,6 +27,7 @@ use circuit_generation::circuit_generator::CircuitGenerator;
 use circuit_helper::circuit_helper::CircuitHelper;
 use privacy::library_contracts;
 use privacy::manifest::Manifest;
+use rccell::RcCell;
 // use privacy::offchain_compiler::PythonOffchainVisitor
 use proving_scheme::backends::gm17::ProvingSchemeGm17;
 use proving_scheme::backends::groth16::ProvingSchemeGroth16;
@@ -57,7 +58,7 @@ use zkay_ast::visitor::solidity_visitor::to_solidity;
 // }
 fn generator_classes(
     _snark_backend: &String,
-) -> impl FnOnce(Vec<CircuitHelper>, String, String) -> JsnarkGenerator //<T, VK>
+) -> impl FnOnce(Vec<RcCell<CircuitHelper>>, String, String) -> JsnarkGenerator //<T, VK>
 // where
 //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
 //     VK: VerifyingKeyMeta<Output = VK>,
@@ -142,7 +143,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(Some(zkay_ast.to_ast()));
+    let (ast, circuits) = transform_ast(Some(zkay_ast.clone()));
 
     // Dump libraries
     print_step("Write library contract files");
@@ -150,6 +151,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     for crypto_params in ast
         .try_as_source_unit_ref()
         .unwrap()
+        .borrow()
         .used_crypto_backends
         .clone()
         .unwrap()
@@ -176,12 +178,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Write public contract file
     print_step("Write public solidity code");
     let output_filename = "contract.sol";
-    let _solidity_code_output = _dump_to_output(
-        &to_solidity(ast.to_ast()),
-        output_dir,
-        output_filename,
-        false,
-    );
+    let _solidity_code_output =
+        _dump_to_output(&to_solidity(&ast), output_dir, output_filename, false);
 
     // Get all circuit helpers for the transformed contract
     let circuits: Vec<_> = circuits.values().cloned().collect();
@@ -207,13 +205,20 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     let mut kwargs = std::collections::HashMap::new();
     if let Some(_v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
-        let mut verifier_names = get_verification_contract_names((None, Some(zkay_ast)));
+        let mut verifier_names = get_verification_contract_names((None, Some(zkay_ast.clone())));
         verifier_names.sort_unstable();
         let mut verifier_contract_type_codes: Vec<_> = cg
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| cc.verifier_contract_type.as_ref().unwrap().to_ast().code())
+            .map(|cc| {
+                cc.borrow()
+                    .verifier_contract_type
+                    .as_ref()
+                    .unwrap()
+                    .to_ast()
+                    .code()
+            })
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);
@@ -228,6 +233,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             if !ast
                 .try_as_source_unit_ref()
                 .unwrap()
+                .borrow()
                 .used_homomorphisms
                 .as_ref()
                 .unwrap()

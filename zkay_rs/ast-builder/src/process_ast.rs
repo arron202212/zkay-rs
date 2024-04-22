@@ -83,7 +83,7 @@ impl fmt::Display for ASTFlags {
         write!(f, "{:032b}", self.bits())
     }
 }
-fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
+fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (ASTFlatten, String) {
     print_step("Parsing");
     let _ast = build_ast(code);
     // except SyntaxException as e:
@@ -102,7 +102,7 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (AST, String) {
 }
 
 //parents:bool, link_identifiers:bool, check_return:bool, alias_analysis:bool, type_check:bool, solc_check:bool
-pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
+pub fn get_processed_ast(code: &str, flag: Option<u32>) -> ASTFlatten {
     let flag = ASTFlags::new(flag);
 
     let (mut ast, _) =
@@ -110,7 +110,7 @@ pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
 
     // Zkay preprocessing and type checking
     process_ast(
-        &mut ast,
+        &ast.clone().into(),
         flag.parents(),
         flag.link_identifiers(),
         flag.check_return(),
@@ -122,7 +122,7 @@ pub fn get_processed_ast(code: &str, flag: Option<u32>) -> AST {
 }
 
 fn process_ast(
-    ast: &mut AST,
+    ast: &ASTFlatten,
     parents: bool,
     link_identifiers: bool,
     check_return: bool,
@@ -142,7 +142,7 @@ fn process_ast(
     //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")
     // try:
     if check_return {
-        r(&ast);
+        r(ast);
     }
     if alias_analysis {
         a(ast);
@@ -155,7 +155,7 @@ fn process_ast(
     if type_check {
         print_step("Zkay type checking");
         // try:
-        t(ast.clone());
+        t(ast);
         check_circuit_compliance(ast);
         detect_hybrid_functions(ast);
         check_loops(ast);
@@ -164,7 +164,9 @@ fn process_ast(
     }
 }
 
-pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>)) -> Vec<String> {
+pub fn get_verification_contract_names(
+    code_or_ast: (Option<String>, Option<ASTFlatten>),
+) -> Vec<String> {
     let ast = if let (Some(code), None) = code_or_ast {
         Some(get_processed_ast(&code, None))
     } else {
@@ -173,8 +175,9 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
     assert!(ast.is_some(), "Invalid AST (no source unit at root)");
     let ast = ast.unwrap();
     let mut vc_names = vec![];
-    for contract in &ast.try_as_source_unit_ref().unwrap().contracts {
+    for contract in &ast.try_as_source_unit_ref().unwrap().borrow().contracts {
         let cname = contract
+            .borrow()
             .namespace_definition_base
             .idf
             .as_ref()
@@ -182,23 +185,21 @@ pub fn get_verification_contract_names(code_or_ast: (Option<String>, Option<AST>
             .borrow()
             .name();
         let fcts: Vec<_> = contract
+            .borrow()
             .function_definitions
             .iter()
-            .chain(&contract.constructor_definitions)
-            .filter_map(|fct| {
-                if fct.requires_verification_when_external && fct.has_side_effects() {
-                    Some(fct)
-                } else {
-                    None
-                }
+            .chain(&contract.borrow().constructor_definitions)
+            .filter(|fct| {
+                fct.borrow().requires_verification_when_external && fct.borrow().has_side_effects()
             })
+            .cloned()
             .collect();
         vc_names.extend(
             fcts.iter()
                 .map(|fct| {
                     CFG.lock()
                         .unwrap()
-                        .get_verification_contract_name(cname.clone(), fct.name())
+                        .get_verification_contract_name(cname.clone(), fct.borrow().name())
                 })
                 .collect::<Vec<_>>(),
         );

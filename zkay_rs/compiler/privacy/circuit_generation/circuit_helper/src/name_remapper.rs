@@ -93,7 +93,7 @@ impl Remapper {
     //                               already in scope at scope_stmt will not be reset during rollback
     // :return: context manager
     // """
-    pub fn remap_scope(&mut self, scope_stmt: Option<&RcCell<Block>>) {
+    pub fn remap_scope(&mut self, scope_stmt: Option<&ASTFlatten>) {
         let mut prev = self.rmap.clone();
         // yield
         if let Some(scope_stmt) = scope_stmt {
@@ -102,9 +102,7 @@ impl Remapper {
                     .rmap
                     .clone()
                     .into_iter()
-                    .filter(|(key, _)| {
-                        SymbolTableLinker::in_scope_at(key, &scope_stmt.clone().into())
-                    })
+                    .filter(|(key, _)| SymbolTableLinker::in_scope_at(key, scope_stmt))
                     .collect(),
             );
         }
@@ -198,23 +196,18 @@ impl Remapper {
             ch: &RcCell<CircuitHelper>,
         ) -> HybridArgumentIdf {
             let rhs = FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
-                RcCell::new(BuiltinFunction::new("ite").to_expr()),
+                RcCell::new(BuiltinFunction::new("ite").to_expr()).into(),
                 vec![
-                    true_cond_for_other_branch
-                        .clone()
-                        .try_as_expression()
-                        .unwrap(),
-                    then_idf.clone().try_as_expression().unwrap(),
-                    else_idf.clone().try_as_expression().unwrap(),
+                    true_cond_for_other_branch.clone(),
+                    then_idf.clone(),
+                    else_idf.clone(),
                 ],
                 None,
             ))
             .as_type(&val.t.clone().into());
             // create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
-            ch.borrow_mut()._create_temp_var(
-                &key.try_as_identifier_ref().unwrap().borrow().name(),
-                rhs.try_as_expression_ref().unwrap(),
-            )
+            ch.borrow_mut()
+                ._create_temp_var(&key.try_as_identifier_ref().unwrap().borrow().name(), &rhs)
         }
 
         for (key, val) in true_state
@@ -293,7 +286,7 @@ impl Remapper {
                     self.rmap.insert(
                         key.clone(),
                         join(
-                            &true_state[&key].get_idf_expr(Some(stmt)),
+                            true_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
                             &prev_val,
                             &key.clone().into(),
                             &val,
@@ -309,8 +302,8 @@ impl Remapper {
                 self.rmap.insert(
                     key.clone(),
                     join(
-                        &true_state[&key].get_idf_expr(Some(stmt)),
-                        &false_state[&key].get_idf_expr(Some(stmt)),
+                        true_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
+                        false_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
                         &key.clone().into(),
                         &val,
                         &true_cond_for_other_branch,
@@ -391,7 +384,7 @@ impl Remapper {
                     key.clone(),
                     join(
                         &prev_val,
-                        &false_state[&key].get_idf_expr(Some(stmt)),
+                        false_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
                         &key.clone().into(),
                         &val,
                         &true_cond_for_other_branch,

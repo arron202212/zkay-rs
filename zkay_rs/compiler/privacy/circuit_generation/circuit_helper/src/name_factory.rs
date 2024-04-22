@@ -63,7 +63,7 @@ impl NameFactory {
     pub fn get_new_idf(
         &mut self,
         t: &RcCell<TypeName>,
-        priv_expr: Option<RcCell<Expression>>,
+        priv_expr: Option<ASTFlatten>,
     ) -> HybridArgumentIdf {
         let name = self.base_name_factory.get_new_name(t, true);
         let idf = HybridArgumentIdf::new(name, t.clone(), self.arg_type.clone(), priv_expr);
@@ -86,12 +86,7 @@ impl NameFactory {
             name,
             t.clone(),
             self.arg_type.clone(),
-            priv_expr
-                .as_ref()
-                .unwrap()
-                .try_as_expression_ref()
-                .clone()
-                .cloned(),
+            priv_expr.clone().cloned(),
         );
         self.base_name_factory.count += 1;
         self.size += t.borrow().size_in_uints();
