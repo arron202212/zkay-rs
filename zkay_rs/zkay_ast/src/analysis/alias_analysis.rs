@@ -15,7 +15,7 @@ use crate::ast::{
     IdentifierDeclarationBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
     StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
-    VariableDeclarationStatement, WhileStatement, AST,
+    VariableDeclarationStatement, WhileStatement, AST,Expression,SimpleStatement,
 };
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
@@ -54,7 +54,9 @@ impl AstVisitor for AliasAnalysisVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            ASTType::StatementListBase => self.visitStatementList(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
+                self.visitStatementList(ast)
+            }
             ASTType::Block => self.visitBlock(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
 
@@ -64,13 +66,21 @@ impl AstVisitor for AliasAnalysisVisitor {
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::RequireStatement => self.visitRequireStatement(ast),
 
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
 
             ASTType::ExpressionStatement => self.visitExpressionStatement(ast),
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
             ASTType::ContinueStatement => self.visitContinueStatement(ast),
             ASTType::BreakStatement => self.visitBreakStatement(ast),
-            ASTType::StatementBase => self.visitStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => {}
         }
     }
@@ -1199,7 +1209,13 @@ impl AstVisitor for GuardConditionAnalyzer {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
 
             _ => {}
         }

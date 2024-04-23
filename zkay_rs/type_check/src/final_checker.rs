@@ -12,7 +12,7 @@ use zkay_ast::ast::{
     is_instance, ASTFlatten, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierDeclarationBaseRef,
     IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty,
-    StateVariableDeclaration, TupleOrLocationExpr, AST,
+    StateVariableDeclaration, TupleOrLocationExpr, AST,SimpleStatement,Statement,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -45,7 +45,15 @@ impl AstVisitor for FinalVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             _ => {}

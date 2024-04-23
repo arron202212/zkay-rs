@@ -49,9 +49,10 @@ impl AstVisitor for UsedHomomorphismsVisitor {
             }
             ASTType::StructDefinition => self.visitStructDefinition(ast),
             ASTType::EnumDefinition => self.visitEnumDefinition(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
-            ASTType::IdentifierDeclarationBase => self.visitIdentifierDeclaration(ast),
-
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::IdentifierDeclaration(_)) => {
+                self.visitIdentifierDeclaration(ast)
+            }
             _ => BTreeSet::new(),
         }
     }

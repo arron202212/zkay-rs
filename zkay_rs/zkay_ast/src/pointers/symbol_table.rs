@@ -581,7 +581,13 @@ impl AstVisitor for SymbolTableLinker {
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
-            ASTType::UserDefinedTypeNameBase => self.visitUserDefinedTypeName(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::TypeName(TypeName::UserDefinedTypeName(_))
+            ) =>
+            {
+                self.visitUserDefinedTypeName(ast)
+            }
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
 
@@ -969,8 +975,7 @@ impl SymbolTableLinker {
     pub fn visitMemberAccessExpr(&self, ast: &ASTFlatten) {
         assert!(
             is_instance(
-                &**ast
-                    .try_as_member_access_expr_ref()
+                ast.try_as_member_access_expr_ref()
                     .unwrap()
                     .borrow()
                     .expr
@@ -1129,8 +1134,7 @@ impl SymbolTableLinker {
     pub fn visitIndexExpr(&self, ast: &ASTFlatten) {
         assert!(
             is_instance(
-                &**ast
-                    .try_as_index_expr_ref()
+                ast.try_as_index_expr_ref()
                     .unwrap()
                     .borrow()
                     .arr

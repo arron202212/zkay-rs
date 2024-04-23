@@ -45,8 +45,14 @@ impl AstVisitor for ContainsPrivVisitor {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ => {}
         }
     }

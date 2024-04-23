@@ -282,9 +282,6 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
-            ASTType::StatementListBase => self.visitStatementList(ast),
-            ASTType::StatementBase => self.visitStatement(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::WhileStatement => self.visitWhileStatement(ast),
             ASTType::DoWhileStatement => self.visitDoWhileStatement(ast),
@@ -292,7 +289,20 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
             ASTType::ContinueStatement => self.visitContinueStatement(ast),
             ASTType::BreakStatement => self.visitBreakStatement(ast),
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
+                self.visitStatementList(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => None,
         }
     }
@@ -1138,17 +1148,24 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
             // ASTType::MeExpr => self.visitMeExpr(ast),
-            ASTType::LiteralExprBase => self.visitLiteralExpr(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::LiteralExpr(_))) => {
+                self.visitLiteralExpr(ast)
+            }
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
             ASTType::TupleExpr => self.visitTupleExpr(ast),
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::BuiltinFunction => self.visitBuiltinFunction(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
-
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ => None,
         }
     }
@@ -1848,18 +1865,34 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
-            ASTType::LiteralExprBase => self.visitLiteralExpr(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::LiteralExpr(_))) => {
+                self.visitLiteralExpr(ast)
+            }
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::Block => self.visitBlock(ast, None, None),
-            ASTType::StatementBase => self.visitStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => None,
         }
     }

@@ -12,7 +12,7 @@ use crate::ast::{
     AssignmentStatement, AssignmentStatementBaseProperty, BuiltinFunction, Expression,
     FunctionCallExpr, FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST,
     IntoExpression, IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter,
-    StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,
+    StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,SimpleStatement,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -59,10 +59,24 @@ impl AstVisitor for SideEffectsDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
-            ASTType::StatementBase => self.visitStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
 
             _ => false,
         }
@@ -146,8 +160,24 @@ impl AstVisitor for DirectModificationDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::LocationExprBase => self.visitLocationExpr(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::TupleOrLocationExpr(
+                    TupleOrLocationExpr::LocationExpr(_)
+                ))
+            ) =>
+            {
+                self.visitLocationExpr(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
             ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
 
             _ => {}
@@ -281,7 +311,13 @@ impl AstVisitor for IndirectModificationDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
 
             _ => {}
         }
@@ -425,9 +461,23 @@ impl AstVisitor for EvalOrderUBChecker {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
 
             _ => {}
         }

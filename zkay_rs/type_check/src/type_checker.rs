@@ -28,7 +28,7 @@ use zkay_ast::ast::{
     ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr,
     RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef,
     StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
+    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,SimpleStatement,Statement,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -76,9 +76,23 @@ impl AstVisitor for TypeCheckVisitor {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::NewExpr => self.visitNewExpr(ast),
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
@@ -118,7 +132,7 @@ impl TypeCheckVisitor {
         if is_instance(rhs, ASTType::TupleExpr) {
             assert!(
                 is_instance(
-                    &**expected_type.borrow().type_name.as_ref().unwrap(),
+                    expected_type.borrow().type_name.as_ref().unwrap(),
                     ASTType::TupleType,
                 ) && rhs
                     .try_as_tuple_or_location_expr_ref()
@@ -461,8 +475,7 @@ impl TypeCheckVisitor {
     //@staticmethod
     pub fn has_literal_type(ast: Expression) -> bool {
         is_instances(
-            &**ast
-                .annotated_type()
+            ast.annotated_type()
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -2760,8 +2773,7 @@ impl TypeCheckVisitor {
 
     pub fn visitAnnotatedTypeName(&self, mut ast: &ASTFlatten) {
         if is_instance(
-            &**ast
-                .try_as_annotated_type_name_ref()
+            ast.try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
                 .type_name

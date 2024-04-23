@@ -124,7 +124,13 @@ impl AstVisitor for JsnarkVisitor {
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             _ => String::new(),
         }

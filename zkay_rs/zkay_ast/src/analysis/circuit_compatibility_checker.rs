@@ -16,7 +16,7 @@ use crate::ast::{
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName,
     IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
     NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty,
-    ReturnStatement, Statement, StatementBaseProperty, StatementList, VariableDeclarationStatement,
+    ReturnStatement, Statement, StatementBaseProperty, StatementList, VariableDeclarationStatement,SimpleStatement,TupleOrLocationExpr,
     AST,
 };
 use crate::visitor::{
@@ -64,15 +64,39 @@ impl AstVisitor for DirectCanBePrivateDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
-            ASTType::LocationExprBase => self.visitLocationExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::TupleOrLocationExpr(
+                    TupleOrLocationExpr::LocationExpr(_)
+                ))
+            ) =>
+            {
+                self.visitLocationExpr(ast)
+            }
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
-            ASTType::AssignmentStatementBase => self.visitAssignmentStatement(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visitAssignmentStatement(ast)
+            }
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
-            ASTType::StatementListBase => self.visitStatementList(ast),
-            ASTType::StatementBase => self.visitStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
+                self.visitStatementList(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
 
             _ => {}
         }
@@ -333,7 +357,13 @@ impl AstVisitor for CircuitComplianceChecker {
         match name {
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             _ => {}
@@ -382,8 +412,7 @@ impl CircuitComplianceChecker {
 
             if is_instance(expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    &**expr
-                        .try_as_expression_ref()
+                    expr.try_as_expression_ref()
                         .unwrap()
                         .borrow()
                         .try_as_primitive_cast_expr_ref()
@@ -679,8 +708,14 @@ impl AstVisitor for PrivateSetter {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
-            ASTType::ExpressionBase => self.visitExpression(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
 
             _ => {}
         }
@@ -776,7 +811,13 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
 
             _ => {}
         }
@@ -819,8 +860,7 @@ impl NonstaticOrIncompatibilityDetector {
                     .target()
                     .is_some());
                 assert!(is_instance(
-                    &**ast
-                        .try_as_function_call_expr_ref()
+                    ast.try_as_function_call_expr_ref()
                         .unwrap()
                         .borrow()
                         .func()

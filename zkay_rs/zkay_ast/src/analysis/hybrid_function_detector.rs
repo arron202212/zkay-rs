@@ -10,7 +10,7 @@ use rccell::RcCell;
 use crate::ast::{
     is_instance, ASTFlatten, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
     ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
-    IntoAST, LocationExpr, LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
+    IntoAST, LocationExpr, LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,Expression,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -57,7 +57,13 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::AllExpr => self.visitAllExpr(ast),
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
@@ -337,7 +343,13 @@ impl AstVisitor for NonInlineableCallDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
 
             _ => {}
         }

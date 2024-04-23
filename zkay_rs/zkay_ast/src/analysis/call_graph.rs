@@ -9,7 +9,7 @@ use crate::ast::{
     is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition,
     ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST, LocationExpr,
-    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
+    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,Expression,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -50,7 +50,13 @@ impl AstVisitor for DirectCalledFunctionDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::FunctionCallExprBase => self.visitFunctionCallExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visitFunctionCallExpr(ast)
+            }
             ASTType::ForStatement => self.visitForStatement(ast),
             ASTType::WhileStatement => self.visitWhileStatement(ast),
             _ => {}

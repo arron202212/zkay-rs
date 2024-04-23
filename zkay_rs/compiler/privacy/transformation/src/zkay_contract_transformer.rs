@@ -854,7 +854,7 @@ impl ZkayTransformer {
                 Some(RcCell::new(out_start_idx.to_expr()).into()),
                 offset,
             ));
-            if is_instance(&*s.t, ASTType::CipherText)
+            if is_instance(&s.t, ASTType::CipherText)
                 && s.t
                     .borrow()
                     .try_as_array_ref()
@@ -1402,7 +1402,7 @@ impl ZkayTransformer {
                     .borrow()
                     .type_name
                     .clone();
-                assert!(is_instance(&**c.as_ref().unwrap(), ASTType::CipherText));
+                assert!(is_instance(c.as_ref().unwrap(), ASTType::CipherText));
                 if c.as_ref()
                     .unwrap()
                     .borrow()

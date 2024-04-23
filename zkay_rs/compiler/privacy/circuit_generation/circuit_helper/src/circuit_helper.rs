@@ -2556,7 +2556,7 @@ where
         assert!(
             !(is_instance(expr, ASTType::MemberAccessExpr)
                 && is_instance(
-                    &*expr
+                    &expr
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .borrow()
@@ -2564,8 +2564,7 @@ where
                         .unwrap()
                         .try_as_member_access_expr_ref()
                         .unwrap()
-                        .member
-                        .clone(),
+                        .member,
                     ASTType::HybridArgumentIdf
                 ))
         );

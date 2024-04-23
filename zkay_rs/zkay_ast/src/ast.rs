@@ -91,16 +91,79 @@ impl<T: ASTInstanceOf> ASTInstanceOf for RcCell<T> {
         self.borrow().get_ast_type()
     }
 }
-impl<T: ASTInstanceOf> ASTInstanceOf for RefCell<T> {
-    fn get_ast_type(&self) -> ASTType {
-        self.borrow().get_ast_type()
+impl<T: IntoAST> IntoAST for RcCell<T> {
+    fn into_ast(self) -> AST {
+        self.borrow().clone().into_ast()
     }
 }
-pub fn is_instance<T: ASTInstanceOf>(var: &T, ast_type: ASTType) -> bool {
-    var.get_ast_type() == ast_type
+pub fn is_instance<T: ASTInstanceOf + IntoAST>(var: &T, ast_type: ASTType) -> bool {
+    match ast_type {
+        ASTType::IdentifierBase => matches!(var.to_ast(), AST::Identifier(_)),
+        ASTType::CommentBase => matches!(var.to_ast(), AST::Comment(_)),
+        ASTType::ExpressionBase => matches!(var.to_ast(), AST::Expression(_)),
+        ASTType::StatementBase => matches!(var.to_ast(), AST::Statement(_)),
+        ASTType::TypeNameBase => matches!(var.to_ast(), AST::TypeName(_)),
+        ASTType::IdentifierDeclarationBase => matches!(var.to_ast(), AST::IdentifierDeclaration(_)),
+        ASTType::NamespaceDefinitionBase => matches!(var.to_ast(), AST::NamespaceDefinition(_)),
+        ASTType::FunctionCallExprBase => matches!(
+            var.to_ast(),
+            AST::Expression(Expression::FunctionCallExpr(_))
+        ),
+        ASTType::LiteralExprBase => {
+            matches!(var.to_ast(), AST::Expression(Expression::LiteralExpr(_)))
+        }
+        ASTType::TupleOrLocationExprBase => matches!(
+            var.to_ast(),
+            AST::Expression(Expression::TupleOrLocationExpr(_))
+        ),
+        ASTType::ArrayLiteralExprBase => matches!(
+            var.to_ast(),
+            AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
+        ),
+        ASTType::LocationExprBase => matches!(
+            var.to_ast(),
+            AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(_)
+            ))
+        ),
+        ASTType::ReclassifyExprBase => {
+            matches!(var.to_ast(), AST::Expression(Expression::ReclassifyExpr(_)))
+        }
+        ASTType::CircuitDirectiveStatementBase => matches!(
+            var.to_ast(),
+            AST::Statement(Statement::CircuitDirectiveStatement(_))
+        ),
+        ASTType::SimpleStatementBase => {
+            matches!(var.to_ast(), AST::Statement(Statement::SimpleStatement(_)))
+        }
+        ASTType::StatementListBase => {
+            matches!(var.to_ast(), AST::Statement(Statement::StatementList(_)))
+        }
+        ASTType::AssignmentStatementBase => matches!(
+            var.to_ast(),
+            AST::Statement(Statement::SimpleStatement(
+                SimpleStatement::AssignmentStatement(_)
+            ))
+        ),
+        ASTType::ElementaryTypeNameBase => {
+            matches!(var.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_)))
+        }
+        ASTType::UserDefinedTypeNameBase => matches!(
+            var.to_ast(),
+            AST::TypeName(TypeName::UserDefinedTypeName(_))
+        ),
+        ASTType::NumberTypeNameBase => matches!(
+            var.to_ast(),
+            AST::TypeName(TypeName::ElementaryTypeName(
+                ElementaryTypeName::NumberTypeName(_)
+            ))
+        ),
+        ASTType::ArrayBase => matches!(var.to_ast(), AST::TypeName(TypeName::Array(_))),
+        _ => var.get_ast_type() == ast_type,
+    }
 }
-pub fn is_instances<T: ASTInstanceOf>(var: &T, ast_types: Vec<ASTType>) -> bool {
-    ast_types.iter().any(|t| t == &var.get_ast_type())
+pub fn is_instances<T: ASTInstanceOf + IntoAST>(var: &T, ast_types: Vec<ASTType>) -> bool {
+    ast_types.into_iter().any(|t| is_instance(var, t))
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -639,6 +702,114 @@ impl ASTInstanceOf for ASTFlatten {
             Self::CircEncConstraint(astf) => astf.borrow().get_ast_type(),
             Self::CircSymmEncConstraint(astf) => astf.borrow().get_ast_type(),
             Self::CircEqConstraint(astf) => astf.borrow().get_ast_type(),
+        }
+    }
+}
+impl IntoAST for ASTFlatten {
+    fn into_ast(self) -> AST {
+        match self {
+            Self::AST(astf) => astf.borrow().clone().into_ast(),
+            Self::Expression(astf) => astf.borrow().clone().into_ast(),
+            Self::Identifier(astf) => astf.borrow().clone().into_ast(),
+            Self::IdentifierBase(astf) => astf.borrow().clone().into_ast(),
+            Self::Comment(astf) => astf.borrow().clone().into_ast(),
+            Self::CommentBase(astf) => astf.borrow().clone().into_ast(),
+            Self::AnnotatedTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::EnumValue(astf) => astf.borrow().clone().into_ast(),
+            Self::SourceUnit(astf) => astf.borrow().clone().into_ast(),
+            Self::BlankLine(astf) => astf.borrow().clone().into_ast(),
+            Self::BuiltinFunction(astf) => astf.borrow().clone().into_ast(),
+            Self::FunctionCallExprBase(astf) => astf.borrow().clone().into_ast(),
+            Self::FunctionCallExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::NewExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::PrimitiveCastExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::MeExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::AllExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::ReclassifyExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::LiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::BooleanLiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::NumberLiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::StringLiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::ArrayLiteralExprBase(astf) => astf.borrow().clone().into_ast(),
+            Self::ArrayLiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::KeyLiteralExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::TupleOrLocationExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::TupleExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::IdentifierExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::MemberAccessExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::LocationExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::IndexExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::SliceExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::ReclassifyExprBase(astf) => astf.borrow().clone().into_ast(),
+            Self::RehomExpr(astf) => astf.borrow().clone().into_ast(),
+            Self::EncryptionExpression(astf) => astf.borrow().clone().into_ast(),
+            Self::HybridArgumentIdf(astf) => astf.borrow().clone().into_ast(),
+            Self::Statement(astf) => astf.borrow().clone().into_ast(),
+            Self::IfStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::WhileStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::DoWhileStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::ForStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::BreakStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::ContinueStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::ReturnStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::StatementListBase(astf) => astf.borrow().clone().into_ast(),
+            Self::StatementList(astf) => astf.borrow().clone().into_ast(),
+            Self::CircuitDirectiveStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::CircuitComputationStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::EnterPrivateKeyStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::ExpressionStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::RequireStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::AssignmentStatementBase(astf) => astf.borrow().clone().into_ast(),
+            Self::AssignmentStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::VariableDeclarationStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::CircuitInputStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::SimpleStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::Block(astf) => astf.borrow().clone().into_ast(),
+            Self::IndentBlock(astf) => astf.borrow().clone().into_ast(),
+            Self::Mapping(astf) => astf.borrow().clone().into_ast(),
+            Self::TupleType(astf) => astf.borrow().clone().into_ast(),
+            Self::TypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::ElementaryTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::FunctionTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::BoolTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::BooleanLiteralType(astf) => astf.borrow().clone().into_ast(),
+            Self::NumberLiteralType(astf) => astf.borrow().clone().into_ast(),
+            Self::IntTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::UintTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::NumberTypeNameBase(astf) => astf.borrow().clone().into_ast(),
+            Self::NumberTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::EnumTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::EnumValueTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::StructTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::ContractTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::AddressTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::AddressPayableTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::UserDefinedTypeName(astf) => astf.borrow().clone().into_ast(),
+            Self::CipherText(astf) => astf.borrow().clone().into_ast(),
+            Self::Randomness(astf) => astf.borrow().clone().into_ast(),
+            Self::Key(astf) => astf.borrow().clone().into_ast(),
+            Self::Proof(astf) => astf.borrow().clone().into_ast(),
+            Self::ArrayBase(astf) => astf.borrow().clone().into_ast(),
+            Self::Array(astf) => astf.borrow().clone().into_ast(),
+            Self::IdentifierDeclaration(astf) => astf.borrow().clone().into_ast(),
+            Self::VariableDeclaration(astf) => astf.borrow().clone().into_ast(),
+            Self::Parameter(astf) => astf.borrow().clone().into_ast(),
+            Self::StateVariableDeclaration(astf) => astf.borrow().clone().into_ast(),
+            Self::NamespaceDefinition(astf) => astf.borrow().clone().into_ast(),
+            Self::ConstructorOrFunctionDefinition(astf) => astf.borrow().clone().into_ast(),
+            Self::EnumDefinition(astf) => astf.borrow().clone().into_ast(),
+            Self::StructDefinition(astf) => astf.borrow().clone().into_ast(),
+            Self::ContractDefinition(astf) => astf.borrow().clone().into_ast(),
+            Self::DummyAnnotation(astf) => astf.borrow().clone().into_ast(),
+            Self::CircuitStatement(astf) => astf.borrow().clone().into_ast(),
+            Self::CircComment(astf) => astf.borrow().clone().into_ast(),
+            Self::CircIndentBlock(astf) => astf.borrow().clone().into_ast(),
+            Self::CircCall(astf) => astf.borrow().clone().into_ast(),
+            Self::CircVarDecl(astf) => astf.borrow().clone().into_ast(),
+            Self::CircGuardModification(astf) => astf.borrow().clone().into_ast(),
+            Self::CircEncConstraint(astf) => astf.borrow().clone().into_ast(),
+            Self::CircSymmEncConstraint(astf) => astf.borrow().clone().into_ast(),
+            Self::CircEqConstraint(astf) => astf.borrow().clone().into_ast(),
         }
     }
 }
@@ -4816,7 +4987,6 @@ impl CircuitDirectiveStatementBase {
 )]
 pub struct CircuitComputationStatement {
     pub circuit_directive_statement_base: CircuitDirectiveStatementBase,
-
     pub idf: Option<RcCell<HybridArgumentIdf>>,
 }
 
@@ -7354,12 +7524,12 @@ impl AnnotatedTypeName {
 
     pub fn is_address(&self) -> bool {
         is_instances(
-            &**self.type_name.as_ref().unwrap(),
+            self.type_name.as_ref().unwrap(),
             vec![ASTType::AddressTypeName, ASTType::AddressPayableTypeName],
         )
     }
     pub fn is_cipher(&self) -> bool {
-        is_instance(&**self.type_name.as_ref().unwrap(), ASTType::CipherText)
+        is_instance(self.type_name.as_ref().unwrap(), ASTType::CipherText)
     }
     pub fn with_homomorphism(&self, hom: String) -> RcCell<Self> {
         RcCell::new(AnnotatedTypeName::new(
@@ -8459,8 +8629,7 @@ impl InstanceTarget {
     pub fn privacy(&self) -> Option<ASTFlatten> {
         if self.key().is_none()
             && !is_instance(
-                &**self
-                    .target()
+                self.target()
                     .unwrap()
                     .try_as_expression_ref()
                     .unwrap()
@@ -8505,7 +8674,7 @@ impl InstanceTarget {
                 .zkay_type()
                 .type_name
                 .unwrap();
-            assert!(is_instance(&*t, ASTType::Mapping));
+            assert!(is_instance(&t, ASTType::Mapping));
 
             if t.borrow().try_as_mapping_ref().unwrap().has_key_label() {
                 self.key()

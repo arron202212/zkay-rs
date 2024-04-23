@@ -38,7 +38,9 @@ impl AstVisitor for ParentSetterVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            ASTType::NamespaceDefinitionBase => self.visitNamespaceDefinition(ast),
+            _ if matches!(ast.to_ast(), AST::NamespaceDefinition(_)) => {
+                self.visitNamespaceDefinition(ast)
+            }
             _ => {}
         }
     }
@@ -166,8 +168,8 @@ impl AstVisitor for ExpressionToStatementVisitor {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
-            ASTType::ExpressionBase => self.visitExpression(ast),
-            ASTType::StatementBase => self.visitStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => {}
         }
     }
