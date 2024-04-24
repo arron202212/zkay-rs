@@ -12,7 +12,8 @@ use crate::ast::{
     AssignmentStatement, AssignmentStatementBaseProperty, BuiltinFunction, Expression,
     FunctionCallExpr, FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST,
     IntoExpression, IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter,
-    StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,SimpleStatement,
+    SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr,
+    VariableDeclaration, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,

@@ -26,9 +26,10 @@ use zkay_ast::ast::{
     LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NewExpr,
     NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr, ReclassifyExpr,
     ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr,
-    RequireStatement, ReturnStatement, StateVariableDeclaration, StatementBaseMutRef,
-    StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,SimpleStatement,Statement,
+    RequireStatement, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
+    StatementBaseMutRef, StatementBaseProperty, TupleExpr, TupleType, TypeName,
+    UserDefinedTypeName, UserDefinedTypeNameBaseProperty, VariableDeclarationStatement,
+    WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -1398,13 +1399,10 @@ impl TypeCheckVisitor {
             .borrow()
             .is_private_at_me(&expr.try_as_expression_ref().unwrap().borrow().analysis()));
 
-        let mut r = RcCell::new(
-            RehomExpr::new(
-                expr.clone(),
-                Some(expected_type.borrow().homomorphism.clone()),
-            )
-            .into_expr(),
-        );
+        let mut r = RcCell::new(RehomExpr::new(
+            expr.clone(),
+            Some(expected_type.borrow().homomorphism.clone()),
+        ));
 
         //set type
         let pl = get_privacy_expr_from_label(
@@ -1467,10 +1465,11 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .into(),
         );
-        let mut r = RcCell::new(
-            ReclassifyExprBase::new(expr.clone(), pl.clone(), Some(homomorphism.clone()))
-                .into_expr(),
-        );
+        let mut r = RcCell::new(ReclassifyExprBase::new(
+            expr.clone(),
+            pl.clone(),
+            Some(homomorphism.clone()),
+        ));
 
         //set type
         r.borrow_mut().expression_base_mut_ref().annotated_type =
@@ -1653,8 +1652,7 @@ impl TypeCheckVisitor {
             .unwrap()
             .borrow()
             .is_primitive_type());
-        let mut cast =
-            RcCell::new(PrimitiveCastExpr::new(t.clone(), expr.clone(), true).into_expr());
+        let mut cast = RcCell::new(PrimitiveCastExpr::new(t.clone(), expr.clone(), true));
         let cast_weak = ASTFlatten::from(cast.clone()).downgrade();
         cast.borrow_mut().ast_base_mut_ref().borrow_mut().parent = expr
             .try_as_expression_ref()
@@ -1673,8 +1671,6 @@ impl TypeCheckVisitor {
         cast.borrow_mut().ast_base_mut_ref().borrow_mut().column =
             expr.try_as_expression_ref().unwrap().borrow().column();
         cast.borrow_mut()
-            .try_as_primitive_cast_expr_mut()
-            .unwrap()
             .elem_type
             .borrow_mut()
             .ast_base_mut_ref()
@@ -2381,7 +2377,7 @@ impl TypeCheckVisitor {
             .expr
             .is_some()
         {
-            self.get_rhs(&RcCell::new(TupleExpr::new(vec![]).into_expr()).into(), &rt);
+            self.get_rhs(&RcCell::new(TupleExpr::new(vec![])).into(), &rt);
         } else if !is_instance(
             ast.try_as_return_statement_ref()
                 .unwrap()
@@ -2392,17 +2388,14 @@ impl TypeCheckVisitor {
             ASTType::TupleExpr,
         ) {
             ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = self.get_rhs(
-                &RcCell::new(
-                    TupleExpr::new(vec![ast
-                        .try_as_return_statement_ref()
-                        .unwrap()
-                        .borrow()
-                        .expr
-                        .clone()
-                        .unwrap()
-                        .into()])
-                    .into_expr(),
-                )
+                &RcCell::new(TupleExpr::new(vec![ast
+                    .try_as_return_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .expr
+                    .clone()
+                    .unwrap()
+                    .into()]))
                 .into(),
                 &rt,
             );

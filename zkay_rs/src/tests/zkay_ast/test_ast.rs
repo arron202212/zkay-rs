@@ -13,7 +13,7 @@ mod tests {
     #[test]
     fn test_require() {
         let e = BooleanLiteralExpr::new(true);
-        let r = RequireStatement::new(RcCell::new(e.into_expr()).into(), None);
+        let r = RequireStatement::new(RcCell::new(e).into(), None);
         assert_eq!(&r.to_string(), "require(true);");
     }
     #[test]
@@ -21,19 +21,16 @@ mod tests {
         // let i = Identifier::identifier("x");
         let lhs = IdentifierExpr::new(IdentifierExprUnion::String(String::from("x")), None);
         let rhs = BooleanLiteralExpr::new(true);
-        let mut a = AssignmentStatementBase::new(
-            Some(RcCell::new(lhs.to_ast()).into()),
-            Some(RcCell::new(rhs.to_expr()).into()),
+        let a = AssignmentStatementBase::new(
+            Some(RcCell::new(lhs.clone()).into()),
+            Some(RcCell::new(rhs.clone()).into()),
             None,
         );
         // assert!(a.is_some());
         assert_eq!(a.to_string(), "x = true;");
         assert_eq!(
-            a.children(),
-            vec![
-                RcCell::new(lhs.into_ast()).into(),
-                RcCell::new(rhs.into_ast()).into()
-            ]
+            a.children().iter().map(|c| c.to_ast()).collect::<Vec<_>>(),
+            vec![lhs.to_ast(), rhs.to_ast()]
         );
         assert!(a.names().is_empty());
         assert!(a.parent().is_none());
@@ -47,10 +44,10 @@ mod tests {
     fn test_builtin_code() {
         let f = BuiltinFunction::new("+");
         let c = FunctionCallExprBase::new(
-            RcCell::new(f.into_expr()).into(),
+            RcCell::new(f).into(),
             vec![
-                RcCell::new(NumberLiteralExpr::new(0, false).into_expr()).into(),
-                RcCell::new(NumberLiteralExpr::new(0, false).into_expr()).into(),
+                RcCell::new(NumberLiteralExpr::new(0, false)).into(),
+                RcCell::new(NumberLiteralExpr::new(0, false)).into(),
             ],
             None,
         );

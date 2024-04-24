@@ -54,6 +54,12 @@ pub fn derive_ast_flatten_impl(item: TokenStream) -> TokenStream {
                     let struct_name = it.next().unwrap().to_string();
                     return format!(
                         r#"
+impl {struct_name} {{
+ pub fn code(&self) -> String {{
+        let v = CodeVisitor::new(true);
+        v.visit(&RcCell::new(self.clone()).into())
+    }}
+}}
 impl From<RcCell<{struct_name}>> for ASTFlatten {{
     fn from(f:RcCell<{struct_name}>) -> ASTFlatten{{
         ASTFlatten::{struct_name}(f)
@@ -109,6 +115,7 @@ pub fn derive_ast_transformer_visitor_base_ref(item: TokenStream) -> TokenStream
                     let struct_name = it.next().unwrap().to_string();
                     return format!(
                         r#"
+
 impl AstTransformerVisitorBaseRef for {} {{
     fn ast_transformer_visitor_base_ref(&self) -> &AstTransformerVisitorBase {{
         &self.ast_transformer_visitor_base
@@ -164,9 +171,10 @@ pub fn derive_ast_debug(item: TokenStream) -> TokenStream {
                     let struct_name = it.next().unwrap().to_string();
                     return format!(
                         r#"
+
 impl std::fmt::Display for {} {{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result  {{
-        write!(f, "{{}}", self.to_ast().code())
+        write!(f, "{{}}", self.code())
     }}
 }}
                     "#,

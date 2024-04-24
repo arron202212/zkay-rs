@@ -631,7 +631,7 @@ impl JsnarkVisitor {
             )
         }
     }
-
+    #[allow(unreachable_code)]
     pub fn visitIndexExpr(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         unimplemented!();
         String::new()

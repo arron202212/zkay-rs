@@ -550,7 +550,7 @@ where
     // """
     pub fn evaluate_stmt_in_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
-            RcCell::new(NumberLiteralExpr::new(0, false).to_expr()).into(),
+            RcCell::new(NumberLiteralExpr::new(0, false)).into(),
         ));
         for var in &ast
             .try_as_statement_ref()
@@ -692,15 +692,12 @@ where
                 vec![
                     ast.clone(),
                     RcCell::new(ReturnStatement::new(Some(
-                        RcCell::new(
-                            TupleExpr::new(
-                                ret_params
-                                    .iter()
-                                    .map(|r| RcCell::new(r.to_expr()).into())
-                                    .collect(),
-                            )
-                            .to_expr(),
-                        )
+                        RcCell::new(TupleExpr::new(
+                            ret_params
+                                .iter()
+                                .map(|r| RcCell::new(r.clone()).into())
+                                .collect(),
+                        ))
                         .into(),
                     )))
                     .into(),
@@ -730,7 +727,7 @@ where
             .target_rc
             .as_ref()
             .map(|t| t.clone().downgrade());
-        let mut fcall = FunctionCallExprBase::new(RcCell::new(idf.to_expr()).into(), vec![], None);
+        let mut fcall = FunctionCallExprBase::new(RcCell::new(idf).into(), vec![], None);
         fcall.expression_base.statement =
             Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
         let mut ret_args = self.inline_function_call_into_circuit(&RcCell::new(fcall).into());
@@ -738,7 +735,7 @@ where
         let mut ret_args = ret_args.unwrap();
         //Move all return values out of the circuit
         let mut ret_args = if !is_instance(&ret_args, ASTType::TupleExpr) {
-            RcCell::new(TupleExpr::new(vec![ret_args.into()]).into_expr()).into()
+            RcCell::new(TupleExpr::new(vec![ret_args.into()])).into()
         } else {
             ret_args
         };
@@ -791,22 +788,19 @@ where
                 .unwrap()
                 .assignment_statement_base_mut_ref()
                 .lhs = Some(
-                RcCell::new(
-                    TupleExpr::new(
-                        ret_params
-                            .iter()
-                            .map(|r| RcCell::new(r.to_expr()).into())
-                            .collect(),
-                    )
-                    .into_expr(),
-                )
+                RcCell::new(TupleExpr::new(
+                    ret_params
+                        .iter()
+                        .map(|r| RcCell::new(r.clone()).into())
+                        .collect(),
+                ))
                 .into(),
             );
             astmt
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
-                .rhs = Some(RcCell::new(TupleExpr::new(ret_arg_outs).to_expr()).into());
+                .rhs = Some(RcCell::new(TupleExpr::new(ret_arg_outs)).into());
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
         }
@@ -913,16 +907,14 @@ where
             .unwrap()
             .assign(
                 RcCell::new(
-                    LocationExpr::IdentifierExpr(pki)
-                        .call(
-                            IdentifierExprUnion::String(String::from("getPk")),
-                            self._expr_trafo
-                                .as_ref()
-                                .unwrap()
-                                .visit(&privacy_label_expr.clone().into())
-                                .map_or(vec![], |expr| vec![expr]),
-                        )
-                        .to_expr(),
+                    LocationExpr::IdentifierExpr(pki).call(
+                        IdentifierExprUnion::String(String::from("getPk")),
+                        self._expr_trafo
+                            .as_ref()
+                            .unwrap()
+                            .visit(&privacy_label_expr.clone().into())
+                            .map_or(vec![], |expr| vec![expr]),
+                    ),
                 )
                 .into(),
             );
@@ -1261,15 +1253,12 @@ where
                 tname,
                 &cipher_t,
                 Some(
-                    &RcCell::new(
-                        IdentifierExpr::new(
-                            IdentifierExprUnion::Identifier(RcCell::new(
-                                Identifier::HybridArgumentIdf(locally_decrypted_idf),
-                            )),
-                            None,
-                        )
-                        .to_expr(),
-                    )
+                    &RcCell::new(IdentifierExpr::new(
+                        IdentifierExprUnion::Identifier(RcCell::new(
+                            Identifier::HybridArgumentIdf(locally_decrypted_idf),
+                        )),
+                        None,
+                    ))
                     .into(),
                 ),
             );
@@ -1725,7 +1714,7 @@ where
             // ret = if let Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(ret))=&ret.elements[0]{ret.clone()}else{TupleExpr::default()};
             ret.elements[0].clone()
         } else {
-            RcCell::new(ret.into_expr()).into()
+            RcCell::new(ret).into()
         })
     }
     // """Include private assignment statement in this circuit."""
@@ -1796,7 +1785,7 @@ where
                 .unwrap()
                 .borrow_mut()
                 .expr = Some(TypeCheckVisitor::implicitly_converted_to(
-                &RcCell::new(nle.to_expr()).into(),
+                &RcCell::new(nle).into(),
                 t.as_ref().unwrap(),
             ));
         }
@@ -1846,16 +1835,13 @@ where
             ASTType::TupleExpr,
         ) {
             ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = Some(
-                RcCell::new(
-                    TupleExpr::new(vec![ast
-                        .try_as_return_statement_ref()
-                        .unwrap()
-                        .borrow()
-                        .expr
-                        .clone()
-                        .unwrap()])
-                    .to_expr(),
-                )
+                RcCell::new(TupleExpr::new(vec![ast
+                    .try_as_return_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .expr
+                    .clone()
+                    .unwrap()]))
                 .into(),
             );
         }
@@ -2489,7 +2475,7 @@ where
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 &cipher_t,
-                Some(&RcCell::new(enc_expr.to_expr()).into()),
+                Some(&RcCell::new(enc_expr).into()),
             );
             let crypto_params = CFG
                 .lock()

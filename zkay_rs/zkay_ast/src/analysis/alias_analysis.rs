@@ -10,12 +10,12 @@ use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
     is_instance, ASTBaseProperty, ASTFlatten, ASTType, AllExpr, AssignmentStatement,
     AssignmentStatementBaseProperty, Block, BreakStatement, BuiltinFunction,
-    ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, ExpressionStatement,
-    ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
+    ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, Expression,
+    ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
     IdentifierDeclarationBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
-    RequireStatement, ReturnStatement, Statement, StatementBaseMutRef, StatementBaseProperty,
-    StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
-    VariableDeclarationStatement, WhileStatement, AST,Expression,SimpleStatement,
+    RequireStatement, ReturnStatement, SimpleStatement, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
@@ -97,8 +97,18 @@ impl AliasAnalysisVisitor {
     }
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
         let mut s: PartitionState<ASTFlatten> = PartitionState::new();
-        s.insert(MeExpr::new().to_expr().privacy_annotation_label().unwrap());
-        s.insert(AllExpr::new().to_expr().privacy_annotation_label().unwrap());
+        s.insert(
+            MeExpr::new()
+                .into_expr()
+                .privacy_annotation_label()
+                .unwrap(),
+        );
+        s.insert(
+            AllExpr::new()
+                .into_expr()
+                .privacy_annotation_label()
+                .unwrap(),
+        );
         for d in &ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()

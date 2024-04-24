@@ -172,13 +172,10 @@ pub fn transform_internal_calls(
                 .function_call_expr_base_mut_ref()
                 .args
                 .extend(vec![
-                    RcCell::new(
-                        IdentifierExpr::new(
-                            IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
-                            None,
-                        )
-                        .to_expr(),
-                    )
+                    RcCell::new(IdentifierExpr::new(
+                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
+                        None,
+                    ))
                     .into(),
                     RcCell::new(
                         IdentifierExpr::new(
@@ -188,21 +185,17 @@ pub fn transform_internal_calls(
                             )),
                             None,
                         )
-                        .to_expr()
+                        .into_expr()
                         .binop(
                             String::from("+"),
-                            NumberLiteralExpr::new(in_size + i, false).to_expr(),
-                        )
-                        .to_expr(),
+                            NumberLiteralExpr::new(in_size + i, false).into_expr(),
+                        ),
                     )
                     .into(),
-                    RcCell::new(
-                        IdentifierExpr::new(
-                            IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
-                            None,
-                        )
-                        .to_expr(),
-                    )
+                    RcCell::new(IdentifierExpr::new(
+                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
+                        None,
+                    ))
                     .into(),
                     RcCell::new(
                         IdentifierExpr::new(
@@ -212,12 +205,11 @@ pub fn transform_internal_calls(
                             )),
                             None,
                         )
-                        .to_expr()
+                        .into_expr()
                         .binop(
                             String::from("+"),
-                            NumberLiteralExpr::new(out_size + o, false).to_expr(),
-                        )
-                        .to_expr(),
+                            NumberLiteralExpr::new(out_size + o, false).into_expr(),
+                        ),
                     )
                     .into(),
                 ]);

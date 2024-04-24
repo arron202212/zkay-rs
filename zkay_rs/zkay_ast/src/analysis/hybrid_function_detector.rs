@@ -9,8 +9,9 @@ use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
     is_instance, ASTFlatten, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
-    ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
-    IntoAST, LocationExpr, LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,Expression,
+    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
+    FunctionCallExprBaseProperty, IntoAST, LocationExpr, LocationExprBaseProperty,
+    PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,

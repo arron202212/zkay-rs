@@ -832,99 +832,99 @@ impl ASTFlatten {
     }
     pub fn code(&self) -> String {
         match self {
-            Self::AST(astf) => astf.borrow().to_ast().code(),
-            Self::Expression(astf) => astf.borrow().to_ast().code(),
-            Self::Identifier(astf) => astf.borrow().to_ast().code(),
-            Self::IdentifierBase(astf) => astf.borrow().to_ast().code(),
-            Self::Comment(astf) => astf.borrow().to_ast().code(),
-            Self::CommentBase(astf) => astf.borrow().to_ast().code(),
-            Self::AnnotatedTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::EnumValue(astf) => astf.borrow().to_ast().code(),
-            Self::SourceUnit(astf) => astf.borrow().to_ast().code(),
-            Self::BlankLine(astf) => astf.borrow().to_ast().code(),
-            Self::BuiltinFunction(astf) => astf.borrow().to_ast().code(),
-            Self::FunctionCallExprBase(astf) => astf.borrow().to_ast().code(),
-            Self::FunctionCallExpr(astf) => astf.borrow().to_ast().code(),
-            Self::NewExpr(astf) => astf.borrow().to_ast().code(),
-            Self::PrimitiveCastExpr(astf) => astf.borrow().to_ast().code(),
-            Self::MeExpr(astf) => astf.borrow().to_ast().code(),
-            Self::AllExpr(astf) => astf.borrow().to_ast().code(),
-            Self::ReclassifyExpr(astf) => astf.borrow().to_ast().code(),
-            Self::LiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::BooleanLiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::NumberLiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::StringLiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::ArrayLiteralExprBase(astf) => astf.borrow().to_ast().code(),
-            Self::ArrayLiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::KeyLiteralExpr(astf) => astf.borrow().to_ast().code(),
-            Self::TupleOrLocationExpr(astf) => astf.borrow().to_ast().code(),
-            Self::TupleExpr(astf) => astf.borrow().to_ast().code(),
-            Self::IdentifierExpr(astf) => astf.borrow().to_ast().code(),
-            Self::MemberAccessExpr(astf) => astf.borrow().to_ast().code(),
-            Self::LocationExpr(astf) => astf.borrow().to_ast().code(),
-            Self::IndexExpr(astf) => astf.borrow().to_ast().code(),
-            Self::SliceExpr(astf) => astf.borrow().to_ast().code(),
-            Self::ReclassifyExprBase(astf) => astf.borrow().to_ast().code(),
-            Self::RehomExpr(astf) => astf.borrow().to_ast().code(),
-            Self::EncryptionExpression(astf) => astf.borrow().to_ast().code(),
-            Self::HybridArgumentIdf(astf) => astf.borrow().to_ast().code(),
-            Self::Statement(astf) => astf.borrow().to_ast().code(),
-            Self::IfStatement(astf) => astf.borrow().to_ast().code(),
-            Self::WhileStatement(astf) => astf.borrow().to_ast().code(),
-            Self::DoWhileStatement(astf) => astf.borrow().to_ast().code(),
-            Self::ForStatement(astf) => astf.borrow().to_ast().code(),
-            Self::BreakStatement(astf) => astf.borrow().to_ast().code(),
-            Self::ContinueStatement(astf) => astf.borrow().to_ast().code(),
-            Self::ReturnStatement(astf) => astf.borrow().to_ast().code(),
-            Self::StatementListBase(astf) => astf.borrow().to_ast().code(),
-            Self::StatementList(astf) => astf.borrow().to_ast().code(),
-            Self::CircuitDirectiveStatement(astf) => astf.borrow().to_ast().code(),
-            Self::CircuitComputationStatement(astf) => astf.borrow().to_ast().code(),
-            Self::EnterPrivateKeyStatement(astf) => astf.borrow().to_ast().code(),
-            Self::ExpressionStatement(astf) => astf.borrow().to_ast().code(),
-            Self::RequireStatement(astf) => astf.borrow().to_ast().code(),
-            Self::AssignmentStatementBase(astf) => astf.borrow().to_ast().code(),
-            Self::AssignmentStatement(astf) => astf.borrow().to_ast().code(),
-            Self::VariableDeclarationStatement(astf) => astf.borrow().to_ast().code(),
-            Self::CircuitInputStatement(astf) => astf.borrow().to_ast().code(),
-            Self::SimpleStatement(astf) => astf.borrow().to_ast().code(),
-            Self::Block(astf) => astf.borrow().to_ast().code(),
-            Self::IndentBlock(astf) => astf.borrow().to_ast().code(),
-            Self::Mapping(astf) => astf.borrow().to_ast().code(),
-            Self::TupleType(astf) => astf.borrow().to_ast().code(),
-            Self::TypeName(astf) => astf.borrow().to_ast().code(),
-            Self::ElementaryTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::FunctionTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::BoolTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::BooleanLiteralType(astf) => astf.borrow().to_ast().code(),
-            Self::NumberLiteralType(astf) => astf.borrow().to_ast().code(),
-            Self::IntTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::UintTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::NumberTypeNameBase(astf) => astf.borrow().to_ast().code(),
-            Self::NumberTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::EnumTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::EnumValueTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::StructTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::ContractTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::AddressTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::AddressPayableTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::UserDefinedTypeName(astf) => astf.borrow().to_ast().code(),
-            Self::CipherText(astf) => astf.borrow().to_ast().code(),
-            Self::Randomness(astf) => astf.borrow().to_ast().code(),
-            Self::Key(astf) => astf.borrow().to_ast().code(),
-            Self::Proof(astf) => astf.borrow().to_ast().code(),
-            Self::ArrayBase(astf) => astf.borrow().to_ast().code(),
-            Self::Array(astf) => astf.borrow().to_ast().code(),
-            Self::IdentifierDeclaration(astf) => astf.borrow().to_ast().code(),
-            Self::VariableDeclaration(astf) => astf.borrow().to_ast().code(),
-            Self::Parameter(astf) => astf.borrow().to_ast().code(),
-            Self::StateVariableDeclaration(astf) => astf.borrow().to_ast().code(),
-            Self::NamespaceDefinition(astf) => astf.borrow().to_ast().code(),
-            Self::ConstructorOrFunctionDefinition(astf) => astf.borrow().to_ast().code(),
-            Self::EnumDefinition(astf) => astf.borrow().to_ast().code(),
-            Self::StructDefinition(astf) => astf.borrow().to_ast().code(),
-            Self::ContractDefinition(astf) => astf.borrow().to_ast().code(),
-            Self::DummyAnnotation(astf) => astf.borrow().to_ast().code(),
+            Self::AST(astf) => astf.borrow().code(),
+            Self::Expression(astf) => astf.borrow().code(),
+            Self::Identifier(astf) => astf.borrow().code(),
+            Self::IdentifierBase(astf) => astf.borrow().code(),
+            Self::Comment(astf) => astf.borrow().code(),
+            Self::CommentBase(astf) => astf.borrow().code(),
+            Self::AnnotatedTypeName(astf) => astf.borrow().code(),
+            Self::EnumValue(astf) => astf.borrow().code(),
+            Self::SourceUnit(astf) => astf.borrow().code(),
+            Self::BlankLine(astf) => astf.borrow().code(),
+            Self::BuiltinFunction(astf) => astf.borrow().code(),
+            Self::FunctionCallExprBase(astf) => astf.borrow().code(),
+            Self::FunctionCallExpr(astf) => astf.borrow().code(),
+            Self::NewExpr(astf) => astf.borrow().code(),
+            Self::PrimitiveCastExpr(astf) => astf.borrow().code(),
+            Self::MeExpr(astf) => astf.borrow().code(),
+            Self::AllExpr(astf) => astf.borrow().code(),
+            Self::ReclassifyExpr(astf) => astf.borrow().code(),
+            Self::LiteralExpr(astf) => astf.borrow().code(),
+            Self::BooleanLiteralExpr(astf) => astf.borrow().code(),
+            Self::NumberLiteralExpr(astf) => astf.borrow().code(),
+            Self::StringLiteralExpr(astf) => astf.borrow().code(),
+            Self::ArrayLiteralExprBase(astf) => astf.borrow().code(),
+            Self::ArrayLiteralExpr(astf) => astf.borrow().code(),
+            Self::KeyLiteralExpr(astf) => astf.borrow().code(),
+            Self::TupleOrLocationExpr(astf) => astf.borrow().code(),
+            Self::TupleExpr(astf) => astf.borrow().code(),
+            Self::IdentifierExpr(astf) => astf.borrow().code(),
+            Self::MemberAccessExpr(astf) => astf.borrow().code(),
+            Self::LocationExpr(astf) => astf.borrow().code(),
+            Self::IndexExpr(astf) => astf.borrow().code(),
+            Self::SliceExpr(astf) => astf.borrow().code(),
+            Self::ReclassifyExprBase(astf) => astf.borrow().code(),
+            Self::RehomExpr(astf) => astf.borrow().code(),
+            Self::EncryptionExpression(astf) => astf.borrow().code(),
+            Self::HybridArgumentIdf(astf) => astf.borrow().code(),
+            Self::Statement(astf) => astf.borrow().code(),
+            Self::IfStatement(astf) => astf.borrow().code(),
+            Self::WhileStatement(astf) => astf.borrow().code(),
+            Self::DoWhileStatement(astf) => astf.borrow().code(),
+            Self::ForStatement(astf) => astf.borrow().code(),
+            Self::BreakStatement(astf) => astf.borrow().code(),
+            Self::ContinueStatement(astf) => astf.borrow().code(),
+            Self::ReturnStatement(astf) => astf.borrow().code(),
+            Self::StatementListBase(astf) => astf.borrow().code(),
+            Self::StatementList(astf) => astf.borrow().code(),
+            Self::CircuitDirectiveStatement(astf) => astf.borrow().code(),
+            Self::CircuitComputationStatement(astf) => astf.borrow().code(),
+            Self::EnterPrivateKeyStatement(astf) => astf.borrow().code(),
+            Self::ExpressionStatement(astf) => astf.borrow().code(),
+            Self::RequireStatement(astf) => astf.borrow().code(),
+            Self::AssignmentStatementBase(astf) => astf.borrow().code(),
+            Self::AssignmentStatement(astf) => astf.borrow().code(),
+            Self::VariableDeclarationStatement(astf) => astf.borrow().code(),
+            Self::CircuitInputStatement(astf) => astf.borrow().code(),
+            Self::SimpleStatement(astf) => astf.borrow().code(),
+            Self::Block(astf) => astf.borrow().code(),
+            Self::IndentBlock(astf) => astf.borrow().code(),
+            Self::Mapping(astf) => astf.borrow().code(),
+            Self::TupleType(astf) => astf.borrow().code(),
+            Self::TypeName(astf) => astf.borrow().code(),
+            Self::ElementaryTypeName(astf) => astf.borrow().code(),
+            Self::FunctionTypeName(astf) => astf.borrow().code(),
+            Self::BoolTypeName(astf) => astf.borrow().code(),
+            Self::BooleanLiteralType(astf) => astf.borrow().code(),
+            Self::NumberLiteralType(astf) => astf.borrow().code(),
+            Self::IntTypeName(astf) => astf.borrow().code(),
+            Self::UintTypeName(astf) => astf.borrow().code(),
+            Self::NumberTypeNameBase(astf) => astf.borrow().code(),
+            Self::NumberTypeName(astf) => astf.borrow().code(),
+            Self::EnumTypeName(astf) => astf.borrow().code(),
+            Self::EnumValueTypeName(astf) => astf.borrow().code(),
+            Self::StructTypeName(astf) => astf.borrow().code(),
+            Self::ContractTypeName(astf) => astf.borrow().code(),
+            Self::AddressTypeName(astf) => astf.borrow().code(),
+            Self::AddressPayableTypeName(astf) => astf.borrow().code(),
+            Self::UserDefinedTypeName(astf) => astf.borrow().code(),
+            Self::CipherText(astf) => astf.borrow().code(),
+            Self::Randomness(astf) => astf.borrow().code(),
+            Self::Key(astf) => astf.borrow().code(),
+            Self::Proof(astf) => astf.borrow().code(),
+            Self::ArrayBase(astf) => astf.borrow().code(),
+            Self::Array(astf) => astf.borrow().code(),
+            Self::IdentifierDeclaration(astf) => astf.borrow().code(),
+            Self::VariableDeclaration(astf) => astf.borrow().code(),
+            Self::Parameter(astf) => astf.borrow().code(),
+            Self::StateVariableDeclaration(astf) => astf.borrow().code(),
+            Self::NamespaceDefinition(astf) => astf.borrow().code(),
+            Self::ConstructorOrFunctionDefinition(astf) => astf.borrow().code(),
+            Self::EnumDefinition(astf) => astf.borrow().code(),
+            Self::StructDefinition(astf) => astf.borrow().code(),
+            Self::ContractDefinition(astf) => astf.borrow().code(),
+            Self::DummyAnnotation(astf) => astf.borrow().code(),
             _ => String::new(),
             // Self::CircComment(astf) => Some(astf.borrow().ast_base_ref()),
             // Self::CircIndentBlock(astf) => Some(astf.borrow().ast_base_ref()),
@@ -1597,10 +1597,10 @@ impl AST {
         let v = CodeVisitor::new(true);
         v.visit(&RcCell::new(self.clone()).into())
     }
-    pub fn code(&self) -> String {
-        let v = CodeVisitor::new(true);
-        v.visit(&RcCell::new(self.clone()).into())
-    }
+    // pub fn code(&self) -> String {
+    //     let v = CodeVisitor::new(true);
+    //     v.visit(&RcCell::new(self.clone()).into())
+    // }
     pub fn is_parent_of(&self, child: &ASTFlatten) -> bool {
         let mut e = child.clone();
         let selfs = RcCell::new(self.clone()).into();
@@ -1916,6 +1916,9 @@ pub enum Comment {
     BlankLine(BlankLine),
 }
 impl Comment {
+    pub fn code(&self) -> String {
+        String::new()
+    }
     pub fn text(&self) -> String {
         String::new()
     }
@@ -3016,16 +3019,10 @@ impl NewExpr {
         // assert not isinstance(annotated_type, ElementaryTypeName)
         Self {
             function_call_expr_base: FunctionCallExprBase::new(
-                RcCell::new(
-                    IdentifierExpr::new(
-                        IdentifierExprUnion::String(format!(
-                            "new {}",
-                            annotated_type.to_ast().code()
-                        )),
-                        None,
-                    )
-                    .into_expr(),
-                )
+                RcCell::new(IdentifierExpr::new(
+                    IdentifierExprUnion::String(format!("new {}", annotated_type.to_ast().code())),
+                    None,
+                ))
                 .into(),
                 args,
                 None,
@@ -3645,7 +3642,7 @@ impl TupleExpr {
     }
     pub fn assign(&self, val: ASTFlatten) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(RcCell::new(self.to_expr()).into()),
+            Some(RcCell::new(self.clone()).into()),
             Some(val),
             None,
         ))
@@ -3698,21 +3695,19 @@ impl LocationExpr {
     pub fn call(&self, member: IdentifierExprUnion, args: Vec<ASTFlatten>) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(match member {
             IdentifierExprUnion::Identifier(member) => FunctionCallExprBase::new(
-                RcCell::new(
-                    MemberAccessExpr::new(Some(RcCell::new(self.clone())), member).into_expr(),
-                )
+                RcCell::new(MemberAccessExpr::new(
+                    Some(RcCell::new(self.clone())),
+                    member,
+                ))
                 .into(),
                 args,
                 None,
             ),
             IdentifierExprUnion::String(member) => FunctionCallExprBase::new(
-                RcCell::new(
-                    MemberAccessExpr::new(
-                        Some(RcCell::new(self.clone())),
-                        RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
-                    )
-                    .into_expr(),
-                )
+                RcCell::new(MemberAccessExpr::new(
+                    Some(RcCell::new(self.clone())),
+                    RcCell::new(Identifier::Identifier(IdentifierBase::new(member))),
+                ))
                 .into(),
                 args,
                 None,
@@ -3751,9 +3746,7 @@ impl LocationExpr {
             .flatten();
         assert!(value_type.is_some());
         let item = match item {
-            ExprUnion::I32(item) => {
-                RcCell::new(NumberLiteralExpr::new(item, false).into_expr()).into()
-            }
+            ExprUnion::I32(item) => RcCell::new(NumberLiteralExpr::new(item, false)).into(),
             ExprUnion::Expression(item) => item,
         };
 
@@ -3761,7 +3754,7 @@ impl LocationExpr {
     }
     pub fn assign(&self, val: ASTFlatten) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(RcCell::new(self.to_expr()).into()),
+            Some(RcCell::new(self.to_ast()).into()),
             Some(val),
             None,
         ))
@@ -4594,7 +4587,7 @@ impl HybridArgumentIdf {
             .arr
             .unwrap()
             .borrow_mut()
-            .assign(RcCell::new(self.serialized_loc.to_expr()).into())
+            .assign(RcCell::new(self.serialized_loc.clone()).into())
         } else if let Some(base) = &base {
             self.get_loc_expr(None)
                 .try_as_expression_mut()
@@ -4609,16 +4602,10 @@ impl HybridArgumentIdf {
                         src.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
                     .index(ExprUnion::Expression(
-                        RcCell::new(
-                            base.try_as_expression_ref()
-                                .unwrap()
-                                .borrow()
-                                .binop(
-                                    String::from("+"),
-                                    NumberLiteralExpr::new(start_offset, false).to_expr(),
-                                )
-                                .to_expr(),
-                        )
+                        RcCell::new(base.try_as_expression_ref().unwrap().borrow().binop(
+                            String::from("+"),
+                            NumberLiteralExpr::new(start_offset, false).into_expr(),
+                        ))
                         .into(),
                     ))
                     .try_as_expression()
@@ -4666,15 +4653,12 @@ impl HybridArgumentIdf {
                 .unwrap()
                 .borrow_mut()
                 .assign(
-                    RcCell::new(
-                        SliceExpr::new(
-                            loc.try_as_location_expr(),
-                            None,
-                            0,
-                            self.t.borrow().size_in_uints(),
-                        )
-                        .to_expr(),
-                    )
+                    RcCell::new(SliceExpr::new(
+                        loc.try_as_location_expr(),
+                        None,
+                        0,
+                        self.t.borrow().size_in_uints(),
+                    ))
                     .into(),
                 )
         } else {
@@ -4717,16 +4701,10 @@ impl HybridArgumentIdf {
                         tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
                     .index(ExprUnion::Expression(
-                        RcCell::new(
-                            base.try_as_expression_ref()
-                                .unwrap()
-                                .borrow()
-                                .binop(
-                                    String::from("+"),
-                                    NumberLiteralExpr::new(start_offset, false).to_expr(),
-                                )
-                                .to_expr(),
-                        )
+                        RcCell::new(base.try_as_expression_ref().unwrap().borrow().binop(
+                            String::from("+"),
+                            NumberLiteralExpr::new(start_offset, false).into_expr(),
+                        ))
                         .into(),
                     ))
                     .try_as_index_expr_ref()
@@ -5075,15 +5053,6 @@ impl ASTChildren for IfStatement {
         }
     }
 }
-// impl ASTChildrenMut for IfStatement {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         cb.push(self.condition.to_ast_flatten());
-//         cb.push(self.then_branch.to_ast_flatten());
-//         if let Some(else_branch) = &mut self.else_branch {
-//             cb.push(else_branch.to_ast_flatten());
-//         }
-//     }
-// }
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct WhileStatement {
@@ -5112,12 +5081,6 @@ impl ASTChildren for WhileStatement {
         cb.add_child(self.body.clone().into());
     }
 }
-// impl ASTChildrenMut for WhileStatement {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         cb.push(self.condition.to_ast_flatten());
-//         cb.push(self.body.to_ast_flatten());
-//     }
-// }
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DoWhileStatement {
@@ -5146,12 +5109,6 @@ impl ASTChildren for DoWhileStatement {
         cb.add_child(self.condition.clone().into());
     }
 }
-// impl ASTChildrenMut for DoWhileStatement {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         cb.push(self.body.to_ast_flatten());
-//         cb.push(self.condition.to_ast_flatten());
-//     }
-// }
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ForStatement {
@@ -5215,19 +5172,6 @@ impl ASTChildren for ForStatement {
         cb.add_child(self.body.clone().into());
     }
 }
-// impl ASTChildrenMut for ForStatement {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         if let Some(init) = &mut self.init {
-//             cb.push(init.to_ast_flatten());
-//         }
-
-//         cb.push(self.condition.to_ast_flatten());
-//         if let Some(update) = &mut self.update {
-//             cb.push(update.to_ast_flatten());
-//         }
-//         cb.push(self.body.to_ast_flatten());
-//     }
-// }
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
@@ -5502,16 +5446,6 @@ impl ASTChildren for AssignmentStatementBase {
         }
     }
 }
-// impl ASTChildrenMut for AssignmentStatementBase {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         if let Some(lhs) = &mut self.lhs {
-//             cb.push(lhs.to_ast_flatten().unwrap());
-//         }
-//         if let Some(rhs) = &mut self.rhs {
-//             cb.push(rhs.to_ast_flatten());
-//         }
-//     }
-// }
 #[impl_traits(AssignmentStatementBase, SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
@@ -5753,20 +5687,6 @@ impl ASTChildren for TypeName {
         }
     }
 }
-// impl ASTChildrenMut for TypeName {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         match self {
-//             TypeName::ElementaryTypeName(ast) => ast.process_children_mut(cb),
-//             TypeName::UserDefinedTypeName(ast) => ast.process_children_mut(cb),
-//             TypeName::Mapping(ast) => ast.process_children_mut(cb),
-//             TypeName::Array(ast) => ast.process_children_mut(cb),
-//             // TypeName::TupleType(ast) => ast.process_children_mut(cb),
-//             TypeName::FunctionTypeName(ast) => ast.process_children_mut(cb),
-//             _ => {}
-//         }
-//     }
-// }
-
 #[macro_export]
 macro_rules! impl_base_ref_for_typename {
     ($fn_name: ident,$self: ident) => {
@@ -6926,9 +6846,7 @@ impl ArrayBase {
             type_name_base: TypeNameBase::new(),
             value_type,
             expr: expr.map(|_expr| match _expr {
-                ExprUnion::I32(exp) => {
-                    RcCell::new(NumberLiteralExpr::new(exp, false).into_expr()).into()
-                }
+                ExprUnion::I32(exp) => RcCell::new(NumberLiteralExpr::new(exp, false)).into(),
                 ExprUnion::Expression(exp) => exp,
             }),
         }
@@ -6992,10 +6910,7 @@ impl CipherText {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 Some(ExprUnion::Expression(
-                    RcCell::new(
-                        NumberLiteralExpr::new(crypto_params.cipher_len(), false).into_expr(),
-                    )
-                    .into(),
+                    RcCell::new(NumberLiteralExpr::new(crypto_params.cipher_len(), false)).into(),
                 )),
             ),
             plain_type,
@@ -7030,8 +6945,7 @@ impl Randomness {
                 AnnotatedTypeName::uint_all(),
                 if let Some(randomness_len) = crypto_params.randomness_len() {
                     Some(ExprUnion::Expression(
-                        RcCell::new(NumberLiteralExpr::new(randomness_len, false).into_expr())
-                            .into(),
+                        RcCell::new(NumberLiteralExpr::new(randomness_len, false)).into(),
                     ))
                 } else {
                     None
@@ -7064,8 +6978,7 @@ impl Key {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 Some(ExprUnion::Expression(
-                    RcCell::new(NumberLiteralExpr::new(crypto_params.key_len(), false).into_expr())
-                        .into(),
+                    RcCell::new(NumberLiteralExpr::new(crypto_params.key_len(), false)).into(),
                 )),
             ),
             crypto_params,
@@ -7094,9 +7007,10 @@ impl Proof {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),
                 Some(ExprUnion::Expression(
-                    RcCell::new(
-                        NumberLiteralExpr::new(CFG.lock().unwrap().proof_len(), false).into_expr(),
-                    )
+                    RcCell::new(NumberLiteralExpr::new(
+                        CFG.lock().unwrap().proof_len(),
+                        false,
+                    ))
                     .into(),
                 )),
             ),
@@ -7624,16 +7538,6 @@ impl ASTChildren for AnnotatedTypeName {
         }
     }
 }
-// impl ASTChildrenMut for AnnotatedTypeName {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         if let Some(type_name) = &mut self.type_name {
-//             cb.push(type_name.to_ast_flatten().unwrap());
-//         }
-//         if let Some(privacy_annotation) = &mut self.privacy_annotation {
-//             cb.push(privacy_annotation.to_ast_flatten().unwrap());
-//         }
-//     }
-// }
 #[enum_dispatch(
     ASTChildren,
     IntoAST,
@@ -8159,20 +8063,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
         }
     }
 }
-// impl ASTChildrenMut for ConstructorOrFunctionDefinition {
-//     fn process_children_mut<'c>(&'c mut self, cb: & mut Vec<ASTFlatten<'c>>) {
-//         self.namespace_definition_base.process_children_mut(cb);
-//         self.parameters.iter_mut().for_each(|parameter| {
-//             cb.push(parameter.to_ast_flatten());
-//         });
-//         self.return_parameters.iter_mut().for_each(|parameter| {
-//             cb.push(parameter.to_ast_flatten());
-//         });
-//         if let Some(body) = &mut self.body {
-//             cb.push(body.to_ast_flatten());
-//         }
-//     }
-// }
+
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
@@ -8539,7 +8430,7 @@ pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten
             Some(AnnotatedTypeName::address_all()),
         );
         ie.location_expr_base.target = plabel.try_as_identifier_ref().unwrap().borrow().parent();
-        RcCell::new(ie.into_expr()).into()
+        RcCell::new(ie).into()
     } else {
         plabel
     }
@@ -8971,16 +8862,28 @@ impl AstVisitor for CodeVisitor {
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
-        match *name {
+        match name {
             ASTType::ASTBase => self.visit_AST(ast),
-            ASTType::CommentBase => self.visit_Comment(ast),
-            ASTType::IdentifierBase => self.visit_Identifier(ast),
-            ASTType::FunctionCallExprBase => self.visit_FunctionCallExpr(ast),
+            _ if matches!(ast.to_ast(), AST::Comment(_)) => self.visit_Comment(ast),
+            _ if matches!(ast.to_ast(), AST::Identifier(_)) => self.visit_Identifier(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visit_FunctionCallExpr(ast)
+            }
             ASTType::PrimitiveCastExpr => self.visit_PrimitiveCastExpr(ast),
             ASTType::BooleanLiteralExpr => self.visit_BooleanLiteralExpr(ast),
             ASTType::NumberLiteralExpr => self.visit_NumberLiteralExpr(ast),
             ASTType::StringLiteralExpr => self.visit_StringLiteralExpr(ast),
-            ASTType::ArrayLiteralExprBase => self.visit_ArrayLiteralExpr(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
+            ) =>
+            {
+                self.visit_ArrayLiteralExpr(ast)
+            }
             ASTType::TupleExpr => self.visit_TupleExpr(ast),
             ASTType::IdentifierExpr => self.visit_IdentifierExpr(ast),
             ASTType::MemberAccessExpr => self.visit_MemberAccessExpr(ast),
@@ -8998,18 +8901,42 @@ impl AstVisitor for CodeVisitor {
             ASTType::ReturnStatement => self.visit_ReturnStatement(ast),
             ASTType::ExpressionStatement => self.visit_ExpressionStatement(ast),
             ASTType::RequireStatement => self.visit_RequireStatement(ast),
-            ASTType::AssignmentStatementBase => self.visit_AssignmentStatement(ast),
-            ASTType::CircuitDirectiveStatementBase => self.visit_CircuitDirectiveStatement(ast),
-            ASTType::StatementListBase => self.visit_StatementList(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            ) =>
+            {
+                self.visit_AssignmentStatement(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::CircuitDirectiveStatement(_))
+            ) =>
+            {
+                self.visit_CircuitDirectiveStatement(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
+                self.visit_StatementList(ast)
+            }
             ASTType::Block => self.visit_Block(ast),
             ASTType::IndentBlock => self.visit_IndentBlock(ast),
-            ASTType::ElementaryTypeNameBase => self.visit_ElementaryTypeName(ast),
-            ASTType::UserDefinedTypeNameBase => self.visit_UserDefinedTypeName(ast),
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_))) => {
+                self.visit_ElementaryTypeName(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::TypeName(TypeName::UserDefinedTypeName(_))
+            ) =>
+            {
+                self.visit_UserDefinedTypeName(ast)
+            }
             ASTType::AddressTypeName => self.visit_AddressTypeName(ast),
             ASTType::AddressPayableTypeName => self.visit_AddressPayableTypeName(ast),
             ASTType::AnnotatedTypeName => self.visit_AnnotatedTypeName(ast),
             ASTType::Mapping => self.visit_Mapping(ast),
-            ASTType::ArrayBase => self.visit_Array(ast),
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::Array(_))) => self.visit_Array(ast),
             ASTType::CipherText => self.visit_CipherText(ast),
             ASTType::TupleType => self.visit_TupleType(ast),
             ASTType::VariableDeclaration => self.visit_VariableDeclaration(ast),
@@ -9102,21 +9029,40 @@ impl CodeVisitor {
     }
 
     pub fn visit_FunctionCallExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        println!(
+            "=====visit_FunctionCallExpr==============={:?}",
+            ast.is_ast()
+        );
         if is_instance(
-            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_ast_ref()
+                .unwrap()
+                .borrow()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func(),
             ASTType::BuiltinFunction,
         ) {
             let args: Vec<_> = ast
-                .try_as_function_call_expr_ref()
+                .try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .args()
                 .iter()
                 .map(|a| self.visit(&a.clone().into()))
                 .collect();
-            ast.try_as_function_call_expr_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .func()
                 .try_as_builtin_function_ref()
                 .unwrap()
@@ -9124,17 +9070,25 @@ impl CodeVisitor {
                 .format_string(&args)
         } else {
             let f = self.visit(
-                &ast.try_as_function_call_expr_ref()
+                &ast.try_as_ast_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
                     .func()
                     .clone()
                     .into(),
             );
             let a = self.visit_list(
-                ast.try_as_function_call_expr_ref()
+                ast.try_as_ast_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
                     .args()
                     .iter()
                     .map(|arg| ListUnion::AST(arg.clone().into()))
@@ -9184,10 +9138,14 @@ impl CodeVisitor {
     }
 
     pub fn visit_BooleanLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        ast.try_as_boolean_literal_type_ref()
+        println!(
+            "=========visit_BooleanLiteralExpr==========={:?}",
+            ast.is_expression()
+        );
+        ast.try_as_boolean_literal_expr_ref()
             .unwrap()
             .borrow()
-            .value()
+            .value
             .to_string()
             .to_ascii_lowercase()
     }
@@ -9201,10 +9159,14 @@ impl CodeVisitor {
         {
             format!(
                 "{:x}",
-                ast.try_as_number_literal_expr_ref()
+                ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
-                    .value()
+                    .try_as_literal_expr_ref()
+                    .unwrap()
+                    .try_as_number_literal_expr_ref()
+                    .unwrap()
+                    .value
             )
         } else {
             ast.try_as_number_literal_expr_ref()
@@ -9255,6 +9217,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_IdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        println!("======visit_IdentifierExpr========={:?}", ast.is_ast());
         self.visit(
             &ast.try_as_identifier_expr_ref()
                 .unwrap()
@@ -9543,64 +9506,45 @@ impl CodeVisitor {
     }
 
     pub fn visit_AssignmentStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let lhs = ast
+        println!("====visit_AssignmentStatement=========={:?}", ast.is_ast());
+        let ast = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_assignment_statement_ref()
             .unwrap()
-            .borrow()
-            .lhs()
             .clone();
-        let mut op = ast
-            .try_as_assignment_statement_ref()
-            .unwrap()
-            .borrow()
-            .op()
-            .clone();
-        if let Some(asu) = lhs
+        let lhs = ast.lhs().clone();
+        let mut op = ast.op().clone();
+        if lhs
             .as_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .borrow()
-            .try_as_tuple_expr_ref()
-        {
-            if let Some(at) = &asu
-                .tuple_or_location_expr_base
-                .expression_base
-                .annotated_type
-            {
-                if at.borrow().is_private() {
-                    op = String::new();
-                }
-            }
-        }
-        if let Some(le) = lhs
+            .to_ast()
+            .try_as_expression_ref()
             .as_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .borrow()
-            .try_as_location_expr_ref()
+            .map_or(false, |asu| {
+                asu.annotated_type()
+                    .as_ref()
+                    .map_or(false, |at| at.borrow().is_private())
+            })
         {
-            if let Some(at) = le.annotated_type() {
-                if at.borrow().is_private() {
-                    op = String::new();
-                }
-            }
+            op = String::new();
         }
 
         let rhs = if !op.is_empty() {
-            ast.try_as_assignment_statement_ref()
-                .unwrap()
-                .borrow()
-                .rhs()
-                .clone()
-                .map(|fce| fce.try_as_function_call_expr_ref().unwrap().borrow().args()[1].clone())
+            ast.rhs().clone().map(|fce| {
+                fce.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .args()[1]
+                    .clone()
+            })
         } else {
-            ast.try_as_assignment_statement_ref()
-                .unwrap()
-                .borrow()
-                .rhs()
-                .clone()
+            ast.rhs().clone()
         };
 
         let fstr = if op.starts_with("pre") {
@@ -9623,15 +9567,29 @@ impl CodeVisitor {
             let (lhs, rhs) = (
                 lhs.as_ref()
                     .unwrap()
-                    .try_as_slice_expr_ref()
+                    .try_as_ast_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_slice_expr_ref()
+                    .unwrap()
                     .clone(),
                 rhs.as_ref()
                     .unwrap()
-                    .try_as_slice_expr_ref()
+                    .try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_slice_expr_ref()
+                    .unwrap()
                     .clone(),
             );
             assert!(lhs.size == rhs.size, "Slice ranges don't have same size");

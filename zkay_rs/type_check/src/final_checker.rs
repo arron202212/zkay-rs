@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTFlatten, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
     ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierDeclarationBaseRef,
-    IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty,
-    StateVariableDeclaration, TupleOrLocationExpr, AST,SimpleStatement,Statement,
+    IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty, SimpleStatement,
+    StateVariableDeclaration, Statement, TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;

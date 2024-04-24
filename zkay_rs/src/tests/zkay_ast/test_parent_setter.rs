@@ -1,8 +1,7 @@
 use ast_builder::build_ast::build_ast;
-use rccell::{RcCell, WeakCell};
+// use rccell::{RcCell, WeakCell};
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, IntoAST,
-    NamespaceDefinitionBaseProperty, AST,
+    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, NamespaceDefinitionBaseProperty,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -25,18 +24,13 @@ impl AstVisitor for ParentChecker {
             assert!(ast.ast_base_ref().unwrap().borrow().parent().is_some());
         }
         self._visit_internal(ast);
-        None
     }
-    type Return = Option<()>;
-    fn temper_result(&self) -> Self::Return {
-        None
-    }
+    type Return = ();
+    fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, _name: &ASTType) -> bool {
         false
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
-        self.temper_result()
-    }
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}
 }
 
 // @parameterized_class(('name', 'example'), all_examples)

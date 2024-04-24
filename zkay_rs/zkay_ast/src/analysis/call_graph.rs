@@ -6,10 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition,
+    is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, Expression,
     ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST, LocationExpr,
-    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,Expression,
+    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,

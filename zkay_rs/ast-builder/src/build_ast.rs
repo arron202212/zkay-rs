@@ -57,14 +57,15 @@ use zkay_ast::{
         DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue,
         EnumValueTypeName, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
         FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier, IdentifierBase,
-        IdentifierBaseProperty, IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion,
-        IfStatement, IndexExpr, IntTypeName, IntoAST, IntoExpression, LiteralExpr, LocationExpr,
-        Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberTypeName,
-        Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, RehomExpr,
-        RequireStatement, ReturnStatement, SimpleStatement, SourceUnit, StateVariableDeclaration,
-        Statement, StatementList, StringLiteralExpr, StructTypeName, TupleExpr,
-        TupleOrLocationExpr, TypeName, UintTypeName, UserDefinedTypeName, VariableDeclaration,
-        VariableDeclarationStatement, WhileStatement, AST,
+        IdentifierBaseProperty, IdentifierDeclaration, IdentifierDeclarationBase, IdentifierExpr,
+        IdentifierExprUnion, IfStatement, IndexExpr, IntTypeName, IntoAST, IntoExpression,
+        LiteralExpr, LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
+        NumberLiteralExpr, NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr,
+        ReclassifyExprBase, RehomExpr, RequireStatement, ReturnStatement, SimpleStatement,
+        SourceUnit, StateVariableDeclaration, Statement, StatementList, StringLiteralExpr,
+        StructTypeName, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName,
+        UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, WhileStatement,
+        AST,
     },
     homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS},
 };
@@ -271,12 +272,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_pragmaDirective(&mut self, ctx: &PragmaDirectiveContext<'input>) -> Self::Return {
-        ctx.pragma().expect("visit_pragmaDirective").accept(self);
-        let pragmas = if let Some(AST::VersionPragma(p)) = self.temp_result().clone() {
-            p
-        } else {
-            String::new()
-        };
+        let pragmas = ctx
+            .pragma()
+            .map(|p| {
+                p.accept(self);
+                self.temp_result()
+                    .clone()
+                    .map(|ast| ast.try_as_version_pragma())
+                    .flatten()
+            })
+            .flatten()
+            .unwrap_or(String::new());
+
         let s = format!("pragma {pragmas};");
         Some(AST::Pragma(s))
     }
@@ -1761,7 +1768,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             let expr = expr.map(|e| e.into_ast());
             AssignmentStatementBase::new(
                 expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
-                Some(RcCell::new(fce.to_expr()).into()),
+                Some(RcCell::new(fce).into()),
                 Some(format!("{kind}{}", op.text)),
             )
             .into_ast()
@@ -2012,17 +2019,22 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 let keywords: Vec<_> = p.keywords.iter().map(|kw| kw.to_string()).collect();
                 // //println!("{:?},{:?},{:?}",keywords,annotated_type,idf);
 
-                (keywords, annotated_type, idf)
+                VariableDeclaration::new(
+                    keywords,
+                    annotated_type.map(RcCell::new).unwrap(),
+                    idf.map(RcCell::new),
+                    None,
+                )
             })
             .collect();
         // //println!("=={:?}==ctx
         //     .params======={:?}============",ctx.parameter,ctx
         //     .params);
-        // if rp.is_empty() {
-        None
-        // } else {
-        //     rp[0].clone()
-        // }
+        if rp.is_empty() {
+            None
+        } else {
+            Some(rp[0].clone().into_ast())
+        }
     }
     fn visit_variableDeclaration(
         &mut self,

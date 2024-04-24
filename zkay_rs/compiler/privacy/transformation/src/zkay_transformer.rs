@@ -1075,7 +1075,7 @@ impl ZkayStatementTransformer {
                         None,
                     );
                     idf.location_expr_base.target = Some(ASTFlatten::from(vd.clone()).downgrade());
-                    RcCell::new(idf.to_expr()).into()
+                    RcCell::new(idf).into()
                 })
                 .collect();
             let mut te = TupleExpr::new(ret_args).assign(expr.unwrap());
@@ -1816,11 +1816,11 @@ impl ZkayExpressionTransformer {
             self.visit_children(ast)
         }
     }
-
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    #[allow(unreachable_code)]
+    pub fn visitExpression(&self, _ast: &ASTFlatten) -> Option<ASTFlatten> {
         // raise NotImplementedError()
         unimplemented!();
-        Some(ast.clone())
+        Some(_ast.clone())
     }
 }
 // class ZkayCircuitTransformer(AstTransformerVisitor)
@@ -2391,8 +2391,9 @@ impl ZkayCircuitTransformer {
     }
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
-    pub fn visitStatement(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    #[allow(unreachable_code)]
+    pub fn visitStatement(&self, _ast: &ASTFlatten) -> Option<ASTFlatten> {
         unimplemented!("Unsupported statement");
-        Some(ast.clone())
+        Some(_ast.clone())
     }
 }

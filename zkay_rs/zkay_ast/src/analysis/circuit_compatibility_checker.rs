@@ -16,8 +16,8 @@ use crate::ast::{
     ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName,
     IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
     NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty,
-    ReturnStatement, Statement, StatementBaseProperty, StatementList, VariableDeclarationStatement,SimpleStatement,TupleOrLocationExpr,
-    AST,
+    ReturnStatement, SimpleStatement, Statement, StatementBaseProperty, StatementList,
+    TupleOrLocationExpr, VariableDeclarationStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,

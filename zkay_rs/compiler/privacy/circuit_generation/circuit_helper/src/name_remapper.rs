@@ -196,7 +196,7 @@ impl Remapper {
             ch: &RcCell<CircuitHelper>,
         ) -> HybridArgumentIdf {
             let rhs = FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
-                RcCell::new(BuiltinFunction::new("ite").to_expr()).into(),
+                RcCell::new(BuiltinFunction::new("ite")).into(),
                 vec![
                     true_cond_for_other_branch.clone(),
                     then_idf.clone(),
@@ -205,7 +205,7 @@ impl Remapper {
                 None,
             ))
             .as_type(&val.t.clone().into());
-            // create_val_for_name_and_expr_fct(key.name(), rhs.to_expr())
+            // create_val_for_name_and_expr_fct(key.name(), rhs)
             ch.borrow_mut()
                 ._create_temp_var(&key.try_as_identifier_ref().unwrap().borrow().name(), &rhs)
         }
