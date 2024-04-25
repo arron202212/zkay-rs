@@ -17,22 +17,23 @@ use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTType, AnnotatedTypeName,
-    AssignmentStatement, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BlankLine,
-    Block, BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction,
-    ChildListBuilder, Comment, CommentBase, ContinueStatement, DoWhileStatement,
-    ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion, Expression,
-    ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, HybridArgType,
-    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseMutRef, IdentifierBaseProperty,
-    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
-    LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
-    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr,
-    ReclassifyExpr, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, ReclassifyExprBaseRef,
-    ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
-    StatementBaseProperty, StatementList, StatementListBaseMutRef, StatementListBaseProperty,
-    TupleExpr, TypeName, VariableDeclaration, VariableDeclarationStatement, WhileStatement, AST,
+    is_instance, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
+    AnnotatedTypeName, AssignmentStatement, AssignmentStatementBaseMutRef,
+    AssignmentStatementBaseProperty, BlankLine, Block, BooleanLiteralExpr, BooleanLiteralType,
+    BreakStatement, BuiltinFunction, ChildListBuilder, Comment, CommentBase, ContinueStatement,
+    DoWhileStatement, ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion,
+    Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement,
+    FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
+    FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
+    IdentifierBaseMutRef, IdentifierBaseProperty, IdentifierDeclaration,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
+    IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr, LocationExprBaseProperty,
+    Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
+    NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
+    ReclassifyExprBaseProperty, ReclassifyExprBaseRef, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty, StatementList,
+    StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::deep_copy::replace_expr;
@@ -67,9 +68,9 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::AnnotatedTypeName
                 | ASTType::VariableDeclaration
                 | ASTType::Parameter
@@ -264,9 +265,9 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
     //     None
     // }
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::StatementListBase
                 | ASTType::StatementBase
                 | ASTType::AssignmentStatementBase
@@ -278,7 +279,15 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
                 | ASTType::BreakStatement
                 | ASTType::ReturnStatement
                 | ASTType::ExpressionBase
-        )
+        ) || matches!(ast, AST::Expression(_))
+            || matches!(ast, AST::Statement(Statement::StatementList(_)))
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
@@ -1129,9 +1138,9 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
     //     None
     // }
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::MeExpr
                 | ASTType::LiteralExprBase
                 | ASTType::IdentifierExpr
@@ -1846,9 +1855,9 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::LiteralExprBase
                 | ASTType::IndexExpr
                 | ASTType::IdentifierExpr
@@ -1861,7 +1870,16 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
                 | ASTType::IfStatement
                 | ASTType::Block
                 | ASTType::StatementBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::LiteralExpr(_)))
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(ast, AST::Expression(_))
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         match name {
@@ -1871,7 +1889,6 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
-            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
@@ -1892,6 +1909,7 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::Block => self.visitBlock(ast, None, None),
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => None,
         }

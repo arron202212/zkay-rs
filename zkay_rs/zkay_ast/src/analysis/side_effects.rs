@@ -8,7 +8,7 @@
 use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, is_instances, ASTBaseMutRef, ASTChildren, ASTFlatten, ASTType,
+    is_instance, is_instances, ASTBaseMutRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
     AssignmentStatement, AssignmentStatementBaseProperty, BuiltinFunction, Expression,
     FunctionCallExpr, FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST,
     IntoExpression, IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter,
@@ -49,14 +49,22 @@ impl AstVisitor for SideEffectsDetector {
         false
     }
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase
                 | ASTType::ExpressionBase
                 | ASTType::AssignmentStatementBase
                 | ASTType::StatementBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Expression(_))
+            || matches!(ast, AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -151,12 +159,22 @@ impl AstVisitor for DirectModificationDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::LocationExprBase
                 | ASTType::VariableDeclaration
                 | ASTType::AssignmentStatementBase
+        ) || matches!(
+            ast,
+            AST::Expression(Expression::TupleOrLocationExpr(
+                TupleOrLocationExpr::LocationExpr(_)
+            ))
+        ) || matches!(
+            ast,
+            AST::Statement(Statement::SimpleStatement(
+                SimpleStatement::AssignmentStatement(_)
+            ))
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
@@ -307,8 +325,11 @@ impl AstVisitor for IndirectModificationDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(
+            ast.to_ast(),
+            AST::Expression(Expression::FunctionCallExpr(_))
+        )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -452,13 +473,20 @@ impl AstVisitor for EvalOrderUBChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase
                 | ASTType::ExpressionBase
                 | ASTType::AssignmentStatementBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Expression(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

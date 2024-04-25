@@ -170,3 +170,28 @@ pub fn expand_derive_is_enum_variant(ast: &syn::DeriveInput) -> TokenStream {
     }
     .into()
 }
+
+use proc_macro::TokenTree;
+
+pub fn get_name(keyword: &str, item: TokenStream) -> String {
+    get_names(&[keyword], item)
+}
+pub fn get_names(keywords: &[&str], item: TokenStream) -> String {
+    let mut struct_name = String::new();
+    let mut it = item.into_iter();
+    while let Some(tt) = it.next() {
+        match tt {
+            TokenTree::Ident(id) => {
+                if keywords.iter().any(|kw| id.to_string() == *kw) {
+                    struct_name = it.next().unwrap().to_string();
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    if struct_name.is_empty() {
+        panic!("no ident found")
+    }
+    struct_name
+}

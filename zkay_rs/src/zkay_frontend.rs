@@ -211,14 +211,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
             .circuit_generator_base
             .circuits_to_prove
             .iter()
-            .map(|cc| {
-                cc.borrow()
-                    .verifier_contract_type
-                    .as_ref()
-                    .unwrap()
-                    .to_ast()
-                    .code()
-            })
+            .map(|cc| cc.borrow().verifier_contract_type.as_ref().unwrap().code())
             .collect();
         verifier_contract_type_codes.sort_unstable();
         assert!(verifier_names == verifier_contract_type_codes);

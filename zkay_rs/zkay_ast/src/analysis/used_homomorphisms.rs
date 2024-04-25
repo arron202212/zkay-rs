@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTChildren, ASTFlatten, ASTType, AnnotatedTypeName,
+    is_instance, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName,
     ConstructorOrFunctionDefinition, EnumDefinition, Expression, ExpressionBaseProperty,
     IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
 };
@@ -28,9 +28,9 @@ impl AstVisitor for UsedHomomorphismsVisitor {
         BTreeSet::new()
     }
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::AnnotatedTypeName
                 | ASTType::ExpressionBase
                 | ASTType::IdentifierDeclarationBase
@@ -38,7 +38,8 @@ impl AstVisitor for UsedHomomorphismsVisitor {
                 | ASTType::EnumDefinition
                 | ASTType::StructDefinition
                 | ASTType::SourceUnit
-        )
+        ) || matches!(ast, AST::Expression(_))
+            || matches!(ast, AST::IdentifierDeclaration(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

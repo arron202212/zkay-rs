@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use crate::ast::{ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, AST};
+use crate::ast::{ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST};
 
 pub struct AstVisitorBase {
     pub traversal: String,
@@ -45,7 +45,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
     fn visit(&self, ast: &ASTFlatten) -> Self::Return {
         self._visit_internal(ast).unwrap()
     }
-    fn has_attr(&self, name: &ASTType) -> bool;
+    fn has_attr(&self, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return;
     fn temper_result(&self) -> Self::Return;
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<Self::Return> {
@@ -82,7 +82,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
 // std::any::type_name::<Option<String>>(),
     {
         // let _visitor_function = c; // String::from("visit") +
-        if self.has_attr(&c) {
+        if self.has_attr(&ast.to_ast()) {
             return Some(self.get_attr(&c, ast));
         } else if let Some(c) = AST::bases(c) {
             let f = self.get_visit_function(c, ast);

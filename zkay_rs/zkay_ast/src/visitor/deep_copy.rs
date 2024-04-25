@@ -126,7 +126,7 @@ impl AstVisitor for DeepCopyVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn has_attr(&self, _name: &ASTType) -> bool {
+    fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
     fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {

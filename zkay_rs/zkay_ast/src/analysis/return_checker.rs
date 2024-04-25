@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTType, Block, ConstructorOrFunctionDefinition,
-    IntoAST, ReturnStatement, StatementListBaseProperty, AST,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, Block,
+    ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, StatementListBaseProperty, AST,
 }; //, AstException
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -30,8 +30,8 @@ struct ReturnCheckVisitor {
 impl AstVisitor for ReturnCheckVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ReturnStatement == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        ASTType::ReturnStatement == ast.get_ast_type()
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

@@ -51,6 +51,6 @@ mod tests {
             ],
             None,
         );
-        assert_eq!(c.to_ast().code(), "0 + 0");
+        assert_eq!(c.code(), "0 + 0");
     }
 }

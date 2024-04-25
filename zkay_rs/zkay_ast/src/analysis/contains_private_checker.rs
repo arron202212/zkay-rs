@@ -6,9 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTFlatten, ASTType, Expression, ExpressionBaseProperty, FunctionCallExpr,
-    FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
-    AST,
+    is_instance, ASTFlatten, ASTInstanceOf, ASTType, Expression, ExpressionBaseProperty,
+    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr,
+    LocationExprBaseProperty, AST,
 };
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
@@ -37,11 +37,12 @@ impl AstVisitor for ContainsPrivVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase | ASTType::ExpressionBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(ast, AST::Expression(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

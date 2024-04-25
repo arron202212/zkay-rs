@@ -40,7 +40,7 @@ use zkay_config::{
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
     impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
-    ASTVisitorBaseRefImpl, ImplBaseTrait,
+    ASTVisitorBaseRefImpl, ExpressionASTypeImpl, ImplBaseTrait,
 };
 use zkay_utils::progress_printer::warn_print;
 
@@ -2016,6 +2016,7 @@ impl BlankLine {
     }
 }
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -2337,20 +2338,6 @@ impl Expression {
         }
     }
 
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            Expression::BuiltinFunction(ast) => ast.as_type(t).into(),
-            Expression::FunctionCallExpr(ast) => ast.as_type(t).into(),
-            Expression::PrimitiveCastExpr(ast) => ast.as_type(t).into(),
-            Expression::LiteralExpr(ast) => ast.as_type(t).into(),
-            Expression::TupleOrLocationExpr(ast) => ast.as_type(t).into(),
-            Expression::MeExpr(ast) => ast.as_type(t).into(),
-            Expression::AllExpr(ast) => ast.as_type(t).into(),
-            Expression::ReclassifyExpr(ast) => ast.as_type(t).into(),
-            Expression::DummyAnnotation(ast) => RcCell::new(ast.clone()).into(),
-        }
-    }
-
     pub fn analysis(&self) -> Option<PartitionState<ASTFlatten>> {
         self.statement()
             .as_ref()
@@ -2389,6 +2376,11 @@ impl<T: ExpressionBaseRef> ExpressionBaseProperty for T {
     fn evaluate_privately(&self) -> bool {
         self.expression_base_ref().evaluate_privately
     }
+}
+
+#[enum_dispatch]
+pub trait ExpressionASType {
+    fn as_type(&self, t: &ASTFlatten) -> ASTFlatten;
 }
 #[derive(ImplBaseTrait, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ExpressionBase {
@@ -2561,6 +2553,7 @@ lazy_static! {
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -2805,21 +2798,6 @@ impl BuiltinFunction {
             None
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 
 //     Describes the required input types and the resulting output type of a homomorphic execution of a BuiltinFunction.
@@ -2864,6 +2842,7 @@ impl HomomorphicBuiltinFunction {
     }
 }
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -2901,12 +2880,6 @@ impl FunctionCallExpr {
                 vec![ASTType::ContractDefinition, ASTType::EnumDefinition],
             )
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            FunctionCallExpr::FunctionCallExpr(ast) => ast.as_type(t),
-            FunctionCallExpr::NewExpr(ast) => ast.as_type(t),
-        }
-    }
 }
 
 #[enum_dispatch]
@@ -2935,6 +2908,7 @@ impl<T: FunctionCallExprBaseRef> FunctionCallExprBaseProperty for T {
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ImplBaseTrait,
     ASTDebug,
     ASTFlattenImpl,
@@ -2973,22 +2947,6 @@ impl FunctionCallExprBase {
             public_key: None,
         }
     }
-
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 
 impl ASTChildren for FunctionCallExprBase {
@@ -3001,7 +2959,19 @@ impl ASTChildren for FunctionCallExprBase {
 }
 
 #[impl_traits(FunctionCallExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct NewExpr {
     pub function_call_expr_base: FunctionCallExprBase,
     pub annotated_type: RcCell<AnnotatedTypeName>,
@@ -3020,7 +2990,7 @@ impl NewExpr {
         Self {
             function_call_expr_base: FunctionCallExprBase::new(
                 RcCell::new(IdentifierExpr::new(
-                    IdentifierExprUnion::String(format!("new {}", annotated_type.to_ast().code())),
+                    IdentifierExprUnion::String(format!("new {}", annotated_type.code())),
                     None,
                 ))
                 .into(),
@@ -3029,21 +2999,6 @@ impl NewExpr {
             ),
             annotated_type: RcCell::new(annotated_type),
         }
-    }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
     }
 }
 impl ASTChildren for NewExpr {
@@ -3056,7 +3011,19 @@ impl ASTChildren for NewExpr {
 }
 
 #[impl_traits(ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct PrimitiveCastExpr {
     pub expression_base: ExpressionBase,
     pub elem_type: RcCell<TypeName>,
@@ -3078,21 +3045,6 @@ impl PrimitiveCastExpr {
             is_implicit,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for PrimitiveCastExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3102,6 +3054,7 @@ impl ASTChildren for PrimitiveCastExpr {
 }
 
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -3119,16 +3072,7 @@ pub enum LiteralExpr {
     StringLiteralExpr(StringLiteralExpr),
     ArrayLiteralExpr(ArrayLiteralExpr),
 }
-impl LiteralExpr {
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            LiteralExpr::BooleanLiteralExpr(ast) => ast.as_type(t),
-            LiteralExpr::NumberLiteralExpr(ast) => ast.as_type(t),
-            LiteralExpr::StringLiteralExpr(ast) => ast.as_type(t),
-            LiteralExpr::ArrayLiteralExpr(ast) => ast.as_type(t),
-        }
-    }
-}
+
 #[enum_dispatch]
 pub trait LiteralExprBaseRef: ExpressionBaseRef {
     fn literal_expr_base_ref(&self) -> &LiteralExprBase;
@@ -3147,6 +3091,7 @@ impl LiteralExprBase {
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -3187,24 +3132,10 @@ impl BooleanLiteralExpr {
             ))),
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -3266,27 +3197,14 @@ impl NumberLiteralExpr {
             ))),
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
 
-        RcCell::new(selfs).into()
-    }
     pub fn value(&self) -> i32 {
         0
     }
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -3318,23 +3236,9 @@ impl StringLiteralExpr {
             value,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -3351,14 +3255,7 @@ pub enum ArrayLiteralExpr {
     ArrayLiteralExpr(ArrayLiteralExprBase),
     KeyLiteralExpr(KeyLiteralExpr),
 }
-impl ArrayLiteralExpr {
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            ArrayLiteralExpr::ArrayLiteralExpr(ast) => ast.as_type(t),
-            ArrayLiteralExpr::KeyLiteralExpr(ast) => ast.as_type(t),
-        }
-    }
-}
+
 #[enum_dispatch]
 pub trait ArrayLiteralExprBaseRef: LiteralExprBaseRef {
     fn array_literal_expr_base_ref(&self) -> &ArrayLiteralExprBase;
@@ -3374,6 +3271,7 @@ impl<T: ArrayLiteralExprBaseRef> ArrayLiteralExprBaseProperty for T {
 }
 #[impl_traits(LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ImplBaseTrait,
     ASTDebug,
     ASTFlattenImpl,
@@ -3405,21 +3303,6 @@ impl ArrayLiteralExprBase {
             values,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for ArrayLiteralExprBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3431,6 +3314,7 @@ impl ASTChildren for ArrayLiteralExprBase {
 
 #[impl_traits(ArrayLiteralExprBase, LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -3462,23 +3346,9 @@ impl KeyLiteralExpr {
             crypto_params,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -3595,12 +3465,6 @@ impl TupleOrLocationExpr {
     pub fn is_rvalue(&self) -> bool {
         !self.is_lvalue()
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            TupleOrLocationExpr::TupleExpr(ast) => ast.as_type(t),
-            TupleOrLocationExpr::LocationExpr(ast) => ast.as_type(t),
-        }
-    }
 }
 #[enum_dispatch]
 pub trait TupleOrLocationExprBaseRef: ExpressionBaseRef {
@@ -3619,7 +3483,19 @@ impl TupleOrLocationExprBase {
     }
 }
 #[impl_traits(TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct TupleExpr {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
     pub elements: Vec<ASTFlatten>,
@@ -3647,21 +3523,6 @@ impl TupleExpr {
             None,
         ))
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for TupleExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3672,6 +3533,7 @@ impl ASTChildren for TupleExpr {
 }
 
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -3754,18 +3616,10 @@ impl LocationExpr {
     }
     pub fn assign(&self, val: ASTFlatten) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
-            Some(RcCell::new(self.to_ast()).into()),
+            Some(RcCell::new(self.clone()).into()),
             Some(val),
             None,
         ))
-    }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            LocationExpr::IdentifierExpr(ast) => ast.as_type(t),
-            LocationExpr::MemberAccessExpr(ast) => ast.as_type(t),
-            LocationExpr::IndexExpr(ast) => ast.as_type(t),
-            LocationExpr::SliceExpr(ast) => ast.as_type(t),
-        }
     }
 }
 #[enum_dispatch]
@@ -3804,7 +3658,19 @@ pub enum IdentifierExprUnion {
     Identifier(RcCell<Identifier>),
 }
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IdentifierExpr {
     pub location_expr_base: LocationExprBase,
     pub idf: Option<RcCell<Identifier>>,
@@ -3860,21 +3726,6 @@ impl IdentifierExpr {
             size,
         )
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for IdentifierExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3885,7 +3736,19 @@ impl ASTChildren for IdentifierExpr {
 }
 
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct MemberAccessExpr {
     pub location_expr_base: LocationExprBase,
     pub expr: Option<RcCell<LocationExpr>>,
@@ -3907,21 +3770,6 @@ impl MemberAccessExpr {
             member,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for MemberAccessExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3933,7 +3781,19 @@ impl ASTChildren for MemberAccessExpr {
 }
 
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
-#[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    ExpressionASTypeImpl,
+    ASTDebug,
+    ASTFlattenImpl,
+    ASTKind,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub struct IndexExpr {
     pub location_expr_base: LocationExprBase,
     pub arr: Option<RcCell<LocationExpr>>,
@@ -3955,21 +3815,6 @@ impl IndexExpr {
             key,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for IndexExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -3982,6 +3827,7 @@ impl ASTChildren for IndexExpr {
 
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -4024,24 +3870,10 @@ impl SliceExpr {
             size,
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -4072,22 +3904,6 @@ impl MeExpr {
             name: String::from("me"),
         }
     }
-
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl Immutable for MeExpr {
     fn is_immutable(&self) -> bool {
@@ -4096,6 +3912,7 @@ impl Immutable for MeExpr {
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -4125,21 +3942,6 @@ impl AllExpr {
             name: String::from("all"),
         }
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl Immutable for AllExpr {
     fn is_immutable(&self) -> bool {
@@ -4147,6 +3949,7 @@ impl Immutable for AllExpr {
     }
 }
 #[enum_dispatch(
+    ExpressionASType,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -4166,14 +3969,6 @@ pub enum ReclassifyExpr {
 }
 
 impl ReclassifyExpr {
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        match self {
-            ReclassifyExpr::ReclassifyExpr(ast) => ast.as_type(t),
-            ReclassifyExpr::RehomExpr(ast) => ast.as_type(t),
-            ReclassifyExpr::EncryptionExpression(ast) => ast.as_type(t),
-        }
-    }
-
     pub fn func_name(&self) -> String {
         String::from("reveal")
     }
@@ -4201,6 +3996,7 @@ impl<T: ReclassifyExprBaseRef> ReclassifyExprBaseProperty for T {
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ImplBaseTrait,
     ASTDebug,
     ASTFlattenImpl,
@@ -4239,21 +4035,6 @@ impl ReclassifyExprBase {
     pub fn func_name(&self) -> String {
         String::from("reveal")
     }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
-    }
 }
 impl ASTChildren for ReclassifyExprBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -4264,6 +4045,7 @@ impl ASTChildren for ReclassifyExprBase {
 
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -4303,21 +4085,6 @@ impl RehomExpr {
             .unwrap()
             .rehom_expr_name
             .clone()
-    }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
     }
 }
 
@@ -4764,6 +4531,7 @@ impl Identifier {
 
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -4804,21 +4572,6 @@ impl EncryptionExpression {
             reclassify_expr_base: ReclassifyExprBase::new(expr, privacy, homomorphism),
             annotated_type,
         }
-    }
-    pub fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {
-        let mut selfs = self.clone();
-        if is_instance(t, ASTType::AnnotatedTypeName) {
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
-        } else if t.try_as_type_name_ref().is_some() {
-            selfs.expression_base_mut_ref().annotated_type =
-                Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
-                    None,
-                    Homomorphism::non_homomorphic(),
-                )));
-        }
-
-        RcCell::new(selfs).into()
     }
 }
 #[enum_dispatch(ASTChildren, IntoAST, ASTFlattenImpl, ASTInstanceOf)]
@@ -7019,6 +6772,7 @@ impl Proof {
 }
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
+    ExpressionASTypeImpl,
     ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
@@ -8806,9 +8560,9 @@ impl AstVisitor for CodeVisitor {
     fn temper_result(&self) -> Self::Return {
         String::new()
     }
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::ASTBase
                 | ASTType::CommentBase
                 | ASTType::IdentifierBase
@@ -8859,7 +8613,23 @@ impl AstVisitor for CodeVisitor {
                 | ASTType::StateVariableDeclaration
                 | ASTType::ContractDefinition
                 | ASTType::SourceUnit
-        )
+        ) || matches!(ast, AST::Comment(_))
+            || matches!(ast, AST::Identifier(_))
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(
+                ast,
+                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
+            )
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Statement(Statement::CircuitDirectiveStatement(_)))
+            || matches!(ast, AST::Statement(Statement::StatementList(_)))
+            || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
+            || matches!(ast, AST::TypeName(TypeName::Array(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -9217,7 +8987,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_IdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        println!("======visit_IdentifierExpr========={:?}", ast.is_ast());
+        println!("======visit_IdentifierExpr========={:?}", ast);
         self.visit(
             &ast.try_as_identifier_expr_ref()
                 .unwrap()
@@ -9752,9 +9522,11 @@ impl CodeVisitor {
 
     pub fn visit_UserDefinedTypeName(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         let names: Vec<_> = ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .try_as_user_defined_type_name_ref()
             .unwrap()
-            .borrow()
             .user_defined_type_name_base_ref()
             .names
             .iter()
@@ -10219,6 +9991,10 @@ impl CodeVisitor {
 
     pub fn visit_StateVariableDeclaration(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         let final_string = String::from("final");
+        println!(
+            "=======visit_StateVariableDeclaration====================={:?}",
+            ast
+        );
         let keywords: Vec<_> = ast
             .try_as_state_variable_declaration_ref()
             .unwrap()

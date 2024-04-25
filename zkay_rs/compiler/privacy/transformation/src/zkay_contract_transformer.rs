@@ -25,13 +25,14 @@ use zkay_ast::ast::{
     ArrayLiteralExprBase, AssignmentStatement, AssignmentStatementBase,
     AssignmentStatementBaseMutRef, BlankLine, Block, CipherText, Comment, CommentBase,
     ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
-    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier,
-    IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration,
-    IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement,
-    LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr, Parameter,
-    PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration,
-    Statement, StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr,
-    TypeName, UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    ExpressionASType, ExpressionStatement, FunctionCallExpr, FunctionCallExprBase,
+    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef,
+    IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression,
+    IntoStatement, LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr,
+    Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit,
+    StateVariableDeclaration, Statement, StatementList, StatementListBase, StructDefinition,
+    StructTypeName, TupleExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers};
 use zkay_ast::visitor::{
@@ -172,7 +173,7 @@ impl AstTransformerVisitor for ZkayTransformer {
         Self::new()
     }
 
-    fn has_attr(&self, _name: &ASTType) -> bool {
+    fn has_attr(&self, _ast: &AST) -> bool {
         // matches!(
         //     name,
         //     ASTType::AnnotatedTypeName

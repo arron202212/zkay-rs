@@ -10,7 +10,8 @@
 use crate::analysis::contains_private_checker::contains_private_expr;
 
 use crate::ast::{
-    ASTFlatten, ASTType, DoWhileStatement, ForStatement, IntoAST, WhileStatement, AST,
+    ASTFlatten, ASTInstanceOf, ASTType, DoWhileStatement, ForStatement, IntoAST, WhileStatement,
+    AST,
 };
 
 use crate::visitor::{
@@ -37,9 +38,9 @@ impl AstVisitor for LoopChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::WhileStatement | ASTType::DoWhileStatement | ASTType::ForStatement
         )
     }

@@ -132,6 +132,8 @@ pub fn build_ast_from_parse_tree(code: &str) -> Option<ASTFlatten> {
     root.accept(&mut v);
     v.temp_result()
         .clone()
+        .map(|ast| ast.try_as_source_unit())
+        .flatten()
         .map(RcCell::new)
         .map(Into::<ASTFlatten>::into)
 }
@@ -143,11 +145,9 @@ pub fn build_ast(code: &str) -> ASTFlatten {
     full_ast
         .as_mut()
         .unwrap()
-        .try_as_ast_mut()
-        .unwrap()
-        .borrow_mut()
         .try_as_source_unit_mut()
         .unwrap()
+        .borrow_mut()
         .original_code = code.split("\n").map(String::from).collect();
     full_ast.unwrap()
 }
@@ -344,6 +344,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         self.temp_result()
                             .clone()
                             .filter(|ast| is_instance(ast, ASTType::StateVariableDeclaration))
+                            .map(|ast| {
+                                ast.try_as_identifier_declaration()
+                                    .unwrap()
+                                    .try_as_state_variable_declaration()
+                            })
+                            .flatten()
                     })
                     .flatten()
             })
@@ -1620,8 +1626,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         });
         assert!(op.is_some());
 
-        let lhs = lhs.map(|l| l.into_ast());
-
         Some(
             AssignmentStatementBase::new(
                 lhs.map(RcCell::new).map(Into::<ASTFlatten>::into),
@@ -1699,8 +1703,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.borrow_mut().line = line;
             fce.expression_base.ast_base.borrow_mut().column = column + 1;
 
-            let expr = expr.map(|e| e.to_ast());
-
             AssignmentStatementBase::new(
                 expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
                 Some(
@@ -1765,7 +1767,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             fce.expression_base.ast_base.borrow_mut().line = line;
             fce.expression_base.ast_base.borrow_mut().column = column + 1;
 
-            let expr = expr.map(|e| e.into_ast());
             AssignmentStatementBase::new(
                 expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
                 Some(RcCell::new(fce).into()),
@@ -2266,11 +2267,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     }
 
     fn visit_continueStatement(&mut self, ctx: &ContinueStatementContext<'input>) -> Self::Return {
-        if ctx.ContinueKeyword().is_some() {
-            Some(ContinueStatement::new().into_ast())
-        } else {
-            None
-        }
+        ctx.ContinueKeyword()
+            .map(|_| ContinueStatement::new().into_ast())
     }
 
     fn visit_breakStatement(&mut self, ctx: &BreakStatementContext<'input>) -> Self::Return {

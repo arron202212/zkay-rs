@@ -1,7 +1,8 @@
 use ast_builder::build_ast::build_ast;
 // use rccell::{RcCell, WeakCell};
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, NamespaceDefinitionBaseProperty,
+    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType,
+    NamespaceDefinitionBaseProperty, AST,
 };
 use zkay_ast::pointers::parent_setter::set_parents;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -27,7 +28,7 @@ impl AstVisitor for ParentChecker {
     }
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, _name: &ASTType) -> bool {
+    fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
     fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}
@@ -78,9 +79,9 @@ mod tests {
     #[test]
     pub fn test_all_nodes_have_parent() {
         for (_name, example) in ALL_EXAMPLES.iter() {
-            let mut ast = build_ast(&example.code());
-            set_parents(&mut ast);
-
+            let ast = build_ast(&example.code());
+            set_parents(&ast);
+            println!("================={_name}");
             // test
             let v = ParentChecker::new();
             v.visit(&ast);

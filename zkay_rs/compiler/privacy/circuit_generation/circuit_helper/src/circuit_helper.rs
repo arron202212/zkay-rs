@@ -18,17 +18,17 @@ use zkay_ast::ast::{
     AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, AssignmentStatementBaseRef,
     Block, BooleanLiteralType, BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
     ConstructorOrFunctionDefinition, ElementaryTypeName, EncryptionExpression,
-    EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
-    ExpressionBaseRef, ExpressionStatement, FunctionCallExpr, FunctionCallExprBase,
-    FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
-    HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseProperty,
-    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
-    IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr, LocationExprBaseProperty,
-    MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty, NumberLiteralExpr,
-    NumberLiteralType, NumberTypeName, Parameter, ReturnStatement, SimpleStatement,
-    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty,
-    StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement, AST,
+    EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
+    ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
+    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
+    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NamespaceDefinitionBaseProperty,
+    NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter, ReturnStatement,
+    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -215,11 +215,7 @@ where
     //Properties #
     pub fn get_verification_contract_name(&self) -> String {
         assert!(self.verifier_contract_type.is_some());
-        self.verifier_contract_type
-            .as_ref()
-            .unwrap()
-            .to_ast()
-            .code()
+        self.verifier_contract_type.as_ref().unwrap().code()
     }
     // """
     // Return true if a struct needs to be created in the solidity code to store public data (IO) associated with this circuit.
@@ -523,14 +519,7 @@ where
         new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
-        self.circ_indent_block(
-            &expr
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .to_ast()
-                .code(),
-        );
+        self.circ_indent_block(&expr.code());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
     }
     // """
@@ -1016,12 +1005,7 @@ where
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
 
-        let expr_text = expr
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .to_ast()
-            .code();
+        let expr_text = expr.code();
         let input_expr = self
             ._expr_trafo
             .as_ref()
@@ -1561,15 +1545,7 @@ where
             .name()
             != "<stmt_fct>"
         {
-            self.circ_indent_block(&format!(
-                "INLINED {}",
-                fcall
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .to_ast()
-                    .code()
-            ));
+            self.circ_indent_block(&format!("INLINED {}", fcall.code()));
         }
 
         //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
@@ -1604,11 +1580,7 @@ where
                         .unwrap()
                         .borrow()
                         .name(),
-                    arg.try_as_expression_ref()
-                        .unwrap()
-                        .borrow()
-                        .to_ast()
-                        .code()
+                    arg.code()
                 )),
             )));
             // with
@@ -1721,13 +1693,7 @@ where
 
     pub fn add_assignment_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(
-                ast.try_as_assignment_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .to_ast()
-                    .code(),
-            ),
+            CircComment::new(ast.code()),
         )));
         self._add_assign(
             ast.try_as_assignment_statement_ref()
@@ -1749,13 +1715,7 @@ where
 
     pub fn add_var_decl_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(
-                ast.try_as_variable_declaration_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .to_ast()
-                    .code(),
-            ),
+            CircComment::new(ast.code()),
         )));
         if ast
             .try_as_variable_declaration_statement_ref()
@@ -1811,13 +1771,7 @@ where
 
     pub fn add_return_stmt_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(
-                ast.try_as_return_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .to_ast()
-                    .code(),
-            ),
+            CircComment::new(ast.code()),
         )));
         assert!(ast
             .try_as_return_statement_ref()
@@ -1897,10 +1851,6 @@ where
                 .unwrap()
                 .borrow()
                 .condition
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .to_ast()
                 .code()
         ));
         self._phi

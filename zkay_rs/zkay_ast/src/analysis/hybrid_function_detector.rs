@@ -8,10 +8,10 @@
 use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, ASTFlatten, ASTType, AllExpr, BuiltinFunction, ConstructorOrFunctionDefinition,
-    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
-    FunctionCallExprBaseProperty, IntoAST, LocationExpr, LocationExprBaseProperty,
-    PrimitiveCastExpr, ReclassifyExpr, AST,
+    is_instance, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, BuiltinFunction,
+    ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
+    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, LocationExpr,
+    LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -43,15 +43,15 @@ impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
 impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::ReclassifyExpr
                 | ASTType::PrimitiveCastExpr
                 | ASTType::AllExpr
                 | ASTType::FunctionCallExprBase
                 | ASTType::ConstructorOrFunctionDefinition
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -276,8 +276,8 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ConstructorOrFunctionDefinition == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -339,8 +339,11 @@ impl AstVisitor for NonInlineableCallDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(
+            ast.to_ast(),
+            AST::Expression(Expression::FunctionCallExpr(_))
+        )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

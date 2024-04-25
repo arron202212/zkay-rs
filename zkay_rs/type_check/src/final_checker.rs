@@ -9,10 +9,11 @@ use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTFlatten, ASTType, AssignmentStatement, AssignmentStatementBaseProperty, Block,
-    ConstructorOrFunctionDefinition, ContractDefinition, Expression, IdentifierDeclarationBaseRef,
-    IdentifierExpr, IfStatement, IntoAST, LocationExpr, LocationExprBaseProperty, SimpleStatement,
-    StateVariableDeclaration, Statement, TupleOrLocationExpr, AST,
+    is_instance, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement,
+    AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
+    Expression, IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
+    LocationExprBaseProperty, SimpleStatement, StateVariableDeclaration, Statement,
+    TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -30,14 +31,20 @@ struct FinalVisitor {
 impl AstVisitor for FinalVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        matches! {name,
-         ASTType::ContractDefinition|
-         ASTType::ConstructorOrFunctionDefinition|
-         ASTType::AssignmentStatementBase|
-         ASTType::IfStatement|
-         ASTType::IdentifierExpr
-        }
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(
+            ast.get_ast_type(),
+            ASTType::ContractDefinition
+                | ASTType::ConstructorOrFunctionDefinition
+                | ASTType::AssignmentStatementBase
+                | ASTType::IfStatement
+                | ASTType::IdentifierExpr
+        ) || matches!(
+            ast,
+            AST::Statement(Statement::SimpleStatement(
+                SimpleStatement::AssignmentStatement(_)
+            ))
+        )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

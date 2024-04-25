@@ -14,11 +14,11 @@ use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS
 use std::ops::DerefMut;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, issue_compiler_warning, ASTBaseMutRef,
-    ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, AllExpr, AnnotatedTypeName, Array,
-    ArrayBaseProperty, AssignmentStatement, AssignmentStatementBaseMutRef,
+    ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName,
+    Array, ArrayBaseProperty, AssignmentStatement, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, BooleanLiteralType, BuiltinFunction, CombinedPrivacyUnion,
     ConstructorOrFunctionDefinition, ContractDefinition, ElementaryTypeName, EnumDefinition,
-    EnumTypeName, EnumValue, EnumValueTypeName, Expression, ExpressionBaseMutRef,
+    EnumTypeName, EnumValue, EnumValueTypeName, Expression, ExpressionASType, ExpressionBaseMutRef,
     ExpressionBaseProperty, ExpressionBaseRef, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
     FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseRef, IdentifierExpr,
@@ -48,9 +48,9 @@ pub struct TypeCheckVisitor {
 impl AstVisitor for TypeCheckVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::AssignmentStatementBase
                 | ASTType::VariableDeclarationStatement
                 | ASTType::FunctionCallExprBase
@@ -73,6 +73,14 @@ impl AstVisitor for TypeCheckVisitor {
                 | ASTType::Mapping
                 | ASTType::RequireStatement
                 | ASTType::AnnotatedTypeName
+        ) || matches!(
+            ast.to_ast(),
+            AST::Statement(Statement::SimpleStatement(
+                SimpleStatement::AssignmentStatement(_)
+            ))
+        ) || matches!(
+            ast.to_ast(),
+            AST::Expression(Expression::FunctionCallExpr(_))
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {

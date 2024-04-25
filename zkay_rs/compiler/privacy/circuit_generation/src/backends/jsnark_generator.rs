@@ -27,11 +27,11 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
-    indent, is_instance, ASTFlatten, ASTType, BooleanLiteralExpr, BuiltinFunction, EnumDefinition,
-    Expression, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
-    HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
-    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr,
-    TypeName, AST,
+    indent, is_instance, ASTFlatten, ASTInstanceOf, ASTType, BooleanLiteralExpr, BuiltinFunction,
+    EnumDefinition, Expression, ExpressionBaseProperty, FunctionCallExpr,
+    FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr,
+    IndexExpr, IntoAST, LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr,
+    PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -88,9 +88,9 @@ impl AstVisitor for JsnarkVisitor {
     fn temper_result(&self) -> Self::Return {
         String::new()
     }
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::CircComment
                 | ASTType::CircIndentBlock
                 | ASTType::CircCall
@@ -106,7 +106,7 @@ impl AstVisitor for JsnarkVisitor {
                 | ASTType::IndexExpr
                 | ASTType::FunctionCallExprBase
                 | ASTType::PrimitiveCastExpr
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

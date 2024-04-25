@@ -272,7 +272,6 @@ impl CircuitGeneratorBase {
                 .verifier_contract_type
                 .as_ref()
                 .unwrap()
-                .to_ast()
                 .code(),
             finish_counter.lock().unwrap(),
             c_count.lock().unwrap()

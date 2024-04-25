@@ -28,7 +28,7 @@ pub struct ContainsPrivateVisitor {
 impl AstVisitor for ContainsPrivateVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, _name: &ASTType) -> bool {
+    fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
     fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}

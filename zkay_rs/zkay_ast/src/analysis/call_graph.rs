@@ -6,10 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTFlatten, ASTType, BuiltinFunction, ConstructorOrFunctionDefinition, Expression,
-    ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
-    FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST, LocationExpr,
-    LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
+    is_instance, ASTFlatten, ASTInstanceOf, ASTType, BuiltinFunction,
+    ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
+    ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST,
+    LocationExpr, LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -42,11 +42,11 @@ impl FunctionVisitor for DirectCalledFunctionDetector {}
 impl AstVisitor for DirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase | ASTType::ForStatement | ASTType::WhileStatement
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -183,8 +183,8 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ConstructorOrFunctionDefinition == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -288,8 +288,8 @@ impl FunctionVisitor for IndirectDynamicBodyDetector {}
 impl AstVisitor for IndirectDynamicBodyDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ConstructorOrFunctionDefinition == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

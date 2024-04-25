@@ -11,13 +11,13 @@ use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
-    is_instance, is_instances, ASTFlatten, ASTType, AssignmentStatement, BooleanLiteralType,
-    BuiltinFunction, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
-    ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionTypeName,
-    IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr, LocationExprBaseProperty,
-    NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty,
-    ReturnStatement, SimpleStatement, Statement, StatementBaseProperty, StatementList,
-    TupleOrLocationExpr, VariableDeclarationStatement, AST,
+    is_instance, is_instances, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement,
+    BooleanLiteralType, BuiltinFunction, ConstructorOrFunctionDefinition, Expression,
+    ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
+    FunctionTypeName, IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr,
+    LocationExprBaseProperty, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
+    ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement, StatementBaseProperty,
+    StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -48,9 +48,9 @@ impl FunctionVisitor for DirectCanBePrivateDetector {}
 impl AstVisitor for DirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase
                 | ASTType::LocationExprBase
                 | ASTType::ReclassifyExpr
@@ -60,7 +60,21 @@ impl AstVisitor for DirectCanBePrivateDetector {
                 | ASTType::IfStatement
                 | ASTType::StatementListBase
                 | ASTType::StatementBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(
+                ast,
+                AST::Expression(Expression::TupleOrLocationExpr(
+                    TupleOrLocationExpr::LocationExpr(_)
+                ))
+            )
+            || matches!(
+                ast,
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast, AST::Statement(Statement::StatementList(_)))
+            || matches!(ast, AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -289,8 +303,8 @@ impl FunctionVisitor for IndirectCanBePrivateDetector {}
 impl AstVisitor for IndirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::ConstructorOrFunctionDefinition == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -343,15 +357,15 @@ impl FunctionVisitor for CircuitComplianceChecker {}
 impl AstVisitor for CircuitComplianceChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::IndexExpr
                 | ASTType::ReclassifyExpr
                 | ASTType::FunctionCallExprBase
                 | ASTType::PrimitiveCastExpr
                 | ASTType::IfStatement
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -700,11 +714,12 @@ impl AstVisitor for PrivateSetter {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::FunctionCallExprBase | ASTType::ExpressionBase
-        )
+        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+            || matches!(ast, AST::Expression(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -806,8 +821,8 @@ impl FunctionVisitor for NonstaticOrIncompatibilityDetector {}
 impl AstVisitor for NonstaticOrIncompatibilityDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

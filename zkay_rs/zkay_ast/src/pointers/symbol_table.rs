@@ -105,9 +105,9 @@ impl AstVisitor for SymbolTableFiller {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::SourceUnit
                 | ASTType::ContractDefinition
                 | ASTType::ConstructorOrFunctionDefinition
@@ -569,14 +569,14 @@ pub struct SymbolTableLinker {
 impl AstVisitor for SymbolTableLinker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::IdentifierExpr
                 | ASTType::UserDefinedTypeNameBase
                 | ASTType::MemberAccessExpr
                 | ASTType::IndexExpr
-        )
+        ) || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

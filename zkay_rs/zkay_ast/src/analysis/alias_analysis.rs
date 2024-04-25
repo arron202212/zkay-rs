@@ -8,7 +8,7 @@
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTType, AllExpr, AssignmentStatement,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AssignmentStatement,
     AssignmentStatementBaseProperty, Block, BreakStatement, BuiltinFunction,
     ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, Expression,
     ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
@@ -34,9 +34,9 @@ struct AliasAnalysisVisitor {
 impl AstVisitor for AliasAnalysisVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
+            ast.get_ast_type(),
             ASTType::SourceUnit
                 | ASTType::ContractDefinition
                 | ASTType::ConstructorOrFunctionDefinition
@@ -47,7 +47,14 @@ impl AstVisitor for AliasAnalysisVisitor {
                 | ASTType::SimpleStatementBase
                 | ASTType::ForStatement
                 | ASTType::Mapping
-        )
+        ) || matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_)))
+            || matches!(
+                ast.to_ast(),
+                AST::Statement(Statement::SimpleStatement(
+                    SimpleStatement::AssignmentStatement(_)
+                ))
+            )
+            || matches!(ast.to_ast(), AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -1214,8 +1221,8 @@ impl AstVisitor for GuardConditionAnalyzer {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, name: &ASTType) -> bool {
-        &ASTType::FunctionCallExprBase == name
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {

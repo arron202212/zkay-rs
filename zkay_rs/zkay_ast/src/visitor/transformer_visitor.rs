@@ -6,7 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
-use crate::ast::{ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, Block, HybridArgumentIdf, AST};
+use crate::ast::{
+    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, Block, HybridArgumentIdf, IntoAST, AST,
+};
 use dyn_clone::DynClone;
 // T = TypeVar("T")
 // std::marker::Sync +
@@ -50,7 +52,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     fn visit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._visit_internal(ast)
     }
-    fn has_attr(&self, name: &ASTType) -> bool;
+    fn has_attr(&self, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten>;
     fn visit_list(&self, ast_list: &Vec<ASTFlatten>) -> Vec<ASTFlatten> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
@@ -71,7 +73,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     }
 
     fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        if self.has_attr(&c) {
+        if self.has_attr(&ast.to_ast()) {
             self.get_attr(&c, ast)
         } else if let Some(c) = AST::bases(c) {
             self.get_visit_function(c, ast)

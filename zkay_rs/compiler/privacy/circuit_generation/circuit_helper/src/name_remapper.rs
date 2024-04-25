@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
 use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, Block, BuiltinFunction,
-    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
+    Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
     FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBaseProperty,
     IdentifierExpr, IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
     VariableDeclarationStatement, AST,

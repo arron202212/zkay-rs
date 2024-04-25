@@ -22,15 +22,11 @@ struct ParentSetterVisitor {
 impl AstVisitor for ParentSetterVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
+    fn has_attr(&self, ast: &AST) -> bool {
         matches!(
-            name,
-            ASTType::SourceUnit
-                | ASTType::EnumDefinition
-                | ASTType::ContractDefinition
-                | ASTType::StructDefinition
-                | ASTType::ConstructorOrFunctionDefinition
-        )
+            ast.get_ast_type(),
+            ASTType::SourceUnit | ASTType::ConstructorOrFunctionDefinition
+        ) || matches!(ast, AST::NamespaceDefinition(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -46,12 +42,19 @@ impl AstVisitor for ParentSetterVisitor {
     }
 
     fn visit_children(&self, ast: &ASTFlatten) -> Self::Return {
-        for c in ast.children().iter_mut() {
-            // println!("=={:?}==={:?}===children=={:?}======={:?}",ast.get_ast_type(),c.get_ast_type(),ast.to_string(), c.to_string());
+        for c in ast.children() {
+            println!(
+                "=0000000={:?}==={:?}===children=={:?}======={:?}",
+                ast.get_ast_type(),
+                c.get_ast_type(),
+                ast.to_string(),
+                c.to_string()
+            );
             c.ast_base_ref().unwrap().borrow_mut().parent = Some(ast.clone().downgrade());
             c.ast_base_ref().unwrap().borrow_mut().namespace =
                 ast.ast_base_ref().unwrap().borrow().namespace().clone();
-            self.visit(c);
+
+            self.visit(&c); //stack overflow TODO
         }
     }
 }
@@ -72,18 +75,13 @@ impl ParentSetterVisitor {
     }
 
     pub fn visitNamespaceDefinition(&self, ast: &ASTFlatten) {
-        ast.try_as_namespace_definition_ref()
+        println!("====visitNamespaceDefinition==========={:?}", ast);
+        let mut ast = ast.to_ast();
+        let namespace = ast
+            .try_as_namespace_definition_ref()
             .unwrap()
-            .borrow_mut()
-            .ast_base_mut_ref()
-            .borrow_mut()
-            .namespace = Some(
-            if let Some(parent) = ast
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
-                .parent()
-            {
+            .parent()
+            .map(|parent| {
                 parent
                     .upgrade()
                     .unwrap()
@@ -95,37 +93,29 @@ impl ParentSetterVisitor {
                     .unwrap()
                     .iter()
                     .cloned()
-                    .chain([ast
-                        .try_as_namespace_definition_ref()
-                        .unwrap()
-                        .borrow()
-                        .idf()
-                        .clone()])
+                    .chain([ast.try_as_namespace_definition_ref().unwrap().idf().clone()])
                     .collect()
-            } else {
-                vec![ast
-                    .try_as_namespace_definition_ref()
-                    .unwrap()
-                    .borrow()
-                    .idf()]
-            },
-        );
+            })
+            .or(Some(vec![ast
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .idf()]));
+
+        ast.try_as_namespace_definition_ref()
+            .unwrap()
+            .ast_base_ref()
+            .borrow_mut()
+            .namespace = namespace;
     }
 
     pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        ast.try_as_constructor_or_function_definition_ref()
+        let namespace = ast
+            .try_as_constructor_or_function_definition_ref()
             .unwrap()
-            .borrow_mut()
-            .namespace_definition_base
-            .ast_base
-            .borrow_mut()
-            .namespace = Some(
-            if let Some(parent) = &ast
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .parent
-            {
+            .borrow()
+            .parent
+            .as_ref()
+            .map(|parent| {
                 parent
                     .namespace_definition_base
                     .ast_base
@@ -143,16 +133,22 @@ impl ParentSetterVisitor {
                         .clone()])
                     .cloned()
                     .collect()
-            } else {
-                vec![ast
-                    .try_as_constructor_or_function_definition_ref()
-                    .unwrap()
-                    .borrow()
-                    .namespace_definition_base
-                    .idf()
-                    .clone()]
-            },
-        );
+            })
+            .or(Some(vec![ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .namespace_definition_base
+                .idf()
+                .clone()]));
+
+        ast.try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow_mut()
+            .namespace_definition_base
+            .ast_base
+            .borrow_mut()
+            .namespace = namespace;
     }
 }
 #[derive(ASTVisitorBaseRefImpl)]
@@ -163,8 +159,12 @@ struct ExpressionToStatementVisitor {
 impl AstVisitor for ExpressionToStatementVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, name: &ASTType) -> bool {
-        matches!(name, ASTType::ExpressionBase | ASTType::StatementBase)
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(
+            ast.get_ast_type(),
+            ASTType::ExpressionBase | ASTType::StatementBase
+        ) || matches!(ast, AST::Expression(_))
+            || matches!(ast, AST::Statement(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
         match name {
@@ -187,13 +187,17 @@ impl ExpressionToStatementVisitor {
             if is_instance(&p, ASTType::StatementBase) {
                 break;
             }
+            // println!("=====visitExpression===================={:?}",p);
+            //   println!("=====visitExpression===========s========={:?}",p.try_as_expression_ref()  .unwrap()
+            //                 .borrow()
+            //                 .ast_base_ref()
+            //                 .clone());
             parent = p
+                .to_ast()
                 .try_as_expression_ref()
                 .unwrap()
-                .borrow()
                 .ast_base_ref()
-                .clone()
-                .unwrap()
+                .borrow()
                 .parent()
                 .as_ref()
                 .map(|p| p.clone().upgrade())
