@@ -33,10 +33,10 @@ impl AstVisitor for ReturnCheckVisitor {
     fn has_attr(&self, ast: &AST) -> bool {
         ASTType::ReturnStatement == ast.get_ast_type()
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -46,7 +46,10 @@ impl ReturnCheckVisitor {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
+    pub fn visitReturnStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let container = ast
             .try_as_return_statement_ref()
             .unwrap()
@@ -111,5 +114,6 @@ impl ReturnCheckVisitor {
             "Return statements are only allowed at the end of a function. {:?}",
             ast,
         );
+        Ok(())
     }
 }

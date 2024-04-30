@@ -129,8 +129,30 @@ impl AstVisitor for DeepCopyVisitor {
     fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {
-        None
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        Ok(None)
+    }
+    fn visit_children(&self, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        // let c = ast;
+        // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
+        // let new_fields = BTreeMap::new();
+        // for arg_name in args_names {
+        //     let old_field = getattr(ast, arg_name);
+        //     new_fields[arg_name] = self.copy_field(old_field);
+        // }
+
+        // for k in ast.keys() {
+        //     if !new_fields.contains(&k)
+        //         && !self.setting_later.contains(&k)
+        //     {
+        //         // && !inspect.getfullargspec(c.__bases__[0].__init__).args[1..].contains(&k)
+        //         assert!(false, "Not copying,{}", k);
+        //     }
+        // }
+        // let mut ast_copy = c(new_fields);
+        // self.copy_ast_fields(ast, ast_copy);
+        // ast_copy
+        Ok(None)
     }
 }
 impl DeepCopyVisitor {
@@ -153,50 +175,36 @@ impl DeepCopyVisitor {
         // ast_copy.read_values = ast.read_values;
     }
 
-    pub fn visitChildren(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        // let c = ast;
-        // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
-        // let new_fields = BTreeMap::new();
-        // for arg_name in args_names {
-        //     let old_field = getattr(ast, arg_name);
-        //     new_fields[arg_name] = self.copy_field(old_field);
-        // }
-
-        // for k in ast.keys() {
-        //     if !new_fields.contains(&k)
-        //         && !self.setting_later.contains(&k)
-        //     {
-        //         // && !inspect.getfullargspec(c.__bases__[0].__init__).args[1..].contains(&k)
-        //         assert!(false, "Not copying,{}", k);
-        //     }
-        // }
-        // let mut ast_copy = c(new_fields);
-        // self.copy_ast_fields(ast, ast_copy);
-        // ast_copy
-        None
-    }
-
-    pub fn visitAnnotatedTypeName(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitAnnotatedTypeName(
+        self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ast_copy = self.visit_children(ast);
         // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
         ast_copy
     }
 
-    pub fn visitUserDefinedTypeName(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitUserDefinedTypeName(
+        self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ast_copy = self.visit_children(ast);
         // ast_copy.target = ast.target;
         ast_copy
     }
 
-    pub fn visitBuiltinFunction(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitBuiltinFunction(
+        self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ast_copy = self.visit_children(ast);
         // ast_copy.is_private = ast.is_private;
         // ast_copy.homomorphism = ast.homomorphism;
         ast_copy
     }
 
-    pub fn visitExpression(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitExpression(self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ast_copy = self.visit_children(ast);
         if self.with_types
             && ast
                 .try_as_expression_ref()
@@ -211,15 +219,15 @@ impl DeepCopyVisitor {
         ast_copy
     }
 
-    pub fn visitStatement(self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let mut ast_copy = self.visitChildren(ast);
+    pub fn visitStatement(self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ast_copy = self.visit_children(ast);
         if self.with_analysis {
             // ast_copy.before_analysis = ast.before_analysis();
         }
         ast_copy
     }
 
-    pub fn copy_field(self, field: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn copy_field(self, field: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // if field.is_none() {
         //     None
         // } else if isinstance(field, str)
@@ -234,6 +242,6 @@ impl DeepCopyVisitor {
         // } else {
         //     self.visit(field)
         // }
-        Some(field.clone())
+        Ok(Some(field.clone()))
     }
 }

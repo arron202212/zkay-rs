@@ -28,34 +28,35 @@ impl AstVisitor for ParentSetterVisitor {
             ASTType::SourceUnit | ASTType::ConstructorOrFunctionDefinition
         ) || matches!(ast, AST::NamespaceDefinition(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::SourceUnit => self.visitSourceUnit(ast),
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ if matches!(ast.to_ast(), AST::NamespaceDefinition(_)) => {
-                self.visitNamespaceDefinition(ast)
-            }
-            _ => {}
+            // _ if matches!(ast.to_ast(), AST::NamespaceDefinition(_)) => {
+            //     self.visitNamespaceDefinition(ast)
+            // }
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 
-    fn visit_children(&self, ast: &ASTFlatten) -> Self::Return {
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         for c in ast.children() {
-            println!(
-                "=0000000={:?}==={:?}===children=={:?}======={:?}",
-                ast.get_ast_type(),
-                c.get_ast_type(),
-                ast.to_string(),
-                c.to_string()
-            );
             c.ast_base_ref().unwrap().borrow_mut().parent = Some(ast.clone().downgrade());
             c.ast_base_ref().unwrap().borrow_mut().namespace =
                 ast.ast_base_ref().unwrap().borrow().namespace().clone();
-
+            // println!("========================{:?},{:?}",ast.get_ast_type(),c.get_ast_type());
+            // println!(
+            //         "=0000000={:?}==={:?}===children=={:?}======={:?}",
+            //         ast.get_ast_type(),
+            //         c.get_ast_type(),
+            //         ast.to_string(),
+            //         c.to_string()
+            //     );
             self.visit(&c); //stack overflow TODO
         }
+        Ok(())
     }
 }
 
@@ -65,16 +66,20 @@ impl ParentSetterVisitor {
             ast_visitor_base: AstVisitorBase::new("pre", false),
         }
     }
-    pub fn visitSourceUnit(&self, ast: &ASTFlatten) {
+    pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_source_unit_ref()
             .unwrap()
             .borrow_mut()
             .ast_base
             .borrow_mut()
             .namespace = Some(vec![]);
+        Ok(())
     }
 
-    pub fn visitNamespaceDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitNamespaceDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         println!("====visitNamespaceDefinition==========={:?}", ast);
         let mut ast = ast.to_ast();
         let namespace = ast
@@ -106,9 +111,13 @@ impl ParentSetterVisitor {
             .ast_base_ref()
             .borrow_mut()
             .namespace = namespace;
+        Ok(())
     }
 
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let namespace = ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -149,6 +158,7 @@ impl ParentSetterVisitor {
             .ast_base
             .borrow_mut()
             .namespace = namespace;
+        Ok(())
     }
 }
 #[derive(ASTVisitorBaseRefImpl)]
@@ -166,11 +176,15 @@ impl AstVisitor for ExpressionToStatementVisitor {
         ) || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::Statement(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(
+        &self,
+        name: &ASTType,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         match name {
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -181,22 +195,21 @@ impl ExpressionToStatementVisitor {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitExpression(&self, ast: &ASTFlatten) {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut parent = Some(ast.clone());
         while let Some(p) = parent.clone() {
             if is_instance(&p, ASTType::StatementBase) {
                 break;
             }
-            // println!("=====visitExpression===================={:?}",p);
+
             //   println!("=====visitExpression===========s========={:?}",p.try_as_expression_ref()  .unwrap()
             //                 .borrow()
             //                 .ast_base_ref()
             //                 .clone());
             parent = p
                 .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
                 .ast_base_ref()
+                .unwrap()
                 .borrow()
                 .parent()
                 .as_ref()
@@ -205,15 +218,17 @@ impl ExpressionToStatementVisitor {
                 .clone();
         }
         if parent.is_some() {
-            ast.try_as_expression_ref()
+            //  println!("=====visitExpression========p============{:?}",ast);
+            ast.to_ast()
+                .try_as_expression_mut()
                 .unwrap()
-                .borrow_mut()
                 .expression_base_mut_ref()
                 .statement = parent.map(|p| p.clone().downgrade());
         }
+        Ok(())
     }
 
-    pub fn visitStatement(&self, ast: &ASTFlatten) {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut parent = Some(ast.clone());
         while let Some(p) = parent.clone() {
             if is_instance(&p, ASTType::ConstructorOrFunctionDefinition) {
@@ -230,13 +245,15 @@ impl ExpressionToStatementVisitor {
                 .clone();
         }
         if parent.is_some() {
-            ast.try_as_statement_ref()
+            // println!("=====visitStatement========{:?}", ast);
+            ast.to_ast()
+                .try_as_statement_mut()
                 .unwrap()
-                .borrow_mut()
                 .statement_base_mut_ref()
                 .unwrap()
-                .function = parent.map(|p| p.clone());
+                .function = parent.map(|p| p.clone().downgrade());
         }
+        Ok(())
     }
 }
 

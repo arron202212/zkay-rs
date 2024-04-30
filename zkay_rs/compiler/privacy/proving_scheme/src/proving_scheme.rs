@@ -19,11 +19,10 @@ pub struct G1Point {
     y: String,
 }
 impl Default for G1Point {
-    fn default() -> Self
-// """Construct G1Point from coordinate integer literal strings."""
-    // self.x: String = x
-    // self.y: String = y
-    {
+    fn default() -> Self {
+        // """Construct G1Point from coordinate integer literal strings."""
+        // self.x: String = x
+        // self.y: String = y
         let zero = String::from("0");
         Self {
             x: zero.clone(),

@@ -16,9 +16,8 @@ use textwrap::dedent;
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
 use zkay_utils::helpers::read_file;
-pub fn get_verify_libs_code() -> String
 // """Return all verification contract libraries combined into single string"""
-{
+pub fn get_verify_libs_code() -> String {
     let mut code = String::new();
     if CFG
         .lock()
@@ -53,11 +52,9 @@ pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {
 // """The field prime used by the zk-snark elliptic curve"""
 
 // """Integers of at most this many bits can be represented using field values"""
-
-pub fn get_pki_contract(params: &CryptoParams) -> String
 // """Contract of the public key infrastructure used for asymmetric cryptography"""
-    //TODO prove private key knowledge during announcePk
-{
+//TODO prove private key knowledge during announcePk
+pub fn get_pki_contract(params: &CryptoParams) -> String {
     dedent(&format!(
         r#"
     pragma solidity {expression};

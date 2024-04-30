@@ -83,7 +83,7 @@ impl AstVisitor for TypeCheckVisitor {
             AST::Expression(Expression::FunctionCallExpr(_))
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -123,7 +123,7 @@ impl AstVisitor for TypeCheckVisitor {
             ASTType::Mapping => self.visitMapping(ast),
             ASTType::RequireStatement => self.visitRequireStatement(ast),
             ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unimplemented")),
         }
     }
 }
@@ -135,7 +135,7 @@ impl TypeCheckVisitor {
     }
     pub fn get_rhs(
         &self,
-        mut rhs: &ASTFlatten,
+        rhs: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
     ) -> Option<ASTFlatten> {
         if is_instance(rhs, ASTType::TupleExpr) {
@@ -365,7 +365,10 @@ impl TypeCheckVisitor {
         }
     }
 
-    pub fn visitAssignmentStatement(&self, mut ast: &ASTFlatten) {
+    pub fn visitAssignmentStatement(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -428,6 +431,9 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .borrow()
                     .function()
+                    .clone()
+                    .unwrap()
+                    .upgrade()
                     .as_ref()
                     .unwrap(),
                 ast.try_as_assignment_statement_ref()
@@ -438,9 +444,13 @@ impl TypeCheckVisitor {
                     .unwrap(),
             );
         }
+        Ok(())
     }
 
-    pub fn visitVariableDeclarationStatement(&self, mut ast: &ASTFlatten) {
+    pub fn visitVariableDeclarationStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_variable_declaration_statement_ref()
             .unwrap()
@@ -467,6 +477,7 @@ impl TypeCheckVisitor {
                     .annotated_type,
             );
         }
+        Ok(())
     }
 
     //@staticmethod
@@ -1725,7 +1736,10 @@ impl TypeCheckVisitor {
         cast.into()
     }
 
-    pub fn visitFunctionCallExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -1916,9 +1930,13 @@ impl TypeCheckVisitor {
         } else {
             assert!(false, "Invalid function call{:?}", ast);
         }
+        Ok(())
     }
 
-    pub fn visitPrimitiveCastExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitPrimitiveCastExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_primitive_cast_expr_ref()
             .unwrap()
             .borrow_mut()
@@ -1932,6 +1950,7 @@ impl TypeCheckVisitor {
                     .elem_type,
             ),
         );
+        Ok(())
     }
 
     pub fn handle_cast(
@@ -1990,11 +2009,16 @@ impl TypeCheckVisitor {
         )
     }
 
-    pub fn visitNewExpr(&self, _ast: &ASTFlatten) { //already has correct type
-                                                    // pass
+    pub fn visitNewExpr(&self, _ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        //already has correct type
+        // pass
+        Ok(())
     }
 
-    pub fn visitMemberAccessExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitMemberAccessExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(ast
             .try_as_member_access_expr_ref()
             .unwrap()
@@ -2051,9 +2075,13 @@ impl TypeCheckVisitor {
             .borrow()
             .annotated_type()
             .clone();
+        Ok(())
     }
 
-    pub fn visitReclassifyExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitReclassifyExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             ast.try_as_reclassify_expr_ref()
                 .unwrap()
@@ -2241,9 +2269,10 @@ impl TypeCheckVisitor {
             ast
         );
         Self::check_for_invalid_private_type(ast);
+        Ok(())
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let b = &ast.try_as_if_statement_ref().unwrap().borrow().condition;
         assert!(
             b.try_as_expression_ref()
@@ -2293,9 +2322,13 @@ impl TypeCheckVisitor {
                 b
             )
         }
+        Ok(())
     }
 
-    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
+    pub fn visitWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             Some(String::from("true"))
                 == ast
@@ -2318,11 +2351,15 @@ impl TypeCheckVisitor {
                 .borrow()
                 .annotated_type(),
             ast.try_as_while_statement_ref().unwrap().borrow().condition
-        )
+        );
         //must also later check that body and condition do not contain private expressions
+        Ok(())
     }
 
-    pub fn visitForStatement(&self, ast: &ASTFlatten) {
+    pub fn visitForStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             Some(String::from("true"))
                 == ast
@@ -2345,17 +2382,23 @@ impl TypeCheckVisitor {
                 .borrow()
                 .annotated_type(),
             ast.try_as_for_statement_ref().unwrap().borrow().condition
-        )
+        );
         //must also later check that body, update and condition do not contain private expressions
+        Ok(())
     }
-    pub fn visitReturnStatement(&self, mut ast: &ASTFlatten) {
+    pub fn visitReturnStatement(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(ast
             .try_as_return_statement_ref()
             .unwrap()
             .borrow()
             .statement_base
             .function
-            .as_ref()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -2368,7 +2411,9 @@ impl TypeCheckVisitor {
                     .borrow()
                     .statement_base
                     .function
-                    .as_ref()
+                    .clone()
+                    .unwrap()
+                    .upgrade()
                     .unwrap()
                     .try_as_constructor_or_function_definition_ref()
                     .unwrap()
@@ -2418,8 +2463,12 @@ impl TypeCheckVisitor {
                 &rt,
             );
         }
+        Ok(())
     }
-    pub fn visitTupleExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitTupleExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_tuple_expr_ref()
             .unwrap()
             .borrow_mut()
@@ -2445,17 +2494,22 @@ impl TypeCheckVisitor {
             None,
             String::from("NON_HOMOMORPHISM"),
         )));
+        Ok(())
     }
 
-    pub fn visitMeExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitMeExpr(&self, mut ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_me_expr_ref()
             .unwrap()
             .borrow_mut()
             .expression_base
             .annotated_type = Some(AnnotatedTypeName::address_all());
+        Ok(())
     }
 
-    pub fn visitIdentifierExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitIdentifierExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
         let target = ast
@@ -2485,8 +2539,12 @@ impl TypeCheckVisitor {
 
             assert!(Self::is_accessible_by_invoker(&ast.try_as_identifier_expr_ref().unwrap().borrow().to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
         }
+        Ok(())
     }
-    pub fn visitIndexExpr(&self, mut ast: &ASTFlatten) {
+    pub fn visitIndexExpr(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let arr = ast
             .try_as_index_expr_ref()
             .unwrap()
@@ -2605,8 +2663,12 @@ impl TypeCheckVisitor {
         } else {
             assert!(false, "Indexing into non-mapping{:?}", ast);
         }
+        Ok(())
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         for t in ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -2643,8 +2705,12 @@ impl TypeCheckVisitor {
                 ),"Only me/all accepted as privacy type of return values for public functions{:?}", ast);
             }
         }
+        Ok(())
     }
-    pub fn visitEnumDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitEnumDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut etn = EnumTypeName::new(
             ast.try_as_enum_definition_ref()
                 .unwrap()
@@ -2663,9 +2729,10 @@ impl TypeCheckVisitor {
             None,
             String::from("NON_HOMOMORPHIM"),
         ));
+        Ok(())
     }
 
-    pub fn visitEnumValue(&self, ast: &ASTFlatten) {
+    pub fn visitEnumValue(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut evtn = EnumValueTypeName::new(
             ast.try_as_enum_value_ref()
                 .unwrap()
@@ -2684,9 +2751,13 @@ impl TypeCheckVisitor {
             None,
             String::from("NON_HOMOMORPHISM"),
         ));
+        Ok(())
     }
 
-    pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) {
+    pub fn visitStateVariableDeclaration(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if let Some(expr) = &ast
             .try_as_state_variable_declaration_ref()
             .unwrap()
@@ -2728,9 +2799,10 @@ impl TypeCheckVisitor {
             "State variables cannot be annotated as me{:?}",
             ast
         );
+        Ok(())
     }
 
-    pub fn visitMapping(&self, ast: &ASTFlatten) {
+    pub fn visitMapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_mapping_ref()
             .unwrap()
@@ -2745,9 +2817,13 @@ impl TypeCheckVisitor {
                 ast
             );
         }
+        Ok(())
     }
 
-    pub fn visitRequireStatement(&self, ast: &ASTFlatten) {
+    pub fn visitRequireStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             ast.try_as_require_statement_ref()
                 .unwrap()
@@ -2770,9 +2846,13 @@ impl TypeCheckVisitor {
             "require needs public argument{:?}",
             ast
         );
+        Ok(())
     }
 
-    pub fn visitAnnotatedTypeName(&self, mut ast: &ASTFlatten) {
+    pub fn visitAnnotatedTypeName(
+        &self,
+        mut ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_annotated_type_name_ref()
                 .unwrap()
@@ -2949,5 +3029,6 @@ impl TypeCheckVisitor {
                 );
             }
         }
+        Ok(())
     }
 }

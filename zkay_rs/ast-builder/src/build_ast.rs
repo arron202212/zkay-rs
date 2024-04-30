@@ -525,12 +525,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         .map(|kw| kw.get_text().to_string())
                         .collect();
                     // //println!("===functdefini===Parameter==========={:?},{:?},{:?}",keywords,annotated_type,idf);
-                    println!(
-                        "==functdefini==keywords.len()==={:?}=={:?}==={}=====",
-                        annotated_type,
-                        idf,
-                        keywords.len()
-                    );
+                    // println!(
+                    //     "==functdefini==keywords.len()==={:?}=={:?}==={}=====",
+                    //     annotated_type,
+                    //     idf,
+                    //     keywords.len()
+                    // );
                     Parameter::new(
                         keywords,
                         RcCell::new(annotated_type.unwrap()),

@@ -53,15 +53,16 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
         self._visit_internal(ast)
     }
     fn has_attr(&self, ast: &AST) -> bool;
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten>;
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten>;
     fn visit_list(&self, ast_list: &Vec<ASTFlatten>) -> Vec<ASTFlatten> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
-    fn visit_children(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        let mut ret = Some(ast.clone());
         for c in ast.children() {
-            self.visit(&c);
+            ret = self.visit(&c);
         }
-        Some(ast.clone())
+        ret.ok_or(eyre::eyre!("unexpected"))
     }
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.log() {
@@ -74,7 +75,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
 
     fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.has_attr(&ast.to_ast()) {
-            self.get_attr(&c, ast)
+            self.get_attr(&c, ast).ok()
         } else if let Some(c) = AST::bases(c) {
             self.get_visit_function(c, ast)
         } else {
@@ -82,7 +83,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
         }
     }
 
-    fn visitAST(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         self.visit_children(ast)
     }
 }

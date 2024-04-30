@@ -31,7 +31,9 @@ impl AstVisitor for ContainsPrivateVisitor {
     fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        Err(eyre::eyre!("unreach"))
+    }
 }
 impl ContainsPrivateVisitor {
     // pub fn __init__(self)

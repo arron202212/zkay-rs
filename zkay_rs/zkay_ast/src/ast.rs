@@ -19,6 +19,7 @@ use crate::circuit_constraints::{
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
+use eyre::{eyre, Result};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -814,6 +815,248 @@ impl IntoAST for ASTFlatten {
     }
 }
 impl ASTFlatten {
+    pub fn clone_inner(&self) -> ASTFlatten {
+        match self {
+            Self::AST(astf) => ASTFlatten::AST(RcCell::new(astf.borrow().clone())),
+            Self::Expression(astf) => ASTFlatten::Expression(RcCell::new(astf.borrow().clone())),
+            Self::Identifier(astf) => ASTFlatten::Identifier(RcCell::new(astf.borrow().clone())),
+            Self::IdentifierBase(astf) => {
+                ASTFlatten::IdentifierBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::Comment(astf) => ASTFlatten::Comment(RcCell::new(astf.borrow().clone())),
+            Self::CommentBase(astf) => ASTFlatten::CommentBase(RcCell::new(astf.borrow().clone())),
+            Self::AnnotatedTypeName(astf) => {
+                ASTFlatten::AnnotatedTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::EnumValue(astf) => ASTFlatten::EnumValue(RcCell::new(astf.borrow().clone())),
+            Self::SourceUnit(astf) => ASTFlatten::SourceUnit(RcCell::new(astf.borrow().clone())),
+            Self::BlankLine(astf) => ASTFlatten::BlankLine(RcCell::new(astf.borrow().clone())),
+            Self::BuiltinFunction(astf) => {
+                ASTFlatten::BuiltinFunction(RcCell::new(astf.borrow().clone()))
+            }
+            Self::FunctionCallExprBase(astf) => {
+                ASTFlatten::FunctionCallExprBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::FunctionCallExpr(astf) => {
+                ASTFlatten::FunctionCallExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NewExpr(astf) => ASTFlatten::NewExpr(RcCell::new(astf.borrow().clone())),
+            Self::PrimitiveCastExpr(astf) => {
+                ASTFlatten::PrimitiveCastExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::MeExpr(astf) => ASTFlatten::MeExpr(RcCell::new(astf.borrow().clone())),
+            Self::AllExpr(astf) => ASTFlatten::AllExpr(RcCell::new(astf.borrow().clone())),
+            Self::ReclassifyExpr(astf) => {
+                ASTFlatten::ReclassifyExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::LiteralExpr(astf) => ASTFlatten::LiteralExpr(RcCell::new(astf.borrow().clone())),
+            Self::BooleanLiteralExpr(astf) => {
+                ASTFlatten::BooleanLiteralExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NumberLiteralExpr(astf) => {
+                ASTFlatten::NumberLiteralExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::StringLiteralExpr(astf) => {
+                ASTFlatten::StringLiteralExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ArrayLiteralExprBase(astf) => {
+                ASTFlatten::ArrayLiteralExprBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ArrayLiteralExpr(astf) => {
+                ASTFlatten::ArrayLiteralExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::KeyLiteralExpr(astf) => {
+                ASTFlatten::KeyLiteralExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::TupleOrLocationExpr(astf) => {
+                ASTFlatten::TupleOrLocationExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::TupleExpr(astf) => ASTFlatten::TupleExpr(RcCell::new(astf.borrow().clone())),
+            Self::IdentifierExpr(astf) => {
+                ASTFlatten::IdentifierExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::MemberAccessExpr(astf) => {
+                ASTFlatten::MemberAccessExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::LocationExpr(astf) => {
+                ASTFlatten::LocationExpr(RcCell::new(astf.borrow().clone()))
+            }
+            Self::IndexExpr(astf) => ASTFlatten::IndexExpr(RcCell::new(astf.borrow().clone())),
+            Self::SliceExpr(astf) => ASTFlatten::SliceExpr(RcCell::new(astf.borrow().clone())),
+            Self::ReclassifyExprBase(astf) => {
+                ASTFlatten::ReclassifyExprBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::RehomExpr(astf) => ASTFlatten::RehomExpr(RcCell::new(astf.borrow().clone())),
+            Self::EncryptionExpression(astf) => {
+                ASTFlatten::EncryptionExpression(RcCell::new(astf.borrow().clone()))
+            }
+            Self::HybridArgumentIdf(astf) => {
+                ASTFlatten::HybridArgumentIdf(RcCell::new(astf.borrow().clone()))
+            }
+            Self::Statement(astf) => ASTFlatten::Statement(RcCell::new(astf.borrow().clone())),
+            Self::IfStatement(astf) => ASTFlatten::IfStatement(RcCell::new(astf.borrow().clone())),
+            Self::WhileStatement(astf) => {
+                ASTFlatten::WhileStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::DoWhileStatement(astf) => {
+                ASTFlatten::DoWhileStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ForStatement(astf) => {
+                ASTFlatten::ForStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::BreakStatement(astf) => {
+                ASTFlatten::BreakStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ContinueStatement(astf) => {
+                ASTFlatten::ContinueStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ReturnStatement(astf) => {
+                ASTFlatten::ReturnStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::StatementListBase(astf) => {
+                ASTFlatten::StatementListBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::StatementList(astf) => {
+                ASTFlatten::StatementList(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircuitDirectiveStatement(astf) => {
+                ASTFlatten::CircuitDirectiveStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircuitComputationStatement(astf) => {
+                ASTFlatten::CircuitComputationStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::EnterPrivateKeyStatement(astf) => {
+                ASTFlatten::EnterPrivateKeyStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ExpressionStatement(astf) => {
+                ASTFlatten::ExpressionStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::RequireStatement(astf) => {
+                ASTFlatten::RequireStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::AssignmentStatementBase(astf) => {
+                ASTFlatten::AssignmentStatementBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::AssignmentStatement(astf) => {
+                ASTFlatten::AssignmentStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::VariableDeclarationStatement(astf) => {
+                ASTFlatten::VariableDeclarationStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircuitInputStatement(astf) => {
+                ASTFlatten::CircuitInputStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::SimpleStatement(astf) => {
+                ASTFlatten::SimpleStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::Block(astf) => ASTFlatten::Block(RcCell::new(astf.borrow().clone())),
+            Self::IndentBlock(astf) => ASTFlatten::IndentBlock(RcCell::new(astf.borrow().clone())),
+            Self::Mapping(astf) => ASTFlatten::Mapping(RcCell::new(astf.borrow().clone())),
+            Self::TupleType(astf) => ASTFlatten::TupleType(RcCell::new(astf.borrow().clone())),
+            Self::TypeName(astf) => ASTFlatten::TypeName(RcCell::new(astf.borrow().clone())),
+            Self::ElementaryTypeName(astf) => {
+                ASTFlatten::ElementaryTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::FunctionTypeName(astf) => {
+                ASTFlatten::FunctionTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::BoolTypeName(astf) => {
+                ASTFlatten::BoolTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::BooleanLiteralType(astf) => {
+                ASTFlatten::BooleanLiteralType(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NumberLiteralType(astf) => {
+                ASTFlatten::NumberLiteralType(RcCell::new(astf.borrow().clone()))
+            }
+            Self::IntTypeName(astf) => ASTFlatten::IntTypeName(RcCell::new(astf.borrow().clone())),
+            Self::UintTypeName(astf) => {
+                ASTFlatten::UintTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NumberTypeNameBase(astf) => {
+                ASTFlatten::NumberTypeNameBase(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NumberTypeName(astf) => {
+                ASTFlatten::NumberTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::EnumTypeName(astf) => {
+                ASTFlatten::EnumTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::EnumValueTypeName(astf) => {
+                ASTFlatten::EnumValueTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::StructTypeName(astf) => {
+                ASTFlatten::StructTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ContractTypeName(astf) => {
+                ASTFlatten::ContractTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::AddressTypeName(astf) => {
+                ASTFlatten::AddressTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::AddressPayableTypeName(astf) => {
+                ASTFlatten::AddressPayableTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::UserDefinedTypeName(astf) => {
+                ASTFlatten::UserDefinedTypeName(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CipherText(astf) => ASTFlatten::CipherText(RcCell::new(astf.borrow().clone())),
+            Self::Randomness(astf) => ASTFlatten::Randomness(RcCell::new(astf.borrow().clone())),
+            Self::Key(astf) => ASTFlatten::Key(RcCell::new(astf.borrow().clone())),
+            Self::Proof(astf) => ASTFlatten::Proof(RcCell::new(astf.borrow().clone())),
+            Self::ArrayBase(astf) => ASTFlatten::ArrayBase(RcCell::new(astf.borrow().clone())),
+            Self::Array(astf) => ASTFlatten::Array(RcCell::new(astf.borrow().clone())),
+            Self::IdentifierDeclaration(astf) => {
+                ASTFlatten::IdentifierDeclaration(RcCell::new(astf.borrow().clone()))
+            }
+            Self::VariableDeclaration(astf) => {
+                ASTFlatten::VariableDeclaration(RcCell::new(astf.borrow().clone()))
+            }
+            Self::Parameter(astf) => ASTFlatten::Parameter(RcCell::new(astf.borrow().clone())),
+            Self::StateVariableDeclaration(astf) => {
+                ASTFlatten::StateVariableDeclaration(RcCell::new(astf.borrow().clone()))
+            }
+            Self::NamespaceDefinition(astf) => {
+                ASTFlatten::NamespaceDefinition(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ConstructorOrFunctionDefinition(astf) => {
+                ASTFlatten::ConstructorOrFunctionDefinition(RcCell::new(astf.borrow().clone()))
+            }
+            Self::EnumDefinition(astf) => {
+                ASTFlatten::EnumDefinition(RcCell::new(astf.borrow().clone()))
+            }
+            Self::StructDefinition(astf) => {
+                ASTFlatten::StructDefinition(RcCell::new(astf.borrow().clone()))
+            }
+            Self::ContractDefinition(astf) => {
+                ASTFlatten::ContractDefinition(RcCell::new(astf.borrow().clone()))
+            }
+            Self::DummyAnnotation(astf) => {
+                ASTFlatten::DummyAnnotation(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircuitStatement(astf) => {
+                ASTFlatten::CircuitStatement(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircComment(astf) => ASTFlatten::CircComment(RcCell::new(astf.borrow().clone())),
+            Self::CircIndentBlock(astf) => {
+                ASTFlatten::CircIndentBlock(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircCall(astf) => ASTFlatten::CircCall(RcCell::new(astf.borrow().clone())),
+            Self::CircVarDecl(astf) => ASTFlatten::CircVarDecl(RcCell::new(astf.borrow().clone())),
+            Self::CircGuardModification(astf) => {
+                ASTFlatten::CircGuardModification(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircEncConstraint(astf) => {
+                ASTFlatten::CircEncConstraint(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircSymmEncConstraint(astf) => {
+                ASTFlatten::CircSymmEncConstraint(RcCell::new(astf.borrow().clone()))
+            }
+            Self::CircEqConstraint(astf) => {
+                ASTFlatten::CircEqConstraint(RcCell::new(astf.borrow().clone()))
+            }
+        }
+    }
     pub fn is_parent_of(&self, child: &ASTFlatten) -> bool {
         let mut e = child.clone();
         let selfs = self.clone();
@@ -829,6 +1072,38 @@ impl ASTFlatten {
             e = e1;
         }
         e == selfs
+    }
+    pub fn annotated_type(&self) -> Option<AnnotatedTypeName> {
+        match self {
+            Self::EnumValue(astf) => astf.borrow().annotated_type.clone(),
+            Self::NewExpr(astf) => Some(astf.borrow().annotated_type.borrow().clone()),
+            Self::ConstructorOrFunctionDefinition(astf) => astf.borrow().annotated_type.clone(),
+            Self::EnumDefinition(astf) => astf.borrow().annotated_type.clone(),
+            Self::Expression(astf) => astf
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .map(|a| a.borrow().clone()),
+            Self::IdentifierDeclaration(astf) => {
+                Some(astf.borrow().annotated_type().borrow().clone())
+            }
+            _ if matches!(self.to_ast(), AST::Expression(_)) => self
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .annotated_type()
+                .as_ref()
+                .map(|a| a.borrow().clone()),
+            _ if matches!(self.to_ast(), AST::IdentifierDeclaration(_)) => Some(
+                self.to_ast()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .annotated_type()
+                    .borrow()
+                    .clone(),
+            ),
+            _ => None,
+        }
     }
     pub fn code(&self) -> String {
         match self {
@@ -1658,7 +1933,7 @@ impl AST {
             | ASTType::IndexExpr
             | ASTType::SliceExpr => Some(ASTType::LocationExprBase),
             ASTType::ReclassifyExprBase | ASTType::RehomExpr | ASTType::EncryptionExpression => {
-                Some(ASTType::ReclassifyExprBase)
+                Some(ASTType::ExpressionBase)
             }
             ASTType::HybridArgumentIdf => Some(ASTType::IdentifierBase),
             ASTType::CircuitDirectiveStatementBase
@@ -2338,7 +2613,7 @@ impl Expression {
         }
     }
 
-    pub fn analysis(&self) -> Option<PartitionState<ASTFlatten>> {
+    pub fn analysis(&self) -> Option<PartitionState<AST>> {
         self.statement()
             .as_ref()
             .map(|statement| {
@@ -2695,7 +2970,7 @@ impl BuiltinFunction {
     pub fn select_homomorphic_overload(
         &self,
         args: &Vec<ASTFlatten>,
-        analysis: Option<PartitionState<ASTFlatten>>,
+        analysis: Option<PartitionState<AST>>,
     ) -> Option<HomomorphicBuiltinFunction> {
         // """
         // Finds a homomorphic builtin that performs the correct operation and which can be applied
@@ -3539,6 +3814,7 @@ impl ASTChildren for TupleExpr {
     ASTFlattenImpl,
     ASTInstanceOf,
     LocationExprBaseRef,
+    LocationExprBaseMutRef,
     TupleOrLocationExprBaseRef,
     ExpressionBaseRef,
     ExpressionBaseMutRef,
@@ -4629,19 +4905,19 @@ pub trait StatementBaseRef: ASTBaseRef {
     fn statement_base_ref(&self) -> &StatementBase;
 }
 pub trait StatementBaseProperty {
-    fn before_analysis(&self) -> &Option<PartitionState<ASTFlatten>>;
-    fn after_analysis(&self) -> &Option<PartitionState<ASTFlatten>>;
-    fn function(&self) -> &Option<ASTFlatten>;
+    fn before_analysis(&self) -> &Option<PartitionState<AST>>;
+    fn after_analysis(&self) -> &Option<PartitionState<AST>>;
+    fn function(&self) -> &Option<ASTFlattenWeak>;
     fn pre_statements(&self) -> &Vec<ASTFlatten>;
 }
 impl<T: StatementBaseRef> StatementBaseProperty for T {
-    fn before_analysis(&self) -> &Option<PartitionState<ASTFlatten>> {
+    fn before_analysis(&self) -> &Option<PartitionState<AST>> {
         &self.statement_base_ref().before_analysis
     }
-    fn after_analysis(&self) -> &Option<PartitionState<ASTFlatten>> {
+    fn after_analysis(&self) -> &Option<PartitionState<AST>> {
         &self.statement_base_ref().after_analysis
     }
-    fn function(&self) -> &Option<ASTFlatten> {
+    fn function(&self) -> &Option<ASTFlattenWeak> {
         &self.statement_base_ref().function
     }
     fn pre_statements(&self) -> &Vec<ASTFlatten> {
@@ -4652,9 +4928,9 @@ impl<T: StatementBaseRef> StatementBaseProperty for T {
 #[derive(ImplBaseTrait, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StatementBase {
     pub ast_base: RcCell<ASTBase>,
-    pub before_analysis: Option<PartitionState<ASTFlatten>>,
-    pub after_analysis: Option<PartitionState<ASTFlatten>>,
-    pub function: Option<ASTFlatten>,
+    pub before_analysis: Option<PartitionState<AST>>,
+    pub after_analysis: Option<PartitionState<AST>>,
+    pub function: Option<ASTFlattenWeak>,
     pub pre_statements: Vec<ASTFlatten>,
 }
 impl StatementBase {
@@ -5322,7 +5598,7 @@ impl IntoAST for StatementListBase {
 impl ASTChildren for StatementListBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         self.statements.iter().for_each(|statement| {
-            cb.add_child(statement.clone().into());
+            cb.add_child(statement.clone());
         });
     }
 }
@@ -5513,10 +5789,8 @@ impl TypeName {
             None,
         )))
     }
-
-    pub fn size_in_uints(&self) -> i32
-// """How many uints this type occupies when serialized."""
-    {
+    // """How many uints this type occupies when serialized."""
+    pub fn size_in_uints(&self) -> i32 {
         1
     }
 
@@ -5910,10 +6184,8 @@ impl NumberTypeNameBase {
             self._size_in_bits
         }
     }
-
-    pub fn can_represent(&self, value: i32) -> bool
-// """Return true if value can be represented by this type"""
-    {
+    // """Return true if value can be represented by this type"""
+    pub fn can_represent(&self, value: i32) -> bool {
         let elem_bitwidth = self.elem_bitwidth() as usize;
         let lo = if self.signed {
             -(1 << elem_bitwidth - 1)
@@ -7097,7 +7369,7 @@ impl AnnotatedTypeName {
     }
     pub fn combined_privacy(
         &self,
-        analysis: Option<PartitionState<ASTFlatten>>,
+        analysis: Option<PartitionState<AST>>,
         other: &RcCell<AnnotatedTypeName>,
     ) -> Option<CombinedPrivacyUnion> {
         if let (Some(TypeName::TupleType(selfs)), Some(TypeName::TupleType(others))) = (
@@ -7143,7 +7415,7 @@ impl AnnotatedTypeName {
                 || (analysis.is_some()
                     && analysis
                         .unwrap()
-                        .same_partition(&p_expected.into(), &p_actual.into()))
+                        .same_partition(&p_expected.to_ast(), &p_actual.to_ast()))
             {
                 Some(CombinedPrivacyUnion::AST(Some(
                     self_privacy_annotation.clone(),
@@ -7174,19 +7446,19 @@ impl AnnotatedTypeName {
     pub fn is_private(&self) -> bool {
         !self.is_public()
     }
-    pub fn is_private_at_me(&self, analysis: &Option<PartitionState<ASTFlatten>>) -> bool {
+    pub fn is_private_at_me(&self, analysis: &Option<PartitionState<AST>>) -> bool {
         self.privacy_annotation.as_ref().map_or(false, |pa| {
             pa.try_as_expression_ref().map_or(false, |p| {
                 p.borrow().is_me_expr()
                     || (analysis.is_some()
                         && analysis.as_ref().unwrap().same_partition(
-                            &p.borrow().privacy_annotation_label().unwrap().into(),
-                            &RcCell::new(MeExpr::new()).into(),
+                            &p.borrow().privacy_annotation_label().unwrap().to_ast(),
+                            &MeExpr::new().into_ast(),
                         ))
             })
         })
     }
-    pub fn is_accessible(&self, analysis: &Option<PartitionState<ASTFlatten>>) -> bool {
+    pub fn is_accessible(&self, analysis: &Option<PartitionState<AST>>) -> bool {
         self.is_public() || self.is_private_at_me(analysis)
     }
 
@@ -7370,6 +7642,7 @@ impl ASTChildren for IdentifierDeclarationBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         cb.add_child(self.annotated_type.clone().into());
         if let Some(idf) = &self.idf {
+            // println!("===process_children===IdentifierDeclarationBase========={:?}",idf);
             cb.add_child(idf.clone().into());
         }
     }
@@ -7701,10 +7974,8 @@ impl ConstructorOrFunctionDefinition {
                 .collect(),
         )
     }
-
-    pub fn parameter_types(&self) -> TupleType
-// return TupleType([p.annotated_type for p in self.parameters])
-    {
+    // return TupleType([p.annotated_type for p in self.parameters])
+    pub fn parameter_types(&self) -> TupleType {
         TupleType::new(
             self.parameters
                 .iter()
@@ -7813,6 +8084,7 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
             cb.add_child(parameter.clone().into());
         });
         if let Some(body) = &self.body {
+            // println!("======body============={:?}",body);
             cb.add_child(body.clone().into());
         }
     }
@@ -8005,7 +8277,7 @@ impl ContractDefinition {
         }
     }
     pub fn get_item(&self, key: &String) -> Option<ASTFlatten> {
-        println!("=======get_item============");
+        // //println!("=======get_item============");
         if key == "constructor" {
             if self.constructor_definitions.len() == 0 {
                 // # return empty constructor
@@ -8175,9 +8447,8 @@ impl ConstructorOrFunctionDefinitionAttr for ASTFlatten {
             .map_or(String::new(), |c| c.borrow().name().clone())
     }
 }
-pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten
 // """Turn privacy label into expression (i.e. Identifier -> IdentifierExpr, Me and All stay the same)."""
-{
+pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten {
     if plabel.is_identifier() {
         let mut ie = IdentifierExpr::new(
             IdentifierExprUnion::Identifier(plabel.try_as_identifier_ref().unwrap().clone()),
@@ -8439,7 +8710,9 @@ pub fn get_ast_exception_msg(ast: AST, msg: String) -> String {
         stmt.statement_base_ref()
             .unwrap()
             .function
-            .as_ref()
+            .clone()
+            .unwrap()
+            .upgrade()
             .map(|f| {
                 f.try_as_constructor_or_function_definition_ref()
                     .unwrap()
@@ -8631,7 +8904,7 @@ impl AstVisitor for CodeVisitor {
             || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
             || matches!(ast, AST::TypeName(TypeName::Array(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ASTBase => self.visit_AST(ast),
             _ if matches!(ast.to_ast(), AST::Comment(_)) => self.visit_Comment(ast),
@@ -8721,7 +8994,7 @@ impl AstVisitor for CodeVisitor {
             ASTType::StateVariableDeclaration => self.visit_StateVariableDeclaration(ast),
             ASTType::ContractDefinition => self.visit_ContractDefinition(ast),
             ASTType::SourceUnit => self.visit_SourceUnit(ast),
-            _ => String::new(),
+            _ => Ok(String::new()),
         }
     }
 }
@@ -8733,12 +9006,16 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_list(&self, l: Vec<ListUnion>, mut sep: &str) -> <Self as AstVisitor>::Return {
+    pub fn visit_list(
+        &self,
+        l: Vec<ListUnion>,
+        mut sep: &str,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if sep.is_empty() {
             sep = "\n";
         }
         if l.is_empty() {
-            return String::new();
+            return Ok(String::new());
         }
 
         fn handle(selfs: &CodeVisitor, e: &ListUnion) -> String {
@@ -8750,212 +9027,233 @@ impl CodeVisitor {
 
         let s: Vec<_> = l.iter().map(|e| handle(self, e)).collect();
         let s = s.join(sep);
-        s
+        Ok(s)
     }
 
     pub fn visit_single_or_list(
         &self,
         v: SingleOrListUnion,
         mut sep: &str,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if sep.is_empty() {
             sep = "\n";
         }
         match v {
             SingleOrListUnion::Vec(v) => self.visit_list(v, sep),
-            SingleOrListUnion::String(v) => v,
-            SingleOrListUnion::AST(v) => self.visit(&v),
+            SingleOrListUnion::String(v) => Ok(v),
+            SingleOrListUnion::AST(v) => Ok(self.visit(&v)),
         }
     }
 
-    pub fn visit_AST(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_AST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // should never be called
         // raise NotImplementedError("Did not implement code generation for " + repr(ast))
         // unimplemented!("Did not implement code generation for {:?} ", ast);
-        println!("=======visit_AST==============");
-        String::new()
+        // //println!("=======visit_AST==============");
+
+        Err(eyre!("Did not implement code generation for {:?} ", ast))
     }
-    pub fn visit_Comment(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if ast.try_as_comment_ref().unwrap().borrow().text() == String::new() {
-            String::new()
-        } else if ast
-            .try_as_comment_ref()
-            .unwrap()
-            .borrow()
-            .text()
-            .contains(" ")
-        {
-            format!(
-                "/* {} */",
-                ast.try_as_comment_ref().unwrap().borrow().text()
-            )
-        } else {
-            format!("// {}", ast.try_as_comment_ref().unwrap().borrow().text())
-        }
+    pub fn visit_Comment(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if ast.try_as_comment_ref().unwrap().borrow().text() == String::new() {
+                String::new()
+            } else if ast
+                .try_as_comment_ref()
+                .unwrap()
+                .borrow()
+                .text()
+                .contains(" ")
+            {
+                format!(
+                    "/* {} */",
+                    ast.try_as_comment_ref().unwrap().borrow().text()
+                )
+            } else {
+                format!("// {}", ast.try_as_comment_ref().unwrap().borrow().text())
+            },
+        )
     }
 
-    pub fn visit_Identifier(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        ast.try_as_identifier_ref().unwrap().borrow().name().clone()
+    pub fn visit_Identifier(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(ast.try_as_identifier_ref().unwrap().borrow().name().clone())
     }
 
-    pub fn visit_FunctionCallExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        println!(
-            "=====visit_FunctionCallExpr==============={:?}",
-            ast.is_ast()
-        );
-        if is_instance(
-            ast.try_as_ast_ref()
-                .unwrap()
-                .borrow()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func(),
-            ASTType::BuiltinFunction,
-        ) {
-            let args: Vec<_> = ast
-                .try_as_ast_ref()
-                .unwrap()
-                .borrow()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .args()
-                .iter()
-                .map(|a| self.visit(&a.clone().into()))
-                .collect();
-            ast.try_as_ast_ref()
-                .unwrap()
-                .borrow()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .try_as_builtin_function_ref()
-                .unwrap()
-                .borrow()
-                .format_string(&args)
-        } else {
-            let f = self.visit(
-                &ast.try_as_ast_ref()
-                    .unwrap()
-                    .borrow()
+    pub fn visit_FunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if is_instance(
+                ast.to_ast()
                     .try_as_expression_ref()
                     .unwrap()
                     .try_as_function_call_expr_ref()
                     .unwrap()
-                    .func()
-                    .clone()
-                    .into(),
-            );
-            let a = self.visit_list(
-                ast.try_as_ast_ref()
-                    .unwrap()
-                    .borrow()
+                    .func(),
+                ASTType::BuiltinFunction,
+            ) {
+                let args: Vec<_> = ast
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .args()
                     .iter()
-                    .map(|arg| ListUnion::AST(arg.clone().into()))
-                    .collect(),
-                ", ",
-            );
-            format!("{f}({a})")
-        }
+                    .map(|a| self.visit(&a.clone().into()))
+                    .collect();
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .func()
+                    .to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .format_string(&args)
+            } else {
+                let f = self.visit(
+                    &ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .func()
+                        .clone()
+                        .into(),
+                );
+                let a = self.visit_list(
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .args()
+                        .iter()
+                        .map(|arg| ListUnion::AST(arg.clone().into()))
+                        .collect(),
+                    ", ",
+                )?;
+                format!("{f}({a})")
+            },
+        )
     }
 
-    pub fn visit_PrimitiveCastExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if ast
-            .try_as_primitive_cast_expr_ref()
-            .unwrap()
-            .borrow()
-            .is_implicit
-        {
-            self.visit(
-                &ast.try_as_primitive_cast_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .expr
-                    .clone()
-                    .into(),
-            )
-        } else {
-            format!(
-                "{}({})",
-                self.visit(
-                    &ast.try_as_primitive_cast_expr_ref()
-                        .unwrap()
-                        .borrow()
-                        .elem_type
-                        .clone()
-                        .into()
-                ),
+    pub fn visit_PrimitiveCastExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if ast
+                .try_as_primitive_cast_expr_ref()
+                .unwrap()
+                .borrow()
+                .is_implicit
+            {
                 self.visit(
                     &ast.try_as_primitive_cast_expr_ref()
                         .unwrap()
                         .borrow()
                         .expr
                         .clone()
-                        .into()
+                        .into(),
                 )
-            )
-        }
+            } else {
+                format!(
+                    "{}({})",
+                    self.visit(
+                        &ast.try_as_primitive_cast_expr_ref()
+                            .unwrap()
+                            .borrow()
+                            .elem_type
+                            .clone()
+                            .into()
+                    ),
+                    self.visit(
+                        &ast.try_as_primitive_cast_expr_ref()
+                            .unwrap()
+                            .borrow()
+                            .expr
+                            .clone()
+                            .into()
+                    )
+                )
+            },
+        )
     }
 
-    pub fn visit_BooleanLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        println!(
-            "=========visit_BooleanLiteralExpr==========={:?}",
-            ast.is_expression()
-        );
-        ast.try_as_boolean_literal_expr_ref()
+    pub fn visit_BooleanLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(ast
+            .try_as_boolean_literal_expr_ref()
             .unwrap()
             .borrow()
             .value
             .to_string()
-            .to_ascii_lowercase()
+            .to_ascii_lowercase())
     }
 
-    pub fn visit_NumberLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if ast
-            .try_as_number_literal_expr_ref()
-            .unwrap()
-            .borrow()
-            .was_hex
-        {
-            format!(
-                "{:x}",
-                ast.try_as_expression_ref()
+    pub fn visit_NumberLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("======visit_NumberLiteralExpr==============={:?}",ast);
+        Ok(
+            if ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_literal_expr_ref()
+                .unwrap()
+                .try_as_number_literal_expr_ref()
+                .unwrap()
+                .was_hex
+            {
+                format!(
+                    "{:x}",
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_number_literal_expr_ref()
+                        .unwrap()
+                        .value
+                )
+            } else {
+                ast.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_literal_expr_ref()
                     .unwrap()
                     .try_as_number_literal_expr_ref()
                     .unwrap()
                     .value
-            )
-        } else {
-            ast.try_as_number_literal_expr_ref()
-                .unwrap()
-                .borrow()
-                .value
-                .to_string()
-        }
-    }
-
-    pub fn visit_StringLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
-            "\"{}\"",
-            ast.try_as_string_literal_expr_ref().unwrap().borrow().value
+                    .to_string()
+            },
         )
     }
 
-    pub fn visit_ArrayLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visit_StringLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
+            "\"{}\"",
+            ast.try_as_string_literal_expr_ref().unwrap().borrow().value
+        ))
+    }
+
+    pub fn visit_ArrayLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
             "[{}]",
             self.visit_list(
                 ast.try_as_array_literal_expr_ref()
@@ -8966,12 +9264,12 @@ impl CodeVisitor {
                     .map(|value| ListUnion::AST(value.clone().into()))
                     .collect(),
                 ", "
-            )
-        )
+            )?
+        ))
     }
 
-    pub fn visit_TupleExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visit_TupleExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
             "({})",
             self.visit_list(
                 ast.try_as_tuple_expr_ref()
@@ -8982,26 +9280,38 @@ impl CodeVisitor {
                     .map(|element| ListUnion::AST(element.clone().into()))
                     .collect(),
                 ", "
-            )
-        )
+            )?
+        ))
     }
 
-    pub fn visit_IdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        println!("======visit_IdentifierExpr========={:?}", ast);
-        self.visit(
-            &ast.try_as_identifier_expr_ref()
+    pub fn visit_IdentifierExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("======visit_IdentifierExpr========={:?}", ast);
+        Ok(self.visit(
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+                .unwrap()
                 .idf
                 .as_ref()
                 .unwrap()
                 .clone()
                 .into(),
-        )
+        ))
     }
 
-    pub fn visit_MemberAccessExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visit_MemberAccessExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
             "{}.{}",
             self.visit(
                 &ast.try_as_member_access_expr_ref()
@@ -9021,16 +9331,23 @@ impl CodeVisitor {
                     .clone()
                     .into()
             )
-        )
+        ))
     }
 
-    pub fn visit_IndexExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visit_IndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("=======visit_IndexExpr================={:?}",ast);
+        Ok(format!(
             "{}[{}]",
             self.visit(
-                &ast.try_as_index_expr_ref()
+                &ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_index_expr_ref()
+                    .unwrap()
                     .arr
                     .as_ref()
                     .unwrap()
@@ -9038,25 +9355,34 @@ impl CodeVisitor {
                     .into()
             ),
             self.visit(
-                &ast.try_as_index_expr_ref()
+                &ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_index_expr_ref()
+                    .unwrap()
                     .key
                     .clone()
                     .into()
             )
-        )
+        ))
     }
 
-    pub fn visit_MeExpr(&self, _: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("me")
+    pub fn visit_MeExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("me"))
     }
 
-    pub fn visit_AllExpr(&self, _: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("all")
+    pub fn visit_AllExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("all"))
     }
 
-    pub fn visit_ReclassifyExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_ReclassifyExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let e = self.visit(
             &ast.try_as_reclassify_expr_ref()
                 .unwrap()
@@ -9086,10 +9412,10 @@ impl CodeVisitor {
             )
             .unwrap()
             .clone();
-        format!("reveal{h:?}({e}, {p})")
+        Ok(format!("reveal{h:?}({e}, {p})"))
     }
 
-    pub fn visit_RehomExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_RehomExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let e = self.visit(
             &ast.try_as_rehom_expr_ref()
                 .unwrap()
@@ -9099,13 +9425,16 @@ impl CodeVisitor {
                 .clone()
                 .into(),
         );
-        format!(
+        Ok(format!(
             "{}({e})",
             ast.try_as_rehom_expr_ref().unwrap().borrow().func_name()
-        )
+        ))
     }
 
-    pub fn visit_IfStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_IfStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let c = self.visit(
             &ast.try_as_if_statement_ref()
                 .unwrap()
@@ -9124,17 +9453,20 @@ impl CodeVisitor {
                     .into(),
             ),
             "",
-        );
+        )?;
         let mut ret = format!("if ({c}) {t}");
         if let Some(else_branch) = &ast.try_as_if_statement_ref().unwrap().borrow().else_branch {
             let e =
-                self.visit_single_or_list(SingleOrListUnion::AST(else_branch.clone().into()), "");
+                self.visit_single_or_list(SingleOrListUnion::AST(else_branch.clone().into()), "")?;
             ret += format!("\n else {e}").as_str();
         }
-        ret
+        Ok(ret)
     }
 
-    pub fn visit_WhileStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_WhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let c = self.visit(
             &ast.try_as_while_statement_ref()
                 .unwrap()
@@ -9153,11 +9485,14 @@ impl CodeVisitor {
                     .into(),
             ),
             "",
-        );
-        format!("while ({c}) {b}")
+        )?;
+        Ok(format!("while ({c}) {b}"))
     }
 
-    pub fn visit_DoWhileStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_DoWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let b = self.visit_single_or_list(
             SingleOrListUnion::AST(
                 ast.try_as_do_while_statement_ref()
@@ -9168,7 +9503,7 @@ impl CodeVisitor {
                     .into(),
             ),
             "",
-        );
+        )?;
         let c = self.visit(
             &ast.try_as_do_while_statement_ref()
                 .unwrap()
@@ -9177,14 +9512,17 @@ impl CodeVisitor {
                 .clone()
                 .into(),
         );
-        format!("do {b} while ({c});")
+        Ok(format!("do {b} while ({c});"))
     }
 
-    pub fn visit_ForStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_ForStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let i = if let Some(init) = &ast.try_as_for_statement_ref().unwrap().borrow().init {
             format!(
                 "{}",
-                self.visit_single_or_list(SingleOrListUnion::AST(init.clone().into()), "")
+                self.visit_single_or_list(SingleOrListUnion::AST(init.clone().into()), "")?
             )
         } else {
             String::from(";")
@@ -9200,7 +9538,7 @@ impl CodeVisitor {
         let u = if let Some(update) = &ast.try_as_for_statement_ref().unwrap().borrow().update {
             format!(
                 " {}",
-                self.visit_single_or_list(SingleOrListUnion::AST(update.clone().into()), "")
+                self.visit_single_or_list(SingleOrListUnion::AST(update.clone().into()), "")?
                     .replace(";", "")
             )
         } else {
@@ -9216,67 +9554,92 @@ impl CodeVisitor {
                     .into(),
             ),
             "",
-        );
-        format!("for ({i} {c};{u}) {b}")
+        )?;
+        Ok(format!("for ({i} {c};{u}) {b}"))
     }
 
-    pub fn visit_BreakStatement(&self, _: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("break;")
+    pub fn visit_BreakStatement(
+        &self,
+        _: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("break;"))
     }
 
-    pub fn visit_ContinueStatement(&self, _: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("continue;")
+    pub fn visit_ContinueStatement(
+        &self,
+        _: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("continue;"))
     }
 
-    pub fn visit_ReturnStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if ast
-            .try_as_return_statement_ref()
-            .unwrap()
-            .borrow()
-            .expr
-            .is_none()
-        {
-            String::from("return;")
-        } else {
-            let e = self.visit(
-                &ast.try_as_return_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .expr
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .into(),
-            );
-            format!("return {e};")
-        }
+    pub fn visit_ReturnStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if ast
+                .try_as_return_statement_ref()
+                .unwrap()
+                .borrow()
+                .expr
+                .is_none()
+            {
+                String::from("return;")
+            } else {
+                let e = self.visit(
+                    &ast.try_as_return_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr
+                        .as_ref()
+                        .unwrap()
+                        .clone()
+                        .into(),
+                );
+                format!("return {e};")
+            },
+        )
     }
 
-    pub fn visit_ExpressionStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        self.visit(
+    pub fn visit_ExpressionStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(self.visit(
             &ast.try_as_expression_statement_ref()
                 .unwrap()
                 .borrow()
                 .expr
                 .clone()
                 .into(),
-        ) + ";"
+        ) + ";")
     }
 
-    pub fn visit_RequireStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_RequireStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("====visit_RequireStatement=========={:?}", ast);
         let c = self.visit(
-            &ast.try_as_require_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_require_statement_ref()
+                .unwrap()
                 .condition
                 .clone()
                 .into(),
         );
-        format!("require({c});")
+        Ok(format!("require({c});"))
     }
 
-    pub fn visit_AssignmentStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        println!("====visit_AssignmentStatement=========={:?}", ast.is_ast());
+    pub fn visit_AssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("====visit_AssignmentStatement=========={:?}", ast.is_ast());
         let ast = ast
             .to_ast()
             .try_as_statement_ref()
@@ -9331,177 +9694,194 @@ impl CodeVisitor {
             "{0}{1};" => format!("{0}{1};", ls, rs),
             _ => format!("{} {}= {};", ls, op, rs),
         };
-        if is_instance(lhs.as_ref().unwrap(), ASTType::SliceExpr)
-            && is_instance(rhs.as_ref().unwrap(), ASTType::SliceExpr)
-        {
-            let (lhs, rhs) = (
-                lhs.as_ref()
-                    .unwrap()
-                    .try_as_ast_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_slice_expr_ref()
-                    .unwrap()
-                    .clone(),
-                rhs.as_ref()
-                    .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_slice_expr_ref()
-                    .unwrap()
-                    .clone(),
-            );
-            assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
-            let mut s = String::new();
-            let (lexpr, rexpr) = (
-                self.visit(&lhs.arr.as_ref().unwrap().clone().into()),
-                self.visit(&rhs.arr.as_ref().unwrap().clone().into()),
-            );
-            let mut lbase = if let Some(base) = &lhs.base {
-                format!("{} + ", self.visit(&base.clone().into()))
-            } else {
-                String::new()
-            };
-            let mut rbase = if let Some(base) = &rhs.base {
-                format!("{} + ", self.visit(&base.clone().into()))
-            } else {
-                String::new()
-            };
-            if lhs.size <= 3 {
-                for i in 0..lhs.size {
-                    s += &format_string(
-                        format!("{lexpr}[{lbase}{}]", lhs.start_offset + i),
-                        format!("{rexpr}[{rbase}{}]", rhs.start_offset + i),
-                    );
+        Ok(
+            if is_instance(lhs.as_ref().unwrap(), ASTType::SliceExpr)
+                && is_instance(rhs.as_ref().unwrap(), ASTType::SliceExpr)
+            {
+                let (lhs, rhs) = (
+                    lhs.as_ref()
+                        .unwrap()
+                        .try_as_ast_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_slice_expr_ref()
+                        .unwrap()
+                        .clone(),
+                    rhs.as_ref()
+                        .unwrap()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_slice_expr_ref()
+                        .unwrap()
+                        .clone(),
+                );
+                assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
+                let mut s = String::new();
+                let (lexpr, rexpr) = (
+                    self.visit(&lhs.arr.as_ref().unwrap().clone().into()),
+                    self.visit(&rhs.arr.as_ref().unwrap().clone().into()),
+                );
+                let mut lbase = if let Some(base) = &lhs.base {
+                    format!("{} + ", self.visit(&base.clone().into()))
+                } else {
+                    String::new()
+                };
+                let mut rbase = if let Some(base) = &rhs.base {
+                    format!("{} + ", self.visit(&base.clone().into()))
+                } else {
+                    String::new()
+                };
+                if lhs.size <= 3 {
+                    for i in 0..lhs.size {
+                        s += &format_string(
+                            format!("{lexpr}[{lbase}{}]", lhs.start_offset + i),
+                            format!("{rexpr}[{rbase}{}]", rhs.start_offset + i),
+                        );
+                        s += "\n";
+                    }
+                } else {
+                    let i = CFG.lock().unwrap().reserved_name_prefix() + "i";
+                    if lhs.start_offset != 0 {
+                        lbase += &format!("{} + ", lhs.start_offset);
+                    }
+                    if rhs.start_offset != 0 {
+                        rbase += &format!("{} + ", rhs.start_offset);
+                    }
+                    s += format!("for (uint {i} = 0; {i} < {}; ++{i}) {{\n", lhs.size).as_str();
+                    s += &indent(format_string(
+                        format!("{lexpr}[{lbase}{i}]"),
+                        format!("{rexpr}[{rbase}{i}]"),
+                    ));
                     s += "\n";
+                    s += "}\n";
                 }
+                s[..s.len() - 1].to_string()
             } else {
-                let i = CFG.lock().unwrap().reserved_name_prefix() + "i";
-                if lhs.start_offset != 0 {
-                    lbase += &format!("{} + ", lhs.start_offset);
-                }
-                if rhs.start_offset != 0 {
-                    rbase += &format!("{} + ", rhs.start_offset);
-                }
-                s += format!("for (uint {i} = 0; {i} < {}; ++{i}) {{\n", lhs.size).as_str();
-                s += &indent(format_string(
-                    format!("{lexpr}[{lbase}{i}]"),
-                    format!("{rexpr}[{rbase}{i}]"),
-                ));
-                s += "\n";
-                s += "}\n";
-            }
-            s[..s.len() - 1].to_string()
-        } else {
-            let to_ast = |hs| self.visit(hs);
-            format_string(
-                to_ast(&lhs.as_ref().unwrap().clone().into()),
-                self.visit(&rhs.clone().unwrap().into()),
-            )
-        }
+                let to_ast = |hs| self.visit(hs);
+                format_string(
+                    to_ast(&lhs.as_ref().unwrap().clone().into()),
+                    self.visit(&rhs.clone().unwrap().into()),
+                )
+            },
+        )
     }
     pub fn visit_CircuitDirectiveStatement(
         &self,
         _ast: &ASTFlatten,
-    ) -> <Self as AstVisitor>::Return {
-        String::new()
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::new())
     }
 
-    fn handle_block(&self, ast: &StatementList) -> <Self as AstVisitor>::Return {
+    fn handle_block(&self, ast: &StatementList) -> eyre::Result<<Self as AstVisitor>::Return> {
         match ast {
-            StatementList::Block(block) => indent(
+            StatementList::Block(block) => Ok(indent(
                 self.visit_list(
                     block
                         .statement_list_base
                         .statements
                         .iter()
-                        .map(|statement| ListUnion::AST(statement.clone().into()))
+                        .map(|statement| ListUnion::AST(statement.clone_inner()))
                         .collect(),
                     "",
-                ),
-            ),
-            StatementList::IndentBlock(block) => indent(
+                )?,
+            )),
+            StatementList::IndentBlock(block) => Ok(indent(
                 self.visit_list(
                     block
                         .statement_list_base
                         .statements
                         .iter()
-                        .map(|statement| ListUnion::AST(statement.clone().into()))
+                        .map(|statement| ListUnion::AST(statement.clone_inner()))
                         .collect(),
                     "",
-                ),
-            ),
-            _ => String::new(),
+                )?,
+            )),
+            _ => Err(eyre::eyre!("unreach ")),
         }
     }
 
-    pub fn visit_StatementList(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        match &*ast.try_as_statement_list_ref().unwrap().borrow() {
-            StatementList::Block(block) => indent(
+    pub fn visit_StatementList(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("======visit_StatementList==============={:?}",ast);
+        match &*ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_statement_list_ref()
+            .unwrap()
+        {
+            StatementList::Block(block) => Ok(indent(
                 self.visit_list(
                     block
                         .statement_list_base
                         .statements
                         .iter()
-                        .map(|statement| ListUnion::AST(statement.clone().into()))
+                        .map(|statement| ListUnion::AST(statement.clone_inner()))
                         .collect(),
                     "",
-                ),
-            ),
-            StatementList::IndentBlock(block) => indent(
+                )?,
+            )),
+            StatementList::IndentBlock(block) => Ok(indent(
                 self.visit_list(
                     block
                         .statement_list_base
                         .statements
                         .iter()
-                        .map(|statement| ListUnion::AST(statement.clone().into()))
+                        .map(|statement| ListUnion::AST(statement.clone_inner()))
                         .collect(),
                     "",
-                ),
-            ),
-            _ => String::new(),
+                )?,
+            )),
+            _ => Err(eyre::eyre!("unreach ")),
         }
     }
 
-    pub fn visit_Block(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_Block(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let b = self
             .handle_block(&StatementList::Block(
                 ast.try_as_block_ref().unwrap().borrow().clone(),
-            ))
+            ))?
             .trim_end()
             .to_string();
-        if ast
-            .try_as_block_ref()
-            .unwrap()
-            .borrow()
-            .was_single_statement
-            && ast
+        Ok(
+            if ast
                 .try_as_block_ref()
                 .unwrap()
                 .borrow()
-                .statement_list_base
-                .statements
-                .len()
-                == 1
-        {
-            b
-        } else {
-            format!("{{ {b} }}")
-        }
+                .was_single_statement
+                && ast
+                    .try_as_block_ref()
+                    .unwrap()
+                    .borrow()
+                    .statement_list_base
+                    .statements
+                    .len()
+                    == 1
+            {
+                b
+            } else {
+                format!("{{ {b} }}")
+            },
+        )
     }
 
-    pub fn visit_IndentBlock(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_IndentBlock(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.handle_block(
             ast.try_as_indent_block_ref()
                 .unwrap()
@@ -9512,15 +9892,22 @@ impl CodeVisitor {
         )
     }
 
-    pub fn visit_ElementaryTypeName(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        ast.try_as_elementary_type_name_ref()
+    pub fn visit_ElementaryTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(ast
+            .try_as_elementary_type_name_ref()
             .unwrap()
             .borrow()
             .name()
-            .clone()
+            .clone())
     }
 
-    pub fn visit_UserDefinedTypeName(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_UserDefinedTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let names: Vec<_> = ast
             .to_ast()
             .try_as_type_name_ref()
@@ -9535,15 +9922,24 @@ impl CodeVisitor {
         self.visit_list(names, ".")
     }
 
-    pub fn visit_AddressTypeName(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("address")
+    pub fn visit_AddressTypeName(
+        &self,
+        _ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("address"))
     }
 
-    pub fn visit_AddressPayableTypeName(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        String::from("address payable")
+    pub fn visit_AddressPayableTypeName(
+        &self,
+        _ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("address payable"))
     }
 
-    pub fn visit_AnnotatedTypeName(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_AnnotatedTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let t = self.visit(
             &ast.try_as_annotated_type_name_ref()
                 .unwrap()
@@ -9565,46 +9961,60 @@ impl CodeVisitor {
             String::new()
         };
 
-        if ast
-            .try_as_annotated_type_name_ref()
-            .unwrap()
-            .borrow()
-            .had_privacy_annotation
-        {
-            format!(
-                "{t}@{p}{:?}",
-                HOMOMORPHISM_STORE
-                    .lock()
-                    .unwrap()
-                    .get(
-                        &ast.try_as_annotated_type_name_ref()
-                            .unwrap()
-                            .borrow()
-                            .homomorphism
-                    )
-                    .unwrap()
-            )
-        } else {
-            t
-        }
-    }
-
-    pub fn visit_Mapping(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let k = self.visit(
-            &ast.try_as_mapping_ref()
+        Ok(
+            if ast
+                .try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
+                .had_privacy_annotation
+            {
+                format!(
+                    "{t}@{p}{:?}",
+                    HOMOMORPHISM_STORE
+                        .lock()
+                        .unwrap()
+                        .get(
+                            &ast.try_as_annotated_type_name_ref()
+                                .unwrap()
+                                .borrow()
+                                .homomorphism
+                        )
+                        .unwrap()
+                )
+            } else {
+                t
+            },
+        )
+    }
+
+    pub fn visit_Mapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // //println!("=========visit_Mapping================={:?}",ast);
+        let k = self.visit(
+            &ast.try_as_type_name_ref()
+                .unwrap()
+                .borrow()
+                .try_as_mapping_ref()
+                .unwrap()
                 .key_type
                 .clone()
                 .into(),
         );
-        let label = if let Some(idf) = &ast.try_as_mapping_ref().unwrap().borrow().key_label {
+        let label = if let Some(idf) = &ast
+            .try_as_type_name_ref()
+            .unwrap()
+            .borrow()
+            .try_as_mapping_ref()
+            .unwrap()
+            .key_label
+        {
             format!("!{}", self.visit(&idf.clone().into()))
         } else {
             if let Some(Identifier::HybridArgumentIdf(key_label)) = &ast
-                .try_as_mapping_ref()
+                .try_as_type_name_ref()
                 .unwrap()
                 .borrow()
+                .try_as_mapping_ref()
+                .unwrap()
                 .key_label
                 .as_ref()
                 .map(|kl| (*kl.borrow()).clone())
@@ -9615,17 +10025,19 @@ impl CodeVisitor {
             }
         };
         let v = self.visit(
-            &ast.try_as_mapping_ref()
+            &ast.try_as_type_name_ref()
                 .unwrap()
                 .borrow()
+                .try_as_mapping_ref()
+                .unwrap()
                 .value_type
                 .clone()
                 .into(),
         );
-        format!("mapping({k}{label} => {v})")
+        Ok(format!("mapping({k}{label} => {v})"))
     }
 
-    pub fn visit_Array(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_Array(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let value_type = ast
             .try_as_array_ref()
             .unwrap()
@@ -9637,12 +10049,12 @@ impl CodeVisitor {
         let e = expr.clone().map_or(String::new(), |_expr| {
             self.visit(&expr.clone().unwrap().into())
         });
-        format!("{t}[{e}]")
+        Ok(format!("{t}[{e}]"))
     }
 
-    pub fn visit_CipherText(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        let e = self.visit_Array(&ast.try_as_cipher_text_ref().unwrap().clone().into());
-        format!(
+    pub fn visit_CipherText(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let e = self.visit_Array(&ast.try_as_cipher_text_ref().unwrap().clone().into())?;
+        Ok(format!(
             "{e}/*{}*/",
             ast.try_as_cipher_text_ref()
                 .unwrap()
@@ -9651,10 +10063,10 @@ impl CodeVisitor {
                 .borrow()
                 .to_ast()
                 .code()
-        )
+        ))
     }
 
-    pub fn visit_TupleType(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_TupleType(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let s = self.visit_list(
             ast.try_as_tuple_type_ref()
                 .unwrap()
@@ -9664,11 +10076,14 @@ impl CodeVisitor {
                 .map(|typ| ListUnion::AST(typ.clone().into()))
                 .collect(),
             ", ",
-        );
-        format!("({s})")
+        )?;
+        Ok(format!("({s})"))
     }
 
-    pub fn visit_VariableDeclaration(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_VariableDeclaration(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let keywords: Vec<_> = ast
             .try_as_variable_declaration_ref()
             .unwrap()
@@ -9716,13 +10131,13 @@ impl CodeVisitor {
                 .clone()
                 .into(),
         );
-        format!("{k} {t}{s} {i}").trim().to_string()
+        Ok(format!("{k} {t}{s} {i}").trim().to_string())
     }
 
     pub fn visit_VariableDeclarationStatement(
         &self,
         ast: &ASTFlatten,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut s = self.visit(
             &ast.try_as_variable_declaration_statement_ref()
                 .unwrap()
@@ -9740,10 +10155,10 @@ impl CodeVisitor {
             s += format!(" = {}", self.visit(&expr.clone().into())).as_str();
         }
         s += ";";
-        s
+        Ok(s)
     }
 
-    pub fn visit_Parameter(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_Parameter(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let final_string = String::from("final");
         let f = if !self.display_final {
             None
@@ -9795,20 +10210,20 @@ impl CodeVisitor {
         .iter()
         .filter_map(|d| d.clone())
         .collect();
-        description.join(" ")
+        Ok(description.join(" "))
     }
 
     pub fn visit_ConstructorOrFunctionDefinition(
         &self,
         ast: &ASTFlatten,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let b = if let Some(body) = &ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
             .body
         {
-            self.visit_single_or_list(SingleOrListUnion::AST(body.clone().into()), "")
+            self.visit_single_or_list(SingleOrListUnion::AST(body.clone().into()), "")?
         } else {
             String::new()
         };
@@ -9845,14 +10260,14 @@ impl CodeVisitor {
         modifiers: &Vec<String>,
         return_parameters: &Vec<RcCell<Parameter>>,
         body: &String,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let definition = if idf.borrow().name() != "constructor" {
             let i = self.visit(&idf.clone().into());
             format!("function {i}")
         } else {
             String::from("constructor")
         };
-        println!("{:?}", parameters);
+        // //println!("{:?}", parameters);
         let p = self.visit_list(
             parameters
                 .iter()
@@ -9862,7 +10277,7 @@ impl CodeVisitor {
                 })
                 .collect(),
             ", ",
-        );
+        )?;
         let mut m = modifiers.clone().join(" ");
         if !m.is_empty() {
             m = format!(" {m}");
@@ -9873,23 +10288,28 @@ impl CodeVisitor {
                 .map(|p| ListUnion::AST(p.clone().into()))
                 .collect(),
             ", ",
-        );
+        )?;
         if !r.is_empty() {
             r = format!(" returns ({r})");
         }
 
-        format!("{definition}({p}){m}{r} {body}")
+        Ok(format!("{definition}({p}){m}{r} {body}"))
     }
 
-    pub fn visit_EnumValue(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf {
-            self.visit(&idf.clone().into())
-        } else {
-            String::new()
-        }
+    pub fn visit_EnumValue(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf {
+                self.visit(&idf.clone().into())
+            } else {
+                String::new()
+            },
+        )
     }
 
-    pub fn visit_EnumDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_EnumDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let values = indent(
             self.visit_list(
                 ast.try_as_enum_definition_ref()
@@ -9900,9 +10320,9 @@ impl CodeVisitor {
                     .map(|value| ListUnion::AST(value.clone().into()))
                     .collect(),
                 ", ",
-            ),
+            )?,
         );
-        format!(
+        Ok(format!(
             "enum {} {{\n{values}\n}}",
             self.visit(
                 &ast.try_as_enum_definition_ref()
@@ -9915,7 +10335,7 @@ impl CodeVisitor {
                     .clone()
                     .into()
             )
-        )
+        ))
     }
 
     // @staticmethod
@@ -9957,7 +10377,10 @@ impl CodeVisitor {
         }
     }
 
-    pub fn visit_StructDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_StructDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // Define struct with members in order of descending size (to get maximum space savings through packing)
         let mut members_by_descending_size = ast
             .try_as_struct_definition_ref()
@@ -9973,7 +10396,7 @@ impl CodeVisitor {
                 .collect::<Vec<_>>()
                 .join("\n"),
         );
-        format!(
+        Ok(format!(
             "struct {} {{\n{body}\n}}",
             self.visit(
                 &ast.try_as_struct_definition_ref()
@@ -9986,15 +10409,15 @@ impl CodeVisitor {
                     .clone()
                     .into()
             )
-        )
+        ))
     }
 
-    pub fn visit_StateVariableDeclaration(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_StateVariableDeclaration(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let final_string = String::from("final");
-        println!(
-            "=======visit_StateVariableDeclaration====================={:?}",
-            ast
-        );
+
         let keywords: Vec<_> = ast
             .try_as_state_variable_declaration_ref()
             .unwrap()
@@ -10064,7 +10487,7 @@ impl CodeVisitor {
         {
             ret += &format!(" = {}", self.visit(&expr.clone().into()));
         }
-        ret + ";"
+        Ok(ret + ";")
     }
 
     fn contract_definition_to_str(
@@ -10074,7 +10497,7 @@ impl CodeVisitor {
         functions: Vec<String>,
         enums: Vec<String>,
         structs: Vec<String>,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let i = idf.to_string();
         let structs = structs.join("\n\n");
         let enums = enums.join("\n\n");
@@ -10087,10 +10510,13 @@ impl CodeVisitor {
             .collect::<Vec<_>>()
             .join("\n\n");
         body = indent(body);
-        format!("contract {i} {{\n{body}\n}}")
+        Ok(format!("contract {i} {{\n{body}\n}}"))
     }
 
-    pub fn visit_ContractDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_ContractDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let state_vars = ast
             .try_as_contract_definition_ref()
             .unwrap()
@@ -10154,7 +10580,7 @@ impl CodeVisitor {
         pragma
     }
 
-    pub fn visit_SourceUnit(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visit_SourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let p = self.handle_pragma(
             ast.try_as_source_unit_ref()
                 .unwrap()
@@ -10171,10 +10597,10 @@ impl CodeVisitor {
                 .map(|contract| ListUnion::AST(contract.clone().into()))
                 .collect(),
             "",
-        );
+        )?;
         let lfstr = |uc| format!("import \"{}\";", uc);
         //  "\n\n".join(filter("".__ne__, [p, linesep.join([lfstr.format(uc) for uc in ast.used_contracts]), contracts]))
-        [
+        Ok([
             p,
             ast.try_as_source_unit_ref()
                 .unwrap()
@@ -10189,6 +10615,6 @@ impl CodeVisitor {
         .into_iter()
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>()
-        .join("\n\n")
+        .join("\n\n"))
     }
 }

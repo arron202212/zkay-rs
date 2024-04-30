@@ -108,9 +108,8 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
 }
 
 // Replacing reveals only with regex is impossible because they could be nested -> do it with a stack
-pub fn strip_reveals(code: &str) -> String
 // """Replace reveal expressions by their inner expression, with whitespace padding."""
-{
+pub fn strip_reveals(code: &str) -> String {
     let mut code = code.to_owned();
     let c = code.clone();
     let matches = REVEAL_START_PATTERN.find_iter(&c);
@@ -137,10 +136,8 @@ pub fn strip_reveals(code: &str) -> String
     }
     code
 }
-
-pub fn inject_me_decls(code: &str) -> String
 // """Add an additional address me = msg.sender state variable declaration right before the closing brace of each contract definition."""
-{
+pub fn inject_me_decls(code: &str) -> String {
     let matches = CONTRACT_START_PATTERN.find_iter(code);
     let mut insert_indices = vec![];
     for m in matches {

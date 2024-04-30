@@ -31,7 +31,9 @@ impl AstVisitor for ParentChecker {
     fn has_attr(&self, _ast: &AST) -> bool {
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Self::Return {}
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        Err(eyre::eyre!("unreach"))
+    }
 }
 
 // @parameterized_class(('name', 'example'), all_examples)

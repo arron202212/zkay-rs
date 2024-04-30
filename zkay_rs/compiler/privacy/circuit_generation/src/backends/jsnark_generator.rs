@@ -108,7 +108,7 @@ impl AstVisitor for JsnarkVisitor {
                 | ASTType::PrimitiveCastExpr
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             // ASTType::Circuit=>self.visitCircuit(ast),
             ASTType::CircComment => self.visitCircComment(ast),
@@ -132,7 +132,7 @@ impl AstVisitor for JsnarkVisitor {
                 self.visitFunctionCallExpr(ast)
             }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
-            _ => String::new(),
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -152,24 +152,32 @@ impl JsnarkVisitor {
             .collect()
     }
 
-    pub fn visitCircComment(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if !stmt
-            .try_as_circ_comment_ref()
-            .unwrap()
-            .borrow()
-            .text
-            .is_empty()
-        {
-            format!(
-                r#"// {}"#,
-                stmt.try_as_circ_comment_ref().unwrap().borrow().text
-            )
-        } else {
-            String::new()
-        }
+    pub fn visitCircComment(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if !stmt
+                .try_as_circ_comment_ref()
+                .unwrap()
+                .borrow()
+                .text
+                .is_empty()
+            {
+                format!(
+                    r#"// {}"#,
+                    stmt.try_as_circ_comment_ref().unwrap().borrow().text
+                )
+            } else {
+                String::new()
+            },
+        )
     }
 
-    pub fn visitCircIndentBlock(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitCircIndentBlock(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let stmts: Vec<_> = stmt
             .try_as_circ_indent_block_ref()
             .unwrap()
@@ -178,32 +186,37 @@ impl JsnarkVisitor {
             .iter()
             .map(|s| self.visit(&s.clone().into()))
             .collect();
-        if !stmt
-            .try_as_circ_indent_block_ref()
-            .unwrap()
-            .borrow()
-            .name
-            .is_empty()
-        {
-            format!(
-                r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
-                indent(stmts.join("\n")),
-                name = stmt.try_as_circ_indent_block_ref().unwrap().borrow().name
-            )
-        } else {
-            indent(stmts.join("\n"))
-        }
-    }
-
-    pub fn visitCircCall(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
-            r#"_{}();"#,
-            stmt.try_as_circ_call_ref().unwrap().borrow().fct.name()
+        Ok(
+            if !stmt
+                .try_as_circ_indent_block_ref()
+                .unwrap()
+                .borrow()
+                .name
+                .is_empty()
+            {
+                format!(
+                    r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
+                    indent(stmts.join("\n")),
+                    name = stmt.try_as_circ_indent_block_ref().unwrap().borrow().name
+                )
+            } else {
+                indent(stmts.join("\n"))
+            },
         )
     }
 
-    pub fn visitCircVarDecl(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visitCircCall(&self, stmt: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
+            r#"_{}();"#,
+            stmt.try_as_circ_call_ref().unwrap().borrow().fct.name()
+        ))
+    }
+
+    pub fn visitCircVarDecl(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
             r#"decl("{}", {});"#,
             stmt.try_as_circ_var_decl_ref()
                 .unwrap()
@@ -220,10 +233,13 @@ impl JsnarkVisitor {
                     .clone()
                     .into()
             )
-        )
+        ))
     }
 
-    pub fn visitCircEqConstraint(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitCircEqConstraint(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             stmt.try_as_circ_eq_constraint_ref()
                 .unwrap()
@@ -241,7 +257,7 @@ impl JsnarkVisitor {
                     .borrow()
                     .size_in_uints()
         );
-        format!(
+        Ok(format!(
             r#"checkEq("{}", "{}");"#,
             stmt.try_as_circ_eq_constraint_ref()
                 .unwrap()
@@ -255,10 +271,13 @@ impl JsnarkVisitor {
                 .val
                 .identifier_base
                 .name
-        )
+        ))
     }
 
-    pub fn visitCircEncConstraint(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitCircEncConstraint(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(stmt
             .try_as_circ_enc_constraint_ref()
             .unwrap()
@@ -347,7 +366,7 @@ impl JsnarkVisitor {
             .crypto_name
             .clone();
 
-        format!(
+        Ok(format!(
             r#"check{}("{backend}", "{}", "{}", "{}", "{}");"#,
             if stmt
                 .try_as_circ_enc_constraint_ref()
@@ -383,9 +402,12 @@ impl JsnarkVisitor {
                 .cipher
                 .identifier_base
                 .name
-        )
+        ))
     }
-    pub fn visitCircSymmEncConstraint(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitCircSymmEncConstraint(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(stmt
             .try_as_circ_symm_enc_constraint_ref()
             .unwrap()
@@ -441,7 +463,7 @@ impl JsnarkVisitor {
             .crypto_params
             .crypto_name
             .clone();
-        format!(
+        Ok(format!(
             r#"checkSymm{}("{backend}", "{}", "{}", "{}");"#,
             if stmt
                 .try_as_circ_symm_enc_constraint_ref()
@@ -471,38 +493,46 @@ impl JsnarkVisitor {
                 .iv_cipher
                 .identifier_base
                 .name
+        ))
+    }
+    pub fn visitCircGuardModification(
+        &self,
+        stmt: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if let Some(_new_cond) = &stmt
+                .try_as_circ_guard_modification_ref()
+                .unwrap()
+                .borrow()
+                .new_cond
+            {
+                format!(
+                    r#"addGuard("{}", {});"#,
+                    stmt.try_as_circ_guard_modification_ref()
+                        .unwrap()
+                        .borrow()
+                        .new_cond
+                        .as_ref()
+                        .unwrap()
+                        .identifier_base
+                        .name,
+                    stmt.try_as_circ_guard_modification_ref()
+                        .unwrap()
+                        .borrow()
+                        .is_true
+                        .map_or(String::new(), |v| v.to_string().to_ascii_lowercase())
+                )
+            } else {
+                String::from("popGuard();")
+            },
         )
     }
-    pub fn visitCircGuardModification(&self, stmt: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if let Some(_new_cond) = &stmt
-            .try_as_circ_guard_modification_ref()
-            .unwrap()
-            .borrow()
-            .new_cond
-        {
-            format!(
-                r#"addGuard("{}", {});"#,
-                stmt.try_as_circ_guard_modification_ref()
-                    .unwrap()
-                    .borrow()
-                    .new_cond
-                    .as_ref()
-                    .unwrap()
-                    .identifier_base
-                    .name,
-                stmt.try_as_circ_guard_modification_ref()
-                    .unwrap()
-                    .borrow()
-                    .is_true
-                    .map_or(String::new(), |v| v.to_string().to_ascii_lowercase())
-            )
-        } else {
-            String::from("popGuard();")
-        }
-    }
 
-    pub fn visitBooleanLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        format!(
+    pub fn visitBooleanLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
             r#"val({})"#,
             ast.try_as_boolean_literal_type_ref()
                 .unwrap()
@@ -510,134 +540,152 @@ impl JsnarkVisitor {
                 .value()
                 .to_string()
                 .to_ascii_lowercase()
-        )
+        ))
     }
 
-    pub fn visitNumberLiteralExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitNumberLiteralExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let t = _get_t(
             ast.try_as_number_literal_expr_ref()
                 .map(|x| x.clone().into()),
         );
-        if ast.try_as_number_literal_expr_ref().unwrap().borrow().value < (1 << 31) {
-            format!(
-                r#"val({}, {t})"#,
-                ast.try_as_number_literal_expr_ref().unwrap().borrow().value
-            )
-        } else {
-            format!(
-                r#"val("{}", {t})"#,
-                ast.try_as_number_literal_expr_ref().unwrap().borrow().value
-            )
-        }
+        Ok(
+            if ast.try_as_number_literal_expr_ref().unwrap().borrow().value < (1 << 31) {
+                format!(
+                    r#"val({}, {t})"#,
+                    ast.try_as_number_literal_expr_ref().unwrap().borrow().value
+                )
+            } else {
+                format!(
+                    r#"val("{}", {t})"#,
+                    ast.try_as_number_literal_expr_ref().unwrap().borrow().value
+                )
+            },
+        )
     }
 
-    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        if is_instance(
-            ast.try_as_identifier_expr_ref()
+    pub fn visitIdentifierExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if is_instance(
+                ast.try_as_identifier_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .idf
+                    .as_ref()
+                    .unwrap(),
+                ASTType::HybridArgumentIdf,
+            ) && ast
+                .try_as_identifier_expr_ref()
                 .unwrap()
                 .borrow()
                 .idf
                 .as_ref()
-                .unwrap(),
-            ASTType::HybridArgumentIdf,
-        ) && ast
-            .try_as_identifier_expr_ref()
-            .unwrap()
-            .borrow()
-            .idf
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .try_as_hybrid_argument_idf_ref()
-            .unwrap()
-            .t
-            .borrow()
-            .is_cipher()
-        {
-            format!(
-                r#"getCipher("{}")"#,
-                ast.try_as_identifier_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .idf
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .name()
-            )
-        } else {
-            format!(
-                r#"get("{}")"#,
-                ast.try_as_identifier_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .idf
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .name()
-            )
-        }
+                .unwrap()
+                .borrow()
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .t
+                .borrow()
+                .is_cipher()
+            {
+                format!(
+                    r#"getCipher("{}")"#,
+                    ast.try_as_identifier_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                )
+            } else {
+                format!(
+                    r#"get("{}")"#,
+                    ast.try_as_identifier_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                )
+            },
+        )
     }
 
-    pub fn visitMemberAccessExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitMemberAccessExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(is_instance(
             &ast.try_as_member_access_expr_ref().unwrap().borrow().member,
             ASTType::HybridArgumentIdf
         ));
-        if ast
-            .try_as_member_access_expr_ref()
-            .unwrap()
-            .borrow()
-            .member
-            .borrow()
-            .try_as_hybrid_argument_idf_ref()
-            .unwrap()
-            .t
-            .borrow()
-            .is_cipher()
-        {
-            format!(
-                r#"getCipher("{}")"#,
-                ast.try_as_member_access_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .member
-                    .borrow()
-                    .name()
-            )
-        } else {
-            assert!(
-                ast.try_as_member_access_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .member
-                    .borrow()
-                    .try_as_hybrid_argument_idf_ref()
-                    .unwrap()
-                    .t
-                    .borrow()
-                    .size_in_uints()
-                    == 1
-            );
-            format!(
-                r#"get("{}")"#,
-                ast.try_as_member_access_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .member
-                    .borrow()
-                    .name()
-            )
-        }
+        Ok(
+            if ast
+                .try_as_member_access_expr_ref()
+                .unwrap()
+                .borrow()
+                .member
+                .borrow()
+                .try_as_hybrid_argument_idf_ref()
+                .unwrap()
+                .t
+                .borrow()
+                .is_cipher()
+            {
+                format!(
+                    r#"getCipher("{}")"#,
+                    ast.try_as_member_access_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .member
+                        .borrow()
+                        .name()
+                )
+            } else {
+                assert!(
+                    ast.try_as_member_access_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .member
+                        .borrow()
+                        .try_as_hybrid_argument_idf_ref()
+                        .unwrap()
+                        .t
+                        .borrow()
+                        .size_in_uints()
+                        == 1
+                );
+                format!(
+                    r#"get("{}")"#,
+                    ast.try_as_member_access_expr_ref()
+                        .unwrap()
+                        .borrow()
+                        .member
+                        .borrow()
+                        .name()
+                )
+            },
+        )
     }
-    #[allow(unreachable_code)]
-    pub fn visitIndexExpr(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        unimplemented!();
-        String::new()
+    // #[allow(unreachable_code)]
+    pub fn visitIndexExpr(&self, _ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // unimplemented!();
+        Err(eyre::eyre!("unimplemented"))
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -718,7 +766,8 @@ impl JsnarkVisitor {
                 .clone();
             let op = if op == "sign-" { "-" } else { op };
             if op == "sign+" {
-                unimplemented!()
+                // unimplemented!()
+                eyre::bail!("unimplemented")
             }
             let homomorphism = ast
                 .try_as_function_call_expr_ref()
@@ -763,7 +812,7 @@ impl JsnarkVisitor {
                     )
                 };
 
-            return if op == "ite" {
+            return Ok(if op == "ite" {
                 format!(
                     r#"{f_start}{{{}}}, "?", {{{}}}, ":", {{{}}})"#,
                     args[0], args[1], args[2]
@@ -814,7 +863,7 @@ impl JsnarkVisitor {
                         format!(r#"{f_start}{{{}}}, {o}, {{{}}})"#, args[0], args[1])
                     }
                 }
-            };
+            });
         } else if ast
             .try_as_function_call_expr_ref()
             .unwrap()
@@ -868,10 +917,20 @@ impl JsnarkVisitor {
         //     "Unsupported function {} inside circuit",
         //     ast.func().code()
         // );
-        String::new()
+        Err(eyre::eyre!(
+            "Unsupported function {} inside circuit",
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow()
+                .func()
+                .code()
+        ))
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitPrimitiveCastExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.handle_cast(
             self.visit(
                 &ast.try_as_primitive_cast_expr_ref()
@@ -888,8 +947,15 @@ impl JsnarkVisitor {
         )
     }
 
-    pub fn handle_cast(&self, wire: String, t: &RcCell<TypeName>) -> <Self as AstVisitor>::Return {
-        format!(r#"cast({wire}, {})"#, _get_t(Some(t.clone().into())))
+    pub fn handle_cast(
+        &self,
+        wire: String,
+        t: &RcCell<TypeName>,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(format!(
+            r#"cast({wire}, {})"#,
+            _get_t(Some(t.clone().into()))
+        ))
     }
 }
 // """Generate java code which adds circuit IO as described by circuit"""

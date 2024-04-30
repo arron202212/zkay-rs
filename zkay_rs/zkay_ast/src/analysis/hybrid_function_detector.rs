@@ -53,7 +53,7 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
                 | ASTType::ConstructorOrFunctionDefinition
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
@@ -68,7 +68,7 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -78,7 +78,10 @@ impl DirectHybridFunctionDetectionVisitor {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
+    pub fn visitReclassifyExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(ast, ASTType::ReclassifyExpr) {
             ast.try_as_reclassify_expr_ref()
                 .unwrap()
@@ -96,16 +99,23 @@ impl DirectHybridFunctionDetectionVisitor {
                 .statement_base_mut_ref()
                 .unwrap()
                 .function
-                .as_mut()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_constructor_or_function_definition_mut()
                 .unwrap()
                 .borrow_mut()
                 .requires_verification = true;
         }
+        Ok(())
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) {
+    pub fn visitPrimitiveCastExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ret = Ok(());
         if ast
             .try_as_primitive_cast_expr_ref()
             .unwrap()
@@ -131,19 +141,28 @@ impl DirectHybridFunctionDetectionVisitor {
                 .statement_base_mut_ref()
                 .unwrap()
                 .function
-                .as_mut()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_constructor_or_function_definition_mut()
                 .unwrap()
                 .borrow_mut()
                 .requires_verification = true;
         } else {
-            self.visit_children(ast);
+            ret = self.visit_children(ast);
         }
+        ret
     }
 
-    pub fn visitAllExpr(&self, _ast: &ASTFlatten) {}
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitAllExpr(&self, _ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(())
+    }
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut ret = Ok(());
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -172,7 +191,9 @@ impl DirectHybridFunctionDetectionVisitor {
                 .statement_base_mut_ref()
                 .unwrap()
                 .function
-                .as_mut()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_constructor_or_function_definition_mut()
                 .unwrap()
@@ -204,17 +225,23 @@ impl DirectHybridFunctionDetectionVisitor {
                 .statement_base_mut_ref()
                 .unwrap()
                 .function
-                .as_mut()
+                .clone()
+                .unwrap()
+                .upgrade()
                 .unwrap()
                 .try_as_constructor_or_function_definition_mut()
                 .unwrap()
                 .borrow_mut()
                 .requires_verification = true;
         } else {
-            self.visit_children(ast);
+            ret = self.visit_children(ast);
         }
+        ret
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit(
             &ast.try_as_constructor_or_function_definition_ref()
                 .unwrap()
@@ -264,6 +291,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 }
             }
         }
+        Ok(())
     }
 }
 // class IndirectHybridFunctionDetectionVisitor(FunctionVisitor)
@@ -279,12 +307,12 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     fn has_attr(&self, ast: &AST) -> bool {
         ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -294,7 +322,10 @@ impl IndirectHybridFunctionDetectionVisitor {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if !ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -327,6 +358,7 @@ impl IndirectHybridFunctionDetectionVisitor {
                 }
             }
         }
+        Ok(())
     }
 }
 // class NonInlineableCallDetector(FunctionVisitor)
@@ -345,7 +377,7 @@ impl AstVisitor for NonInlineableCallDetector {
             AST::Expression(Expression::FunctionCallExpr(_))
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -355,7 +387,7 @@ impl AstVisitor for NonInlineableCallDetector {
                 self.visitFunctionCallExpr(ast)
             }
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -365,7 +397,10 @@ impl NonInlineableCallDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if !ast
             .try_as_function_call_expr_ref()
             .unwrap()
@@ -410,6 +445,6 @@ impl NonInlineableCallDetector {
                 ast.try_as_function_call_expr_ref().unwrap().borrow().func()
             )
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 }

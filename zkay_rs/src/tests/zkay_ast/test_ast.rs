@@ -2,8 +2,8 @@
 use rccell::RcCell;
 use zkay_ast::ast::{
     ASTBaseProperty, ASTChildren, AssignmentStatementBase, BooleanLiteralExpr, BuiltinFunction,
-    FunctionCallExprBase, IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression,
-    NumberLiteralExpr, RequireStatement,
+    FunctionCallExprBase, IdentifierExpr, IdentifierExprUnion, IntoAST, NumberLiteralExpr,
+    RequireStatement,
 };
 
 #[cfg(test)]

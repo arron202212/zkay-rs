@@ -538,8 +538,8 @@ where
     // :return: AssignmentStatement as described above
     // """
     pub fn evaluate_stmt_in_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        let mut astmt = SimpleStatement::ExpressionStatement(ExpressionStatement::new(
-            RcCell::new(NumberLiteralExpr::new(0, false)).into(),
+        let mut astmt = RcCell::new(SimpleStatement::ExpressionStatement(
+            ExpressionStatement::new(RcCell::new(NumberLiteralExpr::new(0, false)).into()),
         ));
         for var in &ast
             .try_as_statement_ref()
@@ -551,14 +551,15 @@ where
             .modified_values
         {
             if var.in_scope_at(ast) {
-                astmt =
-                    SimpleStatement::AssignmentStatement(AssignmentStatement::AssignmentStatement(
-                        AssignmentStatementBase::new(None, None, None),
-                    ));
+                astmt = RcCell::new(SimpleStatement::AssignmentStatement(
+                    AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
+                        None, None, None,
+                    )),
+                ));
                 break;
             }
         }
-        astmt.statement_base_mut_ref().before_analysis = ast
+        astmt.borrow_mut().statement_base_mut_ref().before_analysis = ast
             .try_as_statement_ref()
             .unwrap()
             .borrow()
@@ -590,8 +591,8 @@ where
                     .as_ref()
                     .unwrap()
                     .same_partition(
-                        &var.privacy().unwrap(),
-                        &RcCell::new(Expression::me_expr(None)).into()
+                        &var.privacy().unwrap().to_ast(),
+                        &Expression::me_expr(None).to_ast()
                     ));
                 assert!(is_instances(
                     &var.target().unwrap(),
@@ -641,8 +642,7 @@ where
                     .location_expr_base
                     .tuple_or_location_expr_base
                     .expression_base
-                    .statement =
-                    Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
+                    .statement = Some(ASTFlatten::from(astmt.clone()).downgrade());
                 ret_params.push(ret_param);
             }
         }
@@ -717,8 +717,7 @@ where
             .as_ref()
             .map(|t| t.clone().downgrade());
         let mut fcall = FunctionCallExprBase::new(RcCell::new(idf).into(), vec![], None);
-        fcall.expression_base.statement =
-            Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
+        fcall.expression_base.statement = Some(ASTFlatten::from(astmt.clone()).downgrade());
         let mut ret_args = self.inline_function_call_into_circuit(&RcCell::new(fcall).into());
         assert!(ret_args.is_some());
         let mut ret_args = ret_args.unwrap();
@@ -742,7 +741,7 @@ where
                 .unwrap()
                 .borrow_mut()
                 .expression_base_mut_ref()
-                .statement = Some(ASTFlatten::from(RcCell::new(astmt.to_statement())).downgrade());
+                .statement = Some(ASTFlatten::from(astmt.clone()).downgrade());
         }
         let ret_arg_outs: Vec<_> = ret_params
             .iter()
@@ -773,6 +772,7 @@ where
         //Create assignment statement
         if !ret_params.is_empty() {
             astmt
+                .borrow_mut()
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
@@ -786,6 +786,7 @@ where
                 .into(),
             );
             astmt
+                .borrow_mut()
                 .try_as_assignment_statement_mut()
                 .unwrap()
                 .assignment_statement_base_mut_ref()
@@ -793,7 +794,7 @@ where
         } else {
             assert!(is_instance(&astmt, ASTType::ExpressionStatement));
         }
-        Some(RcCell::new(astmt).into())
+        Some(astmt.into())
     }
     pub fn invalidate_idf(&mut self, target_idf: &RcCell<Identifier>) {
         if self._remapper.0.is_remapped(target_idf) {
@@ -1806,7 +1807,9 @@ where
             .borrow_mut()
             .statement_base
             .function
-            .as_mut()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -1931,15 +1934,16 @@ where
             let mut ps: Vec<_> = ast
                 .try_as_if_statement_ref()
                 .unwrap()
-                .borrow()
+                .borrow_mut()
                 .else_branch
                 .as_ref()
                 .unwrap()
-                .borrow()
+                .borrow_mut()
                 .statement_list_base
                 .statement_base
                 .pre_statements
-                .clone();
+                .drain(..)
+                .collect();
             ast.try_as_if_statement_ref()
                 .unwrap()
                 .borrow_mut()
@@ -2069,11 +2073,11 @@ where
     // """
     pub fn _get_canonical_privacy_label(
         &self,
-        analysis: &PartitionState<ASTFlatten>,
+        analysis: &PartitionState<AST>,
         privacy: &ASTFlatten,
     ) -> ASTFlatten {
         for owner in &self.static_owner_labels {
-            if analysis.same_partition(owner, privacy) {
+            if analysis.same_partition(&owner.to_ast(), &privacy.to_ast()) {
                 return owner.clone();
             }
         }

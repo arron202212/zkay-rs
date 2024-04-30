@@ -25,9 +25,9 @@ impl Manifest {
     pub const zkay_options: &'static str = "zkay-options";
 
     // @staticmethod
-    pub fn load(project_dir: &str) -> Value
-// """Returned parsed manifest json file located in project dir::"""
-    {
+    // """Returned parsed manifest json file located in project dir::"""
+
+    pub fn load(project_dir: &str) -> Value {
         let f = File::open(Path::new(project_dir).join("manifest::json"));
         let mut s = String::new();
         f.unwrap().read_to_string(&mut s).unwrap();

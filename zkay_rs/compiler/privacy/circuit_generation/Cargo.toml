@@ -28,3 +28,4 @@ lazy_static = { workspace = true }
 hex={workspace=true}
 num_cpus={ workspace = true }
 zkp-u256 = { workspace = true }
+eyre= { workspace = true }

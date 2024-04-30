@@ -48,7 +48,7 @@ impl AstVisitor for DirectCalledFunctionDetector {
             ASTType::FunctionCallExprBase | ASTType::ForStatement | ASTType::WhileStatement
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -59,7 +59,7 @@ impl AstVisitor for DirectCalledFunctionDetector {
             }
             ASTType::ForStatement => self.visitForStatement(ast),
             ASTType::WhileStatement => self.visitWhileStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -69,7 +69,10 @@ impl DirectCalledFunctionDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if !is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -133,7 +136,9 @@ impl DirectCalledFunctionDetector {
                     .statement_base_mut_ref()
                     .unwrap()
                     .function
-                    .as_mut()
+                    .clone()
+                    .unwrap()
+                    .upgrade()
                     .unwrap()
                     .try_as_constructor_or_function_definition_mut()
                     .unwrap()
@@ -142,35 +147,45 @@ impl DirectCalledFunctionDetector {
                     .insert(RcCell::new(cofd));
             }
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
-    pub fn visitForStatement(&self, ast: &ASTFlatten) {
+    pub fn visitForStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_for_statement_ref()
             .unwrap()
             .borrow_mut()
             .statement_base
             .function
-            .as_mut()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .borrow_mut()
             .has_static_body = false;
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
-    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
+    pub fn visitWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_while_statement_ref()
             .unwrap()
             .borrow_mut()
             .statement_base
             .function
-            .as_mut()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .borrow_mut()
             .has_static_body = false;
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 }
 // class IndirectCalledFunctionDetector(FunctionVisitor)
@@ -186,12 +201,12 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -201,9 +216,11 @@ impl IndirectCalledFunctionDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten)
     //Fixed point iteration
-    {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut size = 0;
         let mut leaves = ast
             .try_as_constructor_or_function_definition_ref()
@@ -277,6 +294,7 @@ impl IndirectCalledFunctionDetector {
                 .borrow_mut()
                 .has_static_body = false;
         }
+        Ok(())
     }
 }
 // class IndirectDynamicBodyDetector(FunctionVisitor)
@@ -291,12 +309,12 @@ impl AstVisitor for IndirectDynamicBodyDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -306,14 +324,17 @@ impl IndirectDynamicBodyDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if !ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
             .has_static_body
         {
-            return;
+            return Ok(());
         }
 
         for fct in &ast
@@ -322,15 +343,15 @@ impl IndirectDynamicBodyDetector {
             .borrow()
             .called_functions
         {
-            if !fct.borrow().has_static_body
             // This function (directly or indirectly) calls a recursive function
-            {
+            if !fct.borrow().has_static_body {
                 ast.try_as_constructor_or_function_definition_ref()
                     .unwrap()
                     .borrow_mut()
                     .has_static_body = false;
-                return;
+                return Ok(());
             }
         }
+        Ok(())
     }
 }

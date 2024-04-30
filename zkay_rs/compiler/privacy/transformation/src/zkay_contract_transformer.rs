@@ -184,7 +184,7 @@ impl AstTransformerVisitor for ZkayTransformer {
         // )
         false
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> Option<ASTFlatten> {
+    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         // match name {
         //     ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
         //     ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
@@ -193,7 +193,7 @@ impl AstTransformerVisitor for ZkayTransformer {
         //     ASTType::Mapping => self.visitMapping(ast),
         //     _ => {}
         // }
-        None
+        Err(eyre::eyre!("unreach"))
     }
     // fn visit(&self, _ast: Option<AST>) -> Option<AST> {
     //     // self._visit_internal(ast)
@@ -944,7 +944,9 @@ impl ZkayTransformer {
                 .borrow()
                 .statement_list_base
                 .statements
-                .clone(),
+                .iter()
+                .map(|s| s.clone_inner())
+                .collect::<Vec<_>>(),
         );
 
         // Serialize in parameters to in array (if any)
@@ -1634,7 +1636,6 @@ impl ZkayTransformer {
                             .verifier_contract_type
                             .as_ref()
                             .unwrap()
-                            .to_ast()
                             .code(),
                     ),
                 ),

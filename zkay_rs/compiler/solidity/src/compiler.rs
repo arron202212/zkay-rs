@@ -124,9 +124,8 @@ fn compile(_input: &str) -> Option<Map<String, Value>> {
         None
     }
 }
-fn _get_line_col(code: &str, idx: i32) -> (i32, i32)
 // """ Get line and column (1-based) from character index """
-{
+fn _get_line_col(code: &str, idx: i32) -> (i32, i32) {
     let i = idx as usize;
     let line = code[..i + 1].split("\n").count() as i32;
     let col = idx - (code[..i + 1].rfind("\n").unwrap() as i32 + 1);

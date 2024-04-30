@@ -46,7 +46,7 @@ impl AstVisitor for FinalVisitor {
             ))
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ContractDefinition => self.visitContractDefinition(ast),
             ASTType::ConstructorOrFunctionDefinition => {
@@ -63,7 +63,7 @@ impl AstVisitor for FinalVisitor {
             }
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -77,7 +77,10 @@ impl FinalVisitor {
             state_vars_assigned: RcCell::new(None),
         }
     }
-    pub fn visitContractDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitContractDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         *self.state_vars_assigned.borrow_mut() = Some(BTreeMap::new());
         for v in &ast
             .try_as_contract_definition_ref()
@@ -137,19 +140,24 @@ impl FinalVisitor {
         }
 
         *self.state_vars_assigned.borrow_mut() = None;
+        Ok(())
     }
     pub fn visitConstructorOrFunctionDefinition(
         &self,
         ast: &ASTFlatten,
-    ) -> <Self as AstVisitor>::Return {
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
             .is_function());
+        Ok(())
     }
 
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitAssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit(
             &ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -186,9 +194,10 @@ impl FinalVisitor {
                 }
             }
         }
+        Ok(())
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit(
             &ast.try_as_if_statement_ref()
                 .unwrap()
@@ -235,8 +244,12 @@ impl FinalVisitor {
                 ast
             );
         }
+        Ok(())
     }
-    pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitIdentifierExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
             ast.try_as_identifier_expr_ref().unwrap().borrow().clone(),
         ))
@@ -260,5 +273,6 @@ impl FinalVisitor {
                 );
             }
         }
+        Ok(())
     }
 }

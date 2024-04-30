@@ -133,9 +133,8 @@ fn process_ast(
     if parents {
         set_parents(ast);
     }
-    if link_identifiers
-    // try:
-    {
+    if link_identifiers {
+        // try:
         link(ast);
     }
     // except UnknownIdentifierException as e:

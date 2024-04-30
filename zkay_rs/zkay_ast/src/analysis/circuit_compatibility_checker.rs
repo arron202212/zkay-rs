@@ -76,7 +76,7 @@ impl AstVisitor for DirectCanBePrivateDetector {
             || matches!(ast, AST::Statement(Statement::StatementList(_)))
             || matches!(ast, AST::Statement(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -112,7 +112,7 @@ impl AstVisitor for DirectCanBePrivateDetector {
             }
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -122,7 +122,10 @@ impl DirectCanBePrivateDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -196,7 +199,9 @@ impl DirectCanBePrivateDetector {
                     .statement_base_mut_ref()
                     .unwrap()
                     .function
-                    .as_mut()
+                    .clone()
+                    .unwrap()
+                    .upgrade()
                     .unwrap()
                     .try_as_constructor_or_function_definition_mut()
                     .unwrap()
@@ -209,9 +214,13 @@ impl DirectCanBePrivateDetector {
         for arg in ast.try_as_function_call_expr_ref().unwrap().borrow().args() {
             self.visit(&arg.clone().into());
         }
+        Ok(())
     }
 
-    pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
+    pub fn visitLocationExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let t = &ast
             .try_as_location_expr_ref()
             .unwrap()
@@ -238,47 +247,64 @@ impl DirectCanBePrivateDetector {
             .statement_base_mut_ref()
             .unwrap()
             .function
-            .as_mut()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .borrow_mut()
             .can_be_private &= t.as_ref().unwrap().borrow().can_be_private();
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
-        self.visit(
+    pub fn visitReclassifyExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(self.visit(
             &ast.try_as_reclassify_expr_ref()
                 .unwrap()
                 .borrow()
                 .expr()
                 .clone()
                 .into(),
-        );
+        ))
     }
 
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
-        self.visit_children(ast);
+    pub fn visitAssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visit_children(ast)
     }
 
-    pub fn visitVariableDeclarationStatement(&self, ast: &ASTFlatten) {
-        self.visit_children(ast);
+    pub fn visitVariableDeclarationStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visit_children(ast)
     }
 
-    pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
-        self.visit_children(ast);
+    pub fn visitReturnStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visit_children(ast)
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
-        self.visit_children(ast);
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visit_children(ast)
     }
 
-    pub fn visitStatementList(&self, ast: &ASTFlatten) {
-        self.visit_children(ast);
+    pub fn visitStatementList(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visit_children(ast)
     }
 
-    pub fn visitStatement(&self, ast: &ASTFlatten) {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         //All other statement types are not supported inside circuit (for now)
         ast.try_as_statement_ref()
             .unwrap()
@@ -286,12 +312,15 @@ impl DirectCanBePrivateDetector {
             .statement_base_mut_ref()
             .unwrap()
             .function
-            .as_mut()
+            .clone()
+            .unwrap()
+            .upgrade()
             .unwrap()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .borrow_mut()
             .can_be_private = false;
+        Ok(())
     }
 }
 // class IndirectCanBePrivateDetector(FunctionVisitor)
@@ -306,12 +335,12 @@ impl AstVisitor for IndirectCanBePrivateDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -321,7 +350,10 @@ impl IndirectCanBePrivateDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
@@ -339,10 +371,11 @@ impl IndirectCanBePrivateDetector {
                         .unwrap()
                         .borrow_mut()
                         .can_be_private = false;
-                    return;
+                    return Ok(());
                 }
             }
         }
+        Ok(())
     }
 }
 // class CircuitComplianceChecker(FunctionVisitor)
@@ -367,7 +400,7 @@ impl AstVisitor for CircuitComplianceChecker {
                 | ASTType::IfStatement
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
@@ -380,7 +413,7 @@ impl AstVisitor for CircuitComplianceChecker {
             }
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -457,7 +490,7 @@ impl CircuitComplianceChecker {
         false
     }
 
-    pub fn visitIndexExpr(&self, ast: &ASTFlatten) {
+    pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_index_expr_ref()
             .unwrap()
@@ -490,14 +523,17 @@ impl CircuitComplianceChecker {
                 false,
             );
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) {
+    pub fn visitReclassifyExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(!*self.inside_privif_stmt.borrow()
             || ast.try_as_reclassify_expr_ref().unwrap().borrow().statement().as_ref().unwrap().clone().upgrade().unwrap().try_as_statement_ref().unwrap().borrow().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
-                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().try_as_expression_ref().unwrap().borrow().privacy_annotation_label().unwrap(),
-                &RcCell::new(Expression::me_expr(None)).into(),
+                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().try_as_expression_ref().unwrap().borrow().privacy_annotation_label().unwrap().to_ast(),
+                &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast
             .try_as_reclassify_expr_ref()
@@ -541,17 +577,20 @@ impl CircuitComplianceChecker {
         } else {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit(
+        Ok(self.visit(
             &ast.try_as_reclassify_expr_ref()
                 .unwrap()
                 .borrow()
                 .expr()
                 .clone()
                 .into(),
-        );
+        ))
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -583,10 +622,13 @@ impl CircuitComplianceChecker {
         {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitPrimitiveCastExpr(&self, ast: &ASTFlatten) {
+    pub fn visitPrimitiveCastExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_primitive_cast_expr_ref()
             .unwrap()
@@ -603,10 +645,10 @@ impl CircuitComplianceChecker {
         {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let old_in_privif_stmt = *self.inside_privif_stmt.borrow();
         if ast
             .try_as_if_statement_ref()
@@ -688,8 +730,8 @@ impl CircuitComplianceChecker {
                         .as_ref()
                         .unwrap()
                         .same_partition(
-                            &val.privacy().unwrap(),
-                            &RcCell::new(Expression::me_expr(None)).into(),
+                            &val.privacy().unwrap().to_ast(),
+                            &Expression::me_expr(None).to_ast(),
                         )
                 {
                     assert!(false,"If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
@@ -698,8 +740,9 @@ impl CircuitComplianceChecker {
             *self.inside_privif_stmt.borrow_mut() = true;
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit_children(ast);
+        let ret = self.visit_children(ast);
         *self.inside_privif_stmt.borrow_mut() = old_in_privif_stmt;
+        ret
     }
 }
 // class PrivateSetter(FunctionVisitor)
@@ -721,7 +764,7 @@ impl AstVisitor for PrivateSetter {
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(ast, AST::Expression(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -732,7 +775,7 @@ impl AstVisitor for PrivateSetter {
             }
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -752,7 +795,10 @@ impl PrivateSetter {
         *self.evaluate_privately.borrow_mut() = None;
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if self.evaluate_privately.borrow().is_some()
             && is_instance(
                 ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
@@ -792,17 +838,17 @@ impl PrivateSetter {
                 ast
             )
         }
-        self.visitExpression(ast);
+        self.visitExpression(ast)
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(self.evaluate_privately.borrow().is_some());
         ast.try_as_expression_ref()
             .unwrap()
             .borrow_mut()
             .expression_base_mut_ref()
             .evaluate_privately = self.evaluate_privately.borrow().unwrap();
-        self.visit_children(&ast);
+        self.visit_children(&ast)
     }
 }
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(
@@ -824,7 +870,7 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -834,7 +880,7 @@ impl AstVisitor for NonstaticOrIncompatibilityDetector {
                 self.visitFunctionCallExpr(ast)
             }
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -844,7 +890,10 @@ impl NonstaticOrIncompatibilityDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut can_be_private = true;
         let mut has_nonstatic_call = false;
         if ast
@@ -1015,6 +1064,6 @@ impl NonstaticOrIncompatibilityDetector {
             );
         assert!(can_be_private,
                 "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions {:?}", ast);
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 }

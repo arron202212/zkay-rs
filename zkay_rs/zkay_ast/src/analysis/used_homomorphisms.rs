@@ -41,7 +41,7 @@ impl AstVisitor for UsedHomomorphismsVisitor {
         ) || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::IdentifierDeclaration(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::SourceUnit => self.visitSourceUnit(ast),
             ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
@@ -54,15 +54,15 @@ impl AstVisitor for UsedHomomorphismsVisitor {
             _ if matches!(ast.to_ast(), AST::IdentifierDeclaration(_)) => {
                 self.visitIdentifierDeclaration(ast)
             }
-            _ => BTreeSet::new(),
+            _ => Ok(BTreeSet::new()),
         }
     }
-    fn visit_children(&self, ast: &ASTFlatten) -> Self::Return {
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         let mut all_homs = BTreeSet::new();
         for c in ast.children().iter_mut() {
             all_homs = all_homs.union(&self.visit(c)).cloned().collect();
         }
-        return all_homs;
+        Ok(all_homs)
     }
     fn visit(&self, ast: &ASTFlatten) -> Self::Return {
         let all_homs = BTreeSet::new(); //AstVisitor::visit(self, ast); //TODO super()
@@ -102,25 +102,30 @@ impl UsedHomomorphismsVisitor {
         }
     }
 
-    pub fn visitAnnotatedTypeName(&self, ast: &ASTFlatten) -> BTreeSet<String> {
-        if ast
-            .try_as_annotated_type_name_ref()
-            .unwrap()
-            .borrow()
-            .is_private()
-        {
-            BTreeSet::from([ast
+    pub fn visitAnnotatedTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(
+            if ast
                 .try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
-                .homomorphism
-                .clone()])
-        } else {
-            BTreeSet::new()
-        }
+                .is_private()
+            {
+                BTreeSet::from([ast
+                    .try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .homomorphism
+                    .clone()])
+            } else {
+                BTreeSet::new()
+            },
+        )
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> BTreeSet<String> {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_expression_ref()
             .unwrap()
@@ -137,7 +142,7 @@ impl UsedHomomorphismsVisitor {
                 .borrow()
                 .is_private()
         {
-            BTreeSet::from([ast
+            Ok(BTreeSet::from([ast
                 .try_as_expression_ref()
                 .unwrap()
                 .borrow()
@@ -147,31 +152,43 @@ impl UsedHomomorphismsVisitor {
                 .borrow()
                 .homomorphism
                 .clone()])
-            .union(&self.visit_children(ast))
+            .union(&self.visit_children(ast)?)
             .cloned()
-            .collect()
+            .collect())
         } else {
             self.visit_children(ast)
         }
     }
 
-    pub fn visitIdentifierDeclaration(&self, ast: &ASTFlatten) -> BTreeSet<String> {
+    pub fn visitIdentifierDeclaration(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit_children(ast)
     }
     // Visits annotated type of identifier (and initial value expression)
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) -> BTreeSet<String> {
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit_children(ast)
     } // Parameter and return types are children; don"t bother with "function type"
 
-    pub fn visitEnumDefinition(&self, _ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
-        BTreeSet::new()
+    pub fn visitEnumDefinition(
+        &self,
+        _ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(BTreeSet::new())
     } // Neither the enum type nor the types of the enum values can be private
 
-    pub fn visitStructDefinition(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitStructDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit_children(ast)
     } // Struct types are never private, but they may have private members
 
-    pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+    pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let used_homs = self.visit_children(ast);
         // Now all constructors or functions have been visited and we can do some post-processing
         // If some function f calls some function g, and g uses crypto-backend c, f also uses crypto-backend c
@@ -195,10 +212,8 @@ impl UsedHomomorphismsVisitor {
         }
         used_homs
     }
-
-    pub fn compute_transitive_homomorphisms(fcts: &Vec<RcCell<ConstructorOrFunctionDefinition>>)
     // Invert called_functions relation
-    {
+    pub fn compute_transitive_homomorphisms(fcts: &Vec<RcCell<ConstructorOrFunctionDefinition>>) {
         let mut callers = BTreeMap::new(); //<ConstructorOrFunctionDefinition, Vec<ConstructorOrFunctionDefinition>> ;
         for f in fcts {
             callers.insert(f.clone(), vec![]);
@@ -264,9 +279,8 @@ impl UsedHomomorphismsVisitor {
             }
         }
     }
-    pub fn visitAST(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return
-// Base case, make sure we don"t miss any annotated types
-    {
+    // Base case, make sure we don"t miss any annotated types
+    pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             ast.try_as_expression_ref()
                 .unwrap()
@@ -278,10 +292,8 @@ impl UsedHomomorphismsVisitor {
         );
         self.visit_children(ast)
     }
-
-    pub fn used_crypto_backends(used_homs: BTreeSet<String>) -> Vec<CryptoParams>
-// Guarantee consistent order
-    {
+    // Guarantee consistent order
+    pub fn used_crypto_backends(used_homs: BTreeSet<String>) -> Vec<CryptoParams> {
         let mut result = vec![];
         for hom in Homomorphism::fields() {
             if used_homs.contains(&hom) {

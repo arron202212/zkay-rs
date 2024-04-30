@@ -56,7 +56,7 @@ impl AstVisitor for AliasAnalysisVisitor {
             )
             || matches!(ast.to_ast(), AST::Statement(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
@@ -88,7 +88,7 @@ impl AstVisitor for AliasAnalysisVisitor {
             ASTType::ContinueStatement => self.visitContinueStatement(ast),
             ASTType::BreakStatement => self.visitBreakStatement(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -102,19 +102,24 @@ impl AliasAnalysisVisitor {
             cond_analyzer: GuardConditionAnalyzer::new(log),
         }
     }
-    pub fn visitConstructorOrFunctionDefinition(&self, ast: &ASTFlatten) {
-        let mut s: PartitionState<ASTFlatten> = PartitionState::new();
+    pub fn visitConstructorOrFunctionDefinition(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        let mut s: PartitionState<AST> = PartitionState::new();
         s.insert(
             MeExpr::new()
                 .into_expr()
                 .privacy_annotation_label()
-                .unwrap(),
+                .unwrap()
+                .to_ast(),
         );
         s.insert(
             AllExpr::new()
                 .into_expr()
                 .privacy_annotation_label()
-                .unwrap(),
+                .unwrap()
+                .to_ast(),
         );
         for d in &ast
             .try_as_constructor_or_function_definition_ref()
@@ -134,7 +139,7 @@ impl AliasAnalysisVisitor {
                     .idf()
                     .upgrade()
                     .unwrap()
-                    .into(),
+                    .to_ast(),
             );
         }
         for p in &ast
@@ -150,7 +155,7 @@ impl AliasAnalysisVisitor {
                     .as_ref()
                     .unwrap()
                     .clone()
-                    .into(),
+                    .to_ast(),
             );
         }
         ast.try_as_constructor_or_function_definition_ref()
@@ -171,13 +176,14 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 .into(),
         );
+        Ok(())
     }
 
     pub fn propagate(
         &self,
         statements: &Vec<ASTFlatten>,
-        before_analysis: &PartitionState<ASTFlatten>,
-    ) -> PartitionState<ASTFlatten> {
+        before_analysis: &PartitionState<AST>,
+    ) -> PartitionState<AST> {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements {
@@ -205,7 +211,10 @@ impl AliasAnalysisVisitor {
 
         last
     }
-    pub fn visitStatementList(&self, ast: &ASTFlatten) {
+    pub fn visitStatementList(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_statement_list_ref()
             .unwrap()
             .borrow_mut()
@@ -225,8 +234,9 @@ impl AliasAnalysisVisitor {
                     .unwrap(),
             ),
         );
+        Ok(())
     }
-    pub fn visitBlock(&self, ast: &ASTFlatten) {
+    pub fn visitBlock(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // add fresh names from this block
         for name in ast
             .try_as_block_ref()
@@ -247,7 +257,7 @@ impl AliasAnalysisVisitor {
                 .before_analysis
                 .as_mut()
                 .unwrap()
-                .insert(name.upgrade().unwrap().into());
+                .insert(name.upgrade().unwrap().to_ast());
         }
 
         ast.try_as_block_ref()
@@ -293,10 +303,11 @@ impl AliasAnalysisVisitor {
                 .after_analysis
                 .as_mut()
                 .unwrap()
-                .remove(&name.upgrade().unwrap().into());
+                .remove(&name.upgrade().unwrap().to_ast());
         }
+        Ok(())
     }
-    pub fn visitIfStatement(&self, ast: &ASTFlatten) {
+    pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // condition
         let before_then = self.cond_analyzer.analyze(
             &ast.try_as_if_statement_ref()
@@ -415,12 +426,15 @@ impl AliasAnalysisVisitor {
             .borrow_mut()
             .statement_base
             .after_analysis = Some(after_then.unwrap().join(&after_else.unwrap()));
+        Ok(())
     }
-    pub fn visitWhileStatement(&self, ast: &ASTFlatten)
     // Body always executes after the condition, but it is also possible that it is not executed at all
     // Condition is true before the body
     // After the loop, the condition is false
-    {
+    pub fn visitWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if has_side_effects(
             &ast.try_as_while_statement_ref()
                 .unwrap()
@@ -536,14 +550,17 @@ impl AliasAnalysisVisitor {
             .borrow_mut()
             .statement_base
             .after_analysis = Some(skip_loop.join(&did_loop));
+        Ok(())
     }
-    pub fn visitDoWhileStatement(&self, ast: &ASTFlatten)
     // Body either executes with or without condition, but it is also possible that it is not executed at all
     // No information about condition before the body
     // After the loop, the condition is false
 
     // Could be subsequent loop iteration after condition with side effect
-    {
+    pub fn visitDoWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let cond_se = has_side_effects(
             &ast.try_as_do_while_statement_ref()
                 .unwrap()
@@ -642,8 +659,12 @@ impl AliasAnalysisVisitor {
                     .unwrap(),
             ),
         );
+        Ok(())
     }
-    pub fn visitForStatement(&self, ast: &ASTFlatten) {
+    pub fn visitForStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut last = ast
             .try_as_for_statement_ref()
             .unwrap()
@@ -664,7 +685,7 @@ impl AliasAnalysisVisitor {
             .names()
             .values()
         {
-            last.insert(name.upgrade().unwrap().clone().into());
+            last.insert(name.upgrade().unwrap().clone().to_ast());
         }
 
         if ast
@@ -777,9 +798,8 @@ impl AliasAnalysisVisitor {
                 .clone()
                 .into(),
         );
-        if let Some(update) = &mut ast.try_as_for_statement_ref().unwrap().borrow_mut().update
         // Update is always executed after the body (if it is executed)
-        {
+        if let Some(update) = &mut ast.try_as_for_statement_ref().unwrap().borrow_mut().update {
             update.borrow_mut().statement_base_mut_ref().before_analysis = ast
                 .try_as_for_statement_ref()
                 .unwrap()
@@ -871,10 +891,14 @@ impl AliasAnalysisVisitor {
                 .after_analysis
                 .as_mut()
                 .unwrap()
-                .remove(&name.upgrade().unwrap().clone().into());
+                .remove(&name.upgrade().unwrap().clone().to_ast());
         }
+        Ok(())
     }
-    pub fn visitVariableDeclarationStatement(&self, ast: &ASTFlatten) {
+    pub fn visitVariableDeclarationStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let e = &ast
             .try_as_variable_declaration_statement_ref()
             .unwrap()
@@ -927,7 +951,7 @@ impl AliasAnalysisVisitor {
         assert!(after
             .as_ref()
             .unwrap()
-            .has(&name.as_ref().unwrap().clone().into()));
+            .has(&name.as_ref().unwrap().clone().to_ast()));
 
         // make state more precise
         if let Some(e) = e {
@@ -940,7 +964,7 @@ impl AliasAnalysisVisitor {
                 after
                     .clone()
                     .unwrap()
-                    .merge(&name.as_ref().unwrap().clone().into(), &pal);
+                    .merge(&name.as_ref().unwrap().clone().to_ast(), &pal.to_ast());
             }
         }
 
@@ -950,8 +974,12 @@ impl AliasAnalysisVisitor {
             .simple_statement_base
             .statement_base
             .after_analysis = after;
+        Ok(())
     }
-    pub fn visitRequireStatement(&self, ast: &ASTFlatten) {
+    pub fn visitRequireStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if has_side_effects(
             &ast.try_as_require_statement_ref()
                 .unwrap()
@@ -1030,10 +1058,10 @@ impl AliasAnalysisVisitor {
                 .borrow()
                 .privacy_annotation_label();
             if lhs.is_some() && rhs.is_some() {
-                after
-                    .as_mut()
-                    .unwrap()
-                    .merge(&lhs.clone().unwrap().into(), &rhs.clone().unwrap().into());
+                after.as_mut().unwrap().merge(
+                    &lhs.clone().unwrap().to_ast(),
+                    &rhs.clone().unwrap().to_ast(),
+                );
             }
         }
 
@@ -1043,8 +1071,12 @@ impl AliasAnalysisVisitor {
             .simple_statement_base
             .statement_base
             .after_analysis = after;
+        Ok(())
     }
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
+    pub fn visitAssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if has_side_effects(
             &ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -1111,8 +1143,12 @@ impl AliasAnalysisVisitor {
             .borrow_mut()
             .statement_base_mut_ref()
             .after_analysis = after.clone();
+        Ok(())
     }
-    pub fn visitExpressionStatement(&self, ast: &ASTFlatten) {
+    pub fn visitExpressionStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if has_side_effects(
             &ast.try_as_expression_statement_ref()
                 .unwrap()
@@ -1163,8 +1199,12 @@ impl AliasAnalysisVisitor {
             .statement_base
             .before_analysis
             .clone();
+        Ok(())
     }
-    pub fn visitReturnStatement(&self, ast: &ASTFlatten) {
+    pub fn visitReturnStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_return_statement_ref()
             .unwrap()
             .borrow_mut()
@@ -1176,9 +1216,13 @@ impl AliasAnalysisVisitor {
             .statement_base
             .before_analysis
             .clone();
+        Ok(())
     }
 
-    pub fn visitContinueStatement(&self, ast: &ASTFlatten) {
+    pub fn visitContinueStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_continue_statement_ref()
             .unwrap()
             .borrow_mut()
@@ -1190,9 +1234,13 @@ impl AliasAnalysisVisitor {
             .statement_base
             .before_analysis
             .clone();
+        Ok(())
     }
 
-    pub fn visitBreakStatement(&self, ast: &ASTFlatten) {
+    pub fn visitBreakStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_break_statement_ref()
             .unwrap()
             .borrow_mut()
@@ -1204,18 +1252,20 @@ impl AliasAnalysisVisitor {
             .statement_base
             .before_analysis
             .clone();
+        Ok(())
     }
 
-    pub fn visitStatement(&self, _: &ASTFlatten) {
+    pub fn visitStatement(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // raise NotImplementedError();
-        unimplemented!();
+        // unimplemented!();
+        Err(eyre::eyre!("unimplemented"))
     }
 }
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct GuardConditionAnalyzer {
     pub ast_visitor_base: AstVisitorBase,
     _neg: RcCell<bool>,
-    _analysis: RcCell<Option<PartitionState<ASTFlatten>>>,
+    _analysis: RcCell<Option<PartitionState<AST>>>,
 }
 impl AstVisitor for GuardConditionAnalyzer {
     type Return = ();
@@ -1224,7 +1274,7 @@ impl AstVisitor for GuardConditionAnalyzer {
     fn has_attr(&self, ast: &AST) -> bool {
         matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -1234,7 +1284,7 @@ impl AstVisitor for GuardConditionAnalyzer {
                 self.visitFunctionCallExpr(ast)
             }
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -1250,8 +1300,8 @@ impl GuardConditionAnalyzer {
     pub fn analyze(
         &self,
         cond: &ASTFlatten,
-        before_analysis: &PartitionState<ASTFlatten>,
-    ) -> PartitionState<ASTFlatten> {
+        before_analysis: &PartitionState<AST>,
+    ) -> PartitionState<AST> {
         if has_side_effects(cond) {
             before_analysis.separate_all()
         } else {
@@ -1268,7 +1318,10 @@ impl GuardConditionAnalyzer {
         // self._neg = ! self._neg
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -1306,12 +1359,13 @@ impl GuardConditionAnalyzer {
                 );
             }
         }
+        Ok(())
     }
 }
 pub fn _recursive_update(
     lhs: &ASTFlatten,
     rhs: &ASTFlatten,
-    mut analysis: PartitionState<ASTFlatten>,
+    mut analysis: PartitionState<AST>,
     merge: bool,
 ) {
     if is_instance(lhs, ASTType::TupleExpr) && is_instance(rhs, ASTType::TupleExpr) {
@@ -1354,21 +1408,21 @@ pub fn _recursive_update(
             .unwrap()
             .borrow()
             .privacy_annotation_label();
-        if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().into()) {
+        if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().to_ast()) {
             if merge {
-                analysis.merge(&lhs.unwrap().into(), &rhs.unwrap().into());
+                analysis.merge(&lhs.unwrap().to_ast(), &rhs.unwrap().to_ast());
             } else {
-                analysis.move_to(&lhs.unwrap().into(), &rhs.clone().unwrap().into());
+                analysis.move_to(&lhs.unwrap().to_ast(), &rhs.clone().unwrap().to_ast());
             }
         } else if lhs.is_some() {
-            analysis.move_to_separate(&lhs.unwrap().into());
+            analysis.move_to_separate(&lhs.unwrap().to_ast());
         }
     }
 }
-pub fn recursive_merge(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<ASTFlatten>) {
+pub fn recursive_merge(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<AST>) {
     _recursive_update(lhs, rhs, analysis, true);
 }
 
-pub fn recursive_assign(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<ASTFlatten>) {
+pub fn recursive_assign(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<AST>) {
     _recursive_update(lhs, rhs, analysis, false);
 }

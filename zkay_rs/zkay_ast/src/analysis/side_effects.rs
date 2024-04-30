@@ -66,7 +66,7 @@ impl AstVisitor for SideEffectsDetector {
             || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::Statement(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -87,7 +87,7 @@ impl AstVisitor for SideEffectsDetector {
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
 
-            _ => false,
+            _ => Ok(false),
         }
     }
 }
@@ -97,7 +97,10 @@ impl SideEffectsDetector {
             ast_visitor_base: AstVisitorBase::new("post", false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> bool {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
@@ -128,25 +131,28 @@ impl SideEffectsDetector {
                 .unwrap()
                 .has_side_effects()
         {
-            true
+            Ok(true)
         } else {
             self.visitExpression(ast)
         }
     }
-    pub fn visitAssignmentStatement(&self, _ast: &ASTFlatten) -> bool {
-        true
+    pub fn visitAssignmentStatement(
+        &self,
+        _ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(true)
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) -> bool {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visitAST(ast)
     }
 
-    pub fn visitStatement(&self, ast: &ASTFlatten) -> bool {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visitAST(ast)
     }
 
-    pub fn visitAST(&self, ast: &ASTFlatten) -> bool {
-        ast.children().iter().any(|c| self.visit(&c))
+    pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(ast.children().iter().any(|c| self.visit(&c)))
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
@@ -177,7 +183,7 @@ impl AstVisitor for DirectModificationDetector {
             ))
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -199,7 +205,7 @@ impl AstVisitor for DirectModificationDetector {
             }
             ASTType::VariableDeclaration => self.visitVariableDeclaration(ast),
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -209,8 +215,11 @@ impl DirectModificationDetector {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
-        self.visitAST(ast);
+    pub fn visitAssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visitAST(ast)?;
         self.collect_modified_values(
             ast,
             &ast.try_as_assignment_statement_ref()
@@ -221,6 +230,7 @@ impl DirectModificationDetector {
                 .unwrap()
                 .into(),
         );
+        Ok(())
     }
 
     pub fn collect_modified_values(&self, target: &ASTFlatten, expr: &ASTFlatten) {
@@ -253,9 +263,12 @@ impl DirectModificationDetector {
                 .insert(mod_value);
         }
     }
-    pub fn visitLocationExpr(&self, ast: &ASTFlatten) {
+    pub fn visitLocationExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let _ast2: LocationExpr = ast.try_as_location_expr_ref().unwrap().borrow().clone();
-        self.visitAST(ast);
+        self.visitAST(ast)?;
         let ast1 = ast
             .try_as_location_expr_ref()
             .unwrap()
@@ -284,8 +297,12 @@ impl DirectModificationDetector {
                 .read_values
                 .insert(InstanceTarget::new(vec![Some(ast.clone())]));
         }
+        Ok(())
     }
-    pub fn visitVariableDeclaration(&self, ast: &ASTFlatten) {
+    pub fn visitVariableDeclaration(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ast.try_as_variable_declaration_ref()
             .unwrap()
             .borrow_mut()
@@ -294,9 +311,10 @@ impl DirectModificationDetector {
             .borrow_mut()
             .modified_values
             .insert(InstanceTarget::new(vec![Some(ast.clone())]));
+        Ok(())
     }
 
-    pub fn visitAST(&self, ast: &ASTFlatten) {
+    pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut modified_values = BTreeSet::new();
         let mut read_values = BTreeSet::new();
         for child in ast.children() {
@@ -312,6 +330,7 @@ impl DirectModificationDetector {
         }
         ast.ast_base_ref().unwrap().borrow_mut().modified_values = modified_values;
         ast.ast_base_ref().unwrap().borrow_mut().read_values = read_values;
+        Ok(())
     }
 }
 // class IndirectModificationDetector(FunctionVisitor)
@@ -331,7 +350,7 @@ impl AstVisitor for IndirectModificationDetector {
             AST::Expression(Expression::FunctionCallExpr(_))
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -341,7 +360,7 @@ impl AstVisitor for IndirectModificationDetector {
                 self.visitFunctionCallExpr(ast)
             }
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -366,8 +385,11 @@ impl IndirectModificationDetector {
         }
     }
 
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
-        self.visitAST(ast);
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        self.visitAST(ast)?;
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
@@ -435,8 +457,9 @@ impl IndirectModificationDetector {
             *self.fixed_point_reached.borrow_mut() &=
                 mlen == ast.ast_base_ref().unwrap().borrow().modified_values.len();
         }
+        Ok(())
     }
-    pub fn visitAST(&self, ast: &ASTFlatten) {
+    pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mlen = ast.ast_base_ref().unwrap().borrow().modified_values.len();
         let rlen = ast.ast_base_ref().unwrap().borrow().read_values.len();
         for child in ast.children().iter_mut() {
@@ -462,6 +485,7 @@ impl IndirectModificationDetector {
             mlen == ast.ast_base_ref().unwrap().borrow().modified_values.len();
         *self.fixed_point_reached.borrow_mut() &=
             rlen == ast.ast_base_ref().unwrap().borrow().read_values.len();
+        Ok(())
     }
 }
 // class EvalOrderUBChecker(AstVisitor)
@@ -488,7 +512,7 @@ impl AstVisitor for EvalOrderUBChecker {
             )
             || matches!(ast, AST::Expression(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -508,7 +532,7 @@ impl AstVisitor for EvalOrderUBChecker {
             }
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
 
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -519,7 +543,10 @@ impl EvalOrderUBChecker {
         }
     }
     // @staticmethod
-    pub fn visit_child_expressions(parent: &ASTFlatten, exprs: &Vec<ASTFlatten>) {
+    pub fn visit_child_expressions(
+        parent: &ASTFlatten,
+        exprs: &Vec<ASTFlatten>,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if exprs.len() > 1 {
             let mut modset: BTreeSet<_> = exprs[0]
                 .ast_base_ref()
@@ -584,8 +611,12 @@ impl EvalOrderUBChecker {
                 }
             }
         }
+        Ok(())
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::BuiltinFunction,
@@ -600,7 +631,7 @@ impl EvalOrderUBChecker {
                 .borrow()
                 .has_shortcircuiting()
             {
-                return;
+                return Ok(());
             }
         }
         Self::visit_child_expressions(
@@ -612,14 +643,17 @@ impl EvalOrderUBChecker {
                 .into_iter()
                 .map(|arg| arg.clone().into())
                 .collect(),
-        );
+        )
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) {
-        Self::visit_child_expressions(ast, &ast.children());
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Self::visit_child_expressions(ast, &ast.children())
     }
 
-    pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) {
-        Self::visit_child_expressions(ast, &ast.children());
+    pub fn visitAssignmentStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Self::visit_child_expressions(ast, &ast.children())
     }
 }

@@ -8,6 +8,7 @@ use zkay_ast::ast::{
     LocationExprBaseProperty, NamespaceDefinitionBaseProperty, SourceUnit,
     StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
 };
+use zkay_ast::global_defs::{global_defs, global_vars};
 use zkay_ast::pointers::{
     parent_setter::set_parents,
     symbol_table::{fill_symbol_table, get_builtin_globals, link_identifiers},
@@ -105,9 +106,10 @@ mod tests {
     }
     #[test]
     pub fn test_fill_symbol_table_simple() {
-        let mut ast = build_ast(&SIMPLE.code());
+        let ast = build_ast(&SIMPLE.code());
         // println!("===ast======{:?}",ast);
-        fill_symbol_table(&mut ast);
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        fill_symbol_table(&ast, global_vars);
 
         let ASTElements {
             contract,
@@ -184,8 +186,9 @@ mod tests {
     // class TestSimpleStorageAST(ZkayTestCase):
     #[test]
     pub fn test_fill_symbol_tables() {
-        let mut ast = build_ast(&SIMPLE_STORAGE.code());
-        fill_symbol_table(&mut ast);
+        let ast = build_ast(&SIMPLE_STORAGE.code());
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        fill_symbol_table(&ast, global_vars);
 
         let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
 
@@ -304,10 +307,12 @@ mod tests {
     #[test]
     pub fn test_symbol_table() {
         for (name, example) in ALL_EXAMPLES.iter() {
-            let mut ast = build_ast(&example.code());
-            set_parents(&mut ast);
-            fill_symbol_table(&mut ast);
-            link_identifiers(&mut ast);
+            let ast = build_ast(&example.code());
+            println!("=test_symbol_table======{name}");
+            set_parents(&ast);
+            let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+            fill_symbol_table(&ast, global_vars);
+            link_identifiers(&ast);
             let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
             assert_eq!(
                 &contract.borrow().idf().upgrade().unwrap().borrow().name(),

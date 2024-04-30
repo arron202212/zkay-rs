@@ -44,7 +44,7 @@ impl AstVisitor for ContainsPrivVisitor {
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(ast, AST::Expression(_))
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             _ if matches!(
                 ast.to_ast(),
@@ -54,7 +54,7 @@ impl AstVisitor for ContainsPrivVisitor {
                 self.visitFunctionCallExpr(ast)
             }
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -65,7 +65,10 @@ impl ContainsPrivVisitor {
             contains_private: RcCell::new(false),
         }
     }
-    pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) {
+    pub fn visitFunctionCallExpr(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
             ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
             ASTType::LocationExprBase,
@@ -101,7 +104,7 @@ impl ContainsPrivVisitor {
         self.visitExpression(ast)
     }
 
-    pub fn visitExpression(&self, ast: &ASTFlatten) {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
             .try_as_expression_ref()
             .unwrap()
@@ -113,10 +116,10 @@ impl ContainsPrivVisitor {
         self.visitAST(ast)
     }
 
-    pub fn visitAST(&self, ast: &ASTFlatten) {
+    pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if *self.contains_private.borrow() {
-            return;
+            return Ok(());
         }
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 }

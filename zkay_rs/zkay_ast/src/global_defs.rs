@@ -33,19 +33,19 @@ pub fn array_length_member() -> ASTFlatten {
 pub fn global_defs() -> GlobalDefs {
     GlobalDefs::new()
 }
-pub fn global_vars() -> GlobalVars {
-    GlobalVars::new()
+pub fn global_vars(global_defs: RcCell<GlobalDefs>) -> GlobalVars {
+    GlobalVars::new(global_defs)
 }
-// lazy_static! {
+lazy_static! {
 // pub static ref ARRAY_LENGTH_MEMBER: Arc<Mutex<VariableDeclaration>> = Arc::new(Mutex::new(VariableDeclaration::new(
 //     vec![],
 //     AnnotatedTypeName::uint_all(),
 //     Identifier::identifier("length"),
 //     None
 // )));
-// pub static ref global_defs(): GlobalDefs = GlobalDefs::new();
-// pub static ref global_vars(): GlobalVars = GlobalVars::new();
-// }
+// pub static ref GLOBAL_DEFSS: GlobalDefs = GlobalDefs::new();
+// pub static ref GLOBAL_VARSS: GlobalVars = GlobalVars::new();
+}
 pub struct GlobalDefs {
     address_struct: RcCell<StructDefinition>,
     address_payable_struct: RcCell<StructDefinition>,
@@ -119,19 +119,16 @@ impl GlobalDefs {
                 .into(),
             ],
         ));
+        // println!("=====members[1]============{:?}====", address_payable_struct.borrow().members[1]);
         address_payable_struct.borrow_mut().members[1]
-            .try_as_namespace_definition_mut()
-            .unwrap()
-            .borrow_mut()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
+            .borrow_mut()
             .can_be_private = false;
         address_payable_struct.borrow_mut().members[2]
-            .try_as_namespace_definition_mut()
-            .unwrap()
-            .borrow_mut()
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
+            .borrow_mut()
             .can_be_private = false;
         set_parents(&address_payable_struct.clone().into());
 
@@ -254,14 +251,16 @@ pub struct GlobalVars {
     block: RcCell<StateVariableDeclaration>,
     tx: RcCell<StateVariableDeclaration>,
     now: RcCell<StateVariableDeclaration>,
+    pub global_defs: RcCell<GlobalDefs>,
 }
 // class GlobalVars:
 impl GlobalVars {
-    pub fn new() -> Self {
+    pub fn new(global_defs: RcCell<GlobalDefs>) -> Self {
         let mut msg = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs()
+                    vec![global_defs
+                        .borrow()
                         .msg_struct
                         .borrow()
                         .namespace_definition_base
@@ -270,7 +269,7 @@ impl GlobalVars {
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(ASTFlatten::from(global_defs().msg_struct.clone()).downgrade()),
+                    Some(ASTFlatten::from(global_defs.borrow().msg_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
@@ -291,7 +290,8 @@ impl GlobalVars {
         let mut block = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs()
+                    vec![global_defs
+                        .borrow()
                         .block_struct
                         .borrow()
                         .namespace_definition_base
@@ -300,7 +300,7 @@ impl GlobalVars {
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(ASTFlatten::from(global_defs().block_struct.clone()).downgrade()),
+                    Some(ASTFlatten::from(global_defs.borrow().block_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
@@ -322,7 +322,8 @@ impl GlobalVars {
         let mut tx = RcCell::new(StateVariableDeclaration::new(
             AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs()
+                    vec![global_defs
+                        .borrow()
                         .tx_struct
                         .borrow()
                         .namespace_definition_base
@@ -331,7 +332,7 @@ impl GlobalVars {
                         .unwrap()
                         .borrow()
                         .clone()],
-                    Some(ASTFlatten::from(global_defs().tx_struct.clone()).downgrade()),
+                    Some(ASTFlatten::from(global_defs.borrow().tx_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
             ),
@@ -369,6 +370,7 @@ impl GlobalVars {
             block,
             tx,
             now,
+            global_defs,
         }
     }
     pub fn vars(&self) -> Vec<RcCell<StateVariableDeclaration>> {

@@ -15,3 +15,4 @@ rust-version.workspace = true
 rccell={workspace=true}
  zkay_ast={workspace = true }
 zkay-derive = { workspace = true }
+eyre ={ workspace = true }

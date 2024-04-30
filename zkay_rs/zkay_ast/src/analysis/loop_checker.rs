@@ -44,12 +44,12 @@ impl AstVisitor for LoopChecker {
             ASTType::WhileStatement | ASTType::DoWhileStatement | ASTType::ForStatement
         )
     }
-    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> Self::Return {
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::WhileStatement => self.visitWhileStatement(ast),
             ASTType::DoWhileStatement => self.visitDoWhileStatement(ast),
             ASTType::ForStatement => self.visitForStatement(ast),
-            _ => {}
+            _ => Err(eyre::eyre!("unreach")),
         }
     }
 }
@@ -59,7 +59,10 @@ impl LoopChecker {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
-    pub fn visitWhileStatement(&self, ast: &ASTFlatten) {
+    pub fn visitWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             !contains_private_expr(
                 &ast.try_as_while_statement_ref()
@@ -84,10 +87,13 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.try_as_while_statement_ref().unwrap().borrow().body
         );
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitDoWhileStatement(&self, ast: &ASTFlatten) {
+    pub fn visitDoWhileStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             !contains_private_expr(
                 &ast.try_as_do_while_statement_ref()
@@ -115,10 +121,13 @@ impl LoopChecker {
             "Loop body cannot contain private expressions {:?}",
             ast.try_as_do_while_statement_ref().unwrap().borrow().body
         );
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 
-    pub fn visitForStatement(&self, ast: &ASTFlatten) {
+    pub fn visitForStatement(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             !contains_private_expr(
                 &ast.try_as_for_statement_ref()
@@ -161,6 +170,6 @@ impl LoopChecker {
             "Loop update statement cannot contain private expressions {:?}",
             ast.try_as_for_statement_ref().unwrap().borrow().update
         );
-        self.visit_children(ast);
+        self.visit_children(ast)
     }
 }
