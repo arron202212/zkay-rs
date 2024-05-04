@@ -9339,9 +9339,9 @@ impl CodeVisitor {
         Ok(format!(
             "{}[{}]",
             self.visit(
-                &ast.try_as_expression_ref()
+                &ast.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -9355,9 +9355,9 @@ impl CodeVisitor {
                     .into()
             ),
             self.visit(
-                &ast.try_as_expression_ref()
+                &ast.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -9435,19 +9435,24 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_IfStatement=========={:?}",ast);
         let c = self.visit(
-            &ast.try_as_if_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .condition
                 .clone()
                 .into(),
         );
         let t = self.visit_single_or_list(
             SingleOrListUnion::AST(
-                ast.try_as_if_statement_ref()
+                ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_if_statement_ref()
+                    .unwrap()
                     .then_branch
                     .clone()
                     .into(),
@@ -9455,7 +9460,14 @@ impl CodeVisitor {
             "",
         )?;
         let mut ret = format!("if ({c}) {t}");
-        if let Some(else_branch) = &ast.try_as_if_statement_ref().unwrap().borrow().else_branch {
+        if let Some(else_branch) = &ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_if_statement_ref()
+            .unwrap()
+            .else_branch
+        {
             let e =
                 self.visit_single_or_list(SingleOrListUnion::AST(else_branch.clone().into()), "")?;
             ret += format!("\n else {e}").as_str();
@@ -9605,10 +9617,15 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        //  println!("===visit_ExpressionStatement=========={:?}",ast);
         Ok(self.visit(
-            &ast.try_as_expression_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_expression_statement_ref()
+                .unwrap()
                 .expr
                 .clone()
                 .into(),
@@ -9668,9 +9685,10 @@ impl CodeVisitor {
 
         let rhs = if !op.is_empty() {
             ast.rhs().clone().map(|fce| {
-                fce.try_as_expression_ref()
+                // println!("=====fce==========={:?}=====",fce);
+                fce.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .args()[1]
@@ -10138,18 +10156,27 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_VariableDeclarationStatement=========={:?}", ast);
         let mut s = self.visit(
-            &ast.try_as_variable_declaration_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_variable_declaration_statement_ref()
+                .unwrap()
                 .variable_declaration
                 .clone()
                 .into(),
         );
         if let Some(expr) = &ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_variable_declaration_statement_ref()
             .unwrap()
-            .borrow()
             .expr
         {
             s += format!(" = {}", self.visit(&expr.clone().into())).as_str();
