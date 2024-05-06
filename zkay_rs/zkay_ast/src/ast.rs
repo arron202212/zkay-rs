@@ -1084,9 +1084,11 @@ impl ASTFlatten {
                 .annotated_type()
                 .as_ref()
                 .map(|a| a.borrow().clone()),
-            Self::IdentifierDeclaration(astf) => {
-                Some(astf.borrow().annotated_type().borrow().clone())
-            }
+            Self::IdentifierDeclaration(astf) => astf
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .map(|a| a.borrow().clone()),
             _ if matches!(self.to_ast(), AST::Expression(_)) => self
                 .to_ast()
                 .try_as_expression_ref()
@@ -1099,6 +1101,8 @@ impl ASTFlatten {
                     .try_as_identifier_declaration_ref()
                     .unwrap()
                     .annotated_type()
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .clone(),
             ),
@@ -2132,8 +2136,9 @@ impl IdentifierBase {
             t.clone().try_as_annotated_type_name()
         };
         assert!(t.is_some());
-        let t = t.unwrap();
         let storage_loc = if t
+            .as_ref()
+            .unwrap()
             .borrow()
             .type_name
             .as_ref()
@@ -3989,6 +3994,8 @@ impl IdentifierExpr {
                     .unwrap()
                     .borrow()
                     .annotated_type()
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .clone()
             })
@@ -7585,7 +7592,7 @@ pub trait IdentifierDeclarationBaseRef: ASTBaseRef {
 }
 pub trait IdentifierDeclarationBaseProperty {
     fn keywords(&self) -> &Vec<String>;
-    fn annotated_type(&self) -> &RcCell<AnnotatedTypeName>;
+    fn annotated_type(&self) -> &Option<RcCell<AnnotatedTypeName>>;
     fn idf(&self) -> WeakCell<Identifier>;
     fn storage_location(&self) -> &Option<String>;
 }
@@ -7593,7 +7600,7 @@ impl<T: IdentifierDeclarationBaseRef> IdentifierDeclarationBaseProperty for T {
     fn keywords(&self) -> &Vec<String> {
         &self.identifier_declaration_base_ref().keywords
     }
-    fn annotated_type(&self) -> &RcCell<AnnotatedTypeName> {
+    fn annotated_type(&self) -> &Option<RcCell<AnnotatedTypeName>> {
         &self.identifier_declaration_base_ref().annotated_type
     }
     fn idf(&self) -> WeakCell<Identifier> {
@@ -7612,14 +7619,14 @@ impl<T: IdentifierDeclarationBaseRef> IdentifierDeclarationBaseProperty for T {
 pub struct IdentifierDeclarationBase {
     pub ast_base: RcCell<ASTBase>,
     pub keywords: Vec<String>,
-    pub annotated_type: RcCell<AnnotatedTypeName>,
+    pub annotated_type: Option<RcCell<AnnotatedTypeName>>,
     pub idf: Option<RcCell<Identifier>>,
     pub storage_location: Option<String>,
 }
 impl IdentifierDeclarationBase {
     fn new(
         keywords: Vec<String>,
-        annotated_type: RcCell<AnnotatedTypeName>,
+        annotated_type: Option<RcCell<AnnotatedTypeName>>,
         idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
@@ -7640,7 +7647,7 @@ impl IdentifierDeclarationBase {
 }
 impl ASTChildren for IdentifierDeclarationBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
-        cb.add_child(self.annotated_type.clone().into());
+        cb.add_child(self.annotated_type.clone().unwrap().into());
         if let Some(idf) = &self.idf {
             // println!("===process_children===IdentifierDeclarationBase========={:?}",idf);
             cb.add_child(idf.clone().into());
@@ -7667,7 +7674,7 @@ impl ASTChildren for VariableDeclaration {
 impl VariableDeclaration {
     pub fn new(
         keywords: Vec<String>,
-        annotated_type: RcCell<AnnotatedTypeName>,
+        annotated_type: Option<RcCell<AnnotatedTypeName>>,
         idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
@@ -7742,7 +7749,7 @@ pub enum ParameterUnion {
 impl Parameter {
     pub fn new(
         keywords: Vec<String>,
-        annotated_type: RcCell<AnnotatedTypeName>,
+        annotated_type: Option<RcCell<AnnotatedTypeName>>,
         idf: Option<RcCell<Identifier>>,
         storage_location: Option<String>,
     ) -> Self {
@@ -7965,7 +7972,7 @@ impl ConstructorOrFunctionDefinition {
         TupleType::new(
             self.return_parameters
                 .iter()
-                .map(|p| {
+                .filter_map(|p| {
                     p.borrow()
                         .identifier_declaration_base
                         .annotated_type
@@ -7979,7 +7986,7 @@ impl ConstructorOrFunctionDefinition {
         TupleType::new(
             self.parameters
                 .iter()
-                .map(|p| {
+                .filter_map(|p| {
                     p.borrow()
                         .identifier_declaration_base
                         .annotated_type
@@ -8058,7 +8065,7 @@ impl ConstructorOrFunctionDefinition {
         };
         self.parameters.push(RcCell::new(Parameter::new(
             vec![],
-            t.try_as_annotated_type_name().unwrap(),
+            t.try_as_annotated_type_name(),
             Some(idf.as_ref().unwrap().clone()),
             storage_loc,
         )));
@@ -8106,7 +8113,7 @@ impl IntoAST for StateVariableDeclaration {
 
 impl StateVariableDeclaration {
     pub fn new(
-        annotated_type: RcCell<AnnotatedTypeName>,
+        annotated_type: Option<RcCell<AnnotatedTypeName>>,
         keywords: Vec<String>,
         idf: Option<RcCell<Identifier>>,
         expr: Option<ASTFlatten>,
@@ -10125,6 +10132,7 @@ impl CodeVisitor {
                 .identifier_declaration_base
                 .annotated_type
                 .clone()
+                .unwrap()
                 .into(),
         );
         let s = if let Some(storage_location) = &ast
@@ -10210,6 +10218,7 @@ impl CodeVisitor {
                 .identifier_declaration_base
                 .annotated_type
                 .clone()
+                .unwrap()
                 .into(),
         );
         let i = self.visit(
@@ -10373,6 +10382,8 @@ impl CodeVisitor {
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .type_name
                 .clone(),
@@ -10381,6 +10392,8 @@ impl CodeVisitor {
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .type_name
                 .clone(),
@@ -10473,6 +10486,7 @@ impl CodeVisitor {
                 .identifier_declaration_base
                 .annotated_type
                 .clone()
+                .unwrap()
                 .into(),
         );
         let mut k = ast

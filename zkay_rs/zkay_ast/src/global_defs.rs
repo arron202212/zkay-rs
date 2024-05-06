@@ -23,7 +23,7 @@ use std::sync::{Arc, Mutex};
 pub fn array_length_member() -> ASTFlatten {
     RcCell::new(VariableDeclaration::new(
         vec![],
-        AnnotatedTypeName::uint_all(),
+        Some(AnnotatedTypeName::uint_all()),
         Identifier::identifier("length"),
         None,
     ))
@@ -68,7 +68,7 @@ impl GlobalDefs {
             Identifier::identifier("<address>"),
             vec![RcCell::new(VariableDeclaration::new(
                 vec![],
-                AnnotatedTypeName::uint_all(),
+                Some(AnnotatedTypeName::uint_all()),
                 Identifier::identifier("balance"),
                 None,
             ))
@@ -81,7 +81,7 @@ impl GlobalDefs {
             vec![
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("balance"),
                     None,
                 ))
@@ -90,14 +90,14 @@ impl GlobalDefs {
                     Identifier::identifier("send"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
-                        AnnotatedTypeName::uint_all(),
+                        Some(AnnotatedTypeName::uint_all()),
                         Identifier::identifier(""),
                         None,
                     ))]),
                     Some(vec![String::from("public")]),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
-                        AnnotatedTypeName::bool_all(),
+                        Some(AnnotatedTypeName::bool_all()),
                         Identifier::identifier(""),
                         None,
                     ))]),
@@ -108,7 +108,7 @@ impl GlobalDefs {
                     Identifier::identifier("transfer"),
                     Some(vec![RcCell::new(Parameter::new(
                         vec![],
-                        AnnotatedTypeName::uint_all(),
+                        Some(AnnotatedTypeName::uint_all()),
                         Identifier::identifier(""),
                         None,
                     ))]),
@@ -137,18 +137,18 @@ impl GlobalDefs {
             vec![
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    RcCell::new(AnnotatedTypeName::new(
+                    Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    )),
+                    ))),
                     Identifier::identifier("sender"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("value"),
                     None,
                 ))
@@ -162,39 +162,39 @@ impl GlobalDefs {
             vec![
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    RcCell::new(AnnotatedTypeName::new(
+                    Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    )),
+                    ))),
                     Identifier::identifier("coinbase"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("difficulty"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("gaslimit"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("number"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("timestamp"),
                     None,
                 ))
@@ -208,18 +208,18 @@ impl GlobalDefs {
             vec![
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    AnnotatedTypeName::uint_all(),
+                    Some(AnnotatedTypeName::uint_all()),
                     Identifier::identifier("gasprice"),
                     None,
                 ))
                 .into(),
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    RcCell::new(AnnotatedTypeName::new(
+                    Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
                         String::from("NON_HOMOMORPHISM"),
-                    )),
+                    ))),
                     Identifier::identifier("origin"),
                     None,
                 ))
@@ -257,7 +257,7 @@ pub struct GlobalVars {
 impl GlobalVars {
     pub fn new(global_defs: RcCell<GlobalDefs>) -> Self {
         let mut msg = RcCell::new(StateVariableDeclaration::new(
-            AnnotatedTypeName::all(
+            Some(AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs
                         .borrow()
@@ -272,7 +272,7 @@ impl GlobalVars {
                     Some(ASTFlatten::from(global_defs.borrow().msg_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
-            ),
+            )),
             vec![],
             Identifier::identifier("msg"),
             None,
@@ -288,7 +288,7 @@ impl GlobalVars {
             .parent = Some(ASTFlatten::from(msg.clone()).downgrade());
 
         let mut block = RcCell::new(StateVariableDeclaration::new(
-            AnnotatedTypeName::all(
+            Some(AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs
                         .borrow()
@@ -303,7 +303,7 @@ impl GlobalVars {
                     Some(ASTFlatten::from(global_defs.borrow().block_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
-            ),
+            )),
             vec![],
             Identifier::identifier("block"),
             None,
@@ -320,7 +320,7 @@ impl GlobalVars {
             .parent = Some(ASTFlatten::from(block.clone()).downgrade());
 
         let mut tx = RcCell::new(StateVariableDeclaration::new(
-            AnnotatedTypeName::all(
+            Some(AnnotatedTypeName::all(
                 StructTypeName::new(
                     vec![global_defs
                         .borrow()
@@ -335,7 +335,7 @@ impl GlobalVars {
                     Some(ASTFlatten::from(global_defs.borrow().tx_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
-            ),
+            )),
             vec![],
             Identifier::identifier("tx"),
             None,
@@ -351,7 +351,7 @@ impl GlobalVars {
             .parent = Some(ASTFlatten::from(tx.clone()).downgrade());
 
         let mut now = RcCell::new(StateVariableDeclaration::new(
-            AnnotatedTypeName::uint_all(),
+            Some(AnnotatedTypeName::uint_all()),
             vec![],
             Identifier::identifier("now"),
             None,

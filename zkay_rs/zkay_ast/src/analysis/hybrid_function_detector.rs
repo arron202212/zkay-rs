@@ -279,6 +279,8 @@ impl DirectHybridFunctionDetectionVisitor {
                         .borrow()
                         .identifier_declaration_base
                         .annotated_type
+                        .as_ref()
+                        .unwrap()
                         .borrow()
                         .is_private()
                     {

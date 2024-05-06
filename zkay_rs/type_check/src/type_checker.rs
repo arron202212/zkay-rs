@@ -468,13 +468,15 @@ impl TypeCheckVisitor {
                     .expr
                     .as_ref()
                     .unwrap(),
-                &ast.try_as_variable_declaration_statement_ref()
+                ast.try_as_variable_declaration_statement_ref()
                     .unwrap()
                     .borrow()
                     .variable_declaration
                     .borrow()
                     .identifier_declaration_base
-                    .annotated_type,
+                    .annotated_type
+                    .as_ref()
+                    .unwrap(),
             );
         }
         Ok(())
@@ -1867,13 +1869,15 @@ impl TypeCheckVisitor {
                 args[i] = self
                     .get_rhs(
                         &args[i],
-                        &ft.borrow()
+                        ft.borrow()
                             .try_as_function_type_name_ref()
                             .unwrap()
                             .parameters[i]
                             .borrow()
                             .identifier_declaration_base
-                            .annotated_type,
+                            .annotated_type
+                            .as_ref()
+                            .unwrap(),
                     )
                     .unwrap();
             }
@@ -1905,6 +1909,7 @@ impl TypeCheckVisitor {
                         .identifier_declaration_base
                         .annotated_type
                         .clone()
+                        .unwrap()
                 } else {
                     //TODO maybe not None label in the future
                     RcCell::new(AnnotatedTypeName::new(
@@ -1914,7 +1919,7 @@ impl TypeCheckVisitor {
                                 .unwrap()
                                 .return_parameters
                                 .iter()
-                                .map(|t| {
+                                .filter_map(|t| {
                                     t.borrow()
                                         .identifier_declaration_base
                                         .annotated_type
@@ -2774,11 +2779,13 @@ impl TypeCheckVisitor {
             //check type
             self.get_rhs(
                 expr,
-                &ast.try_as_state_variable_declaration_ref()
+                ast.try_as_state_variable_declaration_ref()
                     .unwrap()
                     .borrow()
                     .identifier_declaration_base
-                    .annotated_type,
+                    .annotated_type
+                    .as_ref()
+                    .unwrap(),
             );
         }
 
@@ -2789,6 +2796,8 @@ impl TypeCheckVisitor {
             .borrow()
             .identifier_declaration_base
             .annotated_type
+            .as_ref()
+            .unwrap()
             .borrow()
             .privacy_annotation
             .as_ref()

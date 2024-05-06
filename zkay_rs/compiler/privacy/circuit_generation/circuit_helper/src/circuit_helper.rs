@@ -394,6 +394,8 @@ where
             .borrow()
             .identifier_declaration_base
             .annotated_type
+            .as_ref()
+            .unwrap()
             .borrow()
             .is_cipher());
 
@@ -411,6 +413,8 @@ where
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .zkay_type()
                 .type_name
@@ -425,6 +429,8 @@ where
                     .borrow()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .type_name
                     .as_ref()
@@ -446,6 +452,8 @@ where
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .type_name
                 .as_ref()
@@ -460,6 +468,8 @@ where
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .type_name
                 .as_ref()
@@ -660,7 +670,7 @@ where
                     .map(|ret| {
                         RcCell::new(Parameter::new(
                             vec![],
-                            ret.annotated_type.clone().unwrap(),
+                            ret.annotated_type.clone(),
                             ret.location_expr_base
                                 .target
                                 .clone()
@@ -923,6 +933,8 @@ where
                         if p.borrow()
                             .identifier_declaration_base
                             .annotated_type
+                            .as_ref()
+                            .unwrap()
                             .borrow()
                             .is_cipher()
                         {
@@ -930,6 +942,8 @@ where
                                 p.borrow()
                                     .identifier_declaration_base
                                     .annotated_type
+                                    .as_ref()
+                                    .unwrap()
                                     .borrow()
                                     .type_name
                                     .as_ref()
@@ -1735,6 +1749,8 @@ where
                 .borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .type_name
                 .clone();

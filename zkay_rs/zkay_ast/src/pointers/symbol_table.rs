@@ -228,6 +228,17 @@ impl SymbolTableFiller {
             .contracts
             .iter()
             .map(|d| {
+                println!(
+                    "=={:?}==",
+                    d.borrow()
+                        .namespace_definition_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone(),
+                );
                 (
                     d.borrow()
                         .namespace_definition_base
@@ -255,7 +266,10 @@ impl SymbolTableFiller {
             .borrow_mut()
             .names
             .append(&mut vars);
-        // //println!("====ast.visitSourceUnit.names.len()========{:?}",ast.ast_base.names().len());
+        println!(
+            "====ast.visitSourceUnit.names.len()========{:?}",
+            ast.to_ast().ast_base_ref().unwrap().borrow().names.len()
+        );
         Ok(())
     }
 
@@ -271,6 +285,18 @@ impl SymbolTableFiller {
             .iter()
             .filter(|&d| !is_instance(d, ASTType::CommentBase))
             .map(|d| {
+                println!(
+                    "=={:?}==",
+                    d.to_ast()
+                        .try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .idf()
+                        .upgrade()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone()
+                );
                 (
                     d.to_ast()
                         .try_as_identifier_declaration_ref()
@@ -310,7 +336,17 @@ impl SymbolTableFiller {
                 "Zkay does not currently support method overloading.{:?}",
                 f
             );
-            //    //println!("==function_definitions=={:?}=====",f.namespace_definition_base.idf.name().clone());
+            println!(
+                "==function_definitions====name====={:?}=====",
+                f.borrow()
+                    .namespace_definition_base
+                    .idf
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .name()
+                    .clone()
+            );
             funcs.insert(
                 f.borrow()
                     .namespace_definition_base
@@ -335,6 +371,17 @@ impl SymbolTableFiller {
             .struct_definitions
             .iter()
             .map(|d| {
+                println!(
+                    "=={:?}==",
+                    d.borrow()
+                        .namespace_definition_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone()
+                );
                 (
                     d.borrow()
                         .namespace_definition_base
@@ -360,6 +407,17 @@ impl SymbolTableFiller {
             .enum_definitions
             .iter()
             .map(|d| {
+                println!(
+                    "=={:?}==",
+                    d.borrow()
+                        .namespace_definition_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone()
+                );
                 (
                     d.borrow()
                         .namespace_definition_base
@@ -385,7 +443,7 @@ impl SymbolTableFiller {
             .ast_base
             .borrow_mut()
             .names = merge_dicts(vec![state_vars, funcs, structs, enums]);
-        // //println!("====visitContractDefinition========{:?}",ast.ast_base_ref().names().len());
+        // println!("====visitContractDefinition========{:?}",ast.ast_base_ref().names().len());
         Ok(())
     }
 
@@ -400,7 +458,18 @@ impl SymbolTableFiller {
             .parameters
             .iter()
             .map(|d| {
-                //    //println!("==parameters===={:?}======{:?}=====",d.identifier_declaration_base.idf.to_string(),d.identifier_declaration_base.idf.name().clone());
+                println!(
+                    "==parameters===={:?}======{:?}=====",
+                    d.borrow().identifier_declaration_base.idf,
+                    d.borrow()
+                        .identifier_declaration_base
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                        .clone()
+                );
                 (
                     d.borrow()
                         .identifier_declaration_base
@@ -596,7 +665,7 @@ impl SymbolTableFiller {
                     .unwrap(),
             )]);
         }
-        // //println!("====visitMapping========{:?}",ast.ast_base_ref().names().len());
+        // println!("====visitMapping========{:?}",ast.ast_base_ref().names().len());
         Ok(())
     }
 }
@@ -647,13 +716,14 @@ impl SymbolTableLinker {
         ast: &ASTFlatten,
         name: &String,
     ) -> (Option<ASTFlatten>, Option<ASTFlatten>) {
-        ////println!("=============={name}=========={:?}===", ast.to_string());
+        println!("=============={name}=========={:?}===", ast.to_string());
         let mut ancestor = ast.ast_base_ref().unwrap().borrow().parent().clone();
         while let Some(_ancestor) = &ancestor {
             // for (k,v) in _ancestor    .clone()
             //     .upgrade()
             //     .unwrap().ast_base_ref().unwrap().borrow().names(){
             // //println!("={:?}==weak==names={:?}==={:?}",v.weak_count(),k.to_string(),v.weak_count());}
+            println!("=============_ancestor===={:?}===", _ancestor);
             if let Some(nameo) = _ancestor
                 .clone()
                 .upgrade()
@@ -664,7 +734,7 @@ impl SymbolTableLinker {
                 .names()
                 .get(name)
             {
-                //println!("={:?}=={:?}==names==in=={:?}", name, nameo.upgrade(), nameo);
+                println!("={:?}=={:?}==names==in=={:?}", name, nameo.upgrade(), nameo);
                 let decl = nameo.upgrade().unwrap().borrow().parent();
                 if decl
                     .clone()
@@ -682,7 +752,10 @@ impl SymbolTableLinker {
                             || !decl_parent.is_parent_of(ast)
                     })
                 {
-                    //println!("=========return ======");
+                    println!(
+                        "===_find_next_decl======return ==={:?}===",
+                        decl.as_ref().map(|d| d.clone().upgrade()).flatten()
+                    );
                     return (
                         ancestor.map(|a| a.upgrade()).flatten(),
                         decl.as_ref().map(|d| d.clone().upgrade()).flatten(),
@@ -833,17 +906,18 @@ impl SymbolTableLinker {
         let mut _ans = ast.clone(); //TODO side effect
         for _ in 0..100 {
             let (anc, decl) = Self::_find_next_decl(&_ans, &name);
-            // //println!(
-            //     "===={}===={}====={}=={}=====",
-            //     anc.is_some(),
-            //     is_instances(
-            //         anc.as_ref().unwrap(),
-            //         vec![ASTType::ForStatement, ASTType::Block],
-            //     ),
-            //     decl.is_some(),
-            //     is_instance(decl.as_ref().unwrap(), ASTType::VariableDeclaration)
-            // );
-            // //println!(
+            println!(
+                "===={}===={}====={}=={}=====",
+                anc.is_some(),
+                anc.is_some()
+                    && is_instances(
+                        anc.as_ref().unwrap(),
+                        vec![ASTType::ForStatement, ASTType::Block],
+                    ),
+                decl.is_some(),
+                decl.is_some() && is_instance(decl.as_ref().unwrap(), ASTType::VariableDeclaration)
+            );
+            // println!(
             //     "====anc ,decl===={:?}=={:?}=====",
             //     anc.as_ref().unwrap().get_ast_type(),
             //     decl.as_ref().unwrap().get_ast_type()
@@ -857,7 +931,6 @@ impl SymbolTableLinker {
                 && is_instance(decl.as_ref().unwrap(), ASTType::VariableDeclaration)
             {
                 // Check if identifier really references this declaration (does not come before declaration)
-
                 let (lca, ref_anchor, decl_anchor) =
                     Self::_find_lca(&_ans, decl.as_ref().unwrap(), anc.as_ref().unwrap());
 
@@ -874,36 +947,15 @@ impl SymbolTableLinker {
                     continue;
                 }
             }
-            // if let (
-            //     Some(AST::Statement(Statement::StatementList(StatementList::Block(anc)))),
-            //     Some(decl),
-            // ) = (
-            //     &anc,
-            //     &decl
-            //         .as_ref()
-            //         .unwrap()
-            //         .try_as_identifier_declaration_ref()
-            //         .unwrap()
-            //         .try_as_variable_declaration_ref(),
-            // ) {
-            //     // Check if identifier really references this declaration (does not come before declaration)
-            //     let (lca, ref_anchor, decl_anchor) =
-            //         SymbolTableLinker::_find_lca(ast.to_ast(), decl.to_ast(), anc.to_ast());
-            //     if lca.statements().iter().find(|x| (*x).clone() == ref_anchor)
-            //         <= lca
-            //             .statements()
-            //             .iter()
-            //             .find(|x| (*x).clone() == decl_anchor)
-            //     {
-            //         _ans = anc.to_ast();
-            //         continue;
-            //     }
-            // }
+
             *ast = _ans;
-            //println!("=======find_identifier_declaration========return ======");
+            println!(
+                "=======find_identifier_declaration========return =={:?}====",
+                1
+            );
             return decl;
         }
-        //println!("======find_identifier_declaration======= ===fail===");
+        println!("======find_identifier_declaration======= ===fail===");
         None
     }
 
@@ -1331,12 +1383,14 @@ impl SymbolTableLinker {
             .unwrap();
         let ta: ASTFlatten = RcCell::new(VariableDeclaration::new(
             vec![],
-            source_t
-                .borrow()
-                .try_as_mapping_ref()
-                .unwrap()
-                .value_type
-                .clone(),
+            Some(
+                source_t
+                    .borrow()
+                    .try_as_mapping_ref()
+                    .unwrap()
+                    .value_type
+                    .clone(),
+            ),
             Identifier::identifier(""),
             None,
         ))

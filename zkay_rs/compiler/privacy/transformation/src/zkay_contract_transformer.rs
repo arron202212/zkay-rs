@@ -280,13 +280,13 @@ impl ZkayTransformer {
             false,
         ));
         RcCell::new(StateVariableDeclaration::new(
-            RcCell::new(AnnotatedTypeName::new(
+            Some(RcCell::new(AnnotatedTypeName::new(
                 Some(RcCell::new(TypeName::UserDefinedTypeName(
                     UserDefinedTypeName::ContractTypeName(c_type.clone()),
                 ))),
                 None,
                 String::from("NON_HOMOMORPHIC"),
-            )),
+            ))),
             zkay_config::lc_vec_s!["public", "constant"],
             Some(RcCell::new(inst_idf.clone())),
             Some(cast_0_to_c.into()),
@@ -439,6 +439,8 @@ impl ZkayTransformer {
                     .unwrap()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .is_address()
                     && (var
@@ -515,7 +517,7 @@ impl ZkayTransformer {
 
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
-            AnnotatedTypeName::uint_all(),
+            Some(AnnotatedTypeName::uint_all()),
             zkay_config::lc_vec_s!["public", "constant"],
             Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
                 CFG.lock().unwrap().field_prime_var_name(),
@@ -624,11 +626,11 @@ impl ZkayTransformer {
                         .map(|idf| {
                             RcCell::new(VariableDeclaration::new(
                                 vec![],
-                                RcCell::new(AnnotatedTypeName::new(
+                                Some(RcCell::new(AnnotatedTypeName::new(
                                     Some(idf.t.clone()),
                                     None,
                                     String::from("NON_HOMOMORPHIC"),
-                                )),
+                                ))),
                                 Some(RcCell::new(Identifier::HybridArgumentIdf(idf.clone()))),
                                 None,
                             ))
@@ -1154,6 +1156,8 @@ impl ZkayTransformer {
                 if p.borrow()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .is_cipher()
                 {
@@ -1169,6 +1173,8 @@ impl ZkayTransformer {
                 p.borrow()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .type_name
                     .as_ref()
@@ -1326,6 +1332,8 @@ impl ZkayTransformer {
             if p.borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .is_cipher()
             {
@@ -1333,6 +1341,8 @@ impl ZkayTransformer {
                     .borrow()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .type_name
                     .as_ref()
@@ -1381,6 +1391,8 @@ impl ZkayTransformer {
             if p.borrow()
                 .identifier_declaration_base
                 .annotated_type
+                .as_ref()
+                .unwrap()
                 .borrow()
                 .is_cipher()
             {
@@ -1388,6 +1400,8 @@ impl ZkayTransformer {
                     .borrow()
                     .identifier_declaration_base
                     .annotated_type
+                    .as_ref()
+                    .unwrap()
                     .borrow()
                     .type_name
                     .clone();
@@ -1431,6 +1445,7 @@ impl ZkayTransformer {
                             .identifier_declaration_base
                             .annotated_type
                             .clone()
+                            .unwrap()
                             .into(),
                     );
                     let cipher_payload_len = CFG
@@ -1441,6 +1456,8 @@ impl ZkayTransformer {
                             &p.borrow()
                                 .identifier_declaration_base
                                 .annotated_type
+                                .as_ref()
+                                .unwrap()
                                 .borrow()
                                 .homomorphism,
                         )

@@ -142,6 +142,8 @@ impl ZkayVarDeclTransformer {
             .borrow()
             .identifier_declaration_base
             .annotated_type
+            .as_ref()
+            .unwrap()
             .borrow()
             .is_private()
         {
@@ -167,6 +169,8 @@ impl ZkayVarDeclTransformer {
             .borrow()
             .identifier_declaration_base
             .annotated_type
+            .as_ref()
+            .unwrap()
             .borrow()
             .type_name
             .as_ref()

@@ -179,7 +179,7 @@ mod tests {
         );
         assert_eq!(
             identifier_expr.get_annotated_type().map(RcCell::new),
-            Some(decl.borrow().annotated_type().clone())
+            decl.borrow().annotated_type().clone()
         );
     }
 

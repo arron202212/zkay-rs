@@ -32,8 +32,8 @@ use solidity_parser::{
             MappingContext, MeExprContext, MeExprContextAttrs, MemberAccessExprContext,
             ModifierContext, ModifierListContext, MultDivModExprContext, NotExprContext,
             NumberLiteralContext, NumberLiteralContextAttrs, NumberLiteralExprContext,
-            OrExprContext, ParameterListContext, ParenthesisExprContext, PlusMinusExprContext,
-            PostCrementExprContext, PowExprContext, PragmaDirectiveContext,
+            OrExprContext, ParameterContext, ParameterListContext, ParenthesisExprContext,
+            PlusMinusExprContext, PostCrementExprContext, PowExprContext, PragmaDirectiveContext,
             PragmaDirectiveContextAttrs, PreCrementExprContext, PrimitiveCastExprContext,
             ReturnParametersContext, ReturnStatementContext, SignExprContext,
             SimpleStatementContext, SimpleStatementContextAttrs, SolidityParser,
@@ -263,6 +263,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
     fn visit_identifier(&mut self, ctx: &IdentifierContext<'input>) -> Self::Return {
         let name = ctx.name.clone().expect("visit_identifier").text;
+        println!(
+            "======visit_identifier=========================={name},{:?}",
+            name.to_string()
+        );
         // if name.startswith(cfg.reserved_name_prefix) or name.startswith(f"_{cfg.reserved_name_prefix}"){
         //     raise SyntaxException(f"Identifiers must not start with reserved prefix _?{cfg.reserved_name_prefix}", ctx, self.code)
         // elif name.endswith(cfg.reserved_conflict_resolution_suffix){
@@ -362,7 +366,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .as_ref()
                     .map(|v| {
                         v.accept(self);
-                        ////println!("====constructorDefinition======={:?}",self.temp_result().clone());
+                        println!(
+                            "====constructorDefinition======={:?}",
+                            self.temp_result().clone()
+                        );
                         self.temp_result()
                             .clone()
                             .filter(|ast| {
@@ -533,7 +540,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     // );
                     Parameter::new(
                         keywords,
-                        RcCell::new(annotated_type.unwrap()),
+                        annotated_type.map(RcCell::new),
                         idf.map(RcCell::new),
                         None,
                     )
@@ -595,6 +602,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ConstructorDefinitionContext<'input>,
     ) -> Self::Return {
+        println!("====visit_constructorDefinition=====begin=============");
         // self.handle_fdef(ctx)
         let idf = None;
         let return_parameters = None;
@@ -603,10 +611,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .iter()
                 .filter_map(|param| {
                     param.accept(self);
+                    println!(
+                        "====visit_constructorDefinition=====filter======={:?}=======",
+                        self.temp_result().clone()
+                    );
                     self.temp_result()
                         .clone()
                         .filter(|ast| is_instance(ast, ASTType::Parameter))
                         .map(|ast| {
+                            println!(
+                                "====visit_constructorDefinition=====param======={:?}=======",
+                                ast
+                            );
                             ast.try_as_identifier_declaration()
                                 .unwrap()
                                 .try_as_parameter()
@@ -1946,7 +1962,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
         Some(
             StateVariableDeclaration::new(
-                RcCell::new(annotated_type.unwrap()),
+                annotated_type.map(RcCell::new),
                 keywords,
                 idf.map(RcCell::new),
                 expr.map(RcCell::new).map(Into::<ASTFlatten>::into),
@@ -1989,53 +2005,41 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         }
     }
 
-    fn visit_parameterList(&mut self, ctx: &ParameterListContext<'input>) -> Self::Return {
-        //TODO vec
-        let rp: Vec<_> = ctx
-            .params
-            .iter()
-            .map(|p| {
-                let annotated_type = p
-                    .annotated_type
-                    .as_ref()
-                    .map(|at| {
-                        at.accept(self);
-                        self.temp_result()
-                            .clone()
-                            .map(|ast| ast.try_as_annotated_type_name())
-                            .flatten()
-                    })
-                    .flatten();
-                let idf = p
-                    .idf
-                    .as_ref()
-                    .map(|idf| {
-                        idf.accept(self);
-                        self.temp_result()
-                            .clone()
-                            .map(|ast| ast.try_as_identifier())
-                            .flatten()
-                    })
-                    .flatten();
-                let keywords: Vec<_> = p.keywords.iter().map(|kw| kw.to_string()).collect();
-                // //println!("{:?},{:?},{:?}",keywords,annotated_type,idf);
-
-                VariableDeclaration::new(
-                    keywords,
-                    annotated_type.map(RcCell::new).unwrap(),
-                    idf.map(RcCell::new),
-                    None,
-                )
+    fn visit_parameter(&mut self, ctx: &ParameterContext<'input>) -> Self::Return {
+        let annotated_type = ctx
+            .annotated_type
+            .as_ref()
+            .map(|at| {
+                at.accept(self);
+                self.temp_result()
+                    .clone()
+                    .map(|ast| ast.try_as_annotated_type_name())
+                    .flatten()
             })
-            .collect();
-        // //println!("=={:?}==ctx
-        //     .params======={:?}============",ctx.parameter,ctx
-        //     .params);
-        if rp.is_empty() {
-            None
-        } else {
-            Some(rp[0].clone().into_ast())
-        }
+            .flatten();
+        let idf = ctx
+            .idf
+            .as_ref()
+            .map(|idf| {
+                idf.accept(self);
+                self.temp_result()
+                    .clone()
+                    .map(|ast| ast.try_as_identifier())
+                    .flatten()
+            })
+            .flatten();
+        let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
+        // //println!("{:?},{:?},{:?}",keywords,annotated_type,idf);
+
+        Some(
+            Parameter::new(
+                keywords,
+                annotated_type.map(RcCell::new),
+                idf.map(RcCell::new),
+                None,
+            )
+            .into_ast(),
+        )
     }
     fn visit_variableDeclaration(
         &mut self,
@@ -2067,7 +2071,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         Some(
             VariableDeclaration::new(
                 keywords,
-                RcCell::new(annotated_type.unwrap()),
+                annotated_type.map(RcCell::new),
                 idf.map(RcCell::new),
                 None,
             )
