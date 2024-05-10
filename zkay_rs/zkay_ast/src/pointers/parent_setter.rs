@@ -80,7 +80,7 @@ impl ParentSetterVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!("====visitNamespaceDefinition==========={:?}", ast);
+        // println!("====visitNamespaceDefinition==========={:?}", ast);
         let mut ast = ast.to_ast();
         let namespace = ast
             .try_as_namespace_definition_ref()

@@ -2065,6 +2065,7 @@ impl<T: ASTBaseRef> ASTBaseProperty for T {
 
 #[derive(ImplBaseTrait, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ASTBase {
+    pub target: Option<ASTFlattenWeak>,
     pub parent: Option<ASTFlattenWeak>,
     pub namespace: Option<Vec<WeakCell<Identifier>>>,
     pub names: BTreeMap<String, WeakCell<Identifier>>,
@@ -2076,6 +2077,7 @@ pub struct ASTBase {
 impl ASTBase {
     pub fn new() -> Self {
         Self {
+            target: None,
             parent: None,
             namespace: None,
             names: BTreeMap::new(),
@@ -9595,20 +9597,25 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("======visit_ReturnStatement==========={:?}",ast);
         Ok(
             if ast
+                .to_ast()
+                .try_as_statement_ref()
+                .unwrap()
                 .try_as_return_statement_ref()
                 .unwrap()
-                .borrow()
                 .expr
                 .is_none()
             {
                 String::from("return;")
             } else {
                 let e = self.visit(
-                    &ast.try_as_return_statement_ref()
+                    &ast.to_ast()
+                        .try_as_statement_ref()
                         .unwrap()
-                        .borrow()
+                        .try_as_return_statement_ref()
+                        .unwrap()
                         .expr
                         .as_ref()
                         .unwrap()

@@ -263,10 +263,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
     fn visit_identifier(&mut self, ctx: &IdentifierContext<'input>) -> Self::Return {
         let name = ctx.name.clone().expect("visit_identifier").text;
-        println!(
-            "======visit_identifier=========================={name},{:?}",
-            name.to_string()
-        );
+        // println!(
+        //     "======visit_identifier=========================={name},{:?}",
+        //     name.to_string()
+        // );
         // if name.startswith(cfg.reserved_name_prefix) or name.startswith(f"_{cfg.reserved_name_prefix}"){
         //     raise SyntaxException(f"Identifiers must not start with reserved prefix _?{cfg.reserved_name_prefix}", ctx, self.code)
         // elif name.endswith(cfg.reserved_conflict_resolution_suffix){
@@ -366,10 +366,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .as_ref()
                     .map(|v| {
                         v.accept(self);
-                        println!(
-                            "====constructorDefinition======={:?}",
-                            self.temp_result().clone()
-                        );
+                        // println!(
+                        //     "====constructorDefinition======={:?}",
+                        //     self.temp_result().clone()
+                        // );
                         self.temp_result()
                             .clone()
                             .filter(|ast| {
@@ -602,7 +602,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ConstructorDefinitionContext<'input>,
     ) -> Self::Return {
-        println!("====visit_constructorDefinition=====begin=============");
+        // println!("====visit_constructorDefinition=====begin=============");
         // self.handle_fdef(ctx)
         let idf = None;
         let return_parameters = None;
@@ -611,18 +611,18 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .iter()
                 .filter_map(|param| {
                     param.accept(self);
-                    println!(
-                        "====visit_constructorDefinition=====filter======={:?}=======",
-                        self.temp_result().clone()
-                    );
+                    // println!(
+                    //     "====visit_constructorDefinition=====filter======={:?}=======",
+                    //     self.temp_result().clone()
+                    // );
                     self.temp_result()
                         .clone()
                         .filter(|ast| is_instance(ast, ASTType::Parameter))
                         .map(|ast| {
-                            println!(
-                                "====visit_constructorDefinition=====param======={:?}=======",
-                                ast
-                            );
+                            // println!(
+                            //     "====visit_constructorDefinition=====param======={:?}=======",
+                            //     ast
+                            // );
                             ast.try_as_identifier_declaration()
                                 .unwrap()
                                 .try_as_parameter()
