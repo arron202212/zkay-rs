@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
     AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
-    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr,
+    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST,
     LocationExprBaseProperty, NamespaceDefinitionBaseProperty, SourceUnit,
     StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
 };
@@ -34,17 +34,18 @@ mod tests {
         let f = contract.borrow().function_definitions[0].clone();
         let body = f.borrow().body.as_ref().map(|b| b.borrow().clone());
         let decl_statement = body.as_ref().unwrap().statements()[0].clone();
-        // println!("=====decl_statement======{:?}",decl_statement);
         assert!(is_instance(
             &decl_statement,
             ASTType::VariableDeclarationStatement
         ));
         let decl = decl_statement
             .clone()
-            .try_as_statement()
+            .try_as_ast()
             .unwrap()
             .borrow()
             .clone()
+            .try_as_statement()
+            .unwrap()
             .try_as_simple_statement()
             .unwrap()
             .try_as_variable_declaration_statement()
@@ -53,10 +54,14 @@ mod tests {
             .clone();
         let assignment = body.as_ref().unwrap().statements()[1].clone();
         assert!(is_instance(&assignment, ASTType::AssignmentStatementBase));
+
         let identifier_expr = assignment
-            .try_as_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .clone()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_simple_statement_ref()
             .unwrap()
             .try_as_assignment_statement_ref()
@@ -67,29 +72,35 @@ mod tests {
             identifier_expr.as_ref().unwrap(),
             ASTType::IdentifierExpr
         ));
+        let assignment = assignment
+            .try_as_ast_ref()
+            .unwrap()
+            .borrow()
+            .clone()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
+            .clone();
         ASTElements {
             contract,
             f,
             body,
             decl_statement: decl_statement
-                .try_as_statement()
+                .try_as_ast()
                 .unwrap()
                 .borrow()
                 .clone()
+                .try_as_statement()
+                .unwrap()
                 .try_as_simple_statement()
                 .unwrap()
                 .try_as_variable_declaration_statement()
                 .unwrap(),
             decl,
-            assignment: assignment
-                .try_as_statement()
-                .unwrap()
-                .borrow()
-                .clone()
-                .try_as_simple_statement()
-                .unwrap()
-                .try_as_assignment_statement()
-                .unwrap(),
+            assignment,
             identifier_expr: identifier_expr
                 .unwrap()
                 .try_as_expression()
@@ -109,7 +120,7 @@ mod tests {
         let ast = build_ast(&SIMPLE.code());
         // println!("===ast======{:?}",ast);
         let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
-        fill_symbol_table(&ast, global_vars);
+        fill_symbol_table(&ast, global_vars.clone());
 
         let ASTElements {
             contract,
@@ -119,7 +130,7 @@ mod tests {
             ..
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
-        let mut s = get_builtin_globals();
+        let mut s = get_builtin_globals(global_vars.clone());
         s.insert(String::from("Simple"), contract.borrow().idf().clone());
 
         // assert_eq!(ast.ast_base_ref().unwrap().names(), &s);
@@ -157,16 +168,20 @@ mod tests {
     }
     #[test]
     pub fn test_link_identifier_simple() {
-        let mut ast = build_ast(&SIMPLE.code());
-        set_parents(&mut ast);
-        link_identifiers(&mut ast);
+        let ast = build_ast(&SIMPLE.code());
+        set_parents(&ast);
+        link_identifiers(&ast);
 
         let ASTElements {
             identifier_expr,
             decl,
             ..
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
-
+        println!(
+            "=identifier_expr====={:?}======={:?}===",
+            identifier_expr.get_ast_type(),
+            identifier_expr
+        );
         assert_eq!(
             identifier_expr
                 .target()
@@ -178,8 +193,11 @@ mod tests {
             decl.borrow().get_ast_type()
         );
         assert_eq!(
-            identifier_expr.get_annotated_type().map(RcCell::new),
-            decl.borrow().annotated_type().clone()
+            identifier_expr.get_annotated_type(),
+            decl.borrow()
+                .annotated_type()
+                .as_ref()
+                .map(|at| at.borrow().clone())
         );
     }
 
@@ -188,11 +206,10 @@ mod tests {
     pub fn test_fill_symbol_tables() {
         let ast = build_ast(&SIMPLE_STORAGE.code());
         let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
-        fill_symbol_table(&ast, global_vars);
+        fill_symbol_table(&ast, global_vars.clone());
 
         let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
-
-        let mut s = get_builtin_globals();
+        let mut s = get_builtin_globals(global_vars.clone());
         s.insert(
             String::from("SimpleStorage"),
             contract.borrow().idf().clone(),
@@ -204,34 +221,46 @@ mod tests {
         let mut ast = build_ast(&SIMPLE_STORAGE.code());
         set_parents(&mut ast);
         link_identifiers(&mut ast);
+        // println!("=======get_item============={:?}",ast
+        //     .try_as_source_unit_ref()
+        //     .unwrap()
+        //     .borrow()
+        //     .get_item(&String::from("SimpleStorage")).unwrap()
+        //     .try_as_contract_definition_ref()
+        //     .as_ref()
+        //     .unwrap()
+        //     .borrow()
+        //     .get_item(&String::from("set")));
         let assignment = &ast
             .try_as_source_unit_ref()
             .unwrap()
             .borrow()
             .get_item(&String::from("SimpleStorage"))
             .unwrap()
-            .try_as_source_unit_ref()
+            .try_as_contract_definition_ref()
             .as_ref()
             .unwrap()
             .borrow()
             .get_item(&String::from("set"))
             .unwrap()
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
+            .borrow()
             .body
             .as_ref()
             .unwrap()
             .borrow()
             .get_item(0);
         assert!(is_instance(assignment, ASTType::AssignmentStatementBase));
+        // println!("=====assignment======{:?}",assignment);
 
         let stored_data = &assignment
-            .try_as_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .clone()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_simple_statement_ref()
             .unwrap()
             .try_as_assignment_statement_ref()
@@ -251,6 +280,7 @@ mod tests {
             .unwrap()
             .upgrade()
             .unwrap();
+
         assert_eq!(
             Some(stored_data.clone()),
             ast.try_as_source_unit_ref()
@@ -259,7 +289,7 @@ mod tests {
                 .borrow()
                 .get_item(&String::from("SimpleStorage"))
                 .unwrap()
-                .try_as_source_unit_ref()
+                .try_as_contract_definition_ref()
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -267,10 +297,12 @@ mod tests {
         );
 
         let x = assignment
-            .try_as_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
             .clone()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_simple_statement_ref()
             .unwrap()
             .try_as_assignment_statement_ref()
@@ -278,10 +310,12 @@ mod tests {
             .rhs()
             .as_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
+            .try_as_expression_ref()
             .unwrap()
             .borrow()
             .clone()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
             .try_as_location_expr_ref()
             .unwrap()
             .target()
@@ -289,10 +323,11 @@ mod tests {
             .unwrap()
             .upgrade()
             .unwrap();
+        println!("=======x============={:?}", x);
         assert_eq!(
-            x.try_as_identifier_declaration_ref()
+            x.to_ast()
+                .try_as_identifier_declaration_ref()
                 .unwrap()
-                .borrow()
                 .idf()
                 .upgrade()
                 .unwrap()
@@ -305,10 +340,10 @@ mod tests {
     // @parameterized_class(("name", "example"), all_examples)
     // class TestSymbolTable(TestExamples):
     #[test]
-    pub fn test_symbol_table() {
+    pub fn test_symbol_tables() {
         for (name, example) in ALL_EXAMPLES.iter() {
             let ast = build_ast(&example.code());
-            println!("=test_symbol_table======{name}");
+            println!("=test_symbol_tables======{name}");
             set_parents(&ast);
             let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
             fill_symbol_table(&ast, global_vars);

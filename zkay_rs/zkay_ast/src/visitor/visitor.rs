@@ -57,9 +57,11 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         let mut ret_children = None;
 
         if self.traversal() == "post" {
+            // println!("===post={:?}==",ast.get_ast_type());
             ret_children = self.visit_children(&ast).ok();
         }
         let f = self.get_visit_function(ast.get_ast_type(), &ast);
+        // println!("===get_visit_function={:?}==",ast.get_ast_type());
         if f.is_some() {
             ret = f;
         } else if self.traversal() == "node-or-children" {
@@ -90,11 +92,13 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         None
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        // println!("====={:?}=========visit_children=========begin====",ast.get_ast_type());
         let mut ret = self.temper_result();
         for c in ast.children() {
             // println!("==============sssss=============");
             ret = self.visit(&c);
         }
+        // println!("====={:?}=========visit_children=========end====",ast.get_ast_type());
         Ok(ret)
     }
 }

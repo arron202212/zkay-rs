@@ -213,8 +213,7 @@ impl ExpressionToStatementVisitor {
                 .borrow()
                 .parent()
                 .as_ref()
-                .map(|p| p.clone().upgrade())
-                .flatten()
+                .and_then(|p| p.clone().upgrade())
                 .clone();
         }
         if parent.is_some() {

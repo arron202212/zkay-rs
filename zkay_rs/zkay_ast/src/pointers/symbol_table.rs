@@ -14,8 +14,9 @@ use crate::ast::{
     ExpressionBaseProperty, ForStatement, Identifier, IdentifierBase, IdentifierBaseProperty,
     IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
     LocationExpr, LocationExprBaseMutRef, LocationExprBaseProperty, Mapping, MemberAccessExpr,
-    NamespaceDefinition, SimpleStatement, SourceUnit, StateVariableDeclaration, Statement,
-    StatementList, StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
+    NamespaceDefinition, NamespaceDefinitionBaseProperty, SimpleStatement, SourceUnit,
+    StateVariableDeclaration, Statement, StatementList, StatementListBase,
+    StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
     UserDefinedTypeName, UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty,
     UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
 };
@@ -83,8 +84,9 @@ pub fn collect_children_names(ast: &ASTFlatten) -> BTreeMap<String, WeakCell<Ide
     ret
 }
 
-pub fn get_builtin_globals() -> BTreeMap<String, WeakCell<Identifier>> {
-    let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+pub fn get_builtin_globals(
+    global_vars: RcCell<GlobalVars>,
+) -> BTreeMap<String, WeakCell<Identifier>> {
     let mut sf = SymbolTableFiller::new(global_vars);
     sf.get_builtin_globals()
 }
@@ -176,7 +178,13 @@ impl SymbolTableFiller {
                     .clone()
                     .unwrap()
                     .downgrade();
-
+                // println!("=name===={:?}",d.borrow()
+                //         .namespace_definition_base
+                //         .idf
+                //         .as_ref()
+                //         .unwrap()
+                //         .borrow()
+                //         .name());
                 (
                     d.borrow()
                         .namespace_definition_base
@@ -483,7 +491,7 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        // //println!("====visitConstructorOrFunctionDefinition========{:?}",ast.ast_base_ref().names().len());
+        // println!("====visitConstructorOrFunctionDefinition========{:?}",ast.to_ast().ast_base_ref().unwrap().borrow().names .len());
         Ok(())
     }
 
@@ -498,11 +506,18 @@ impl SymbolTableFiller {
             .members
             .iter()
             .filter_map(|d| {
-                // println!("=visitStructDefinition==d==={:?}",d);
-                d.try_as_variable_declaration_ref().map(|id| {
-                    let idf = id.borrow().idf().clone();
-                    (idf.upgrade().unwrap().borrow().name().clone(), idf.clone())
-                })
+                //  println!("=visitStructDefinition==d=name=type={:?}",d.get_ast_type());
+                d.try_as_variable_declaration_ref()
+                    .map(|id| {
+                        let idf = id.borrow().idf().clone();
+
+                        (idf.upgrade().unwrap().borrow().name().clone(), idf.clone())
+                    })
+                    .or(d.try_as_constructor_or_function_definition_ref().map(|id| {
+                        let idf = id.borrow().idf().clone();
+
+                        (idf.upgrade().unwrap().borrow().name().clone(), idf.clone())
+                    }))
             })
             .collect();
         // println!(
@@ -520,13 +535,7 @@ impl SymbolTableFiller {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_enum_definition_ref()
-            .unwrap()
-            .borrow_mut()
-            .namespace_definition_base
-            .ast_base
-            .borrow_mut()
-            .names = ast
+        let names: BTreeMap<_, _> = ast
             .try_as_enum_definition_ref()
             .unwrap()
             .borrow()
@@ -539,6 +548,13 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
+        ast.try_as_enum_definition_ref()
+            .unwrap()
+            .borrow_mut()
+            .namespace_definition_base
+            .ast_base
+            .borrow_mut()
+            .names = names;
         // //println!("====visitEnumDefinition========{:?}",ast.ast_base_ref().names().len());
         Ok(())
     }
@@ -603,13 +619,14 @@ impl SymbolTableFiller {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_for_statement_ref()
+        //    println!("====visitForStatement========{:?}",ast);
+        ast.to_ast()
+            .ast_base_ref()
+            .as_ref()
             .unwrap()
             .borrow_mut()
-            .ast_base_mut_ref()
-            .borrow_mut()
             .names = collect_children_names(ast);
-        // //println!("====visitForStatement========{:?}",ast.ast_base_ref().names().len());
+
         Ok(())
     }
 
@@ -683,7 +700,6 @@ impl SymbolTableFiller {
 pub struct SymbolTableLinker {
     pub ast_visitor_base: AstVisitorBase,
     global_vars: RcCell<GlobalVars>,
-    array_length_member: ASTFlatten,
 }
 // class SymbolTableLinker(AstVisitor)
 impl AstVisitor for SymbolTableLinker {
@@ -720,7 +736,6 @@ impl SymbolTableLinker {
         Self {
             ast_visitor_base: AstVisitorBase::new("post", false),
             global_vars,
-            array_length_member: array_length_member(),
         }
     }
     pub fn _find_next_decl(
@@ -789,14 +804,20 @@ impl SymbolTableLinker {
     }
 
     pub fn _find_lca(
-        ast1: &mut ASTFlatten,
-        ast2: &mut ASTFlatten,
+        ast1: &ASTFlatten,
+        ast2: &ASTFlatten,
         root: &ASTFlatten,
     ) -> eyre::Result<(StatementList, ASTFlatten, ASTFlatten)> {
         assert!(ast1 != ast2);
+        println!(
+            "=_find_lca=={:?}=={:?}=={:?}====begin==",
+            ast1.get_ast_type(),
+            ast2.get_ast_type(),
+            root.get_ast_type()
+        );
         let (mut ast1c, mut ast2c) = (ast1.clone(), ast2.clone());
         // Gather ast1"s ancestors + immediate child towards ast1 (for each)
-        let mut ancs = BTreeMap::new();
+        let mut ancs = HashMap::new();
         for _ in 0..100 {
             assert!(ast1c.ast_base_ref().unwrap().borrow().parent().is_some());
             ancs.insert(
@@ -808,8 +829,7 @@ impl SymbolTableLinker {
                     .clone()
                     .unwrap()
                     .upgrade()
-                    .unwrap()
-                    .to_string(),
+                    .unwrap(),
                 ast1c.clone(),
             );
             ast1c = ast1c
@@ -823,13 +843,15 @@ impl SymbolTableLinker {
                 .unwrap()
                 .clone();
             if &ast1c == root {
-                //println!("======_find_lca======= &ast1 == root ======");
+                println!("======_find_lca======= &ast1 == root ======");
                 break;
             }
         }
 
+        // println!("=ast2=={:?}===={:?}====00==", root, ast2c);
         // Find least common ancestor with ast2 + immediate child towards ast2
         for _ in 0..100 {
+            println!("=ast2=={:?}===={:?}======", 1, ast2c.get_ast_type());
             assert!(ast2c.ast_base_ref().unwrap().borrow().parent().is_some());
             let old_ast = ast2c.clone();
             ast2c = ast2c
@@ -844,8 +866,8 @@ impl SymbolTableLinker {
             // for k in ancs.keys() {
             //     //println!("=ast2=={}==key=={:?}======", ancs.len(), k.to_string());
             // }
-            if let Some(ast2v) = ancs.get(&ast2.to_string()) {
-                //println!("=ast2===1==={:?}======", ast2.to_string());
+            if let Some(ast2v) = ancs.get(&ast2c) {
+                // println!("=ast2=={:?}=1==={:?}======", ast2v.to_string(),ast2c.to_string());
                 assert!(is_instances(
                     &ast2c,
                     vec![
@@ -855,17 +877,28 @@ impl SymbolTableLinker {
                         ASTType::IndentBlock
                     ],
                 ));
-                //println!("=ast2====2=={:?}======", ast2);
-                *ast1 = ast1c.clone();
-                *ast2 = ast2c.clone();
+                println!("=ast2====2=={:?}======", ast2c.get_ast_type());
                 return Ok((
-                    ast2c
-                        .to_ast()
-                        .try_as_statement()
-                        .unwrap()
-                        .try_as_statement_list_ref()
-                        .unwrap()
-                        .clone(),
+                    if is_instance(&ast2c, ASTType::ForStatement) {
+                        StatementList::StatementList(StatementListBase::new(
+                            ast2c
+                                .to_ast()
+                                .try_as_statement()
+                                .unwrap()
+                                .try_as_for_statement_ref()
+                                .unwrap()
+                                .statements(),
+                            false,
+                        ))
+                    } else {
+                        ast2c
+                            .to_ast()
+                            .try_as_statement()
+                            .unwrap()
+                            .try_as_statement_list_ref()
+                            .unwrap()
+                            .clone()
+                    },
                     ast2v.clone(),
                     old_ast,
                 ));
@@ -892,7 +925,7 @@ impl SymbolTableLinker {
         .map(|x| x.1)
     }
 
-    pub fn find_identifier_declaration(&self, ast: &mut ASTFlatten) -> eyre::Result<ASTFlatten> {
+    pub fn find_identifier_declaration(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         // //println!("=======find_identifier_declaration============{:?}",ast);
         let name = ast
             .to_ast()
@@ -911,7 +944,7 @@ impl SymbolTableLinker {
             .name();
         let mut _ans = ast.clone(); //TODO side effect
         for _ in 0..100 {
-            let (anc, mut decl) = Self::_find_next_decl(&_ans, &name)?;
+            let (anc, decl) = Self::_find_next_decl(&_ans, &name)?;
             // println!(
             //     "===={}===={}====={}=={}=====",
             //     anc.is_some(),
@@ -925,15 +958,23 @@ impl SymbolTableLinker {
             // );
             // println!(
             //     "====anc ,decl===={:?}=={:?}=====",
-            //     anc.as_ref().unwrap().get_ast_type(),
-            //     decl.as_ref().unwrap().get_ast_type()
+            //     anc.get_ast_type(),
+            //     decl.get_ast_type()
             // );
             if is_instances(&anc, vec![ASTType::ForStatement, ASTType::Block])
                 && is_instance(&decl, ASTType::VariableDeclaration)
             {
                 // Check if identifier really references this declaration (does not come before declaration)
-                let (lca, ref_anchor, decl_anchor) = Self::_find_lca(&mut _ans, &mut decl, &anc)?;
-
+                let (lca, ref_anchor, decl_anchor) = Self::_find_lca(&_ans, &decl, &anc)?;
+                // println!("={:?}===={:?}=={:?}=",lca
+                //     .statements().len(),lca
+                //     .statements()
+                //     .iter()
+                //     .position(|x| ref_anchor == x.clone().into())
+                //     , lca
+                //         .statements()
+                //         .iter()
+                //         .position(|x| decl_anchor == x.clone().into()));
                 if lca
                     .statements()
                     .iter()
@@ -943,16 +984,13 @@ impl SymbolTableLinker {
                         .iter()
                         .position(|x| decl_anchor == x.clone().into())
                 {
+                    // println!("=*********===========");
                     _ans = anc.clone();
                     continue;
                 }
             }
 
-            *ast = _ans;
-            // println!(
-            //     "=======find_identifier_declaration========return =={:?}====",
-            //     1
-            // );
+            // println!( "=======find_identifier_declaration===return ");
             return Ok(decl);
         }
         println!("======find_identifier_declaration======= ===fail===");
@@ -991,12 +1029,12 @@ impl SymbolTableLinker {
 
     pub fn visitIdentifierExpr(
         &self,
-        mut ast: &ASTFlatten,
+        ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("====visitIdentifierExpr=======begin========={:?}", ast);
+        // println!("====visitIdentifierExpr=======begin========={:?}", ast.get_ast_type());
         let mut ast = ast.clone();
         let fid = self.find_identifier_declaration(&mut ast).ok();
-        // println!("====visitIdentifierExpr=======fid========={:?}", fid);
+        // println!("====visitIdentifierExpr====fid===ast.get_ast_type()========={:?}", ast.get_ast_type());
         let ta = fid.map(|d| d.downgrade());
         // println!("====visitIdentifierExpr=======ta========={:?}", ta);
         if ast.is_expression() {
@@ -1018,7 +1056,11 @@ impl SymbolTableLinker {
                 .location_expr_base_mut_ref()
                 .target = ta;
         } else {
-            println!("====visitIdentifierExpr=======else========={:?}", ta);
+            println!(
+                "=={:?}==visitIdentifierExpr=======else========={:?}",
+                ast.get_ast_type(),
+                ta
+            );
             ast.ast_base_ref().unwrap().borrow_mut().target = ta;
         }
         // println!("====visitIdentifierExpr======end=========={:?}", ast);
@@ -1125,7 +1167,7 @@ impl SymbolTableLinker {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        //println!("===visitMemberAccessExpr============={:?}", ast);
+        // println!("===visitMemberAccessExpr======begin======={:?}", ast.to_string());
         assert!(
             is_instance(
                 ast.to_ast()
@@ -1182,6 +1224,25 @@ impl SymbolTableLinker {
                 ASTType::NamespaceDefinitionBase,
             )
         {
+            //  println!("===visitMemberAccessExpr======NamespaceDefinitionBase===target===={:?}", ast
+            //                 .to_ast()
+            //                 .try_as_expression_ref()
+            //                 .unwrap()
+            //                 .try_as_tuple_or_location_expr_ref()
+            //                 .unwrap()
+            //                 .try_as_location_expr_ref()
+            //                 .unwrap()
+            //                 .try_as_member_access_expr_ref()
+            //                 .unwrap()
+            //                 .expr
+            //                 .as_ref()
+            //                 .unwrap()
+            //                 .borrow()
+            //                 .target()
+            //                 .clone()
+            //                 .unwrap()
+            //                 .upgrade()
+            //                 .unwrap());
             let idf = ast
                 .to_ast()
                 .try_as_expression_ref()
@@ -1201,9 +1262,9 @@ impl SymbolTableLinker {
                 .unwrap()
                 .upgrade()
                 .unwrap()
+                .to_ast()
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .borrow()
                 .names()
                 .get(
                     &ast.to_ast()
@@ -1223,6 +1284,7 @@ impl SymbolTableLinker {
                 .clone();
 
             ast.try_as_expression_ref().map(|expr| {
+                println!("=try_as_expression_ref=={:?}", ast.get_ast_type());
                 expr.borrow_mut()
                     .try_as_tuple_or_location_expr_mut()
                     .unwrap()
@@ -1233,14 +1295,17 @@ impl SymbolTableLinker {
                 expr
             });
             ast.try_as_location_expr_ref().map(|expr| {
+                println!("=try_as_location_expr_ref=={:?}", ast.get_ast_type());
                 expr.borrow_mut().location_expr_base_mut_ref().target =
                     idf.upgrade().unwrap().borrow().parent();
                 expr
             });
+            println!("===NamespaceDefinitionBase=1==typ={:?}", ast.get_ast_type());
             return Ok(());
         }
         println!(
-            "===expr=888888==typ={:?}",
+            "={:?}==expr=88888@@@@8==typ={:?}",
+            ast.get_ast_type(),
             ast.to_ast()
                 .try_as_expression_ref()
                 .unwrap()
@@ -1297,9 +1362,9 @@ impl SymbolTableLinker {
                     .name()
                     == "length"
             );
-            let ta = self.array_length_member.clone();
+            let ta = array_length_member();
             ast.try_as_expression_ref().map(|expr| {
-                println!("===88888=====ta==={:?}==", ta);
+                println!("=arr==try_as_expression_ref=====ta==={:?}==", ta);
                 expr.borrow_mut()
                     .try_as_tuple_or_location_expr_mut()
                     .unwrap()
@@ -1322,24 +1387,24 @@ impl SymbolTableLinker {
                 expr.borrow_mut().location_expr_base_mut_ref().target = Some(ta.downgrade());
                 expr
             });
+            println!("===arr===ta==={:?}==", 1);
             return Ok(());
         }
         assert!(
             t.clone()
                 .map_or(false, |t| is_instance(&t, ASTType::UserDefinedTypeNameBase)),
-            ""
+            "is not UserDefinedTypeNameBase"
         );
 
         // assert!(isinstance(t, UserDefinedTypeName));
 
-        println!("==========target is  none===========");
         if t.clone()
             .unwrap()
             .borrow()
             .try_as_user_defined_type_name_ref()
             .unwrap()
             .target()
-            .is_some()
+            .is_none()
         {
             t.as_ref()
                 .unwrap()
@@ -1349,61 +1414,102 @@ impl SymbolTableLinker {
                 .borrow_mut()
                 .parent = Some(ast.clone().downgrade());
 
-            let tt = ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .try_as_member_access_expr_ref()
-                .unwrap()
-                .expr
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .target()
-                .clone()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .type_name
-                .as_ref()
-                .map(|tn| tn.borrow().clone())
-                .map(RcCell::new);
-            self.visit(&tt.clone().unwrap().into());
+            // let tt = ast
+            //     .to_ast()
+            //     .try_as_expression_ref()
+            //     .unwrap()
+            //     .try_as_tuple_or_location_expr_ref()
+            //     .unwrap()
+            //     .try_as_location_expr_ref()
+            //     .unwrap()
+            //     .try_as_member_access_expr_ref()
+            //     .unwrap()
+            //     .expr
+            //     .as_ref()
+            //     .unwrap()
+            //     .borrow()
+            //     .target()
+            //     .clone()
+            //     .unwrap()
+            //     .upgrade()
+            //     .unwrap()
+            //     .annotated_type()
+            //     .as_ref()
+            //     .unwrap()
+            //     .type_name
+            //     .as_ref()
+            //     .map(|tn| tn.borrow().clone())
+            //     .map(RcCell::new);
+            self.visit(&t.clone().unwrap().into());
 
-            *ast.to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .try_as_member_access_expr_ref()
-                .unwrap()
-                .expr
-                .as_ref()
-                .unwrap()
-                .borrow_mut()
-                .target()
-                .clone()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .annotated_type()
-                .as_mut()
-                .unwrap()
-                .type_name
-                .as_mut()
-                .unwrap()
-                .borrow_mut() = tt.unwrap().borrow().clone();
+            // *ast.to_ast()
+            //     .try_as_expression_ref()
+            //     .unwrap()
+            //     .try_as_tuple_or_location_expr_ref()
+            //     .unwrap()
+            //     .try_as_location_expr_ref()
+            //     .unwrap()
+            //     .try_as_member_access_expr_ref()
+            //     .unwrap()
+            //     .expr
+            //     .as_ref()
+            //     .unwrap()
+            //     .borrow_mut()
+            //     .target()
+            //     .clone()
+            //     .unwrap()
+            //     .upgrade()
+            //     .unwrap()
+            //     .annotated_type()
+            //     .as_mut()
+            //     .unwrap()
+            //     .type_name
+            //     .as_mut()
+            //     .unwrap()
+            //     .borrow_mut() = tt.unwrap().borrow().clone();
+            println!("==========target is   none===========");
             return Ok(());
         }
+        println!(
+            "={:?}===={:?}=====target is not  none======{:?}=====",
+            t.clone()
+                .unwrap()
+                .borrow()
+                .try_as_user_defined_type_name_ref()
+                .unwrap()
+                .target()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .get_ast_type(),
+            t.clone()
+                .unwrap()
+                .borrow()
+                .try_as_user_defined_type_name_ref()
+                .unwrap()
+                .target()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .names(),
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_member_access_expr_ref()
+                .unwrap()
+                .member
+                .borrow()
+                .name()
+        );
 
         let idf = t
             .clone()
