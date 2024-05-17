@@ -11,6 +11,7 @@ const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
+
 use crate::analysis::partition_state::PartitionState;
 use crate::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -26,6 +27,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     cell::RefCell,
     cmp::Ordering,
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     fmt::Debug,
     hash::{Hash, Hasher},
     ops::{Deref, DerefMut},
@@ -83,7 +85,6 @@ impl ChildListBuilder {
     }
 }
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 pub trait Immutable {
     fn is_immutable(&self) -> bool;
 }
@@ -2431,36 +2432,36 @@ impl Expression {
     }
 
     pub fn privacy_annotation_label(&self) -> Option<ASTFlatten> {
-        if let Some(ie) = self
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .try_as_identifier_expr_ref()
-        {
-            if let Some(target) = ie.target() {
-                let target = target.clone().upgrade().unwrap();
-                if let Some(mapping) = target
+        if is_instance(self, ASTType::IdentifierExpr) {
+            let ie = self
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_identifier_expr_ref()
+                .unwrap();
+            let target = ie.target().clone().unwrap().upgrade().unwrap();
+            // println!("=====target======{:?}", target);
+            if is_instance(&target, ASTType::Mapping) {
+                return target
                     .try_as_type_name_ref()
                     .unwrap()
                     .borrow()
                     .try_as_mapping_ref()
-                {
-                    return mapping
-                        .instantiated_key
-                        .as_ref()
-                        .unwrap()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .borrow()
-                        .privacy_annotation_label();
-                }
-                if let Some(id) = target.try_as_identifier_declaration_ref() {
-                    return id.borrow().idf().upgrade().map(|f| f.into());
-                }
-                if let Some(id) = target.try_as_namespace_definition_ref() {
-                    return id.borrow().idf().upgrade().map(|p| p.into());
-                }
+                    .unwrap()
+                    .instantiated_key
+                    .as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .privacy_annotation_label();
+            }
+            if let Some(id) = target.try_as_identifier_declaration_ref() {
+                return id.borrow().idf().upgrade().map(|f| f.into());
+            }
+            if let Some(id) = target.try_as_namespace_definition_ref() {
+                return id.borrow().idf().upgrade().map(|p| p.into());
             }
         }
 
@@ -3145,13 +3146,20 @@ pub enum FunctionCallExpr {
 impl FunctionCallExpr {
     pub fn is_cast(&self) -> bool {
         // isinstance(self.func, LocationExpr) && isinstance(self.func.target, (ContractDefinition, EnumDefinition))
+        // println!(
+        //     "=={:?}======is_cast==================={:?}",
+        //     self.get_ast_type(),
+        //     self.func()
+        // );
         is_instance(self.func(), ASTType::LocationExprBase)
             && is_instances(
                 &self
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -3661,15 +3669,21 @@ impl TupleOrLocationExpr {
                 == &*parent
                     .as_ref()
                     .unwrap()
+                    .to_ast()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .try_as_simple_statement_ref()
+                    .unwrap()
                     .try_as_assignment_statement_ref()
                     .unwrap()
-                    .borrow()
                     .lhs()
                     .as_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow();
+                    .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap();
         }
         if is_instance(parent.as_ref().unwrap(), ASTType::IndexExpr) {
             if self
@@ -3677,9 +3691,15 @@ impl TupleOrLocationExpr {
                     parent
                         .as_ref()
                         .unwrap()
+                        .to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
                         .try_as_index_expr_ref()
                         .unwrap()
-                        .borrow()
                         .arr
                         .clone()
                         .unwrap()
@@ -3689,9 +3709,9 @@ impl TupleOrLocationExpr {
             {
                 return parent
                     .unwrap()
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .is_lvalue();
@@ -3703,9 +3723,15 @@ impl TupleOrLocationExpr {
                     parent
                         .as_ref()
                         .unwrap()
+                        .to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
                         .try_as_member_access_expr_ref()
                         .unwrap()
-                        .borrow()
                         .expr
                         .clone()
                         .unwrap()
@@ -3715,9 +3741,9 @@ impl TupleOrLocationExpr {
             {
                 return parent
                     .unwrap()
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .is_lvalue();
@@ -3727,9 +3753,11 @@ impl TupleOrLocationExpr {
             return parent
                 .as_ref()
                 .unwrap()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .borrow()
                 .is_lvalue();
         }
 
@@ -8469,7 +8497,7 @@ pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten {
 }
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct InstanceTarget {
-    pub target_key: Vec<Option<ASTFlatten>>,
+    pub target_key: Vec<Option<ASTFlattenWeak>>,
 }
 impl fmt::Display for InstanceTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -8479,16 +8507,16 @@ impl fmt::Display for InstanceTarget {
 impl InstanceTarget {
     pub fn new(expr: Vec<Option<ASTFlatten>>) -> Self {
         let target_key = if expr.len() == 2 {
-            expr
+            expr.into_iter().map(|t| t.map(|x| x.downgrade())).collect()
         } else {
             let v = expr[0].clone().unwrap();
             if is_instance(&v, ASTType::VariableDeclaration) {
-                vec![expr[0].clone(), None]
+                vec![expr[0].clone().map(|t| t.downgrade()), None]
             } else if is_instance(&v, ASTType::LocationExprBase) {
                 let v = v
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -8496,25 +8524,22 @@ impl InstanceTarget {
                     .clone();
                 match v.get_ast_type() {
                     ASTType::IdentifierExpr => {
-                        vec![
-                            v.location_expr_base_ref().target.clone().unwrap().upgrade(),
-                            None,
-                        ]
+                        vec![v.location_expr_base_ref().target.clone(), None]
                     }
 
                     ASTType::MemberAccessExpr => vec![
-                        v.location_expr_base_ref().target.clone().unwrap().upgrade(),
+                        v.location_expr_base_ref().target.clone(),
                         Some(
-                            v.try_as_member_access_expr_ref()
-                                .unwrap()
-                                .member
-                                .clone()
-                                .into(),
+                            ASTFlatten::from(
+                                v.try_as_member_access_expr_ref().unwrap().member.clone(),
+                            )
+                            .downgrade(),
                         ),
                     ],
                     ASTType::IndexExpr => vec![
-                        v.location_expr_base_ref().target.clone().unwrap().upgrade(),
-                        Some(v.try_as_index_expr_ref().unwrap().key.clone().into()),
+                        v.location_expr_base_ref().target.clone(),
+                        v.try_as_index_expr_ref()
+                            .map(|astf| ASTFlatten::from(astf.key.clone()).downgrade()),
                     ],
                     _ => vec![None; 2],
                 }
@@ -8523,7 +8548,7 @@ impl InstanceTarget {
             }
         };
         assert!(is_instances(
-            &target_key[0].clone().unwrap(),
+            &target_key[0].clone().unwrap().upgrade().unwrap(),
             vec![
                 ASTType::VariableDeclaration,
                 ASTType::Parameter,
@@ -8534,16 +8559,16 @@ impl InstanceTarget {
     }
 
     pub fn target(&self) -> Option<ASTFlatten> {
-        if !self.target_key.is_empty() {
-            self.target_key[0].clone()
-        } else {
-            None
-        }
+        self.target_key
+            .first()
+            .and_then(|t| t.clone().unwrap().upgrade())
     }
 
     pub fn key(&self) -> Option<ASTFlatten> {
         if self.target_key.len() > 1 {
-            self.target_key[1].clone()
+            self.target_key[1]
+                .as_ref()
+                .and_then(|t| t.clone().upgrade())
         } else {
             None
         }

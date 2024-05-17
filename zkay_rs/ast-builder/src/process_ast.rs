@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-
+use rccell::RcCell;
 use solidity::compiler::check_for_zkay_solc_errors;
 //, SolcException;
 use zkay_config::config::CFG;
@@ -27,9 +27,11 @@ use zkay_ast::ast::{ASTFlatten, IdentifierBaseProperty, SourceUnit, AST}; //, As
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers as link};
 use zkay_utils::progress_printer::print_step;
 // use crate::pointers::pointer_exceptions::UnknownIdentifierException;
-
 use bitflags::bitflags;
 use std::fmt;
+use zkay_ast::global_defs::{
+    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+};
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct ASTFlags(u32);
@@ -102,7 +104,11 @@ fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (ASTFlatten, St
 }
 
 //parents:bool, link_identifiers:bool, check_return:bool, alias_analysis:bool, type_check:bool, solc_check:bool
-pub fn get_processed_ast(code: &str, flag: Option<u32>) -> ASTFlatten {
+pub fn get_processed_ast(
+    code: &str,
+    flag: Option<u32>,
+    global_vars: RcCell<GlobalVars>,
+) -> ASTFlatten {
     let flag = ASTFlags::new(flag);
 
     let (mut ast, _) =
@@ -116,6 +122,7 @@ pub fn get_processed_ast(code: &str, flag: Option<u32>) -> ASTFlatten {
         flag.check_return(),
         flag.alias_analysis(),
         flag.type_check(),
+        global_vars,
     );
 
     ast
@@ -128,6 +135,7 @@ fn process_ast(
     check_return: bool,
     alias_analysis: bool,
     type_check: bool,
+    global_vars: RcCell<GlobalVars>,
 ) {
     print_step("Preprocessing AST");
     if parents {
@@ -135,7 +143,7 @@ fn process_ast(
     }
     if link_identifiers {
         // try:
-        link(ast);
+        link(ast, global_vars.clone());
     }
     // except UnknownIdentifierException as e:
     //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")
@@ -144,8 +152,9 @@ fn process_ast(
         r(ast);
     }
     if alias_analysis {
-        a(ast);
+        a(ast, global_vars.clone());
     }
+    println!("{:?}", global_vars.borrow().vars().len());
     call_graph_analysis(ast);
     compute_modified_sets(ast);
     check_for_undefined_behavior_due_to_eval_order(ast);
@@ -165,9 +174,10 @@ fn process_ast(
 
 pub fn get_verification_contract_names(
     code_or_ast: (Option<String>, Option<ASTFlatten>),
+    global_vars: RcCell<GlobalVars>,
 ) -> Vec<String> {
     let ast = if let (Some(code), None) = code_or_ast {
-        Some(get_processed_ast(&code, None))
+        Some(get_processed_ast(&code, None, global_vars))
     } else {
         code_or_ast.1.clone()
     };

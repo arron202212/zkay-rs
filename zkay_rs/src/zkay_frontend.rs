@@ -44,8 +44,12 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use zkay_ast::ast::IntoAST;
+use zkay_ast::global_defs::{
+    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+};
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitor::solidity_visitor::to_solidity;
+
 // fn proving_scheme_classes<T,VK>(proving_scheme: &str) -> T
 // where
 //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
@@ -137,13 +141,13 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     } else if !import_keys {
         _dump_to_output(code, output_dir, zkay_filename, false);
     }
-
+    let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
     // Type checking
-    let zkay_ast = get_processed_ast(code, None);
+    let zkay_ast = get_processed_ast(code, None, global_vars.clone());
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(Some(zkay_ast.clone()));
+    let (ast, circuits) = transform_ast(Some(zkay_ast.clone()), global_vars.clone());
 
     // Dump libraries
     print_step("Write library contract files");
@@ -205,7 +209,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     let mut kwargs = std::collections::HashMap::new();
     if let Some(_v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
-        let mut verifier_names = get_verification_contract_names((None, Some(zkay_ast.clone())));
+        let mut verifier_names =
+            get_verification_contract_names((None, Some(zkay_ast.clone())), global_vars.clone());
         verifier_names.sort_unstable();
         let mut verifier_contract_type_codes: Vec<_> = cg
             .circuit_generator_base

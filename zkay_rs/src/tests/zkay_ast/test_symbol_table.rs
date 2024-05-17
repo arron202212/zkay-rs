@@ -170,7 +170,8 @@ mod tests {
     pub fn test_link_identifier_simple() {
         let ast = build_ast(&SIMPLE.code());
         set_parents(&ast);
-        link_identifiers(&ast);
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        link_identifiers(&ast, global_vars);
 
         let ASTElements {
             identifier_expr,
@@ -218,9 +219,11 @@ mod tests {
     }
     #[test]
     pub fn test_link_identifiers_storge() {
-        let mut ast = build_ast(&SIMPLE_STORAGE.code());
-        set_parents(&mut ast);
-        link_identifiers(&mut ast);
+        let ast = build_ast(&SIMPLE_STORAGE.code());
+        set_parents(&ast);
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+
+        link_identifiers(&ast, global_vars);
         // println!("=======get_item============={:?}",ast
         //     .try_as_source_unit_ref()
         //     .unwrap()
@@ -346,8 +349,8 @@ mod tests {
             println!("=test_symbol_tables======{name}");
             set_parents(&ast);
             let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
-            fill_symbol_table(&ast, global_vars);
-            link_identifiers(&ast);
+            fill_symbol_table(&ast, global_vars.clone());
+            link_identifiers(&ast, global_vars);
             let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
             assert_eq!(
                 &contract.borrow().idf().upgrade().unwrap().borrow().name(),

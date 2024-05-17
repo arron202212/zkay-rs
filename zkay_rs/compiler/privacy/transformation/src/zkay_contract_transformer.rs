@@ -34,6 +34,9 @@ use zkay_ast::ast::{
     StructTypeName, TupleExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
     VariableDeclarationStatement, AST,
 };
+use zkay_ast::global_defs::{
+    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+};
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers};
 use zkay_ast::visitor::{
     deep_copy::deep_copy,
@@ -56,6 +59,7 @@ use zkay_derive::AstTransformerVisitorBaseRefImpl;
 // """
 pub fn transform_ast(
     ast: Option<ASTFlatten>,
+    global_vars: RcCell<GlobalVars>,
 ) -> (
     ASTFlatten,
     BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
@@ -65,7 +69,8 @@ pub fn transform_ast(
 
     // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
-    link_identifiers(new_ast.as_ref().unwrap());
+
+    link_identifiers(new_ast.as_ref().unwrap(), global_vars.clone());
     (new_ast.unwrap(), zt.circuits.clone())
 }
 

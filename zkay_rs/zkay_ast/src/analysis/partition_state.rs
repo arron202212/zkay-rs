@@ -205,8 +205,9 @@ impl<
             .map(|subset| subset.iter().cloned().collect::<Vec<_>>())
             .flatten()
             .collect::<BTreeSet<_>>();
+        // println!("===my_vals.len(),other_vals========================={:?},{:?}",my_vals.len(),other_vals.len());
         assert!(
-            my_vals.symmetric_difference(&other_vals).count() > 0,
+            my_vals.symmetric_difference(&other_vals).count() == 0,
             "joined branches do not contain the same values"
         );
         let values_in_both: BTreeSet<_> = my_vals.intersection(&other_vals).collect();

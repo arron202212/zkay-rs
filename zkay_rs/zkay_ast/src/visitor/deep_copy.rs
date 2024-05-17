@@ -9,6 +9,7 @@ use crate::ast::{
     ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty,
     IntoAST, Statement, UserDefinedTypeName, AST,
 };
+use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -37,7 +38,8 @@ pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Opt
         .borrow_mut()
         .parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
     set_parents(ast_copy.as_mut().unwrap());
-    link_identifiers(ast_copy.as_mut().unwrap());
+    let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+    link_identifiers(ast_copy.as_mut().unwrap(), global_vars.clone());
     ast_copy
 }
 // """
@@ -61,7 +63,8 @@ pub fn _replace_ast(old_ast: &ASTFlatten, mut new_ast: &ASTFlatten) {
     DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
     if old_ast.ast_base_ref().unwrap().borrow().parent().is_some() {
         set_parents(&mut new_ast);
-        link_identifiers(new_ast);
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        link_identifiers(new_ast, global_vars.clone());
     }
 }
 

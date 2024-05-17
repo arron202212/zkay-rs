@@ -8,8 +8,9 @@
 use crate::ast::{
     is_instance, ASTFlatten, ASTInstanceOf, ASTType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
-    ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionCallExprBaseRef, IntoAST,
-    LocationExpr, LocationExprBaseProperty, NamespaceDefinition, WhileStatement, AST,
+    ExpressionBaseRef, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
+    WhileStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,
@@ -73,27 +74,45 @@ impl DirectCalledFunctionDetector {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // let fce=ast.try_as_expression_ref().unwrap().borrow().try_as_function_call_expr_ref().unwrap().clone();
+        // println!("====visitFunctionCallExpr============{:?}",ast);
         if !is_instance(
-            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func(),
             ASTType::BuiltinFunction,
         ) && !ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .try_as_function_call_expr_ref()
             .unwrap()
-            .borrow()
             .is_cast()
         {
             assert!(is_instance(
-                ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .func(),
                 ASTType::LocationExprBase
             ));
             let fdef = &ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -104,36 +123,48 @@ impl DirectCalledFunctionDetector {
                 .clone()
                 .upgrade()
                 .unwrap()
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
+                .borrow()
                 .is_function());
             if let Some(cofd) = fdef
                 .clone()
                 .upgrade()
                 .unwrap()
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
                 .try_as_constructor_or_function_definition_ref()
+                .map(|d| d.borrow().clone())
             {
                 let cofd = cofd.clone();
-                ast.try_as_function_call_expr_ref()
+                // println!("====ast.try_as_expression_ref().unwrap().borrow()
+                //     .expression_base_ref()
+                //     .statement
+                //     .as_ref()
+                //     .unwrap()
+                //     .clone()
+                //     .upgrade()====================={:?}",ast.try_as_expression_ref().unwrap().borrow()
+                //     .expression_base_ref()
+                //     .statement
+                //     .as_ref()
+                //     .unwrap()
+                //     .clone()
+                //     .upgrade());
+
+                ast.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
+                    .expression_base_ref()
                     .statement
                     .as_ref()
                     .unwrap()
                     .clone()
                     .upgrade()
                     .unwrap()
+                    .try_as_ast_ref()
+                    .unwrap()
+                    .borrow()
                     .try_as_statement_ref()
                     .unwrap()
-                    .borrow_mut()
-                    .statement_base_mut_ref()
+                    .statement_base_ref()
                     .unwrap()
                     .function
                     .clone()
@@ -265,10 +296,7 @@ impl IndirectCalledFunctionDetector {
                 })
                 .flatten()
                 .collect();
-            ast.try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow_mut()
-                .called_functions = ast
+            let cf = ast
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow()
@@ -276,6 +304,10 @@ impl IndirectCalledFunctionDetector {
                 .union(&leaves)
                 .cloned()
                 .collect();
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .called_functions = cf;
         }
 
         if ast

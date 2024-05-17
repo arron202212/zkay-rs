@@ -9,7 +9,7 @@ use crate::ast::{
     is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
     ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
     Identifier, IntoAST, NamespaceDefinition, NamespaceDefinitionBaseProperty, SourceUnit,
-    Statement, AST,
+    Statement, StatementBaseMutRef, AST,
 };
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
@@ -218,11 +218,19 @@ impl ExpressionToStatementVisitor {
         }
         if parent.is_some() {
             //  println!("=====visitExpression========p============{:?}",ast);
-            ast.to_ast()
-                .try_as_expression_mut()
-                .unwrap()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
+            if ast.is_expression() {
+                ast.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = parent.map(|p| p.clone().downgrade());
+            } else if ast.is_location_expr() {
+                ast.try_as_location_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = parent.map(|p| p.clone().downgrade());
+            }
         }
         Ok(())
     }
@@ -244,13 +252,23 @@ impl ExpressionToStatementVisitor {
                 .clone();
         }
         if parent.is_some() {
-            // println!("=====visitStatement========{:?}", ast);
-            ast.to_ast()
-                .try_as_statement_mut()
-                .unwrap()
-                .statement_base_mut_ref()
-                .unwrap()
-                .function = parent.map(|p| p.clone().downgrade());
+            // println!("=====visitStatement====get_ast_type===={:?}", ast);
+            if ast.is_block() {
+                ast.try_as_block_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .statement_base_mut_ref()
+                    .function = parent.map(|p| p.clone().downgrade());
+            } else if ast.is_ast() {
+                ast.try_as_ast_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_statement_mut()
+                    .unwrap()
+                    .statement_base_mut_ref()
+                    .unwrap()
+                    .function = parent.map(|p| p.clone().downgrade());
+            }
         }
         Ok(())
     }

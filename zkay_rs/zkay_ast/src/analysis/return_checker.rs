@@ -50,20 +50,23 @@ impl ReturnCheckVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("========visitReturnStatement========================{:?}",ast);
         let container = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_return_statement_ref()
             .unwrap()
-            .borrow()
             .parent()
             .unwrap()
             .upgrade()
             .unwrap();
-        // assert!(is_instance(&*container,ASTType::Block));
+        assert!(is_instance(&container, ASTType::Block));
         let mut ok = true;
         if container
+            .to_ast()
             .try_as_statement_ref()
             .unwrap()
-            .borrow()
             .try_as_statement_list_ref()
             .unwrap()
             .statements()
@@ -75,9 +78,9 @@ impl ReturnCheckVisitor {
         }
         if !is_instance(
             &container
+                .to_ast()
                 .try_as_statement_ref()
                 .unwrap()
-                .borrow()
                 .ast_base_ref()
                 .unwrap()
                 .borrow()
@@ -88,9 +91,9 @@ impl ReturnCheckVisitor {
                 .unwrap(),
             ASTType::ConstructorOrFunctionDefinition,
         ) || container
+            .to_ast()
             .try_as_statement_ref()
             .unwrap()
-            .borrow()
             .ast_base_ref()
             .unwrap()
             .borrow()
@@ -99,17 +102,15 @@ impl ReturnCheckVisitor {
             .unwrap()
             .upgrade()
             .unwrap()
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
+            .borrow()
             .is_constructor()
         {
             ok = false;
         }
         // raise ReturnPositionException(ast)}
-        assert!(
+        eyre::ensure!(
             ok,
             "Return statements are only allowed at the end of a function. {:?}",
             ast,

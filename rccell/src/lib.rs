@@ -321,10 +321,11 @@ impl<T> Clone for WeakCell<T> {
 
 impl<T> PartialEq for WeakCell<T> {
     fn eq(&self, other: &Self) -> bool {
-        match (self.upgrade(), other.upgrade()) {
-            (Some(s), Some(o)) if s == o => true,
-            _ => false,
-        }
+        // match (self.upgrade(), other.upgrade()) {
+        //     (Some(s), Some(o)) if s == o => true,
+        //     _ => false,
+        // }
+        self.ptr_eq(other)
     }
 }
 
@@ -338,19 +339,21 @@ impl<T> Hash for WeakCell<T> {
 }
 impl<T: PartialOrd + Ord> PartialOrd for WeakCell<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self.upgrade(), other.upgrade()) {
-            (Some(s), Some(o)) => Some((*s.borrow()).cmp(&*o.borrow())),
-            _ => None,
-        }
+        // match (self.upgrade(), other.upgrade()) {
+        //     (Some(s), Some(o)) => Some((*s.borrow()).cmp(&*o.borrow())),
+        //     _ => None,
+        // }
+        Some(self.cmp(other))
     }
 }
 
 impl<T: Ord> Ord for WeakCell<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        match (self.upgrade(), other.upgrade()) {
-            (Some(s), Some(o)) => (*s.borrow()).cmp(&*o.borrow()),
-            _ => Ordering::Equal,
-        }
+        // match (self.upgrade(), other.upgrade()) {
+        //     (Some(s), Some(o)) => (*s.borrow()).cmp(&*o.borrow()),
+        //     _ => Ordering::Equal,
+        // }
+        format!("{:?}", self.0.as_ptr()).cmp(&format!("{:?}", other.0.as_ptr()))
     }
 }
 

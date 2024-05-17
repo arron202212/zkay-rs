@@ -17,17 +17,19 @@ use crate::ast::{
     StatementBaseProperty, StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
     VariableDeclarationStatement, WhileStatement, AST,
 };
+use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use zkay_derive::ASTVisitorBaseRefImpl;
-pub fn alias_analysis(ast: &ASTFlatten) {
-    let mut v = AliasAnalysisVisitor::new(false);
-    v.cond_analyzer.visit(ast);
+pub fn alias_analysis(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
+    let mut v = AliasAnalysisVisitor::new(false, global_vars);
+    v.visit(ast);
 }
 #[derive(ASTVisitorBaseRefImpl)]
 struct AliasAnalysisVisitor {
     pub ast_visitor_base: AstVisitorBase,
     pub cond_analyzer: GuardConditionAnalyzer,
+    global_vars: RcCell<GlobalVars>,
 }
 // class AliasAnalysisVisitor(AstVisitor)
 
@@ -96,16 +98,18 @@ impl AliasAnalysisVisitor {
     // pub fn __init__(&self, log=False)
     //     super().__init__("node-or-children", log)
     //     self.cond_analyzer = GuardConditionAnalyzer()
-    pub fn new(log: bool) -> Self {
+    pub fn new(log: bool, global_vars: RcCell<GlobalVars>) -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", log),
             cond_analyzer: GuardConditionAnalyzer::new(log),
+            global_vars,
         }
     }
     pub fn visitConstructorOrFunctionDefinition(
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("{:?},{:?}",ast,ast.to_string());
         let mut s: PartitionState<AST> = PartitionState::new();
         s.insert(
             MeExpr::new()
@@ -121,21 +125,28 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 .to_ast(),
         );
+        // println!("==ast.to_ast().ast_base_ref().borrow().parant====================={:?}",ast.to_ast().ast_base_ref().unwrap().borrow().parent.clone().unwrap().upgrade().unwrap().get_ast_type());
         for d in &ast
-            .try_as_constructor_or_function_definition_ref()
+            .to_ast()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .parent
-            .as_ref()
+            .clone()
             .unwrap()
+            .upgrade()
+            .clone()
+            .unwrap()
+            .try_as_contract_definition_ref()
+            .unwrap()
+            .borrow()
             .state_variable_declarations
         {
+            // println!("=====d========{:?}",d);
             s.insert(
-                d.try_as_identifier_declaration_ref()
+                d.try_as_state_variable_declaration_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_state_variable_declaration_ref()
-                    .unwrap()
                     .idf()
                     .upgrade()
                     .unwrap()
@@ -187,26 +198,29 @@ impl AliasAnalysisVisitor {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements {
+            // println!("{:?}",statement);
             statement
-                .try_as_statement_ref()
+                .try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
                 .statement_base_mut_ref()
                 .unwrap()
                 .before_analysis = Some(last.clone());
-            print!("before  {:?},{:?}", statement, last);
+            // print!("before  {:?},{:?}", statement, last);
             self.visit(&statement);
             last = statement
+                .to_ast()
                 .try_as_statement_ref()
                 .unwrap()
-                .borrow()
                 .statement_base_ref()
                 .unwrap()
                 .after_analysis
                 .as_ref()
                 .unwrap()
                 .clone();
-            print!("after {:?},{:?}", statement, last);
+            // print!("after {:?},{:?}", statement, last);
         }
 
         last
@@ -215,25 +229,46 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_statement_list_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_base_mut_ref()
-            .after_analysis = Some(
+        // println!("============={:?}=================",ast);
+        let aa = Some(
             self.propagate(
-                &ast.try_as_statement_list_ref()
+                &ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_statement_list_ref()
+                    .unwrap()
                     .statements()
                     .clone(),
-                ast.try_as_statement_list_ref()
+                ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_statement_list_ref()
+                    .unwrap()
                     .before_analysis()
                     .as_ref()
                     .unwrap(),
             ),
         );
+        if ast.is_block() {
+            ast.try_as_block_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .after_analysis = aa;
+        } else if ast.is_ast() {
+            ast.try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_statement_list_mut()
+                .unwrap()
+                .try_as_block_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .after_analysis = aa;
+        }
+
         Ok(())
     }
     pub fn visitBlock(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -308,17 +343,22 @@ impl AliasAnalysisVisitor {
         Ok(())
     }
     pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("=======visitIfStatement================={:?}====",ast);
         // condition
         let before_then = self.cond_analyzer.analyze(
-            &ast.try_as_if_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .condition
                 .clone()
                 .into(),
-            ast.try_as_if_statement_ref()
+            ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .statement_base
                 .before_analysis
                 .as_ref()
@@ -326,26 +366,34 @@ impl AliasAnalysisVisitor {
         );
 
         // then
-        ast.try_as_if_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_if_statement_mut()
+            .unwrap()
             .then_branch
             .borrow_mut()
             .statement_list_base
             .statement_base
             .before_analysis = Some(before_then);
         self.visit(
-            &ast.try_as_if_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .then_branch
                 .clone()
                 .into(),
         );
         let after_then = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_if_statement_ref()
             .unwrap()
-            .borrow()
             .then_branch
             .borrow()
             .statement_list_base
@@ -355,15 +403,21 @@ impl AliasAnalysisVisitor {
 
         // else
         let after_else = if ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_if_statement_ref()
             .unwrap()
-            .borrow()
             .else_branch
             .is_some()
         {
-            ast.try_as_if_statement_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_if_statement_mut()
+                .unwrap()
                 .else_branch
                 .as_mut()
                 .unwrap()
@@ -372,9 +426,11 @@ impl AliasAnalysisVisitor {
                 .before_analysis = Some(
                 self.cond_analyzer.analyze(
                     &RcCell::new(
-                        ast.try_as_if_statement_ref()
+                        ast.to_ast()
+                            .try_as_statement_ref()
                             .unwrap()
-                            .borrow()
+                            .try_as_if_statement_ref()
+                            .unwrap()
                             .condition
                             .try_as_expression_ref()
                             .unwrap()
@@ -382,9 +438,11 @@ impl AliasAnalysisVisitor {
                             .unop(String::from("!")),
                     )
                     .into(),
-                    ast.try_as_if_statement_ref()
+                    ast.to_ast()
+                        .try_as_statement_ref()
                         .unwrap()
-                        .borrow()
+                        .try_as_if_statement_ref()
+                        .unwrap()
                         .statement_base
                         .before_analysis
                         .as_ref()
@@ -392,17 +450,21 @@ impl AliasAnalysisVisitor {
                 ),
             );
             self.visit(
-                &ast.try_as_if_statement_ref()
+                &ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_if_statement_ref()
+                    .unwrap()
                     .else_branch
                     .clone()
                     .unwrap()
                     .into(),
             );
-            ast.try_as_if_statement_ref()
+            ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .else_branch
                 .as_ref()
                 .unwrap()
@@ -412,18 +474,24 @@ impl AliasAnalysisVisitor {
                 .after_analysis
                 .clone()
         } else {
-            ast.try_as_if_statement_ref()
+            ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_if_statement_ref()
+                .unwrap()
                 .statement_base
                 .before_analysis
                 .clone()
         };
 
         // join branches
-        ast.try_as_if_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_if_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = Some(after_then.unwrap().join(&after_else.unwrap()));
         Ok(())
@@ -435,30 +503,27 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        if has_side_effects(
-            &ast.try_as_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .condition
-                .clone()
-                .into(),
-        ) || has_side_effects(
-            &ast.try_as_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .body
-                .clone()
-                .into(),
-        ) {
-            ast.try_as_while_statement_ref()
+        // println!("===visitWhileStatement================{:?}",ast);
+        let ws = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_while_statement_ref()
+            .unwrap()
+            .clone();
+        if has_side_effects(&ws.condition.clone().into())
+            || has_side_effects(&ws.body.clone().into())
+        {
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_while_statement_mut()
+                .unwrap()
                 .statement_base
                 .before_analysis = Some(
-                ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base
+                ws.statement_base
                     .before_analysis
                     .clone()
                     .unwrap()
@@ -466,76 +531,45 @@ impl AliasAnalysisVisitor {
             );
         }
 
-        ast.try_as_while_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_while_statement_mut()
+            .unwrap()
             .body
             .borrow_mut()
             .statement_list_base
             .statement_base
-            .before_analysis = Some(
-            self.cond_analyzer.analyze(
-                &ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
-                    .clone()
-                    .into(),
-                ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base
-                    .before_analysis
-                    .as_ref()
-                    .unwrap(),
-            ),
-        );
-        self.visit(
-            &ast.try_as_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .body
-                .clone()
-                .into(),
-        );
+            .before_analysis = Some(self.cond_analyzer.analyze(
+            &ws.condition.clone().into(),
+            ws.statement_base.before_analysis.as_ref().unwrap(),
+        ));
+        self.visit(&ws.body.clone().into());
 
         // Either no loop iteration or at least one loop iteration
         let skip_loop = self.cond_analyzer.analyze(
             &RcCell::new(
-                ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
+                ws.condition
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
             .into(),
-            ast.try_as_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .statement_base
-                .before_analysis
-                .as_ref()
-                .unwrap(),
+            ws.statement_base.before_analysis.as_ref().unwrap(),
         );
         let did_loop = self.cond_analyzer.analyze(
             &RcCell::new(
-                ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
+                ws.condition
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
             .into(),
-            ast.try_as_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .body
+            ws.body
                 .borrow()
                 .statement_list_base
                 .statement_base
@@ -545,9 +579,13 @@ impl AliasAnalysisVisitor {
         );
 
         // join
-        ast.try_as_while_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_while_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = Some(skip_loop.join(&did_loop));
         Ok(())
@@ -561,33 +599,25 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let cond_se = has_side_effects(
-            &ast.try_as_do_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .condition
-                .clone()
-                .into(),
-        );
-        if cond_se
-            || has_side_effects(
-                &ast.try_as_do_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .body
-                    .clone()
-                    .into(),
-            )
-        {
-            ast.try_as_do_while_statement_ref()
+        let dws = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_do_while_statement_ref()
+            .unwrap()
+            .clone();
+        let cond_se = has_side_effects(&dws.condition.clone().into());
+        if cond_se || has_side_effects(&dws.body.clone().into()) {
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_do_while_statement_mut()
+                .unwrap()
                 .statement_base
                 .before_analysis = Some(
-                ast.try_as_do_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base
+                dws.statement_base
                     .before_analysis
                     .as_ref()
                     .unwrap()
@@ -595,68 +625,55 @@ impl AliasAnalysisVisitor {
             );
         }
 
-        ast.try_as_do_while_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_do_while_statement_mut()
+            .unwrap()
             .body
             .borrow_mut()
             .statement_list_base
             .statement_base
-            .before_analysis = ast
-            .try_as_do_while_statement_ref()
-            .unwrap()
-            .borrow()
-            .statement_base
-            .before_analysis
-            .clone();
-        self.visit(
-            &ast.try_as_do_while_statement_ref()
-                .unwrap()
-                .borrow()
-                .body
-                .clone()
-                .into(),
-        );
+            .before_analysis = dws.statement_base.before_analysis.clone();
+        self.visit(&dws.body.clone().into());
 
         // ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
-        ast.try_as_do_while_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
-            .statement_base
-            .before_analysis = ast
-            .try_as_do_while_statement_ref()
+            .try_as_statement_mut()
             .unwrap()
-            .borrow()
+            .try_as_do_while_statement_mut()
+            .unwrap()
+            .statement_base
+            .before_analysis = dws
             .body
             .borrow()
             .statement_list_base
             .statement_base
             .after_analysis
             .clone();
-        ast.try_as_do_while_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_do_while_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = Some(
             self.cond_analyzer.analyze(
                 &RcCell::new(
-                    ast.try_as_do_while_statement_ref()
-                        .unwrap()
-                        .borrow()
-                        .condition
+                    dws.condition
                         .try_as_expression_ref()
                         .unwrap()
                         .borrow()
                         .unop(String::from("!")),
                 )
                 .into(),
-                ast.try_as_do_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base
-                    .before_analysis
-                    .as_ref()
-                    .unwrap(),
+                dws.statement_base.before_analysis.as_ref().unwrap(),
             ),
         );
         Ok(())
@@ -665,145 +682,80 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let mut last = ast
+        let fs = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_for_statement_ref()
             .unwrap()
-            .borrow()
-            .statement_base
-            .before_analysis
-            .clone()
-            .unwrap();
+            .clone();
+        let mut last = fs.statement_base.before_analysis.clone().unwrap();
 
         // add names introduced in init
-        for name in ast
-            .try_as_for_statement_ref()
-            .unwrap()
-            .borrow()
-            .statement_base
-            .ast_base
-            .borrow()
-            .names()
-            .values()
-        {
+        for name in fs.statement_base.ast_base.borrow().names().values() {
             last.insert(name.upgrade().unwrap().clone().to_ast());
         }
 
-        if ast
-            .try_as_for_statement_ref()
-            .unwrap()
-            .borrow()
-            .init
-            .is_some()
-        {
-            ast.try_as_for_statement_ref()
+        if fs.init.is_some() {
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_for_statement_mut()
+                .unwrap()
                 .init
                 .as_mut()
                 .unwrap()
                 .borrow_mut()
                 .statement_base_mut_ref()
                 .before_analysis = Some(last.clone());
-            self.visit(
-                &ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .init
-                    .clone()
-                    .unwrap()
-                    .into(),
-            );
-            ast.try_as_for_statement_ref()
+            self.visit(&fs.init.clone().unwrap().into());
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_for_statement_mut()
+                .unwrap()
                 .statement_base
-                .before_analysis = ast
-                .try_as_for_statement_ref()
-                .unwrap()
-                .borrow()
-                .init
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .after_analysis()
-                .clone();
+                .before_analysis = fs.init.as_ref().unwrap().borrow().after_analysis().clone();
             // init should be taken into account when looking up things in the condition
         }
-        if has_side_effects(
-            &ast.try_as_for_statement_ref()
-                .unwrap()
-                .borrow()
-                .condition
-                .clone()
-                .into(),
-        ) || has_side_effects(
-            &ast.try_as_for_statement_ref()
-                .unwrap()
-                .borrow_mut()
-                .body
-                .clone()
-                .into(),
-        ) || (ast
-            .try_as_for_statement_ref()
-            .unwrap()
-            .borrow_mut()
-            .update
-            .is_some()
-            && has_side_effects(
-                &ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .update
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .into(),
-            ))
+        if has_side_effects(&fs.condition.clone().into())
+            || has_side_effects(&fs.body.clone().into())
+            || (fs.update.is_some()
+                && has_side_effects(&fs.update.as_ref().unwrap().clone().into()))
         {
-            ast.try_as_for_statement_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_for_statement_mut()
+                .unwrap()
                 .statement_base
                 .before_analysis = Some(last.separate_all());
         }
-        ast.try_as_for_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_for_statement_mut()
+            .unwrap()
             .body
             .borrow_mut()
             .statement_list_base
             .statement_base
-            .before_analysis = Some(
-            self.cond_analyzer.analyze(
-                &ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
-                    .clone()
-                    .into(),
-                ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base
-                    .before_analysis
-                    .as_ref()
-                    .unwrap(),
-            ),
-        );
-        self.visit(
-            &ast.try_as_for_statement_ref()
-                .unwrap()
-                .borrow_mut()
-                .body
-                .clone()
-                .into(),
-        );
+            .before_analysis = Some(self.cond_analyzer.analyze(
+            &fs.condition.clone().into(),
+            fs.statement_base.before_analysis.as_ref().unwrap(),
+        ));
+        self.visit(&fs.body.clone().into());
         // Update is always executed after the body (if it is executed)
-        if let Some(update) = &mut ast.try_as_for_statement_ref().unwrap().borrow_mut().update {
-            update.borrow_mut().statement_base_mut_ref().before_analysis = ast
-                .try_as_for_statement_ref()
-                .unwrap()
-                .borrow()
+        if let Some(update) = &fs.update {
+            update.borrow_mut().statement_base_mut_ref().before_analysis = fs
                 .body
                 .borrow()
                 .statement_list_base
@@ -815,20 +767,14 @@ impl AliasAnalysisVisitor {
 
         let skip_loop = self.cond_analyzer.analyze(
             &RcCell::new(
-                ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
+                fs.condition
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
                     .unop(String::from("!")),
             )
             .into(),
-            ast.try_as_for_statement_ref()
-                .unwrap()
-                .borrow()
-                .init
+            fs.init
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -836,27 +782,20 @@ impl AliasAnalysisVisitor {
                 .as_ref()
                 .unwrap(),
         );
-        let after_analysis =
-            if let Some(update) = &ast.try_as_for_statement_ref().unwrap().borrow_mut().update {
-                update.borrow().after_analysis().clone().unwrap()
-            } else {
-                ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .body
-                    .borrow()
-                    .statement_list_base
-                    .statement_base
-                    .after_analysis
-                    .clone()
-                    .unwrap()
-            };
+        let after_analysis = if let Some(update) = &fs.update {
+            update.borrow().after_analysis().clone().unwrap()
+        } else {
+            fs.body
+                .borrow()
+                .statement_list_base
+                .statement_base
+                .after_analysis
+                .clone()
+                .unwrap()
+        };
         let did_loop = self.cond_analyzer.analyze(
             &RcCell::new(
-                ast.try_as_for_statement_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .condition
+                fs.condition
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
@@ -867,26 +806,25 @@ impl AliasAnalysisVisitor {
         );
 
         // join
-        ast.try_as_for_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_for_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = Some(skip_loop.join(&did_loop));
 
         // drop names introduced in init
-        for name in ast
-            .try_as_for_statement_ref()
-            .unwrap()
-            .borrow()
-            .statement_base
-            .ast_base
-            .borrow()
-            .names()
-            .values()
-        {
-            ast.try_as_for_statement_ref()
+        for name in fs.statement_base.ast_base.borrow().names().values() {
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_for_statement_mut()
+                .unwrap()
                 .statement_base
                 .after_analysis
                 .as_mut()
@@ -899,21 +837,37 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("=======visitVariableDeclarationStatement================={:?}====",ast);
         let e = &ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_variable_declaration_statement_ref()
             .unwrap()
-            .borrow()
-            .expr;
+            .expr
+            .clone();
         if e.is_some() && has_side_effects(&e.as_ref().unwrap().clone().into()) {
-            ast.try_as_variable_declaration_statement_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_simple_statement_mut()
+                .unwrap()
+                .try_as_variable_declaration_statement_mut()
+                .unwrap()
                 .simple_statement_base
                 .statement_base
                 .before_analysis = Some(
-                ast.try_as_variable_declaration_statement_ref()
+                ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_simple_statement_ref()
+                    .unwrap()
+                    .try_as_variable_declaration_statement_ref()
+                    .unwrap()
                     .simple_statement_base
                     .statement_base
                     .before_analysis
@@ -930,9 +884,13 @@ impl AliasAnalysisVisitor {
 
         // state after declaration
         let after = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_variable_declaration_statement_ref()
             .unwrap()
-            .borrow()
             .simple_statement_base
             .statement_base
             .before_analysis
@@ -940,9 +898,13 @@ impl AliasAnalysisVisitor {
 
         // name of variable is already in list
         let name = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_variable_declaration_statement_ref()
             .unwrap()
-            .borrow()
             .variable_declaration
             .borrow()
             .identifier_declaration_base
@@ -968,9 +930,15 @@ impl AliasAnalysisVisitor {
             }
         }
 
-        ast.try_as_variable_declaration_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_simple_statement_mut()
+            .unwrap()
+            .try_as_variable_declaration_statement_mut()
+            .unwrap()
             .simple_statement_base
             .statement_base
             .after_analysis = after;
@@ -981,22 +949,40 @@ impl AliasAnalysisVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if has_side_effects(
-            &ast.try_as_require_statement_ref()
+            &ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_require_statement_ref()
+                .unwrap()
                 .condition
                 .clone()
                 .into(),
         ) {
-            ast.try_as_require_statement_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
-                .simple_statement_base
-                .statement_base
+                .try_as_statement_mut()
+                .unwrap()
+                // .try_as_simple_statement_ref()
+                // .unwrap().try_as_require_statement_ref()
+                // .unwrap()
+                // .simple_statement_base
+                .statement_base_mut_ref()
+                .unwrap()
                 .before_analysis = Some(
-                ast.try_as_require_statement_ref()
+                ast.try_as_ast_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .try_as_simple_statement_ref()
+                    .unwrap()
+                    .try_as_require_statement_ref()
+                    .unwrap()
                     .simple_statement_base
                     .statement_base
                     .before_analysis
@@ -1007,9 +993,15 @@ impl AliasAnalysisVisitor {
         }
 
         self.visit(
-            &ast.try_as_require_statement_ref()
+            &ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_require_statement_ref()
+                .unwrap()
                 .condition
                 .clone()
                 .into(),
@@ -1017,9 +1009,15 @@ impl AliasAnalysisVisitor {
 
         // state after require
         let mut after = ast
-            .try_as_require_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_require_statement_ref()
+            .unwrap()
             .simple_statement_base
             .statement_base
             .before_analysis
@@ -1027,32 +1025,60 @@ impl AliasAnalysisVisitor {
 
         // make state more precise
         let c = &ast
-            .try_as_require_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
-            .condition;
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_require_statement_ref()
+            .unwrap()
+            .condition
+            .clone();
         if is_instance(c, ASTType::FunctionCallExprBase)
             && is_instance(
-                c.try_as_function_call_expr_ref().unwrap().borrow().func(),
+                c.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .func(),
                 ASTType::BuiltinFunction,
             )
             && &c
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
-                .try_as_builtin_function_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
                 .op
                 == "=="
         {
-            let lhs = c.try_as_function_call_expr_ref().unwrap().borrow().args()[0]
+            let lhs = c
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .args()[0]
                 .try_as_expression_ref()
                 .unwrap()
                 .borrow()
                 .privacy_annotation_label();
-            let rhs = c.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
+            let rhs = c
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .args()[1]
                 .try_as_expression_ref()
                 .unwrap()
                 .borrow()
@@ -1065,9 +1091,15 @@ impl AliasAnalysisVisitor {
             }
         }
 
-        ast.try_as_require_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_simple_statement_mut()
+            .unwrap()
+            .try_as_require_statement_mut()
+            .unwrap()
             .simple_statement_base
             .statement_base
             .after_analysis = after;
@@ -1077,47 +1109,85 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("====visitAssignmentStatement====================={:?}",ast);
         if has_side_effects(
-            &ast.try_as_assignment_statement_ref()
+            &ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_assignment_statement_ref()
+                .unwrap()
                 .lhs()
                 .clone()
                 .unwrap()
                 .into(),
         ) || has_side_effects(
-            &ast.try_as_assignment_statement_ref()
+            &ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_assignment_statement_ref()
+                .unwrap()
                 .rhs()
                 .clone()
                 .unwrap()
                 .into(),
         ) {
-            ast.try_as_assignment_statement_ref()
-                .unwrap()
-                .borrow_mut()
-                .statement_base_mut_ref()
-                .before_analysis = Some(
-                ast.try_as_assignment_statement_ref()
+            let ba = Some(
+                ast.try_as_ast_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .try_as_simple_statement_ref()
+                    .unwrap()
+                    .try_as_assignment_statement_ref()
+                    .unwrap()
                     .before_analysis()
                     .as_ref()
                     .unwrap()
                     .separate_all(),
             );
+            ast.try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_simple_statement_mut()
+                .unwrap()
+                .try_as_assignment_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .before_analysis = ba;
         }
         let lhs = ast
-            .try_as_assignment_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
             .lhs()
             .clone();
         let rhs = ast
-            .try_as_assignment_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
             .rhs()
             .clone();
         // visit expression
@@ -1126,9 +1196,15 @@ impl AliasAnalysisVisitor {
 
         // state after assignment
         let after = ast
-            .try_as_assignment_statement_ref()
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
+            .try_as_assignment_statement_ref()
+            .unwrap()
             .before_analysis()
             .clone();
         recursive_assign(
@@ -1138,9 +1214,15 @@ impl AliasAnalysisVisitor {
         );
 
         // save state
-        ast.try_as_assignment_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_simple_statement_mut()
+            .unwrap()
+            .try_as_assignment_statement_mut()
+            .unwrap()
             .statement_base_mut_ref()
             .after_analysis = after.clone();
         Ok(())
@@ -1149,23 +1231,38 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("======visitExpressionStatement======================={:?}",ast);
         if has_side_effects(
-            &ast.try_as_expression_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_expression_statement_ref()
+                .unwrap()
                 .expr
                 .clone()
                 .into(),
         ) {
-            ast.try_as_expression_statement_ref()
+            ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_simple_statement_mut()
+                .unwrap()
+                .try_as_expression_statement_mut()
+                .unwrap()
                 .simple_statement_base
                 .statement_base
                 .before_analysis = Some(
-                ast.try_as_expression_statement_ref()
+                ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_simple_statement_ref()
+                    .unwrap()
+                    .try_as_expression_statement_ref()
+                    .unwrap()
                     .simple_statement_base
                     .statement_base
                     .before_analysis
@@ -1177,24 +1274,38 @@ impl AliasAnalysisVisitor {
 
         // visit expression
         self.visit(
-            &ast.try_as_expression_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_expression_statement_ref()
+                .unwrap()
                 .expr
                 .clone()
                 .into(),
         );
 
         // if expression has effect, we are already at TOP
-        ast.try_as_expression_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_simple_statement_mut()
+            .unwrap()
+            .try_as_expression_statement_mut()
+            .unwrap()
             .simple_statement_base
             .statement_base
             .after_analysis = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_expression_statement_ref()
             .unwrap()
-            .borrow()
             .simple_statement_base
             .statement_base
             .before_analysis
@@ -1205,17 +1316,27 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_return_statement_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_base
-            .after_analysis = ast
-            .try_as_return_statement_ref()
+        // println!("========visitReturnStatement============={:?}",ast);
+        let ba = ast
+            .try_as_ast_ref()
             .unwrap()
             .borrow()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_return_statement_ref()
+            .unwrap()
             .statement_base
             .before_analysis
             .clone();
+        ast.try_as_ast_ref()
+            .unwrap()
+            .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_return_statement_mut()
+            .unwrap()
+            .statement_base
+            .after_analysis = ba;
         Ok(())
     }
 
@@ -1223,14 +1344,20 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_continue_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_continue_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_continue_statement_ref()
             .unwrap()
-            .borrow()
             .statement_base
             .before_analysis
             .clone();
@@ -1241,14 +1368,20 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_break_statement_ref()
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_break_statement_mut()
+            .unwrap()
             .statement_base
             .after_analysis = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
             .try_as_break_statement_ref()
             .unwrap()
-            .borrow_mut()
             .statement_base
             .before_analysis
             .clone();
@@ -1313,7 +1446,8 @@ impl GuardConditionAnalyzer {
     }
 
     pub fn _negated(&self) {
-        *self._neg.borrow_mut() = !*self._neg.borrow();
+        let v = !*self._neg.borrow();
+        *self._neg.borrow_mut() = v;
         // yield
         // self._neg = ! self._neg
     }
@@ -1322,24 +1456,39 @@ impl GuardConditionAnalyzer {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("======visitFunctionCallExpr=========={:?}",ast
+        //         .to_ast().try_as_expression_ref().unwrap().try_as_function_call_expr_ref().unwrap()
+        //         .func());
+
         if is_instance(
-            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func(),
             ASTType::BuiltinFunction,
         ) {
             let args = ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .args()
                 .clone();
             let op = &ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_builtin_function_ref()
                 .unwrap()
-                .borrow()
                 .op
                 .clone();
             if op == "!" {
@@ -1355,7 +1504,7 @@ impl GuardConditionAnalyzer {
                 recursive_merge(
                     &args[0].clone().into(),
                     &args[1].clone().into(),
-                    self._analysis.clone().unwrap().unwrap(),
+                    self._analysis.borrow().clone().unwrap(),
                 );
             }
         }
@@ -1403,10 +1552,11 @@ pub fn _recursive_update(
             .unwrap()
             .borrow()
             .privacy_annotation_label();
+        // println!("=======rhs========={:?}",rhs);
         let rhs = rhs
+            .to_ast()
             .try_as_expression_ref()
             .unwrap()
-            .borrow()
             .privacy_annotation_label();
         if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().to_ast()) {
             if merge {
