@@ -569,6 +569,7 @@ where
                 break;
             }
         }
+        println!("==========evaluate_stmt_in_circuit===========================");
         astmt.borrow_mut().statement_base_mut_ref().before_analysis = ast
             .try_as_statement_ref()
             .unwrap()

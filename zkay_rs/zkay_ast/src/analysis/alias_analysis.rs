@@ -22,7 +22,7 @@ use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn alias_analysis(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
-    let mut v = AliasAnalysisVisitor::new(false, global_vars);
+    let v = AliasAnalysisVisitor::new(false, global_vars);
     v.visit(ast);
 }
 #[derive(ASTVisitorBaseRefImpl)]
@@ -63,9 +63,7 @@ impl AstVisitor for AliasAnalysisVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
-                self.visitStatementList(ast)
-            }
+
             ASTType::Block => self.visitBlock(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
 
@@ -74,7 +72,10 @@ impl AstVisitor for AliasAnalysisVisitor {
             ASTType::ForStatement => self.visitForStatement(ast),
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::RequireStatement => self.visitRequireStatement(ast),
-
+            ASTType::ExpressionStatement => self.visitExpressionStatement(ast),
+            ASTType::ReturnStatement => self.visitReturnStatement(ast),
+            ASTType::ContinueStatement => self.visitContinueStatement(ast),
+            ASTType::BreakStatement => self.visitBreakStatement(ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Statement(Statement::SimpleStatement(
@@ -84,11 +85,9 @@ impl AstVisitor for AliasAnalysisVisitor {
             {
                 self.visitAssignmentStatement(ast)
             }
-
-            ASTType::ExpressionStatement => self.visitExpressionStatement(ast),
-            ASTType::ReturnStatement => self.visitReturnStatement(ast),
-            ASTType::ContinueStatement => self.visitContinueStatement(ast),
-            ASTType::BreakStatement => self.visitBreakStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
+                self.visitStatementList(ast)
+            }
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
             _ => Err(eyre::eyre!("unreach")),
         }
@@ -159,13 +158,13 @@ impl AliasAnalysisVisitor {
             .borrow()
             .parameters
         {
+            //   println!("=====p========{:?}",p);
             s.insert(
                 p.borrow()
                     .identifier_declaration_base
                     .idf
                     .as_ref()
                     .unwrap()
-                    .clone()
                     .to_ast(),
             );
         }
@@ -198,7 +197,7 @@ impl AliasAnalysisVisitor {
         let mut last = before_analysis.clone();
         // push state through each statement
         for statement in statements {
-            // println!("{:?}",statement);
+            // println!("===propagate===={:?}=={:?}======{:?}",file!(),line!(),last);
             statement
                 .try_as_ast_ref()
                 .unwrap()
@@ -272,73 +271,123 @@ impl AliasAnalysisVisitor {
         Ok(())
     }
     pub fn visitBlock(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visitBlock========={:?}",ast);
         // add fresh names from this block
-        for name in ast
-            .try_as_block_ref()
+        let names: Vec<_> = ast
+            .ast_base_ref()
             .unwrap()
-            .borrow()
-            .statement_list_base
-            .statement_base
-            .ast_base
             .borrow()
             .names()
             .values()
-        {
-            ast.try_as_block_ref()
-                .unwrap()
-                .borrow_mut()
-                .statement_list_base
-                .statement_base
-                .before_analysis
-                .as_mut()
-                .unwrap()
-                .insert(name.upgrade().unwrap().to_ast());
-        }
-
-        ast.try_as_block_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_list_base
-            .statement_base
-            .after_analysis = Some(
-            self.propagate(
-                &ast.try_as_block_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_list_base
-                    .statements,
+            .map(|name| name.upgrade().unwrap().to_ast())
+            .collect();
+        for name in names {
+            // println!("{:?}",name);
+            if ast.is_block() {
                 ast.try_as_block_ref()
                     .unwrap()
                     .borrow_mut()
                     .statement_list_base
                     .statement_base
                     .before_analysis
+                    .as_mut()
+                    .unwrap()
+                    .insert(name.clone());
+            } else if ast.is_ast() {
+                ast.try_as_ast_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_statement_mut()
+                    .unwrap()
+                    .try_as_statement_list_mut()
+                    .unwrap()
+                    .try_as_block_mut()
+                    .unwrap()
+                    .statement_list_base
+                    .statement_base
+                    .before_analysis
+                    .as_mut()
+                    .unwrap()
+                    .insert(name.clone());
+            }
+        }
+        let aa = Some(
+            self.propagate(
+                &ast.to_ast()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .try_as_statement_list_ref()
+                    .unwrap()
+                    .statements(),
+                ast.to_ast()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .statement_base_ref()
+                    .unwrap()
+                    .before_analysis
                     .as_ref()
                     .unwrap(),
             ),
         );
-
-        // remove names falling out of scope
-        for name in ast
-            .try_as_block_ref()
-            .unwrap()
-            .borrow()
-            .statement_list_base
-            .statement_base
-            .ast_base
-            .borrow()
-            .names()
-            .values()
-        {
+        if ast.is_block() {
             ast.try_as_block_ref()
                 .unwrap()
                 .borrow_mut()
                 .statement_list_base
                 .statement_base
-                .after_analysis
-                .as_mut()
+                .after_analysis = aa;
+        } else if ast.is_ast() {
+            ast.try_as_ast_ref()
                 .unwrap()
-                .remove(&name.upgrade().unwrap().to_ast());
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_statement_list_mut()
+                .unwrap()
+                .try_as_block_mut()
+                .unwrap()
+                .statement_list_base
+                .statement_base
+                .after_analysis = aa;
+        }
+        let names: Vec<_> = ast
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .names()
+            .values()
+            .map(|name| name.upgrade().unwrap().to_ast())
+            .collect();
+        // remove names falling out of scope
+        for name in names {
+            //   println!("rm===={:?}",name);
+            if ast.is_block() {
+                ast.try_as_block_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .statement_list_base
+                    .statement_base
+                    .after_analysis
+                    .as_mut()
+                    .unwrap()
+                    .remove(&name);
+            } else if ast.is_ast() {
+                ast.try_as_ast_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_statement_mut()
+                    .unwrap()
+                    .try_as_statement_list_mut()
+                    .unwrap()
+                    .try_as_block_mut()
+                    .unwrap()
+                    .statement_list_base
+                    .statement_base
+                    .after_analysis
+                    .as_mut()
+                    .unwrap()
+                    .remove(&name);
+            }
         }
         Ok(())
     }
@@ -837,7 +886,7 @@ impl AliasAnalysisVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("=======visitVariableDeclarationStatement================={:?}====",ast);
+        // println!("=======visitVariableDeclarationStatement=========s=={:?}======{:?}====",ast.to_string(),ast);
         let e = &ast
             .to_ast()
             .try_as_statement_ref()
@@ -848,7 +897,7 @@ impl AliasAnalysisVisitor {
             .unwrap()
             .expr
             .clone();
-        if e.is_some() && has_side_effects(&e.as_ref().unwrap().clone().into()) {
+        if e.is_some() && has_side_effects(&e.clone().unwrap().into()) {
             ast.try_as_ast_ref()
                 .unwrap()
                 .borrow_mut()
@@ -883,7 +932,7 @@ impl AliasAnalysisVisitor {
         }
 
         // state after declaration
-        let after = ast
+        let mut after = ast
             .to_ast()
             .try_as_statement_ref()
             .unwrap()
@@ -910,10 +959,11 @@ impl AliasAnalysisVisitor {
             .identifier_declaration_base
             .idf
             .clone();
+        //   println!("{:?},=============={:?}",after,name);
         assert!(after
             .as_ref()
             .unwrap()
-            .has(&name.as_ref().unwrap().clone().to_ast()));
+            .has(&name.as_ref().unwrap().to_ast()));
 
         // make state more precise
         if let Some(e) = e {
@@ -924,24 +974,35 @@ impl AliasAnalysisVisitor {
                 .privacy_annotation_label()
             {
                 after
-                    .clone()
+                    .as_mut()
                     .unwrap()
                     .merge(&name.as_ref().unwrap().clone().to_ast(), &pal.to_ast());
             }
         }
-
-        ast.try_as_ast_ref()
-            .unwrap()
-            .borrow_mut()
-            .try_as_statement_mut()
-            .unwrap()
-            .try_as_simple_statement_mut()
-            .unwrap()
-            .try_as_variable_declaration_statement_mut()
-            .unwrap()
-            .simple_statement_base
-            .statement_base
-            .after_analysis = after;
+        println!("{:?}", ast);
+        if ast.is_ast() {
+            ast.try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .try_as_simple_statement_mut()
+                .unwrap()
+                .try_as_variable_declaration_statement_mut()
+                .unwrap()
+                .simple_statement_base
+                .statement_base
+                .after_analysis = after;
+        } else if ast.is_simple_statement() {
+            ast.try_as_simple_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_variable_declaration_statement_mut()
+                .unwrap()
+                .simple_statement_base
+                .statement_base
+                .after_analysis = after;
+        }
         Ok(())
     }
     pub fn visitRequireStatement(
@@ -1207,10 +1268,11 @@ impl AliasAnalysisVisitor {
             .unwrap()
             .before_analysis()
             .clone();
+        let after = RcCell::new(after);
         recursive_assign(
             &lhs.as_ref().unwrap().clone().into(),
             &rhs.as_ref().unwrap().clone().into(),
-            after.clone().unwrap(),
+            &after,
         );
 
         // save state
@@ -1224,7 +1286,7 @@ impl AliasAnalysisVisitor {
             .try_as_assignment_statement_mut()
             .unwrap()
             .statement_base_mut_ref()
-            .after_analysis = after.clone();
+            .after_analysis = after.borrow().clone();
         Ok(())
     }
     pub fn visitExpressionStatement(
@@ -1504,7 +1566,7 @@ impl GuardConditionAnalyzer {
                 recursive_merge(
                     &args[0].clone().into(),
                     &args[1].clone().into(),
-                    self._analysis.borrow().clone().unwrap(),
+                    &self._analysis,
                 );
             }
         }
@@ -1514,7 +1576,7 @@ impl GuardConditionAnalyzer {
 pub fn _recursive_update(
     lhs: &ASTFlatten,
     rhs: &ASTFlatten,
-    mut analysis: PartitionState<AST>,
+    analysis: &RcCell<Option<PartitionState<AST>>>,
     merge: bool,
 ) {
     if is_instance(lhs, ASTType::TupleExpr) && is_instance(rhs, ASTType::TupleExpr) {
@@ -1539,12 +1601,7 @@ pub fn _recursive_update(
                     .elements,
             )
         {
-            _recursive_update(
-                &l.clone().into(),
-                &r.clone().into(),
-                analysis.clone(),
-                merge,
-            );
+            _recursive_update(&l.clone().into(), &r.clone().into(), analysis, merge);
         }
     } else {
         let lhs = lhs
@@ -1558,21 +1615,48 @@ pub fn _recursive_update(
             .try_as_expression_ref()
             .unwrap()
             .privacy_annotation_label();
-        if lhs.is_some() && rhs.is_some() && analysis.has(&rhs.clone().unwrap().to_ast()) {
+        if lhs.is_some()
+            && rhs.is_some()
+            && analysis
+                .borrow()
+                .as_ref()
+                .unwrap()
+                .has(&rhs.as_ref().unwrap().to_ast())
+        {
             if merge {
-                analysis.merge(&lhs.unwrap().to_ast(), &rhs.unwrap().to_ast());
+                analysis
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .merge(&lhs.unwrap().to_ast(), &rhs.as_ref().unwrap().to_ast());
             } else {
-                analysis.move_to(&lhs.unwrap().to_ast(), &rhs.clone().unwrap().to_ast());
+                analysis
+                    .borrow_mut()
+                    .as_mut()
+                    .unwrap()
+                    .move_to(&lhs.unwrap().to_ast(), &rhs.as_ref().unwrap().to_ast());
             }
         } else if lhs.is_some() {
-            analysis.move_to_separate(&lhs.unwrap().to_ast());
+            analysis
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .move_to_separate(&lhs.unwrap().to_ast());
         }
     }
 }
-pub fn recursive_merge(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<AST>) {
+pub fn recursive_merge(
+    lhs: &ASTFlatten,
+    rhs: &ASTFlatten,
+    analysis: &RcCell<Option<PartitionState<AST>>>,
+) {
     _recursive_update(lhs, rhs, analysis, true);
 }
 
-pub fn recursive_assign(lhs: &ASTFlatten, rhs: &ASTFlatten, analysis: PartitionState<AST>) {
+pub fn recursive_assign(
+    lhs: &ASTFlatten,
+    rhs: &ASTFlatten,
+    analysis: &RcCell<Option<PartitionState<AST>>>,
+) {
     _recursive_update(lhs, rhs, analysis, false);
 }

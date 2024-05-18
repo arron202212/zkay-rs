@@ -2622,22 +2622,19 @@ impl Expression {
     }
 
     pub fn analysis(&self) -> Option<PartitionState<AST>> {
-        self.statement()
-            .as_ref()
-            .map(|statement| {
-                statement
-                    .clone()
-                    .upgrade()
-                    .unwrap()
-                    .try_as_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base_ref()
-                    .unwrap()
-                    .before_analysis()
-                    .clone()
-            })
-            .flatten()
+        self.statement().as_ref().and_then(|statement| {
+            statement
+                .clone()
+                .upgrade()
+                .unwrap()
+                .try_as_statement_ref()
+                .unwrap()
+                .borrow()
+                .statement_base_ref()
+                .unwrap()
+                .before_analysis()
+                .clone()
+        })
     }
 }
 #[enum_dispatch]
@@ -2975,19 +2972,18 @@ impl BuiltinFunction {
         &self.op != "**"
     }
 
+    // """
+    // Finds a homomorphic builtin that performs the correct operation and which can be applied
+    // on the arguments, if any exist.
+
+    // :return: A HomomorphicBuiltinFunction that can be used to query the required input types and
+    //          the resulting output type of the homomorphic operation, or None
+    // """
     pub fn select_homomorphic_overload(
         &self,
         args: &Vec<ASTFlatten>,
         analysis: Option<PartitionState<AST>>,
     ) -> Option<HomomorphicBuiltinFunction> {
-        // """
-        // Finds a homomorphic builtin that performs the correct operation and which can be applied
-        // on the arguments, if any exist.
-
-        // :return: A HomomorphicBuiltinFunction that can be used to query the required input types and
-        //          the resulting output type of the homomorphic operation, or None
-        // """
-
         // The first inaccessible (not @all, not @me) determines the output type
         // self.op and the public arguments determine which homomorphic builtin is selected
         // We may want to rethink this in the future if we also implement other homomorphisms (e.g. multiplicative)
@@ -8866,6 +8862,7 @@ impl AstVisitor for CodeVisitor {
         String::new()
     }
     fn has_attr(&self, ast: &AST) -> bool {
+        // println!("======has_attr========{:?}======",ast.get_ast_type());
         matches!(
             ast.get_ast_type(),
             ASTType::ASTBase
@@ -8883,7 +8880,7 @@ impl AstVisitor for CodeVisitor {
                 | ASTType::IndexExpr
                 | ASTType::MeExpr
                 | ASTType::AllExpr
-                | ASTType::ReclassifyExpr
+                | ASTType::ReclassifyExprBase
                 | ASTType::RehomExpr
                 | ASTType::IfStatement
                 | ASTType::WhileStatement
@@ -8933,39 +8930,27 @@ impl AstVisitor for CodeVisitor {
             )
             || matches!(ast, AST::Statement(Statement::CircuitDirectiveStatement(_)))
             || matches!(ast, AST::Statement(Statement::StatementList(_)))
+            || matches!(ast, AST::TypeName(TypeName::ElementaryTypeName(_)))
             || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
             || matches!(ast, AST::TypeName(TypeName::Array(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        // println!("====get_attr======code========={:?}",name);
         match name {
             ASTType::ASTBase => self.visit_AST(ast),
-            _ if matches!(ast.to_ast(), AST::Comment(_)) => self.visit_Comment(ast),
-            _ if matches!(ast.to_ast(), AST::Identifier(_)) => self.visit_Identifier(ast),
-            _ if matches!(
-                ast.to_ast(),
-                AST::Expression(Expression::FunctionCallExpr(_))
-            ) =>
-            {
-                self.visit_FunctionCallExpr(ast)
-            }
+
             ASTType::PrimitiveCastExpr => self.visit_PrimitiveCastExpr(ast),
             ASTType::BooleanLiteralExpr => self.visit_BooleanLiteralExpr(ast),
             ASTType::NumberLiteralExpr => self.visit_NumberLiteralExpr(ast),
             ASTType::StringLiteralExpr => self.visit_StringLiteralExpr(ast),
-            _ if matches!(
-                ast.to_ast(),
-                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
-            ) =>
-            {
-                self.visit_ArrayLiteralExpr(ast)
-            }
+
             ASTType::TupleExpr => self.visit_TupleExpr(ast),
             ASTType::IdentifierExpr => self.visit_IdentifierExpr(ast),
             ASTType::MemberAccessExpr => self.visit_MemberAccessExpr(ast),
             ASTType::IndexExpr => self.visit_IndexExpr(ast),
             ASTType::MeExpr => self.visit_MeExpr(ast),
             ASTType::AllExpr => self.visit_AllExpr(ast),
-            ASTType::ReclassifyExpr => self.visit_ReclassifyExpr(ast),
+            ASTType::ReclassifyExprBase => self.visit_ReclassifyExpr(ast),
             ASTType::RehomExpr => self.visit_RehomExpr(ast),
             ASTType::IfStatement => self.visit_IfStatement(ast),
             ASTType::WhileStatement => self.visit_WhileStatement(ast),
@@ -8976,6 +8961,56 @@ impl AstVisitor for CodeVisitor {
             ASTType::ReturnStatement => self.visit_ReturnStatement(ast),
             ASTType::ExpressionStatement => self.visit_ExpressionStatement(ast),
             ASTType::RequireStatement => self.visit_RequireStatement(ast),
+
+            ASTType::Block => self.visit_Block(ast),
+            ASTType::IndentBlock => self.visit_IndentBlock(ast),
+
+            ASTType::AddressTypeName => self.visit_AddressTypeName(ast),
+            ASTType::AddressPayableTypeName => self.visit_AddressPayableTypeName(ast),
+            ASTType::AnnotatedTypeName => self.visit_AnnotatedTypeName(ast),
+            ASTType::Mapping => self.visit_Mapping(ast),
+            ASTType::CipherText => self.visit_CipherText(ast),
+            ASTType::TupleType => self.visit_TupleType(ast),
+            ASTType::VariableDeclaration => self.visit_VariableDeclaration(ast),
+            ASTType::VariableDeclarationStatement => self.visit_VariableDeclarationStatement(ast),
+            ASTType::Parameter => self.visit_Parameter(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visit_ConstructorOrFunctionDefinition(ast)
+            }
+            ASTType::EnumValue => self.visit_EnumValue(ast),
+            ASTType::EnumDefinition => self.visit_EnumDefinition(ast),
+            ASTType::StructDefinition => self.visit_StructDefinition(ast),
+            ASTType::StateVariableDeclaration => self.visit_StateVariableDeclaration(ast),
+            ASTType::ContractDefinition => self.visit_ContractDefinition(ast),
+            ASTType::SourceUnit => self.visit_SourceUnit(ast),
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_))) => {
+                self.visit_ElementaryTypeName(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::TypeName(TypeName::UserDefinedTypeName(_))
+            ) =>
+            {
+                self.visit_UserDefinedTypeName(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::Array(_))) => self.visit_Array(ast),
+
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
+            ) =>
+            {
+                self.visit_ArrayLiteralExpr(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Comment(_)) => self.visit_Comment(ast),
+            _ if matches!(ast.to_ast(), AST::Identifier(_)) => self.visit_Identifier(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::FunctionCallExpr(_))
+            ) =>
+            {
+                self.visit_FunctionCallExpr(ast)
+            }
             _ if matches!(
                 ast.to_ast(),
                 AST::Statement(Statement::SimpleStatement(
@@ -8995,37 +9030,6 @@ impl AstVisitor for CodeVisitor {
             _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
                 self.visit_StatementList(ast)
             }
-            ASTType::Block => self.visit_Block(ast),
-            ASTType::IndentBlock => self.visit_IndentBlock(ast),
-            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_))) => {
-                self.visit_ElementaryTypeName(ast)
-            }
-            _ if matches!(
-                ast.to_ast(),
-                AST::TypeName(TypeName::UserDefinedTypeName(_))
-            ) =>
-            {
-                self.visit_UserDefinedTypeName(ast)
-            }
-            ASTType::AddressTypeName => self.visit_AddressTypeName(ast),
-            ASTType::AddressPayableTypeName => self.visit_AddressPayableTypeName(ast),
-            ASTType::AnnotatedTypeName => self.visit_AnnotatedTypeName(ast),
-            ASTType::Mapping => self.visit_Mapping(ast),
-            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::Array(_))) => self.visit_Array(ast),
-            ASTType::CipherText => self.visit_CipherText(ast),
-            ASTType::TupleType => self.visit_TupleType(ast),
-            ASTType::VariableDeclaration => self.visit_VariableDeclaration(ast),
-            ASTType::VariableDeclarationStatement => self.visit_VariableDeclarationStatement(ast),
-            ASTType::Parameter => self.visit_Parameter(ast),
-            ASTType::ConstructorOrFunctionDefinition => {
-                self.visit_ConstructorOrFunctionDefinition(ast)
-            }
-            ASTType::EnumValue => self.visit_EnumValue(ast),
-            ASTType::EnumDefinition => self.visit_EnumDefinition(ast),
-            ASTType::StructDefinition => self.visit_StructDefinition(ast),
-            ASTType::StateVariableDeclaration => self.visit_StateVariableDeclaration(ast),
-            ASTType::ContractDefinition => self.visit_ContractDefinition(ast),
-            ASTType::SourceUnit => self.visit_SourceUnit(ast),
             _ => Ok(String::new()),
         }
     }
@@ -9107,7 +9111,7 @@ impl CodeVisitor {
     }
 
     pub fn visit_Identifier(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(ast.try_as_identifier_ref().unwrap().borrow().name().clone())
+        Ok(ast.to_ast().try_as_identifier_ref().unwrap().name().clone())
     }
 
     pub fn visit_FunctionCallExpr(
@@ -9430,35 +9434,42 @@ impl CodeVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let e = self.visit(
-            &ast.try_as_reclassify_expr_ref()
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
                 .expr()
                 .clone()
                 .into(),
         );
         let p = self.visit(
-            &ast.try_as_reclassify_expr_ref()
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
                 .privacy()
                 .clone()
                 .into(),
         );
-        let h = HOMOMORPHISM_STORE
-            .lock()
+        let h = ast
+            .to_ast()
+            .try_as_expression_ref()
             .unwrap()
-            .get(
-                ast.try_as_reclassify_expr_ref()
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .homomorphism()
+            .as_ref()
+            .map_or(String::new(), |ho| {
+                HOMOMORPHISM_STORE
+                    .lock()
                     .unwrap()
-                    .borrow()
-                    .homomorphism()
-                    .as_ref()
-                    .unwrap(),
-            )
-            .unwrap()
-            .clone();
-        Ok(format!("reveal{h:?}({e}, {p})"))
+                    .get(ho)
+                    .map_or(String::new(), |h| h.to_string())
+            });
+        println!("reveal{}({e}, {p})", h);
+        Ok(format!("reveal{}({e}, {p})", h))
     }
 
     pub fn visit_RehomExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -9968,9 +9979,11 @@ impl CodeVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .try_as_elementary_type_name_ref()
             .unwrap()
-            .borrow()
             .name()
             .clone())
     }
@@ -10011,6 +10024,7 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        println!("===visit_AnnotatedTypeName=============");
         let t = ast
             .try_as_annotated_type_name_ref()
             .unwrap()
@@ -10018,6 +10032,10 @@ impl CodeVisitor {
             .type_name
             .as_ref()
             .map_or(String::new(), |type_name| {
+                println!(
+                    "===visit_AnnotatedTypeName========{:?}=====",
+                    type_name.get_ast_type()
+                );
                 self.visit(&type_name.clone().into())
             });
         let p = ast
@@ -10160,14 +10178,10 @@ impl CodeVisitor {
             .identifier_declaration_base
             .keywords
             .iter()
-            .filter_map(|k| {
-                if self.display_final || k != "final" {
-                    Some(k.clone())
-                } else {
-                    None
-                }
-            })
+            .filter(|&k| self.display_final || k != "final")
+            .cloned()
             .collect();
+
         let k = keywords.join(" ");
         let t = self.visit(
             &ast.try_as_variable_declaration_ref()
@@ -10179,28 +10193,28 @@ impl CodeVisitor {
                 .unwrap()
                 .into(),
         );
-        let s = if let Some(storage_location) = &ast
+
+        let s = ast
             .try_as_variable_declaration_ref()
             .unwrap()
             .borrow()
             .identifier_declaration_base
             .storage_location
-        {
-            format!(" {storage_location}")
-        } else {
-            String::new()
-        };
+            .as_ref()
+            .map_or(String::new(), |storage_location| {
+                format!(" {storage_location}")
+            });
         let i = self.visit(
             &ast.try_as_variable_declaration_ref()
                 .unwrap()
                 .borrow()
                 .identifier_declaration_base
                 .idf
-                .as_ref()
-                .unwrap()
                 .clone()
+                .unwrap()
                 .into(),
         );
+        // println!("=====visit_VariableDeclaration===================={k}, {t},{s} ,{i}");
         Ok(format!("{k} {t}{s} {i}").trim().to_string())
     }
 
@@ -10208,7 +10222,6 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("===visit_VariableDeclarationStatement=========={:?}", ast);
         let mut s = self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()

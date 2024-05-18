@@ -37,29 +37,29 @@ impl<
         self._insert_partition(BTreeSet::from([x]));
     }
 
-    pub fn _insert_partition(&mut self, p: BTreeSet<T>) {
+    fn _insert_partition(&mut self, p: BTreeSet<T>) {
         self._partitions.insert(self._next_unused, p);
         self._next_unused += 1;
     }
+    // """
+    // Return index for element x.
 
-    pub fn get_index(&self, x: &T) -> Option<i32>
-// """
-        // Return index for element x.
-
-        // :param x:
-        // :return: the index of the partition containing x
-        // """
-    {
+    // :param x:
+    // :return: the index of the partition containing x
+    // """
+    pub fn get_index(&self, x: &T) -> Option<i32> {
         for (k, p) in &self._partitions {
+            // println!("===get_index===={:?}======{:?}",p.iter().map(|t|t.to_string()).collect::<Vec<_>>(),x.to_string());
             if p.contains(x) {
                 return Some(*k);
             }
         }
+        println!("===get_index=========={:?}", self._partitions.len());
         None
     }
 
     pub fn has(&self, x: &T) -> bool {
-        self.get_index(x).is_none()
+        self.get_index(x).is_some()
     }
 
     pub fn same_partition(&self, x: &T, y: &T) -> bool {
@@ -86,9 +86,8 @@ impl<
         let xp_key = self.get_index(x).unwrap();
         let yp_key = self.get_index(y).unwrap();
 
-        if xp_key == yp_key
-        // merging not necessary
-        {
+        if xp_key == yp_key {
+            // merging not necessary
             return;
         }
 
@@ -100,15 +99,13 @@ impl<
             *v = (*v).union(&yp).cloned().collect();
         });
     }
+    // """
+    // Removes x from its partition
 
+    // :param x:
+    // :return:
+    // """
     pub fn remove(&mut self, x: &T) {
-        // """
-        // Removes x from its partition
-
-        // :param x:
-        // :return:
-        // """
-
         // locate
         let xp_key = self.get_index(x);
         assert!(xp_key.is_some(), "element {x} not found");
@@ -131,9 +128,8 @@ impl<
     // :param y:
     // """
     pub fn move_to(&mut self, x: &T, y: &T) {
-        if self.same_partition(x, y)
-        // no action necessary
-        {
+        if self.same_partition(x, y) {
+            // no action necessary
             return;
         }
 
@@ -238,13 +234,7 @@ impl<
             // shallow copy
             let kept: BTreeSet<T> = p
                 .iter()
-                .filter_map(|x| {
-                    if project.is_none() || project.as_ref().unwrap().contains(&x) {
-                        Some(x)
-                    } else {
-                        None
-                    }
-                })
+                .filter(|x| project.is_none() || project.as_ref().unwrap().contains(&x))
                 .cloned()
                 .collect();
             if !kept.is_empty() {

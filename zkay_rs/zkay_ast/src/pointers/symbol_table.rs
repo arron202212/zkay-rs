@@ -228,7 +228,8 @@ impl SymbolTableFiller {
     }
 
     pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.to_ast().ast_base_ref().unwrap().borrow_mut().names = ast
+        // println!("==visitSourceUnit={:?}====",ast);
+        let names: BTreeMap<_, _> = ast
             .to_ast()
             .try_as_source_unit_ref()
             .unwrap()
@@ -264,15 +265,14 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        // //println!("==ast
-        //     .contracts==s=={:?}====",s.len());
+        ast.ast_base_ref().unwrap().borrow_mut().names = names;
         let mut vars = self.get_builtin_globals().clone();
-        ast.to_ast()
-            .ast_base_ref()
+        ast.ast_base_ref()
             .unwrap()
             .borrow_mut()
             .names
             .append(&mut vars);
+
         // println!(
         //     "====ast.visitSourceUnit.names.len()========{:?}",
         //     ast.to_ast().ast_base_ref().unwrap().borrow().names.len()
@@ -443,13 +443,8 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        ast.try_as_contract_definition_ref()
-            .unwrap()
-            .borrow_mut()
-            .namespace_definition_base
-            .ast_base
-            .borrow_mut()
-            .names = merge_dicts(vec![state_vars, funcs, structs, enums]);
+        ast.ast_base_ref().unwrap().borrow_mut().names =
+            merge_dicts(vec![state_vars, funcs, structs, enums]);
         // println!("====visitContractDefinition========{:?}",ast.ast_base_ref().names().len());
         Ok(())
     }
@@ -458,7 +453,7 @@ impl SymbolTableFiller {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.to_ast().ast_base_ref().unwrap().borrow_mut().names = ast
+        let names: BTreeMap<_, _> = ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
@@ -490,6 +485,7 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
+        ast.ast_base_ref().unwrap().borrow_mut().names = names;
         // println!("====visitConstructorOrFunctionDefinition========{:?}",ast.to_ast().ast_base_ref().unwrap().borrow().names .len());
         Ok(())
     }
@@ -547,13 +543,7 @@ impl SymbolTableFiller {
                 )
             })
             .collect();
-        ast.try_as_enum_definition_ref()
-            .unwrap()
-            .borrow_mut()
-            .namespace_definition_base
-            .ast_base
-            .borrow_mut()
-            .names = names;
+        ast.ast_base_ref().unwrap().borrow_mut().names = names;
         // //println!("====visitEnumDefinition========{:?}",ast.ast_base_ref().names().len());
         Ok(())
     }
@@ -565,8 +555,16 @@ impl SymbolTableFiller {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // //println!("====visitVariableDeclaration========{:?}", ast);
-        ast.to_ast().ast_base_ref().unwrap().borrow_mut().names = BTreeMap::from([(
+        // println!("====visitVariableDeclaration========{:?}", ast.try_as_variable_declaration_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .identifier_declaration_base
+        //         .idf
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .name());
+        let names = BTreeMap::from([(
             ast.try_as_variable_declaration_ref()
                 .unwrap()
                 .borrow()
@@ -584,6 +582,7 @@ impl SymbolTableFiller {
                 .idf()
                 .clone(),
         )]);
+        ast.ast_base_ref().unwrap().borrow_mut().names = names;
 
         Ok(())
     }
@@ -594,7 +593,7 @@ impl SymbolTableFiller {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // //println!("====visitStatementList========{:?}", ast);
 
-        ast.to_ast().ast_base_ref().unwrap().borrow_mut().names = collect_children_names(ast);
+        ast.ast_base_ref().unwrap().borrow_mut().names = collect_children_names(ast);
         Ok(())
     }
 
@@ -603,14 +602,7 @@ impl SymbolTableFiller {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         ////println!("====visitSimpleStatement========{:?}", ast);
-        ast.to_ast()
-            .try_as_statement_ref()
-            .unwrap()
-            .try_as_simple_statement_ref()
-            .unwrap()
-            .ast_base_ref()
-            .borrow_mut()
-            .names = collect_children_names(ast);
+        ast.ast_base_ref().unwrap().borrow_mut().names = collect_children_names(ast);
         Ok(())
     }
 
@@ -619,26 +611,14 @@ impl SymbolTableFiller {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         //    println!("====visitForStatement========{:?}",ast);
-        ast.to_ast()
-            .ast_base_ref()
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .names = collect_children_names(ast);
+        ast.ast_base_ref().unwrap().borrow_mut().names = collect_children_names(ast);
 
         Ok(())
     }
 
     pub fn visitMapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         ////println!("====visitMapping===1====={:?}", ast);
-        ast.to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .try_as_mapping_ref()
-            .unwrap()
-            .ast_base_ref()
-            .borrow_mut()
-            .names = BTreeMap::new();
+        ast.ast_base_ref().unwrap().borrow_mut().names = BTreeMap::new();
 
         if ast
             .to_ast()
@@ -660,14 +640,7 @@ impl SymbolTableFiller {
                 ASTType::IdentifierBase,
             )
         {
-            ast.to_ast()
-                .try_as_type_name_ref()
-                .unwrap()
-                .try_as_mapping_ref()
-                .unwrap()
-                .ast_base_ref()
-                .borrow_mut()
-                .names = BTreeMap::from([(
+            ast.ast_base_ref().unwrap().borrow_mut().names = BTreeMap::from([(
                 ast.to_ast()
                     .try_as_type_name_ref()
                     .unwrap()
