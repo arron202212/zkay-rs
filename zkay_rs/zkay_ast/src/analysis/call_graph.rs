@@ -135,19 +135,20 @@ impl DirectCalledFunctionDetector {
                 .map(|d| d.borrow().clone())
             {
                 let cofd = cofd.clone();
-                // println!("====ast.try_as_expression_ref().unwrap().borrow()
-                //     .expression_base_ref()
-                //     .statement
-                //     .as_ref()
-                //     .unwrap()
-                //     .clone()
-                //     .upgrade()====================={:?}",ast.try_as_expression_ref().unwrap().borrow()
-                //     .expression_base_ref()
-                //     .statement
-                //     .as_ref()
-                //     .unwrap()
-                //     .clone()
-                //     .upgrade());
+                println!(
+                    "====.upgrade()=======function=============={:?}",
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .expression_base_ref()
+                        .statement
+                        .as_ref()
+                        .unwrap()
+                        .clone()
+                        .upgrade()
+                        .unwrap()
+                        .get_ast_type()
+                );
 
                 ast.to_ast()
                     .try_as_expression_ref()
@@ -159,9 +160,7 @@ impl DirectCalledFunctionDetector {
                     .clone()
                     .upgrade()
                     .unwrap()
-                    .try_as_ast_ref()
-                    .unwrap()
-                    .borrow()
+                    .to_ast()
                     .try_as_statement_ref()
                     .unwrap()
                     .statement_base_ref()
@@ -184,9 +183,11 @@ impl DirectCalledFunctionDetector {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_for_statement_ref()
+        ast.to_ast()
+            .try_as_statement_ref()
             .unwrap()
-            .borrow_mut()
+            .try_as_for_statement_ref()
+            .unwrap()
             .statement_base
             .function
             .clone()
@@ -203,9 +204,14 @@ impl DirectCalledFunctionDetector {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        ast.try_as_while_statement_ref()
+        // println!("=======visitWhileStatement================{:?}",ast);
+        ast.try_as_ast_ref()
             .unwrap()
             .borrow_mut()
+            .try_as_statement_mut()
+            .unwrap()
+            .try_as_while_statement_mut()
+            .unwrap()
             .statement_base
             .function
             .clone()

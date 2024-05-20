@@ -54,7 +54,7 @@ impl<
                 return Some(*k);
             }
         }
-        println!("===get_index=========={:?}", self._partitions.len());
+        // println!("===get_index=========={:?}", self._partitions.len());
         None
     }
 
@@ -201,7 +201,7 @@ impl<
             .map(|subset| subset.iter().cloned().collect::<Vec<_>>())
             .flatten()
             .collect::<BTreeSet<_>>();
-        // println!("===my_vals.len(),other_vals========================={:?},{:?}",my_vals.len(),other_vals.len());
+        // println!("===my_vals.len(),other_vals========================={:?},{:?}",my_vals.iter().map(|x|x.to_string()).collect::<Vec<_>>(),other_vals.iter().map(|x|x.to_string()).collect::<Vec<_>>());
         assert!(
             my_vals.symmetric_difference(&other_vals).count() == 0,
             "joined branches do not contain the same values"
@@ -220,7 +220,13 @@ impl<
         s._insert_partition(new_parts);
         s
     }
-
+    pub fn codes(&self) -> Vec<String> {
+        self._partitions
+            .values()
+            .map(|subset| subset.iter().map(|x| x.to_string()).collect::<Vec<_>>())
+            .flatten()
+            .collect::<Vec<_>>()
+    }
     // """
     // Create a shallow copy of the partition state.
 

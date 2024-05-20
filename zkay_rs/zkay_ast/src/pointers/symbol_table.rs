@@ -965,7 +965,6 @@ impl SymbolTableLinker {
             // println!( "=======find_identifier_declaration===return ");
             return Ok(decl);
         }
-        println!("======find_identifier_declaration======= ===fail===");
         eyre::bail!("find_identifier_declaration======= ===fail")
     }
 
@@ -1255,12 +1254,12 @@ impl SymbolTableLinker {
                     .location_expr_base_mut_ref()
                     .target = idf.upgrade().unwrap().borrow().parent();
             } else {
-                println!(
+                eyre::bail!(
                     "===NamespaceDefinitionBase=1=target is else =typ={:?}",
                     ast.get_ast_type()
                 );
             }
-            println!("===NamespaceDefinitionBase=1==typ={:?}", ast.get_ast_type());
+            // println!("===NamespaceDefinitionBase=1==typ={:?}", ast.get_ast_type());
             //   println!(
             //             "===visitMemberAccessExpr======end======={:?}",
             //             ast
@@ -1342,7 +1341,7 @@ impl SymbolTableLinker {
                     .location_expr_base_mut_ref()
                     .target = Some(ta.downgrade());
             } else {
-                println!("===arr===ta==else target={:?}==", ast.get_ast_type());
+                eyre::bail!("===arr===ta==else target={:?}==", ast.get_ast_type());
             }
             //      println!(
             //     "===visitMemberAccessExpr======end===arr===={:?}",
@@ -1432,12 +1431,12 @@ impl SymbolTableLinker {
                 .location_expr_base_mut_ref()
                 .target = idf.upgrade().unwrap().borrow().parent();
         } else {
-            println!("===target is not  none==else ==={:?}==", ast.get_ast_type());
+            eyre::bail!("===target is not  none==else ==={:?}==", ast.get_ast_type());
         }
-        println!(
-            "===target is not  none==end ==={:?}==",
-            idf.upgrade().unwrap().borrow().parent()
-        );
+        // println!(
+        //     "===target is not  none==end ==={:?}==",
+        //     idf.upgrade().unwrap().borrow().parent()
+        // );
         //   println!(
         //             "===visitMemberAccessExpr======end======={:?}",
         //             ast

@@ -221,9 +221,7 @@ impl DirectModificationDetector {
         self.visitAST(ast)?;
         self.collect_modified_values(
             ast,
-            &ast.try_as_ast_ref()
-                .unwrap()
-                .borrow()
+            &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
                 .try_as_simple_statement_ref()

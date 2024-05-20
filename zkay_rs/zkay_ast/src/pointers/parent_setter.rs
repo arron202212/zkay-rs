@@ -247,12 +247,14 @@ impl ExpressionToStatementVisitor {
                 .borrow()
                 .parent()
                 .as_ref()
-                .map(|p| p.clone().upgrade())
-                .flatten()
+                .and_then(|p| p.clone().upgrade())
                 .clone();
         }
         if parent.is_some() {
-            // println!("=====visitStatement====get_ast_type===={:?}", ast);
+            println!(
+                "=====visitStatement====get_ast_type===={:?}",
+                ast.get_ast_type()
+            );
             if ast.is_block() {
                 ast.try_as_block_ref()
                     .unwrap()
@@ -268,6 +270,17 @@ impl ExpressionToStatementVisitor {
                     .statement_base_mut_ref()
                     .unwrap()
                     .function = parent.map(|p| p.clone().downgrade());
+            } else if ast.is_simple_statement() {
+                ast.try_as_simple_statement_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .statement_base_mut_ref()
+                    .function = parent.map(|p| p.clone().downgrade());
+                println!(
+                    "=====visitStatement=======else==={:?}=====",
+                    ast.get_ast_type()
+                );
+                eyre::bail!("=========else===========");
             }
         }
         Ok(())

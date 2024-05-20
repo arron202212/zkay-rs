@@ -9474,9 +9474,13 @@ impl CodeVisitor {
 
     pub fn visit_RehomExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let e = self.visit(
-            &ast.try_as_rehom_expr_ref()
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .try_as_rehom_expr_ref()
+                .unwrap()
                 .reclassify_expr_base
                 .expr
                 .clone()
@@ -9484,7 +9488,14 @@ impl CodeVisitor {
         );
         Ok(format!(
             "{}({e})",
-            ast.try_as_rehom_expr_ref().unwrap().borrow().func_name()
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .try_as_rehom_expr_ref()
+                .unwrap()
+                .func_name()
         ))
     }
 
@@ -9597,6 +9608,7 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("==visit_ForStatement========{:?}======",ast);
         let for_statement = ast
             .to_ast()
             .try_as_statement_ref()
@@ -9613,15 +9625,19 @@ impl CodeVisitor {
             String::from(";")
         };
         let c = self.visit(&for_statement.condition.clone().into());
-        let u = if let Some(update) = &for_statement.update {
-            format!(
-                " {}",
-                self.visit_single_or_list(SingleOrListUnion::AST(update.clone().into()), "")?
-                    .replace(";", "")
-            )
-        } else {
-            String::new()
-        };
+        let u = for_statement
+            .update
+            .as_ref()
+            .map_or(String::new(), |update| {
+                // println!("===update=====code========={:?}",update.borrow().to_string());
+                format!(
+                    " {}",
+                    self.visit_single_or_list(SingleOrListUnion::AST(update.clone().into()), "")
+                        .unwrap_or(String::new())
+                        .replace(";", "")
+                )
+            });
+
         let b = self.visit_single_or_list(
             SingleOrListUnion::AST(for_statement.body.clone().into()),
             "",
@@ -9761,7 +9777,7 @@ impl CodeVisitor {
         } else {
             ast.rhs().clone()
         };
-
+        // println!("=visit_AssignmentStatement======op============={:?}",op);
         let fstr = if op.starts_with("pre") {
             op = op[3..].to_string();
             "{1}{0};"
@@ -9771,10 +9787,11 @@ impl CodeVisitor {
         } else {
             "{} {}= {};"
         };
+
         let format_string = |ls, rs| match fstr {
-            "{1}{0};" => format!("{1}{0};", ls, rs),
-            "{0}{1};" => format!("{0}{1};", ls, rs),
-            _ => format!("{} {}= {};", ls, op, rs),
+            "{1}{0};" => format!("{op}{ls};"),
+            "{0}{1};" => format!("{ls}{op};"),
+            _ => format!("{ls} {op}= {rs};"),
         };
         Ok(
             if is_instance(lhs.as_ref().unwrap(), ASTType::SliceExpr)
@@ -9825,6 +9842,7 @@ impl CodeVisitor {
                     String::new()
                 };
                 if lhs.size <= 3 {
+                    //   println!("=visit_AssignmentStatement====44444==op={:?}====fstr========{:?}",op,fstr);
                     for i in 0..lhs.size {
                         s += &format_string(
                             format!("{lexpr}[{lbase}{}]", lhs.start_offset + i),
@@ -9833,6 +9851,7 @@ impl CodeVisitor {
                         s += "\n";
                     }
                 } else {
+                    // println!("=======+++++===============");
                     let i = CFG.lock().unwrap().reserved_name_prefix() + "i";
                     if lhs.start_offset != 0 {
                         lbase += &format!("{} + ", lhs.start_offset);
@@ -9850,9 +9869,9 @@ impl CodeVisitor {
                 }
                 s[..s.len() - 1].to_string()
             } else {
-                let to_ast = |hs| self.visit(hs);
+                //   println!("=visit_AssignmentStatement===sss===op={:?}====fstr========{:?}",op,fstr);
                 format_string(
-                    to_ast(&lhs.as_ref().unwrap().clone().into()),
+                    self.visit(&lhs.clone().unwrap().into()),
                     self.visit(&rhs.clone().unwrap().into()),
                 )
             },
@@ -10024,7 +10043,7 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!("===visit_AnnotatedTypeName=============");
+        // println!("===visit_AnnotatedTypeName=============");
         let t = ast
             .try_as_annotated_type_name_ref()
             .unwrap()
@@ -10032,10 +10051,10 @@ impl CodeVisitor {
             .type_name
             .as_ref()
             .map_or(String::new(), |type_name| {
-                println!(
-                    "===visit_AnnotatedTypeName========{:?}=====",
-                    type_name.get_ast_type()
-                );
+                // println!(
+                //     "===visit_AnnotatedTypeName========{:?}=====",
+                //     type_name.get_ast_type()
+                // );
                 self.visit(&type_name.clone().into())
             });
         let p = ast

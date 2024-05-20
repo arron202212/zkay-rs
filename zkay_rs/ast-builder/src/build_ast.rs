@@ -1517,23 +1517,24 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .flatten()
             })
             .flatten();
-        let update = ctx
-            .update
-            .as_ref()
-            .map(|expr| {
-                expr.accept(self);
-                self.temp_result()
-                    .clone()
-                    .map(|ast| {
-                        ast.try_as_expression().map(|expr| {
-                            SimpleStatement::ExpressionStatement(ExpressionStatement::new(
-                                RcCell::new(expr).into(),
-                            ))
-                        })
+
+        let update = ctx.update.as_ref().and_then(|expr| {
+            expr.accept(self);
+            // println!("===ctx.update============{:?}",self.temp_result().clone());
+            self.temp_result().as_ref().and_then(|ast| {
+                ast.try_as_expression_ref()
+                    .map(|expr| {
+                        SimpleStatement::ExpressionStatement(ExpressionStatement::new(
+                            RcCell::new(expr.clone()).into(),
+                        ))
                     })
-                    .flatten()
+                    .or(ast
+                        .clone()
+                        .try_as_statement()
+                        .and_then(|s| s.try_as_simple_statement()))
             })
-            .flatten();
+        });
+        // println!("update============{:?}",update);
         let body = ctx
             .body
             .as_ref()
