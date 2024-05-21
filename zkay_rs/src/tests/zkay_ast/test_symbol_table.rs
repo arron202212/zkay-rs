@@ -1,32 +1,32 @@
-use ast_builder::build_ast::build_ast;
-use rccell::RcCell;
-use std::collections::BTreeMap;
-use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
-    AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
-    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST,
-    LocationExprBaseProperty, NamespaceDefinitionBaseProperty, SourceUnit,
-    StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
-};
-use zkay_ast::global_defs::{global_defs, global_vars};
-use zkay_ast::pointers::{
-    parent_setter::set_parents,
-    symbol_table::{fill_symbol_table, get_builtin_globals, link_identifiers},
-};
-use zkay_examples::examples::{ALL_EXAMPLES, SIMPLE, SIMPLE_STORAGE};
-pub struct ASTElements {
-    pub contract: RcCell<ContractDefinition>,
-    pub f: RcCell<ConstructorOrFunctionDefinition>,
-    pub body: Option<Block>,
-    pub decl_statement: VariableDeclarationStatement,
-    pub decl: RcCell<VariableDeclaration>,
-    pub assignment: AssignmentStatement,
-    pub identifier_expr: IdentifierExpr,
-}
 // class TestSimpleAST(ZkayTestCase):
 
 #[cfg(test)]
 mod tests {
+    use ast_builder::build_ast::build_ast;
+    use rccell::RcCell;
+    use std::collections::BTreeMap;
+    use zkay_ast::ast::{
+        is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
+        AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition,
+        ContractDefinition, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
+        IdentifierExpr, IntoAST, LocationExprBaseProperty, NamespaceDefinitionBaseProperty,
+        SourceUnit, StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
+    };
+    use zkay_ast::global_defs::{global_defs, global_vars};
+    use zkay_ast::pointers::{
+        parent_setter::set_parents,
+        symbol_table::{fill_symbol_table, get_builtin_globals, link_identifiers},
+    };
+    use zkay_examples::examples::{ALL_EXAMPLES, SIMPLE, SIMPLE_STORAGE};
+    struct ASTElements {
+        pub contract: RcCell<ContractDefinition>,
+        pub f: RcCell<ConstructorOrFunctionDefinition>,
+        pub body: Option<Block>,
+        pub decl_statement: VariableDeclarationStatement,
+        pub decl: RcCell<VariableDeclaration>,
+        pub assignment: AssignmentStatement,
+        pub identifier_expr: IdentifierExpr,
+    }
     use super::*;
 
     pub fn get_ast_elements(ast: &RcCell<SourceUnit>) -> ASTElements {

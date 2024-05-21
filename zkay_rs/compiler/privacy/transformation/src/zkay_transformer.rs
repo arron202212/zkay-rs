@@ -128,7 +128,7 @@ impl ZkayVarDeclTransformer {
             )
         };
         Ok(RcCell::new(AnnotatedTypeName::new(
-            t.map(|t| t.try_as_type_name()).flatten(),
+            t.and_then(|t| t.try_as_type_name()),
             None,
             String::from("NON_HOMOMORPHISM"),
         ))
@@ -542,8 +542,7 @@ impl ZkayStatementTransformer {
                                 .unwrap()
                                 .target()
                                 .as_ref()
-                                .map(|t| t.clone().upgrade())
-                                .flatten()
+                                .and_then(|t| t.clone().upgrade())
                     })
                     .cloned()
                     .collect();
@@ -2185,8 +2184,7 @@ impl ZkayCircuitTransformer {
                     .borrow()
                     .statement()
                     .as_ref()
-                    .map(|t| t.clone().upgrade())
-                    .flatten();
+                    .and_then(|t| t.clone().upgrade());
                 ast.try_as_function_call_expr_ref()
                     .unwrap()
                     .borrow_mut()

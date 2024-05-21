@@ -601,8 +601,7 @@ impl ZkayTransformer {
             let gen = self.circuits.get(fct);
             fct.borrow_mut().body = ZkayStatementTransformer::new(gen.clone().cloned())
                 .visit(&fct.borrow().body.clone().unwrap().into())
-                .map(|b| b.try_as_block())
-                .flatten();
+                .and_then(|b| b.try_as_block());
         }
 
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)

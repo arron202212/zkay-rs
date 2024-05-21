@@ -1382,8 +1382,7 @@ where
             .location_expr_base
             .target
             .clone()
-            .map(|t| t.upgrade())
-            .flatten();
+            .and_then(|t| t.upgrade());
         assert!(target.is_some());
         assert!(!is_instance(
             idf.try_as_identifier_expr_ref()

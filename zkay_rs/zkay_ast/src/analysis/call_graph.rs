@@ -135,20 +135,20 @@ impl DirectCalledFunctionDetector {
                 .map(|d| d.borrow().clone())
             {
                 let cofd = cofd.clone();
-                println!(
-                    "====.upgrade()=======function=============={:?}",
-                    ast.to_ast()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .expression_base_ref()
-                        .statement
-                        .as_ref()
-                        .unwrap()
-                        .clone()
-                        .upgrade()
-                        .unwrap()
-                        .get_ast_type()
-                );
+                // println!(
+                //     "====.upgrade()=======function=============={:?}",
+                //     ast.to_ast()
+                //         .try_as_expression_ref()
+                //         .unwrap()
+                //         .expression_base_ref()
+                //         .statement
+                //         .as_ref()
+                //         .unwrap()
+                //         .clone()
+                //         .upgrade()
+                //         .unwrap()
+                //         .get_ast_type()
+                // );
 
                 ast.to_ast()
                     .try_as_expression_ref()
@@ -285,19 +285,14 @@ impl IndirectCalledFunctionDetector {
                     leaf.borrow()
                         .called_functions
                         .iter()
-                        .filter_map(|fct| {
-                            if !ast
-                                .try_as_constructor_or_function_definition_ref()
+                        .filter(|fct| {
+                            !ast.try_as_constructor_or_function_definition_ref()
                                 .unwrap()
                                 .borrow()
                                 .called_functions
                                 .contains(fct)
-                            {
-                                Some(fct.clone())
-                            } else {
-                                None
-                            }
                         })
+                        .cloned()
                         .collect::<Vec<_>>()
                 })
                 .flatten()
@@ -375,20 +370,19 @@ impl IndirectDynamicBodyDetector {
             return Ok(());
         }
 
-        for fct in &ast
+        let v = ast
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
             .called_functions
-        {
+            .iter()
+            .any(|fct| !fct.borrow().has_static_body);
+        if v {
             // This function (directly or indirectly) calls a recursive function
-            if !fct.borrow().has_static_body {
-                ast.try_as_constructor_or_function_definition_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .has_static_body = false;
-                return Ok(());
-            }
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .has_static_body = false;
         }
         Ok(())
     }

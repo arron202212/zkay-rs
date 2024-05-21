@@ -88,14 +88,14 @@ impl FinalVisitor {
             .borrow()
             .state_variable_declarations
         {
-            if v.try_as_identifier_declaration_ref()
+            if v.to_ast()
+                .try_as_identifier_declaration_ref()
                 .unwrap()
-                .borrow()
                 .identifier_declaration_base_ref()
                 .is_final()
-                && v.try_as_identifier_declaration_ref()
+                && v.to_ast()
+                    .try_as_identifier_declaration_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_state_variable_declaration_ref()
                     .unwrap()
                     .expr
@@ -159,39 +159,49 @@ impl FinalVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visit(
-            &ast.try_as_assignment_statement_ref()
+            &ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_simple_statement_ref()
+                .unwrap()
+                .try_as_assignment_statement_ref()
+                .unwrap()
                 .rhs()
                 .clone()
                 .unwrap()
                 .into(),
         );
-        if let Some(le) = ast
+        if let Some(var) = ast
+            .to_ast()
+            .try_as_statement_ref()
+            .unwrap()
+            .try_as_simple_statement_ref()
+            .unwrap()
             .try_as_assignment_statement_ref()
             .unwrap()
-            .borrow()
             .lhs()
             .as_ref()
             .unwrap()
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
-            .borrow()
             .try_as_location_expr_ref()
             .unwrap()
-            .try_as_identifier_expr_ref()
+            .target()
+            .as_ref()
+            .and_then(|var| var.clone().upgrade())
         {
-            if let Some(var) = le.location_expr_base.target() {
-                if let Some(v) = self
-                    .state_vars_assigned
-                    .borrow_mut()
-                    .as_mut()
-                    .unwrap()
-                    .get_mut(&var.clone().upgrade().unwrap())
-                {
-                    assert!(!*v, "Tried to reassign final variable,{:?}", ast);
-                    *v = true;
-                }
+            if let Some(v) = self
+                .state_vars_assigned
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .get_mut(&var)
+            {
+                assert!(!*v, "Tried to reassign final variable,{:?}", ast);
+                *v = true;
             }
         }
         Ok(())
@@ -250,28 +260,37 @@ impl FinalVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        if TupleOrLocationExpr::LocationExpr(LocationExpr::IdentifierExpr(
-            ast.try_as_identifier_expr_ref().unwrap().borrow().clone(),
-        ))
-        .is_rvalue()
+        if ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .is_rvalue()
             && self.state_vars_assigned.borrow().is_some()
         {
-            if let Some(&v) = self.state_vars_assigned.borrow().as_ref().unwrap().get(
-                &ast.try_as_identifier_expr_ref()
-                    .unwrap()
+            assert!(
+                self.state_vars_assigned
                     .borrow()
-                    .location_expr_base
-                    .target
-                    .clone()
+                    .as_ref()
                     .unwrap()
-                    .upgrade()
-                    .unwrap(),
-            ) {
-                assert!(
-                    v,
-                    r#"{ast:?} is reading "final" state variable before writing it"#,
-                );
-            }
+                    .get(
+                        &ast.to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_location_expr_ref()
+                            .unwrap()
+                            .target()
+                            .clone()
+                            .unwrap()
+                            .upgrade()
+                            .unwrap(),
+                    )
+                    .map_or(true, |&v| v),
+                r#"{ast:?} is reading "final" state variable before writing it"#,
+            );
         }
         Ok(())
     }

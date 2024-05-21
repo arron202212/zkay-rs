@@ -1,14 +1,14 @@
 // use  zkay.tests.zkay_unit_test::ZkayTestCase
-use rccell::RcCell;
-use zkay_ast::ast::{
-    ASTBaseProperty, ASTChildren, AssignmentStatementBase, BooleanLiteralExpr, BuiltinFunction,
-    FunctionCallExprBase, IdentifierExpr, IdentifierExprUnion, IntoAST, NumberLiteralExpr,
-    RequireStatement,
-};
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rccell::RcCell;
+    use zkay_ast::ast::{
+        ASTBaseProperty, ASTChildren, AssignmentStatementBase, BooleanLiteralExpr, BuiltinFunction,
+        FunctionCallExprBase, IdentifierExpr, IdentifierExprUnion, IntoAST, NumberLiteralExpr,
+        RequireStatement,
+    };
     // class TestASTSimpleStorageDetailed(ZkayTestCase):
     #[test]
     fn test_require() {

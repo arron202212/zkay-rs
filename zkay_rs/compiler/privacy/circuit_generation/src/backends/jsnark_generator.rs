@@ -47,23 +47,21 @@ pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
 pub fn _get_t(mut t: Option<ASTFlatten>) -> String
 // """Return the corresponding jsnark type name for a given type or expression."""
 {
-    let t = t
-        .map(|t| {
-            if t.is_expression() {
-                t.try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type()
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .type_name
-                    .clone()
-            } else {
-                t.try_as_type_name()
-            }
-        })
-        .flatten();
+    let t = t.and_then(|t| {
+        if t.is_expression() {
+            t.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .type_name
+                .clone()
+        } else {
+            t.try_as_type_name()
+        }
+    });
     assert!(t.is_some());
     let t = t.unwrap();
     let bits = t.borrow().elem_bitwidth();

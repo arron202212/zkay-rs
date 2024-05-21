@@ -1,46 +1,45 @@
-use ast_builder::build_ast::build_ast;
-// use rccell::{RcCell, WeakCell};
-use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType,
-    NamespaceDefinitionBaseProperty, AST,
-};
-use zkay_ast::pointers::parent_setter::set_parents;
-use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
-use zkay_derive::ASTVisitorBaseRefImpl;
-use zkay_examples::examples::ALL_EXAMPLES;
-#[derive(ASTVisitorBaseRefImpl)]
-struct ParentChecker {
-    pub ast_visitor_base: AstVisitorBase,
-}
-impl ParentChecker {
-    pub fn new() -> Self {
-        Self {
-            ast_visitor_base: AstVisitorBase::new("post", false),
-        }
-    }
-}
-impl AstVisitor for ParentChecker {
-    fn visit(&self, ast: &ASTFlatten) -> Self::Return {
-        if !is_instance(ast, ASTType::SourceUnit) {
-            assert!(ast.ast_base_ref().unwrap().borrow().parent().is_some());
-        }
-        self._visit_internal(ast);
-    }
-    type Return = ();
-    fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, _ast: &AST) -> bool {
-        false
-    }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
-        Err(eyre::eyre!("unreach"))
-    }
-}
-
 // @parameterized_class(('name', 'example'), all_examples)
 // class TestParentSetter(TestExamples):
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ast_builder::build_ast::build_ast;
+    // use rccell::{RcCell, WeakCell};
+    use zkay_ast::ast::{
+        is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType,
+        NamespaceDefinitionBaseProperty, AST,
+    };
+    use zkay_ast::pointers::parent_setter::set_parents;
+    use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+    use zkay_derive::ASTVisitorBaseRefImpl;
+    use zkay_examples::examples::ALL_EXAMPLES;
+    #[derive(ASTVisitorBaseRefImpl)]
+    struct ParentChecker {
+        pub ast_visitor_base: AstVisitorBase,
+    }
+    impl ParentChecker {
+        fn new() -> Self {
+            Self {
+                ast_visitor_base: AstVisitorBase::new("post", false),
+            }
+        }
+    }
+    impl AstVisitor for ParentChecker {
+        fn visit(&self, ast: &ASTFlatten) -> Self::Return {
+            if !is_instance(ast, ASTType::SourceUnit) {
+                assert!(ast.ast_base_ref().unwrap().borrow().parent().is_some());
+            }
+            self._visit_internal(ast);
+        }
+        type Return = ();
+        fn temper_result(&self) -> Self::Return {}
+        fn has_attr(&self, _ast: &AST) -> bool {
+            false
+        }
+        fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+            Err(eyre::eyre!("unreach"))
+        }
+    }
     #[test]
     pub fn test_root_children_have_parent() {
         for (_name, example) in ALL_EXAMPLES.iter() {
@@ -72,8 +71,7 @@ mod tests {
                     .borrow()
                     .parent()
                     .as_ref()
-                    .map(|p| p.clone().upgrade())
-                    .flatten(),
+                    .and_then(|p| p.clone().upgrade()),
                 Some(contract.clone().into())
             );
         }

@@ -21,20 +21,21 @@ use zkay_ast::ast::{
     EnumTypeName, EnumValue, EnumValueTypeName, Expression, ExpressionASType, ExpressionBaseMutRef,
     ExpressionBaseProperty, ExpressionBaseRef, ForStatement, FunctionCallExpr,
     FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
-    FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseRef, IdentifierExpr,
-    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralUnion, LocationExpr,
-    LocationExprBaseProperty, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NewExpr,
-    NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName, PrimitiveCastExpr, ReclassifyExpr,
-    ReclassifyExprBase, ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr,
-    RequireStatement, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
-    StatementBaseMutRef, StatementBaseProperty, TupleExpr, TupleType, TypeName,
-    UserDefinedTypeName, UserDefinedTypeNameBaseProperty, VariableDeclarationStatement,
-    WhileStatement, AST,
+    FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseProperty,
+    IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IndexExpr, IntoAST, IntoExpression,
+    IntoStatement, LiteralUnion, LocationExpr, LocationExprBaseProperty, Mapping, MeExpr,
+    MemberAccessExpr, NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion,
+    NumberTypeName, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase,
+    ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr, RequireStatement,
+    ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
+    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitor::deep_copy::replace_expr;
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn type_check(ast: &ASTFlatten) {
+    println!("==========type_check=====================");
     check_final(ast);
     let v = TypeCheckVisitor::new();
     v.visit(&ast);
@@ -2518,20 +2519,31 @@ impl TypeCheckVisitor {
         // if is_instance(&ast.location_expr_base.target, ASTType::Mapping) { //no action necessary, the identifier will be replaced later
         // pass
         let target = ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
             .try_as_identifier_expr_ref()
             .unwrap()
-            .borrow()
             .location_expr_base
             .target()
             .as_ref()
-            .map(|t| t.clone().upgrade())
-            .flatten();
-        if let Some(target) = target {
-            assert!(
-                is_instance(&target, ASTType::ContractDefinition),
-                "Unsupported use of contract type in expression{:?}",
-                ast
-            );
+            .and_then(|t| t.clone().upgrade())
+            .unwrap();
+        if is_instance(&target, ASTType::Mapping) {
+            // no action necessary, the identifier will be replaced later
+            return Ok(());
+        }
+
+        assert!(
+            is_instance(&target, ASTType::ContractDefinition),
+            "Unsupported use of contract type in expression{:?}",
+            ast
+        );
+        if ast.is_identifier_expr() {
             ast.try_as_identifier_expr_ref()
                 .unwrap()
                 .borrow_mut()
@@ -2541,9 +2553,44 @@ impl TypeCheckVisitor {
                 .borrow()
                 .annotated_type()
                 .clone();
-
-            assert!(Self::is_accessible_by_invoker(&ast.try_as_identifier_expr_ref().unwrap().borrow().to_expr()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
+        } else if ast.is_expression() {
+            ast.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_tuple_or_location_expr_mut()
+                .unwrap()
+                .try_as_location_expr_mut()
+                .unwrap()
+                .try_as_identifier_expr_mut()
+                .unwrap()
+                .annotated_type = target
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .clone();
+        } else {
+            println!("===========else===========");
+            eyre::bail!("======else==============");
         }
+
+        assert!(
+            Self::is_accessible_by_invoker(
+                &ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_identifier_expr_ref()
+                    .unwrap()
+                    .to_expr()
+            ),
+            "Tried to read value which cannot be proven to be owned by the transaction invoker{:?}",
+            ast
+        );
+
         Ok(())
     }
     pub fn visitIndexExpr(
@@ -2813,16 +2860,29 @@ impl TypeCheckVisitor {
 
     pub fn visitMapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .try_as_mapping_ref()
             .unwrap()
-            .borrow()
             .key_label
             .is_some()
         {
+            // println!("======Only addresses can be annotated===================={:?}==={:?}",ast.to_ast().try_as_type_name_ref().unwrap()
+            //             .try_as_mapping_ref()
+            //             .unwrap().key_type
+            //                     , RcCell::new(TypeName::address_type()));
             assert!(
-                ast.try_as_mapping_ref().unwrap().borrow().key_type
-                    == RcCell::new(TypeName::address_type()),
-                "Only addresses can be annotated{:?}",
+                ast.to_ast()
+                    .try_as_type_name_ref()
+                    .unwrap()
+                    .try_as_mapping_ref()
+                    .unwrap()
+                    .key_type
+                    .borrow()
+                    .clone()
+                    == TypeName::address_type(),
+                "Only addresses can be annotated {:?}",
                 ast
             );
         }
@@ -2862,15 +2922,22 @@ impl TypeCheckVisitor {
         &self,
         mut ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        if is_instance(
-            ast.try_as_annotated_type_name_ref()
+        if ast
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow()
+            .type_name
+            .is_some()
+            && ast
+                .try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
                 .type_name
                 .as_ref()
-                .unwrap(),
-            ASTType::UserDefinedTypeNameBase,
-        ) {
+                .unwrap()
+                .get_ast_type()
+                == ASTType::UserDefinedTypeNameBase
+        {
             assert!(
                 is_instance(
                     &ast.try_as_annotated_type_name_ref()
@@ -2889,16 +2956,27 @@ impl TypeCheckVisitor {
                         .unwrap(),
                     ASTType::EnumDefinition
                 ),
-                "Unsupported use of user-defined type {:?}",
+                "Unsupported use of user-defined type {:?},===={:?}==={:?}",
+                ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name,
+                ast,
                 ast.try_as_annotated_type_name_ref()
                     .unwrap()
                     .borrow()
                     .type_name
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_user_defined_type_name_ref()
+                    .unwrap()
+                    .target()
+                    .clone()
+                    .unwrap()
+                    .upgrade()
             );
-            ast.try_as_annotated_type_name_ref()
-                .unwrap()
-                .borrow_mut()
-                .type_name = ast
+            let tn = ast
                 .try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
@@ -2913,9 +2991,9 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .upgrade()
                 .unwrap()
+                .to_ast()
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .borrow()
                 .try_as_enum_definition_ref()
                 .unwrap()
                 .annotated_type
@@ -2923,6 +3001,10 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .type_name
                 .clone();
+            ast.try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow_mut()
+                .type_name = tn;
         }
 
         if ast
@@ -2932,6 +3014,7 @@ impl TypeCheckVisitor {
             .privacy_annotation
             != Some(RcCell::new(Expression::all_expr()).into())
         {
+            println!("========can_be_private========================{ast:?}");
             assert!(
                 ast.try_as_annotated_type_name_ref()
                     .unwrap()
@@ -3010,30 +3093,36 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .target()
                 .as_ref()
-                .map(|t| t.clone().upgrade())
-                .flatten();
-            if let Some(t) = t {
+                .and_then(|t| t.clone().upgrade())
+                .unwrap();
+            if !is_instance(&t, ASTType::Mapping) {
                 //no action necessary, this is the case: mapping(address!x => uint@x)
                 // pass
                 assert!(
-                    t.try_as_identifier_declaration_ref()
+                    t.to_ast()
+                        .try_as_identifier_declaration_ref()
                         .unwrap()
-                        .borrow()
                         .identifier_declaration_base_ref()
                         .is_final()
-                        || t.try_as_identifier_declaration_ref()
+                        || t.to_ast()
+                            .try_as_identifier_declaration_ref()
                             .unwrap()
-                            .borrow()
                             .identifier_declaration_base_ref()
                             .is_constant(),
                     r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}"#,
                     p
                 );
                 assert!(
-                    t.try_as_expression_ref().unwrap().borrow().annotated_type()
+                    t.to_ast()
+                        .try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .annotated_type()
                         == &Some(AnnotatedTypeName::address_all()),
                     r#"Privacy type is not a public address, but {:?},{:?}"#,
-                    t.try_as_expression_ref().unwrap().borrow().annotated_type(),
+                    t.to_ast()
+                        .try_as_identifier_declaration_ref()
+                        .unwrap()
+                        .annotated_type(),
                     p
                 );
             }

@@ -1122,7 +1122,11 @@ impl SymbolTableLinker {
                 .expect("parent is none")
                 .clone();
         }
-
+        println!(
+            "===visitUserDefinedTypeName========================{:?},======{:?}",
+            ast.get_ast_type(),
+            type_def.get_ast_type()
+        );
         ast.try_as_type_name_ref()
             .unwrap()
             .borrow_mut()

@@ -1,11 +1,10 @@
-use zkay_examples::examples::ALL_EXAMPLES;
-// use  zkay_tests::utils::test_examples::TestExamples;
-// use  zkay_solidity_parser::emit::normalize_code;
-use ast_builder::build_ast::build_ast;
-
 #[cfg(test)]
 mod tests {
+    use zkay_examples::examples::ALL_EXAMPLES;
+    // use  zkay_tests::utils::test_examples::TestExamples;
+    // use  zkay_solidity_parser::emit::normalize_code;
     use super::*;
+    use ast_builder::build_ast::build_ast;
     // @parameterized_class(('name', 'example'), all_examples)
     // class TestBuildAST(TestExamples):
     #[test]

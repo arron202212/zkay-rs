@@ -54,7 +54,7 @@ bitflags! {
 #[warn(dead_code)]
 impl ASTFlags {
     pub fn new(flag: Option<u32>) -> Self {
-        Self(flag.unwrap_or(0x1f))
+        Self(flag.unwrap_or(0x3f))
     }
     // pub fn clear(&mut self) -> &mut ASTFlags {
     //     self
@@ -110,7 +110,11 @@ pub fn get_processed_ast(
     global_vars: RcCell<GlobalVars>,
 ) -> ASTFlatten {
     let flag = ASTFlags::new(flag);
-
+    println!(
+        "====flag=================={:?}======={:?}",
+        flag.to_string(),
+        flag.type_check()
+    );
     let (mut ast, _) =
         get_parsed_ast_and_fake_code(code, flag & ASTFlags::SOLC_CHECK == ASTFlags::SOLC_CHECK); //solc_check
 
@@ -160,7 +164,9 @@ fn process_ast(
     check_for_undefined_behavior_due_to_eval_order(ast);
     // except AstException as e:
     //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
+    println!("======{type_check}=========process======before====");
     if type_check {
+        println!("======type_check=========process==========");
         print_step("Zkay type checking");
         // try:
         t(ast);

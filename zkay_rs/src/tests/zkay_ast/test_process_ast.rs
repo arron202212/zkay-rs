@@ -1,8 +1,3 @@
-use zkay_examples::examples::ALL_EXAMPLES;
-// use zkay_tests::utils::test_examples::TestExamples
-use ast_builder::process_ast::get_processed_ast;
-use rccell::RcCell;
-use zkay_ast::global_defs::{global_defs, global_vars};
 // @parameterized_class(('name', 'example'), all_examples)
 // class TestProcessAST(TestExamples):
 
@@ -11,13 +6,18 @@ use zkay_ast::global_defs::{global_defs, global_vars};
 //         self.assertIsNotNone(ast)
 #[cfg(test)]
 mod tests {
+    use zkay_examples::examples::ALL_EXAMPLES;
+    // use zkay_tests::utils::test_examples::TestExamples
     use super::*;
+    use ast_builder::process_ast::get_processed_ast;
+    use rccell::RcCell;
+    use zkay_ast::global_defs::{global_defs, global_vars};
     #[test]
     pub fn test_process_ast() {
         let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
         for (name, example) in ALL_EXAMPLES.iter() {
             println!("{:?}", name);
-            let _ast = get_processed_ast(&example.code(), Some(!0b00001000), global_vars.clone());
+            let _ast = get_processed_ast(&example.code(), Some(0b0011_0111), global_vars.clone());
             assert!(true);
         }
     }
