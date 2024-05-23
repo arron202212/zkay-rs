@@ -262,10 +262,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
 
     fn visit_identifier(&mut self, ctx: &IdentifierContext<'input>) -> Self::Return {
         let name = ctx.name.clone().expect("visit_identifier").text;
-        println!(
-            "======visit_identifier=========================={name},{:?}",
-            ctx.name
-        );
+        // println!(
+        //     "======visit_identifier=========================={name},{:?}",
+        //     ctx.name
+        // );
         // if name.startswith(cfg.reserved_name_prefix) or name.startswith(f"_{cfg.reserved_name_prefix}"){
         //     raise SyntaxException(f"Identifiers must not start with reserved prefix _?{cfg.reserved_name_prefix}", ctx, self.code)
         // elif name.endswith(cfg.reserved_conflict_resolution_suffix){
@@ -780,12 +780,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // ////println!("======{:?},{:?}",ctx,ctx.type_name);
         let type_name = ctx.type_name.as_ref().and_then(|tn| {
             tn.accept(self);
-            println!("=type_name=={:?},{:?}", tn, self.temp_result().clone());
+            // println!("=type_name=={:?},{:?}", tn, self.temp_result().clone());
             self.temp_result()
                 .clone()
                 .and_then(|ast| ast.try_as_type_name())
         });
-        println!("=type_name=={:?},", type_name);
+        // println!("=type_name=={:?},", type_name);
         assert!(type_name.is_some(), "type name is none");
         Some(
             AnnotatedTypeName::new(
@@ -831,10 +831,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ElementaryTypeNameContext<'input>,
     ) -> Self::Return {
-        println!(
-            "====visit_elementaryTypeName=======ctx.get_text()==={}==========",
-            ctx.get_text()
-        );
+        // println!(
+        //     "====visit_elementaryTypeName=======ctx.get_text()==={}==========",
+        //     ctx.get_text()
+        // );
         let t = ctx.get_text();
         match t.as_str() {
             "address" => Some(AddressTypeName::new().into_ast()),
@@ -1755,7 +1755,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_expression())
         });
-        let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
+        let keywords: Vec<_> = ctx
+            .keywords
+            .iter()
+            .map(|kw| {
+                println!("{}", kw.get_text());
+                kw.get_text().to_owned()
+            })
+            .collect();
         Some(
             StateVariableDeclaration::new(
                 annotated_type.map(RcCell::new),
@@ -1857,29 +1864,29 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
     fn visit_typeName(&mut self, ctx: &TypeNameContext<'input>) -> Self::Return {
         if let Some(statement) = ctx.elementaryTypeName() {
             statement.accept(self);
-            println!(
-                "=======visit_typeName==========elementaryTypeName======{:?}",
-                self.temp_result().clone()
-            );
+            // println!(
+            //     "=======visit_typeName==========elementaryTypeName======{:?}",
+            //     self.temp_result().clone()
+            // );
             return self.temp_result().clone();
         }
         if let Some(statement) = ctx.userDefinedTypeName() {
             statement.accept(self);
-            println!(
-                "=======visit_typeName==========userDefinedTypeName======{:?}",
-                self.temp_result().clone()
-            );
+            // println!(
+            //     "=======visit_typeName==========userDefinedTypeName======{:?}",
+            //     self.temp_result().clone()
+            // );
             return self.temp_result().clone();
         }
         if let Some(statement) = ctx.mapping() {
             statement.accept(self);
-            println!(
-                "=======visit_typeName==========mapping======{:?}",
-                self.temp_result().clone()
-            );
+            // println!(
+            //     "=======visit_typeName==========mapping======{:?}",
+            //     self.temp_result().clone()
+            // );
             return self.temp_result().clone();
         }
-        println!("=======visit_typeName==========else======{:?}", ctx);
+        // println!("=======visit_typeName==========else======{:?}", ctx);
         None
     }
 
@@ -1887,13 +1894,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &UserDefinedTypeNameContext<'input>,
     ) -> Self::Return {
-        println!("===visit_userDefinedTypeName=========={ctx:?}=============");
+        // println!("===visit_userDefinedTypeName=========={ctx:?}=============");
         let identifier = ctx.identifier.as_ref().and_then(|identifier| {
             identifier.accept(self);
-            println!(
-                "===visit_userDefinedTypeName====identifier======{:?}=============",
-                self.temp_result().clone()
-            );
+            // println!(
+            //     "===visit_userDefinedTypeName====identifier======{:?}=============",
+            //     self.temp_result().clone()
+            // );
             self.temp_result()
                 .clone()
                 .and_then(|ast| ast.try_as_identifier())
@@ -1903,10 +1910,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .iter()
             .map(|name| {
                 name.accept(self);
-                println!(
-                    "===visit_userDefinedTypeName====name======{:?}=============",
-                    self.temp_result().clone()
-                );
+                // println!(
+                //     "===visit_userDefinedTypeName====name======{:?}=============",
+                //     self.temp_result().clone()
+                // );
                 self.temp_result()
                     .clone()
                     .unwrap()

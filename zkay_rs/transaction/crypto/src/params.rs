@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 pub struct CryptoParams {
     pub crypto_name: String,
 }
+
 pub fn title(data: String) -> String {
     let mut result = String::new();
     let mut first = true;

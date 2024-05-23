@@ -135,6 +135,39 @@ impl ASTChildren for {} {{
     .unwrap()
 }
 
+#[proc_macro_derive(ASTNoneIdentifierPropertyImpl)]
+pub fn derive_ast_none_identifier_property(item: TokenStream) -> TokenStream {
+    let struct_name = get_name("struct", item);
+    format!(
+        r#"
+impl ASTPropertyIdentifier for {} {{
+    fn get_option_idf(&self)-> Option<Identifier> {{
+        None
+    }}
+                }}
+                    "#,
+        struct_name
+    )
+    .parse()
+    .unwrap()
+}
+
+#[proc_macro_derive(ASTIdentifierPropertyImpl)]
+pub fn derive_ast_identifier_property(item: TokenStream) -> TokenStream {
+    let struct_name = get_name("struct", item);
+    format!(
+        r#"
+impl ASTPropertyIdentifier for {} {{
+    fn get_option_idf(&self)-> Option<Identifier> {{
+        self.idf().clone().upgrade().map(|f|f.borrow().clone())
+    }}
+                }}
+                    "#,
+        struct_name
+    )
+    .parse()
+    .unwrap()
+}
 #[proc_macro_derive(ASTDebug)]
 pub fn derive_ast_debug(item: TokenStream) -> TokenStream {
     let struct_name = get_name("struct", item);

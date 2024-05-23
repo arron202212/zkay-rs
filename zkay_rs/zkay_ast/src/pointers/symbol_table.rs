@@ -687,6 +687,7 @@ impl AstVisitor for SymbolTableLinker {
         ) || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        //  println!("=======get_attr=============={name:?}");
         match name {
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             _ if matches!(
@@ -699,7 +700,10 @@ impl AstVisitor for SymbolTableLinker {
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
 
-            _ => Err(eyre::eyre!("unreach")),
+            _ => {
+                println!("=======get_attr===other==========={name:?}");
+                Err(eyre::eyre!("unreach"))
+            }
         }
     }
 }
@@ -1122,11 +1126,11 @@ impl SymbolTableLinker {
                 .expect("parent is none")
                 .clone();
         }
-        println!(
-            "===visitUserDefinedTypeName========================{:?},======{:?}",
-            ast.get_ast_type(),
-            type_def.get_ast_type()
-        );
+        // println!(
+        //     "===visitUserDefinedTypeName========================{:?},======{:?}",
+        //     ast.get_ast_type(),
+        //     type_def.get_ast_type()
+        // );
         ast.try_as_type_name_ref()
             .unwrap()
             .borrow_mut()

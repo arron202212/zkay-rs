@@ -2539,8 +2539,8 @@ impl TypeCheckVisitor {
         }
 
         assert!(
-            is_instance(&target, ASTType::ContractDefinition),
-            "Unsupported use of contract type in expression{:?}",
+            !is_instance(&target, ASTType::ContractDefinition),
+            "Unsupported use of contract type in expression {:?}",
             ast
         );
         if ast.is_identifier_expr() {
@@ -2548,9 +2548,9 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .borrow_mut()
                 .annotated_type = target
-                .try_as_expression_ref()
+                .to_ast()
+                .try_as_identifier_declaration_ref()
                 .unwrap()
-                .borrow()
                 .annotated_type()
                 .clone();
         } else if ast.is_expression() {
@@ -2564,9 +2564,9 @@ impl TypeCheckVisitor {
                 .try_as_identifier_expr_mut()
                 .unwrap()
                 .annotated_type = target
-                .try_as_expression_ref()
+                .to_ast()
+                .try_as_identifier_declaration_ref()
                 .unwrap()
-                .borrow()
                 .annotated_type()
                 .clone();
         } else {
@@ -2868,10 +2868,6 @@ impl TypeCheckVisitor {
             .key_label
             .is_some()
         {
-            // println!("======Only addresses can be annotated===================={:?}==={:?}",ast.to_ast().try_as_type_name_ref().unwrap()
-            //             .try_as_mapping_ref()
-            //             .unwrap().key_type
-            //                     , RcCell::new(TypeName::address_type()));
             assert!(
                 ast.to_ast()
                     .try_as_type_name_ref()
@@ -2880,8 +2876,8 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .key_type
                     .borrow()
-                    .clone()
-                    == TypeName::address_type(),
+                    .get_ast_type()
+                    == TypeName::address_type().get_ast_type(),
                 "Only addresses can be annotated {:?}",
                 ast
             );
@@ -3012,9 +3008,10 @@ impl TypeCheckVisitor {
             .unwrap()
             .borrow()
             .privacy_annotation
-            != Some(RcCell::new(Expression::all_expr()).into())
+            .as_ref()
+            .map_or(false, |pa| !is_instance(pa, ASTType::AllExpr))
         {
-            println!("========can_be_private========================{ast:?}");
+            // println!("========can_be_private========================{ast:?}");
             assert!(
                 ast.try_as_annotated_type_name_ref()
                     .unwrap()
@@ -3109,8 +3106,9 @@ impl TypeCheckVisitor {
                             .unwrap()
                             .identifier_declaration_base_ref()
                             .is_constant(),
-                    r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}"#,
-                    p
+                    r#"Privacy annotations must be "final" or "constant", if they are expressions {:?}'s {:?}"#,
+                    p,
+                    t
                 );
                 assert!(
                     t.to_ast()

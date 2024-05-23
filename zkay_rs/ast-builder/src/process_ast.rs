@@ -164,9 +164,9 @@ fn process_ast(
     check_for_undefined_behavior_due_to_eval_order(ast);
     // except AstException as e:
     //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
-    println!("======{type_check}=========process======before====");
+    // println!("======{type_check}=========process======before====");
     if type_check {
-        println!("======type_check=========process==========");
+        // println!("======type_check=========process==========");
         print_step("Zkay type checking");
         // try:
         t(ast);
