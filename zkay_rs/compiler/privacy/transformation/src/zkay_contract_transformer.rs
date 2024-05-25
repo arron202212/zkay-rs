@@ -21,11 +21,11 @@ use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
-    is_instance, ASTFlatten, ASTType, AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr,
-    ArrayLiteralExprBase, AssignmentStatement, AssignmentStatementBase,
-    AssignmentStatementBaseMutRef, BlankLine, Block, CipherText, Comment, CommentBase,
-    ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion, Expression,
-    ExpressionASType, ExpressionStatement, FunctionCallExpr, FunctionCallExprBase,
+    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, Array,
+    ArrayBase, ArrayLiteralExpr, ArrayLiteralExprBase, AssignmentStatement,
+    AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block, CipherText, Comment,
+    CommentBase, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, ExprUnion,
+    Expression, ExpressionASType, ExpressionStatement, FunctionCallExpr, FunctionCallExprBase,
     HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef,
     IdentifierDeclaration, IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression,
     IntoStatement, LocationExpr, MeExpr, NamespaceDefinition, NewExpr, NumberLiteralExpr,
@@ -327,14 +327,7 @@ impl ZkayTransformer {
         {
             if f.borrow().requires_verification_when_external && f.borrow().has_side_effects() {
                 let name = CFG.lock().unwrap().get_verification_contract_name(
-                    c.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
+                    c.borrow().idf().as_ref().unwrap().borrow().name().clone(),
                     f.borrow().name(),
                 );
                 Self::import_contract(&name, su, self.circuits.get(&f));
@@ -437,12 +430,9 @@ impl ZkayTransformer {
         for var in &c.borrow().state_variable_declarations {
             if is_instance(var, ASTType::StateVariableDeclaration) {
                 if var
-                    .try_as_identifier_declaration_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_state_variable_declaration_ref()
-                    .unwrap()
-                    .identifier_declaration_base
                     .annotated_type
                     .as_ref()
                     .unwrap()
@@ -471,8 +461,7 @@ impl ZkayTransformer {
                             .borrow()
                             .try_as_state_variable_declaration_ref()
                             .unwrap()
-                            .identifier_declaration_base
-                            .idf
+                            .idf()
                             .clone()
                             .unwrap()
                             .into(),
@@ -990,11 +979,7 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 let mut idf = IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        vd.borrow()
-                                            .identifier_declaration_base
-                                            .idf
-                                            .clone()
-                                            .unwrap(),
+                                        vd.borrow().idf().clone().unwrap(),
                                     ),
                                     None,
                                 );
@@ -1070,7 +1055,7 @@ impl ZkayTransformer {
             new_modifiers.push(String::from("view"));
         }
         let mut new_f = ConstructorOrFunctionDefinition::new(
-            f.borrow().namespace_definition_base.idf.clone(),
+            f.borrow().idf().clone(),
             Some(original_params.clone()),
             Some(new_modifiers),
             Some(f.borrow().return_parameters.clone()),
@@ -1078,9 +1063,10 @@ impl ZkayTransformer {
         );
 
         // Make original function internal
-        f.borrow_mut().namespace_definition_base.idf = Some(RcCell::new(Identifier::Identifier(
-            IdentifierBase::new(CFG.lock().unwrap().get_internal_name(&f.borrow().clone())),
-        )));
+        f.borrow_mut().ast_base_mut_ref().borrow_mut().idf =
+            Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
+                CFG.lock().unwrap().get_internal_name(&f.borrow().clone()),
+            ))));
         f.borrow_mut().modifiers = f
             .borrow()
             .modifiers
@@ -1158,8 +1144,7 @@ impl ZkayTransformer {
             .iter()
             .filter_map(|p| {
                 if p.borrow()
-                    .identifier_declaration_base
-                    .annotated_type
+                    .annotated_type()
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -1175,8 +1160,7 @@ impl ZkayTransformer {
             .iter()
             .map(|p| {
                 p.borrow()
-                    .identifier_declaration_base
-                    .annotated_type
+                    .annotated_type()
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -1334,8 +1318,7 @@ impl ZkayTransformer {
         for p in &original_params {
             // """ * of T_e rule 8 """
             if p.borrow()
-                .identifier_declaration_base
-                .annotated_type
+                .annotated_type()
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -1343,8 +1326,7 @@ impl ZkayTransformer {
             {
                 let cipher_payload_len = p
                     .borrow()
-                    .identifier_declaration_base
-                    .annotated_type
+                    .annotated_type()
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -1369,9 +1351,7 @@ impl ZkayTransformer {
                     .assign(
                         RcCell::new(
                             IdentifierExpr::new(
-                                IdentifierExprUnion::Identifier(
-                                    p.borrow().identifier_declaration_base.idf.clone().unwrap(),
-                                ),
+                                IdentifierExprUnion::Identifier(p.borrow().idf().clone().unwrap()),
                                 None,
                             )
                             .slice(0, cipher_payload_len, None),
@@ -1393,8 +1373,7 @@ impl ZkayTransformer {
         let mut copy_stmts = vec![];
         for p in &original_params {
             if p.borrow()
-                .identifier_declaration_base
-                .annotated_type
+                .annotated_type()
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -1402,8 +1381,7 @@ impl ZkayTransformer {
             {
                 let c = p
                     .borrow()
-                    .identifier_declaration_base
-                    .annotated_type
+                    .annotated_type()
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -1439,27 +1417,17 @@ impl ZkayTransformer {
                             .crypto_params],
                     ));
                     let idf = IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(
-                            p.borrow().identifier_declaration_base.idf.clone().unwrap(),
-                        ),
+                        IdentifierExprUnion::Identifier(p.borrow().idf().clone().unwrap()),
                         None,
                     )
-                    .as_type(
-                        &p.borrow()
-                            .identifier_declaration_base
-                            .annotated_type
-                            .clone()
-                            .unwrap()
-                            .into(),
-                    );
+                    .as_type(&p.borrow().annotated_type().clone().unwrap().into());
                     let cipher_payload_len = CFG
                         .lock()
                         .unwrap()
                         .user_config
                         .get_crypto_params(
                             &p.borrow()
-                                .identifier_declaration_base
-                                .annotated_type
+                                .annotated_type()
                                 .as_ref()
                                 .unwrap()
                                 .borrow()
@@ -1481,11 +1449,8 @@ impl ZkayTransformer {
                         RcCell::new(VariableDeclarationStatement::new(
                             RcCell::new(VariableDeclaration::new(
                                 vec![],
-                                p.borrow()
-                                    .identifier_declaration_base
-                                    .annotated_type
-                                    .clone(),
-                                p.borrow().identifier_declaration_base.idf.clone(),
+                                p.borrow().annotated_type().clone(),
+                                p.borrow().idf().clone(),
                                 None,
                             )),
                             Some(RcCell::new(lit).into()),
@@ -1520,7 +1485,7 @@ impl ZkayTransformer {
             .into()],
         );
         let in_var_decl = in_arr_var
-            .try_as_identifier_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .idf
@@ -1548,33 +1513,19 @@ impl ZkayTransformer {
             .iter()
             .map(|param| {
                 RcCell::new(IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(
-                        param
-                            .borrow()
-                            .identifier_declaration_base
-                            .idf
-                            .clone()
-                            .unwrap(),
-                    ),
+                    IdentifierExprUnion::Identifier(param.borrow().idf().clone().unwrap()),
                     None,
                 ))
                 .into()
             })
             .collect();
         let mut idf = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(
-                int_fct
-                    .borrow()
-                    .namespace_definition_base
-                    .idf
-                    .clone()
-                    .unwrap(),
-            ),
+            IdentifierExprUnion::Identifier(int_fct.borrow().idf().clone().unwrap()),
             None,
         );
         idf.location_expr_base.target = Some(ASTFlatten::from(int_fct.clone()).downgrade());
         let mut internal_call =
-            FunctionCallExprBase::new(RcCell::new(idf).into(), args.clone(), None);
+            FunctionCallExprBase::new(RcCell::new(idf).into(), args.clone(), None, None);
         internal_call.sec_start_offset = Some(ext_circuit.borrow().priv_in_size());
         let mut internal_call = RcCell::new(FunctionCallExpr::FunctionCallExpr(internal_call));
         if int_fct.borrow().requires_verification {
@@ -1628,9 +1579,7 @@ impl ZkayTransformer {
                         .iter()
                         .map(|vd| {
                             RcCell::new(IdentifierExpr::new(
-                                IdentifierExprUnion::Identifier(
-                                    vd.borrow().identifier_declaration_base.idf.clone().unwrap(),
-                                ),
+                                IdentifierExprUnion::Identifier(vd.borrow().idf().clone().unwrap()),
                                 None,
                             ))
                             .into()
@@ -1714,11 +1663,7 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 RcCell::new(IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        vd.borrow()
-                                            .identifier_declaration_base
-                                            .idf
-                                            .clone()
-                                            .unwrap(),
+                                        vd.borrow().idf().clone().unwrap(),
                                     ),
                                     None,
                                 ))

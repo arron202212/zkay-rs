@@ -147,7 +147,7 @@ impl AliasAnalysisVisitor {
                     .unwrap()
                     .borrow()
                     .idf()
-                    .upgrade()
+                    .as_ref()
                     .unwrap()
                     .to_ast(),
             );
@@ -162,7 +162,7 @@ impl AliasAnalysisVisitor {
             s.insert(
                 p.borrow()
                     .identifier_declaration_base
-                    .idf
+                    .idf()
                     .as_ref()
                     .unwrap()
                     .to_ast(),
@@ -1116,8 +1116,7 @@ impl AliasAnalysisVisitor {
             .unwrap()
             .variable_declaration
             .borrow()
-            .identifier_declaration_base
-            .idf
+            .idf()
             .clone();
         //   println!("{:?},=============={:?}",after,name);
         assert!(after

@@ -7,7 +7,8 @@
 #![allow(unused_braces)]
 use rccell::RcCell;
 use zkay_ast::ast::{
-    is_instance, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty, AST,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty,
+    AST,
 };
 use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -52,7 +53,7 @@ impl ContainsPrivateVisitor {
             .borrow()
             .annotated_type()
         {
-            assert!(is_instance(t, ASTType::AnnotatedTypeName));
+            assert!(is_instance(&t, ASTType::AnnotatedTypeName));
 
             if !t
                 .borrow()

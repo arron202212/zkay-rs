@@ -88,9 +88,9 @@ impl<T> RcCell<T> {
     /// let _y = RcCell::clone(&x);
     /// // assert_eq!(RcCell::unwrap(x), 2);  // This will panic, as there are two RcCells
     /// ```
-    pub fn unwrap(self) -> T {
-        self.try_unwrap().ok().unwrap()
-    }
+    // pub fn unwrap(self) -> T {
+    //     self.try_unwrap().ok().unwrap()
+    // }
 
     /// Similar to [Rc::downgrade].
     /// Creates a new [WeakCell] pointer to this allocation.
@@ -298,9 +298,10 @@ impl<T> Hash for RcCell<T> {
 
 /// `RefCell<T>` does not implement `PartialEq`, and borrowing its inner value can cause a lot of panic errors.
 /// Therefore, `PartialEq` will check that two `RefCell<T>` point to the exact same allocation.
-impl<T> PartialEq for RcCell<T> {
+impl<T: PartialEq> PartialEq for RcCell<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.0.as_ptr() == other.0.as_ptr()
+        // self.0.as_ptr() == other.0.as_ptr()
+        &*self.0.borrow() == &*other.0.borrow()
     }
 }
 impl<T: PartialOrd + Ord> PartialOrd for RcCell<T> {

@@ -203,6 +203,7 @@ impl Remapper {
                     else_idf.clone(),
                 ],
                 None,
+                None,
             ))
             .as_type(&val.t.clone().into());
             // create_val_for_name_and_expr_fct(key.name(), rhs)

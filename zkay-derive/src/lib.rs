@@ -26,9 +26,9 @@ impl ExpressionASType for {struct_name} {{
     fn as_type(&self, t: &ASTFlatten) -> ASTFlatten {{
         let mut selfs = self.clone();
         if is_instance(t, ASTType::AnnotatedTypeName) {{
-            selfs.expression_base_mut_ref().annotated_type = t.clone().try_as_annotated_type_name();
+            selfs.ast_base_mut_ref().borrow_mut().annotated_type = t.clone().try_as_annotated_type_name();
         }} else if t.try_as_type_name_ref().is_some() {{
-            selfs.expression_base_mut_ref().annotated_type =
+            selfs.ast_base_mut_ref().borrow_mut().annotated_type =
                 Some(RcCell::new(AnnotatedTypeName::new(
                     t.clone().try_as_type_name(),
                     None,
@@ -126,6 +126,23 @@ pub fn derive_ast_children(item: TokenStream) -> TokenStream {
 impl ASTChildren for {} {{
     fn process_children(&self, _cb: &mut ChildListBuilder) {{
         
+    }}
+                }}
+                    "#,
+        struct_name
+    )
+    .parse()
+    .unwrap()
+}
+
+#[proc_macro_derive(MyPartialEqImpl)]
+pub fn derive_my_partial_eq(item: TokenStream) -> TokenStream {
+    let struct_name = get_name("struct", item);
+    format!(
+        r#"
+impl MyPartialEq for {} {{
+    fn my_eq(&self, other: &Self)-> bool{{
+        self==other
     }}
                 }}
                     "#,

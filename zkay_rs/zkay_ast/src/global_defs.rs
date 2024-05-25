@@ -8,10 +8,10 @@
 
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
-    ASTBaseMutRef, ASTBaseRef, ASTFlatten, AnnotatedTypeName, Block,
+    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, AnnotatedTypeName, Block,
     ConstructorOrFunctionDefinition, FunctionTypeName, Identifier, IdentifierBase, IntoAST,
-    NamespaceDefinitionBaseProperty, Parameter, StateVariableDeclaration, StructDefinition,
-    StructTypeName, TypeName, UserDefinedTypeName, VariableDeclaration,
+    Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
+    UserDefinedTypeName, VariableDeclaration,
 };
 use crate::pointers::parent_setter::set_parents;
 use lazy_static::lazy_static;
@@ -263,8 +263,7 @@ impl GlobalVars {
                         .borrow()
                         .msg_struct
                         .borrow()
-                        .namespace_definition_base
-                        .idf
+                        .idf()
                         .as_ref()
                         .unwrap()
                         .borrow()
@@ -278,9 +277,10 @@ impl GlobalVars {
             None,
         ));
         msg.borrow_mut()
-            .identifier_declaration_base
+            .ast_base_mut_ref()
+            .borrow_mut()
             .idf
-            .as_ref()
+            .as_mut()
             .unwrap()
             .borrow_mut()
             .ast_base_ref()
@@ -294,8 +294,7 @@ impl GlobalVars {
                         .borrow()
                         .block_struct
                         .borrow()
-                        .namespace_definition_base
-                        .idf
+                        .idf()
                         .as_ref()
                         .unwrap()
                         .borrow()
@@ -310,7 +309,8 @@ impl GlobalVars {
         ));
         block
             .borrow_mut()
-            .identifier_declaration_base
+            .ast_base_mut_ref()
+            .borrow_mut()
             .idf
             .as_mut()
             .unwrap()
@@ -326,9 +326,7 @@ impl GlobalVars {
                         .borrow()
                         .tx_struct
                         .borrow()
-                        .namespace_definition_base
                         .idf()
-                        .upgrade()
                         .unwrap()
                         .borrow()
                         .clone()],
@@ -341,7 +339,8 @@ impl GlobalVars {
             None,
         ));
         tx.borrow_mut()
-            .identifier_declaration_base
+            .ast_base_mut_ref()
+            .borrow_mut()
             .idf
             .as_mut()
             .unwrap()
@@ -357,7 +356,8 @@ impl GlobalVars {
             None,
         ));
         now.borrow_mut()
-            .identifier_declaration_base
+            .ast_base_mut_ref()
+            .borrow_mut()
             .idf
             .as_mut()
             .unwrap()

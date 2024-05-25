@@ -8,7 +8,7 @@
 use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
-    is_instance, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, BuiltinFunction,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
     FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, LocationExpr,
     LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
@@ -277,8 +277,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 {
                     if param
                         .borrow()
-                        .identifier_declaration_base
-                        .annotated_type
+                        .annotated_type()
                         .as_ref()
                         .unwrap()
                         .borrow()

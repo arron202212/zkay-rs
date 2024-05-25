@@ -11,13 +11,13 @@ use zkay_config::config::CFG;
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
-    is_instance, is_instances, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement,
-    BooleanLiteralType, BuiltinFunction, ConstructorOrFunctionDefinition, Expression,
-    ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
-    FunctionTypeName, IfStatement, IndexExpr, IntoAST, IntoExpression, LocationExpr,
-    LocationExprBaseProperty, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement, StatementBaseProperty,
-    StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
+    is_instance, is_instances, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType,
+    AssignmentStatement, BooleanLiteralType, BuiltinFunction, ConstructorOrFunctionDefinition,
+    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
+    FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr, IntoAST,
+    IntoExpression, LocationExpr, LocationExprBaseProperty, NumberLiteralType, PrimitiveCastExpr,
+    ReclassifyExpr, ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement,
+    StatementBaseProperty, StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
 };
 use crate::visitor::{
     function_visitor::FunctionVisitor,

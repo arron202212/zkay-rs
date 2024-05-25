@@ -14,11 +14,11 @@ use crate::ast::{
     ExpressionBaseProperty, ForStatement, Identifier, IdentifierBase, IdentifierBaseProperty,
     IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
     LocationExpr, LocationExprBaseMutRef, LocationExprBaseProperty, Mapping, MemberAccessExpr,
-    NamespaceDefinition, NamespaceDefinitionBaseProperty, SimpleStatement, SourceUnit,
-    StateVariableDeclaration, Statement, StatementList, StatementListBase,
-    StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty,
-    UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
+    NamespaceDefinition, SimpleStatement, SourceUnit, StateVariableDeclaration, Statement,
+    StatementList, StatementListBase, StatementListBaseProperty, StructDefinition,
+    TupleOrLocationExpr, TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseMutRef,
+    UserDefinedTypeNameBaseProperty, UserDefinedTypeNameBaseRef, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use rccell::{RcCell, WeakCell};
@@ -170,13 +170,7 @@ impl SymbolTableFiller {
         let global_defs = global_defs
             .iter()
             .map(|d| {
-                let dd = d
-                    .borrow()
-                    .namespace_definition_base
-                    .idf
-                    .clone()
-                    .unwrap()
-                    .downgrade();
+                let dd = d.borrow().idf().clone().unwrap().downgrade();
                 // println!("=name===={:?}",d.borrow()
                 //         .namespace_definition_base
                 //         .idf
@@ -185,14 +179,7 @@ impl SymbolTableFiller {
                 //         .borrow()
                 //         .name());
                 (
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
                     dd,
                 )
             })
@@ -203,23 +190,10 @@ impl SymbolTableFiller {
             .vars()
             .iter()
             .map(|d| {
-                let dd = d
-                    .borrow()
-                    .identifier_declaration_base
-                    .idf
-                    .clone()
-                    .unwrap()
-                    .downgrade();
+                let dd = d.borrow().idf().clone().unwrap().downgrade();
 
                 (
-                    d.borrow()
-                        .identifier_declaration_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
                     dd,
                 )
             })
@@ -248,20 +222,8 @@ impl SymbolTableFiller {
                 //         .clone(),
                 // );
                 (
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .downgrade(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
+                    d.borrow().idf().as_ref().unwrap().downgrade(),
                 )
             })
             .collect();
@@ -309,7 +271,6 @@ impl SymbolTableFiller {
                         .try_as_identifier_declaration_ref()
                         .unwrap()
                         .idf()
-                        .upgrade()
                         .unwrap()
                         .borrow()
                         .name()
@@ -318,7 +279,9 @@ impl SymbolTableFiller {
                         .try_as_identifier_declaration_ref()
                         .unwrap()
                         .idf()
-                        .clone(),
+                        .clone()
+                        .unwrap()
+                        .downgrade(),
                 )
             })
             .collect();
@@ -331,15 +294,7 @@ impl SymbolTableFiller {
         {
             // raise UnknownIdentifierException(f"Zkay does not currently support method overloading.", f)
             assert!(
-                !funcs.contains_key(
-                    &f.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                ),
+                !funcs.contains_key(&f.borrow().idf().as_ref().unwrap().borrow().name()),
                 "Zkay does not currently support method overloading.{:?}",
                 f
             );
@@ -355,20 +310,8 @@ impl SymbolTableFiller {
             //         .clone()
             // );
             funcs.insert(
-                f.borrow()
-                    .namespace_definition_base
-                    .idf
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .name()
-                    .clone(),
-                f.borrow()
-                    .namespace_definition_base
-                    .idf
-                    .as_ref()
-                    .unwrap()
-                    .downgrade(),
+                f.borrow().idf().as_ref().unwrap().borrow().name().clone(),
+                f.borrow().idf().as_ref().unwrap().downgrade(),
             );
         }
         let structs = ast
@@ -390,20 +333,8 @@ impl SymbolTableFiller {
                 //         .clone()
                 // );
                 (
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .downgrade(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
+                    d.borrow().idf().as_ref().unwrap().downgrade(),
                 )
             })
             .collect();
@@ -426,20 +357,8 @@ impl SymbolTableFiller {
                 //         .clone()
                 // );
                 (
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
-                    d.borrow()
-                        .namespace_definition_base
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .downgrade(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
+                    d.borrow().idf().as_ref().unwrap().downgrade(),
                 )
             })
             .collect();
@@ -473,15 +392,13 @@ impl SymbolTableFiller {
                 //         .clone()
                 // );
                 (
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
                     d.borrow()
                         .identifier_declaration_base
-                        .idf
-                        .as_ref()
+                        .idf()
+                        .clone()
                         .unwrap()
-                        .borrow()
-                        .name()
-                        .clone(),
-                    d.borrow().identifier_declaration_base.idf().clone(),
+                        .downgrade(),
                 )
             })
             .collect();
@@ -506,12 +423,20 @@ impl SymbolTableFiller {
                     .map(|id| {
                         let idf = id.borrow().idf().clone();
 
-                        (idf.upgrade().unwrap().borrow().name().clone(), idf.clone())
+                        let x = (
+                            idf.as_ref().unwrap().borrow().name().clone(),
+                            idf.clone().unwrap().downgrade(),
+                        );
+                        x
                     })
                     .or(d.try_as_constructor_or_function_definition_ref().map(|id| {
                         let idf = id.borrow().idf().clone();
 
-                        (idf.upgrade().unwrap().borrow().name().clone(), idf.clone())
+                        let x = (
+                            idf.as_ref().unwrap().borrow().name().clone(),
+                            idf.clone().unwrap().downgrade(),
+                        );
+                        x
                     }))
             })
             .collect();
@@ -538,8 +463,8 @@ impl SymbolTableFiller {
             .iter()
             .map(|d| {
                 (
-                    d.borrow().idf.as_ref().unwrap().borrow().name().clone(),
-                    d.borrow().idf.as_ref().map(|f| f.downgrade()).unwrap(),
+                    d.borrow().idf().as_ref().unwrap().borrow().name().clone(),
+                    d.borrow().idf().as_ref().map(|f| f.downgrade()).unwrap(),
                 )
             })
             .collect();
@@ -568,8 +493,7 @@ impl SymbolTableFiller {
             ast.try_as_variable_declaration_ref()
                 .unwrap()
                 .borrow()
-                .identifier_declaration_base
-                .idf
+                .idf()
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -580,7 +504,9 @@ impl SymbolTableFiller {
                 .borrow()
                 .identifier_declaration_base
                 .idf()
-                .clone(),
+                .clone()
+                .unwrap()
+                .downgrade(),
         )]);
         ast.ast_base_ref().unwrap().borrow_mut().names = names;
 
@@ -904,16 +830,10 @@ impl SymbolTableLinker {
     pub fn find_identifier_declaration(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         // //println!("=======find_identifier_declaration============{:?}",ast);
         let name = ast
-            .to_ast()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .try_as_identifier_expr_ref()
-            .unwrap()
-            .idf
+            .borrow()
+            .idf()
             .as_ref()
             .unwrap()
             .borrow()
@@ -1118,7 +1038,7 @@ impl SymbolTableLinker {
                 .unwrap()
                 .borrow()
                 .ast_base_ref()
-                .unwrap()
+                .borrow()
                 .parent()
                 .as_ref()
                 .and_then(|p| p.clone().upgrade())
@@ -1294,9 +1214,13 @@ impl SymbolTableLinker {
             .unwrap()
             .upgrade()
             .unwrap()
-            .annotated_type()
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .clone();
         if t.clone()
@@ -1493,9 +1417,13 @@ impl SymbolTableLinker {
             .unwrap()
             .upgrade()
             .unwrap()
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
+            .borrow()
             .type_name
             .clone()
             .unwrap();

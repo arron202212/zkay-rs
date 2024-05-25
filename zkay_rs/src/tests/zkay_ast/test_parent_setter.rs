@@ -5,10 +5,7 @@ mod tests {
     use super::*;
     use ast_builder::build_ast::build_ast;
     // use rccell::{RcCell, WeakCell};
-    use zkay_ast::ast::{
-        is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType,
-        NamespaceDefinitionBaseProperty, AST,
-    };
+    use zkay_ast::ast::{is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, AST};
     use zkay_ast::pointers::parent_setter::set_parents;
     use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
     use zkay_derive::ASTVisitorBaseRefImpl;

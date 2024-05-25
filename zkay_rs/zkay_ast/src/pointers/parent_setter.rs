@@ -8,8 +8,7 @@
 use crate::ast::{
     is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
     ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
-    Identifier, IntoAST, NamespaceDefinition, NamespaceDefinitionBaseProperty, SourceUnit,
-    Statement, StatementBaseMutRef, AST,
+    Identifier, IntoAST, NamespaceDefinition, SourceUnit, Statement, StatementBaseMutRef, AST,
 };
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
@@ -87,7 +86,7 @@ impl ParentSetterVisitor {
             .unwrap()
             .parent()
             .map(|parent| {
-                parent
+                let mut p: Vec<_> = parent
                     .upgrade()
                     .unwrap()
                     .ast_base_ref()
@@ -98,13 +97,24 @@ impl ParentSetterVisitor {
                     .unwrap()
                     .iter()
                     .cloned()
-                    .chain([ast.try_as_namespace_definition_ref().unwrap().idf().clone()])
-                    .collect()
+                    .collect();
+                p.push(
+                    ast.try_as_namespace_definition_ref()
+                        .unwrap()
+                        .idf()
+                        .as_ref()
+                        .unwrap()
+                        .downgrade(),
+                );
+                p
             })
             .or(Some(vec![ast
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .idf()]));
+                .idf()
+                .as_ref()
+                .unwrap()
+                .downgrade()]));
 
         ast.try_as_namespace_definition_ref()
             .unwrap()
@@ -125,7 +135,7 @@ impl ParentSetterVisitor {
             .parent
             .as_ref()
             .map(|parent| {
-                parent
+                let mut p: Vec<_> = parent
                     .namespace_definition_base
                     .ast_base
                     .borrow()
@@ -133,23 +143,27 @@ impl ParentSetterVisitor {
                     .as_ref()
                     .unwrap()
                     .into_iter()
-                    .chain([&ast
-                        .try_as_constructor_or_function_definition_ref()
+                    .cloned()
+                    .collect();
+                p.push(
+                    ast.try_as_constructor_or_function_definition_ref()
                         .unwrap()
                         .borrow()
-                        .namespace_definition_base
                         .idf()
-                        .clone()])
-                    .cloned()
-                    .collect()
+                        .clone()
+                        .unwrap()
+                        .downgrade(),
+                );
+                p
             })
             .or(Some(vec![ast
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow()
-                .namespace_definition_base
                 .idf()
-                .clone()]));
+                .clone()
+                .unwrap()
+                .downgrade()]));
 
         ast.try_as_constructor_or_function_definition_ref()
             .unwrap()

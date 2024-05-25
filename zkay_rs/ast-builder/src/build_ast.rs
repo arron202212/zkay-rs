@@ -50,20 +50,20 @@ use solidity_parser::{
 };
 use zkay_ast::{
     ast::{
-        self, is_instance, is_instances, ASTFlatten, ASTType, AddressPayableTypeName,
-        AddressTypeName, AllExpr, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase,
-        Block, BoolTypeName, BooleanLiteralExpr, BreakStatement, BuiltinFunction,
-        ConstructorOrFunctionDefinition, ContinueStatement, ContractDefinition, ContractTypeName,
-        DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValue,
-        EnumValueTypeName, Expression, ExpressionStatement, ForStatement, FunctionCallExpr,
-        FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier, IdentifierBase,
-        IdentifierBaseProperty, IdentifierDeclaration, IdentifierDeclarationBase, IdentifierExpr,
-        IdentifierExprUnion, IfStatement, IndexExpr, IntTypeName, IntoAST, IntoExpression,
-        LiteralExpr, LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition,
-        NumberLiteralExpr, NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr,
-        ReclassifyExprBase, RehomExpr, RequireStatement, ReturnStatement, SimpleStatement,
-        SourceUnit, StateVariableDeclaration, Statement, StatementList, StringLiteralExpr,
-        StructTypeName, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName,
+        self, is_instance, is_instances, ASTBaseProperty, ASTFlatten, ASTType,
+        AddressPayableTypeName, AddressTypeName, AllExpr, AnnotatedTypeName, AssignmentStatement,
+        AssignmentStatementBase, Block, BoolTypeName, BooleanLiteralExpr, BreakStatement,
+        BuiltinFunction, ConstructorOrFunctionDefinition, ContinueStatement, ContractDefinition,
+        ContractTypeName, DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumTypeName,
+        EnumValue, EnumValueTypeName, Expression, ExpressionStatement, ForStatement,
+        FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseProperty, Identifier,
+        IdentifierBase, IdentifierBaseProperty, IdentifierDeclaration, IdentifierDeclarationBase,
+        IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntTypeName, IntoAST,
+        IntoExpression, LiteralExpr, LocationExpr, Mapping, MeExpr, MemberAccessExpr,
+        NamespaceDefinition, NumberLiteralExpr, NumberTypeName, Parameter, PrimitiveCastExpr,
+        ReclassifyExpr, ReclassifyExprBase, RehomExpr, RequireStatement, ReturnStatement,
+        SimpleStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
+        StringLiteralExpr, StructTypeName, TupleExpr, TupleOrLocationExpr, TypeName, UintTypeName,
         UserDefinedTypeName, UserDefinedTypeNameBase, VariableDeclaration,
         VariableDeclarationStatement, WhileStatement, AST,
     },
@@ -106,6 +106,7 @@ macro_rules! _visit_binary_expr {
                     .map(Into::<ASTFlatten>::into)
                     .collect(),
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -919,6 +920,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 RcCell::new(Expression::BuiltinFunction(f)).into(),
                 vec![RcCell::new(expr.unwrap()).into()],
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -945,6 +947,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 RcCell::new(Expression::BuiltinFunction(f)).into(),
                 vec![RcCell::new(expr.unwrap()).into()],
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -968,6 +971,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 RcCell::new(Expression::BuiltinFunction(f)).into(),
                 vec![RcCell::new(expr.unwrap()).into()],
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -991,6 +995,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 RcCell::new(Expression::BuiltinFunction(f)).into(),
                 vec![RcCell::new(expr.unwrap()).into()],
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -1097,6 +1102,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .map(Into::<ASTFlatten>::into)
                     .collect(),
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -1150,7 +1156,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         ))) = &func
         {
             //    ////println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
-            if func.idf.as_ref().unwrap().borrow().name() == "reveal" {
+            if func.idf().as_ref().unwrap().borrow().name() == "reveal" {
                 assert!(
                     args.len() == 2,
                     "Invalid number of arguments for reveal: {args:?},{:?},{:?}",
@@ -1163,13 +1169,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         RcCell::new(args[0].clone()).into(),
                         RcCell::new(args[1].clone()).into(),
                         None,
+                        None,
                     )
                     .into_ast(),
                 );
             } else if let Some(homomorphism) = REHOM_EXPRESSIONS
                 .lock()
                 .unwrap()
-                .get(&func.idf.as_ref().unwrap().borrow().name())
+                .get(&func.idf().as_ref().unwrap().borrow().name())
             {
                 assert!(
                     args.len() == 1,
@@ -1196,6 +1203,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .map(Into::<ASTFlatten>::into)
                     .collect(),
                 Some(0),
+                None,
             )
             .into_ast(),
         )
@@ -1453,6 +1461,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         .map(Into::<ASTFlatten>::into)
                         .collect(),
                     Some(0),
+                    None,
                 );
                 fce.expression_base.ast_base.borrow_mut().line = line;
                 fce.expression_base.ast_base.borrow_mut().column = column + 1;
@@ -1532,6 +1541,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .map(Into::<ASTFlatten>::into)
                 .collect(),
                 Some(0),
+                None,
             );
             fce.expression_base.ast_base.borrow_mut().line = line;
             fce.expression_base.ast_base.borrow_mut().column = column + 1;
@@ -1591,6 +1601,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .map(Into::<ASTFlatten>::into)
                 .collect(),
                 Some(0),
+                None,
             );
             fce.expression_base.ast_base.borrow_mut().line = line;
             fce.expression_base.ast_base.borrow_mut().column = column + 1;
@@ -1653,7 +1664,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .unwrap()
                 .try_as_identifier_expr_ref()
             {
-                if f.idf.as_ref().unwrap().borrow().name() == "require" {
+                if f.idf().as_ref().unwrap().borrow().name() == "require" {
                     assert!(
                         e.args().len() == 1,
                         "Invalid number of arguments for require: {:?},{:?},{:?}",

@@ -27,8 +27,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
-    indent, is_instance, ASTFlatten, ASTInstanceOf, ASTType, BooleanLiteralExpr, BuiltinFunction,
-    EnumDefinition, Expression, ExpressionBaseProperty, FunctionCallExpr,
+    indent, is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, BooleanLiteralExpr,
+    BuiltinFunction, EnumDefinition, Expression, ExpressionBaseProperty, FunctionCallExpr,
     FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr,
     IndexExpr, IntoAST, LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr,
     PrimitiveCastExpr, TypeName, AST,
@@ -49,10 +49,10 @@ pub fn _get_t(mut t: Option<ASTFlatten>) -> String
 {
     let t = t.and_then(|t| {
         if t.is_expression() {
-            t.try_as_expression_ref()
+            t.ast_base_ref()
                 .unwrap()
                 .borrow()
-                .annotated_type()
+                .annotated_type
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -570,15 +570,10 @@ impl JsnarkVisitor {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(
             if is_instance(
-                ast.try_as_identifier_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .idf
-                    .as_ref()
-                    .unwrap(),
+                ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
                 ASTType::HybridArgumentIdf,
             ) && ast
-                .try_as_identifier_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .idf
@@ -593,7 +588,7 @@ impl JsnarkVisitor {
             {
                 format!(
                     r#"getCipher("{}")"#,
-                    ast.try_as_identifier_expr_ref()
+                    ast.ast_base_ref()
                         .unwrap()
                         .borrow()
                         .idf
@@ -605,7 +600,7 @@ impl JsnarkVisitor {
             } else {
                 format!(
                     r#"get("{}")"#,
-                    ast.try_as_identifier_expr_ref()
+                    ast.ast_base_ref()
                         .unwrap()
                         .borrow()
                         .idf
@@ -990,7 +985,7 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
                 r#"addIn("{}", {}, {});"#,
                 pub_input.identifier_base.name,
                 pub_input.t.borrow().size_in_uints(),
-                _get_t(Some(RcCell::new(pub_input.t.clone().unwrap()).into()))
+                _get_t(Some(pub_input.t.clone().into()))
             )
         });
     }
