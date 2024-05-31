@@ -30,6 +30,7 @@ regex ={ workspace = true }
 semver_rs = { workspace = true }
 app_dirs2 = { workspace = true }
 zkp-u256 = { workspace = true }
+ethnum = { workspace = true }
 textwrap={ workspace = true }
 eyre ={ workspace = true }
 num_cpus={ workspace = true }

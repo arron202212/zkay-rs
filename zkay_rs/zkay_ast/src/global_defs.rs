@@ -13,6 +13,7 @@ use crate::ast::{
     Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
     UserDefinedTypeName, VariableDeclaration,
 };
+use crate::homomorphism::Homomorphism;
 use crate::pointers::parent_setter::set_parents;
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
@@ -140,7 +141,7 @@ impl GlobalDefs {
                     Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
-                        String::from("NON_HOMOMORPHISM"),
+                        Homomorphism::non_homomorphic(),
                     ))),
                     Identifier::identifier("sender"),
                     None,
@@ -165,7 +166,7 @@ impl GlobalDefs {
                     Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
-                        String::from("NON_HOMOMORPHISM"),
+                        Homomorphism::non_homomorphic(),
                     ))),
                     Identifier::identifier("coinbase"),
                     None,
@@ -218,7 +219,7 @@ impl GlobalDefs {
                     Some(RcCell::new(AnnotatedTypeName::new(
                         Some(RcCell::new(TypeName::address_payable_type())),
                         None,
-                        String::from("NON_HOMOMORPHISM"),
+                        Homomorphism::non_homomorphic(),
                     ))),
                     Identifier::identifier("origin"),
                     None,

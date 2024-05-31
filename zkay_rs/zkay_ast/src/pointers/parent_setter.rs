@@ -33,9 +33,9 @@ impl AstVisitor for ParentSetterVisitor {
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
-            // _ if matches!(ast.to_ast(), AST::NamespaceDefinition(_)) => {
-            //     self.visitNamespaceDefinition(ast)
-            // }
+            _ if matches!(ast.to_ast(), AST::NamespaceDefinition(_)) => {
+                self.visitNamespaceDefinition(ast)
+            }
             _ => Err(eyre::eyre!("unreach")),
         }
     }

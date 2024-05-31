@@ -473,6 +473,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             .clone()
                             .and_then(|ast| ast.try_as_annotated_type_name())
                     });
+println!("======visit_functionDefinition====================={annotated_type:?}======");
                     let idf = param.idf.as_ref().and_then(|idf| {
                         idf.accept(self);
                         self.temp_result()
@@ -1754,6 +1755,9 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .unwrap()
                 .try_as_annotated_type_name()
         });
+        println!(
+            "======visit_stateVariableDeclaration====================={annotated_type:?}======"
+        );
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1770,7 +1774,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .keywords
             .iter()
             .map(|kw| {
-                println!("{}", kw.get_text());
+                // println!("{}", kw.get_text());
                 kw.get_text().to_owned()
             })
             .collect();
@@ -1826,6 +1830,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_annotated_type_name())
         });
+        println!("======visit_parameter====================={annotated_type:?}======");
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1855,6 +1860,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_annotated_type_name())
         });
+        println!("======visit_variableDeclaration====================={annotated_type:?}======");
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1932,11 +1938,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .unwrap()
             })
             .collect();
+        // println!("{:?}",identifier.as_ref().unwrap().name().as_str() );
         match identifier.as_ref().unwrap().name().as_str() {
             "enum" => Some(EnumTypeName::new(names, None).into_ast()),
             "enum value" => Some(EnumValueTypeName::new(names, None).into_ast()),
             "struct" => Some(StructTypeName::new(names, None).into_ast()),
-            "constract" => Some(ContractTypeName::new(names, None).into_ast()),
+            "contract" => Some(ContractTypeName::new(names, None).into_ast()),
             "address" => Some(AddressTypeName::new().into_ast()),
             "address payable" => Some(AddressPayableTypeName::new().into_ast()),
             _ => Some(UserDefinedTypeNameBase::new(names, None).into_ast()),
@@ -2232,12 +2239,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         &mut self,
         ctx: &ElementaryTypeNameExpressionContext<'input>,
     ) -> Self::Return {
-        if let Some(etn) = ctx.elementaryTypeName() {
+        ctx.elementaryTypeName().and_then(|etn| {
             etn.accept(self);
             self.temp_result().clone()
-        } else {
-            None
-        }
+        })
     }
 
     fn visit_numberLiteral(&mut self, ctx: &NumberLiteralContext<'input>) -> Self::Return {

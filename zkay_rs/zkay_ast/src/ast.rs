@@ -11,7 +11,6 @@ const LINE_ENDING: &'static str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDING: &'static str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
-
 use crate::analysis::partition_state::PartitionState;
 use crate::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -20,6 +19,7 @@ use crate::circuit_constraints::{
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
+use ethnum::{i256, int, u256, uint, I256, U256};
 use eyre::{eyre, Result};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
@@ -46,6 +46,7 @@ use zkay_derive::{
     ASTVisitorBaseRefImpl, ExpressionASTypeImpl, ImplBaseTrait,
 };
 use zkay_utils::progress_printer::warn_print;
+use zkp_u256::{Zero, U256 as ZU256};
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct RRWrapper<T: Hash + PartialEq + Eq + Ord + Clone + Debug>(Rc<RefCell<T>>);
@@ -2137,9 +2138,6 @@ impl ASTBase {
             idf,
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &Self) -> bool {
-        &expected == &self
-    }
 }
 #[enum_dispatch]
 pub trait IdentifierBaseRef: ASTBaseRef {
@@ -2495,7 +2493,7 @@ impl Expression {
                 .try_as_identifier_expr_ref()
                 .unwrap();
             let target = ie.target().clone().unwrap().upgrade().unwrap();
-            // println!("=====target======{:?}", target);
+            // println!("==privacy_annotation_label===target======{:?}", target);
             if is_instance(&target, ASTType::Mapping) {
                 return target
                     .try_as_type_name_ref()
@@ -2511,12 +2509,13 @@ impl Expression {
                     .borrow()
                     .privacy_annotation_label();
             }
-            if let Some(id) = target.try_as_identifier_declaration_ref() {
-                return id.borrow().idf().clone().map(|f| f.into());
-            }
-            if let Some(id) = target.try_as_namespace_definition_ref() {
-                return id.borrow().idf().clone().map(|p| p.into());
-            }
+
+            return target
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .idf()
+                .map(|f| f.clone().into());
         }
 
         if self.is_all_expr() || self.is_me_expr() {
@@ -2526,7 +2525,8 @@ impl Expression {
         }
     }
     pub fn instanceof_data_type(&self, expected: &RcCell<TypeName>) -> bool {
-        self.annotated_type()
+        let res = self
+            .annotated_type()
             .as_ref()
             .unwrap()
             .borrow()
@@ -2534,7 +2534,20 @@ impl Expression {
             .as_ref()
             .unwrap()
             .borrow()
-            .implicitly_convertible_to(expected)
+            .implicitly_convertible_to(expected);
+        if !res {
+            // println!(
+            //     "=====instanceof_data_type==============={:?}====,============={:?}",
+            //    self
+            // .annotated_type()
+            // .as_ref()
+            // .unwrap()
+            // .borrow()
+            // .type_name,
+            //     expected,
+            // );
+        }
+        res
     }
     pub fn unop(&self, op: String) -> FunctionCallExpr {
         FunctionCallExpr::FunctionCallExpr(FunctionCallExprBase::new(
@@ -2738,33 +2751,39 @@ pub enum LiteralUnion {
     Bool(bool),
     Number(i32),
 }
-pub fn builtin_op_fct(op: &str, args: Vec<i32>) -> LiteralUnion {
+pub fn builtin_op_fct(op: &str, args: Vec<String>) -> LiteralUnion {
+    let parse_int = |arg: &String| arg.parse::<i32>().unwrap();
+    let parse_bool = |arg: &String| arg == "true";
     match op {
-        "+" => LiteralUnion::Number(args[0] + args[1]),
-        "-" => LiteralUnion::Number(args[0] - args[1]),
-        "**" => LiteralUnion::Number(args[0].pow(args[1] as u32)),
-        "*" => LiteralUnion::Number(args[0] * args[1]),
-        "/" => LiteralUnion::Number(args[0] / args[1]),
-        "%" => LiteralUnion::Number(args[0] % args[1]),
-        "sign+" => LiteralUnion::Number(args[0]),
-        "sign-" => LiteralUnion::Number(-args[0]),
-        "<<" => LiteralUnion::Number(args[0] << args[1]),
-        ">>" => LiteralUnion::Number(args[0] >> args[1]),
-        "|" => LiteralUnion::Number(args[0] | args[1]),
-        "&" => LiteralUnion::Number(args[0] & args[1]),
-        "^" => LiteralUnion::Number(args[0] ^ args[1]),
-        "~" => LiteralUnion::Number(!args[0]),
-        "<" => LiteralUnion::Bool(args[0] < args[1]),
-        ">" => LiteralUnion::Bool(args[0] > args[1]),
-        "<=" => LiteralUnion::Bool(args[0] <= args[1]),
-        ">=" => LiteralUnion::Bool(args[0] >= args[1]),
-        "==" => LiteralUnion::Bool(args[0] == args[1]),
-        "!=" => LiteralUnion::Bool(args[0] != args[1]),
-        "&&" => LiteralUnion::Bool(args[0] != 0 && args[1] != 0),
-        "||" => LiteralUnion::Bool(args[0] != 0 || args[1] != 0),
-        "!" => LiteralUnion::Bool(!(args[0] != 0)),
-        "ite" => LiteralUnion::Number(if args[0] != 0 { args[1] } else { args[2] }),
-        "parenthesis" => LiteralUnion::Number(args[0]),
+        "+" => LiteralUnion::Number(parse_int(&args[0]) + parse_int(&args[1])),
+        "-" => LiteralUnion::Number(parse_int(&args[0]) - parse_int(&args[1])),
+        "**" => LiteralUnion::Number(parse_int(&args[0]).pow(parse_int(&args[1]) as u32)),
+        "*" => LiteralUnion::Number(parse_int(&args[0]) * parse_int(&args[1])),
+        "/" => LiteralUnion::Number(parse_int(&args[0]) / parse_int(&args[1])),
+        "%" => LiteralUnion::Number(parse_int(&args[0]) % parse_int(&args[1])),
+        "sign+" => LiteralUnion::Number(parse_int(&args[0])),
+        "sign-" => LiteralUnion::Number(-parse_int(&args[0])),
+        "<<" => LiteralUnion::Number(parse_int(&args[0]) << parse_int(&args[1])),
+        ">>" => LiteralUnion::Number(parse_int(&args[0]) >> parse_int(&args[1])),
+        "|" => LiteralUnion::Number(parse_int(&args[0]) | parse_int(&args[1])),
+        "&" => LiteralUnion::Number(parse_int(&args[0]) & parse_int(&args[1])),
+        "^" => LiteralUnion::Number(parse_int(&args[0]) ^ parse_int(&args[1])),
+        "~" => LiteralUnion::Number(!parse_int(&args[0])),
+        "<" => LiteralUnion::Bool(parse_int(&args[0]) < parse_int(&args[1])),
+        ">" => LiteralUnion::Bool(parse_int(&args[0]) > parse_int(&args[1])),
+        "<=" => LiteralUnion::Bool(parse_int(&args[0]) <= parse_int(&args[1])),
+        ">=" => LiteralUnion::Bool(parse_int(&args[0]) >= parse_int(&args[1])),
+        "==" => LiteralUnion::Bool(parse_int(&args[0]) == parse_int(&args[1])),
+        "!=" => LiteralUnion::Bool(parse_int(&args[0]) != parse_int(&args[1])),
+        "&&" => LiteralUnion::Bool(parse_bool(&args[0]) && parse_bool(&args[1])),
+        "||" => LiteralUnion::Bool(parse_bool(&args[0]) || parse_bool(&args[1])),
+        "!" => LiteralUnion::Bool(!(parse_bool(&args[0]))),
+        "ite" => LiteralUnion::Number(if args[0] != "0" {
+            parse_int(&args[1])
+        } else {
+            parse_int(&args[2])
+        }),
+        "parenthesis" => LiteralUnion::Number(parse_int(&args[0])),
         _ => LiteralUnion::Bool(false),
     }
 }
@@ -2946,12 +2965,12 @@ impl BuiltinFunction {
             _ => format!("{} {op} {}", args[0], args[1]),
         }
     }
-    pub fn op_func(&self, args: Vec<i32>) -> LiteralUnion {
+    pub fn op_func(&self, args: Vec<String>) -> LiteralUnion {
         builtin_op_fct(&self.op, args)
     }
 
     pub fn is_arithmetic(&self) -> bool {
-        ARITHMETIC.contains_key(&self.op)
+        ARITHMETIC.get(&self.op) == Some(&String::from("arithmetic"))
     }
 
     pub fn is_neg_sign(&self) -> bool {
@@ -2995,34 +3014,39 @@ impl BuiltinFunction {
     }
     pub fn input_types(&self) -> Vec<Option<RcCell<TypeName>>> {
         // :return: None if the type is generic
-        let t = if self.is_arithmetic() || self.is_comp() || self.is_bitop() || self.is_shiftop() {
+        let t = if self.is_arithmetic() || self.is_comp() {
             Some(RcCell::new(TypeName::number_type()))
         } else if self.is_bop() {
             Some(RcCell::new(TypeName::bool_type()))
-        } else
-        // eq, parenthesis, ite
-        {
+        } else if self.is_bitop() || self.is_shiftop() {
+            Some(RcCell::new(TypeName::number_type()))
+        } else {
+            // eq, parenthesis, ite
             None
         };
-
+        // println!(
+        //     "====input_types====={},{},{},{}============{:?},==============={:?}",self.is_arithmetic() , self.is_comp() , self.is_bitop() , self.is_shiftop(),
+        //     t,
+        //     self.arity()
+        // );
         vec![t; self.arity() as usize]
     }
     pub fn output_type(&self) -> Option<TypeName> {
         // :return: None if the type is generic
-        if self.is_arithmetic() || self.is_bitop() || self.is_shiftop() {
+        if self.is_arithmetic() {
             Some(TypeName::number_type())
         } else if self.is_comp() || self.is_bop() || self.is_eq() {
             Some(TypeName::bool_type())
-        } else
-        // parenthesis, ite
-        {
+        } else if self.is_bitop() || self.is_shiftop() {
+            Some(TypeName::number_type())
+        } else {
+            // parenthesis, ite
             None
         }
     }
-    pub fn can_be_private(&self) -> bool
-// :return: true if operation itself can be run inside a circuit \
-        //          for equality and ite it must be checked separately whether the arguments are also supported inside circuits
-    {
+    // :return: true if operation itself can be run inside a circuit \
+    //          for equality and ite it must be checked separately whether the arguments are also supported inside circuits
+    pub fn can_be_private(&self) -> bool {
         &self.op != "**"
     }
 
@@ -3146,6 +3170,7 @@ impl HomomorphicBuiltinFunction {
         }
     }
     pub fn input_types(&self) -> Vec<RcCell<AnnotatedTypeName>> {
+        // println!("===HomomorphicBuiltinFunction============input_types===============");
         let public_type = AnnotatedTypeName::all(
             self.target_type
                 .borrow()
@@ -3283,6 +3308,7 @@ impl FunctionCallExprBase {
         sec_start_offset: Option<i32>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
+        // println("{:?}",args);
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             func,
@@ -4575,11 +4601,8 @@ impl HybridArgumentIdf {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_elementary_type_name_ref()
-                    .unwrap()
-                    .try_as_boolean_literal_type_ref()
-                    .unwrap()
-                    .value(),
+                    .value()
+                    == "true",
             ))
             .into()
         } else if self.arg_type == HybridArgType::TmpCircuitVal
@@ -4616,13 +4639,9 @@ impl HybridArgumentIdf {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_elementary_type_name_ref()
-                    .unwrap()
-                    .try_as_number_type_name_ref()
-                    .unwrap()
-                    .try_as_number_literal_type_ref()
-                    .unwrap()
-                    .value(),
+                    .value()
+                    .parse::<i32>()
+                    .unwrap(),
                 false,
             ))
             .into()
@@ -5974,9 +5993,64 @@ impl TypeName {
     pub fn can_be_private(&self) -> bool {
         self.is_primitive_type() && !(self.is_signed_numeric() && self.elem_bitwidth() == 256)
     }
-
+    pub fn value(&self) -> String {
+        match self {
+            Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => blt.value(),
+            Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::NumberLiteralType(nlt),
+            )) => nlt.value(),
+            _ => String::new(),
+        }
+    }
+    pub fn to_abstract_type(&self) -> Option<RcCell<TypeName>> {
+        match self {
+            Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => {
+                Some(blt.to_abstract_type())
+            }
+            Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::NumberLiteralType(nlt),
+            )) => Some(nlt.to_abstract_type()),
+            Self::UserDefinedTypeName(UserDefinedTypeName::EnumValueTypeName(evtn)) => {
+                Some(evtn.to_abstract_type())
+            }
+            _ => None,
+        }
+    }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
-        &*expected.borrow() == self
+        let res = &*expected.borrow() == self;
+        if !res {
+            // println!(
+            //     "=======implicitly_convertible_to========={:?},========================{:?}",
+            //     "self", "expected"
+            // );
+        }
+        match self {
+            Self::ElementaryTypeName(etn) => match etn {
+                ElementaryTypeName::BooleanLiteralType(blt) => {
+                    blt.implicitly_convertible_to(expected)
+                }
+                ElementaryTypeName::NumberTypeName(ntn) => match ntn {
+                    NumberTypeName::NumberLiteralType(nlt) => {
+                        nlt.implicitly_convertible_to(expected)
+                    }
+                    NumberTypeName::IntTypeName(itn) => itn.implicitly_convertible_to(expected),
+                    NumberTypeName::UintTypeName(utn) => utn.implicitly_convertible_to(expected),
+                    _ => ntn.implicitly_convertible_to(expected),
+                },
+                _ => res,
+            },
+            Self::UserDefinedTypeName(udt) => match udt {
+                UserDefinedTypeName::EnumValueTypeName(evtn) => {
+                    evtn.implicitly_convertible_to(expected)
+                }
+                UserDefinedTypeName::AddressPayableTypeName(aptn) => {
+                    aptn.implicitly_convertible_to(expected)
+                }
+                _ => res,
+            },
+            Self::TupleType(tt) => tt.implicitly_convertible_to(expected),
+            _ => res,
+        }
     }
     pub fn compatible_with(self, other_type: &RcCell<TypeName>) -> bool {
         self.implicitly_convertible_to(&other_type)
@@ -5989,13 +6063,25 @@ impl TypeName {
         other_type: &RcCell<TypeName>,
         _convert_literals: bool,
     ) -> Option<RcCell<Self>> {
-        let selfs = RcCell::new(self.clone());
-        if other_type.borrow().implicitly_convertible_to(&selfs) {
-            Some(selfs)
-        } else if self.implicitly_convertible_to(&other_type) {
-            Some(other_type.clone())
-        } else {
-            None
+        // println!("=======combined_type======{:?}===={:?}=========",self,other_type);
+        match self {
+            Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => {
+                Some(blt.combined_type(other_type, _convert_literals))
+            }
+            Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                NumberTypeName::NumberLiteralType(nlt),
+            )) => Some(nlt.combined_type(other_type, _convert_literals)),
+            Self::TupleType(tt) => tt.combined_type(other_type, _convert_literals),
+            _ => {
+                let selfs = RcCell::new(self.clone());
+                if other_type.borrow().implicitly_convertible_to(&selfs) {
+                    Some(selfs)
+                } else if self.implicitly_convertible_to(&other_type) {
+                    Some(other_type.clone())
+                } else {
+                    None
+                }
+            }
         }
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> RcCell<AnnotatedTypeName> {
@@ -6134,18 +6220,16 @@ impl BooleanLiteralType {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
-        self.to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .implicitly_convertible_to(expected)
+        &*expected.borrow()
+            == &TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(self.clone()))
             || is_instance(expected, ASTType::BoolTypeName)
     }
     pub fn combined_type(
         &self,
-        other_type: RcCell<TypeName>,
+        other_type: &RcCell<TypeName>,
         convert_literals: bool,
     ) -> RcCell<TypeName> {
-        if is_instance(&other_type, ASTType::BooleanLiteralType) {
+        if is_instance(other_type, ASTType::BooleanLiteralType) {
             RcCell::new(if convert_literals {
                 TypeName::bool_type()
             } else {
@@ -6159,8 +6243,8 @@ impl BooleanLiteralType {
                 .unwrap()
         }
     }
-    pub fn value(&self) -> bool {
-        &self.elementary_type_name_base.name == "true"
+    pub fn value(&self) -> String {
+        self.name().clone()
     }
     pub fn elem_bitwidth(&self) -> i32 {
         // Bitwidth, only defined for primitive types
@@ -6182,14 +6266,14 @@ impl BooleanLiteralType {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum NumberTypeName {
     NumberLiteralType(NumberLiteralType),
     IntTypeName(IntTypeName),
     UintTypeName(UintTypeName),
     NumberTypeNameBase(NumberTypeNameBase),
 }
-impl PartialEq for NumberTypeNameBase {
+impl PartialEq for NumberTypeName {
     fn eq(&self, other: &Self) -> bool {
         self.get_ast_type() == other.get_ast_type() && self.name() == other.name()
     }
@@ -6202,6 +6286,11 @@ impl NumberTypeName {
             true,
             Some(256),
         ))
+    }
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
+        &TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(self.clone()))
+            == &*expected.borrow()
+            || expected.borrow().get_ast_type() == ASTType::NumberTypeNameBase
     }
 }
 #[enum_dispatch]
@@ -6237,6 +6326,7 @@ impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
     ASTKind,
     Clone,
     Debug,
+    PartialEq,
     PartialOrd,
     Eq,
     Ord,
@@ -6278,13 +6368,6 @@ impl NumberTypeNameBase {
             _size_in_bits,
         }
     }
-    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
-        self.to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .implicitly_convertible_to(expected)
-            || is_instance(expected, ASTType::NumberTypeNameBase)
-    }
     pub fn elem_bitwidth(&self) -> i32 {
         // Bitwidth, only defined for primitive types
         // raise NotImplementedError()
@@ -6297,17 +6380,21 @@ impl NumberTypeNameBase {
     // """Return true if value can be represented by this type"""
     pub fn can_represent(&self, value: i32) -> bool {
         let elem_bitwidth = self.elem_bitwidth() as usize;
-        let lo = if self.signed {
-            -(1 << elem_bitwidth - 1)
+
+        // println!("=========elem_bitwidth============{}",elem_bitwidth);
+        assert!(
+            elem_bitwidth > 0 && elem_bitwidth <= 256,
+            "elem_bitwidth equal zero{}",
+            elem_bitwidth
+        );
+        if self.signed {
+            let v = I256::from(value);
+            (-(int!("1") << (elem_bitwidth - 2))) * 2 <= v
+                && v < ((int!("1") << (elem_bitwidth - 2) - 1) * 2 + 1)
         } else {
-            0
-        };
-        let hi = if self.signed {
-            1 << elem_bitwidth - 1
-        } else {
-            1 << elem_bitwidth
-        };
-        lo <= value && value < hi
+            let v = U256::from(value as u32);
+            uint!("0") <= v && v < (uint!("1") << elem_bitwidth - 1)
+        }
     }
 }
 pub enum NumberLiteralTypeUnion {
@@ -6362,9 +6449,8 @@ impl NumberLiteralType {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
-        if expected.borrow().is_numeric() && !expected.borrow().is_literals()
-        // Allow implicit conversion only if it fits
-        {
+        if expected.borrow().is_numeric() && !expected.borrow().is_literals() {
+            // Allow implicit conversion only if it fits
             expected
                 .borrow()
                 .try_as_elementary_type_name_ref()
@@ -6372,24 +6458,23 @@ impl NumberLiteralType {
                 .try_as_number_type_name_ref()
                 .unwrap()
                 .number_type_name_base_ref()
-                .can_represent(self.value())
+                .can_represent(self.value().parse::<i32>().unwrap())
         } else if expected.borrow().is_address()
             && self.number_type_name_base.elem_bitwidth() == 160
             && !self.number_type_name_base.signed
-        // Address literal case (fake solidity check will catch the cases where this is too permissive)
         {
+            // Address literal case (fake solidity check will catch the cases where this is too permissive)
             true
         } else {
-            self.number_type_name_base
-                .implicitly_convertible_to(expected)
+            NumberTypeName::NumberLiteralType(self.clone()).implicitly_convertible_to(expected)
         }
     }
     pub fn combined_type(
         &self,
-        other_type: RcCell<TypeName>,
+        other_type: &RcCell<TypeName>,
         convert_literals: bool,
     ) -> RcCell<TypeName> {
-        if is_instance(&other_type, ASTType::NumberLiteralType) {
+        if is_instance(other_type, ASTType::NumberLiteralType) {
             if convert_literals {
                 self.to_abstract_type()
                     .borrow()
@@ -6418,10 +6503,10 @@ impl NumberLiteralType {
         }
     }
     pub fn to_abstract_type(&self) -> RcCell<TypeName> {
-        RcCell::new(if self.value() < 0 {
+        RcCell::new(if self.value().parse::<i32>().unwrap() < 0 {
             TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
                 NumberTypeName::IntTypeName(IntTypeName::new(format!(
-                    "i32{}",
+                    "int{}",
                     self.number_type_name_base.elem_bitwidth()
                 ))),
             ))
@@ -6434,12 +6519,8 @@ impl NumberLiteralType {
             ))
         })
     }
-    pub fn value(&self) -> i32 {
-        self.number_type_name_base
-            .elementary_type_name_base
-            .name
-            .parse::<i32>()
-            .unwrap()
+    pub fn value(&self) -> String {
+        self.name().clone()
     }
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
@@ -6475,10 +6556,9 @@ impl IntTypeName {
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.number_type_name_base
-            .implicitly_convertible_to(expected)
-            || is_instance(expected, ASTType::IntTypeName)
-                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth()
+        NumberTypeName::IntTypeName(self.clone()).implicitly_convertible_to(expected)
+            || (is_instance(expected, ASTType::IntTypeName)
+                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
     }
 }
 #[impl_traits(NumberTypeNameBase, ElementaryTypeNameBase, TypeNameBase, ASTBase)]
@@ -6514,10 +6594,9 @@ impl UintTypeName {
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.number_type_name_base
-            .implicitly_convertible_to(expected)
-            || is_instance(expected, ASTType::UintTypeName)
-                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth()
+        NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected)
+            || (is_instance(expected, ASTType::UintTypeName)
+                && expected.borrow().elem_bitwidth() >= self.number_type_name_base.elem_bitwidth())
     }
 }
 #[enum_dispatch(
@@ -6724,10 +6803,31 @@ impl EnumValueTypeName {
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .implicitly_convertible_to(expected)
+        // println!("==evt=====implicitly_convertible_to={:?}==={:?},{:?},{:?},========={:?}",expected
+        //             .borrow()
+        //             .try_as_user_defined_type_name_ref()
+        //             .unwrap()
+        //             .try_as_enum_type_name_ref()
+        //             .unwrap()
+        //             .user_defined_type_name_base_ref()
+        //             .names.iter().zip(&self.user_defined_type_name_base.names
+        //                 [..self.user_defined_type_name_base.names.len().saturating_sub(1)])
+        //             .all(|(e,s)| {println!("e.borrow().name()==s.borrow().name()======================{:?},================={:?}",e.borrow().name(),s.borrow().name());e.borrow().name()==s.borrow().name()}), &TypeName::UserDefinedTypeName(
+        //     UserDefinedTypeName::EnumValueTypeName(self.clone()),
+        // ) == &*expected.borrow()
+        //     , is_instance(expected, ASTType::EnumTypeName)
+        //         , expected
+        //             .borrow()
+        //             .try_as_user_defined_type_name_ref()
+        //             .unwrap()
+        //             .try_as_enum_type_name_ref()
+        //             .unwrap()
+        //             .user_defined_type_name_base_ref()
+        //             .names
+        //             .clone()
+        //             , self.user_defined_type_name_base.names);
+        &TypeName::UserDefinedTypeName(UserDefinedTypeName::EnumValueTypeName(self.clone()))
+            == &*expected.borrow()
             || (is_instance(expected, ASTType::EnumTypeName)
                 && expected
                     .borrow()
@@ -6737,10 +6837,15 @@ impl EnumValueTypeName {
                     .unwrap()
                     .user_defined_type_name_base_ref()
                     .names
-                    .clone()
-                    >= self.user_defined_type_name_base.names
-                        [..self.user_defined_type_name_base.names.len() - 1]
-                        .to_vec())
+                    .iter()
+                    .zip(
+                        &self.user_defined_type_name_base.names[..self
+                            .user_defined_type_name_base
+                            .names
+                            .len()
+                            .saturating_sub(1)],
+                    )
+                    .all(|(e, s)| e.borrow().name() == s.borrow().name()))
     }
 }
 #[impl_traits(UserDefinedTypeNameBase, TypeNameBase, ASTBase)]
@@ -6879,10 +6984,8 @@ impl AddressPayableTypeName {
 
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
         // Implicitly convert smaller i32 types to larger i32 types
-        self.to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .implicitly_convertible_to(expected)
+        &TypeName::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(self.clone()))
+            == &*expected.borrow()
             || &*expected.borrow() == &TypeName::address_type()
     }
     pub fn elem_bitwidth(&self) -> i32 {
@@ -7341,34 +7444,29 @@ impl TupleType {
         other: &RcCell<TypeName>,
         f: impl FnOnce(RcCell<AnnotatedTypeName>, RcCell<AnnotatedTypeName>) -> bool + std::marker::Copy,
     ) -> bool {
-        if self.len() != other.borrow().try_as_tuple_type_ref().unwrap().len() {
-            false
-        } else {
-            for i in 0..self.len() {
-                if !f(
-                    self.get_item(i),
-                    other.borrow().try_as_tuple_type_ref().unwrap().get_item(i),
-                ) {
-                    return false;
-                }
-            }
-            true
+        if !is_instance(other, ASTType::TupleType) {
+            return false;
         }
+        if self.len() != other.borrow().try_as_tuple_type_ref().unwrap().len() {
+            return false;
+        }
+        (0..self.len()).all(|i| {
+            f(
+                self.get_item(i),
+                other.borrow().try_as_tuple_type_ref().unwrap().get_item(i),
+            )
+        })
     }
 
-    pub fn implicitly_convertible_to(&self, expected: RcCell<TypeName>) -> bool {
-        if expected.borrow().is_tuple_type() {
-            self.check_component_wise(&expected, |x, y| {
-                x.borrow()
-                    .type_name
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .implicitly_convertible_to(y.borrow().type_name.as_ref().unwrap())
-            })
-        } else {
-            false
-        }
+    pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
+        self.check_component_wise(expected, |x, y| {
+            x.borrow()
+                .type_name
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .implicitly_convertible_to(y.borrow().type_name.as_ref().unwrap())
+        })
     }
 
     pub fn compatible_with(&self, other_type: RcCell<TypeName>) -> bool {
@@ -7389,16 +7487,23 @@ impl TupleType {
 
     pub fn combined_type(
         &self,
-        other_type: TupleType,
+        other_type: &RcCell<TypeName>,
         convert_literals: bool,
-    ) -> Option<TupleType> {
-        if self.types.len() != other_type.types.len() {
+    ) -> Option<RcCell<TypeName>> {
+        if self.types.len()
+            != other_type
+                .borrow()
+                .try_as_tuple_type_ref()
+                .unwrap()
+                .types
+                .len()
+        {
             None
         } else {
-            Some(TupleType::new(
+            Some(RcCell::new(TypeName::TupleType(TupleType::new(
                 self.types
                     .iter()
-                    .zip(&other_type.types)
+                    .zip(&other_type.borrow().try_as_tuple_type_ref().unwrap().types)
                     .map(|(e1, e2)| {
                         RcCell::new(AnnotatedTypeName::new(
                             e1.borrow()
@@ -7418,7 +7523,7 @@ impl TupleType {
                         ))
                     })
                     .collect(),
-            ))
+            ))))
         }
     }
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> CombinedPrivacyUnion {
@@ -7562,24 +7667,26 @@ impl IntoAST for AnnotatedTypeName {
 impl AnnotatedTypeName {
     pub fn new(
         type_name: Option<RcCell<TypeName>>,
-        privacy_annotation: Option<ASTFlatten>,
+        mut privacy_annotation: Option<ASTFlatten>,
         homomorphism: String,
     ) -> Self {
         // println!("==AnnotatedTypeName::new====={type_name:?}======");
+        privacy_annotation = privacy_annotation.or(Some(
+            RcCell::new(Expression::AllExpr(AllExpr::new())).into(),
+        ));
         assert!(
             !(privacy_annotation.is_some()
                 && is_instance(privacy_annotation.as_ref().unwrap(), ASTType::AllExpr)
                 && homomorphism != Homomorphism::non_homomorphic()),
-            "Public type name cannot be homomorphic (got {:?})",
-            HOMOMORPHISM_STORE.lock().unwrap().get(&homomorphism)
+            "Public type name cannot be homomorphic (got {:?}),{:?}",
+            HOMOMORPHISM_STORE.lock().unwrap().get(&homomorphism),
+            homomorphism
         );
         Self {
             ast_base: RcCell::new(ASTBase::new(None, None)),
             type_name,
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
-            privacy_annotation: privacy_annotation.or(Some(
-                RcCell::new(Expression::AllExpr(AllExpr::new())).into(),
-            )),
+            privacy_annotation,
             homomorphism,
         }
     }
@@ -9584,7 +9691,7 @@ impl CodeVisitor {
                     .get(ho)
                     .map_or(String::new(), |h| h.to_string())
             });
-        println!("reveal{}({e}, {p})", h);
+        // println!("reveal{}({e}, {p})", h);
         Ok(format!("reveal{}({e}, {p})", h))
     }
 

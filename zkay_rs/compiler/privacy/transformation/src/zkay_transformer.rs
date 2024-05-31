@@ -130,7 +130,7 @@ impl ZkayVarDeclTransformer {
         Ok(RcCell::new(AnnotatedTypeName::new(
             t.and_then(|t| t.try_as_type_name()),
             None,
-            String::from("NON_HOMOMORPHISM"),
+            Homomorphism::non_homomorphic(),
         ))
         .into())
     }
@@ -1712,11 +1712,12 @@ impl ZkayExpressionTransformer {
         if !new_pre_stmts.is_empty() {
             let mut cond_expr = guard_var.get_loc_expr(None);
             if is_instance(&cond_expr, ASTType::BooleanLiteralExpr) {
-                let v = cond_expr
+                let v = (cond_expr
                     .try_as_boolean_literal_type_ref()
                     .unwrap()
                     .borrow()
                     .value()
+                    == "true")
                     == if_true;
                 cond_expr = RcCell::new(BooleanLiteralExpr::new(v)).into();
             } else if !if_true {
@@ -2088,7 +2089,7 @@ impl ZkayCircuitTransformer {
         {
             return replace_expr(
                 ast,
-                &RcCell::new(BooleanLiteralExpr::new(t.value())).into(),
+                &RcCell::new(BooleanLiteralExpr::new(t.value() == "true")).into(),
                 false,
             )
             .ok_or(eyre::eyre!("unexpected"));
@@ -2098,7 +2099,11 @@ impl ZkayCircuitTransformer {
         {
             return replace_expr(
                 &ast,
-                &RcCell::new(NumberLiteralExpr::new(t.value(), false)).into(),
+                &RcCell::new(NumberLiteralExpr::new(
+                    t.value().parse::<i32>().unwrap(),
+                    false,
+                ))
+                .into(),
                 false,
             )
             .ok_or(eyre::eyre!("unexpected"));
@@ -2184,9 +2189,9 @@ impl ZkayCircuitTransformer {
                     .borrow()
                     .op
                     == "*"
-                //special case: private scalar multiplication using additive homomorphism
-                //TODO ugly hack below removes ReclassifyExpr
                 {
+                    //special case: private scalar multiplication using additive homomorphism
+                    //TODO ugly hack below removes ReclassifyExpr
                     let mut new_args = vec![];
                     for arg in args {
                         let mut arg = arg.clone();
@@ -2224,6 +2229,7 @@ impl ZkayCircuitTransformer {
                             .borrow()
                             .is_private()
                         {
+                            println!("===visitFunctionCallExpr=======cipher_type========assign==========annotated_type=========");
                             arg.ast_base_ref().unwrap().borrow_mut().annotated_type =
                                 Some(AnnotatedTypeName::cipher_type(
                                     arg.ast_base_ref()
@@ -2253,9 +2259,8 @@ impl ZkayCircuitTransformer {
                         .borrow_mut()
                         .function_call_expr_base_mut_ref()
                         .args = new_args;
-                } else
-                //We require all non-public arguments to be present as ciphertexts
-                {
+                } else {
+                    //We require all non-public arguments to be present as ciphertexts
                     for arg in args.iter_mut() {
                         if arg
                             .try_as_expression_ref()
@@ -2267,6 +2272,8 @@ impl ZkayCircuitTransformer {
                             .borrow()
                             .is_private()
                         {
+                            println!("===visitFunctionCallExpr==is_private=====cipher_type========assign==========annotated_type=========");
+
                             arg.ast_base_ref().unwrap().borrow_mut().annotated_type =
                                 Some(AnnotatedTypeName::cipher_type(
                                     arg.try_as_expression_ref()

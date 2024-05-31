@@ -110,11 +110,11 @@ pub fn get_processed_ast(
     global_vars: RcCell<GlobalVars>,
 ) -> ASTFlatten {
     let flag = ASTFlags::new(flag);
-    println!(
-        "====flag=================={:?}======={:?}",
-        flag.to_string(),
-        flag.type_check()
-    );
+    // println!(
+    //     "====flag=================={:?}======={:?}",
+    //     flag.to_string(),
+    //     flag.type_check()
+    // );
     let (mut ast, _) =
         get_parsed_ast_and_fake_code(code, flag & ASTFlags::SOLC_CHECK == ASTFlags::SOLC_CHECK); //solc_check
 
@@ -158,7 +158,7 @@ fn process_ast(
     if alias_analysis {
         a(ast, global_vars.clone());
     }
-    println!("{:?}", global_vars.borrow().vars().len());
+    // println!("{:?}", global_vars.borrow().vars().len());
     call_graph_analysis(ast);
     compute_modified_sets(ast);
     check_for_undefined_behavior_due_to_eval_order(ast);
