@@ -1294,7 +1294,14 @@ impl TypeCheckVisitor {
         mut func: &ASTFlatten,
     ) {
         //First - same as non-homomorphic - check that argument types conform to op signature
-        if !func.try_as_builtin_function_ref().unwrap().borrow().is_eq() {
+        if !func
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .is_eq()
+        {
             assert!(
                 ast.to_ast()
                     .try_as_expression_ref()
@@ -1305,9 +1312,11 @@ impl TypeCheckVisitor {
                     .iter()
                     .zip(
                         &func
+                            .to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
                             .try_as_builtin_function_ref()
                             .unwrap()
-                            .borrow()
                             .input_types(),
                     )
                     .all(|(arg, t)| arg
@@ -1321,9 +1330,11 @@ impl TypeCheckVisitor {
         }
 
         let homomorphic_func = func
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .try_as_builtin_function_ref()
             .unwrap()
-            .borrow()
             .select_homomorphic_overload(
                 ast.to_ast()
                     .try_as_expression_ref()
@@ -1342,24 +1353,37 @@ impl TypeCheckVisitor {
         assert!(
             homomorphic_func.is_some(),
             r#"Operation \"{}\" requires all arguments to be accessible, i.e. @all or provably equal to @me{:?}"#,
-            func.try_as_builtin_function_ref().unwrap().borrow().op,
+            func.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .op,
             ast
         );
 
         //We could perform homomorphic operations on-chain by using some Solidity arbitrary precision math library.
         //For now, keep it simple and evaluate homomorphic operations in Python and check the result in the circuit.
-        func.try_as_builtin_function_ref()
-            .unwrap()
-            .borrow_mut()
-            .is_private = true;
+        if func.is_builtin_function() {
+            func.try_as_builtin_function_ref()
+                .unwrap()
+                .borrow_mut()
+                .is_private = true;
+        } else if func.is_expression() {
+            func.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_builtin_function_mut()
+                .unwrap()
+                .is_private = true;
+        } else {
+            assert!(false, "===============else=========={func:?}");
+        }
+
         println!("==handle_homomorphic_builtin_function_call=======annotated_type==");
         ast.ast_base_ref().unwrap().borrow_mut().annotated_type =
             Some(homomorphic_func.clone().unwrap().output_type());
-
-        func.try_as_builtin_function_ref()
-            .unwrap()
-            .borrow_mut()
-            .homomorphism = ast
+        let ho = ast
             .to_ast()
             .try_as_expression_ref()
             .unwrap()
@@ -1371,6 +1395,22 @@ impl TypeCheckVisitor {
             .borrow()
             .homomorphism
             .clone();
+        if func.is_builtin_function() {
+            func.try_as_builtin_function_ref()
+                .unwrap()
+                .borrow_mut()
+                .homomorphism = ho;
+        } else if func.is_expression() {
+            func.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_builtin_function_mut()
+                .unwrap()
+                .homomorphism = ho;
+        } else {
+            assert!(false, "===============else=========={func:?}");
+        }
+
         let expected_arg_types = homomorphic_func.unwrap().input_types();
         let args = ast
             .to_ast()

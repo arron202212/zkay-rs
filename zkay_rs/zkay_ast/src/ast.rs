@@ -3080,12 +3080,12 @@ impl BuiltinFunction {
             .iter()
             .filter(|x| !x.as_ref().unwrap().borrow().is_accessible(&analysis))
             .collect();
-        if inaccessible_arg_types.is_empty()
         // Else we would not have selected a homomorphic operation
-        {
-            // raise ValueError("Cannot select proper homomorphic function if all arguments are public or @me-private")
-            assert!(false,"Cannot select proper homomorphic function if all arguments are public or @me-private");
-        }
+        // raise ValueError("Cannot select proper homomorphic function if all arguments are public or @me-private")
+        assert!(
+            !inaccessible_arg_types.is_empty(),
+            "Cannot select proper homomorphic function if all arguments are public or @me-private"
+        );
         let elem_type = arg_types
             .iter()
             .map(|a| a.as_ref().unwrap().borrow().type_name.clone().unwrap())
@@ -5929,7 +5929,38 @@ impl TypeName {
     pub fn elem_bitwidth(&self) -> i32 {
         // Bitwidth, only defined for primitive types
         // raise NotImplementedError()
-        1
+        match self {
+            Self::ElementaryTypeName(ElementaryTypeName::BoolTypeName(blt)) => blt.elem_bitwidth(),
+            Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => {
+                blt.elem_bitwidth()
+            }
+            // Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+            //     NumberTypeName::NumberLiteralType(nlt),
+            // )) => nlt.elem_bitwidth(),
+            Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(nlt)) => {
+                nlt.elem_bitwidth()
+            }
+            Self::UserDefinedTypeName(UserDefinedTypeName::EnumTypeName(nlt)) => {
+                nlt.elem_bitwidth()
+            }
+            Self::UserDefinedTypeName(UserDefinedTypeName::EnumValueTypeName(nlt)) => {
+                nlt.elem_bitwidth()
+            }
+            Self::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(nlt)) => {
+                nlt.elem_bitwidth()
+            }
+            Self::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(nlt)) => {
+                nlt.elem_bitwidth()
+            }
+            Self::Array(nlt) => nlt.elem_bitwidth(),
+            _ => {
+                println!(
+                    "==========unexpected elem_bitwidth=={:?}",
+                    self.get_ast_type()
+                );
+                0
+            }
+        }
     }
     pub fn is_literals(&self) -> bool {
         is_instances(
@@ -6063,7 +6094,11 @@ impl TypeName {
         other_type: &RcCell<TypeName>,
         _convert_literals: bool,
     ) -> Option<RcCell<Self>> {
-        // println!("=======combined_type======{:?}===={:?}=========",self,other_type);
+        println!(
+            "=======combined_type======{:?}===={:?}=========",
+            self.get_ast_type(),
+            other_type.borrow().get_ast_type()
+        );
         match self {
             Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => {
                 Some(blt.combined_type(other_type, _convert_literals))
@@ -6302,6 +6337,7 @@ pub trait NumberTypeNameBaseProperty {
     fn signed(&self) -> bool;
     fn bitwidth(&self) -> Option<i32>;
     fn _size_in_bits(&self) -> i32;
+    fn elem_bitwidth(&self) -> i32;
 }
 impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
     fn prefix(&self) -> &String {
@@ -6315,6 +6351,14 @@ impl<T: NumberTypeNameBaseRef> NumberTypeNameBaseProperty for T {
     }
     fn _size_in_bits(&self) -> i32 {
         self.number_type_name_base_ref()._size_in_bits
+    }
+    fn elem_bitwidth(&self) -> i32 {
+        // Bitwidth, only defined for primitive types
+        if self._size_in_bits() == 0 {
+            256
+        } else {
+            self._size_in_bits()
+        }
     }
 }
 #[impl_traits(ElementaryTypeNameBase, TypeNameBase, ASTBase)]
@@ -6368,15 +6412,7 @@ impl NumberTypeNameBase {
             _size_in_bits,
         }
     }
-    pub fn elem_bitwidth(&self) -> i32 {
-        // Bitwidth, only defined for primitive types
-        // raise NotImplementedError()
-        if self._size_in_bits == 0 {
-            256
-        } else {
-            self._size_in_bits
-        }
-    }
+
     // """Return true if value can be represented by this type"""
     pub fn can_represent(&self, value: i32) -> bool {
         let elem_bitwidth = self.elem_bitwidth() as usize;
@@ -6593,6 +6629,13 @@ impl UintTypeName {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
+        println!(
+            "===implicitly_convertible_to=======UintTypeName========={}==={}======{}={}==",
+            NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected),
+            is_instance(expected, ASTType::UintTypeName),
+            expected.borrow().elem_bitwidth(),
+            self.number_type_name_base.elem_bitwidth()
+        );
         // Implicitly convert smaller i32 types to larger i32 types
         NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected)
             || (is_instance(expected, ASTType::UintTypeName)
@@ -7124,6 +7167,7 @@ pub trait ArrayBaseRef: TypeNameBaseRef {
 pub trait ArrayBaseProperty {
     fn value_type(&self) -> &RcCell<AnnotatedTypeName>;
     fn expr(&self) -> &Option<ASTFlatten>;
+    fn elem_bitwidth(&self) -> i32;
 }
 impl<T: ArrayBaseRef> ArrayBaseProperty for T {
     fn value_type(&self) -> &RcCell<AnnotatedTypeName> {
@@ -7131,6 +7175,15 @@ impl<T: ArrayBaseRef> ArrayBaseProperty for T {
     }
     fn expr(&self) -> &Option<ASTFlatten> {
         &self.array_base_ref().expr
+    }
+    fn elem_bitwidth(&self) -> i32 {
+        self.value_type()
+            .borrow()
+            .type_name
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .elem_bitwidth()
     }
 }
 #[impl_traits(TypeNameBase, ASTBase)]
@@ -7174,16 +7227,6 @@ impl ArrayBase {
                 .clone();
         }
         -1
-    }
-
-    pub fn elem_bitwidth(&self) -> i32 {
-        self.value_type
-            .borrow()
-            .type_name
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .elem_bitwidth()
     }
 }
 

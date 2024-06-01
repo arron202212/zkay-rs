@@ -23,7 +23,8 @@ impl<
             + std::hash::Hash
             + std::cmp::Eq
             + std::cmp::Ord
-            + crate::ast::Immutable,
+            + crate::ast::Immutable
+            + std::fmt::Debug,
     > PartitionState<T>
 {
     pub fn new() -> Self {
@@ -48,13 +49,16 @@ impl<
     // :return: the index of the partition containing x
     // """
     pub fn get_index(&self, x: &T) -> Option<i32> {
+        // println!("===get_index====x======{:?}",x);
         for (k, p) in &self._partitions {
             // println!("===get_index===={:?}======{:?}",p.iter().map(|t|t.to_string()).collect::<Vec<_>>(),x.to_string());
-            if p.contains(x) {
+            //  println!("===get_index===={:?}=====",p);
+            let pp = p.iter().map(|t| t.to_string()).collect::<BTreeSet<_>>();
+            if pp.contains(&x.to_string()) {
                 return Some(*k);
             }
         }
-        // println!("===get_index=========={:?}", self._partitions.len());
+        println!("===get_index======len no===={:?}", self._partitions.len());
         None
     }
 
