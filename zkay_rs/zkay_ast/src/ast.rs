@@ -2591,11 +2591,11 @@ impl Expression {
         ))
     }
 
+    // """
+    // :param expected:
+    // :return: true, false, or "make-private"
+    // """
     pub fn instance_of(&self, expected: &RcCell<AnnotatedTypeName>) -> Option<String> {
-        // """
-        // :param expected:
-        // :return: true, false, or "make-private"
-        // """
         // assert! (isinstance(expected, AnnotatedTypeName))
 
         let actual = self.annotated_type();
@@ -4452,7 +4452,6 @@ impl ASTChildren for ReclassifyExprBase {
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
-    ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
     ASTKind,
@@ -4470,6 +4469,11 @@ pub struct RehomExpr {
 impl IntoAST for RehomExpr {
     fn into_ast(self) -> AST {
         AST::Expression(Expression::ReclassifyExpr(ReclassifyExpr::RehomExpr(self)))
+    }
+}
+impl ASTChildren for RehomExpr {
+    fn process_children(&self, cb: &mut ChildListBuilder) {
+        self.reclassify_expr_base.process_children(cb);
     }
 }
 
@@ -4928,7 +4932,6 @@ impl Identifier {
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
-    ASTChildrenImpl,
     ASTDebug,
     ASTFlattenImpl,
     ASTKind,
@@ -4950,7 +4953,11 @@ impl IntoAST for EncryptionExpression {
         ))
     }
 }
-
+impl ASTChildren for EncryptionExpression {
+    fn process_children(&self, cb: &mut ChildListBuilder) {
+        self.reclassify_expr_base.process_children(cb);
+    }
+}
 impl EncryptionExpression {
     pub fn new(expr: ASTFlatten, privacy: ASTFlatten, homomorphism: Option<String>) -> Self {
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
@@ -6119,6 +6126,27 @@ impl TypeName {
             }
         }
     }
+    pub fn combined_type_base(
+        &self,
+        other_type: &RcCell<TypeName>,
+        _convert_literals: bool,
+    ) -> Option<RcCell<Self>> {
+        println!(
+            "=======combined_type_base======{:?}===={:?}=========",
+            self.get_ast_type(),
+            other_type.borrow().get_ast_type()
+        );
+
+        let selfs = RcCell::new(self.clone());
+        if other_type.borrow().implicitly_convertible_to(&selfs) {
+            Some(selfs)
+        } else if self.implicitly_convertible_to(&other_type) {
+            Some(other_type.clone())
+        } else {
+            None
+        }
+    }
+
     pub fn annotate(&self, privacy_annotation: CombinedPrivacyUnion) -> RcCell<AnnotatedTypeName> {
         RcCell::new(AnnotatedTypeName::new(
             Some(RcCell::new(self.clone())),
@@ -6274,7 +6302,7 @@ impl BooleanLiteralType {
             self.to_ast()
                 .try_as_type_name_ref()
                 .unwrap()
-                .combined_type(&other_type, convert_literals)
+                .combined_type_base(&other_type, convert_literals)
                 .unwrap()
         }
     }
@@ -6534,7 +6562,7 @@ impl NumberLiteralType {
             self.to_ast()
                 .try_as_type_name_ref()
                 .unwrap()
-                .combined_type(&other_type, convert_literals)
+                .combined_type_base(&other_type, convert_literals)
                 .unwrap()
         }
     }

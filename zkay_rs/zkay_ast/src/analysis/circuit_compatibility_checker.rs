@@ -1020,7 +1020,7 @@ impl NonstaticOrIncompatibilityDetector {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .is_literal();
+                        .is_literals();
                 if ast
                     .try_as_function_call_expr_ref()
                     .unwrap()
