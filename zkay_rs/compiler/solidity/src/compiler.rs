@@ -264,7 +264,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
             zk_print!("");
             if had_error {
                 // raise SolcException(fatal_error_report)
-                assert!(false, "{}", fatal_error_report);
+                panic!("{}", fatal_error_report);
             }
         }
     }

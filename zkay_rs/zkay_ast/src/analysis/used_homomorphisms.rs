@@ -11,7 +11,7 @@ use crate::ast::{
     ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
 };
 use crate::homomorphism::Homomorphism;
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_config::config::CFG;

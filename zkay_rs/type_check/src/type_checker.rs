@@ -476,7 +476,7 @@ impl TypeCheckVisitor {
                 .assignment_statement_base_mut_ref()
                 .rhs = aa;
         } else {
-            assert!(false, "==========else=========={:?}", ast);
+            panic!("==========else=========={:?}", ast);
         }
 
         //prevent modifying final
@@ -585,7 +585,7 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .expr = expr;
             } else {
-                assert!(false, "==============else========{ast:?}");
+                panic!("==============else========{ast:?}");
             }
         }
         Ok(())
@@ -788,7 +788,7 @@ impl TypeCheckVisitor {
                         .unwrap()
                         .is_private = true;
                 } else {
-                    assert!(false, "==========else========{func:?}");
+                    panic!("==========else========{func:?}");
                 }
                 res_t
                     .unwrap()
@@ -844,7 +844,7 @@ impl TypeCheckVisitor {
                     .function_call_expr_base_mut_ref()
                     .args = args;
             } else {
-                assert!(false, "=========else======={:?}", ast);
+                panic!("=========else======={:?}", ast);
             }
             ast.ast_base_ref().unwrap().borrow_mut().annotated_type = Some(a);
             // println!(
@@ -1300,7 +1300,7 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .is_private = true;
             } else {
-                assert!(false, "===========else==========={func:?}=======");
+                panic!("===========else==========={func:?}=======");
             }
             p = Some(CombinedPrivacyUnion::AST(Some(
                 RcCell::new(Expression::me_expr(None)).into(),
@@ -1353,7 +1353,7 @@ impl TypeCheckVisitor {
                     .function_call_expr_base_mut_ref()
                     .args = args;
             } else {
-                assert!(false, "===========else==========={:?}", ast);
+                panic!("===========else==========={:?}", ast);
             }
         }
         let at = Some(out_t.unwrap().borrow().annotate(p.clone().unwrap()));
@@ -1449,7 +1449,7 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .is_private = true;
         } else {
-            assert!(false, "===============else=========={func:?}");
+            panic!("===============else=========={func:?}");
         }
 
         // println!("==handle_homomorphic_builtin_function_call=======annotated_type==");
@@ -1480,7 +1480,7 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .homomorphism = ho;
         } else {
-            assert!(false, "===============else=========={func:?}");
+            panic!("===============else=========={func:?}");
         }
 
         let expected_arg_types = homomorphic_func.unwrap().input_types();
@@ -1511,7 +1511,7 @@ impl TypeCheckVisitor {
                 .function_call_expr_base_mut_ref()
                 .args = args;
         } else {
-            assert!(false, "===========else========={:?}", ast);
+            panic!("===========else========={:?}", ast);
         }
     }
     //@staticmethod
@@ -1912,7 +1912,7 @@ impl TypeCheckVisitor {
                 .expression_base_mut_ref()
                 .statement = s;
         } else {
-            assert!(false, "==================================={:?}", target);
+            panic!("==================================={:?}", target);
         }
         let t = ASTFlatten::from(target.clone()).downgrade();
         //set parents
@@ -2217,7 +2217,7 @@ impl TypeCheckVisitor {
                     .borrow_mut()
                     .annotated_type = at;
             } else {
-                assert!(false, "=============else=========={:?}", ast);
+                panic!("=============else=========={:?}", ast);
             }
         } else if is_instance(
             ast.to_ast()
@@ -2369,10 +2369,10 @@ impl TypeCheckVisitor {
                     .borrow_mut()
                     .annotated_type = at;
             } else {
-                assert!(false, "=============else==========={:?}", ast);
+                panic!("=============else==========={:?}", ast);
             }
         } else {
-            assert!(false, "Invalid function call{:?}", ast);
+            panic!("Invalid function call{:?}", ast);
         }
         Ok(())
     }
@@ -2570,7 +2570,7 @@ impl TypeCheckVisitor {
                 .borrow_mut()
                 .annotated_type = at;
         } else {
-            assert!(false, "===========else========{:?}", ast);
+            panic!("===========else========{:?}", ast);
         }
         Ok(())
     }
@@ -2657,7 +2657,7 @@ impl TypeCheckVisitor {
                     .reclassify_expr_base_mut_ref()
                     .homomorphism = Some(homomorphism.clone());
             } else {
-                assert!(false, "====================else======={ast:?}");
+                panic!("====================else======={ast:?}");
             }
         }
 
@@ -3054,7 +3054,7 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .expr = expr;
             } else {
-                assert!(false, "=============else==========={ast:?}");
+                panic!("=============else==========={ast:?}");
             }
         }
         Ok(())
@@ -3122,7 +3122,7 @@ impl TypeCheckVisitor {
                 .borrow_mut()
                 .annotated_type = Some(AnnotatedTypeName::address_all());
         } else {
-            assert!(false, "================else======{:?}====", ast);
+            panic!("================else======{:?}====", ast);
         }
         Ok(())
     }
@@ -3329,7 +3329,7 @@ impl TypeCheckVisitor {
             ast.ast_base_ref().unwrap().borrow_mut().annotated_type =
                 Some(type_name.value_type().clone());
         } else {
-            assert!(false, "Indexing into non-mapping{:?}", ast);
+            panic!("Indexing into non-mapping{:?}", ast);
         }
         Ok(())
     }

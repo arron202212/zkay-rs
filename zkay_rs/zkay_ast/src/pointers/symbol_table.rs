@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::ops::DerefMut;
 // from zkay::crate::pointers::pointer_exceptions import UnknownIdentifierException
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn fill_symbol_table(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let mut v = SymbolTableFiller::new(global_vars);
@@ -674,11 +674,37 @@ impl SymbolTableLinker {
                     .borrow()
                     .parent()
                     .as_ref()
-                    .map_or(true, |decl_parent| {
-                        let decl_parent = decl_parent.clone().upgrade().unwrap();
-                        !is_instance(&decl_parent, ASTType::VariableDeclarationStatement)
-                            || !decl_parent.is_parent_of(ast)
-                    })
+                    .is_none()
+                    || !is_instance(
+                        &decl
+                            .clone()
+                            .unwrap()
+                            .upgrade()
+                            .unwrap()
+                            .ast_base_ref()
+                            .unwrap()
+                            .borrow()
+                            .parent()
+                            .clone()
+                            .unwrap()
+                            .upgrade()
+                            .unwrap(),
+                        ASTType::VariableDeclarationStatement,
+                    )
+                    || !decl
+                        .clone()
+                        .unwrap()
+                        .upgrade()
+                        .unwrap()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .parent()
+                        .clone()
+                        .unwrap()
+                        .upgrade()
+                        .unwrap()
+                        .is_parent_of(ast)
                 {
                     // println!(
                     //     "===_find_next_decl======return ==={:?}===",
@@ -813,7 +839,7 @@ impl SymbolTableLinker {
     pub fn find_type_declaration(&self, t: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         // //println!("===find_type_declaration======={:?}======", t);
         Self::_find_next_decl(
-            &t,
+            t,
             &t.to_ast()
                 .try_as_type_name_ref()
                 .unwrap()
@@ -874,11 +900,11 @@ impl SymbolTableLinker {
                 if lca
                     .statements()
                     .iter()
-                    .position(|x| ref_anchor == x.clone().into())
+                    .position(|x| ref_anchor == x.clone())
                     <= lca
                         .statements()
                         .iter()
-                        .position(|x| decl_anchor == x.clone().into())
+                        .position(|x| decl_anchor == x.clone())
                 {
                     // println!("=*********===========");
                     _ans = anc.clone();
@@ -928,7 +954,7 @@ impl SymbolTableLinker {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("====visitIdentifierExpr=======begin========={:?}", ast.get_ast_type());
         let mut ast = ast.clone();
-        let fid = self.find_identifier_declaration(&mut ast).ok();
+        let fid = self.find_identifier_declaration(&ast).ok();
         // println!("====visitIdentifierExpr====fid===ast.get_ast_type()========={:?}", ast.get_ast_type());
         let ta = fid.map(|d| d.downgrade());
         // println!("====visitIdentifierExpr=======ta========={:?}", ta);

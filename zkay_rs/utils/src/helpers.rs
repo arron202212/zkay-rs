@@ -101,13 +101,7 @@ pub fn get_contract_names(sol_filename: &str) -> Vec<String> {
 //     return pre + text.replace("\n", "\n" + pre)
 
 pub fn lines_of_code(code: &str) -> i32 {
-    code.split("\n")
-        .filter_map(|l| {
-            if !l.trim().is_empty() && !l.trim().starts_with("//") {
-                Some(l)
-            } else {
-                None
-            }
-        })
+    code.split('\n')
+        .filter(|l| !l.trim().is_empty() && !l.trim().starts_with("//"))
         .count() as _
 }

@@ -116,10 +116,10 @@ pub fn expand_derive_is_enum_variant(ast: &syn::DeriveInput) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     let predicates = variants.variants.iter().map(
-        |&syn::Variant {
-             ref ident,
-             ref fields,
-             ref attrs,
+        |syn::Variant {
+             ident,
+             fields,
+             attrs,
              ..
          }| {
             let cfg = attrs.into();
@@ -180,14 +180,11 @@ pub fn get_names(keywords: &[&str], item: TokenStream) -> String {
     let mut struct_name = String::new();
     let mut it = item.into_iter();
     while let Some(tt) = it.next() {
-        match tt {
-            TokenTree::Ident(id) => {
-                if keywords.iter().any(|kw| id.to_string() == *kw) {
-                    struct_name = it.next().unwrap().to_string();
-                    break;
-                }
+        if let TokenTree::Ident(id) = tt {
+            if keywords.iter().any(|kw| id.to_string() == *kw) {
+                struct_name = it.next().unwrap().to_string();
+                break;
             }
-            _ => {}
         }
     }
     if struct_name.is_empty() {

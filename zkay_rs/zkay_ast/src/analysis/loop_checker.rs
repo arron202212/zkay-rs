@@ -14,7 +14,7 @@ use crate::ast::{
     AST,
 };
 
-use crate::visitor::{
+use crate::visitors::{
     function_visitor::FunctionVisitor,
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
@@ -70,14 +70,7 @@ impl LoopChecker {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
-            !contains_private_expr(
-                &ast.try_as_while_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .condition
-                    .clone()
-                    .into()
-            ),
+            !contains_private_expr(&ast.try_as_while_statement_ref().unwrap().borrow().condition),
             "Loop condition cannot contain private expressions {:?}",
             ast.try_as_while_statement_ref().unwrap().borrow().condition
         );
@@ -106,8 +99,6 @@ impl LoopChecker {
                     .unwrap()
                     .borrow()
                     .condition
-                    .clone()
-                    .into()
             ),
             "Loop condition cannot contain private expressions {:?}",
             ast.try_as_do_while_statement_ref()
@@ -142,8 +133,6 @@ impl LoopChecker {
                     .try_as_for_statement_ref()
                     .unwrap()
                     .condition
-                    .clone()
-                    .into()
             ),
             "Loop condition cannot contain private expressions {:?}",
             ast.to_ast()

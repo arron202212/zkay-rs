@@ -301,7 +301,7 @@ impl<T> Hash for RcCell<T> {
 impl<T: PartialEq> PartialEq for RcCell<T> {
     fn eq(&self, other: &Self) -> bool {
         // self.0.as_ptr() == other.0.as_ptr()
-        &*self.0.borrow() == &*other.0.borrow()
+        *self.0.borrow() == *other.0.borrow()
     }
 }
 impl<T: PartialOrd + Ord> PartialOrd for RcCell<T> {

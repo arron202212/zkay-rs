@@ -129,7 +129,7 @@ impl CircuitGeneratorBase {
         if import_keys {
             for path in self.get_all_key_paths() {
                 if !Path::new(&path).try_exists().map_or(false, |v| v) {
-                    assert!(false, "Zkay contract import failed: Missing keys");
+                    panic!("Zkay contract import failed: Missing keys");
                 }
             }
         } else {

@@ -1101,7 +1101,7 @@ impl ZkayStatementTransformer {
     }
     // """Fail if there are any untransformed expressions left."""
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        assert!(false, "Missed an expression of type {:?}", ast);
+        panic!("Missed an expression of type {:?}", ast);
         Ok(ast.clone())
     }
 }

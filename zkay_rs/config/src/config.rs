@@ -69,6 +69,11 @@ pub struct Config {
     vals: HashMap<String, String>,
     attrs: HashMap<String, String>,
 }
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Config {
     //(UserConfig){
     //     fn __init__(&self){
@@ -133,9 +138,9 @@ impl Config {
     pub fn get_attr(&self, arg: &String) -> String {
         self.attrs.get(arg).unwrap_or(&String::new()).clone()
     }
-    pub fn set_attr(&mut self, arg: &String, val: &Value) {
+    pub fn set_attr(&mut self, arg: &str, val: &Value) {
         self.attrs
-            .insert(arg.clone(), val.as_str().unwrap().to_owned());
+            .insert(arg.to_owned(), val.as_str().unwrap().to_owned());
     }
     pub fn override_defaults(&mut self, overrides: &Map<String, Value>) {
         for (arg, val) in overrides {
@@ -313,7 +318,7 @@ impl Config {
     }
 
     pub fn zk_data_var_name(&self) -> String {
-        format!("{}", self.zk_struct_prefix())
+        self.zk_struct_prefix()
     }
 
     pub fn jsnark_circuit_classname(&self) -> String {

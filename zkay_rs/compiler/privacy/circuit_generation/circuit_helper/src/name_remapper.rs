@@ -131,7 +131,7 @@ impl Remapper {
             v.clone()
         } else {
             if default.is_none() {
-                assert!(false, "default is none");
+                panic!("default is none");
             }
             default.unwrap()
         }

@@ -10,7 +10,7 @@ use crate::ast::{
     FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr,
     LocationExprBaseProperty, AST,
 };
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn contains_private_expr(ast: &ASTFlatten) -> bool {

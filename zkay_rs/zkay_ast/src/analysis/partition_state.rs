@@ -196,14 +196,12 @@ impl<
         let my_vals = self
             ._partitions
             .values()
-            .map(|subset| subset.iter().cloned().collect::<Vec<_>>())
-            .flatten()
+            .flat_map(|subset| subset.iter().cloned().collect::<Vec<_>>())
             .collect::<BTreeSet<_>>();
         let other_vals = other
             ._partitions
             .values()
-            .map(|subset| subset.iter().cloned().collect::<Vec<_>>())
-            .flatten()
+            .flat_map(|subset| subset.iter().cloned().collect::<Vec<_>>())
             .collect::<BTreeSet<_>>();
         // println!("===my_vals.len(),other_vals========================={:?},{:?}",my_vals.iter().map(|x|x.to_string()).collect::<Vec<_>>(),other_vals.iter().map(|x|x.to_string()).collect::<Vec<_>>());
         assert!(
@@ -227,8 +225,7 @@ impl<
     pub fn codes(&self) -> Vec<String> {
         self._partitions
             .values()
-            .map(|subset| subset.iter().map(|x| x.to_string()).collect::<Vec<_>>())
-            .flatten()
+            .flat_map(|subset| subset.iter().map(|x| x.to_string()).collect::<Vec<_>>())
             .collect::<Vec<_>>()
     }
     // """
@@ -244,7 +241,7 @@ impl<
             // shallow copy
             let kept: BTreeSet<T> = p
                 .iter()
-                .filter(|x| project.is_none() || project.as_ref().unwrap().contains(&x))
+                .filter(|x| project.is_none() || project.as_ref().unwrap().contains(x))
                 .cloned()
                 .collect();
             if !kept.is_empty() {
@@ -261,12 +258,11 @@ impl<T: std::fmt::Display + std::cmp::Ord> fmt::Display for PartitionState<T> {
         let mut ps: Vec<_> = self
             ._partitions
             .values()
-            .map(|p| {
+            .flat_map(|p| {
                 let mut s: Vec<_> = p.iter().map(|e| e.to_string()).collect();
                 s.sort();
                 s
             })
-            .flatten()
             .collect();
         ps.sort();
         ps.concat();

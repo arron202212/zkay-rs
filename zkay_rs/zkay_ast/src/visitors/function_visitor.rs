@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{ASTFlatten, IntoAST, Parameter, SourceUnit};
-use crate::visitor::visitor::AstVisitor;
+use crate::visitors::visitor::AstVisitor;
 use rccell::RcCell;
 // class FunctionVisitor(AstVisitor)
 pub trait FunctionVisitor: AstVisitor {

@@ -14,7 +14,11 @@ pub struct Versions {
     pub solc_version: Option<String>,
     pub zkay_solc_version_compatibility: Version,
 }
-
+impl Default for Versions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Versions {
     // pub const zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
     pub const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "0.6.12";
@@ -29,11 +33,10 @@ impl Versions {
         }
     }
     pub fn set_solc_version(&mut self, version: String) {
-        self.solc_version = Some(if version.starts_with("v") {
-            version[1..].to_string()
-        } else {
-            version
-        });
+        self.solc_version = version
+            .strip_prefix('v')
+            .map(|version| version.to_string())
+            .or(Some(version));
     }
 }
 // class Versions:

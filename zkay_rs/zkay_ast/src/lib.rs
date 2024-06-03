@@ -25,4 +25,4 @@ pub mod homomorphism;
 pub mod pointers;
 // pub mod process_ast;
 pub mod circuit_constraints;
-pub mod visitor;
+pub mod visitors;

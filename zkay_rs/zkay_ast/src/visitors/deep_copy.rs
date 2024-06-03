@@ -12,7 +12,7 @@ use crate::ast::{
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_crypto::params::CryptoParams;
@@ -62,7 +62,7 @@ pub fn _replace_ast(old_ast: &ASTFlatten, mut new_ast: &ASTFlatten) {
         old_ast.ast_base_ref().unwrap().borrow().parent().clone();
     DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
     if old_ast.ast_base_ref().unwrap().borrow().parent().is_some() {
-        set_parents(&mut new_ast);
+        set_parents(new_ast);
         let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
         link_identifiers(new_ast, global_vars.clone());
     }
@@ -149,7 +149,7 @@ impl AstVisitor for DeepCopyVisitor {
         //         && !self.setting_later.contains(&k)
         //     {
         //         // && !inspect.getfullargspec(c.__bases__[0].__init__).args[1..].contains(&k)
-        //         assert!(false, "Not copying,{}", k);
+        //         panic!( "Not copying,{}", k);
         //     }
         // }
         // let mut ast_copy = c(new_fields);
@@ -182,28 +182,28 @@ impl DeepCopyVisitor {
         self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let mut ast_copy = self.visit_children(ast);
+        // let mut ast_copy = self.visit_children(ast);
         // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
-        ast_copy
+        self.visit_children(ast)
     }
 
     pub fn visitUserDefinedTypeName(
         self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let mut ast_copy = self.visit_children(ast);
+        // let mut ast_copy = self.visit_children(ast);
         // ast_copy.target = ast.target;
-        ast_copy
+        self.visit_children(ast)
     }
 
     pub fn visitBuiltinFunction(
         self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let mut ast_copy = self.visit_children(ast);
+        // let mut ast_copy = self.visit_children(ast);
         // ast_copy.is_private = ast.is_private;
         // ast_copy.homomorphism = ast.homomorphism;
-        ast_copy
+        self.visit_children(ast)
     }
 
     pub fn visitExpression(self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {

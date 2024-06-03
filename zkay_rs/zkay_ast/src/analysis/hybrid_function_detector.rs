@@ -13,7 +13,7 @@ use crate::ast::{
     FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, LocationExpr,
     LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
 };
-use crate::visitor::{
+use crate::visitors::{
     function_visitor::FunctionVisitor,
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
@@ -87,6 +87,7 @@ impl DirectHybridFunctionDetectionVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(ast, ASTType::ReclassifyExpr) {
+            println!("======*********************=============");
             ast.try_as_reclassify_expr_ref()
                 .unwrap()
                 .borrow_mut()
@@ -132,6 +133,7 @@ impl DirectHybridFunctionDetectionVisitor {
             .borrow()
             .evaluate_privately()
         {
+            println!("======*********************=============");
             ast.to_ast()
                 .try_as_expression_ref()
                 .unwrap()
@@ -203,24 +205,28 @@ impl DirectHybridFunctionDetectionVisitor {
                     .unwrap()
                     .evaluate_privately();
         if flag {
-            // ast.to_ast().try_as_expression_ref().unwrap()
-            // .statement()
-            // .clone()
-            // .unwrap()
-            // .upgrade()
-            // .unwrap().to_ast()
-            // .try_as_statement_ref()
-            // .unwrap()
-            // .statement_base_ref()
-            // .unwrap()
-            // .function
-            // .clone()
-            // .unwrap()
-            // .upgrade()
-            // .unwrap().try_as_constructor_or_function_definition_ref()
-            // .unwrap()
-            // .borrow_mut()
-            // .requires_verification = true;
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .statement()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .to_ast()
+                .try_as_statement_ref()
+                .unwrap()
+                .statement_base_ref()
+                .unwrap()
+                .function
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .requires_verification = true;
             return Ok(());
         }
 
@@ -257,26 +263,27 @@ impl DirectHybridFunctionDetectionVisitor {
                     .borrow_mut()
                     .requires_verification_when_external = true;
             } else {
-                for param in &ast
+                let is_private = ast
                     .try_as_constructor_or_function_definition_ref()
                     .unwrap()
                     .borrow()
                     .parameters
-                {
-                    if param
-                        .borrow()
-                        .annotated_type()
-                        .as_ref()
+                    .iter()
+                    .any(|param| {
+                        param
+                            .borrow()
+                            .annotated_type()
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .is_private()
+                    });
+
+                if is_private {
+                    ast.try_as_constructor_or_function_definition_ref()
                         .unwrap()
-                        .borrow()
-                        .is_private()
-                    {
-                        // ast.try_as_constructor_or_function_definition_ref()
-                        //     .unwrap()
-                        //     .borrow_mut()
-                        //     .requires_verification_when_external = true;
-                        break;
-                    }
+                        .borrow_mut()
+                        .requires_verification_when_external = true;
                 }
             }
         }

@@ -135,7 +135,7 @@ impl FinalVisitor {
 
         for (sv, assigned) in self.state_vars_assigned.borrow().as_ref().unwrap() {
             if !assigned {
-                assert!(false, "Did not set all final state variables {}", sv)
+                panic!("Did not set all final state variables {}", sv)
             }
         }
 

@@ -79,8 +79,7 @@ pub fn run_commands(
     if !process.status.success() {
         let cmd = get_command(cmd);
         // raise subprocess.SubprocessError(msg)
-        assert!(
-            false,
+        panic!(
             "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output:?}\n{error:?}",
             process.status
         );
@@ -96,7 +95,7 @@ pub fn run_commands(
 
 pub fn get_command(cmd: Vec<String>) -> String {
     fn format_part(p: &String) -> String {
-        if p.contains(" ") {
+        if p.contains(' ') {
             format!(r#""{p}""#)
         } else {
             p.to_owned()

@@ -256,7 +256,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         .unwrap_or(false)
     {
         // raise RuntimeError("Zkay contract::failed: Manifest file is missing")
-        assert!(false, "Zkay contract::failed: Manifest file is missing");
+        panic!("Zkay contract::failed: Manifest file is missing");
     }
 
     // Generate circuits and corresponding verification contracts

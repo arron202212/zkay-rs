@@ -17,11 +17,11 @@ macro_rules! lc_vec_s {
     () => { Vec::<String>::new() };
     ( $( $x:expr ),* ) => {
       {
-          let mut temp_vec = Vec::<String>::new();
-          $(
-              temp_vec.push( String::from( $x ) );
-          )*
-          temp_vec
+       let mut temp= vec![ ];
+        $(
+        temp.push(String::from( $x ));
+        )*
+        temp
       }
   };
 }
@@ -33,16 +33,14 @@ macro_rules! lc_string_vec {
   };
   ( $x:expr ) => {
     {
-      let mut temp_vec = Vec::<Option<String>>::new();
-      temp_vec.push( Some(String::from($x)) );
-      temp_vec
+       vec![Some(String::from($x)) ]
     }
   };
   ( null ,  $($rest: tt),* ) => {
     {
       let mut temp_vec = Vec::<Option<String>>::new();
       temp_vec.push(None);
-      temp_vec.extend( ( crate::lc_string_vec![ $($rest),*  ] ));
+      temp_vec.extend( ( $crate::lc_string_vec![ $($rest),*  ] ));
       temp_vec
     }
   };
@@ -50,7 +48,7 @@ macro_rules! lc_string_vec {
     {
       let mut temp_vec = Vec::<Option<String>>::new();
       temp_vec.push( Some(String::from($x)) );
-      temp_vec.extend( ( crate::lc_string_vec![ $($rest),* ]  ));
+      temp_vec.extend( ( $crate::lc_string_vec![ $($rest),* ]  ));
       temp_vec
     }
   };
@@ -109,6 +107,11 @@ pub struct UserConfig {
     pub _verbosity: i32,
 
     pub _disable_verification: bool,
+}
+impl Default for UserConfig {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 impl UserConfig {
     pub fn new() -> Self {
@@ -260,7 +263,7 @@ impl UserConfig {
     }
 
     pub fn _get_crypto_backend(&self, hom: &String) -> Option<String> {
-        self._crypto_backends.get(hom).clone().cloned()
+        self._crypto_backends.get(hom).cloned()
     }
 
     pub fn set_crypto_backend(&mut self, hom: &String, val: String) {
@@ -293,11 +296,9 @@ impl UserConfig {
         crypto_backends
             .iter()
             .filter_map(|backend| {
-                if let Some(backend) = backend {
-                    Some(CryptoParams::new(backend.clone()))
-                } else {
-                    None
-                }
+                backend
+                    .as_ref()
+                    .map(|backend| CryptoParams::new(backend.clone()))
             })
             .collect()
     }

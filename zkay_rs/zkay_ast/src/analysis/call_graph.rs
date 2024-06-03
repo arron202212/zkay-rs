@@ -12,7 +12,7 @@ use crate::ast::{
     FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
     WhileStatement, AST,
 };
-use crate::visitor::{
+use crate::visitors::{
     function_visitor::FunctionVisitor,
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
@@ -292,7 +292,7 @@ impl IndirectCalledFunctionDetector {
                 .len();
             leaves = leaves
                 .iter()
-                .map(|leaf| {
+                .flat_map(|leaf| {
                     leaf.borrow()
                         .called_functions
                         .iter()
@@ -306,7 +306,6 @@ impl IndirectCalledFunctionDetector {
                         .cloned()
                         .collect::<Vec<_>>()
                 })
-                .flatten()
                 .collect();
             let cf = ast
                 .try_as_constructor_or_function_definition_ref()
@@ -327,7 +326,7 @@ impl IndirectCalledFunctionDetector {
             .unwrap()
             .borrow()
             .called_functions
-            .contains(&ast.try_as_constructor_or_function_definition_ref().unwrap())
+            .contains(ast.try_as_constructor_or_function_definition_ref().unwrap())
         {
             ast.try_as_constructor_or_function_definition_ref()
                 .unwrap()

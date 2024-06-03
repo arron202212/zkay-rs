@@ -88,7 +88,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
         close_sym = ']'
     } else {
         // raise ValueError("Unsupported parenthesis type")
-        assert!(false, "Unsupported parenthesis type");
+        panic!("Unsupported parenthesis type");
     }
 
     let pattern = Regex::new(&format!("[{open_sym}{close_sym}]")).unwrap();

@@ -279,7 +279,7 @@ pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut at = args.vars.iter();
     let mut impls = items + "\n";
     let mut struct_vairent = String::from("self");
-    while let Some(base_struct_name) = at.next() {
+    for base_struct_name in at {
         let base_struct_name = base_struct_name.to_string();
         let fn_name = base_struct_name.to_snake_case();
         struct_vairent += ".";
@@ -344,7 +344,7 @@ pub fn impl_trait(attr: TokenStream, item: TokenStream) -> TokenStream {
     // let mut at = at.trim_matches('"');
     // let mut at = at.split(",");
     let mut impls = items + "\n";
-    while let Some(struct_name) = at.next() {
+    for struct_name in at {
         let struct_name = struct_name.to_string();
         let s = format!(
             "impl {trait_name} for {struct_name} {{
@@ -354,12 +354,12 @@ pub fn impl_trait(attr: TokenStream, item: TokenStream) -> TokenStream {
             if struct_ref == "ASTBase" {
                 "RcCell<ASTBase>".to_owned()
             } else {
-                "&".to_owned() + &struct_ref
+                "&".to_owned() + struct_ref
             },
             if struct_ref == "ASTBase" {
                 "self.ast_base.clone()".to_owned()
             } else {
-                "&self.".to_owned() + &struct_vairent
+                "&self.".to_owned() + struct_vairent
             },
         );
         impls += &s;
@@ -373,11 +373,9 @@ pub fn derive_is_enum_variant(tokens: TokenStream) -> TokenStream {
 
     let ast = parse_macro_input!(tokens as DeriveInput);
     // syn::parse_derive_input(&source).expect("should parse input tokens into AST");
-    let expanded = zkay_derive_core::expand_derive_is_enum_variant(&ast);
-
-    expanded
     // .parse()
     // .expect("should parse expanded output source into tokens")
+    zkay_derive_core::expand_derive_is_enum_variant(&ast)
 }
 
 extern crate proc_macro;
@@ -403,8 +401,8 @@ macro_rules! derive_error {
 pub fn derive_is_variant(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    let ref name = input.ident;
-    let ref data = input.data;
+    let name = input.ident;
+    let data = input.data;
 
     let mut variant_checker_functions;
 
@@ -413,7 +411,7 @@ pub fn derive_is_variant(input: TokenStream) -> TokenStream {
             variant_checker_functions = TokenStream2::new();
 
             for variant in &data_enum.variants {
-                let ref variant_name = variant.ident;
+                let variant_name = &variant.ident;
                 let fields_in_variant = match &variant.fields {
                     Fields::Unnamed(_) => quote_spanned! {variant.span()=> (..) },
                     Fields::Unit => quote_spanned! { variant.span()=> },

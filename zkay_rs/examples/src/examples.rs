@@ -117,7 +117,7 @@ impl Example {
         let mut file = File::open(&self.file_location).expect("");
         let mut s = String::new();
         file.read_to_string(&mut s).unwrap();
-        let s = s.replace("\t", &CFG.lock().unwrap().user_config.indentation());
+        let s = s.replace('\t', &CFG.lock().unwrap().user_config.indentation());
         s
     }
 
@@ -222,7 +222,7 @@ mod tests {
 macro_rules! file_abs_workspace {
     () => {
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join(crate::examples::pop_first_two_path_components(file!()))
+            .join($crate::examples::pop_first_two_path_components(file!()))
     };
 }
 

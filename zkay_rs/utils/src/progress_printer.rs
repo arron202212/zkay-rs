@@ -23,23 +23,23 @@ pub enum TermColor {
 impl TermColor {
     pub fn value(&self) -> &'static str {
         match self {
-            Self::HEADER => "\033[95m",
-            Self::OKBLUE => "\033[94m",
-            Self::OKGREEN => "\033[92m",
-            Self::WARNING => "\033[93m",
-            Self::FAIL => "\033[91m",
-            Self::ENDC => "\033[0m",
-            Self::BOLD => "\033[1m",
-            Self::UNDERLINE => "\033[4m",
+            Self::HEADER => "\x1b[95m",
+            Self::OKBLUE => "\x1b[94m",
+            Self::OKGREEN => "\x1b[92m",
+            Self::WARNING => "\x1b[93m",
+            Self::FAIL => "\x1b[91m",
+            Self::ENDC => "\x1b[0m",
+            Self::BOLD => "\x1b[1m",
+            Self::UNDERLINE => "\x1b[4m",
         }
     }
 }
 
 // @contextlib.contextmanager
 pub fn colored_print(color: TermColor) {
-    print!("{},{}", color.value(), "");
+    print!("{},''", color.value());
     // yield
-    print!("{},{}", TermColor::ENDC.value(), "");
+    print!("{},''", TermColor::ENDC.value());
 }
 
 // def fail_print() -> ContextManager:

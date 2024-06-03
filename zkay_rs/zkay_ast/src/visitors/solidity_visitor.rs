@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 
 use crate::ast::{ASTFlatten, AnnotatedTypeName, CodeVisitor, IntoAST, MeExpr, AST};
-use crate::visitor::visitor::AstVisitor;
+use crate::visitors::visitor::AstVisitor;
 use zkay_config::config::CFG;
 
 pub fn to_solidity(ast: &ASTFlatten) -> String {
@@ -15,6 +15,7 @@ pub fn to_solidity(ast: &ASTFlatten) -> String {
 }
 
 // class SolidityVisitor(CodeVisitor)
+
 pub struct SolidityVisitor {
     pub code_visitor_base: CodeVisitor,
 }

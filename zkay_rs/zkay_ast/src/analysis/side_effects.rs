@@ -15,7 +15,7 @@ use crate::ast::{
     SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr,
     VariableDeclaration, AST,
 };
-use crate::visitor::{
+use crate::visitors::{
     function_visitor::FunctionVisitor,
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
 };
@@ -151,7 +151,7 @@ impl SideEffectsDetector {
     }
 
     pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(ast.children().iter().any(|c| self.visit(&c)))
+        Ok(ast.children().iter().any(|c| self.visit(c)))
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
@@ -223,9 +223,9 @@ impl DirectModificationDetector {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         self.visitAST(ast)?;
-        self.collect_modified_values(
+        Self::collect_modified_values(
             ast,
-            &ast.to_ast()
+            ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
                 .try_as_simple_statement_ref()
@@ -233,14 +233,13 @@ impl DirectModificationDetector {
                 .try_as_assignment_statement_ref()
                 .unwrap()
                 .lhs()
-                .clone()
-                .unwrap()
-                .into(),
+                .as_ref()
+                .unwrap(),
         );
         Ok(())
     }
 
-    pub fn collect_modified_values(&self, target: &ASTFlatten, expr: &ASTFlatten) {
+    pub fn collect_modified_values(target: &ASTFlatten, expr: &ASTFlatten) {
         if is_instance(expr, ASTType::TupleExpr) {
             for elem in &expr
                 .try_as_expression_ref()
@@ -252,10 +251,10 @@ impl DirectModificationDetector {
                 .unwrap()
                 .elements
             {
-                self.collect_modified_values(target, &elem.clone().into());
+                Self::collect_modified_values(target, &elem.clone());
             }
         } else {
-            let mod_value = InstanceTarget::new(vec![Some((expr.clone()).into())]);
+            let mod_value = InstanceTarget::new(vec![Some(expr.clone())]);
             assert!(!target
                 .ast_base_ref()
                 .unwrap().borrow()
@@ -606,13 +605,10 @@ impl EvalOrderUBChecker {
                 // modset = modset.union(diffset).collect();
             }
 
-            for arg in &*exprs {
+            for arg in exprs {
                 let modset: BTreeSet<_> =
                     arg.ast_base_ref().unwrap().borrow().modified_values.clone();
-                let other_args: BTreeSet<_> = exprs
-                    .iter()
-                    .filter_map(|e| if e != arg { Some(e) } else { None })
-                    .collect();
+                let other_args: BTreeSet<_> = exprs.iter().filter(|e| *e != arg).cloned().collect();
                 for arg2 in &other_args {
                     let read_values = arg2.ast_base_ref().unwrap().borrow().read_values.clone();
                     let diffset: BTreeSet<_> = modset.intersection(&read_values).collect();
@@ -656,23 +652,21 @@ impl EvalOrderUBChecker {
                 .unwrap()
                 .func(),
             ASTType::BuiltinFunction,
-        ) {
-            if ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .try_as_builtin_function_ref()
-                .unwrap()
-                .has_shortcircuiting()
-            {
-                return Ok(());
-            }
+        ) && ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_function_call_expr_ref()
+            .unwrap()
+            .func()
+            .try_as_expression_ref()
+            .unwrap()
+            .borrow()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .has_shortcircuiting()
+        {
+            return Ok(());
         }
         Self::visit_child_expressions(
             ast,
@@ -682,9 +676,7 @@ impl EvalOrderUBChecker {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .args()
-                .into_iter()
-                .map(|arg| arg.clone().into())
-                .collect(),
+                .to_vec(),
         )
     }
 

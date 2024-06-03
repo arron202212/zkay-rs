@@ -10,7 +10,7 @@ use crate::ast::{
     ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
     Identifier, IntoAST, NamespaceDefinition, SourceUnit, Statement, StatementBaseMutRef, AST,
 };
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
 use zkay_derive::ASTVisitorBaseRefImpl;
 #[derive(ASTVisitorBaseRefImpl)]
@@ -93,11 +93,8 @@ impl ParentSetterVisitor {
                     .unwrap()
                     .borrow()
                     .namespace
-                    .as_ref()
-                    .unwrap()
-                    .iter()
-                    .cloned()
-                    .collect();
+                    .clone()
+                    .unwrap();
                 p.push(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
@@ -142,9 +139,7 @@ impl ParentSetterVisitor {
                     .namespace()
                     .as_ref()
                     .unwrap()
-                    .into_iter()
-                    .cloned()
-                    .collect();
+                    .to_vec();
                 p.push(
                     ast.try_as_constructor_or_function_definition_ref()
                         .unwrap()
@@ -256,7 +251,7 @@ impl ExpressionToStatementVisitor {
                     .expression_base_mut_ref()
                     .statement = parent.map(|p| p.clone().downgrade());
             } else {
-                assert!(false, "===================else======={ast:?}");
+                panic!("===================else======={ast:?}");
             }
         }
         Ok(())

@@ -58,18 +58,18 @@ pub trait AstVisitor: AstVisitorBaseProperty {
 
         if self.traversal() == "post" {
             // println!("===post={:?}==",ast.get_ast_type());
-            ret_children = self.visit_children(&ast).ok();
+            ret_children = self.visit_children(ast).ok();
         }
-        let f = self.get_visit_function(ast.get_ast_type(), &ast);
+        let f = self.get_visit_function(ast.get_ast_type(), ast);
         // println!("===get_visit_function={:?}==",ast.get_ast_type());
         if f.is_some() {
             ret = f;
         } else if self.traversal() == "node-or-children" {
-            ret_children = self.visit_children(&ast).ok();
+            ret_children = self.visit_children(ast).ok();
         }
 
         if self.traversal() == "pre" {
-            ret_children = self.visit_children(&ast).ok();
+            ret_children = self.visit_children(ast).ok();
         }
         if ret.is_some() {
             // Some(ret)

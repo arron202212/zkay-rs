@@ -10,7 +10,7 @@ use crate::ast::{
     is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, Block,
     ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, StatementListBaseProperty, AST,
 }; //, AstException
-use crate::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_return(ast: &ASTFlatten) {
     let v = ReturnCheckVisitor::new();

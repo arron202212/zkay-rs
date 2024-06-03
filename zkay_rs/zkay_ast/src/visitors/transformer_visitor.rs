@@ -54,7 +54,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     }
     fn has_attr(&self, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten>;
-    fn visit_list(&self, ast_list: &Vec<ASTFlatten>) -> Vec<ASTFlatten> {
+    fn visit_list(&self, ast_list: &[ASTFlatten]) -> Vec<ASTFlatten> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
@@ -70,7 +70,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
             print!("Visiting {:?}", ast);
         }
 
-        self.get_visit_function(ast.get_ast_type(), &ast)
+        self.get_visit_function(ast.get_ast_type(), ast)
     }
 
     fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
