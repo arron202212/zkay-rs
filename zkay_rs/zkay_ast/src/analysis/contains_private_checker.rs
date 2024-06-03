@@ -70,22 +70,33 @@ impl ContainsPrivVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         if is_instance(
-            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func(),
             ASTType::LocationExprBase,
         ) && !ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .try_as_function_call_expr_ref()
             .unwrap()
-            .borrow()
             .is_cast()
         {
             *self.contains_private.borrow_mut() |= ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .borrow()
                 .try_as_location_expr_ref()
                 .unwrap()
                 .target()
@@ -94,9 +105,9 @@ impl ContainsPrivVisitor {
                 .clone()
                 .upgrade()
                 .unwrap()
+                .to_ast()
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .borrow()
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .requires_verification;
@@ -106,9 +117,9 @@ impl ContainsPrivVisitor {
 
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
+            .to_ast()
             .try_as_expression_ref()
             .unwrap()
-            .borrow()
             .evaluate_privately()
         {
             *self.contains_private.borrow_mut() = true;

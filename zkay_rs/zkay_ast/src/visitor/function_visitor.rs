@@ -15,16 +15,25 @@ pub trait FunctionVisitor: AstVisitor {
     // fn traversal(&self) -> &'static str {
     //     "node-or-children"
     // }
-    fn visitSourceUnit(&self, ast: &ASTFlatten) {
-        for c in &ast.try_as_source_unit_ref().unwrap().borrow().contracts {
-            for cd in &c.borrow().constructor_definitions {
+    fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        for c in ast
+            .try_as_source_unit_ref()
+            .unwrap()
+            .borrow()
+            .contracts
+            .clone()
+        {
+            for cd in c.borrow().constructor_definitions.clone() {
                 self.visit(&cd.clone().into());
             }
-            for fd in &c.borrow().function_definitions {
+            for fd in c.borrow().function_definitions.clone() {
                 self.visit(&fd.clone().into());
             }
         }
+        Ok(<Self as AstVisitor>::temper_result(self))
     }
 
-    fn visitParameter(&self, _ast: &ASTFlatten) {}
+    fn visitParameter(&self, _ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(<Self as AstVisitor>::temper_result(self))
+    }
 }

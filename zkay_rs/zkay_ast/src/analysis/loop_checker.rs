@@ -41,11 +41,17 @@ impl AstVisitor for LoopChecker {
     fn has_attr(&self, ast: &AST) -> bool {
         matches!(
             ast.get_ast_type(),
-            ASTType::WhileStatement | ASTType::DoWhileStatement | ASTType::ForStatement
+            ASTType::SourceUnit
+                | ASTType::Parameter
+                | ASTType::WhileStatement
+                | ASTType::DoWhileStatement
+                | ASTType::ForStatement
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             ASTType::WhileStatement => self.visitWhileStatement(ast),
             ASTType::DoWhileStatement => self.visitDoWhileStatement(ast),
             ASTType::ForStatement => self.visitForStatement(ast),
@@ -130,45 +136,68 @@ impl LoopChecker {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
             !contains_private_expr(
-                &ast.try_as_for_statement_ref()
+                &ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_for_statement_ref()
+                    .unwrap()
                     .condition
                     .clone()
                     .into()
             ),
             "Loop condition cannot contain private expressions {:?}",
-            ast.try_as_for_statement_ref().unwrap().borrow().condition
+            ast.to_ast()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_for_statement_ref()
+                .unwrap()
+                .condition
         );
         assert!(
             !contains_private_expr(
-                &ast.try_as_for_statement_ref()
+                &ast.to_ast()
+                    .try_as_statement_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_for_statement_ref()
+                    .unwrap()
                     .body
                     .clone()
                     .into()
             ),
             "Loop body cannot contain private expressions {:?}",
-            ast.try_as_for_statement_ref().unwrap().borrow().body
+            ast.to_ast()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_for_statement_ref()
+                .unwrap()
+                .body
         );
         assert!(
-            ast.try_as_for_statement_ref()
+            ast.to_ast()
+                .try_as_statement_ref()
                 .unwrap()
-                .borrow()
+                .try_as_for_statement_ref()
+                .unwrap()
                 .update
                 .is_none()
                 || contains_private_expr(
-                    &ast.try_as_for_statement_ref()
+                    &ast.to_ast()
+                        .try_as_statement_ref()
                         .unwrap()
-                        .borrow()
+                        .try_as_for_statement_ref()
+                        .unwrap()
                         .update
                         .clone()
                         .unwrap()
                         .into()
                 ),
             "Loop update statement cannot contain private expressions {:?}",
-            ast.try_as_for_statement_ref().unwrap().borrow().update
+            ast.to_ast()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_for_statement_ref()
+                .unwrap()
+                .update
         );
         self.visit_children(ast)
     }

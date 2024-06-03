@@ -1755,9 +1755,9 @@ println!("======visit_functionDefinition====================={annotated_type:?}=
                 .unwrap()
                 .try_as_annotated_type_name()
         });
-        println!(
-            "======visit_stateVariableDeclaration====================={annotated_type:?}======"
-        );
+        // println!(
+        //     "======visit_stateVariableDeclaration====================={annotated_type:?}======"
+        // );
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1830,7 +1830,7 @@ println!("======visit_functionDefinition====================={annotated_type:?}=
                 .clone()
                 .and_then(|ast| ast.try_as_annotated_type_name())
         });
-        println!("======visit_parameter====================={annotated_type:?}======");
+        // println!("======visit_parameter====================={annotated_type:?}======");
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1860,7 +1860,7 @@ println!("======visit_functionDefinition====================={annotated_type:?}=
                 .clone()
                 .and_then(|ast| ast.try_as_annotated_type_name())
         });
-        println!("======visit_variableDeclaration====================={annotated_type:?}======");
+        // println!("======visit_variableDeclaration====================={annotated_type:?}======");
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()

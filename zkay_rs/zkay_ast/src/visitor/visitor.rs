@@ -95,7 +95,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         // println!("====={:?}=========visit_children=========begin====",ast.get_ast_type());
         let mut ret = self.temper_result();
         for c in ast.children() {
-            // println!("==============sssss=============");
+            // println!("=========={:?}====visit_children======={:?}======",ast.get_ast_type(),c.get_ast_type());
             ret = self.visit(&c);
         }
         // println!("====={:?}=========visit_children=========end====",ast.get_ast_type());

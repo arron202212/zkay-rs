@@ -167,7 +167,9 @@ impl AstVisitor for DirectModificationDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         matches!(
             ast.get_ast_type(),
-            ASTType::LocationExprBase
+            ASTType::SourceUnit
+                | ASTType::Parameter
+                | ASTType::LocationExprBase
                 | ASTType::VariableDeclaration
                 | ASTType::AssignmentStatementBase
         ) || matches!(
@@ -184,6 +186,8 @@ impl AstVisitor for DirectModificationDetector {
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::TupleOrLocationExpr(
@@ -355,13 +359,13 @@ impl AstVisitor for IndirectModificationDetector {
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, ast: &AST) -> bool {
-        matches!(
-            ast.to_ast(),
-            AST::Expression(Expression::FunctionCallExpr(_))
-        )
+        matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::Parameter)
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))

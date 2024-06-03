@@ -4676,6 +4676,7 @@ impl HybridArgumentIdf {
                     Some(p.clone().downgrade())
                 }
             });
+            println!("===statement========{},======={}", file!(), line!());
             ma
         }
     }
@@ -4716,6 +4717,8 @@ impl HybridArgumentIdf {
                 Some(p.clone().downgrade())
             }
         });
+        println!("===statement========{},======={}", file!(), line!());
+
         Some(ie)
     }
 
@@ -6101,11 +6104,11 @@ impl TypeName {
         other_type: &RcCell<TypeName>,
         _convert_literals: bool,
     ) -> Option<RcCell<Self>> {
-        println!(
-            "=======combined_type======{:?}===={:?}=========",
-            self.get_ast_type(),
-            other_type.borrow().get_ast_type()
-        );
+        // println!(
+        //     "=======combined_type======{:?}===={:?}=========",
+        //     self.get_ast_type(),
+        //     other_type.borrow().get_ast_type()
+        // );
         match self {
             Self::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(blt)) => {
                 Some(blt.combined_type(other_type, _convert_literals))
@@ -6131,11 +6134,11 @@ impl TypeName {
         other_type: &RcCell<TypeName>,
         _convert_literals: bool,
     ) -> Option<RcCell<Self>> {
-        println!(
-            "=======combined_type_base======{:?}===={:?}=========",
-            self.get_ast_type(),
-            other_type.borrow().get_ast_type()
-        );
+        // println!(
+        //     "=======combined_type_base======{:?}===={:?}=========",
+        //     self.get_ast_type(),
+        //     other_type.borrow().get_ast_type()
+        // );
 
         let selfs = RcCell::new(self.clone());
         if other_type.borrow().implicitly_convertible_to(&selfs) {
@@ -6657,13 +6660,13 @@ impl UintTypeName {
         }
     }
     pub fn implicitly_convertible_to(&self, expected: &RcCell<TypeName>) -> bool {
-        println!(
-            "===implicitly_convertible_to=======UintTypeName========={}==={}======{}={}==",
-            NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected),
-            is_instance(expected, ASTType::UintTypeName),
-            expected.borrow().elem_bitwidth(),
-            self.number_type_name_base.elem_bitwidth()
-        );
+        // println!(
+        //     "===implicitly_convertible_to=======UintTypeName========={}==={}======{}={}==",
+        //     NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected),
+        //     is_instance(expected, ASTType::UintTypeName),
+        //     expected.borrow().elem_bitwidth(),
+        //     self.number_type_name_base.elem_bitwidth()
+        // );
         // Implicitly convert smaller i32 types to larger i32 types
         NumberTypeName::UintTypeName(self.clone()).implicitly_convertible_to(expected)
             || (is_instance(expected, ASTType::UintTypeName)

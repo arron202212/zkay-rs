@@ -231,19 +231,32 @@ impl ExpressionToStatementVisitor {
                 .clone();
         }
         if parent.is_some() {
-            //  println!("=====visitExpression========p============{:?}",ast);
+            if ast.get_ast_type() == ASTType::IdentifierExpr {
+                println!(
+                    "=====statement========={:?}==========={:?}",
+                    parent.as_ref().unwrap().to_string(),
+                    parent.as_ref().unwrap().get_ast_type()
+                );
+            }
             if ast.is_expression() {
                 ast.try_as_expression_ref()
                     .unwrap()
                     .borrow_mut()
                     .expression_base_mut_ref()
                     .statement = parent.map(|p| p.clone().downgrade());
+                //      println!("=====statement=====is_expression===={:?}===========",ast.try_as_expression_ref()
+                // .unwrap()
+                // .borrow_mut()
+                // .expression_base_mut_ref()
+                // .statement.is_some());
             } else if ast.is_location_expr() {
                 ast.try_as_location_expr_ref()
                     .unwrap()
                     .borrow_mut()
                     .expression_base_mut_ref()
                     .statement = parent.map(|p| p.clone().downgrade());
+            } else {
+                assert!(false, "===================else======={ast:?}");
             }
         }
         Ok(())
@@ -303,8 +316,8 @@ impl ExpressionToStatementVisitor {
 }
 
 pub fn set_parents(ast: &ASTFlatten) {
-    let mut v = ParentSetterVisitor::new();
+    let v = ParentSetterVisitor::new();
     v.visit(ast);
-    let mut v = ExpressionToStatementVisitor::new();
+    let v = ExpressionToStatementVisitor::new();
     v.visit(ast);
 }

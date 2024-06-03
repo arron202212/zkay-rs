@@ -46,11 +46,17 @@ impl AstVisitor for DirectCalledFunctionDetector {
     fn has_attr(&self, ast: &AST) -> bool {
         matches!(
             ast.get_ast_type(),
-            ASTType::FunctionCallExprBase | ASTType::ForStatement | ASTType::WhileStatement
+            ASTType::SourceUnit
+                | ASTType::Parameter
+                | ASTType::FunctionCallExprBase
+                | ASTType::ForStatement
+                | ASTType::WhileStatement
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
@@ -236,10 +242,15 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     fn temper_result(&self) -> Self::Return {}
 
     fn has_attr(&self, ast: &AST) -> bool {
-        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
+        matches!(
+            ast.get_ast_type(),
+            ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
+        )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
@@ -340,10 +351,15 @@ impl AstVisitor for IndirectDynamicBodyDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, ast: &AST) -> bool {
-        ASTType::ConstructorOrFunctionDefinition == ast.get_ast_type()
+        matches!(
+            ast.get_ast_type(),
+            ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
+        )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
+            ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
             }
