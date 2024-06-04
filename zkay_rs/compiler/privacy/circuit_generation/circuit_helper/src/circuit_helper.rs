@@ -35,8 +35,8 @@ use zkay_ast::circuit_constraints::{
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
 use zkay_ast::homomorphism::Homomorphism;
-use zkay_ast::visitor::deep_copy::deep_copy;
-use zkay_ast::visitor::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
+use zkay_ast::visitors::deep_copy::deep_copy;
+use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
 // class CircuitHelper

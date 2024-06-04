@@ -36,8 +36,8 @@ use zkay_ast::ast::{
     VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
-use zkay_ast::visitor::deep_copy::replace_expr;
-use zkay_ast::visitor::transformer_visitor::{
+use zkay_ast::visitors::deep_copy::replace_expr;
+use zkay_ast::visitors::transformer_visitor::{
     AstTransformerVisitor, AstTransformerVisitorBase, AstTransformerVisitorBaseRef,
     TransformerVisitorEx,
 };
@@ -1101,8 +1101,7 @@ impl ZkayStatementTransformer {
     }
     // """Fail if there are any untransformed expressions left."""
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        panic!("Missed an expression of type {:?}", ast);
-        Ok(ast.clone())
+        eyre::bail!("Missed an expression of type {:?}", ast);
     }
 }
 // class ZkayExpressionTransformer(AstTransformerVisitor)

@@ -79,7 +79,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
 
     // Determine parenthesis characters
     let open_sym = code.as_bytes()[open_parens_loc as usize] as char;
-    let mut close_sym = ' ';
+    let close_sym;
     if open_sym == '(' {
         close_sym = ')'
     } else if open_sym == '{' {
@@ -87,6 +87,7 @@ pub fn find_matching_parenthesis(code: &str, open_parens_loc: i32) -> i32 {
     } else if open_sym == '[' {
         close_sym = ']'
     } else {
+        // close_sym = ' ';
         // raise ValueError("Unsupported parenthesis type")
         panic!("Unsupported parenthesis type");
     }

@@ -31,8 +31,8 @@ use zkay_ast::ast::{
     StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
     UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
 };
-use zkay_ast::visitor::deep_copy::replace_expr;
-use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_ast::visitors::deep_copy::replace_expr;
+use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn type_check(ast: &ASTFlatten) {
     // println!("==========type_check=====================");

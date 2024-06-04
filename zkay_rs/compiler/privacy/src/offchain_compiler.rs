@@ -16,7 +16,7 @@
 //     StatementList, StructDefinition, NumberTypeName, EnterPrivateKeyStatement, ArrayLiteralExpr, NumberLiteralExpr,
 //     BoolTypeName};
 // use zkay_ast::homomorphism::Homomorphism;
-// use zkay_ast::visitor::python_visitor::PythonCodeVisitor;
+// use zkay_ast::visitors::python_visitor::PythonCodeVisitor;
 
 // pub fn api(name: &str, invoker: &str = "self") -> String
 //    { use zkay_transaction::offchain::ApiWrapper;

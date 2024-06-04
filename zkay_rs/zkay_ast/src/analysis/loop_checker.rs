@@ -162,14 +162,15 @@ impl LoopChecker {
                 .body
         );
         assert!(
-            ast.to_ast()
+            !(ast
+                .to_ast()
                 .try_as_statement_ref()
                 .unwrap()
                 .try_as_for_statement_ref()
                 .unwrap()
                 .update
-                .is_none()
-                || contains_private_expr(
+                .is_some()
+                && contains_private_expr(
                     &ast.to_ast()
                         .try_as_statement_ref()
                         .unwrap()
@@ -179,7 +180,7 @@ impl LoopChecker {
                         .clone()
                         .unwrap()
                         .into()
-                ),
+                )),
             "Loop update statement cannot contain private expressions {:?}",
             ast.to_ast()
                 .try_as_statement_ref()

@@ -24,13 +24,13 @@ pub fn detect_hybrid_functions(ast: &ASTFlatten)
 // :return: marks all functions which will require verification
 // """
 {
-    let mut v = DirectHybridFunctionDetectionVisitor::new();
+    let v = DirectHybridFunctionDetectionVisitor::new();
     v.visit(ast);
 
-    let mut v = IndirectHybridFunctionDetectionVisitor::new();
+    let v = IndirectHybridFunctionDetectionVisitor::new();
     v.visit(ast);
 
-    let mut v = NonInlineableCallDetector::new();
+    let v = NonInlineableCallDetector::new();
     v.visit(ast);
 }
 
@@ -90,25 +90,24 @@ impl DirectHybridFunctionDetectionVisitor {
             println!("======*********************=============");
             ast.try_as_reclassify_expr_ref()
                 .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement
-                .as_mut()
+                .borrow()
+                .statement()
+                .as_ref()
                 .unwrap()
                 .clone()
                 .upgrade()
                 .unwrap()
                 .try_as_statement_ref()
                 .unwrap()
-                .borrow_mut()
-                .statement_base_mut_ref()
+                .borrow()
+                .statement_base_ref()
                 .unwrap()
                 .function
                 .clone()
                 .unwrap()
                 .upgrade()
                 .unwrap()
-                .try_as_constructor_or_function_definition_mut()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow_mut()
                 .requires_verification = true;
@@ -152,7 +151,7 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .upgrade()
                 .unwrap()
-                .try_as_constructor_or_function_definition_mut()
+                .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow_mut()
                 .requires_verification = true;
@@ -236,15 +235,13 @@ impl DirectHybridFunctionDetectionVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        self.visit(
-            &ast.try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .body
-                .clone()
-                .unwrap()
-                .into(),
-        );
+        let body = ast
+            .try_as_constructor_or_function_definition_ref()
+            .unwrap()
+            .borrow()
+            .body
+            .clone();
+        self.visit(&body.unwrap().into());
 
         if ast
             .try_as_constructor_or_function_definition_ref()
@@ -332,31 +329,28 @@ impl IndirectHybridFunctionDetectionVisitor {
             .unwrap()
             .borrow()
             .requires_verification
-        {
-            for fct in &ast
+            && ast
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow()
                 .called_functions
+                .iter()
+                .any(|fct| fct.borrow().requires_verification)
+        {
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .requires_verification = true;
+            if ast
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .can_be_external()
             {
-                if fct.borrow().requires_verification {
-                    ast.try_as_constructor_or_function_definition_ref()
-                        .unwrap()
-                        .borrow_mut()
-                        .requires_verification = true;
-                    if ast
-                        .try_as_constructor_or_function_definition_ref()
-                        .unwrap()
-                        .borrow()
-                        .can_be_external()
-                    {
-                        ast.try_as_constructor_or_function_definition_ref()
-                            .unwrap()
-                            .borrow_mut()
-                            .requires_verification_when_external = true;
-                    }
-                    break;
-                }
+                ast.try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .requires_verification_when_external = true;
             }
         }
         Ok(())

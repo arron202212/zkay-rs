@@ -15,7 +15,7 @@ use zkay_ast::ast::{
     LocationExprBaseProperty, SimpleStatement, StateVariableDeclaration, Statement,
     TupleOrLocationExpr, AST,
 };
-use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_final(ast: &ASTFlatten) {
     let v = FinalVisitor::new();

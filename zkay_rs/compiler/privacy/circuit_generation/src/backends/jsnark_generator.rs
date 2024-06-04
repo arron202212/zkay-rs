@@ -34,7 +34,7 @@ use zkay_ast::ast::{
     PrimitiveCastExpr, TypeName, AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
-use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_config::{config::CFG, zk_print};
 use zkay_derive::ASTVisitorBaseRefImpl;
 use zkay_utils::helpers::{hash_file, hash_string};

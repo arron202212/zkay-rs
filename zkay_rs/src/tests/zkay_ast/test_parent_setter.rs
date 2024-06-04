@@ -7,7 +7,7 @@ mod tests {
     // use rccell::{RcCell, WeakCell};
     use zkay_ast::ast::{is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTType, AST};
     use zkay_ast::pointers::parent_setter::set_parents;
-    use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+    use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
     use zkay_derive::ASTVisitorBaseRefImpl;
     use zkay_examples::examples::ALL_EXAMPLES;
     #[derive(ASTVisitorBaseRefImpl)]

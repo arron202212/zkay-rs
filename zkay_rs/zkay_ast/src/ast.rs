@@ -6342,7 +6342,7 @@ impl NumberTypeNameBase {
             "elem_bitwidth equal zero{}",
             elem_bitwidth
         );
-        let i1 = (int!("1"));
+        let i1 = int!("1");
         if self.signed {
             let v = I256::from(value);
             (-(i1 << (elem_bitwidth - 2))) * 2 <= v && v < ((i1 << (elem_bitwidth - 2) - 1) * 2 + 1)

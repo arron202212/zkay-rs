@@ -16,19 +16,17 @@ pub trait FunctionVisitor: AstVisitor {
     //     "node-or-children"
     // }
     fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        for c in ast
-            .try_as_source_unit_ref()
-            .unwrap()
-            .borrow()
-            .contracts
-            .clone()
-        {
-            for cd in c.borrow().constructor_definitions.clone() {
-                self.visit(&cd.clone().into());
+        let mut definitions = vec![];
+        for c in &ast.try_as_source_unit_ref().unwrap().borrow().contracts {
+            for cd in &c.borrow().constructor_definitions {
+                definitions.push(cd.clone().into());
             }
-            for fd in c.borrow().function_definitions.clone() {
-                self.visit(&fd.clone().into());
+            for fd in &c.borrow().function_definitions {
+                definitions.push(fd.clone().into());
             }
+        }
+        for def in definitions {
+            self.visit(&def);
         }
         Ok(<Self as AstVisitor>::temper_result(self))
     }

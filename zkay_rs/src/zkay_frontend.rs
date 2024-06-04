@@ -48,7 +48,7 @@ use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
 };
 use zkay_ast::homomorphism::Homomorphism;
-use zkay_ast::visitor::solidity_visitor::to_solidity;
+use zkay_ast::visitors::solidity_visitor::to_solidity;
 
 // fn proving_scheme_classes<T,VK>(proving_scheme: &str) -> T
 // where

@@ -10,7 +10,7 @@ use zkay_ast::ast::{
     is_instance, ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty,
     AST,
 };
-use zkay_ast::visitor::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 
 pub fn contains_private(ast: &ASTFlatten) -> bool {

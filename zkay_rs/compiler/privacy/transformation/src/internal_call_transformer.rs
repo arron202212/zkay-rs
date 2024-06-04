@@ -30,14 +30,14 @@ use zkay_crypto::params::CryptoParams;
 // """
 pub fn compute_transitive_circuit_io_sizes(
     fcts_with_verification: &mut Vec<RcCell<ConstructorOrFunctionDefinition>>,
-    cgens: &mut BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
+    cgens: &RcCell<BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>>,
 ) {
     for fct in fcts_with_verification.iter_mut() {
         let mut glob_keys = BTreeSet::new();
         let mut called_fcts = BTreeSet::new();
         let (trans_in_size, trans_out_size, trans_priv_size) =
             _compute_transitive_circuit_io_sizes(cgens, fct, &mut glob_keys, &mut called_fcts);
-        let mut circuit = cgens.get_mut(&fct).unwrap();
+        let mut circuit = cgens.borrow_mut().get_mut(&fct).unwrap().clone();
         circuit.borrow_mut().trans_in_size = trans_in_size;
         circuit.borrow_mut().trans_out_size = trans_out_size;
         circuit.borrow_mut().trans_priv_size = trans_priv_size;
@@ -45,7 +45,7 @@ pub fn compute_transitive_circuit_io_sizes(
         circuit.borrow_mut().transitively_called_functions = called_fcts;
     }
 
-    for (fct, circ) in cgens.iter_mut() {
+    for (fct, circ) in cgens.borrow().iter() {
         if !fct.borrow().requires_verification {
             circ.borrow_mut().trans_out_size = 0;
             circ.borrow_mut().trans_in_size = 0;
@@ -55,20 +55,20 @@ pub fn compute_transitive_circuit_io_sizes(
 }
 
 pub fn _compute_transitive_circuit_io_sizes(
-    cgens: &BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
+    cgens: &RcCell<BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>>,
     fct: &RcCell<ConstructorOrFunctionDefinition>,
     gkeys: &mut BTreeSet<(Option<ASTFlatten>, CryptoParams)>,
     called_fcts: &mut BTreeSet<RcCell<ConstructorOrFunctionDefinition>>,
 ) -> (i32, i32, i32) {
-    let circuit = cgens.get(fct).unwrap();
+    let circuit = cgens.borrow().get(fct).unwrap().clone();
     if circuit.borrow().trans_in_size != 0 {
         //Memoized
         *gkeys = (*gkeys)
-            .union(&cgens[fct].borrow()._global_keys)
+            .union(&cgens.borrow()[fct].borrow()._global_keys)
             .cloned()
             .collect();
         *called_fcts = (*called_fcts)
-            .union(&cgens[fct].borrow().transitively_called_functions)
+            .union(&cgens.borrow()[fct].borrow().transitively_called_functions)
             .cloned()
             .collect();
         return (
@@ -79,10 +79,13 @@ pub fn _compute_transitive_circuit_io_sizes(
     }
 
     *gkeys = (*gkeys)
-        .union(&cgens[fct].borrow().requested_global_keys())
+        .union(&cgens.borrow()[fct].borrow().requested_global_keys())
         .cloned()
         .collect();
-    for call in &cgens[fct].borrow().function_calls_with_verification {
+    for call in &cgens.borrow()[fct]
+        .borrow()
+        .function_calls_with_verification
+    {
         if let Some(cofd) = call
             .borrow()
             .func()
@@ -123,7 +126,7 @@ pub fn _compute_transitive_circuit_io_sizes(
                 .try_as_constructor_or_function_definition_ref()
             {
                 let (i, o, p) = _compute_transitive_circuit_io_sizes(cgens, t, gkeys, called_fcts);
-                if let Some(target_circuit) = cgens.get(&t) {
+                if let Some(target_circuit) = cgens.borrow().get(&t) {
                     insum += i + target_circuit.borrow().in_size();
                     outsum += o + target_circuit.borrow().out_size();
                     psum += p + target_circuit.borrow().priv_in_size();
@@ -150,10 +153,10 @@ pub fn _compute_transitive_circuit_io_sizes(
 // """
 pub fn transform_internal_calls(
     fcts_with_verification: &Vec<RcCell<ConstructorOrFunctionDefinition>>,
-    cgens: &mut BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
+    cgens: &RcCell<BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>>,
 ) {
     for fct in fcts_with_verification {
-        let mut circuit = cgens[&fct].clone();
+        let mut circuit = cgens.borrow()[&fct].clone();
         let (priv_in_size, in_size, out_size) = (
             circuit.borrow().priv_in_size(),
             circuit.borrow().in_size(),
@@ -228,7 +231,7 @@ pub fn transform_internal_calls(
                 .unwrap()
                 .try_as_constructor_or_function_definition_ref()
             {
-                if let Some(cg) = cgens.get(&t) {
+                if let Some(cg) = cgens.borrow().get(&t) {
                     i += cg.borrow().in_size_trans();
                     o += cg.borrow().out_size_trans();
                     p += cg.borrow().priv_in_size_trans();
