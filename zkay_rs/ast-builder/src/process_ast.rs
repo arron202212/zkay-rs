@@ -145,7 +145,7 @@ fn process_ast(
     if parents {
         set_parents(ast);
     }
-    println!("======set_parents===========================");
+    // println!("======set_parents===========================");
     if link_identifiers {
         // try:
         link(ast, global_vars.clone());
@@ -171,7 +171,7 @@ fn process_ast(
         print_step("Zkay type checking");
         // try:
         t(ast);
-        println!("======check_circuit_compliance================*****************===========");
+        // println!("======check_circuit_compliance================*****************===========");
         check_circuit_compliance(ast);
         detect_hybrid_functions(ast);
         check_loops(ast);

@@ -5796,9 +5796,10 @@ impl TypeName {
 
     pub fn cipher_type(plain_type: RcCell<AnnotatedTypeName>, hom: String) -> Self {
         let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(&hom);
-        plain_type.borrow_mut().homomorphism = hom; // Just for display purposes
+        let mut plain_type = plain_type.borrow().clone();
+        plain_type.homomorphism = hom; // Just for display purposes
         TypeName::Array(Array::CipherText(CipherText::new(
-            Some(plain_type),
+            Some(RcCell::new(plain_type)),
             crypto_params,
         )))
     }

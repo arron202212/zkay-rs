@@ -43,6 +43,8 @@ impl<T: AstVisitorBaseRef> AstVisitorBaseProperty for T {
 pub trait AstVisitor: AstVisitorBaseProperty {
     type Return;
     fn visit(&self, ast: &ASTFlatten) -> Self::Return {
+        //     if ast.get_ast_type()==ASTType::SourceUnit
+        //    { println!("==AstVisitor=====visit======{:?}",ast.get_ast_type());}
         self._visit_internal(ast).unwrap()
     }
     fn has_attr(&self, ast: &AST) -> bool;

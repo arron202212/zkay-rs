@@ -226,13 +226,13 @@ impl ExpressionToStatementVisitor {
                 .clone();
         }
         if parent.is_some() {
-            if ast.get_ast_type() == ASTType::IdentifierExpr {
-                println!(
-                    "=====statement========={:?}==========={:?}",
-                    parent.as_ref().unwrap().to_string(),
-                    parent.as_ref().unwrap().get_ast_type()
-                );
-            }
+            // if ast.get_ast_type() == ASTType::IdentifierExpr {
+            //     // println!(
+            //     //     "=====statement========={:?}==========={:?}",
+            //     //     parent.as_ref().unwrap().to_string(),
+            //     //     parent.as_ref().unwrap().get_ast_type()
+            //     // );
+            // }
             if ast.is_expression() {
                 ast.try_as_expression_ref()
                     .unwrap()

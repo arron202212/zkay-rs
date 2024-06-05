@@ -207,10 +207,12 @@ pub fn replace_with_surrogate(
     let mut replacement = replacement_fstr.to_owned();
     let mut search_idx = 0;
     let mut c;
-    loop {
+    let mut flag = true;
+    for _ in 0..100 {
         c = code.clone();
         let matches = search_pattern.captures(&c[search_idx..]);
         if matches.is_none() {
+            flag = false;
             break;
         }
         let end = matches.as_ref().unwrap().get(0).unwrap().end();
@@ -227,6 +229,9 @@ pub fn replace_with_surrogate(
                 keep_repl_pattern.to_owned() + &replacement,
             );
         search_idx += end + 1;
+    }
+    if flag {
+        println!("-=====exit loop exception=================");
     }
     code
 }
@@ -246,12 +251,15 @@ pub fn replace_with_surrogatef(
     let mut replacement = replacement_fstr.to_owned();
     let mut search_idx = 0;
     let mut c;
-    loop {
+    let mut flag = true;
+    for _ in 0..100 {
         c = code.clone();
         let matches = search_pattern
             .captures(&c[search_idx..])
             .expect("Error running regex");
         if matches.is_none() {
+            flag = false;
+            println!("===========matches.is_none()=======");
             break;
         }
         let end = matches.as_ref().unwrap().get(0).unwrap().end();
@@ -268,6 +276,9 @@ pub fn replace_with_surrogatef(
                 keep_repl_pattern.to_owned() + &replacement,
             );
         search_idx += end + 1;
+    }
+    if flag {
+        println!("===========err exit loop=======");
     }
     code
 }

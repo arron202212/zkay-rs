@@ -66,7 +66,7 @@ pub fn transform_ast(
 ) {
     let zt = ZkayTransformer::new();
     let mut new_ast = zt.visit(ast.as_ref().unwrap());
-
+    println!("=============1======");
     // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
 
@@ -175,14 +175,16 @@ pub struct ZkayTransformer {
     var_decl_trafo: ZkayVarDeclTransformer,
 }
 impl AstTransformerVisitor for ZkayTransformer {
-    fn default() -> Self {
-        Self::new()
-    }
+    // fn default() -> Self {
+    //     Self::new()
+    // }
 
     fn has_attr(&self, ast: &AST) -> bool {
+        println!("======has_attr========={:?}", ast.get_ast_type());
         matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::ASTBase)
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        println!("======get_attr========={:?}", name);
         match name {
             ASTType::SourceUnit => self.visitSourceUnit(ast),
             ASTType::ASTBase => <Self as AstTransformerVisitor>::visitAST(self, ast),
@@ -328,30 +330,32 @@ impl ZkayTransformer {
         global_owners: Vec<ASTFlatten>,
         internal_circ: Option<&RcCell<CircuitHelper>>,
     ) -> RcCell<CircuitHelper> {
-        RcCell::new(CircuitHelper::new(
+        CircuitHelper::new(
             fct.clone(),
             global_owners,
-            |ch: &RcCell<CircuitHelper>| {
+            |ch: &WeakCell<CircuitHelper>| {
                 Some(Box::new(ZkayExpressionTransformer::new(Some(ch.clone()))))
             },
-            |ch: &RcCell<CircuitHelper>| {
+            |ch: &WeakCell<CircuitHelper>| {
                 Some(Box::new(ZkayCircuitTransformer::new(Some(ch.clone()))))
             },
             internal_circ.map(|c| c.downgrade()),
-        ))
+        )
     }
     // Figure out which crypto backends were used
     pub fn visitSourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        UsedHomomorphismsVisitor::new().visit(&ast);
-
-        for crypto_params in ast
+        // println!("==visitSourceUnit=========={:?}",ast.get_ast_type());
+        UsedHomomorphismsVisitor::new().visit(ast);
+        println!("=====visitSourceUnit==========");
+        let used_crypto_backends = ast
             .try_as_source_unit_ref()
             .unwrap()
             .borrow()
             .used_crypto_backends
             .as_ref()
             .unwrap()
-        {
+            .clone();
+        for crypto_params in used_crypto_backends {
             Self::import_contract(
                 &CFG.lock()
                     .unwrap()
@@ -360,15 +364,18 @@ impl ZkayTransformer {
                 None,
             );
         }
+        println!("=====visitSourceUnit======2====");
         let mut contracts = ast
             .try_as_source_unit_ref()
             .unwrap()
             .borrow()
             .contracts
             .clone();
-        for c in contracts.iter_mut() {
+        for c in &contracts {
+            println!("=====visitSourceUnit====2==2=");
             self.transform_contract(ast, c);
         }
+        println!("=====visitSourceUnit======3====");
         ast.try_as_source_unit_ref().unwrap().borrow_mut().contracts = contracts;
         Ok(ast.clone())
     }
@@ -393,6 +400,7 @@ impl ZkayTransformer {
         su: &ASTFlatten,
         c: &RcCell<ContractDefinition>,
     ) -> RcCell<ContractDefinition> {
+        println!("=====transform_contract===={}=", line!());
         let mut all_fcts: Vec<_> = c
             .borrow()
             .constructor_definitions
@@ -415,26 +423,26 @@ impl ZkayTransformer {
                     .borrow()
                     .is_address()
                     && (var
+                        .to_ast()
                         .try_as_identifier_declaration_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_state_variable_declaration_ref()
                         .unwrap()
                         .identifier_declaration_base
                         .is_final()
                         || var
+                            .to_ast()
                             .try_as_identifier_declaration_ref()
                             .unwrap()
-                            .borrow()
                             .try_as_state_variable_declaration_ref()
                             .unwrap()
                             .identifier_declaration_base
                             .is_constant())
                 {
                     global_owners.push(
-                        var.try_as_identifier_declaration_ref()
+                        var.to_ast()
+                            .try_as_identifier_declaration_ref()
                             .unwrap()
-                            .borrow()
                             .try_as_state_variable_declaration_ref()
                             .unwrap()
                             .idf()
@@ -445,14 +453,15 @@ impl ZkayTransformer {
                 }
             }
         }
-
+        println!("=====transform_contract===={}=", line!());
         // Backup untransformed function bodies
-        for fct in all_fcts.iter_mut() {
-            fct.borrow_mut().original_body = fct.borrow().body.clone(); //deep_copy(fct.body, true, true);
+        for fct in &all_fcts {
+            let body = fct.borrow().body.clone(); //deep_copy(fct.body, true, true);
+            fct.borrow_mut().original_body = body;
         }
 
         // Transform types of normal state variables
-        c.borrow_mut().state_variable_declarations = self.var_decl_trafo.visit_list(
+        let state_variable_declarations = self.var_decl_trafo.visit_list(
             &c.borrow()
                 .state_variable_declarations
                 .iter()
@@ -460,7 +469,8 @@ impl ZkayTransformer {
                 .map(Into::<ASTFlatten>::into)
                 .collect::<Vec<_>>(),
         );
-
+        c.borrow_mut().state_variable_declarations = state_variable_declarations;
+        println!("=====transform_contract===={}=", line!());
         // Split into functions which require verification and those which don"t need a circuit helper
         let mut req_ext_fcts =
             BTreeMap::<RcCell<ConstructorOrFunctionDefinition>, Vec<RcCell<Parameter>>>::new();
@@ -470,10 +480,12 @@ impl ZkayTransformer {
             if fct.borrow().requires_verification
                 || fct.borrow().requires_verification_when_external
             {
+                println!("=====transform_contract==before=={}=", line!());
                 self.circuits.borrow_mut().insert(
                     fct.clone(),
                     Self::create_circuit_helper(fct, global_owners.clone(), None),
                 );
+                println!("=====transform_contract==after=={}=", line!());
             }
 
             if fct.borrow().requires_verification_when_external {
@@ -484,7 +496,7 @@ impl ZkayTransformer {
                 new_fcts.push(fct.clone());
             }
         }
-
+        println!("=====transform_contract===={}=", line!());
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
             Some(AnnotatedTypeName::uint_all()),
@@ -516,7 +528,7 @@ impl ZkayTransformer {
                 .collect::<Vec<_>>(),
         );
         c.borrow_mut().state_variable_declarations = svd;
-
+        println!("=====transform_contract===={}=", line!());
         // Transform signatures
         for f in all_fcts.iter_mut() {
             f.borrow_mut().parameters = self
@@ -533,6 +545,7 @@ impl ZkayTransformer {
                 .filter_map(|p| p.try_as_parameter())
                 .collect();
         }
+        println!("=====transform_contract===={}=", line!());
         for f in c.borrow_mut().function_definitions.iter_mut() {
             f.borrow_mut().return_parameters = self
                 .var_decl_trafo
@@ -560,17 +573,18 @@ impl ZkayTransformer {
                 .filter_map(|p| p.try_as_variable_declaration())
                 .collect();
         }
-
+        println!("=====transform_contract===={}=", line!());
         // Transform bodies
         for fct in all_fcts.iter_mut() {
             if let Some(circuit) = self.circuits.borrow().get(fct) {
                 let body = fct.borrow().body.clone();
-                fct.borrow_mut().body = ZkayStatementTransformer::new(Some(circuit.clone()))
-                    .visit(&body.clone().unwrap().into())
-                    .and_then(|b| b.try_as_block());
+                fct.borrow_mut().body =
+                    ZkayStatementTransformer::new(Some(circuit.clone().downgrade()))
+                        .visit(&body.clone().unwrap().into())
+                        .and_then(|b| b.try_as_block());
             }
         }
-
+        println!("=====transform_contract===={}=", line!());
         // Transform (internal) functions which require verification (add the necessary additional parameters and boilerplate code)
         let mut fcts_with_verification: Vec<_> = all_fcts
             .iter()
@@ -615,7 +629,7 @@ impl ZkayTransformer {
             }
             self.create_internal_verification_wrapper(f);
         }
-
+        println!("=====transform_contract===={}=", line!());
         // Create external wrapper functions where necessary
         for (f, params) in req_ext_fcts.iter_mut() {
             let (ext_f, int_f) =
@@ -627,7 +641,7 @@ impl ZkayTransformer {
             }
             new_fcts.push(int_f);
         }
-
+        println!("=====transform_contract===={}=", line!());
         c.borrow_mut().constructor_definitions = new_constr;
         c.borrow_mut().function_definitions = new_fcts;
         c.clone()

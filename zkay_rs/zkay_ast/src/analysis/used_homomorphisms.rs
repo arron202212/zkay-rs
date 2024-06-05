@@ -38,11 +38,13 @@ impl AstVisitor for UsedHomomorphismsVisitor {
                 | ASTType::EnumDefinition
                 | ASTType::StructDefinition
                 | ASTType::SourceUnit
+                | ASTType::ASTBase
         ) || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::IdentifierDeclaration(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
+            ASTType::ASTBase => self.visitAST(ast),
             ASTType::SourceUnit => self.visitSourceUnit(ast),
             ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
             ASTType::ConstructorOrFunctionDefinition => {
@@ -59,40 +61,10 @@ impl AstVisitor for UsedHomomorphismsVisitor {
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         let mut all_homs = BTreeSet::new();
-        for c in ast.children().iter_mut() {
+        for c in &ast.children() {
             all_homs = all_homs.union(&self.visit(c)).cloned().collect();
         }
         Ok(all_homs)
-    }
-    fn visit(&self, ast: &ASTFlatten) -> Self::Return {
-        let all_homs = BTreeSet::new(); //AstVisitor::visit(self, ast); //TODO super()
-        if is_instance(ast, ASTType::ConstructorOrFunctionDefinition) {
-            if ast
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .used_homomorphisms
-                .is_some()
-            {
-                ast.try_as_constructor_or_function_definition_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .used_homomorphisms = Some(all_homs.clone());
-            }
-            if ast
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .used_crypto_backends
-                .is_some()
-            {
-                ast.try_as_constructor_or_function_definition_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
-            }
-        }
-        all_homs
     }
 }
 impl UsedHomomorphismsVisitor {
@@ -101,39 +73,64 @@ impl UsedHomomorphismsVisitor {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
         }
     }
+    pub fn visit(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
+        // println!("===visit=======out======={:?}",ast.get_ast_type());
+        let all_homs = <Self as AstVisitor>::visit(self, ast); //TODO super()
 
+        if is_instance(ast, ASTType::SourceUnit) {
+            // println!("===visit=============={:?}",ast.get_ast_type());
+            ast.try_as_source_unit_ref()
+                .unwrap()
+                .borrow_mut()
+                .used_homomorphisms = Some(all_homs.clone());
+
+            ast.try_as_source_unit_ref()
+                .unwrap()
+                .borrow_mut()
+                .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
+        } else if is_instance(ast, ASTType::ConstructorOrFunctionDefinition) {
+            // println!("===visit=============={:?}",ast.get_ast_type());
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .used_homomorphisms = Some(all_homs.clone());
+
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
+        }
+        all_homs
+    }
     pub fn visitAnnotatedTypeName(
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(
-            if ast
+        if ast
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow()
+            .is_private()
+        {
+            return Ok(BTreeSet::from([ast
                 .try_as_annotated_type_name_ref()
                 .unwrap()
                 .borrow()
-                .is_private()
-            {
-                BTreeSet::from([ast
-                    .try_as_annotated_type_name_ref()
-                    .unwrap()
-                    .borrow()
-                    .homomorphism
-                    .clone()])
-            } else {
-                BTreeSet::new()
-            },
-        )
+                .homomorphism
+                .clone()]));
+        }
+        Ok(BTreeSet::new())
     }
 
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         if ast
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
             .is_some()
             && ast
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -142,8 +139,8 @@ impl UsedHomomorphismsVisitor {
                 .borrow()
                 .is_private()
         {
-            Ok(BTreeSet::from([ast
-                .try_as_expression_ref()
+            return Ok(BTreeSet::from([ast
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -154,10 +151,9 @@ impl UsedHomomorphismsVisitor {
                 .clone()])
             .union(&self.visit_children(ast)?)
             .cloned()
-            .collect())
-        } else {
-            self.visit_children(ast)
+            .collect());
         }
+        self.visit_children(ast)
     }
 
     pub fn visitIdentifierDeclaration(
@@ -205,24 +201,21 @@ impl UsedHomomorphismsVisitor {
                 a
             });
         Self::compute_transitive_homomorphisms(&all_fcts);
-        for f in all_fcts.iter_mut() {
-            f.borrow_mut().used_crypto_backends = Some(Self::used_crypto_backends(
+        for f in &all_fcts {
+            let used_crypto_backends = Some(Self::used_crypto_backends(
                 f.borrow().used_homomorphisms.clone().unwrap(),
             ));
+            f.borrow_mut().used_crypto_backends = used_crypto_backends;
         }
         used_homs
     }
     // Invert called_functions relation
     pub fn compute_transitive_homomorphisms(fcts: &Vec<RcCell<ConstructorOrFunctionDefinition>>) {
-        let mut callers = BTreeMap::new(); //<ConstructorOrFunctionDefinition, Vec<ConstructorOrFunctionDefinition>> ;
-        for f in fcts {
-            callers.insert(f.clone(), vec![]);
-        }
+        let mut callers: BTreeMap<_, _> = fcts.iter().map(|f| (f.clone(), vec![])).collect(); //<ConstructorOrFunctionDefinition, Vec<ConstructorOrFunctionDefinition>> ;
         for f in fcts {
             for g in &f.borrow().called_functions {
-                if g.borrow().used_homomorphisms.is_none()
-                // Called function not analyzed, (try to) make sure this is a built-in like transfer, send
-                {
+                if g.borrow().used_homomorphisms.is_none() {
+                    // Called function not analyzed, (try to) make sure this is a built-in like transfer, send
                     assert!(
                         !g.borrow().requires_verification
                             && !g
@@ -244,24 +237,19 @@ impl UsedHomomorphismsVisitor {
         // If a function uses any homomorphisms and gets called, propagate its homomorphisms to its callers
         let mut dirty = fcts
             .iter()
-            .filter_map(|f| {
-                if f.borrow().used_homomorphisms.is_some() && !callers[f].is_empty() {
-                    Some(f.clone())
-                } else {
-                    None
-                }
-            })
+            .filter(|f| f.borrow().used_homomorphisms.is_some() && !callers[f].is_empty())
+            .cloned()
             .collect::<BTreeSet<_>>();
-        let callerss = callers.clone();
         while !dirty.is_empty() {
             let f = dirty.pop_first().unwrap();
             // Add all of f"s used homomorphisms to all of its callers g.
             // If this added a new homomorphism to g, mark g as dirty (if not already) -> iterate to fixed point
-            for g in callers.get_mut(&f).unwrap() {
+            for g in callers.get(&f).unwrap() {
                 if f == *g {
                     continue;
                 }
                 let old_len = g.borrow().used_homomorphisms.as_ref().unwrap().len();
+                println!("================used_homomorphisms===============");
                 g.borrow_mut().used_homomorphisms = Some(
                     g.borrow()
                         .used_homomorphisms
@@ -272,7 +260,7 @@ impl UsedHomomorphismsVisitor {
                         .collect(),
                 );
                 if g.borrow().used_homomorphisms.as_ref().unwrap().len() > old_len
-                    && !callerss[g].is_empty()
+                    && !callers[g].is_empty()
                 {
                     dirty.insert(g.clone());
                 }
@@ -282,7 +270,7 @@ impl UsedHomomorphismsVisitor {
     // Base case, make sure we don"t miss any annotated types
     pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
-            ast.try_as_expression_ref()
+            ast.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -294,15 +282,15 @@ impl UsedHomomorphismsVisitor {
     }
     // Guarantee consistent order
     pub fn used_crypto_backends(used_homs: BTreeSet<String>) -> Vec<CryptoParams> {
-        let mut result = vec![];
-        for hom in Homomorphism::fields() {
-            if used_homs.contains(&hom) {
-                let crypto_backend = CFG.lock().unwrap().user_config.get_crypto_params(&hom);
-                if !result.contains(&crypto_backend) {
-                    result.push(crypto_backend);
-                }
-            }
-        }
-        result
+        Homomorphism::fields()
+            .iter()
+            .filter_map(|hom| {
+                used_homs
+                    .contains(hom)
+                    .then(|| CFG.lock().unwrap().user_config.get_crypto_params(&hom))
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect()
     }
 }

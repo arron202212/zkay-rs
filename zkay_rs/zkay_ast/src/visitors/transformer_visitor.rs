@@ -54,9 +54,9 @@ impl<T: AstTransformerVisitorBaseRef> AstTransformerVisitorBaseProperty for T {
 // """
 
 pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
-    fn default() -> Self
-    where
-        Self: Sized;
+    // fn default() -> Self
+    // where
+    //     Self: Sized;
 
     fn visit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._visit_internal(ast)

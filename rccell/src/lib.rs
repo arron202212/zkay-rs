@@ -36,11 +36,11 @@ use std::rc::{Rc, Weak};
 
 /// Wrapper for `Rc<RefCell<T>>`.
 #[derive(Debug, Default, Eq)]
-pub struct RcCell<T>(Rc<RefCell<T>>);
+pub struct RcCell<T>(pub Rc<RefCell<T>>);
 
 /// Version of `RefCell` that holds a non-owning reference to the managed allocation.
 #[derive(Debug, Default)]
-pub struct WeakCell<T>(Weak<RefCell<T>>);
+pub struct WeakCell<T>(pub Weak<RefCell<T>>);
 
 impl<T> RcCell<T> {
     /// Constructs a new `RcCell<T>`.

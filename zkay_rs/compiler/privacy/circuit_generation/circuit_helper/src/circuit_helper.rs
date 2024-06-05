@@ -8,8 +8,13 @@
 use crate::name_factory::NameFactory;
 use crate::name_remapper::CircVarRemapper;
 use rccell::{RcCell, WeakCell};
-use std::collections::{BTreeMap, BTreeSet};
-use std::ops::{Deref, DerefMut};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    {
+        ops::{Deref, DerefMut},
+        {cell::RefCell, rc::Rc},
+    },
+};
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
@@ -93,6 +98,7 @@ where
     pub trans_out_size: i32,
     // Remapper instance used for SSA simulation
     pub _remapper: CircVarRemapper,
+    me: WeakCell<CircuitHelper>,
 }
 
 impl CircuitHelper
@@ -114,18 +120,18 @@ where
     pub fn new(
         fct: RcCell<ConstructorOrFunctionDefinition>,
         static_owner_labels: Vec<ASTFlatten>,
-        expr_trafo_constructor: impl FnOnce(&RcCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
-        circ_trafo_constructor: impl FnOnce(&RcCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
+        expr_trafo_constructor: impl FnOnce(&WeakCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
+        circ_trafo_constructor: impl FnOnce(&WeakCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
         internal_circuit: Option<WeakCell<Self>>,
-    ) -> Self
+    ) -> RcCell<Self>
     where
         Self: Sized,
     {
         // super().__init__()
         let mut verifier_contract_filename: Option<String> = None;
         let mut verifier_contract_type: Option<UserDefinedTypeName> = None;
-        let _expr_trafo = None; //expr_trafo_constructor(&self);
-        let _circ_trafo = None; //circ_trafo_constructor(&self);
+        // let _expr_trafo = None; //expr_trafo_constructor(&self);
+        // let _circ_trafo = None; //circ_trafo_constructor(&self);
         let mut _needed_secret_key = BTreeSet::new();
         let mut _global_keys = BTreeSet::new();
         let mut transitively_called_functions = BTreeSet::new();
@@ -159,45 +165,47 @@ where
             }
         }
 
-        let mut selfs = Self {
-            fct,
-            verifier_contract_filename,
-            verifier_contract_type,
-            has_return_var: false,
-            _expr_trafo,
-            _circ_trafo,
-            _phi: vec![],
-            _secret_input_name_factory: NameFactory::new(
-                String::from("secret"),
-                HybridArgType::PrivCircuitVal,
-            ),
-            _circ_temp_name_factory: NameFactory::new(
-                String::from("tmp"),
-                HybridArgType::TmpCircuitVal,
-            ),
-            _in_name_factory: NameFactory::new(
-                CFG.lock().unwrap().zk_in_name(),
-                HybridArgType::PubCircuitArg,
-            ),
-            _out_name_factory: NameFactory::new(
-                CFG.lock().unwrap().zk_out_name(),
-                HybridArgType::PubCircuitArg,
-            ),
-            static_owner_labels,
-            _requested_dynamic_pks: BTreeMap::new(),
-            _needed_secret_key,
-            _global_keys,
-            function_calls_with_verification: vec![],
-            transitively_called_functions,
-            trans_priv_size,
-            trans_in_size,
-            trans_out_size,
-            _remapper: CircVarRemapper::new(),
-        };
-        let selfsrc = RcCell::new(selfs.clone());
-        selfs._expr_trafo = expr_trafo_constructor(&selfsrc);
-        selfs._circ_trafo = circ_trafo_constructor(&selfsrc);
-        selfs
+        RcCell(Rc::new_cyclic(|me| {
+            RefCell::new(Self {
+                me: WeakCell(me.clone()),
+                fct,
+                verifier_contract_filename,
+                verifier_contract_type,
+                has_return_var: false,
+                _expr_trafo: expr_trafo_constructor(&WeakCell(me.clone())),
+                _circ_trafo: circ_trafo_constructor(&WeakCell(me.clone())),
+                _phi: vec![],
+                _secret_input_name_factory: NameFactory::new(
+                    String::from("secret"),
+                    HybridArgType::PrivCircuitVal,
+                ),
+                _circ_temp_name_factory: NameFactory::new(
+                    String::from("tmp"),
+                    HybridArgType::TmpCircuitVal,
+                ),
+                _in_name_factory: NameFactory::new(
+                    CFG.lock().unwrap().zk_in_name(),
+                    HybridArgType::PubCircuitArg,
+                ),
+                _out_name_factory: NameFactory::new(
+                    CFG.lock().unwrap().zk_out_name(),
+                    HybridArgType::PubCircuitArg,
+                ),
+                static_owner_labels,
+                _requested_dynamic_pks: BTreeMap::new(),
+                _needed_secret_key,
+                _global_keys,
+                function_calls_with_verification: vec![],
+                transitively_called_functions,
+                trans_priv_size,
+                trans_in_size,
+                trans_out_size,
+                _remapper: CircVarRemapper::new(),
+            })
+        }))
+    }
+    fn me(&self) -> RcCell<Self> {
+        self.me.clone().upgrade().unwrap()
     }
     pub fn register_verification_contract_metadata(
         &mut self,

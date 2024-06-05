@@ -59,16 +59,17 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
     // let mut digest = hashlib.sha512();
     let mut digest = Sha512State::default().build_hasher();
     let mut f = File::open(filename).expect("");
-    loop {
+    for _ in 0..10 {
         // Hash prover key in 128mb chunks
         let mut data = vec![0; chunk_size as usize];
         let res = f.read(&mut data);
         if res.is_err() {
+            println!("===hash_file=err=={res:?}========");
             break;
         }
         digest.write(&data);
     }
-
+    println!("===hash_file=====end======");
     // let digest = digest.finish();
     let bytes_result = HasherContext::finish(&mut digest);
     let digest = format!("{bytes_result:02x}");

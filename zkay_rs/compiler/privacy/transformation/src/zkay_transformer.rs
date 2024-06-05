@@ -62,9 +62,9 @@ pub struct ZkayVarDeclTransformer {
 }
 
 impl AstTransformerVisitor for ZkayVarDeclTransformer {
-    fn default() -> Self {
-        Self::new()
-    }
+    // fn default() -> Self {
+    //     Self::new()
+    // }
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
@@ -93,7 +93,7 @@ impl ZkayVarDeclTransformer {
     pub fn new() -> Self {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
-            expr_trafo: None,
+            expr_trafo: Some(ZkayExpressionTransformer::new(None)),
         }
     }
 
@@ -188,11 +188,7 @@ impl ZkayVarDeclTransformer {
     }
 
     pub fn visitStateVariableDeclaration(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        ast.try_as_state_variable_declaration_ref()
-            .unwrap()
-            .borrow_mut()
-            .identifier_declaration_base
-            .keywords = ast
+        let keywords: Vec<_> = ast
             .try_as_state_variable_declaration_ref()
             .unwrap()
             .borrow()
@@ -202,6 +198,11 @@ impl ZkayVarDeclTransformer {
             .filter(|&k| k != "public")
             .cloned()
             .collect();
+        ast.try_as_state_variable_declaration_ref()
+            .unwrap()
+            .borrow_mut()
+            .identifier_declaration_base
+            .keywords = keywords;
         //make sure every state var gets a public getter (required for simulation)
         ast.try_as_state_variable_declaration_ref()
             .unwrap()
@@ -209,40 +210,47 @@ impl ZkayVarDeclTransformer {
             .identifier_declaration_base
             .keywords
             .push(String::from("public"));
-        ast.try_as_state_variable_declaration_ref()
+        if let Some(expr) = ast
+            .try_as_state_variable_declaration_ref()
             .unwrap()
             .borrow_mut()
-            .expr = self.expr_trafo.as_ref().unwrap().visit(
-            ast.try_as_state_variable_declaration_ref()
-                .unwrap()
-                .borrow_mut()
-                .expr
-                .as_ref()
-                .unwrap(),
-        );
+            .expr
+            .as_mut()
+        {
+            let mut exp = self.expr_trafo.as_ref().unwrap().visit(expr).unwrap();
+            *expr = exp;
+        }
         self.visit_children(ast)
     }
 
     pub fn visitMapping(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        if ast
-            .try_as_mapping_ref()
-            .unwrap()
-            .borrow()
-            .key_label
-            .is_some()
-        {
-            let kl = ast
+        // println!("==visitMapping==========={ast:?}");
+        if ast.is_mapping() {
+            if let Some(key_label) = ast
                 .try_as_mapping_ref()
                 .unwrap()
-                .borrow()
+                .borrow_mut()
                 .key_label
-                .as_ref()
+                .as_mut()
+            {
+                let kl = key_label.borrow().name().clone();
+                *key_label = RcCell::new(Identifier::Identifier(IdentifierBase::new(kl)));
+            }
+        } else if ast.is_type_name() {
+            if let Some(key_label) = ast
+                .try_as_type_name_ref()
                 .unwrap()
-                .borrow()
-                .name()
-                .clone();
-            ast.try_as_mapping_ref().unwrap().borrow_mut().key_label =
-                Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(kl))));
+                .borrow_mut()
+                .try_as_mapping_mut()
+                .unwrap()
+                .key_label
+                .as_mut()
+            {
+                let kl = key_label.borrow().name().clone();
+                *key_label = RcCell::new(Identifier::Identifier(IdentifierBase::new(kl)));
+            }
+        } else {
+            panic!("====else====={ast:?}===");
         }
         self.visit_children(ast)
     }
@@ -252,14 +260,14 @@ impl ZkayVarDeclTransformer {
 #[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayStatementTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
-    gen: Option<RcCell<CircuitHelper>>,
+    generator: Option<RcCell<CircuitHelper>>,
     expr_trafo: ZkayExpressionTransformer,
     var_decl_trafo: ZkayVarDeclTransformer,
 }
 impl AstTransformerVisitor for ZkayStatementTransformer {
-    fn default() -> Self {
-        Self::new(None)
-    }
+    // fn default() -> Self {
+    //     Self::new(None)
+    // }
 
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {
@@ -320,13 +328,13 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
 impl ZkayStatementTransformer {
     // pub fn __init__(&self, current_gen: CircuitHelper)
     //     super().__init__()
-    //     self.gen.unwrap() = current_gen
-    //     self.expr_trafo = ZkayExpressionTransformer(self.gen.unwrap())
+    //     self.generator.unwrap() = current_gen
+    //     self.expr_trafo = ZkayExpressionTransformer(self.generator.unwrap())
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
-    pub fn new(current_gen: Option<RcCell<CircuitHelper>>) -> Self {
+    pub fn new(current_gen: Option<WeakCell<CircuitHelper>>) -> Self {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
-            gen: current_gen.clone(),
+            generator: current_gen.clone().and_then(|g| g.upgrade()),
             expr_trafo: ZkayExpressionTransformer::new(current_gen),
             var_decl_trafo: ZkayVarDeclTransformer::new(),
         }
@@ -629,49 +637,59 @@ impl ZkayStatementTransformer {
                 };
                 assert!(is_instance(&ridf, ASTType::HybridArgumentIdf));
                 if let Identifier::HybridArgumentIdf(ridf) = ridf {
-                    self.gen.as_ref().unwrap().borrow_mut()._remapper.0.remap(
-                        &ast.try_as_assignment_statement_ref()
-                            .unwrap()
-                            .borrow()
-                            .lhs()
-                            .as_ref()
-                            .unwrap()
-                            .try_as_expression_ref()
-                            .unwrap()
-                            .borrow()
-                            .try_as_tuple_or_location_expr_ref()
-                            .unwrap()
-                            .try_as_location_expr_ref()
-                            .unwrap()
-                            .target()
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap()
-                            .try_as_identifier_declaration_ref()
-                            .unwrap()
-                            .borrow()
-                            .idf()
-                            .unwrap(),
-                        ridf,
-                    );
+                    self.generator
+                        .as_ref()
+                        .unwrap()
+                        .borrow_mut()
+                        ._remapper
+                        .0
+                        .remap(
+                            &ast.try_as_assignment_statement_ref()
+                                .unwrap()
+                                .borrow()
+                                .lhs()
+                                .as_ref()
+                                .unwrap()
+                                .try_as_expression_ref()
+                                .unwrap()
+                                .borrow()
+                                .try_as_tuple_or_location_expr_ref()
+                                .unwrap()
+                                .try_as_location_expr_ref()
+                                .unwrap()
+                                .target()
+                                .clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
+                                .borrow()
+                                .idf()
+                                .unwrap(),
+                            ridf,
+                        );
                 }
             }
         }
         //Invalidate circuit value for assignment targets
-        if self.gen.is_some() {
+        if self.generator.is_some() {
             for val in modvals {
                 if val.key().is_none() {
-                    self.gen.as_ref().unwrap().borrow_mut().invalidate_idf(
-                        &val.target()
-                            .as_ref()
-                            .unwrap()
-                            .try_as_identifier_declaration_ref()
-                            .unwrap()
-                            .borrow()
-                            .idf()
-                            .unwrap(),
-                    );
+                    self.generator
+                        .as_ref()
+                        .unwrap()
+                        .borrow_mut()
+                        .invalidate_idf(
+                            &val.target()
+                                .as_ref()
+                                .unwrap()
+                                .try_as_identifier_declaration_ref()
+                                .unwrap()
+                                .borrow()
+                                .idf()
+                                .unwrap(),
+                        );
                 }
             }
         }
@@ -719,9 +737,16 @@ impl ZkayStatementTransformer {
                     .clone()
                     .into(),
             ) {
-                let before_if_state = self.gen.as_ref().unwrap().borrow()._remapper.0.get_state();
+                let before_if_state = self
+                    .generator
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    ._remapper
+                    .0
+                    .get_state();
                 let guard_var = self
-                    .gen
+                    .generator
                     .as_ref()
                     .unwrap()
                     .borrow_mut()
@@ -732,7 +757,7 @@ impl ZkayStatementTransformer {
                     .unwrap()
                     .borrow_mut()
                     .condition = guard_var.get_loc_expr(Some(ast));
-                self.gen
+                self.generator
                     .as_ref()
                     .unwrap()
                     .borrow_mut()
@@ -753,7 +778,7 @@ impl ZkayStatementTransformer {
                         .unwrap()
                         .try_as_block()
                         .unwrap();
-                    self.gen
+                    self.generator
                         .as_ref()
                         .unwrap()
                         .borrow_mut()
@@ -768,7 +793,7 @@ impl ZkayStatementTransformer {
                     .else_branch
                     .is_some()
                 {
-                    self.gen
+                    self.generator
                         .as_ref()
                         .unwrap()
                         .borrow_mut()
@@ -790,7 +815,7 @@ impl ZkayStatementTransformer {
                         )
                         .unwrap()
                         .try_as_block();
-                    self.gen
+                    self.generator
                         .as_ref()
                         .unwrap()
                         .borrow_mut()
@@ -810,16 +835,20 @@ impl ZkayStatementTransformer {
                     .modified_values
                 {
                     if val.key().is_none() {
-                        self.gen.as_ref().unwrap().borrow_mut().invalidate_idf(
-                            &val.target()
-                                .as_ref()
-                                .unwrap()
-                                .try_as_identifier_declaration_ref()
-                                .unwrap()
-                                .borrow()
-                                .idf()
-                                .unwrap(),
-                        );
+                        self.generator
+                            .as_ref()
+                            .unwrap()
+                            .borrow_mut()
+                            .invalidate_idf(
+                                &val.target()
+                                    .as_ref()
+                                    .unwrap()
+                                    .try_as_identifier_declaration_ref()
+                                    .unwrap()
+                                    .borrow()
+                                    .idf()
+                                    .unwrap(),
+                            );
                     }
                 }
             } else {
@@ -872,7 +901,7 @@ impl ZkayStatementTransformer {
             }
             Ok(ast.clone())
         } else {
-            self.gen
+            self.generator
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
@@ -1042,8 +1071,8 @@ impl ZkayStatementTransformer {
             {
                 eyre::bail!("expr is_none ")
             }
-            assert!(!self.gen.as_ref().unwrap().borrow().has_return_var);
-            self.gen.as_ref().unwrap().borrow_mut().has_return_var = true;
+            assert!(!self.generator.as_ref().unwrap().borrow().has_return_var);
+            self.generator.as_ref().unwrap().borrow_mut().has_return_var = true;
             let expr = self.expr_trafo.visit(
                 ast.try_as_return_statement_ref()
                     .unwrap()
@@ -1115,13 +1144,13 @@ impl ZkayStatementTransformer {
 #[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayExpressionTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
-    gen: Option<RcCell<CircuitHelper>>,
+    generator: Option<RcCell<CircuitHelper>>,
 }
 impl TransformerVisitorEx for ZkayExpressionTransformer {}
 impl AstTransformerVisitor for ZkayExpressionTransformer {
-    fn default() -> Self {
-        Self::new(None)
-    }
+    // fn default() -> Self {
+    //     Self::new(None)
+    // }
 
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {
@@ -1170,13 +1199,13 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
     }
 }
 impl ZkayExpressionTransformer {
-    pub fn new(current_generator: Option<RcCell<CircuitHelper>>) -> Self
+    pub fn new(current_generator: Option<WeakCell<CircuitHelper>>) -> Self
 // super().__init__()
-        // self.gen.unwrap() = current_generator
+        // self.generator.unwrap() = current_generator
     {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
-            gen: current_generator,
+            generator: current_generator.and_then(|g| g.upgrade()),
         }
     }
 
@@ -1274,7 +1303,7 @@ impl ZkayExpressionTransformer {
             .expr
             .clone()
             .into();
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -1343,7 +1372,7 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .borrow()
                     .privacy_annotation_label();
-                self.gen
+                self.generator
                     .as_ref()
                     .unwrap()
                     .borrow_mut()
@@ -1400,7 +1429,7 @@ impl ZkayExpressionTransformer {
                         .op
                         .clone();
                     let guard_var = self
-                        .gen
+                        .generator
                         .as_ref()
                         .unwrap()
                         .borrow_mut()
@@ -1478,7 +1507,7 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .borrow()
                     .privacy_annotation_label();
-                self.gen
+                self.generator
                     .as_ref()
                     .unwrap()
                     .borrow_mut()
@@ -1600,7 +1629,11 @@ impl ZkayExpressionTransformer {
                 // } else {
                 //     None
                 // };
-                self.gen.as_ref().unwrap().borrow_mut().call_function(&ast);
+                self.generator
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .call_function(&ast);
             } else if ast
                 .try_as_function_call_expr_ref()
                 .unwrap()
@@ -1622,7 +1655,7 @@ impl ZkayExpressionTransformer {
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .has_side_effects()
-                && self.gen.is_some()
+                && self.generator.is_some()
             {
                 //Invalidate modified state variables for the current circuit
 
@@ -1640,16 +1673,20 @@ impl ZkayExpressionTransformer {
                             ASTType::StateVariableDeclaration,
                         )
                     {
-                        self.gen.as_ref().unwrap().borrow_mut().invalidate_idf(
-                            &val.target()
-                                .as_ref()
-                                .unwrap()
-                                .try_as_identifier_declaration_ref()
-                                .unwrap()
-                                .borrow()
-                                .idf()
-                                .unwrap(),
-                        );
+                        self.generator
+                            .as_ref()
+                            .unwrap()
+                            .borrow_mut()
+                            .invalidate_idf(
+                                &val.target()
+                                    .as_ref()
+                                    .unwrap()
+                                    .try_as_identifier_declaration_ref()
+                                    .unwrap()
+                                    .borrow()
+                                    .idf()
+                                    .unwrap(),
+                            );
                     }
                 }
             }
@@ -1682,7 +1719,7 @@ impl ZkayExpressionTransformer {
             .len();
 
         //Transform expression with guard condition in effect
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -1796,7 +1833,7 @@ impl ZkayExpressionTransformer {
                 .unwrap()
                 .borrow()
                 .privacy_annotation_label();
-            self.gen
+            self.generator
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
@@ -1835,14 +1872,14 @@ impl ZkayExpressionTransformer {
 #[derive(Clone, AstTransformerVisitorBaseRefImpl)]
 pub struct ZkayCircuitTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
-    gen: Option<RcCell<CircuitHelper>>,
+    generator: Option<RcCell<CircuitHelper>>,
 }
 
 impl TransformerVisitorEx for ZkayCircuitTransformer {}
 impl AstTransformerVisitor for ZkayCircuitTransformer {
-    fn default() -> Self {
-        Self::new(None)
-    }
+    // fn default() -> Self {
+    //     Self::new(None)
+    // }
 
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
@@ -1909,11 +1946,11 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
 }
 impl ZkayCircuitTransformer {
     // super().__init__()
-    // self.gen.unwrap() = current_generator
-    pub fn new(current_generator: Option<RcCell<CircuitHelper>>) -> Self {
+    // self.generator.unwrap() = current_generator
+    pub fn new(current_generator: Option<WeakCell<CircuitHelper>>) -> Self {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
-            gen: current_generator,
+            generator: current_generator.and_then(|g| g.upgrade()),
         }
     }
     // """Rule (13), don"t modify constants."""
@@ -1934,7 +1971,7 @@ impl ZkayCircuitTransformer {
         ) {
             //If ast is not already transformed, get current SSA version
             ast = self
-                .gen
+                .generator
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -1970,7 +2007,7 @@ impl ZkayCircuitTransformer {
     }
     // """Rule (14), move location into the circuit."""
     pub fn transform_location(&self, loc: &ASTFlatten) -> Option<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2009,7 +2046,7 @@ impl ZkayCircuitTransformer {
                 .borrow()
                 .privacy_annotation_label();
             let orig_homomorphism = orig_type.homomorphism;
-            self.gen
+            self.generator
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
@@ -2049,7 +2086,7 @@ impl ZkayCircuitTransformer {
                 .unwrap()
                 .borrow()
                 .is_public());
-            self.gen
+            self.generator
                 .as_ref()
                 .unwrap()
                 .borrow_mut()
@@ -2162,7 +2199,7 @@ impl ZkayCircuitTransformer {
                     .borrow_mut()
                     .function_call_expr_base_mut_ref()
                     .public_key = Some(RcCell::new(
-                    self.gen
+                    self.generator
                         .as_ref()
                         .unwrap()
                         .borrow_mut()
@@ -2211,7 +2248,7 @@ impl ZkayCircuitTransformer {
                                 .unwrap()
                                 .borrow_mut()
                                 .rerand_using = Some(
-                                self.gen
+                                self.generator
                                     .as_ref()
                                     .unwrap()
                                     .borrow_mut()
@@ -2344,7 +2381,7 @@ impl ZkayCircuitTransformer {
 
         //Function call inside private expression -> entire body will be inlined into circuit.
         //Function must not have side-effects (only pure and view is allowed) and cannot have a nonstatic body (i.e. recursion)
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2353,7 +2390,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitReturnStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2362,7 +2399,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2371,7 +2408,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitVariableDeclarationStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2380,7 +2417,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()
@@ -2394,7 +2431,7 @@ impl ZkayCircuitTransformer {
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> eyre::Result<ASTFlatten> {
-        self.gen
+        self.generator
             .as_ref()
             .unwrap()
             .borrow_mut()

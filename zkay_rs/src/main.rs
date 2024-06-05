@@ -330,10 +330,10 @@ WARNING: This account will be charged with the deployment costs.",
 }
 
 fn main() {
-    println!("==main=====");
+    // println!("==main=====");
     //     // parse arguments
     let a = parse_arguments();
-    println!("==main==1===");
+    // println!("==main==1===");
     //     from zkay.config_version import Versions
 
     if let Some(("version", _)) = a.subcommand() {
@@ -451,7 +451,7 @@ fn main() {
                 //             exit(0)
             }
             Some(("compile", sub_compile)) => {
-                println!("========compile======================{:?}", 1);
+                // println!("========compile======================{:?}", 1);
                 let input_path =
                     if let Ok(Some(input_path)) = sub_compile.try_get_one::<PathBuf>("input") {
                         if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
