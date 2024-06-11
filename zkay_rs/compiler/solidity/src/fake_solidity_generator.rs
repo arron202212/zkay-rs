@@ -259,7 +259,7 @@ pub fn replace_with_surrogatef(
             .expect("Error running regex");
         if matches.is_none() {
             flag = false;
-            println!("===========matches.is_none()=======");
+            // println!("===========matches.is_none()=======");
             break;
         }
         let end = matches.as_ref().unwrap().get(0).unwrap().end();

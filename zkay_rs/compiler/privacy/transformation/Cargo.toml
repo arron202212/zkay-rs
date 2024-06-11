@@ -23,3 +23,4 @@ circuit_helper={workspace=true}
  zkay_ast={workspace = true }
 regex ={ workspace = true }
 eyre ={ workspace = true }
+fancy-regex ={ workspace = true }

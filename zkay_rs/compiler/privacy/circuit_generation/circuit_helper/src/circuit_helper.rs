@@ -127,6 +127,7 @@ where
     where
         Self: Sized,
     {
+// println!("=====new_circuit_helper==before=={}=", line!());
         // super().__init__()
         let mut verifier_contract_filename: Option<String> = None;
         let mut verifier_contract_type: Option<UserDefinedTypeName> = None;
@@ -164,7 +165,8 @@ where
                 transitively_called_functions = BTreeSet::new();
             }
         }
-
+// println!("=====new_circuit_helper==before=={}=", line!());
+        let zk_in_name=CFG.lock().unwrap().zk_in_name();
         RcCell(Rc::new_cyclic(|me| {
             RefCell::new(Self {
                 me: WeakCell(me.clone()),
@@ -184,7 +186,7 @@ where
                     HybridArgType::TmpCircuitVal,
                 ),
                 _in_name_factory: NameFactory::new(
-                    CFG.lock().unwrap().zk_in_name(),
+                    zk_in_name,
                     HybridArgType::PubCircuitArg,
                 ),
                 _out_name_factory: NameFactory::new(

@@ -100,6 +100,13 @@ impl UsedHomomorphismsVisitor {
                 .borrow_mut()
                 .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
         }
+        else if is_instance(ast, ASTType::ContractDefinition) {
+            // println!("===visit=============={:?}",ast.get_ast_type());
+            ast.try_as_contract_definition_ref()
+                .unwrap()
+                .borrow_mut()
+                .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
+        }
         all_homs
     }
     pub fn visitAnnotatedTypeName(

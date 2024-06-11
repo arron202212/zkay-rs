@@ -267,7 +267,7 @@ impl Config {
     }
 
     pub fn get_verification_contract_name(&self, contract: String, fct: String) -> String {
-        format! {"{}Verify_{contract}_{fct}",CFG.lock().unwrap().reserved_name_prefix()}
+        format! {"{}Verify_{contract}_{fct}",self.reserved_name_prefix()}
     }
     // Return the output directory for an individual circuit
     pub fn get_circuit_output_dir_name(&self, verifier_name: String) -> String {

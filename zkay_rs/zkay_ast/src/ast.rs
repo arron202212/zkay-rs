@@ -19,7 +19,7 @@ use crate::circuit_constraints::{
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
-use ethnum::{i256, int, u256, uint, I256, U256};
+use ethnum::{i256, int, u256, uint, I256, U256,AsI256};
 use eyre::{eyre, Result};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
@@ -6353,6 +6353,7 @@ impl NumberTypeNameBase {
         }
     }
 }
+#[derive(Debug)]
 pub enum NumberLiteralTypeUnion {
     String(String),
     I32(i32),
@@ -6379,23 +6380,19 @@ impl IntoAST for NumberLiteralType {
 
 impl NumberLiteralType {
     pub fn new(name: NumberLiteralTypeUnion) -> Self {
+        // println!("{name:?}");
         let name = match name {
-            NumberLiteralTypeUnion::String(v) => v.parse::<i32>().unwrap(), //TODO U256
-            NumberLiteralTypeUnion::I32(v) => v,
+            NumberLiteralTypeUnion::String(v) =>I256::from_str_prefixed(&v).unwrap(), //TODO U256
+            NumberLiteralTypeUnion::I32(v) => v.as_i256(),
         };
-        let blen = (i32::BITS - name.leading_zeros()) as i32;
-        let (signed, mut bitwidth) = if name < 0 {
-            (
-                true,
+        let blen = (I256::BITS - name.leading_zeros()) as i32;
+        let (mut signed, mut bitwidth) =(false, blen);
+        if name < 0 {
+            signed=true;
                 if name != -(1 << (blen - 1)) {
-                    blen + 1
-                } else {
-                    blen
-                },
-            )
-        } else {
-            (false, blen)
-        };
+                    bitwidth += 1;
+                } 
+        } ;
         bitwidth = 8i32.max((bitwidth + 7) / 8 * 8);
         assert!(bitwidth <= 256);
         let name = name.to_string();

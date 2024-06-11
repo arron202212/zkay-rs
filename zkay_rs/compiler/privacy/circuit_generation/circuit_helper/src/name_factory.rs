@@ -9,6 +9,7 @@ pub struct BaseNameFactory {
 // """A Base name factory can generate fresh, unused name strings with a given prefix"""
 impl BaseNameFactory {
     pub fn new(base_name: String) -> Self {
+//  println!("=====BaseNameFactory==before=={}=", line!());
         Self {
             base_name,
             count: 0,
@@ -46,6 +47,7 @@ pub struct NameFactory {
 }
 impl NameFactory {
     pub fn new(base_name: String, arg_type: HybridArgType) -> Self {
+//  println!("=====NameFactory==before==={base_name:?}======{}=", line!());
         // super().__init__(base_name)
         // self.arg_type = arg_type
         // self.size = 0

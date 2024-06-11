@@ -67,11 +67,10 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        let mut ret = Some(ast.clone());
         for c in ast.children() {
-            ret = self.visit(&c);
+            self.visit(&c);
         }
-        ret.ok_or(eyre::eyre!("unexpected"))
+        Ok(ast.clone())
     }
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.log() {

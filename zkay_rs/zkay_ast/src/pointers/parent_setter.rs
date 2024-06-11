@@ -250,7 +250,25 @@ impl ExpressionToStatementVisitor {
                     .borrow_mut()
                     .expression_base_mut_ref()
                     .statement = parent.map(|p| p.clone().downgrade());
-            } else {
+            } else if ast.is_tuple_or_location_expr(){
+                ast.try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = parent.map(|p| p.clone().downgrade());}
+else if ast.is_member_access_expr(){
+                ast.try_as_member_access_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = parent.map(|p| p.clone().downgrade());}
+else if ast.is_index_expr(){
+                ast.try_as_index_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = parent.map(|p| p.clone().downgrade());}
+            else{
                 panic!("===================else======={ast:?}");
             }
         }
