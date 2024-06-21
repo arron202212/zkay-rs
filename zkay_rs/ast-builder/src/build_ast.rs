@@ -755,11 +755,17 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .and_then(|ast| ast.try_as_expression());
             if let Some(hom) = &ctx.homomorphism {
                 hom.accept(self);
+
                 homomorphism = self
                     .temp_result()
                     .clone()
                     .and_then(|ast| ast.try_as_homomorphism())
                     .unwrap_or(homomorphism);
+                println!(
+                    "==visit_annotatedTypeName========homomorphism==={:?}========{:?}",
+                    homomorphism,
+                    self.temp_result().clone()
+                );
             }
             assert!(
                 privacy_annotation.is_some()
@@ -1158,13 +1164,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         {
             //    ////println!("{:?},==0000={:?}",func.idf.name(),REHOM_EXPRESSIONS.lock().unwrap() );
             if func.idf().as_ref().unwrap().borrow().name() == "reveal" {
+                // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
                 assert!(
                     args.len() == 2,
                     "Invalid number of arguments for reveal: {args:?},{:?},{:?}",
                     ctx.args,
                     self.code
                 );
-                // raise SyntaxException(f"Invalid number of arguments for reveal: {args}", ctx.args, self.code)
                 return Some(
                     ReclassifyExprBase::new(
                         RcCell::new(args[0].clone()).into(),
@@ -1179,6 +1185,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .unwrap()
                 .get(&func.idf().as_ref().unwrap().borrow().name())
             {
+                // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
                 assert!(
                     args.len() == 1,
                     "Invalid number of arguments for {:?}: {args:?},{:?},{:?}",
@@ -1186,7 +1193,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     ctx.args,
                     self.code
                 );
-                // raise SyntaxException(f"Invalid number of arguments for {name}: {args}", ctx.args, self.code)
                 return Some(
                     RehomExpr::new(
                         RcCell::new(args[0].clone()).into(),

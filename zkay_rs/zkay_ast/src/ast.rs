@@ -19,7 +19,7 @@ use crate::circuit_constraints::{
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
-use ethnum::{i256, int, u256, uint, I256, U256,AsI256};
+use ethnum::{i256, int, u256, uint, AsI256, I256, U256};
 use eyre::{eyre, Result};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
@@ -2501,13 +2501,13 @@ impl Expression {
     // :param expected:
     // :return: true, false, or "make-private"
     // """
-    pub fn instance_of(&self, expected: &RcCell<AnnotatedTypeName>) -> Option<String> {
+    pub fn instance_of(&self, expected: &RcCell<AnnotatedTypeName>) -> String {
         // assert! (isinstance(expected, AnnotatedTypeName))
 
         let actual = self.annotated_type();
 
         if !self.instanceof_data_type(expected.borrow().type_name.as_ref().unwrap()) {
-            return Some(String::from("false"));
+            return String::from("false");
         }
 
         // check privacy type and homomorphism
@@ -2535,27 +2535,24 @@ impl Expression {
                         Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(_))
                     )
                 );
-                Some(
-                    (combined_label
-                        == self
-                            .annotated_type()
-                            .as_ref()
-                            .unwrap()
-                            .borrow()
-                            .type_name
-                            .as_ref()
-                            .unwrap()
-                            .borrow()
-                            .try_as_tuple_type_ref()
-                            .unwrap()
-                            .types
-                            .iter()
-                            .map(|t| {
-                                CombinedPrivacyUnion::AST(t.borrow().privacy_annotation.clone())
-                            })
-                            .collect::<Vec<_>>())
-                    .to_string(),
-                )
+
+                (combined_label
+                    == self
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_tuple_type_ref()
+                        .unwrap()
+                        .types
+                        .iter()
+                        .map(|t| CombinedPrivacyUnion::AST(t.borrow().privacy_annotation.clone()))
+                        .collect::<Vec<_>>())
+                .to_string()
             } else if combined_label
                 .clone()
                 .as_expression()
@@ -2576,12 +2573,12 @@ impl Expression {
                     .borrow()
                     .privacy_annotation_label()
             {
-                Some(String::from("true"))
+                String::from("true")
             } else {
-                Some(String::from("make-private"))
+                String::from("make-private")
             }
         } else {
-            Some(String::from("false"))
+            String::from("false")
         }
     }
 
@@ -2711,7 +2708,7 @@ lazy_static! {
             ("<<", BINARY_OP),
             (">>", BINARY_OP),
             ("parenthesis", "({})"),
-            ("ite", "if {}  {{{}}} else {{{}}}"),
+            ("ite", "{}?{}:{}"),
         ]);
         m.into_iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -2743,7 +2740,7 @@ lazy_static! {
             ("<<", "shift_operations"),
             (">>", "shift_operations"),
             ("parenthesis", "({})"),
-            ("ite", "if {}  {{{}}} else {{{}}}"),
+            ("ite", "{}?{}:{}"),
         ]);
         m.into_iter()
             .map(|(k, v)| (k.to_string(), v.to_string()))
@@ -2854,7 +2851,7 @@ impl BuiltinFunction {
             "parenthesis" => format!("({})", args[0]),
             "ite" => {
                 let (cond, then, else_then) = (args[0].clone(), args[1].clone(), args[2].clone());
-                format!("if {cond} {{{then}}} else {{{else_then}}}")
+                format!("{cond}?{then}:{else_then}")
             }
             _ => format!("{} {op} {}", args[0], args[1]),
         }
@@ -3875,23 +3872,43 @@ impl LocationExpr {
     }
 
     pub fn index(&self, item: ExprUnion) -> ASTFlatten {
-        let type_name = self
+        // println!("=====index========annotated_type=========={:?}",self
+        //     .ast_base_ref().borrow().annotated_type);
+        assert!(is_instances(
+            self.ast_base_ref()
+                .borrow()
+                .annotated_type
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .type_name
+                .as_ref()
+                .unwrap(),
+            vec![ASTType::ArrayBase, ASTType::Mapping]
+        ));
+        let value_type = self
             .annotated_type()
             .as_ref()
-            .map(|t| t.borrow().type_name.clone());
-        let value_type =
-            type_name.and_then(|type_name| match type_name.map(|t| t.borrow().clone()) {
-                Some(TypeName::Array(a)) => Some(a.value_type().clone().into()),
-                Some(TypeName::Mapping(a)) => Some(a.value_type.clone().into()),
+            .unwrap()
+            .borrow()
+            .type_name
+            .as_ref()
+            .and_then(|t| match &*t.borrow() {
+                TypeName::Array(a) => Some(a.value_type().clone().into()),
+                TypeName::Mapping(a) => Some(a.value_type.clone().into()),
                 _ => None,
             });
-        assert!(value_type.is_some());
+        assert!(
+            value_type.is_some(),
+            "====value_type===is none==of  type name======={:?}",
+            self.annotated_type().as_ref().unwrap().borrow().type_name
+        );
         let item = match item {
             ExprUnion::I32(item) => RcCell::new(NumberLiteralExpr::new(item, false)).into(),
             ExprUnion::Expression(item) => item,
         };
 
-        IndexExpr::new(Some(self.clone()), item).as_type(&value_type.unwrap())
+        IndexExpr::new(Some(self.clone()), item).as_type(value_type.as_ref().unwrap())
     }
     pub fn assign(&self, val: ASTFlatten) -> AssignmentStatement {
         AssignmentStatement::AssignmentStatement(AssignmentStatementBase::new(
@@ -4003,12 +4020,7 @@ impl IdentifierExpr {
     }
 
     pub fn slice(&self, offset: i32, size: i32, base: Option<ASTFlatten>) -> SliceExpr {
-        SliceExpr::new(
-            Some(RcCell::new(LocationExpr::IdentifierExpr(self.clone()))),
-            base,
-            offset,
-            size,
-        )
+        SliceExpr::new(Some(RcCell::new(self.clone()).into()), base, offset, size)
     }
 }
 impl ASTChildren for IdentifierExpr {
@@ -4128,7 +4140,7 @@ impl ASTChildren for IndexExpr {
 )]
 pub struct SliceExpr {
     pub location_expr_base: LocationExprBase,
-    pub arr: Option<RcCell<LocationExpr>>,
+    pub arr: Option<ASTFlatten>,
     pub base: Option<ASTFlatten>,
     pub start_offset: i32,
     pub size: i32,
@@ -4143,7 +4155,7 @@ impl IntoAST for SliceExpr {
 
 impl SliceExpr {
     pub fn new(
-        arr: Option<RcCell<LocationExpr>>,
+        arr: Option<ASTFlatten>,
         base: Option<ASTFlatten>,
         start_offset: i32,
         size: i32,
@@ -4263,7 +4275,11 @@ pub enum ReclassifyExpr {
 
 impl ReclassifyExpr {
     pub fn func_name(&self) -> String {
-        String::from("reveal")
+        if let Self::RehomExpr(rhe) = self {
+            rhe.func_name()
+        } else {
+            String::from("reveal")
+        }
     }
 }
 
@@ -4323,6 +4339,7 @@ impl ReclassifyExprBase {
         homomorphism: Option<String>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
+        println!("======ReclassifyExprBase=============={homomorphism:?}");
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             expr,
@@ -4331,7 +4348,17 @@ impl ReclassifyExprBase {
         }
     }
     pub fn func_name(&self) -> String {
-        String::from("reveal")
+        if let Some(homomorphism) = &self.homomorphism {
+            HOMOMORPHISM_STORE
+                .lock()
+                .unwrap()
+                .get(homomorphism)
+                .unwrap()
+                .rehom_expr_name
+                .clone()
+        } else {
+            String::from("reveal")
+        }
     }
 }
 impl ASTChildren for ReclassifyExprBase {
@@ -4371,6 +4398,7 @@ impl ASTChildren for RehomExpr {
 
 impl RehomExpr {
     pub fn new(expr: ASTFlatten, homomorphism: Option<String>) -> Self {
+        println!("==RehomExpr============={homomorphism:?}");
         Self {
             reclassify_expr_base: ReclassifyExprBase::new(
                 expr,
@@ -4450,9 +4478,13 @@ impl HybridArgumentIdf {
             arg_type,
             corresponding_priv_expression,
             serialized_loc: SliceExpr::new(
-                Some(RcCell::new(LocationExpr::IdentifierExpr(
-                    IdentifierExpr::new(IdentifierExprUnion::String(String::new()), None),
-                ))),
+                Some(
+                    RcCell::new(IdentifierExpr::new(
+                        IdentifierExprUnion::String(String::new()),
+                        None,
+                    ))
+                    .into(),
+                ),
                 None,
                 -1,
                 -1,
@@ -4552,11 +4584,7 @@ impl HybridArgumentIdf {
             )))
             .as_type(&self.t.clone().into());
             ma.ast_base_ref().unwrap().borrow_mut().parent = parent.map(|p| p.clone().downgrade());
-            ma.try_as_identifier_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.as_ref().and_then(|&p| {
+            let statement = parent.as_ref().and_then(|&p| {
                 if is_instance(p, ASTType::ExpressionBase) {
                     p.try_as_expression_ref()
                         .unwrap()
@@ -4567,7 +4595,28 @@ impl HybridArgumentIdf {
                     Some(p.clone().downgrade())
                 }
             });
-            println!("===statement========{},======={}", file!(), line!());
+            if ma.is_identifier_expr() {
+                ma.try_as_identifier_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = statement;
+            } else if ma.is_member_access_expr() {
+                ma.try_as_member_access_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = statement;
+            } else if ma.is_expression() {
+                ma.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = statement;
+            } else {
+                panic!("=======else=============={ma:?}");
+            }
+            // println!("===statement========{},======={}", file!(), line!());
             ma
         }
     }
@@ -4608,7 +4657,7 @@ impl HybridArgumentIdf {
                 Some(p.clone().downgrade())
             }
         });
-        println!("===statement========{},======={}", file!(), line!());
+        // println!("===statement========{},======={}", file!(), line!());
 
         Some(ie)
     }
@@ -4620,9 +4669,8 @@ impl HybridArgumentIdf {
         start_offset: i32,
     ) {
         assert!(self.serialized_loc.start_offset == -1);
-        self.serialized_loc.arr = Some(RcCell::new(LocationExpr::IdentifierExpr(
-            IdentifierExpr::new(IdentifierExprUnion::String(idf), None),
-        )));
+        self.serialized_loc.arr =
+            Some(RcCell::new(IdentifierExpr::new(IdentifierExprUnion::String(idf), None)).into());
         self.serialized_loc.base = base;
         self.serialized_loc.start_offset = start_offset;
         self.serialized_loc.size = self.t.borrow().size_in_uints();
@@ -4640,14 +4688,21 @@ impl HybridArgumentIdf {
             .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_a) = self.t.borrow().clone() {
             SliceExpr::new(
-                self.get_loc_expr(None).try_as_location_expr(),
+                Some(self.get_loc_expr(None)),
                 None,
                 0,
                 self.t.borrow().size_in_uints(),
             )
             .arr
+            .as_ref()
             .unwrap()
-            .borrow_mut()
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
             .assign(RcCell::new(self.serialized_loc.clone()).into())
         } else if let Some(base) = &base {
             self.get_loc_expr(None)
@@ -4708,20 +4763,25 @@ impl HybridArgumentIdf {
             .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
         if let TypeName::Array(_t) = self.t.borrow().clone() {
             let loc = self.get_loc_expr(None);
-            self.serialized_loc
-                .arr
-                .as_mut()
-                .unwrap()
-                .borrow_mut()
-                .assign(
-                    RcCell::new(SliceExpr::new(
-                        loc.try_as_location_expr(),
-                        None,
-                        0,
-                        self.t.borrow().size_in_uints(),
-                    ))
-                    .into(),
-                )
+            LocationExpr::IdentifierExpr(
+                self.serialized_loc
+                    .arr
+                    .as_ref()
+                    .unwrap()
+                    .try_as_identifier_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone(),
+            )
+            .assign(
+                RcCell::new(SliceExpr::new(
+                    Some(loc),
+                    None,
+                    0,
+                    self.t.borrow().size_in_uints(),
+                ))
+                .into(),
+            )
         } else {
             let expr = self.get_loc_expr(None);
             let expr = if self.t.borrow().is_signed_numeric() {
@@ -4749,9 +4809,10 @@ impl HybridArgumentIdf {
                     )
                     .as_type(&self.t.clone().into())
             } else {
-                expr.try_as_expression()
+                // println!("==========================={expr:?}");
+                expr.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .explicitly_converted(&RcCell::new(TypeName::uint_type()))
                 //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
             };
@@ -4762,7 +4823,7 @@ impl HybridArgumentIdf {
                         tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
                     .index(ExprUnion::Expression(
-                        RcCell::new(base.try_as_expression_ref().unwrap().borrow().binop(
+                        RcCell::new(base.to_ast().try_as_expression_ref().unwrap().binop(
                             String::from("+"),
                             NumberLiteralExpr::new(start_offset, false).into_expr(),
                         ))
@@ -4855,7 +4916,7 @@ impl ASTChildren for EncryptionExpression {
 impl EncryptionExpression {
     pub fn new(expr: ASTFlatten, privacy: ASTFlatten, homomorphism: Option<String>) -> Self {
         let annotated_type = Some(AnnotatedTypeName::cipher_type(
-            expr.try_as_expression_ref()
+            expr.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -5824,7 +5885,11 @@ impl TypeName {
     }
     // """How many uints this type occupies when serialized."""
     pub fn size_in_uints(&self) -> i32 {
-        1
+        match self {
+            Self::Array(Array::CipherText(ct)) => ct.size_in_uints(),
+            Self::Array(a) => a.array_base_ref().size_in_uints(),
+            _ => 1,
+        }
     }
 
     pub fn elem_bitwidth(&self) -> i32 {
@@ -6382,17 +6447,17 @@ impl NumberLiteralType {
     pub fn new(name: NumberLiteralTypeUnion) -> Self {
         // println!("{name:?}");
         let name = match name {
-            NumberLiteralTypeUnion::String(v) =>I256::from_str_prefixed(&v).unwrap(), //TODO U256
+            NumberLiteralTypeUnion::String(v) => I256::from_str_prefixed(&v).unwrap(), //TODO U256
             NumberLiteralTypeUnion::I32(v) => v.as_i256(),
         };
         let blen = (I256::BITS - name.leading_zeros()) as i32;
-        let (mut signed, mut bitwidth) =(false, blen);
+        let (mut signed, mut bitwidth) = (false, blen);
         if name < 0 {
-            signed=true;
-                if name != -(1 << (blen - 1)) {
-                    bitwidth += 1;
-                } 
-        } ;
+            signed = true;
+            if name != -(1 << (blen - 1)) {
+                bitwidth += 1;
+            }
+        };
         bitwidth = 8i32.max((bitwidth + 7) / 8 * 8);
         assert!(bitwidth <= 256);
         let name = name.to_string();
@@ -7130,14 +7195,19 @@ impl ArrayBase {
         }
     }
     pub fn size_in_uints(&self) -> i32 {
-        if is_instance(self.expr.as_ref().unwrap(), ASTType::NumberLiteralExpr) {
+        if self.expr.is_some()
+            && is_instance(self.expr.as_ref().unwrap(), ASTType::NumberLiteralExpr)
+        {
+            // println!("{:?}",self.expr);
             return self
                 .expr
                 .as_ref()
                 .unwrap()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_literal_expr_ref()
                 .unwrap()
-                .borrow()
                 .try_as_number_literal_expr_ref()
                 .unwrap()
                 .value;
@@ -8134,6 +8204,7 @@ impl ConstructorOrFunctionDefinition {
         } else {
             vec![]
         };
+        let return_var_name = CFG.lock().unwrap().return_var_name();
         let mut return_var_decls: Vec<_> = return_parameters
             .iter()
             .enumerate()
@@ -8142,7 +8213,7 @@ impl ConstructorOrFunctionDefinition {
                     vec![],
                     rp.borrow().annotated_type().clone(),
                     Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
-                        format!("{}_{idx}", CFG.lock().unwrap().return_var_name()),
+                        format!("{}_{idx}", return_var_name),
                     )))),
                     rp.borrow()
                         .identifier_declaration_base
@@ -8702,39 +8773,84 @@ impl InstanceTarget {
             let v = expr[0].clone().unwrap();
             if is_instance(&v, ASTType::VariableDeclaration) {
                 vec![expr[0].clone().map(|t| t.downgrade()), None]
-            } else if is_instance(&v, ASTType::LocationExprBase) {
-                let v = v
-                    .to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .clone();
+            } else {
                 match v.get_ast_type() {
                     ASTType::IdentifierExpr => {
-                        vec![v.location_expr_base_ref().target.clone(), None]
+                        vec![
+                            v.to_ast()
+                                .try_as_expression_ref()
+                                .unwrap()
+                                .try_as_tuple_or_location_expr_ref()
+                                .unwrap()
+                                .try_as_location_expr_ref()
+                                .unwrap()
+                                .location_expr_base_ref()
+                                .target
+                                .clone(),
+                            None,
+                        ]
                     }
-
                     ASTType::MemberAccessExpr => vec![
-                        v.location_expr_base_ref().target.clone(),
+                        v.to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_location_expr_ref()
+                            .unwrap()
+                            .try_as_member_access_expr_ref()
+                            .unwrap()
+                            .expr
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .target()
+                            .clone(),
                         Some(
                             ASTFlatten::from(
-                                v.try_as_member_access_expr_ref().unwrap().member.clone(),
+                                v.to_ast()
+                                    .try_as_expression_ref()
+                                    .unwrap()
+                                    .try_as_tuple_or_location_expr_ref()
+                                    .unwrap()
+                                    .try_as_location_expr_ref()
+                                    .unwrap()
+                                    .try_as_member_access_expr_ref()
+                                    .unwrap()
+                                    .member
+                                    .clone(),
                             )
                             .downgrade(),
                         ),
                     ],
                     ASTType::IndexExpr => vec![
-                        v.location_expr_base_ref().target.clone(),
-                        v.try_as_index_expr_ref()
+                        v.to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_location_expr_ref()
+                            .unwrap()
+                            .try_as_index_expr_ref()
+                            .unwrap()
+                            .arr
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .target()
+                            .clone(),
+                        v.to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_tuple_or_location_expr_ref()
+                            .unwrap()
+                            .try_as_location_expr_ref()
+                            .unwrap()
+                            .try_as_index_expr_ref()
                             .map(|astf| astf.key.clone().downgrade()),
                     ],
                     _ => vec![None; 2],
                 }
-            } else {
-                vec![None; 2]
             }
         };
         assert!(is_instances(
@@ -9618,6 +9734,15 @@ impl CodeVisitor {
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .privacy(),
+        );
+        println!(
+            "===visit_ReclassifyExpr==============={:?}",
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .homomorphism()
         );
         let h = ast
             .to_ast()

@@ -99,8 +99,7 @@ impl UsedHomomorphismsVisitor {
                 .unwrap()
                 .borrow_mut()
                 .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
-        }
-        else if is_instance(ast, ASTType::ContractDefinition) {
+        } else if is_instance(ast, ASTType::ContractDefinition) {
             // println!("===visit=============={:?}",ast.get_ast_type());
             ast.try_as_contract_definition_ref()
                 .unwrap()
@@ -289,12 +288,13 @@ impl UsedHomomorphismsVisitor {
     }
     // Guarantee consistent order
     pub fn used_crypto_backends(used_homs: BTreeSet<String>) -> Vec<CryptoParams> {
+        let user_config = CFG.lock().unwrap().user_config.clone();
         Homomorphism::fields()
             .iter()
             .filter_map(|hom| {
                 used_homs
                     .contains(hom)
-                    .then(|| CFG.lock().unwrap().user_config.get_crypto_params(&hom))
+                    .then(|| user_config.get_crypto_params(&hom))
             })
             .collect::<BTreeSet<_>>()
             .into_iter()

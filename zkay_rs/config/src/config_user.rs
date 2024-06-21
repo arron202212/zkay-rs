@@ -66,7 +66,7 @@ pub fn _check_is_one_of(val: &String, legal_vals: &Vec<String>) {
 // pub fn //_type_check(val: Any, t){
 //     if not isinstance(val, t){
 //         raise ValueError(f"Value {val} has wrong type (expected {t})")
-
+#[derive(Clone)]
 pub struct UserConfig {
     pub _appdirs: AppInfo,
     pub _proving_scheme: String,

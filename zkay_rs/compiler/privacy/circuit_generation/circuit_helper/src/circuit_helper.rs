@@ -19,21 +19,21 @@ use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty,
-    ASTFlatten, ASTType, AllExpr, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase,
-    AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, AssignmentStatementBaseRef,
-    Block, BooleanLiteralType, BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
-    ConstructorOrFunctionDefinition, ElementaryTypeName, EncryptionExpression,
-    EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
-    ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
-    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
-    LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType,
-    NumberTypeName, Parameter, ReturnStatement, SimpleStatement, StateVariableDeclaration,
-    Statement, StatementBaseMutRef, StatementBaseProperty, StatementBaseRef, TupleExpr,
-    TupleOrLocationExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName, AssignmentStatement,
+    AssignmentStatementBase, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty,
+    AssignmentStatementBaseRef, Block, BooleanLiteralType, BuiltinFunction,
+    CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
+    ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
+    ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef,
+    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
+    FunctionCallExprBaseProperty, FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf,
+    Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
+    IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression,
+    IntoStatement, KeyLiteralExpr, LocationExpr, LocationExprBaseProperty, MeExpr,
+    MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
+    ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
+    StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
@@ -58,8 +58,8 @@ where
 {
     // Function and verification contract corresponding to this circuit
     pub fct: RcCell<ConstructorOrFunctionDefinition>,
-    pub verifier_contract_filename: Option<String>,
-    pub verifier_contract_type: Option<UserDefinedTypeName>,
+    pub verifier_contract_filename: RcCell<Option<String>>,
+    pub verifier_contract_type: RcCell<Option<UserDefinedTypeName>>,
     // Metadata set later by ZkayContractTransformer
     pub has_return_var: bool,
     // Transformer visitors
@@ -67,7 +67,7 @@ where
     pub _circ_trafo: Option<Box<dyn TransformerVisitorEx>>,
     // List of proof circuit statements (assertions and assignments)
     // WARNING: Never assign to let _phi, always access it using the phi property and only mutate it
-    pub _phi: Vec<RcCell<CircuitStatement>>,
+    pub _phi: RcCell<Vec<RcCell<CircuitStatement>>>,
     // Name factory for private circuit inputs
     pub _secret_input_name_factory: NameFactory,
     // Name factory for temporary internal circuit variables
@@ -82,15 +82,15 @@ where
     // For each statement, cache the generated variable holding the requested public key of a given
     // not-statically-known identifier, to prevent requesting the same key over and over again
     pub _requested_dynamic_pks:
-        BTreeMap<RcCell<Statement>, BTreeMap<RcCell<Identifier>, HybridArgumentIdf>>,
+        RcCell<BTreeMap<RcCell<Statement>, BTreeMap<RcCell<Identifier>, HybridArgumentIdf>>>,
     // The crypto backends for which msg.sender"s secret key must be added to the private circuit inputs
-    pub _needed_secret_key: BTreeSet<CryptoParams>,
+    pub _needed_secret_key: RcCell<BTreeSet<CryptoParams>>,
     // Set of statically known privacy labels (OrderedDict is used to ensure deterministic iteration order)
-    pub _global_keys: BTreeSet<(Option<ASTFlatten>, CryptoParams)>,
+    pub _global_keys: RcCell<BTreeSet<(Option<ASTFlatten>, CryptoParams)>>,
     // List of all (non-transitive) calls in let fct"s body to functions which require verification, in AST visiting order
     // This is internally used to compute transitive in/out/privin sizes, but may also be useful when implementing a new
     // circuit generator backend.
-    pub function_calls_with_verification: Vec<RcCell<FunctionCallExpr>>,
+    pub function_calls_with_verification: RcCell<Vec<RcCell<FunctionCallExpr>>>,
     // Set (with deterministic order) of all functions which this circuit transitively calls.
     pub transitively_called_functions: BTreeSet<RcCell<ConstructorOrFunctionDefinition>>,
     pub trans_priv_size: i32,
@@ -98,7 +98,7 @@ where
     pub trans_out_size: i32,
     // Remapper instance used for SSA simulation
     pub _remapper: CircVarRemapper,
-    me: WeakCell<CircuitHelper>,
+    me: Option<WeakCell<CircuitHelper>>,
 }
 
 impl CircuitHelper
@@ -127,29 +127,42 @@ where
     where
         Self: Sized,
     {
-// println!("=====new_circuit_helper==before=={}=", line!());
+        // println!("=====new_circuit_helper==before=={}=", line!());
         // super().__init__()
-        let mut verifier_contract_filename: Option<String> = None;
-        let mut verifier_contract_type: Option<UserDefinedTypeName> = None;
+        let mut verifier_contract_filename: RcCell<Option<String>> = RcCell::new(None);
+        let mut verifier_contract_type: RcCell<Option<UserDefinedTypeName>> = RcCell::new(None);
         // let _expr_trafo = None; //expr_trafo_constructor(&self);
         // let _circ_trafo = None; //circ_trafo_constructor(&self);
-        let mut _needed_secret_key = BTreeSet::new();
-        let mut _global_keys = BTreeSet::new();
+        let mut _needed_secret_key = RcCell::new(BTreeSet::new());
+        let mut _global_keys = RcCell::new(BTreeSet::new());
         let mut transitively_called_functions = BTreeSet::new();
         let (mut trans_priv_size, mut trans_in_size, mut trans_out_size) = (0, 0, 0); //Set later by transform_internal_calls
+
         if let Some(internal_circuit) = internal_circuit {
+            println!("======internal_circuit=============");
             let internal_circuit = internal_circuit.upgrade().unwrap();
             //Inherit metadata from internal function"s circuit helper
-            verifier_contract_filename =
-                internal_circuit.borrow().verifier_contract_filename.clone();
-            verifier_contract_type = internal_circuit.borrow().verifier_contract_type.clone();
-            _global_keys = internal_circuit.borrow()._global_keys.clone();
+            *verifier_contract_filename.borrow_mut() = internal_circuit
+                .borrow()
+                .verifier_contract_filename
+                .borrow()
+                .clone();
+            *verifier_contract_type.borrow_mut() = internal_circuit
+                .borrow()
+                .verifier_contract_type
+                .borrow()
+                .clone();
+            *_global_keys.borrow_mut() = internal_circuit.borrow()._global_keys.borrow().clone();
 
             trans_priv_size = internal_circuit.borrow().priv_in_size_trans();
             trans_in_size = internal_circuit.borrow().in_size_trans();
             trans_out_size = internal_circuit.borrow().out_size_trans();
 
-            _needed_secret_key = internal_circuit.borrow()._needed_secret_key.clone();
+            *_needed_secret_key.borrow_mut() = internal_circuit
+                .borrow()
+                ._needed_secret_key
+                .borrow()
+                .clone();
 
             if internal_circuit.borrow().fct.borrow().requires_verification {
                 transitively_called_functions = internal_circuit
@@ -165,18 +178,18 @@ where
                 transitively_called_functions = BTreeSet::new();
             }
         }
-// println!("=====new_circuit_helper==before=={}=", line!());
-        let zk_in_name=CFG.lock().unwrap().zk_in_name();
-        RcCell(Rc::new_cyclic(|me| {
+        // println!("=====new_circuit_helper==before=={}=", line!());
+        let zk_in_name = CFG.lock().unwrap().zk_in_name();
+        let mut selfs = RcCell(Rc::new_cyclic(|_me| {
             RefCell::new(Self {
-                me: WeakCell(me.clone()),
+                me: None,
                 fct,
                 verifier_contract_filename,
                 verifier_contract_type,
                 has_return_var: false,
-                _expr_trafo: expr_trafo_constructor(&WeakCell(me.clone())),
-                _circ_trafo: circ_trafo_constructor(&WeakCell(me.clone())),
-                _phi: vec![],
+                _expr_trafo: None,
+                _circ_trafo: None,
+                _phi: RcCell::new(vec![]),
                 _secret_input_name_factory: NameFactory::new(
                     String::from("secret"),
                     HybridArgType::PrivCircuitVal,
@@ -185,47 +198,51 @@ where
                     String::from("tmp"),
                     HybridArgType::TmpCircuitVal,
                 ),
-                _in_name_factory: NameFactory::new(
-                    zk_in_name,
-                    HybridArgType::PubCircuitArg,
-                ),
+                _in_name_factory: NameFactory::new(zk_in_name, HybridArgType::PubCircuitArg),
                 _out_name_factory: NameFactory::new(
                     CFG.lock().unwrap().zk_out_name(),
                     HybridArgType::PubCircuitArg,
                 ),
                 static_owner_labels,
-                _requested_dynamic_pks: BTreeMap::new(),
+                _requested_dynamic_pks: RcCell::new(BTreeMap::new()),
                 _needed_secret_key,
                 _global_keys,
-                function_calls_with_verification: vec![],
+                function_calls_with_verification: RcCell::new(vec![]),
                 transitively_called_functions,
                 trans_priv_size,
                 trans_in_size,
                 trans_out_size,
                 _remapper: CircVarRemapper::new(),
             })
-        }))
+        }));
+        let weakselfs = selfs.downgrade();
+        selfs.borrow_mut().me = Some(weakselfs.clone());
+        selfs.borrow_mut()._expr_trafo = expr_trafo_constructor(&weakselfs);
+        selfs.borrow_mut()._circ_trafo = circ_trafo_constructor(&weakselfs);
+        selfs
     }
     fn me(&self) -> RcCell<Self> {
-        self.me.clone().upgrade().unwrap()
+        self.me.clone().unwrap().upgrade().unwrap()
     }
     pub fn register_verification_contract_metadata(
-        &mut self,
+        &self,
         contract_type: TypeName,
         import_filename: &str,
     ) {
-        self.verifier_contract_type = if let TypeName::UserDefinedTypeName(v) = contract_type {
-            Some(v)
-        } else {
-            None
-        };
-        self.verifier_contract_filename = Some(import_filename.to_string());
+        *self.verifier_contract_type.borrow_mut() = contract_type.try_as_user_defined_type_name();
+        *self.verifier_contract_filename.borrow_mut() = Some(import_filename.to_string());
     }
 
     //Properties #
     pub fn get_verification_contract_name(&self) -> String {
-        assert!(self.verifier_contract_type.is_some());
-        self.verifier_contract_type.as_ref().unwrap().code()
+        assert!(self.verifier_contract_type.borrow().is_some());
+        let code = self
+            .verifier_contract_type
+            .borrow()
+            .as_ref()
+            .unwrap()
+            .code();
+        code
     }
     // """
     // Return true if a struct needs to be created in the solidity code to store public data (IO) associated with this circuit.
@@ -250,7 +267,9 @@ where
     }
     // """Size of all private inputs required for self.fct only (without called functions, in #uints)"""
     pub fn priv_in_size(&self) -> i32 {
-        self._secret_input_name_factory.size
+        let size = *self._secret_input_name_factory.size.borrow();
+        println!("=priv_in_size========={size}");
+        size
     }
     // """Total size of all public outputs for this circuit (in //uints)"""
     pub fn out_size_trans(&self) -> i32 {
@@ -258,7 +277,9 @@ where
     }
     // """Size of all public outputs required for self.fct only (without called functions, in #uints)"""
     pub fn out_size(&self) -> i32 {
-        self._out_name_factory.size
+        let size = *self._out_name_factory.size.borrow();
+        println!("=out_size========={size}");
+        size
     }
     // """Total size of all public inputs for this circuit (in //uints)"""
     pub fn in_size_trans(&self) -> i32 {
@@ -266,59 +287,47 @@ where
     }
     // """Size of all public inputs required for self.fct only (without called functions, in #uints)"""
     pub fn in_size(&self) -> i32 {
-        self._in_name_factory.size
+        let size = *self._in_name_factory.size.borrow();
+        println!("=in_size========={size}");
+        size
     }
     // """All public output HybridArgumentIdfs (for self.fct only, w/o called functions)"""
     pub fn output_idfs(&self) -> Vec<HybridArgumentIdf> {
         self._out_name_factory
             .idfs
+            .borrow()
             .iter()
-            .filter_map(|v| {
-                if let Identifier::HybridArgumentIdf(h) = v {
-                    Some(h.clone())
-                } else {
-                    None
-                }
-            })
+            .cloned()
+            .filter_map(|v| v.try_as_hybrid_argument_idf())
             .collect()
     }
     // """All public input HybridArgumentIdfs (for self.fct only, w/o called functions)"""
     pub fn input_idfs(&self) -> Vec<HybridArgumentIdf> {
         self._in_name_factory
             .idfs
+            .borrow()
             .iter()
-            .filter_map(|v| {
-                if let Identifier::HybridArgumentIdf(h) = v {
-                    Some(h.clone())
-                } else {
-                    None
-                }
-            })
+            .cloned()
+            .filter_map(|v| v.try_as_hybrid_argument_idf())
             .collect()
     }
     // """All private input HybridArgumentIdfs (for self.fct only, w/o called functions)"""
     pub fn sec_idfs(&self) -> Vec<HybridArgumentIdf> {
         self._secret_input_name_factory
             .idfs
+            .borrow()
             .iter()
-            .filter_map(|v| {
-                if let Identifier::HybridArgumentIdf(h) = v {
-                    Some(h.clone())
-                } else {
-                    None
-                }
-            })
+            .cloned()
+            .filter_map(|v| v.try_as_hybrid_argument_idf())
             .collect()
     }
     // """List of abstract circuit statements which defines circuit semantics"""
-
     pub fn phi(&self) -> Vec<RcCell<CircuitStatement>> {
-        self._phi.clone()
+        self._phi.borrow().clone()
     }
     // """Statically known keys required by this circuit"""
-
     pub fn requested_global_keys(&self) -> BTreeSet<(Option<ASTFlatten>, CryptoParams)> {
-        self._global_keys.clone()
+        self._global_keys.borrow().clone()
     }
     // """Returns names and lengths of all public parameter uint256 arrays which go into the verifier"""
     pub fn public_arg_arrays(&self) -> Vec<(String, i32)> {
@@ -339,7 +348,7 @@ where
     // All statements which are inserted into self.phi during the lifetime of this context manager are automatically wrapped inside
     // a CircIndentBlock statement with the supplied name.
     // """
-    pub fn circ_indent_block(&mut self, name: &str) {
+    pub fn circ_indent_block(&self, name: &str) {
         let old_len = self.phi().len();
         // yield
         let mut phi = self.phi();
@@ -347,33 +356,35 @@ where
         phi.push(RcCell::new(CircuitStatement::CircIndentBlock(
             CircIndentBlock::new(name.to_string(), post),
         )));
-        self._phi = phi;
+        *self._phi.borrow_mut() = phi;
     }
     // """Return a context manager which manages the lifetime of a guard variable."""
 
     pub fn guarded(&self, guard_idf: HybridArgumentIdf, is_true: bool) {
-        CircGuardModification::guarded(&mut self.phi(), guard_idf, is_true);
+        CircGuardModification::guarded(self._phi.clone(), guard_idf, is_true);
     }
     // """Return the name of the HybridArgumentIdf which holds the statically known public key for the given privacy label."""
 
     pub fn get_glob_key_name(label: &ASTFlatten, crypto_params: &CryptoParams) -> String {
-        // assert!(is_instances(
-        //     &label,
-        //     vec![ASTType::MeExpr, ASTType::Identifier]
-        // ));
-
-        let name = if let Some(me_expr) = label
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .try_as_me_expr_ref()
-        {
-            me_expr.name.clone()
+        assert!(is_instances(
+            label,
+            vec![ASTType::MeExpr, ASTType::IdentifierBase]
+        ));
+        // println!("=get_glob_key_name=============={label:?}");
+        let name = if is_instance(label, ASTType::MeExpr) {
+            label
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_me_expr_ref()
+                .unwrap()
+                .name
+                .clone()
         } else {
             label
+                .to_ast()
                 .try_as_identifier_ref()
                 .unwrap()
-                .borrow()
                 .name()
                 .clone()
         };
@@ -387,6 +398,13 @@ where
     pub fn requires_verification(&self) -> bool {
         let req =
             self.in_size_trans() > 0 || self.out_size_trans() > 0 || self.priv_in_size_trans() > 0;
+        println!(
+            "====={},===={},==={},==={}======",
+            self.in_size_trans(),
+            self.out_size_trans(),
+            self.priv_in_size_trans(),
+            self.fct.borrow().requires_verification
+        );
         assert!(req == self.fct.borrow().requires_verification);
         req
     }
@@ -396,7 +414,7 @@ where
     // Make circuit prove that the encryption of the specified parameter is correct.
     // """
     pub fn ensure_parameter_encryption(
-        &mut self,
+        &self,
         insert_loc_stmt: &ASTFlatten,
         param: &RcCell<Parameter>,
     ) {
@@ -407,7 +425,10 @@ where
             .unwrap()
             .borrow()
             .is_cipher());
-
+        println!(
+            "==_secret_input_name_factory=====ensure_parameter_encryption======{}====",
+            line!()
+        );
         let plain_idf = self._secret_input_name_factory.add_idf(
             param
                 .borrow()
@@ -444,6 +465,10 @@ where
                 false
             ),
             param.borrow().idf().as_ref().unwrap().borrow().name()
+        );
+        println!(
+            "==_in_name_factory====ensure_parameter_encryption========{}==",
+            line!()
         );
         let cipher_idf = self._in_name_factory.add_idf(
             name,
@@ -484,7 +509,7 @@ where
         );
     }
 
-    pub fn get_randomness_for_rerand(&mut self, expr: &ASTFlatten) -> RcCell<IdentifierExpr> {
+    pub fn get_randomness_for_rerand(&self, expr: &ASTFlatten) -> RcCell<IdentifierExpr> {
         let idf = self._secret_input_name_factory.get_new_idf(
             &RcCell::new(TypeName::rnd_type(
                 expr.try_as_expression_ref()
@@ -521,7 +546,7 @@ where
     // :return: Location expression which references the encrypted circuit result
     // """
     pub fn evaluate_expr_in_circuit(
-        &mut self,
+        &self,
         expr: &ASTFlatten,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
@@ -544,7 +569,7 @@ where
     // :param ast: the statement to evaluate inside the circuit
     // :return: AssignmentStatement as described above
     // """
-    pub fn evaluate_stmt_in_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    pub fn evaluate_stmt_in_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         let mut astmt = RcCell::new(SimpleStatement::ExpressionStatement(
             ExpressionStatement::new(RcCell::new(NumberLiteralExpr::new(0, false)).into()),
         ));
@@ -804,7 +829,7 @@ where
         }
         Some(astmt.into())
     }
-    pub fn invalidate_idf(&mut self, target_idf: &RcCell<Identifier>) {
+    pub fn invalidate_idf(&self, target_idf: &RcCell<Identifier>) {
         if self._remapper.0.is_remapped(target_idf) {
             self._remapper.0.reset_key(target_idf);
         }
@@ -814,7 +839,7 @@ where
 
     // :param ast: The function call to include, target function must require verification
     // """
-    pub fn call_function(&mut self, ast: &ASTFlatten) {
+    pub fn call_function(&self, ast: &ASTFlatten) {
         assert!(
             ast.try_as_function_call_expr_ref()
                 .unwrap()
@@ -838,8 +863,10 @@ where
                 .requires_verification
         );
         self.function_calls_with_verification
+            .borrow_mut()
             .push(ast.try_as_function_call_expr_ref().unwrap().clone());
         self._phi
+            .borrow_mut()
             .push(RcCell::new(CircuitStatement::CircCall(CircCall::new(
                 ast.try_as_function_call_expr_ref()
                     .unwrap()
@@ -872,24 +899,25 @@ where
     // :return: HybridArgumentIdf containing the requested key and an AssignmentStatement which assigns the key request to the idf location
     // """
     pub fn request_public_key(
-        &mut self,
+        &self,
         crypto_params: &CryptoParams,
         plabel: Option<ASTFlatten>,
         name: &str,
-    ) -> (HybridArgumentIdf, AssignmentStatement) //(Identifier,CircuitInputStatement)
-    {
+    ) -> (HybridArgumentIdf, AssignmentStatement) {
+        //(Identifier,CircuitInputStatement)
+        println!("==request_public_key===============");
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
             None,
         );
+        let pki_contract_name = CFG
+            .lock()
+            .unwrap()
+            .get_pki_contract_name(&crypto_params.identifier_name());
         let pki = IdentifierExpr::new(
             IdentifierExprUnion::String(
-                CFG.lock().unwrap().get_contract_var_name(
-                    CFG.lock()
-                        .unwrap()
-                        .get_pki_contract_name(&crypto_params.identifier_name()),
-                ),
+                CFG.lock().unwrap().get_contract_var_name(pki_contract_name),
             ),
             None,
         );
@@ -919,9 +947,9 @@ where
         (idf, le)
     }
 
-    pub fn request_private_key(&mut self, crypto_params: &CryptoParams) -> Vec<ASTFlatten> {
+    pub fn request_private_key(&self, crypto_params: &CryptoParams) -> Vec<ASTFlatten> {
         assert!(
-            self._needed_secret_key.contains(&crypto_params)
+            self._needed_secret_key.borrow().contains(&crypto_params)
                 || self
                     .fct
                     .borrow()
@@ -960,6 +988,7 @@ where
                     .contains(crypto_params)
         );
         let key_name = Self::get_own_secret_key_name(crypto_params);
+        println!("==request_private_key===============");
         self._secret_input_name_factory.add_idf(
             key_name,
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
@@ -986,9 +1015,9 @@ where
     // :param expr: [SIDE EFFECT] expression which should be made available inside the circuit as an argument
     // :return: HybridArgumentIdf which references the plaintext value of the newly added input
     // """
-    pub fn add_to_circuit_inputs(&mut self, expr: &ASTFlatten) -> HybridArgumentIdf {
+    pub fn add_to_circuit_inputs(&self, expr: &ASTFlatten) -> HybridArgumentIdf {
         let privacy = if expr
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
@@ -1015,7 +1044,12 @@ where
             Some(RcCell::new(Expression::all_expr()).into())
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
-
+        println!(
+            "==is_public====={is_public}=={:?}===={:?}==={:?}===",
+            expr.to_string(),
+            expr.get_ast_type(),
+            privacy
+        );
         let expr_text = expr.code();
         let input_expr = self
             ._expr_trafo
@@ -1025,7 +1059,7 @@ where
         let t = input_expr
             .as_ref()
             .unwrap()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
@@ -1073,14 +1107,14 @@ where
         }
 
         let mut t_suffix = String::new();
-        if is_instance(expr, ASTType::IdentifierExpr)
-        //Look in cache before doing expensive move-in
-        {
+        if is_instance(expr, ASTType::IdentifierExpr) {
+            //Look in cache before doing expensive move-in
+
             if self._remapper.0.is_remapped(
                 &expr
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -1090,7 +1124,7 @@ where
                     .unwrap()
                     .upgrade()
                     .unwrap()
-                    .try_as_identifier_declaration_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .idf()
@@ -1098,9 +1132,11 @@ where
             ) {
                 return self._remapper.0.get_current(
                     &expr
+                        .to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .target()
@@ -1119,9 +1155,11 @@ where
 
             t_suffix = format!(
                 "_{}",
-                expr.try_as_tuple_or_location_expr_ref()
+                expr.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
                     .try_as_location_expr_ref()
                     .unwrap()
                     .target()
@@ -1129,7 +1167,7 @@ where
                     .unwrap()
                     .upgrade()
                     .unwrap()
-                    .try_as_identifier_declaration_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .idf()
@@ -1145,7 +1183,7 @@ where
                 "{}{t_suffix}",
                 self._in_name_factory.base_name_factory.get_new_name(
                     &expr
-                        .try_as_expression_ref()
+                        .ast_base_ref()
                         .unwrap()
                         .borrow()
                         .annotated_type()
@@ -1158,9 +1196,13 @@ where
                     false
                 )
             );
+            println!(
+                "==add_to_circuit_inputs=======_in_name_factory======={}=",
+                line!()
+            );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
-                expr.try_as_expression_ref()
+                expr.ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -1173,20 +1215,21 @@ where
                 None,
             );
             let return_idf = input_idf.clone();
-            self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                CircComment::new(format!("{} = {expr_text}", input_idf.identifier_base.name)),
-            )));
+            self._phi
+                .borrow_mut()
+                .push(RcCell::new(CircuitStatement::CircComment(
+                    CircComment::new(format!("{} = {expr_text}", input_idf.identifier_base.name)),
+                )));
             (return_idf, input_idf)
-        } else
-        //Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
-        {
+        } else {
+            //Encrypted inputs need to be decrypted inside the circuit (i.e. add plain as private input and prove encryption)
             let tname = format!(
                 "{}{t_suffix}",
                 self._secret_input_name_factory
                     .base_name_factory
                     .get_new_name(
                         &*expr
-                            .try_as_expression_ref()
+                            .ast_base_ref()
                             .unwrap()
                             .borrow()
                             .annotated_type()
@@ -1199,9 +1242,13 @@ where
                         false
                     )
             );
-            let locally_decrypted_idf = self._secret_input_name_factory.add_idf(
+            println!(
+                "===========add_to_circuit_inputs=_secret_input_name_factory==========={}====",
+                line!()
+            );
+            let _locally_decrypted_idf = self._secret_input_name_factory.add_idf(
                 tname,
-                expr.try_as_expression_ref()
+                expr.ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -1213,19 +1260,19 @@ where
                     .unwrap(),
                 None,
             );
-            let return_idf = locally_decrypted_idf.clone();
+            let return_idf = _locally_decrypted_idf.clone();
             let cipher_t = RcCell::new(TypeName::cipher_type(
                 input_expr
                     .as_ref()
                     .unwrap()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
                     .clone(),
-                expr.try_as_expression_ref()
+                expr.ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -1241,53 +1288,73 @@ where
                     .base_name_factory
                     .get_new_name(&cipher_t, false)
             );
+            println!(
+                "=add_to_circuit_inputs====_in_name_factory============{}===",
+                line!()
+            );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 &cipher_t,
                 Some(
                     &RcCell::new(IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(RcCell::new(
-                            Identifier::HybridArgumentIdf(locally_decrypted_idf),
+                            Identifier::HybridArgumentIdf(_locally_decrypted_idf.clone()),
                         )),
                         None,
                     ))
                     .into(),
                 ),
             );
+            locally_decrypted_idf = Some(_locally_decrypted_idf);
             (return_idf, input_idf)
         };
 
         //Add a CircuitInputStatement to the solidity code, which looks like a normal assignment statement,
         //but also signals the offchain simulator to perform decryption if necessary
-        expr.try_as_expression_ref()
+        let statement = expr
+            .to_ast()
+            .try_as_expression_ref()
             .unwrap()
-            .borrow_mut()
-            .expression_base_mut_ref()
-            .statement
+            .statement()
             .clone()
             .unwrap()
             .upgrade()
-            .unwrap()
-            .try_as_statement_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_base_mut_ref()
-            .unwrap()
-            .pre_statements
-            .push(
-                RcCell::new(CircuitInputStatement::new(
-                    input_idf.get_loc_expr(None),
-                    input_expr.unwrap(),
-                    None,
-                ))
-                .into(),
-            );
+            .unwrap();
+        let pre_statement = RcCell::new(CircuitInputStatement::new(
+            input_idf.get_loc_expr(None),
+            input_expr.unwrap(),
+            None,
+        ))
+        .into();
+        if statement.is_ast() {
+            statement
+                .try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else if statement.is_ast() {
+            statement
+                .try_as_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else {
+            panic!("======else========={statement:?}");
+        }
 
         if !is_public {
             //Check if the secret plain input corresponds to the decrypted cipher value
             let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(
                 &expr
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -1296,17 +1363,19 @@ where
                     .borrow()
                     .homomorphism,
             );
-            self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                CircComment::new(format!(
-                    "{:?} = dec({expr_text}) [{}]",
-                    locally_decrypted_idf.clone().unwrap(),
-                    input_idf.identifier_base.name
-                )),
-            )));
+            self._phi
+                .borrow_mut()
+                .push(RcCell::new(CircuitStatement::CircComment(
+                    CircComment::new(format!(
+                        "{:?} = dec({expr_text}) [{}]",
+                        locally_decrypted_idf.clone().unwrap(),
+                        input_idf.identifier_base.name
+                    )),
+                )));
             let mut statement = expr
+                .to_ast()
                 .try_as_expression_ref()
                 .unwrap()
-                .borrow()
                 .expression_base_ref()
                 .statement
                 .clone()
@@ -1320,24 +1389,28 @@ where
                 false,
                 true,
             );
-            expr.try_as_expression_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = Some(statement);
+            if expr.is_expression() {
+                expr.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expression_base_mut_ref()
+                    .statement = Some(statement);
+            } else {
+                panic!("=========else========={expr:?}");
+            }
         }
 
         //Cache circuit input for later reuse if possible
         if CFG.lock().unwrap().user_config.opt_cache_circuit_inputs()
             && is_instance(expr, ASTType::IdentifierExpr)
-        //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
-        //      This works for now because we never perform homomorphic operations on variables we can decrypt.
         {
+            //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
+            //      This works for now because we never perform homomorphic operations on variables we can decrypt.
             self._remapper.0.remap(
                 &expr
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_tuple_or_location_expr_ref()
                     .unwrap()
                     .try_as_location_expr_ref()
@@ -1347,7 +1420,7 @@ where
                     .unwrap()
                     .upgrade()
                     .unwrap()
-                    .try_as_identifier_declaration_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .idf()
@@ -1367,28 +1440,26 @@ where
     // """
     pub fn get_remapped_idf_expr(&self, idf: ASTFlatten) -> ASTFlatten {
         let target = idf
-            .try_as_identifier_expr_ref()
+            .to_ast()
+            .try_as_expression_ref()
             .unwrap()
-            .borrow()
-            .location_expr_base
-            .target
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+            .unwrap()
+            .target()
             .clone()
             .and_then(|t| t.upgrade());
         assert!(target.is_some());
         assert!(!is_instance(
-            idf.try_as_identifier_expr_ref()
-                .unwrap()
-                .borrow()
-                .idf()
-                .as_ref()
-                .unwrap(),
+            idf.ast_base_ref().unwrap().borrow().idf().as_ref().unwrap(),
             ASTType::HybridArgumentIdf
         ));
         if self._remapper.0.is_remapped(
             &target
                 .as_ref()
                 .unwrap()
-                .try_as_identifier_declaration_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .idf()
@@ -1398,7 +1469,7 @@ where
                 &target
                     .as_ref()
                     .unwrap()
-                    .try_as_identifier_declaration_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .idf()
@@ -1407,13 +1478,8 @@ where
             );
             remapped_idf
                 .get_idf_expr(
-                    idf.try_as_identifier_expr_ref()
+                    idf.ast_base_ref()
                         .unwrap()
-                        .borrow()
-                        .location_expr_base
-                        .tuple_or_location_expr_base
-                        .expression_base
-                        .ast_base
                         .borrow()
                         .parent
                         .clone()
@@ -1423,11 +1489,17 @@ where
                 )
                 .as_ref()
                 .unwrap()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
                 .try_as_identifier_expr_ref()
                 .unwrap()
-                .borrow()
                 .as_type(
-                    &idf.try_as_identifier_expr_ref()
+                    &idf.ast_base_ref()
                         .unwrap()
                         .borrow()
                         .annotated_type()
@@ -1447,7 +1519,7 @@ where
     // :param is_local: whether orig_idf refers to a local variable (as opposed to a state variable)
     // """
     pub fn create_new_idf_version_from_value(
-        &mut self,
+        &self,
         orig_idf: &RcCell<Identifier>,
         expr: &ASTFlatten,
     ) {
@@ -1461,7 +1533,7 @@ where
     // :param fcall: Function call to inline
     // :return: Expression (1 retval) / TupleExpr (multiple retvals) with return value(s)
     // """
-    pub fn inline_function_call_into_circuit(&mut self, fcall: &ASTFlatten) -> Option<ASTFlatten> {
+    pub fn inline_function_call_into_circuit(&self, fcall: &ASTFlatten) -> Option<ASTFlatten> {
         assert!(
             is_instance(
                 fcall
@@ -1572,13 +1644,15 @@ where
                     .args(),
             )
         {
-            self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                CircComment::new(format!(
-                    "ARG {}: {}",
-                    param.borrow().idf().as_ref().unwrap().borrow().name(),
-                    arg.code()
-                )),
-            )));
+            self._phi
+                .borrow_mut()
+                .push(RcCell::new(CircuitStatement::CircComment(
+                    CircComment::new(format!(
+                        "ARG {}: {}",
+                        param.borrow().idf().as_ref().unwrap().borrow().name(),
+                        arg.code()
+                    )),
+                )));
             // with
             self.circ_indent_block("");
             {
@@ -1676,10 +1750,12 @@ where
     }
     // """Include private assignment statement in this circuit."""
 
-    pub fn add_assignment_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(ast.code()),
-        )));
+    pub fn add_assignment_to_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+        self._phi
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircComment(
+                CircComment::new(ast.code()),
+            )));
         self._add_assign(
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -1698,10 +1774,12 @@ where
         Some(ast.clone())
     }
 
-    pub fn add_var_decl_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(ast.code()),
-        )));
+    pub fn add_var_decl_to_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+        self._phi
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircComment(
+                CircComment::new(ast.code()),
+            )));
         if ast
             .try_as_variable_declaration_statement_ref()
             .unwrap()
@@ -1754,10 +1832,12 @@ where
         Some(ast.clone())
     }
 
-    pub fn add_return_stmt_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(ast.code()),
-        )));
+    pub fn add_return_stmt_to_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+        self._phi
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircComment(
+                CircComment::new(ast.code()),
+            )));
         assert!(ast
             .try_as_return_statement_ref()
             .unwrap()
@@ -1821,7 +1901,7 @@ where
         Some(ast.clone())
     }
     // """Include private if statement in this circuit."""
-    pub fn add_if_statement_to_circuit(&mut self, ast: &ASTFlatten) -> Option<ASTFlatten> {
+    pub fn add_if_statement_to_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         //Handle if branch
         // with
         self._remapper.0.remap_scope(None);
@@ -1834,6 +1914,7 @@ where
                 .code()
         ));
         self._phi
+            .borrow_mut()
             .push(RcCell::new(CircuitStatement::CircComment(comment.clone())));
         let cond = self._evaluate_private_expression(
             &ast.try_as_if_statement_ref()
@@ -1886,12 +1967,14 @@ where
             .else_branch
             .is_some()
         {
-            self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                CircComment::new(format!(
-                    "else [{}]",
-                    cond.as_ref().unwrap().identifier_base.name
-                )),
-            )));
+            self._phi
+                .borrow_mut()
+                .push(RcCell::new(CircuitStatement::CircComment(
+                    CircComment::new(format!(
+                        "else [{}]",
+                        cond.as_ref().unwrap().identifier_base.name
+                    )),
+                )));
             self._circ_trafo.as_ref().unwrap().visitBlock(
                 Some(
                     ast.try_as_if_statement_ref()
@@ -1952,7 +2035,7 @@ where
         Some(ast.clone())
     }
     pub fn add_block_to_circuit(
-        &mut self,
+        &self,
         ast: &ASTFlatten,
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
@@ -1985,9 +2068,11 @@ where
                 ASTType::IfStatement,
             ],
         );
-        self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(String::from("{")),
-        )));
+        self._phi
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircComment(
+                CircComment::new(String::from("{")),
+            )));
         // with
         self.circ_indent_block("");
         // with
@@ -2035,9 +2120,11 @@ where
             .pre_statements
             .append(&mut statements);
 
-        self._phi.push(RcCell::new(CircuitStatement::CircComment(
-            CircComment::new(String::from("}")),
-        )));
+        self._phi
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircComment(
+                CircComment::new(String::from("}")),
+            )));
         Some(ast.clone())
     }
 
@@ -2061,7 +2148,7 @@ where
         privacy.clone()
     }
     // """Assign expression to a fresh temporary circuit variable."""
-    pub fn _create_temp_var(&mut self, tag: &str, expr: &ASTFlatten) -> HybridArgumentIdf {
+    pub fn _create_temp_var(&self, tag: &str, expr: &ASTFlatten) -> HybridArgumentIdf {
         self._evaluate_private_expression(expr, &format!("_{tag}"))
             .unwrap()
     }
@@ -2071,7 +2158,7 @@ where
     // :param lhs: destination
     // :param rhs: source
     // """
-    pub fn _add_assign(&mut self, lhs: &ASTFlatten, rhs: &ASTFlatten) {
+    pub fn _add_assign(&self, lhs: &ASTFlatten, rhs: &ASTFlatten) {
         if is_instance(lhs, ASTType::IdentifierExpr) {
             //for now no ref types
             assert!(lhs
@@ -2169,7 +2256,7 @@ where
     // :return: HybridArgumentIdf which references the circuit output containing the result of expr
     // """
     pub fn _get_circuit_output_for_private_expression(
-        &mut self,
+        &self,
         expr: &ASTFlatten,
         new_privacy: &ASTFlatten,
         homomorphism: &String,
@@ -2208,9 +2295,11 @@ where
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_builtin_function_ref()
                 .unwrap()
-                .borrow()
                 .homomorphism
                 != Homomorphism::non_homomorphic();
         if is_hom_comp {
@@ -2248,7 +2337,10 @@ where
             self._evaluate_private_expression(expr, "").unwrap()
         } else {
             //For public expressions which should not be evaluated in private, only the result is moved into the circuit
-
+            println!(
+                "====expr===========priv_result_idf========{:?}",
+                expr.to_string()
+            );
             self.add_to_circuit_inputs(expr)
         };
         let private_expr = priv_result_idf.get_idf_expr(None);
@@ -2301,6 +2393,7 @@ where
                     false
                 )
             );
+            println!("=_get_circuit_output_for_private_expression========_out_name_factory============={}==",line!());
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 expr.try_as_expression_ref()
@@ -2316,6 +2409,7 @@ where
                 private_expr.as_ref(),
             );
             self._phi
+                .borrow_mut()
                 .push(RcCell::new(CircuitStatement::CircEqConstraint(
                     CircEqConstraint::new(priv_result_idf, new_out_param.clone()),
                 )));
@@ -2323,11 +2417,11 @@ where
                 new_out_param
                     .clone()
                     .get_loc_expr(None)
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .explicitly_converted(
-                        expr.try_as_expression_ref()
+                        expr.ast_base_ref()
                             .unwrap()
                             .borrow()
                             .annotated_type()
@@ -2374,6 +2468,7 @@ where
                 privacy_label_expr.clone(),
                 Some(homomorphism.clone()),
             );
+            println!("=_get_circuit_output_for_private_expression=============_out_name_factory============={}==",line!());
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -2407,7 +2502,8 @@ where
 
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
-        expr.try_as_expression_ref()
+        let statement = expr
+            .try_as_expression_ref()
             .unwrap()
             .borrow_mut()
             .expression_base_mut_ref()
@@ -2415,19 +2511,34 @@ where
             .clone()
             .unwrap()
             .upgrade()
-            .unwrap()
-            .try_as_statement_mut()
-            .unwrap()
-            .borrow_mut()
-            .statement_base_mut_ref()
-            .unwrap()
-            .pre_statements
-            .push(
-                RcCell::new(CircuitComputationStatement::new(Some(RcCell::new(
-                    Identifier::HybridArgumentIdf(new_out_param),
-                ))))
-                .into(),
-            );
+            .unwrap();
+        let pre_statement = RcCell::new(CircuitComputationStatement::new(Some(RcCell::new(
+            Identifier::HybridArgumentIdf(new_out_param),
+        ))))
+        .into();
+        if statement.is_statement() {
+            statement
+                .try_as_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else if statement.is_ast() {
+            statement
+                .try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else {
+            panic!("========else======{statement:?}");
+        }
         if is_instance(&out_var, ASTType::LocationExprBase) {
             Some(out_var)
         } else {
@@ -2442,7 +2553,7 @@ where
     // :return: temporary circuit variable HybridArgumentIdf which refers to the transformed circuit expression
     // """
     pub fn _evaluate_private_expression(
-        &mut self,
+        &self,
         expr: &ASTFlatten,
         tmp_idf_suffix: &str,
     ) -> Option<HybridArgumentIdf> {
@@ -2485,8 +2596,8 @@ where
                 .unwrap()
                 .arg_type
                 != HybridArgType::PubContractVal
-        //Already evaluated in circuit
         {
+            //Already evaluated in circuit
             return expr
                 .ast_base_ref()
                 .unwrap()
@@ -2519,6 +2630,10 @@ where
                 false
             )
         );
+        println!(
+            "=_evaluate_private_expression========_circ_temp_name_factory==========={}====",
+            line!()
+        );
         let tmp_circ_var_idf = self._circ_temp_name_factory.add_idf(
             tname,
             priv_expr
@@ -2541,6 +2656,7 @@ where
             priv_expr.unwrap().try_as_expression_ref().unwrap().clone(),
         );
         self._phi
+            .borrow_mut()
             .push(RcCell::new(CircuitStatement::CircVarDecl(stmt)));
         Some(tmp_circ_var_idf)
     }
@@ -2559,7 +2675,7 @@ where
     // :param is_dec: whether this is a decryption operation (user supplied plain) as opposed to an encryption operation (user supplied cipher)
     // """
     pub fn _ensure_encryption(
-        &mut self,
+        &self,
         stmt: &ASTFlatten,
         plain: HybridArgumentIdf,
         new_privacy: &ASTFlatten,
@@ -2586,19 +2702,26 @@ where
                 }
             };
 
-            self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                CircComment::new(format!(
-                    "{} = enc({}, ecdh({}, my_sk))",
-                    cipher.identifier_base.name,
-                    plain.identifier_base.name,
-                    other_pk.identifier_base.name
-                )),
-            )));
             self._phi
+                .borrow_mut()
+                .push(RcCell::new(CircuitStatement::CircComment(
+                    CircComment::new(format!(
+                        "{} = enc({}, ecdh({}, my_sk))",
+                        cipher.identifier_base.name,
+                        plain.identifier_base.name,
+                        other_pk.identifier_base.name
+                    )),
+                )));
+            self._phi
+                .borrow_mut()
                 .push(RcCell::new(CircuitStatement::CircSymmEncConstraint(
                     CircSymmEncConstraint::new(plain, other_pk, cipher, is_dec),
                 )));
         } else {
+            println!(
+                "=_ensure_encryption=====_secret_input_name_factory==========={}====",
+                line!()
+            );
             let rnd = self._secret_input_name_factory.add_idf(
                 format!(
                     "{}_R",
@@ -2614,24 +2737,29 @@ where
             let pk =
                 self._require_public_key_for_label_at(Some(stmt), &new_privacy, &crypto_params);
             if !is_dec {
-                self._phi.push(RcCell::new(CircuitStatement::CircComment(
-                    CircComment::new(format!(
-                        "{} = enc({}, {})",
-                        cipher.identifier_base.name,
-                        plain.identifier_base.name,
-                        pk.identifier_base.name
-                    )),
-                )));
+                self._phi
+                    .borrow_mut()
+                    .push(RcCell::new(CircuitStatement::CircComment(
+                        CircComment::new(format!(
+                            "{} = enc({}, {})",
+                            cipher.identifier_base.name,
+                            plain.identifier_base.name,
+                            pk.identifier_base.name
+                        )),
+                    )));
             }
             self._phi
+                .borrow_mut()
                 .push(RcCell::new(CircuitStatement::CircEncConstraint(
                     CircEncConstraint::new(plain, rnd, pk, cipher, is_dec),
                 )));
         }
     }
 
-    pub fn _require_secret_key(&mut self, crypto_params: &CryptoParams) -> HybridArgumentIdf {
-        self._needed_secret_key.insert(crypto_params.clone()); //Add to _need_secret_key OrderedDict
+    pub fn _require_secret_key(&self, crypto_params: &CryptoParams) -> HybridArgumentIdf {
+        self._needed_secret_key
+            .borrow_mut()
+            .insert(crypto_params.clone()); //Add to _need_secret_key OrderedDict
         let key_name = Self::get_own_secret_key_name(crypto_params);
         HybridArgumentIdf::new(
             key_name,
@@ -2650,7 +2778,7 @@ where
     // :return: HybridArgumentIdf which references the key
     // """
     pub fn _require_public_key_for_label_at(
-        &mut self,
+        &self,
         stmt: Option<&ASTFlatten>,
         privacy: &ASTFlatten,
         crypto_params: &CryptoParams,
@@ -2658,6 +2786,7 @@ where
         //Statically known privacy -> keep track (all global keys will be requested only once)
         if self.static_owner_labels.contains(&privacy) {
             self._global_keys
+                .borrow_mut()
                 .insert((privacy.clone().into(), crypto_params.clone()));
             return HybridArgumentIdf::new(
                 Self::get_glob_key_name(&privacy, crypto_params),
@@ -2676,13 +2805,14 @@ where
 
         if let Some(requested_dynamic_pks) = self
             ._requested_dynamic_pks
+            .borrow()
             .get(stmt.as_ref().unwrap().try_as_statement_ref().unwrap())
         {
             if let Some(v) = requested_dynamic_pks.get(&privacy.try_as_identifier_ref().unwrap()) {
                 return v.clone();
             }
         } else {
-            self._requested_dynamic_pks.insert(
+            self._requested_dynamic_pks.borrow_mut().insert(
                 stmt.as_ref()
                     .unwrap()
                     .try_as_statement_ref()
@@ -2714,6 +2844,7 @@ where
             .push(RcCell::new(get_key_stmt).into());
         if let Some(requested_dynamic_pks) = self
             ._requested_dynamic_pks
+            .borrow_mut()
             .get_mut(stmt.as_ref().unwrap().try_as_statement_ref().unwrap())
         {
             requested_dynamic_pks.insert(privacy.clone().try_as_identifier().unwrap(), idf.clone());
@@ -2731,7 +2862,7 @@ where
     // :return: HybridArgumentIdf which references the key in cipher"s sender field (or 0 if none)
     // """
     pub fn _get_public_key_in_sender_field(
-        &mut self,
+        &self,
         stmt: &ASTFlatten,
         cipher: HybridArgumentIdf,
         crypto_params: CryptoParams,
@@ -2743,14 +2874,18 @@ where
                 .base_name_factory
                 .get_new_name(&key_t, false)
         );
+        println!(
+            "=====_get_public_key_in_sender_field=====_in_name_factory==========={}====",
+            line!()
+        );
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(
             if let Some(le) = cipher
                 .get_loc_expr(Some(stmt))
+                .to_ast()
                 .try_as_expression_ref()
                 .unwrap()
-                .borrow()
                 .try_as_tuple_or_location_expr_ref()
                 .unwrap()
                 .try_as_location_expr_ref()
@@ -2762,20 +2897,33 @@ where
             crypto_params,
         )
         .as_type(&key_t.clone().into());
-        stmt.try_as_statement_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_base_mut_ref()
-            .unwrap()
-            .pre_statements
-            .push(
-                RcCell::new(AssignmentStatementBase::new(
-                    Some(RcCell::new(key_idf.clone()).into()),
-                    Some(key_expr),
-                    None,
-                ))
-                .into(),
-            );
+        let pre_statement = RcCell::new(AssignmentStatementBase::new(
+            Some(RcCell::new(key_idf.clone()).into()),
+            Some(key_expr),
+            None,
+        ))
+        .into();
+        if stmt.is_statement() {
+            stmt.try_as_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else if stmt.is_ast() {
+            stmt.try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .unwrap()
+                .pre_statements
+                .push(pre_statement);
+        } else {
+            panic!("=====else========{stmt:?}");
+        }
         key_idf
     }
 }

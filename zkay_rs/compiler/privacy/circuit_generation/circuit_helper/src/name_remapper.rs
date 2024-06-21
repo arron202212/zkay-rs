@@ -24,7 +24,7 @@ use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 type RemapMapType = BTreeMap<RcCell<Identifier>, HybridArgumentIdf>; //#[(bool, Identifier), HybridArgumentIdf]
 #[derive(Clone)]
 pub struct Remapper {
-    rmap: RemapMapType,
+    rmap: RcCell<RemapMapType>,
 }
 // """
 // Helper class to simulate static single assignment, mostly used by CircuitHelper
@@ -53,7 +53,7 @@ impl Remapper {
         // super().__init__()
 
         Self {
-            rmap: RemapMapType::new(),
+            rmap: RcCell::new(RemapMapType::new()),
         }
     }
 
@@ -63,16 +63,16 @@ impl Remapper {
     // :return: True if there exists at least one key which is currently remapped to a different value
     // """
     pub fn boolean(&self) -> bool {
-        !self.rmap.is_empty()
+        !self.rmap.borrow().is_empty()
     }
     // """Discard the entire remap state."""
 
-    pub fn clear(&mut self) {
-        self.rmap.clear();
+    pub fn clear(&self) {
+        self.rmap.borrow_mut().clear();
     }
     // """Invalidate remapping information for the given key (is_remapped returns false after this)."""
-    pub fn reset_key(&mut self, key: &RcCell<Identifier>) {
-        self.rmap.remove(key);
+    pub fn reset_key(&self, key: &RcCell<Identifier>) {
+        self.rmap.borrow_mut().remove(key);
     }
     // """
     // Remap key to refer to new version element "value".
@@ -80,9 +80,9 @@ impl Remapper {
     // :param key: The key/identifier to update
     // :param value: latest version of the element to which key refers
     // """
-    pub fn remap(&mut self, key: &RcCell<Identifier>, value: HybridArgumentIdf) {
+    pub fn remap(&self, key: &RcCell<Identifier>, value: HybridArgumentIdf) {
         // assert!(key.parent().is_some());
-        self.rmap.insert(key.clone(), value);
+        self.rmap.borrow_mut().insert(key.clone(), value);
     }
 
     // @contextmanager
@@ -93,24 +93,25 @@ impl Remapper {
     //                               already in scope at scope_stmt will not be reset during rollback
     // :return: context manager
     // """
-    pub fn remap_scope(&mut self, scope_stmt: Option<&ASTFlatten>) {
-        let mut prev = self.rmap.clone();
+    pub fn remap_scope(&self, scope_stmt: Option<&ASTFlatten>) {
+        let mut prev = self.rmap.borrow().clone();
         // yield
         if let Some(scope_stmt) = scope_stmt {
             prev.append(
                 &mut self
                     .rmap
+                    .borrow()
                     .clone()
                     .into_iter()
                     .filter(|(key, _)| SymbolTableLinker::in_scope_at(key, scope_stmt))
                     .collect(),
             );
         }
-        self.rmap = prev;
+        *self.rmap.borrow_mut() = prev;
     }
 
     pub fn is_remapped(&self, key: &RcCell<Identifier>) -> bool {
-        self.rmap.contains_key(key)
+        self.rmap.borrow().contains_key(key)
     }
     // """
     // Return the value to which key currently refers.
@@ -127,7 +128,7 @@ impl Remapper {
         default: Option<HybridArgumentIdf>,
     ) -> HybridArgumentIdf {
         let k = key;
-        if let Some(v) = self.rmap.get(&k) {
+        if let Some(v) = self.rmap.borrow().get(&k) {
             v.clone()
         } else {
             if default.is_none() {
@@ -139,14 +140,14 @@ impl Remapper {
     // """ Return an opaque copy of the internal state. """
 
     pub fn get_state(&self) -> RemapMapType {
-        self.rmap.clone()
+        self.rmap.borrow().clone()
     }
     // """ Restore internal state from an opaque copy previously obtained using get_state. """
-    pub fn set_state(&mut self, state: &dyn Any) {
+    pub fn set_state(&self, state: &dyn Any) {
         // assert!(isinstance(state, BTreeMap));
         if let Some(state) = state.downcast_ref::<BTreeMap<RcCell<Identifier>, HybridArgumentIdf>>()
         {
-            self.rmap = state.clone();
+            *self.rmap.borrow_mut() = state.clone();
         } else {
             assert!(false);
         }
@@ -175,7 +176,7 @@ impl Remapper {
     //     remapper.join_branch(cond_idf_expr, true_state, <create_tmp_var(idf, expr) function>)
     // """
     pub fn join_branch(
-        &mut self,
+        &self,
         stmt: &ASTFlatten,
         true_cond_for_other_branch: &ASTFlatten,
         other_branch_state: RemapMapType,
@@ -183,8 +184,8 @@ impl Remapper {
         ch: &RcCell<CircuitHelper>,
     ) {
         let true_state = other_branch_state;
-        let false_state = self.rmap.clone();
-        self.rmap.clear();
+        let false_state = self.rmap.borrow().clone();
+        self.rmap.borrow_mut().clear();
         // """Return new temporary HybridArgumentIdf with value cond ? then_idf : else_idf."""
         fn join(
             then_idf: &ASTFlatten,
@@ -222,7 +223,7 @@ impl Remapper {
             }) {
                 // key was not modified in either branch -> simply keep
                 assert!(&false_state[key] == val);
-                self.rmap.insert(key.clone(), val.clone());
+                self.rmap.borrow_mut().insert(key.clone(), val.clone());
             } else if !false_state.contains_key(key) {
                 // If value was only read (remapping points to a circuit input) -> can just take as-is,
                 // otherwise have to use conditional assignment
@@ -230,7 +231,7 @@ impl Remapper {
                     && (val.arg_type == HybridArgType::PubCircuitArg
                         || val.arg_type == HybridArgType::PrivCircuitVal)
                 {
-                    self.rmap.insert(key.clone(), val.clone());
+                    self.rmap.borrow_mut().insert(key.clone(), val.clone());
                 } else {
                     // key was only modified in true branch
                     // remap key -> new temporary with value cond ? new_value : old_value
@@ -284,7 +285,7 @@ impl Remapper {
                         .borrow_mut()
                         .expression_base_mut_ref()
                         .statement = Some(stmt.clone().downgrade());
-                    self.rmap.insert(
+                    self.rmap.borrow_mut().insert(
                         key.clone(),
                         join(
                             true_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
@@ -300,7 +301,7 @@ impl Remapper {
             } else {
                 // key was modified in both branches
                 // remap key -> new temporary with value cond ? true_val : false_val
-                self.rmap.insert(
+                self.rmap.borrow_mut().insert(
                     key.clone(),
                     join(
                         true_state[&key].get_idf_expr(Some(stmt)).as_ref().unwrap(),
@@ -322,7 +323,7 @@ impl Remapper {
                 && (val.arg_type == HybridArgType::PubCircuitArg
                     || val.arg_type == HybridArgType::PrivCircuitVal)
             {
-                self.rmap.insert(key.clone(), val.clone());
+                self.rmap.borrow_mut().insert(key.clone(), val.clone());
             } else {
                 // key was only modified in false branch
                 // remap key -> new temporary with value cond ? old_value : new_value
@@ -381,7 +382,7 @@ impl Remapper {
                     .tuple_or_location_expr_base
                     .expression_base
                     .statement = Some(stmt.clone().downgrade());
-                self.rmap.insert(
+                self.rmap.borrow_mut().insert(
                     key.clone(),
                     join(
                         &prev_val,

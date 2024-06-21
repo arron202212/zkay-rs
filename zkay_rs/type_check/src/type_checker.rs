@@ -250,7 +250,7 @@ impl TypeCheckVisitor {
             .try_as_expression_ref()
             .unwrap()
             .instance_of(expected_type);
-        if instance.is_none() {
+        if instance == String::from("false") {
             require_rehom = true;
             let expected_matching_hom = expected_type.borrow().with_homomorphism(
                 rhs.ast_base_ref()
@@ -272,7 +272,7 @@ impl TypeCheckVisitor {
         }
 
         assert!(
-            instance.is_some(),
+            instance != String::from("false"),
             "TypeMismatchException========{:?},{:?}, {:?}",
             expected_type,
             rhs.ast_base_ref().unwrap().borrow().annotated_type(),
@@ -295,13 +295,17 @@ impl TypeCheckVisitor {
             rhs.clone()
         };
         let rhs = &rhs;
-        Some(if instance == Some(String::from("make-private")) {
+        Some(if instance == String::from("make-private") {
             Self::make_private(
                 rhs,
                 &expected_type.borrow().privacy_annotation,
                 &expected_type.borrow().homomorphism,
             )
         } else if require_rehom {
+            println!(
+                "===require_rehom=======try_rehom======={:?}",
+                expected_type.borrow().to_string()
+            );
             Self::try_rehom(rhs, expected_type)
         } else {
             rhs.clone()
@@ -698,6 +702,11 @@ impl TypeCheckVisitor {
             // );
             self.handle_unhom_builtin_function_call(ast, &func);
         } else {
+            println!(
+                "==handle_homomorphic_builtin_function_call==================={:?}======={:?}",
+                ast.to_string(),
+                func
+            );
             self.handle_homomorphic_builtin_function_call(ast, &func);
         }
     }
@@ -1467,6 +1476,7 @@ impl TypeCheckVisitor {
             .borrow()
             .homomorphism
             .clone();
+        println!("==handle_homomorphic_builtin_function_call==========homomorphism===={ho:?}===");
         if func.is_builtin_function() {
             func.try_as_builtin_function_ref()
                 .unwrap()
@@ -1482,6 +1492,7 @@ impl TypeCheckVisitor {
         } else {
             panic!("===============else=========={func:?}");
         }
+        println!("==handle_homomorphic_builtin_function_call==========homomorphism==func=={:?},========{:?}===",func,func.to_string());
 
         let expected_arg_types = homomorphic_func.unwrap().input_types();
         let args = ast
@@ -1628,12 +1639,9 @@ impl TypeCheckVisitor {
     }
 
     //@staticmethod
-    pub fn try_rehom(
-        mut rhs: &ASTFlatten,
-        expected_type: &RcCell<AnnotatedTypeName>,
-    ) -> ASTFlatten {
+    pub fn try_rehom(rhs: &ASTFlatten, expected_type: &RcCell<AnnotatedTypeName>) -> ASTFlatten {
         assert!(
-            !rhs.try_as_expression_ref()
+            !rhs.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -1643,25 +1651,35 @@ impl TypeCheckVisitor {
                 .is_public(),
             "Cannot change the homomorphism of a public value"
         );
-
+        // println!("=======rhs========{:?}",rhs.get_ast_type());
         if rhs
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
             .as_ref()
             .unwrap()
             .borrow()
-            .is_private_at_me(&rhs.try_as_expression_ref().unwrap().borrow().analysis())
+            .is_private_at_me(&rhs.to_ast().try_as_expression_ref().unwrap().analysis())
         {
             //The value is @me, so we can just insert a ReclassifyExpr to change
             //the homomorphism of this value, just like we do for public values.
             return Self::make_rehom(rhs, expected_type);
         }
-        if is_instance(rhs, ASTType::ReclassifyExpr) && !is_instance(rhs, ASTType::RehomExpr) {
+        if is_instance(rhs, ASTType::ReclassifyExprBase) && !is_instance(rhs, ASTType::RehomExpr) {
             //rhs is a valid ReclassifyExpr, i.e. the argument is public or @me-private
             //To create an expression with the correct homomorphism,
             //just change the ReclassifyExpr"s output homomorphism
+            println!(
+                "=====rhs========homomorphism======before========{:?}",
+                rhs.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_reclassify_expr_mut()
+                    .unwrap()
+                    .reclassify_expr_base_mut_ref()
+                    .homomorphism
+            );
             rhs.try_as_expression_ref()
                 .unwrap()
                 .borrow_mut()
@@ -1669,14 +1687,42 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .reclassify_expr_base_mut_ref()
                 .homomorphism = Some(expected_type.borrow().homomorphism.clone());
+            println!(
+                "=====rhs========homomorphism=============={:?}",
+                rhs.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_reclassify_expr_mut()
+                    .unwrap()
+                    .reclassify_expr_base_mut_ref()
+                    .homomorphism
+            );
         } else if is_instance(rhs, ASTType::PrimitiveCastExpr) {
             //Ignore primitive cast & recurse
-            rhs.try_as_expression_ref()
-                .unwrap()
-                .borrow_mut()
-                .try_as_primitive_cast_expr_mut()
-                .unwrap()
-                .expr = Self::try_rehom(rhs, expected_type);
+            let expr = Self::try_rehom(
+                &rhs.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .expr,
+                expected_type,
+            );
+            if rhs.is_expression() {
+                rhs.try_as_expression_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .try_as_primitive_cast_expr_mut()
+                    .unwrap()
+                    .expr = expr;
+            } else if rhs.is_primitive_cast_expr() {
+                rhs.try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .expr = expr;
+            } else {
+                panic!("==========else======={rhs:?}");
+            }
         } else if is_instance(rhs, ASTType::FunctionCallExprBase)
             && is_instance(
                 rhs.try_as_expression_ref()
@@ -1705,7 +1751,7 @@ impl TypeCheckVisitor {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .args()[0]
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -1731,21 +1777,17 @@ impl TypeCheckVisitor {
                 .function_call_expr_base_mut_ref()
                 .args = args;
         } else {
-            assert!(
-                false,
-                "{:?}, {:?} ,{:?}",
+            panic!(
+                "{:?}, ==={:?} ,==={:?}",
                 expected_type,
-                rhs.try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type(),
-                rhs
+                rhs.ast_base_ref().unwrap().borrow().annotated_type(),
+                rhs.get_ast_type()
             )
         }
         // println!("==========try_rehom==========annotated_type============");
         //Rehom worked without throwing, change annotated_type and return
-        rhs.ast_base_ref().unwrap().borrow_mut().annotated_type = Some(
-            rhs.try_as_expression_ref()
+        let at = Some(
+            rhs.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -1754,6 +1796,7 @@ impl TypeCheckVisitor {
                 .borrow()
                 .with_homomorphism(expected_type.borrow().homomorphism.clone()),
         );
+        rhs.ast_base_ref().unwrap().borrow_mut().annotated_type = at;
         rhs.clone()
     }
 
@@ -2121,6 +2164,12 @@ impl TypeCheckVisitor {
                 .func(),
             ASTType::BuiltinFunction,
         ) {
+            // println!("====handle_builtin_function_call==========================={:?},{:?}",ast.to_string(),ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_function_call_expr_ref()
+            //         .unwrap()
+            //         .func());
             self.handle_builtin_function_call(
                 ast,
                 &ast.to_ast()
@@ -2431,7 +2480,7 @@ impl TypeCheckVisitor {
                     Homomorphism::non_homomorphic(),
                 ));
                 assert!(
-                    Some(String::from("false"))
+                    String::from("false")
                         != expr
                             .try_as_expression_ref()
                             .unwrap()
@@ -2782,7 +2831,7 @@ impl TypeCheckVisitor {
         ast.ast_base_ref().unwrap().borrow_mut().annotated_type = at;
 
         assert!(
-            Some(String::from("true"))
+            String::from("true")
                 != ast.to_ast().try_as_expression_ref().unwrap().instance_of(
                     &ast.to_ast()
                         .try_as_expression_ref()
@@ -2869,7 +2918,7 @@ impl TypeCheckVisitor {
                 Homomorphism::non_homomorphic(),
             ));
             assert!(
-                Some(String::from("false"))
+                String::from("false")
                     != b.try_as_expression_ref()
                         .unwrap()
                         .borrow()
@@ -2888,7 +2937,7 @@ impl TypeCheckVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
-            Some(String::from("true"))
+            String::from("true")
                 == ast
                     .try_as_while_statement_ref()
                     .unwrap()
@@ -2919,7 +2968,7 @@ impl TypeCheckVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
-            Some(String::from("true"))
+            String::from("true")
                 == ast
                     .to_ast()
                     .try_as_statement_ref()
@@ -3237,7 +3286,7 @@ impl TypeCheckVisitor {
                 .borrow()
                 .instance_of(&expected);
             assert!(
-                Some(String::from("true")) == instance,
+                String::from("true") == instance,
                 "{:?}, {:?} ,{:?}",
                 expected,
                 index

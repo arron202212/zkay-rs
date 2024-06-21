@@ -296,17 +296,19 @@ impl CircGuardModification {
     //                 proof generation time
     // """
     pub fn guarded(
-        phi: &mut Vec<RcCell<CircuitStatement>>,
+        phi: RcCell<Vec<RcCell<CircuitStatement>>>,
         guard_idf: HybridArgumentIdf,
         is_true: bool,
     ) {
-        phi.push(RcCell::new(CircuitStatement::CircGuardModification(
-            CircGuardModification::new(Some(guard_idf), Some(is_true)),
-        )));
+        phi.borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircGuardModification(
+                CircGuardModification::new(Some(guard_idf), Some(is_true)),
+            )));
         // yield
-        phi.push(RcCell::new(CircuitStatement::CircGuardModification(
-            CircGuardModification::new(None, None),
-        )));
+        phi.borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircGuardModification(
+                CircGuardModification::new(None, None),
+            )));
     }
 }
 // class CircEncConstraint(CircuitStatement)

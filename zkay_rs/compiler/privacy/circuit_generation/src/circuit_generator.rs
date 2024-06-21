@@ -179,8 +179,14 @@ impl CircuitGeneratorBase {
                 // let vk = self._parse_verification_key(circuit);
                 let pk_hash = self._get_prover_key_hash(circuit);
                 let mut f = File::create(Path::new(
-                    &PathBuf::from(&self.output_dir)
-                        .join(&circuit.borrow().verifier_contract_filename.clone().unwrap()),
+                    &PathBuf::from(&self.output_dir).join(
+                        &circuit
+                            .borrow()
+                            .verifier_contract_filename
+                            .borrow()
+                            .clone()
+                            .unwrap(),
+                    ),
                 ))
                 .expect("");
                 let primary_inputs = self._get_primary_inputs(circuit);
@@ -247,7 +253,14 @@ impl CircuitGeneratorBase {
             .iter()
             .map(|circuit| {
                 Path::new(&self.output_dir)
-                    .join(&circuit.borrow().verifier_contract_filename.clone().unwrap())
+                    .join(
+                        &circuit
+                            .borrow()
+                            .verifier_contract_filename
+                            .borrow()
+                            .clone()
+                            .unwrap(),
+                    )
                     .to_str()
                     .unwrap()
                     .to_string()
@@ -270,6 +283,7 @@ impl CircuitGeneratorBase {
             circuit
                 .borrow()
                 .verifier_contract_type
+                .borrow()
                 .as_ref()
                 .unwrap()
                 .code(),

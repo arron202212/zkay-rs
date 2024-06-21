@@ -173,8 +173,10 @@ fn process_ast(
         t(ast);
         // println!("======check_circuit_compliance================*****************===========");
         check_circuit_compliance(ast);
+        //  println!("======check_circuit_compliance================*******222222**********===========");
         detect_hybrid_functions(ast);
         check_loops(ast);
+        //  println!("======check_circuit_compliance================*******3333**********===========");
         // except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
         //     raise TypeCheckException(f"\n\nCOMPILER ERROR: {e}")
     }

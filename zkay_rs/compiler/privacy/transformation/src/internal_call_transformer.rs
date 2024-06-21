@@ -41,7 +41,7 @@ pub fn compute_transitive_circuit_io_sizes(
         circuit.borrow_mut().trans_in_size = trans_in_size;
         circuit.borrow_mut().trans_out_size = trans_out_size;
         circuit.borrow_mut().trans_priv_size = trans_priv_size;
-        circuit.borrow_mut()._global_keys = glob_keys;
+        circuit.borrow_mut()._global_keys = RcCell::new(glob_keys);
         circuit.borrow_mut().transitively_called_functions = called_fcts;
     }
 
@@ -64,7 +64,7 @@ pub fn _compute_transitive_circuit_io_sizes(
     if circuit.borrow().trans_in_size != 0 {
         //Memoized
         *gkeys = (*gkeys)
-            .union(&cgens.borrow()[fct].borrow()._global_keys)
+            .union(&cgens.borrow()[fct].borrow()._global_keys.borrow())
             .cloned()
             .collect();
         *called_fcts = (*called_fcts)
@@ -82,9 +82,10 @@ pub fn _compute_transitive_circuit_io_sizes(
         .union(&cgens.borrow()[fct].borrow().requested_global_keys())
         .cloned()
         .collect();
-    for call in &cgens.borrow()[fct]
+    for call in &*cgens.borrow()[fct]
         .borrow()
         .function_calls_with_verification
+        .borrow()
     {
         if let Some(cofd) = call
             .borrow()
@@ -105,11 +106,16 @@ pub fn _compute_transitive_circuit_io_sizes(
         }
     }
 
-    if circuit.borrow().function_calls_with_verification.is_empty() {
+    if circuit
+        .borrow()
+        .function_calls_with_verification
+        .borrow()
+        .is_empty()
+    {
         (0, 0, 0)
     } else {
         let (mut insum, mut outsum, mut psum) = (0, 0, 0);
-        for f in &circuit.borrow().function_calls_with_verification {
+        for f in &*circuit.borrow().function_calls_with_verification.borrow() {
             if let Some(ref mut t) = f
                 .borrow()
                 .func()
@@ -163,9 +169,12 @@ pub fn transform_internal_calls(
             circuit.borrow().out_size(),
         );
         let (mut i, mut o, mut p) = (0, 0, 0);
+        let zk_in_name = CFG.lock().unwrap().zk_in_name();
+        let zk_out_name = CFG.lock().unwrap().zk_out_name();
         for fc in circuit
             .borrow_mut()
             .function_calls_with_verification
+            .borrow_mut()
             .iter_mut()
         {
             fc.borrow_mut()
@@ -176,7 +185,7 @@ pub fn transform_internal_calls(
                 .args
                 .extend(vec![
                     RcCell::new(IdentifierExpr::new(
-                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
+                        IdentifierExprUnion::String(zk_in_name.clone()),
                         None,
                     ))
                     .into(),
@@ -184,7 +193,7 @@ pub fn transform_internal_calls(
                         IdentifierExpr::new(
                             IdentifierExprUnion::String(format!(
                                 "{}_start_idx",
-                                CFG.lock().unwrap().zk_in_name()
+                                zk_in_name.clone()
                             )),
                             None,
                         )
@@ -196,7 +205,7 @@ pub fn transform_internal_calls(
                     )
                     .into(),
                     RcCell::new(IdentifierExpr::new(
-                        IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
+                        IdentifierExprUnion::String(zk_out_name.clone()),
                         None,
                     ))
                     .into(),
@@ -204,7 +213,7 @@ pub fn transform_internal_calls(
                         IdentifierExpr::new(
                             IdentifierExprUnion::String(format!(
                                 "{}_start_idx",
-                                CFG.lock().unwrap().zk_out_name()
+                                zk_out_name.clone()
                             )),
                             None,
                         )

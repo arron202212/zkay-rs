@@ -27,10 +27,10 @@ impl ExpressionASType for {struct_name} {{
         let mut selfs = self.clone();
         if is_instance(t, ASTType::AnnotatedTypeName) {{
             selfs.ast_base_mut_ref().borrow_mut().annotated_type = t.clone().try_as_annotated_type_name();
-        }} else if t.try_as_type_name_ref().is_some() {{
+        }} else  {{
             selfs.ast_base_mut_ref().borrow_mut().annotated_type =
                 Some(RcCell::new(AnnotatedTypeName::new(
-                    t.clone().try_as_type_name(),
+                    t.to_ast().try_as_type_name().map(RcCell::new),
                     None,
                     Homomorphism::non_homomorphic(),
                 )));
