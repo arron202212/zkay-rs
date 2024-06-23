@@ -302,10 +302,10 @@ impl TypeCheckVisitor {
                 &expected_type.borrow().homomorphism,
             )
         } else if require_rehom {
-            println!(
-                "===require_rehom=======try_rehom======={:?}",
-                expected_type.borrow().to_string()
-            );
+            // println!(
+            //     "===require_rehom=======try_rehom======={:?}",
+            //     expected_type.borrow().to_string()
+            // );
             Self::try_rehom(rhs, expected_type)
         } else {
             rhs.clone()
@@ -702,11 +702,11 @@ impl TypeCheckVisitor {
             // );
             self.handle_unhom_builtin_function_call(ast, &func);
         } else {
-            println!(
-                "==handle_homomorphic_builtin_function_call==================={:?}======={:?}",
-                ast.to_string(),
-                func
-            );
+            // println!(
+            //     "==handle_homomorphic_builtin_function_call==================={:?}======={:?}",
+            //     ast.to_string(),
+            //     func
+            // );
             self.handle_homomorphic_builtin_function_call(ast, &func);
         }
     }
@@ -1476,7 +1476,7 @@ impl TypeCheckVisitor {
             .borrow()
             .homomorphism
             .clone();
-        println!("==handle_homomorphic_builtin_function_call==========homomorphism===={ho:?}===");
+        // println!("==handle_homomorphic_builtin_function_call==========homomorphism===={ho:?}===");
         if func.is_builtin_function() {
             func.try_as_builtin_function_ref()
                 .unwrap()
@@ -1492,7 +1492,7 @@ impl TypeCheckVisitor {
         } else {
             panic!("===============else=========={func:?}");
         }
-        println!("==handle_homomorphic_builtin_function_call==========homomorphism==func=={:?},========{:?}===",func,func.to_string());
+        // println!("==handle_homomorphic_builtin_function_call==========homomorphism==func=={:?},========{:?}===",func,func.to_string());
 
         let expected_arg_types = homomorphic_func.unwrap().input_types();
         let args = ast
@@ -1670,16 +1670,16 @@ impl TypeCheckVisitor {
             //rhs is a valid ReclassifyExpr, i.e. the argument is public or @me-private
             //To create an expression with the correct homomorphism,
             //just change the ReclassifyExpr"s output homomorphism
-            println!(
-                "=====rhs========homomorphism======before========{:?}",
-                rhs.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .try_as_reclassify_expr_mut()
-                    .unwrap()
-                    .reclassify_expr_base_mut_ref()
-                    .homomorphism
-            );
+            // println!(
+            //     "=====rhs========homomorphism======before========{:?}",
+            //     rhs.try_as_expression_ref()
+            //         .unwrap()
+            //         .borrow_mut()
+            //         .try_as_reclassify_expr_mut()
+            //         .unwrap()
+            //         .reclassify_expr_base_mut_ref()
+            //         .homomorphism
+            // );
             rhs.try_as_expression_ref()
                 .unwrap()
                 .borrow_mut()
@@ -1687,16 +1687,16 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .reclassify_expr_base_mut_ref()
                 .homomorphism = Some(expected_type.borrow().homomorphism.clone());
-            println!(
-                "=====rhs========homomorphism=============={:?}",
-                rhs.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .try_as_reclassify_expr_mut()
-                    .unwrap()
-                    .reclassify_expr_base_mut_ref()
-                    .homomorphism
-            );
+            // println!(
+            //     "=====rhs========homomorphism=============={:?}",
+            //     rhs.try_as_expression_ref()
+            //         .unwrap()
+            //         .borrow_mut()
+            //         .try_as_reclassify_expr_mut()
+            //         .unwrap()
+            //         .reclassify_expr_base_mut_ref()
+            //         .homomorphism
+            // );
         } else if is_instance(rhs, ASTType::PrimitiveCastExpr) {
             //Ignore primitive cast & recurse
             let expr = Self::try_rehom(

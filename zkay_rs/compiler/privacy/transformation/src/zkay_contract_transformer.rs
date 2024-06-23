@@ -903,17 +903,21 @@ impl ZkayTransformer {
                         .cipher_payload_len();
                 deserialize_stmts.push(
                     s.get_loc_expr(None)
+                        .to_ast()
                         .try_as_expression_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()
                         .unwrap()
                         .index(ExprUnion::I32(cipher_payload_len))
+                        .to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
                         .try_as_location_expr_ref()
                         .unwrap()
-                        .borrow()
                         .assign(sender_key),
                 );
             }
@@ -1040,9 +1044,9 @@ impl ZkayTransformer {
                 .map(|p| {
                     let mut pp = deep_copy(&p.clone().into(), true, false)
                         .unwrap()
+                        .to_ast()
                         .try_as_identifier_declaration_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_parameter_ref()
                         .unwrap()
                         .clone();
@@ -1074,22 +1078,20 @@ impl ZkayTransformer {
         );
 
         // Make original function internal
-        f.borrow_mut().ast_base_mut_ref().borrow_mut().idf =
-            Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
-                CFG.lock().unwrap().get_internal_name(&f.borrow().clone()),
-            ))));
-        f.borrow_mut().modifiers = f
+        let idf = Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
+            CFG.lock().unwrap().get_internal_name(&f.borrow().clone()),
+        ))));
+        f.borrow_mut().ast_base_mut_ref().borrow_mut().idf = idf;
+        let modifiers = f
             .borrow()
             .modifiers
             .iter()
             .filter_map(|modi| {
-                if modi != "payable" {
-                    Some((if modi == "public" { "internal" } else { modi }).to_string())
-                } else {
-                    None
-                }
+                (modi != "payable")
+                    .then(|| (if modi == "public" { "internal" } else { modi }).to_string())
             })
             .collect();
+        f.borrow_mut().modifiers = modifiers;
         f.borrow_mut().requires_verification_when_external = false;
         let mut new_f = RcCell::new(new_f);
         // Create new circuit for external function

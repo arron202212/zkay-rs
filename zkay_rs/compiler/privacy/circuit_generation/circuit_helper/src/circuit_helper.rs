@@ -552,6 +552,7 @@ where
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
         self.circ_indent_block(&expr.code());
+        println!("==evaluate_expr_in_circuit======_get_circuit_output_for_private_expression=========={:?}",expr.to_string());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
     }
     // """
@@ -924,9 +925,9 @@ where
         let privacy_label_expr = get_privacy_expr_from_label(plabel.unwrap());
         let le = idf
             .get_loc_expr(None)
+            .to_ast()
             .try_as_expression_ref()
             .unwrap()
-            .borrow()
             .try_as_tuple_or_location_expr_ref()
             .unwrap()
             .try_as_location_expr_ref()
@@ -1044,12 +1045,12 @@ where
             Some(RcCell::new(Expression::all_expr()).into())
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
-        println!(
-            "==is_public====={is_public}=={:?}===={:?}==={:?}===",
-            expr.to_string(),
-            expr.get_ast_type(),
-            privacy
-        );
+        // println!(
+        //     "==is_public====={is_public}=={:?}===={:?}==={:?}===",
+        //     expr.to_string(),
+        //     expr.get_ast_type(),
+        //     privacy
+        // );
         let expr_text = expr.code();
         let input_expr = self
             ._expr_trafo
@@ -1676,6 +1677,11 @@ where
             .unwrap()
             .original_body
             .clone(); //deep_copy(fdef.original_body, true, true);
+        println!(
+            "==_circ_trafo=============inlined_body=={:?}==={}",
+            inlined_body.as_ref().unwrap().borrow().to_string(),
+            line!()
+        );
         self._circ_trafo
             .as_ref()
             .unwrap()
@@ -1925,6 +1931,16 @@ where
             "",
         );
         comment.text += &format!(" [{}]", cond.as_ref().unwrap().identifier_base.name);
+        println!(
+            "===_circ_trafo============then_branch=={:?}==={}",
+            ast.try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
+                .then_branch
+                .borrow()
+                .to_string(),
+            line!()
+        );
         self._circ_trafo.as_ref().unwrap().visitBlock(
             Some(
                 ast.try_as_if_statement_ref()
@@ -1975,6 +1991,18 @@ where
                         cond.as_ref().unwrap().identifier_base.name
                     )),
                 )));
+            println!(
+                "=====else_branch==========_circ_trafo=={:?}==={}",
+                ast.try_as_if_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .else_branch
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .to_string(),
+                line!()
+            );
             self._circ_trafo.as_ref().unwrap().visitBlock(
                 Some(
                     ast.try_as_if_statement_ref()
@@ -2093,6 +2121,11 @@ where
             .iter_mut()
         {
             if is_instance(stmt, ASTType::StatementBase) {
+                println!(
+                    "=====_circ_trafo==========stmt=={:?}==={}",
+                    stmt.to_string(),
+                    line!()
+                );
                 self._circ_trafo
                     .as_ref()
                     .unwrap()
@@ -2193,6 +2226,11 @@ where
         } else {
             assert!(is_instance(lhs, ASTType::TupleExpr));
             if is_instance(&*rhs, ASTType::FunctionCallExprBase) {
+                println!(
+                    "=====rhs==========_circ_trafo=={:?}==={}",
+                    rhs.to_string(),
+                    line!()
+                );
                 if let Some(expr) = self
                     ._circ_trafo
                     .as_ref()
@@ -2304,7 +2342,6 @@ where
                 != Homomorphism::non_homomorphic();
         if is_hom_comp {
             //Treat a homomorphic operation as a privately evaluated operation on (public) ciphertexts
-
             expr.ast_base_ref().unwrap().borrow_mut().annotated_type =
                 Some(AnnotatedTypeName::cipher_type(
                     expr.try_as_expression_ref()
@@ -2318,6 +2355,23 @@ where
                 ));
         }
 
+        println!(
+            "====is_circ_val==={}=={}==={}===priv_result_idf========{:?}",
+            is_circ_val,
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_private(),
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .evaluate_privately(),
+            expr.to_string()
+        );
         let priv_result_idf = if is_circ_val
             || expr
                 .try_as_expression_ref()
@@ -2557,6 +2611,11 @@ where
         expr: &ASTFlatten,
         tmp_idf_suffix: &str,
     ) -> Option<HybridArgumentIdf> {
+        println!(
+            "===begin=====_evaluate_private_expression=======expr=={:?}==={}",
+            expr.to_string(),
+            line!()
+        );
         assert!(
             !(is_instance(expr, ASTType::MemberAccessExpr)
                 && is_instance(
@@ -2609,7 +2668,11 @@ where
                 .clone()
                 .try_as_hybrid_argument_idf();
         }
-
+        println!(
+            "====_circ_trafo====_evaluate_private_expression=======expr=={:?}==={}",
+            expr.to_string(),
+            line!()
+        );
         let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         let tname = format!(
             "{}{tmp_idf_suffix}",

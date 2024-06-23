@@ -26,17 +26,18 @@ use zkay_derive::ASTVisitorBaseRefImpl;
 
 // Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
 // """
-pub fn deep_copy(ast: &ASTFlatten, with_types: bool, with_analysis: bool) -> Option<ASTFlatten> {
+pub fn deep_copy(ast: &ASTFlatten, _with_types: bool, _with_analysis: bool) -> Option<ASTFlatten> {
     // assert!(isinstance(ast,AST,ASTFlatten,));
-    let v = DeepCopyVisitor::new(with_types, with_analysis);
-    let mut ast_copy = v.visit(ast);
+    // let v = DeepCopyVisitor::new(with_types, with_analysis);
+    let mut ast_copy = Some(ast.clone()); //v.visit(ast);
+    let parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
     ast_copy
-        .as_mut()
+        .as_ref()
         .unwrap()
         .ast_base_ref()
         .unwrap()
         .borrow_mut()
-        .parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
+        .parent = parent;
     set_parents(ast_copy.as_mut().unwrap());
     let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
     link_identifiers(ast_copy.as_mut().unwrap(), global_vars.clone());

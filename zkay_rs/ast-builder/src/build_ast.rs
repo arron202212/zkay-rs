@@ -761,11 +761,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .clone()
                     .and_then(|ast| ast.try_as_homomorphism())
                     .unwrap_or(homomorphism);
-                println!(
-                    "==visit_annotatedTypeName========homomorphism==={:?}========{:?}",
-                    homomorphism,
-                    self.temp_result().clone()
-                );
+                // println!(
+                //     "==visit_annotatedTypeName========homomorphism==={:?}========{:?}",
+                //     homomorphism,
+                //     self.temp_result().clone()
+                // );
             }
             assert!(
                 privacy_annotation.is_some()

@@ -4339,7 +4339,7 @@ impl ReclassifyExprBase {
         homomorphism: Option<String>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
-        println!("======ReclassifyExprBase=============={homomorphism:?}");
+        // println!("======ReclassifyExprBase=============={homomorphism:?}");
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             expr,
@@ -4398,7 +4398,7 @@ impl ASTChildren for RehomExpr {
 
 impl RehomExpr {
     pub fn new(expr: ASTFlatten, homomorphism: Option<String>) -> Self {
-        println!("==RehomExpr============={homomorphism:?}");
+        // println!("==RehomExpr============={homomorphism:?}");
         Self {
             reclassify_expr_base: ReclassifyExprBase::new(
                 expr,
@@ -4686,57 +4686,53 @@ impl HybridArgumentIdf {
 
         let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None)
             .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
+        let loc_expr = self.get_loc_expr(None);
         if let TypeName::Array(_a) = self.t.borrow().clone() {
-            SliceExpr::new(
-                Some(self.get_loc_expr(None)),
-                None,
-                0,
-                self.t.borrow().size_in_uints(),
-            )
-            .arr
-            .as_ref()
-            .unwrap()
-            .to_ast()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .assign(RcCell::new(self.serialized_loc.clone()).into())
+            SliceExpr::new(Some(loc_expr), None, 0, self.t.borrow().size_in_uints())
+                .arr
+                .as_ref()
+                .unwrap()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .assign(RcCell::new(self.serialized_loc.clone()).into())
         } else if let Some(base) = &base {
-            self.get_loc_expr(None)
-                .try_as_expression_mut()
+            loc_expr
+                .to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow_mut()
-                .try_as_tuple_or_location_expr_mut()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_location_expr_mut()
+                .try_as_location_expr_ref()
                 .unwrap()
                 .assign(
                     LocationExpr::IdentifierExpr(
                         src.try_as_identifier_expr_ref().unwrap().borrow().clone(),
                     )
                     .index(ExprUnion::Expression(
-                        RcCell::new(base.try_as_expression_ref().unwrap().borrow().binop(
+                        RcCell::new(base.to_ast().try_as_expression_ref().unwrap().binop(
                             String::from("+"),
                             NumberLiteralExpr::new(start_offset, false).into_expr(),
                         ))
                         .into(),
                     ))
+                    .to_ast()
                     .try_as_expression()
                     .unwrap()
-                    .borrow()
                     .explicitly_converted(&self.t),
                 )
         } else {
-            self.get_loc_expr(None)
-                .try_as_expression_mut()
+            loc_expr
+                .to_ast()
+                .try_as_expression_ref()
                 .unwrap()
-                .borrow_mut()
-                .try_as_tuple_or_location_expr_mut()
+                .try_as_tuple_or_location_expr_ref()
                 .unwrap()
-                .try_as_location_expr_mut()
+                .try_as_location_expr_ref()
                 .unwrap()
                 .assign(
                     LocationExpr::IdentifierExpr(
@@ -9735,15 +9731,15 @@ impl CodeVisitor {
                 .unwrap()
                 .privacy(),
         );
-        println!(
-            "===visit_ReclassifyExpr==============={:?}",
-            ast.to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_reclassify_expr_ref()
-                .unwrap()
-                .homomorphism()
-        );
+        // println!(
+        //     "===visit_ReclassifyExpr==============={:?}",
+        //     ast.to_ast()
+        //         .try_as_expression_ref()
+        //         .unwrap()
+        //         .try_as_reclassify_expr_ref()
+        //         .unwrap()
+        //         .homomorphism()
+        // );
         let h = ast
             .to_ast()
             .try_as_expression_ref()

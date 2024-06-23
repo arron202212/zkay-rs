@@ -1050,9 +1050,9 @@ impl SymbolTableLinker {
             .names[1..]
         {
             let _idf = type_def
+                .to_ast()
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .borrow()
                 .names()
                 .get(&idf.borrow().name())
                 .expect("idf not found")
