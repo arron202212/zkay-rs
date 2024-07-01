@@ -10,8 +10,8 @@ use rccell::RcCell;
 use crate::ast::{
     is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
-    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, LocationExpr,
-    LocationExprBaseProperty, PrimitiveCastExpr, ReclassifyExpr, AST,
+    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, LocationExpr, PrimitiveCastExpr,
+    ReclassifyExpr, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -420,14 +420,10 @@ impl NonInlineableCallDetector {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .to_ast()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()

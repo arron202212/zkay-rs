@@ -7,8 +7,7 @@
 #![allow(unused_braces)]
 use crate::ast::{
     is_instance, ASTFlatten, ASTInstanceOf, ASTType, Expression, ExpressionBaseProperty,
-    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr,
-    LocationExprBaseProperty, AST,
+    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, AST,
 };
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
@@ -92,14 +91,10 @@ impl ContainsPrivVisitor {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .to_ast()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .borrow()
+                .target
                 .as_ref()
                 .unwrap()
                 .clone()

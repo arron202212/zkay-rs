@@ -28,9 +28,9 @@ use zkay_ast::ast::{
     FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
     IdentifierBaseMutRef, IdentifierBaseProperty, IdentifierDeclaration,
     IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
-    IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr, LocationExprBaseProperty,
-    Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
-    NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
+    IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr, Mapping, MeExpr,
+    MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType, NumberTypeName,
+    Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
     ReclassifyExprBaseProperty, ReclassifyExprBaseRef, ReturnStatement, SimpleStatement,
     StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty, StatementList,
     StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
@@ -404,6 +404,17 @@ impl ZkayStatementTransformer {
         {
             new_statements.pop();
         }
+        if ast.get_ast_type() == ASTType::StatementListBase {
+            if new_statements
+                .iter()
+                .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+            {
+                println!(
+                    "==StatementListBase=========tt========StatementListBase===={}=",
+                    line!()
+                );
+            }
+        }
         if ast.is_statement_list() {
             ast.try_as_statement_list_ref()
                 .unwrap()
@@ -623,14 +634,10 @@ impl ZkayStatementTransformer {
                                 .lhs()
                                 .as_ref()
                                 .unwrap()
-                                .try_as_expression_ref()
+                                .ast_base_ref()
                                 .unwrap()
                                 .borrow()
-                                .try_as_tuple_or_location_expr_ref()
-                                .unwrap()
-                                .try_as_location_expr_ref()
-                                .unwrap()
-                                .target()
+                                .target
                                 .as_ref()
                                 .and_then(|t| t.clone().upgrade())
                     })
@@ -752,14 +759,10 @@ impl ZkayStatementTransformer {
                                 .lhs()
                                 .as_ref()
                                 .unwrap()
-                                .try_as_expression_ref()
+                                .ast_base_ref()
                                 .unwrap()
                                 .borrow()
-                                .try_as_tuple_or_location_expr_ref()
-                                .unwrap()
-                                .try_as_location_expr_ref()
-                                .unwrap()
-                                .target()
+                                .target
                                 .clone()
                                 .unwrap()
                                 .upgrade()
@@ -1217,7 +1220,8 @@ impl ZkayStatementTransformer {
                         IdentifierExprUnion::Identifier(vd.borrow().idf().clone().unwrap()),
                         None,
                     );
-                    idf.location_expr_base.target = Some(ASTFlatten::from(vd.clone()).downgrade());
+                    idf.ast_base_ref().borrow_mut().target =
+                        Some(ASTFlatten::from(vd.clone()).downgrade());
                     RcCell::new(idf).into()
                 })
                 .collect();
@@ -1640,12 +1644,10 @@ impl ZkayExpressionTransformer {
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -1725,14 +1727,10 @@ impl ZkayExpressionTransformer {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .to_ast()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -1763,12 +1761,10 @@ impl ZkayExpressionTransformer {
                         .borrow_mut()
                         .function_call_expr_base_mut_ref()
                         .func
-                        .try_as_tuple_or_location_expr_ref()
+                        .ast_base_ref()
                         .unwrap()
                         .borrow()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .target()
+                        .target
                         .clone()
                         .unwrap()
                         .upgrade()
@@ -1798,14 +1794,10 @@ impl ZkayExpressionTransformer {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .to_ast()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -1835,14 +1827,10 @@ impl ZkayExpressionTransformer {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .to_ast()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -2636,12 +2624,10 @@ impl ZkayCircuitTransformer {
             .unwrap()
             .borrow()
             .func()
-            .try_as_tuple_or_location_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .target
             .clone()
             .unwrap()
             .upgrade()

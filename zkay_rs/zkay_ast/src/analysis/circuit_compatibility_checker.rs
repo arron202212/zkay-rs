@@ -15,9 +15,9 @@ use crate::ast::{
     AssignmentStatement, BooleanLiteralType, BuiltinFunction, ConstructorOrFunctionDefinition,
     Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef, FunctionCallExpr,
     FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr, IntoAST,
-    IntoExpression, LocationExpr, LocationExprBaseProperty, NumberLiteralType, PrimitiveCastExpr,
-    ReclassifyExpr, ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement,
-    StatementBaseProperty, StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
+    IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
+    ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement, StatementBaseProperty,
+    StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -898,12 +898,10 @@ impl PrivateSetter {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .as_ref()
                 .unwrap()
                 .clone()
@@ -1045,12 +1043,10 @@ impl NonstaticOrIncompatibilityDetector {
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .is_some());
                 assert!(is_instance(
                     ast.to_ast()
@@ -1059,12 +1055,10 @@ impl NonstaticOrIncompatibilityDetector {
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .func()
-                        .try_as_tuple_or_location_expr_ref()
+                        .ast_base_ref()
                         .unwrap()
                         .borrow()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .target()
+                        .target
                         .as_ref()
                         .unwrap()
                         .clone()
@@ -1089,12 +1083,10 @@ impl NonstaticOrIncompatibilityDetector {
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .as_ref()
                     .unwrap()
                     .clone()
@@ -1113,12 +1105,10 @@ impl NonstaticOrIncompatibilityDetector {
                     .try_as_function_call_expr_ref()
                     .unwrap()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .as_ref()
                     .unwrap()
                     .clone()

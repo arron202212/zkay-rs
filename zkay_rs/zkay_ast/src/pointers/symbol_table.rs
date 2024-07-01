@@ -13,12 +13,11 @@ use crate::ast::{
     ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
     ExpressionBaseProperty, ForStatement, Identifier, IdentifierBase, IdentifierBaseProperty,
     IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
-    LocationExpr, LocationExprBaseMutRef, LocationExprBaseProperty, Mapping, MemberAccessExpr,
-    NamespaceDefinition, SimpleStatement, SourceUnit, StateVariableDeclaration, Statement,
-    StatementList, StatementListBase, StatementListBaseProperty, StructDefinition,
-    TupleOrLocationExpr, TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseMutRef,
-    UserDefinedTypeNameBaseProperty, UserDefinedTypeNameBaseRef, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    LocationExpr, LocationExprBaseMutRef, Mapping, MemberAccessExpr, NamespaceDefinition,
+    SimpleStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
+    StatementListBase, StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
+    UserDefinedTypeName, UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty,
+    UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use rccell::{RcCell, WeakCell};
@@ -958,32 +957,8 @@ impl SymbolTableLinker {
         // println!("====visitIdentifierExpr====fid===ast.get_ast_type()========={:?}", ast.get_ast_type());
         let ta = fid.map(|d| d.downgrade());
         // println!("====visitIdentifierExpr=======ta========={:?}", ta);
-        if ast.is_expression() {
-            ast.try_as_expression_ref()
-                .unwrap()
-                .borrow_mut()
-                .try_as_tuple_or_location_expr_mut()
-                .unwrap()
-                .try_as_location_expr_mut()
-                .unwrap()
-                .try_as_identifier_expr_mut()
-                .unwrap()
-                .location_expr_base
-                .target = ta;
-        } else if ast.is_location_expr() {
-            ast.try_as_location_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .location_expr_base_mut_ref()
-                .target = ta;
-        } else {
-            println!(
-                "=={:?}==visitIdentifierExpr=======else========={:?}",
-                ast.get_ast_type(),
-                ta
-            );
-            ast.ast_base_ref().unwrap().borrow_mut().target = ta;
-        }
+
+        ast.ast_base_ref().unwrap().borrow_mut().target = ta;
         // println!("====visitIdentifierExpr======end=========={:?}", ast);
         assert!(
             (ast.ast_base_ref()
@@ -1002,30 +977,16 @@ impl SymbolTableLinker {
                     .upgrade()
                     .is_some())
                 || (ast
-                    .to_ast()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_identifier_expr_ref()
-                    .unwrap()
-                    .location_expr_base
+                    .borrow()
                     .target
                     .as_ref()
                     .is_some()
                     && ast
-                        .to_ast()
-                        .try_as_expression_ref()
+                        .ast_base_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .try_as_identifier_expr_ref()
-                        .unwrap()
-                        .location_expr_base
+                        .borrow()
                         .target
                         .clone()
                         .unwrap()
@@ -1077,17 +1038,12 @@ impl SymbolTableLinker {
         //     ast.get_ast_type(),
         //     type_def.get_ast_type()
         // );
-        ast.try_as_type_name_ref()
-            .unwrap()
-            .borrow_mut()
-            .try_as_user_defined_type_name_mut()
-            .unwrap()
-            .user_defined_type_name_base_mut_ref()
-            .target = Some(type_def.downgrade());
+        ast.ast_base_ref().unwrap().borrow_mut().target = Some(type_def.downgrade());
 
         // ast
         Ok(())
     }
+
     pub fn visitMemberAccessExpr(
         &self,
         ast: &ASTFlatten,
@@ -1128,7 +1084,9 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .borrow()
-            .target()
+            .ast_base_ref()
+            .borrow()
+            .target
             .is_some()
             && is_instance(
                 &ast.to_ast()
@@ -1144,7 +1102,9 @@ impl SymbolTableLinker {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .target()
+                    .ast_base_ref()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -1166,7 +1126,9 @@ impl SymbolTableLinker {
                 .as_ref()
                 .unwrap()
                 .borrow()
-                .target()
+                .ast_base_ref()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -1191,28 +1153,9 @@ impl SymbolTableLinker {
                 )
                 .expect("name is not in names")
                 .clone();
-            if ast.is_expression() {
-                ast.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .try_as_tuple_or_location_expr_mut()
-                    .unwrap()
-                    .try_as_location_expr_mut()
-                    .unwrap()
-                    .location_expr_base_mut_ref()
-                    .target = idf.upgrade().unwrap().borrow().parent();
-            } else if ast.is_location_expr() {
-                ast.try_as_location_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .location_expr_base_mut_ref()
-                    .target = idf.upgrade().unwrap().borrow().parent();
-            } else {
-                eyre::bail!(
-                    "===NamespaceDefinitionBase=1=target is else =typ={:?}",
-                    ast.get_ast_type()
-                );
-            }
+            ast.ast_base_ref().unwrap().borrow_mut().target =
+                idf.upgrade().unwrap().borrow().parent();
+
             // println!("===NamespaceDefinitionBase=1==typ={:?}", ast.get_ast_type());
             //   println!(
             //             "===visitMemberAccessExpr======end======={:?}",
@@ -1235,7 +1178,9 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .borrow()
-            .target()
+            .ast_base_ref()
+            .borrow()
+            .target
             .clone()
             .unwrap()
             .upgrade()
@@ -1268,6 +1213,7 @@ impl SymbolTableLinker {
                     == "length"
             );
             let ta = array_length_member();
+            ast.ast_base_ref().unwrap().borrow_mut().target = Some(ta.clone().downgrade());
             if ast.is_expression() {
                 ast.try_as_expression_ref()
                     .unwrap()
@@ -1278,26 +1224,12 @@ impl SymbolTableLinker {
                     .unwrap()
                     .location_expr_base_mut_ref()
                     .target_rc = Some(ta.clone());
-                ast.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .try_as_tuple_or_location_expr_mut()
-                    .unwrap()
-                    .try_as_location_expr_mut()
-                    .unwrap()
-                    .location_expr_base_mut_ref()
-                    .target = Some(ta.clone().downgrade());
             } else if ast.is_location_expr() {
                 ast.try_as_location_expr_ref()
                     .unwrap()
                     .borrow_mut()
                     .location_expr_base_mut_ref()
                     .target_rc = Some(ta.clone());
-                ast.try_as_location_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .location_expr_base_mut_ref()
-                    .target = Some(ta.downgrade());
             } else {
                 eyre::bail!("===arr===ta==else target={:?}==", ast.get_ast_type());
             }
@@ -1318,9 +1250,10 @@ impl SymbolTableLinker {
         if t.clone()
             .unwrap()
             .borrow()
-            .try_as_user_defined_type_name_ref()
+            .ast_base_ref()
             .unwrap()
-            .target()
+            .borrow()
+            .target
             .is_none()
         {
             t.as_ref()
@@ -1341,65 +1274,61 @@ impl SymbolTableLinker {
             //             return Ok(());
         }
 
-        let idf = t
-            .clone()
+        if t.clone()
             .unwrap()
             .borrow()
-            .try_as_user_defined_type_name_ref()
-            .unwrap()
-            .target()
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
             .ast_base_ref()
             .unwrap()
             .borrow()
-            .names()
-            .get(
-                &ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_member_access_expr_ref()
-                    .unwrap()
-                    .member
-                    .borrow()
-                    .name(),
-            )
-            .expect("name not in names")
-            .clone();
-        if ast.is_expression() {
-            ast.try_as_expression_ref()
+            .target
+            .is_some()
+        {
+            let idf = t
+                .clone()
                 .unwrap()
-                .borrow_mut()
-                .try_as_tuple_or_location_expr_mut()
+                .borrow()
+                .ast_base_ref()
                 .unwrap()
-                .try_as_location_expr_mut()
+                .borrow()
+                .target
+                .clone()
                 .unwrap()
-                .location_expr_base_mut_ref()
-                .target = idf.upgrade().unwrap().borrow().parent();
-        } else if ast.is_location_expr() {
-            ast.try_as_location_expr_ref()
+                .upgrade()
                 .unwrap()
-                .borrow_mut()
-                .location_expr_base_mut_ref()
-                .target = idf.upgrade().unwrap().borrow().parent();
-        } else {
-            eyre::bail!("===target is not  none==else ==={:?}==", ast.get_ast_type());
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .names()
+                .get(
+                    &ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
+                        .member
+                        .borrow()
+                        .name(),
+                )
+                .expect("name not in names")
+                .clone();
+
+            ast.ast_base_ref().unwrap().borrow_mut().target =
+                idf.upgrade().unwrap().borrow().parent();
+
+            // println!(
+            //     "===target is not  none==end ==={:?}==",
+            //     idf.upgrade().unwrap().borrow().parent()
+            // );
+            //   println!(
+            //             "===visitMemberAccessExpr======end======={:?}",
+            //             ast
+            //         );
+            // ast
         }
-        // println!(
-        //     "===target is not  none==end ==={:?}==",
-        //     idf.upgrade().unwrap().borrow().parent()
-        // );
-        //   println!(
-        //             "===visitMemberAccessExpr======end======={:?}",
-        //             ast
-        //         );
-        // ast
         Ok(())
     }
 
@@ -1438,7 +1367,9 @@ impl SymbolTableLinker {
             .as_ref()
             .unwrap()
             .borrow()
-            .target()
+            .ast_base_ref()
+            .borrow()
+            .target
             .clone()
             .unwrap()
             .upgrade()
@@ -1476,18 +1407,12 @@ impl SymbolTableLinker {
                 .unwrap()
                 .location_expr_base_mut_ref()
                 .target_rc = Some(ta.clone());
-            expr.borrow_mut()
-                .try_as_tuple_or_location_expr_mut()
-                .unwrap()
-                .try_as_location_expr_mut()
-                .unwrap()
-                .location_expr_base_mut_ref()
-                .target = Some(ta.clone().downgrade());
+            expr.borrow_mut().ast_base_ref().borrow_mut().target = Some(ta.clone().downgrade());
             expr
         });
         ast.try_as_location_expr_ref().map(|expr| {
             expr.borrow_mut().location_expr_base_mut_ref().target_rc = Some(ta.clone());
-            expr.borrow_mut().location_expr_base_mut_ref().target = Some(ta.downgrade());
+            expr.borrow_mut().ast_base_ref().borrow_mut().target = Some(ta.downgrade());
             expr
         });
 

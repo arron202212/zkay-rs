@@ -23,13 +23,13 @@ use zkay_ast::ast::{
     FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
     FunctionTypeName, IdentifierDeclaration, IdentifierDeclarationBaseProperty,
     IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IndexExpr, IntoAST, IntoExpression,
-    IntoStatement, LiteralUnion, LocationExpr, LocationExprBaseProperty, Mapping, MeExpr,
-    MemberAccessExpr, NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion,
-    NumberTypeName, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase,
-    ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr, RequireStatement,
-    ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
-    StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
+    IntoStatement, LiteralUnion, LocationExpr, Mapping, MeExpr, MemberAccessExpr,
+    NamespaceDefinition, NewExpr, NumberLiteralType, NumberLiteralTypeUnion, NumberTypeName,
+    PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBase, ReclassifyExprBaseMutRef,
+    ReclassifyExprBaseProperty, RehomExpr, RequireStatement, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty, TupleExpr,
+    TupleType, TypeName, UserDefinedTypeName, UserDefinedTypeNameBaseProperty,
+    VariableDeclarationStatement, WhileStatement, AST,
 };
 use zkay_ast::visitors::deep_copy::replace_expr;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -332,16 +332,10 @@ impl TypeCheckVisitor {
     pub fn check_final(&self, fct: &ASTFlatten, ast: &ASTFlatten) {
         if is_instance(ast, ASTType::IdentifierExpr) {
             if let Some(target) = ast
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .try_as_identifier_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -2195,14 +2189,10 @@ impl TypeCheckVisitor {
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .func()
-                        .try_as_expression_ref()
+                        .ast_base_ref()
                         .unwrap()
                         .borrow()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .target()
+                        .target
                         .clone()
                         .unwrap()
                         .upgrade()
@@ -2225,14 +2215,10 @@ impl TypeCheckVisitor {
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .func()
-                        .to_ast()
-                        .try_as_expression_ref()
+                        .ast_base_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .target()
+                        .borrow()
+                        .target
                         .clone()
                         .unwrap()
                         .upgrade()
@@ -2516,19 +2502,7 @@ impl TypeCheckVisitor {
         mut ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("===========visitMemberAccessExpr==================={:?}",ast);
-        assert!(ast
-            .to_ast()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .try_as_member_access_expr_ref()
-            .unwrap()
-            .location_expr_base
-            .target
-            .is_some());
+        assert!(ast.ast_base_ref().unwrap().borrow().target.is_some());
 
         assert!(
             !(ast
@@ -2573,16 +2547,10 @@ impl TypeCheckVisitor {
             ast
         );
         let at = ast
-            .to_ast()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .try_as_member_access_expr_ref()
-            .unwrap()
-            .target()
+            .borrow()
+            .target
             .clone()
             .unwrap()
             .upgrade()
@@ -3184,17 +3152,10 @@ impl TypeCheckVisitor {
         // { //no action necessary, the identifier will be replaced later
         // pass
         let target = ast
-            .to_ast()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .try_as_identifier_expr_ref()
-            .unwrap()
-            .location_expr_base
-            .target()
+            .borrow()
+            .target
             .as_ref()
             .and_then(|t| t.clone().upgrade())
             .unwrap();
@@ -3439,7 +3400,7 @@ impl TypeCheckVisitor {
                 .qualified_name(),
             None,
         );
-        etn.user_defined_type_name_base.target = Some(ast.clone().downgrade());
+        etn.ast_base_ref().borrow_mut().target = Some(ast.clone().downgrade());
         // println!(
         //     "===annotated_type====================={}====={}================annotated_type========",
         //     file!(),
@@ -3469,7 +3430,7 @@ impl TypeCheckVisitor {
                 .qualified_name(),
             None,
         );
-        evtn.user_defined_type_name_base.target = Some(ast.clone().downgrade());
+        evtn.ast_base_ref().borrow_mut().target = Some(ast.clone().downgrade());
         // println!(
         //     "===annotated_type====================={}====={}================annotated_type========",
         //     file!(),
@@ -3638,9 +3599,10 @@ impl TypeCheckVisitor {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .try_as_user_defined_type_name_ref()
+                        .ast_base_ref()
                         .unwrap()
-                        .target()
+                        .borrow()
+                        .target
                         .clone()
                         .unwrap()
                         .upgrade()
@@ -3660,9 +3622,10 @@ impl TypeCheckVisitor {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_user_defined_type_name_ref()
+                    .ast_base_ref()
                     .unwrap()
-                    .target()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -3675,9 +3638,10 @@ impl TypeCheckVisitor {
                 .as_ref()
                 .unwrap()
                 .borrow()
-                .try_as_user_defined_type_name_ref()
+                .ast_base_ref()
                 .unwrap()
-                .target()
+                .borrow()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -3779,14 +3743,10 @@ impl TypeCheckVisitor {
             .clone();
         if is_instance(&p, ASTType::IdentifierExpr) {
             let t = p
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .as_ref()
                 .and_then(|t| t.clone().upgrade())
                 .unwrap();

@@ -223,12 +223,13 @@ impl Config {
     }
 
     pub fn proof_len(&self) -> i32 {
-        PROVINGSCHEMEPARAMS[&self.get_attr(&String::from("proving_scheme"))].proof_len
+        // println!("=====proving_scheme============={:?}",(&String::from("proving_scheme")));
+        PROVINGSCHEMEPARAMS[&self.user_config._proving_scheme].proof_len
     }
 
     // Names of all solidity libraries in verify_libs.sol, which need to be linked against.
     pub fn external_crypto_lib_names(&self) -> Vec<String> {
-        PROVINGSCHEMEPARAMS[&self.get_attr(&String::from("proving_scheme"))]
+        PROVINGSCHEMEPARAMS[&self.user_config._proving_scheme]
             .external_sol_libs
             .clone()
     }

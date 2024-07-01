@@ -270,7 +270,8 @@ impl Remapper {
                         .try_as_identifier_expr_mut()
                         .unwrap()
                         .borrow_mut()
-                        .location_expr_base
+                        .ast_base_ref()
+                        .borrow_mut()
                         .target = key_decl.clone();
                     prev_val
                         .try_as_identifier_expr_mut()
@@ -358,22 +359,9 @@ impl Remapper {
                             )
                             .into(),
                         );
-                prev_val
-                    .try_as_identifier_expr_mut()
-                    .unwrap()
-                    .borrow_mut()
-                    .location_expr_base
-                    .target = key_decl.clone();
-                prev_val
-                    .try_as_identifier_expr_mut()
-                    .unwrap()
-                    .borrow_mut()
-                    .location_expr_base
-                    .tuple_or_location_expr_base
-                    .expression_base
-                    .ast_base
-                    .borrow_mut()
-                    .parent = Some(stmt.clone().downgrade());
+                prev_val.ast_base_ref().unwrap().borrow_mut().target = key_decl.clone();
+                prev_val.ast_base_ref().unwrap().borrow_mut().parent =
+                    Some(stmt.clone().downgrade());
                 prev_val
                     .try_as_identifier_expr_mut()
                     .unwrap()

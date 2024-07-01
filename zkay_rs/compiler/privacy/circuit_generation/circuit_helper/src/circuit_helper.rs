@@ -19,18 +19,18 @@ use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty,
-    ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName, AssignmentStatement,
-    AssignmentStatementBase, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty,
-    AssignmentStatementBaseRef, Block, BooleanLiteralType, BuiltinFunction,
-    CircuitComputationStatement, CircuitInputStatement, ConstructorOrFunctionDefinition,
-    ElementaryTypeName, EncryptionExpression, EnterPrivateKeyStatement, ExprUnion, Expression,
-    ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef,
-    ExpressionStatement, FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
-    FunctionCallExprBaseProperty, FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf,
-    Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
-    IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr, IntoAST, IntoExpression,
-    IntoStatement, KeyLiteralExpr, LocationExpr, LocationExprBaseProperty, MeExpr,
-    MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
+    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName,
+    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
+    AssignmentStatementBaseProperty, AssignmentStatementBaseRef, Block, BooleanLiteralType,
+    BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
+    ConstructorOrFunctionDefinition, ElementaryTypeName, EncryptionExpression,
+    EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
+    ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
+    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
+    IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
+    MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
     ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
     UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
@@ -670,7 +670,7 @@ where
                     ),
                     Some(RcCell::new(ret_t)),
                 );
-                idf.location_expr_base.target = var.target().map(|p| p.downgrade());
+                idf.ast_base_ref().borrow_mut().target = var.target().map(|p| p.downgrade());
                 let mut ret_param = idf;
                 ret_param
                     .location_expr_base
@@ -695,7 +695,8 @@ where
                         RcCell::new(Parameter::new(
                             vec![],
                             ret.annotated_type().clone(),
-                            ret.location_expr_base
+                            ret.ast_base_ref()
+                                .borrow_mut()
                                 .target
                                 .clone()
                                 .unwrap()
@@ -729,7 +730,7 @@ where
             )),
         );
         fdef.original_body = fdef.body.clone();
-        fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();
+        // fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();
         let fdef = RcCell::new(fdef);
         fdef.borrow_mut()
             .body
@@ -745,7 +746,7 @@ where
             None,
         );
         idf.location_expr_base.target_rc = Some(ASTFlatten::from(fdef));
-        idf.location_expr_base.target = idf
+        idf.ast_base_ref().borrow_mut().target = idf
             .location_expr_base
             .target_rc
             .as_ref()
@@ -846,19 +847,17 @@ where
                 .unwrap()
                 .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
                 .unwrap()
+                .to_ast()
                 .try_as_namespace_definition_ref()
                 .unwrap()
-                .borrow()
                 .try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .requires_verification
@@ -873,19 +872,17 @@ where
                     .unwrap()
                     .borrow()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
                     .unwrap()
+                    .to_ast()
                     .try_as_namespace_definition_ref()
                     .unwrap()
-                    .borrow()
                     .try_as_constructor_or_function_definition_ref()
                     .unwrap()
                     .clone(),
@@ -1113,14 +1110,10 @@ where
 
             if self._remapper.0.is_remapped(
                 &expr
-                    .to_ast()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -1133,14 +1126,10 @@ where
             ) {
                 return self._remapper.0.get_current(
                     &expr
-                        .to_ast()
-                        .try_as_expression_ref()
+                        .ast_base_ref()
                         .unwrap()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .target()
+                        .borrow()
+                        .target
                         .clone()
                         .unwrap()
                         .upgrade()
@@ -1156,14 +1145,10 @@ where
 
             t_suffix = format!(
                 "_{}",
-                expr.to_ast()
-                    .try_as_expression_ref()
+                expr.ast_base_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -1409,14 +1394,10 @@ where
             //      This works for now because we never perform homomorphic operations on variables we can decrypt.
             self._remapper.0.remap(
                 &expr
-                    .to_ast()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -1441,14 +1422,10 @@ where
     // """
     pub fn get_remapped_idf_expr(&self, idf: ASTFlatten) -> ASTFlatten {
         let target = idf
-            .to_ast()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .borrow()
+            .target
             .clone()
             .and_then(|t| t.upgrade());
         assert!(target.is_some());
@@ -1548,12 +1525,10 @@ where
                 .unwrap()
                 .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .is_some()
         );
         let fdef = fcall
@@ -1561,12 +1536,10 @@ where
             .unwrap()
             .borrow()
             .func()
-            .try_as_tuple_or_location_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .target
             .clone();
         //with
         self._remapper.0.remap_scope(Some(
@@ -1575,12 +1548,10 @@ where
                 .unwrap()
                 .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -1602,12 +1573,10 @@ where
             .unwrap()
             .borrow()
             .func()
-            .try_as_tuple_or_location_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .target
             .clone()
             .unwrap()
             .upgrade()
@@ -2145,6 +2114,17 @@ where
             }
             // stmt.pre_statements = vec![];
         }
+        if ast.get_ast_type() == ASTType::StatementListBase {
+            if statements
+                .iter()
+                .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+            {
+                println!(
+                    "==StatementListBase=======ch==========StatementListBase===={}=",
+                    line!()
+                );
+            }
+        }
         ast.try_as_block_ref()
             .unwrap()
             .borrow_mut()
@@ -2194,21 +2174,12 @@ where
     pub fn _add_assign(&self, lhs: &ASTFlatten, rhs: &ASTFlatten) {
         if is_instance(lhs, ASTType::IdentifierExpr) {
             //for now no ref types
-            assert!(lhs
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
-                .is_some());
+            assert!(lhs.ast_base_ref().unwrap().borrow().target.is_some());
             self.create_new_idf_version_from_value(
-                &lhs.try_as_tuple_or_location_expr_ref()
+                &lhs.ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()

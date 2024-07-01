@@ -11,9 +11,8 @@ use crate::ast::{
     is_instance, is_instances, ASTBaseMutRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
     AssignmentStatement, AssignmentStatementBaseProperty, BuiltinFunction, Expression,
     FunctionCallExpr, FunctionCallExprBaseProperty, IdentifierDeclaration, InstanceTarget, IntoAST,
-    IntoExpression, IntoStatement, LocationExpr, LocationExprBaseProperty, Parameter,
-    SimpleStatement, StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr,
-    VariableDeclaration, AST,
+    IntoExpression, IntoStatement, LocationExpr, Parameter, SimpleStatement,
+    StateVariableDeclaration, Statement, TupleExpr, TupleOrLocationExpr, VariableDeclaration, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -113,14 +112,10 @@ impl SideEffectsDetector {
             && !fce.is_cast()
             && fce
                 .func()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -283,14 +278,10 @@ impl DirectModificationDetector {
             .unwrap()
             .is_rvalue()
             && is_instances(
-                ast.to_ast()
-                    .try_as_expression_ref()
+                ast.ast_base_ref()
                     .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .borrow()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -303,11 +294,12 @@ impl DirectModificationDetector {
                 ],
             )
         {
+            let it = InstanceTarget::new(vec![Some(ast.clone())]);
             ast.ast_base_ref()
                 .unwrap()
                 .borrow_mut()
                 .read_values
-                .insert(InstanceTarget::new(vec![Some(ast.clone())]));
+                .insert(it);
         }
         Ok(())
     }
@@ -421,14 +413,10 @@ impl IndirectModificationDetector {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()

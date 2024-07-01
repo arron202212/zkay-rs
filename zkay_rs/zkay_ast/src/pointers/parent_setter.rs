@@ -28,6 +28,7 @@ impl AstVisitor for ParentSetterVisitor {
         ) || matches!(ast, AST::NamespaceDefinition(_))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        // println!("{name:?}");
         match name {
             ASTType::SourceUnit => self.visitSourceUnit(ast),
             ASTType::ConstructorOrFunctionDefinition => {
@@ -45,7 +46,7 @@ impl AstVisitor for ParentSetterVisitor {
             c.ast_base_ref().unwrap().borrow_mut().parent = Some(ast.clone().downgrade());
             c.ast_base_ref().unwrap().borrow_mut().namespace =
                 ast.ast_base_ref().unwrap().borrow().namespace().clone();
-            // println!("========================{:?},{:?}",ast.get_ast_type(),c.get_ast_type());
+            // println!("====visit_children========parent============{:?},========{:?}",ast.get_ast_type(),c.get_ast_type());
             // println!(
             //         "=0000000={:?}==={:?}===children=={:?}======={:?}",
             //         ast.get_ast_type(),
@@ -53,6 +54,8 @@ impl AstVisitor for ParentSetterVisitor {
             //         ast.to_string(),
             //         c.to_string()
             //     );
+            // if ast.get_ast_type()==ASTType::Block &&   c.get_ast_type()==ASTType::StatementListBase{//stack overflow TODO
+            // continue}
             self.visit(&c); //stack overflow TODO
         }
         Ok(())
@@ -129,12 +132,16 @@ impl ParentSetterVisitor {
             .try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow()
-            .parent
+            .parent()
             .as_ref()
             .map(|parent| {
+                // println!("-=-=");
                 let mut p: Vec<_> = parent
-                    .namespace_definition_base
-                    .ast_base
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .ast_base_ref()
+                    .unwrap()
                     .borrow()
                     .namespace()
                     .as_ref()
@@ -159,7 +166,7 @@ impl ParentSetterVisitor {
                 .clone()
                 .unwrap()
                 .downgrade()]));
-
+        // println!("=======ddddd========1====");
         ast.try_as_constructor_or_function_definition_ref()
             .unwrap()
             .borrow_mut()
@@ -167,6 +174,7 @@ impl ParentSetterVisitor {
             .ast_base
             .borrow_mut()
             .namespace = namespace;
+        // println!("=======ddddd======2==1====");
         Ok(())
     }
 }
@@ -179,17 +187,14 @@ impl AstVisitor for ExpressionToStatementVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
     fn has_attr(&self, ast: &AST) -> bool {
-        matches!(
-            ast.get_ast_type(),
-            ASTType::ExpressionBase | ASTType::StatementBase
-        ) || matches!(ast, AST::Expression(_))
-            || matches!(ast, AST::Statement(_))
+        matches!(ast, AST::Expression(_)) || matches!(ast, AST::Statement(_))
     }
     fn get_attr(
         &self,
         name: &ASTType,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("====ExpressionToStatementVisitor==========get_attr======{name:?}");
         match name {
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
@@ -225,62 +230,133 @@ impl ExpressionToStatementVisitor {
                 .and_then(|p| p.clone().upgrade())
                 .clone();
         }
-        if parent.is_some() {
-            // if ast.get_ast_type() == ASTType::IdentifierExpr {
-            //     // println!(
-            //     //     "=====statement========={:?}==========={:?}",
-            //     //     parent.as_ref().unwrap().to_string(),
-            //     //     parent.as_ref().unwrap().get_ast_type()
-            //     // );
-            // }
-            if ast.is_expression() {
-                ast.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = parent.map(|p| p.clone().downgrade());
-                //      println!("=====statement=====is_expression===={:?}===========",ast.try_as_expression_ref()
-                // .unwrap()
-                // .borrow_mut()
-                // .expression_base_mut_ref()
-                // .statement.is_some());
-            } else if ast.is_location_expr() {
-                ast.try_as_location_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = parent.map(|p| p.clone().downgrade());
-            } else if ast.is_tuple_or_location_expr() {
-                ast.try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = parent.map(|p| p.clone().downgrade());
-            } else if ast.is_member_access_expr() {
-                ast.try_as_member_access_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = parent.map(|p| p.clone().downgrade());
-            } else if ast.is_index_expr() {
-                ast.try_as_index_expr_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = parent.map(|p| p.clone().downgrade());
-            } else {
-                panic!("===================else======={ast:?}");
-            }
+        if parent.is_none() {
+            return Ok(());
         }
+        // if ast.get_ast_type() == ASTType::IdentifierExpr {
+        //     // println!(
+        //     //     "=====statement========={:?}==========={:?}",
+        //     //     parent.as_ref().unwrap().to_string(),
+        //     //     parent.as_ref().unwrap().get_ast_type()
+        //     // );
+        // }
+        if ast.is_expression() {
+            ast.try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+            //      println!("=====statement=====is_expression===={:?}===========",ast.try_as_expression_ref()
+            // .unwrap()
+            // .borrow_mut()
+            // .expression_base_mut_ref()
+            // .statement.is_some());
+        } else if ast.is_location_expr() {
+            ast.try_as_location_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_tuple_or_location_expr() {
+            ast.try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_member_access_expr() {
+            ast.try_as_member_access_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_index_expr() {
+            ast.try_as_index_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_primitive_cast_expr() {
+            ast.try_as_primitive_cast_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_tuple_expr() {
+            ast.try_as_tuple_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_function_call_expr() {
+            ast.try_as_function_call_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_number_literal_expr() {
+            ast.try_as_number_literal_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_new_expr() {
+            ast.try_as_new_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_identifier_expr() {
+            ast.try_as_identifier_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_slice_expr() {
+            ast.try_as_slice_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_key_literal_expr() {
+            ast.try_as_key_literal_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_reclassify_expr() {
+            ast.try_as_reclassify_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_reclassify_expr_base() {
+            ast.try_as_reclassify_expr_base_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_function_call_expr_base() {
+            ast.try_as_function_call_expr_base_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
+        } else {
+            panic!("===================else======={ast:?}");
+        }
+
         Ok(())
     }
 
     pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("====ExpressionToStatementVisitor==========visitStatement==={:?}==",ast.get_ast_type());
         let mut parent = Some(ast.clone());
         while let Some(p) = parent.clone() {
+            // println!("====ExpressionToStatementVisitor======2====visitStatement=====");
             if is_instance(&p, ASTType::ConstructorOrFunctionDefinition) {
                 break;
             }
+            // println!("====ExpressionToStatementVisitor=======3===visitStatement=====");
             parent = p
                 .ast_base_ref()
                 .unwrap()
@@ -290,47 +366,56 @@ impl ExpressionToStatementVisitor {
                 .and_then(|p| p.clone().upgrade())
                 .clone();
         }
-        if parent.is_some() {
+        // println!("====ExpressionToStatementVisitor=====4=====visitStatement=====");
+        if parent.is_none() {
+            // println!("====ExpressionToStatementVisitor=====parent.is_none====visitStatement===={:?}==",ast.get_ast_type());
+            return Ok(());
+        }
+        // println!("====ExpressionToStatementVisitor=====5=====visitStatement=====");
+        // println!(
+        //     "=====visitStatement====get_ast_type===={:?}",
+        //     ast.get_ast_type()
+        // );
+        if ast.is_block() {
+            ast.try_as_block_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .function = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_ast() {
+            ast.try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_statement_mut()
+                .unwrap()
+                .statement_base_mut_ref()
+                .unwrap()
+                .function = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_simple_statement() {
+            ast.try_as_simple_statement_ref()
+                .unwrap()
+                .borrow_mut()
+                .statement_base_mut_ref()
+                .function = parent.map(|p| p.clone().downgrade());
+        } else {
             // println!(
-            //     "=====visitStatement====get_ast_type===={:?}",
+            //     "=====visitStatement=======else==={:?}=====",
             //     ast.get_ast_type()
             // );
-            if ast.is_block() {
-                ast.try_as_block_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .statement_base_mut_ref()
-                    .function = parent.map(|p| p.clone().downgrade());
-            } else if ast.is_ast() {
-                ast.try_as_ast_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .try_as_statement_mut()
-                    .unwrap()
-                    .statement_base_mut_ref()
-                    .unwrap()
-                    .function = parent.map(|p| p.clone().downgrade());
-            } else if ast.is_simple_statement() {
-                ast.try_as_simple_statement_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .statement_base_mut_ref()
-                    .function = parent.map(|p| p.clone().downgrade());
-            } else {
-                // println!(
-                //     "=====visitStatement=======else==={:?}=====",
-                //     ast.get_ast_type()
-                // );
-                eyre::bail!("=========else===========");
-            }
+            eyre::bail!("=========else===========");
         }
+        // println!("====ExpressionToStatementVisitor=====6=====visitStatement==={:?}==",ast.get_ast_type());
         Ok(())
     }
 }
 
 pub fn set_parents(ast: &ASTFlatten) {
     let v = ParentSetterVisitor::new();
+    //  println!("=======set_parents======0==1====");
     v.visit(ast);
+    // println!("=======set_parents========1====");
     let v = ExpressionToStatementVisitor::new();
+    //   println!("=======set_parents=====3===1====");
     v.visit(ast);
+    //  println!("=======set_parents====2====1====");
 }

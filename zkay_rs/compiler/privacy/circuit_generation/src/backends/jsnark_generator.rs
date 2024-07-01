@@ -30,8 +30,8 @@ use zkay_ast::ast::{
     indent, is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, BooleanLiteralExpr,
     BuiltinFunction, EnumDefinition, Expression, ExpressionBaseProperty, FunctionCallExpr,
     FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr,
-    IndexExpr, IntoAST, LocationExprBaseProperty, MeExpr, MemberAccessExpr, NumberLiteralExpr,
-    PrimitiveCastExpr, TypeName, AST,
+    IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr, PrimitiveCastExpr, TypeName,
+    AST,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
@@ -867,12 +867,10 @@ impl JsnarkVisitor {
                     .unwrap()
                     .borrow()
                     .func()
-                    .try_as_tuple_or_location_expr_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()

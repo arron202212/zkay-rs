@@ -12,8 +12,7 @@ use zkay_ast::ast::{
     is_instance, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement,
     AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
     Expression, IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
-    LocationExprBaseProperty, SimpleStatement, StateVariableDeclaration, Statement,
-    TupleOrLocationExpr, AST,
+    SimpleStatement, StateVariableDeclaration, Statement, TupleOrLocationExpr, AST,
 };
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -182,14 +181,10 @@ impl FinalVisitor {
             .lhs()
             .as_ref()
             .unwrap()
-            .to_ast()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .borrow()
+            .target
             .as_ref()
             .and_then(|var| var.clone().upgrade())
         {
@@ -275,14 +270,10 @@ impl FinalVisitor {
                     .as_ref()
                     .unwrap()
                     .get(
-                        &ast.to_ast()
-                            .try_as_expression_ref()
+                        &ast.ast_base_ref()
                             .unwrap()
-                            .try_as_tuple_or_location_expr_ref()
-                            .unwrap()
-                            .try_as_location_expr_ref()
-                            .unwrap()
-                            .target()
+                            .borrow()
+                            .target
                             .clone()
                             .unwrap()
                             .upgrade()

@@ -21,7 +21,7 @@ use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
-    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType,
+    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType,
     AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr, ArrayLiteralExprBase,
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
     CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
@@ -67,11 +67,12 @@ pub fn transform_ast(
     let zt = ZkayTransformer::new();
     //  println!("=============1======");
     let mut new_ast = zt.visit(ast.as_ref().unwrap());
-    // println!("======2=======1======");
+    println!("======2=======1======");
     // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
-
+    println!("======2===2====1======");
     link_identifiers(new_ast.as_ref().unwrap(), global_vars.clone());
+    println!("======2====3===1======");
     let circuits = zt.circuits.borrow().clone();
     (new_ast.unwrap(), circuits)
 }
@@ -386,6 +387,7 @@ impl ZkayTransformer {
         }
         println!("=====visitSourceUnit======3====");
         ast.try_as_source_unit_ref().unwrap().borrow_mut().contracts = contracts;
+        // panic!("=-===");
         Ok(ast.clone())
     }
     // """
@@ -998,7 +1000,7 @@ impl ZkayTransformer {
                                     ),
                                     None,
                                 );
-                                idf.location_expr_base.target =
+                                idf.ast_base_ref().borrow_mut().target =
                                     Some(ASTFlatten::from(vd.clone()).downgrade());
                                 RcCell::new(idf).into()
                             })
@@ -1010,6 +1012,17 @@ impl ZkayTransformer {
             );
         }
         println!("=====create_internal_verification_wrapper===={}=", line!());
+        if ast.get_ast_type() == ASTType::StatementListBase {
+            if stmts
+                .iter()
+                .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+            {
+                println!(
+                    "==StatementListBase=======ct==========StatementListBase===={}=",
+                    line!()
+                );
+            }
+        }
         ast.borrow_mut()
             .body
             .as_mut()
@@ -1499,7 +1512,7 @@ impl ZkayTransformer {
             AnnotatedTypeName::new(
                 Some(RcCell::new(TypeName::dyn_uint_array())),
                 None,
-                String::from("NON_"),
+                zkay_ast::homomorphism::Homomorphism::non_homomorphic(),
             ),
             vec![RcCell::new(NumberLiteralExpr::new(
                 ext_circuit.borrow().in_size_trans(),
@@ -1546,7 +1559,8 @@ impl ZkayTransformer {
             IdentifierExprUnion::Identifier(int_fct.borrow().idf().clone().unwrap()),
             None,
         );
-        idf.location_expr_base.target = Some(ASTFlatten::from(int_fct.clone()).downgrade());
+        idf.ast_base_ref().borrow_mut().target =
+            Some(ASTFlatten::from(int_fct.clone()).downgrade());
         let mut internal_call =
             FunctionCallExprBase::new(RcCell::new(idf).into(), args.clone(), None, None);
         internal_call.sec_start_offset = Some(ext_circuit.borrow().priv_in_size());

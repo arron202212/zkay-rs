@@ -11,8 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
     ASTFlatten, ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseMutRef,
     FunctionCallExprBaseProperty, Identifier, IdentifierExpr, IdentifierExprUnion, IntoAST,
-    IntoExpression, IntoStatement, LocationExprBaseProperty, MeExpr, NamespaceDefinition,
-    NumberLiteralExpr, AST,
+    IntoExpression, IntoStatement, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,
 };
 use zkay_config::config::CFG;
 use zkay_crypto::params::CryptoParams;
@@ -90,12 +89,10 @@ pub fn _compute_transitive_circuit_io_sizes(
         if let Some(cofd) = call
             .borrow()
             .func()
-            .try_as_tuple_or_location_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .target()
+            .target
             .clone()
             .unwrap()
             .upgrade()
@@ -119,12 +116,10 @@ pub fn _compute_transitive_circuit_io_sizes(
             if let Some(ref mut t) = f
                 .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()
@@ -228,12 +223,10 @@ pub fn transform_internal_calls(
             if let Some(t) = fc
                 .borrow()
                 .func()
-                .try_as_tuple_or_location_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .clone()
                 .unwrap()
                 .upgrade()

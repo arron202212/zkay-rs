@@ -9,8 +9,8 @@ mod tests {
         is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
         AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition,
         ContractDefinition, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
-        IdentifierExpr, IntoAST, LocationExprBaseProperty, NamespaceDefinitionBaseProperty,
-        SourceUnit, StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
+        IdentifierExpr, IntoAST, NamespaceDefinitionBaseProperty, SourceUnit,
+        StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
     };
     use zkay_ast::global_defs::{global_defs, global_vars};
     use zkay_ast::pointers::{

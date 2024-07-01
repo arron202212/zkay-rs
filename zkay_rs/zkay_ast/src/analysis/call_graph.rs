@@ -9,8 +9,7 @@ use crate::ast::{
     is_instance, ASTFlatten, ASTInstanceOf, ASTType, BuiltinFunction,
     ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
     ExpressionBaseRef, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, IntoAST, LocationExpr, LocationExprBaseProperty, NamespaceDefinition,
-    WhileStatement, AST,
+    FunctionCallExprBaseRef, IntoAST, LocationExpr, NamespaceDefinition, WhileStatement, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -114,14 +113,10 @@ impl DirectCalledFunctionDetector {
                 .try_as_function_call_expr_ref()
                 .unwrap()
                 .func()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .target()
+                .target
                 .as_ref()
                 .unwrap()
                 .clone();

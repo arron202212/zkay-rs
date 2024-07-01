@@ -2398,7 +2398,14 @@ impl Expression {
                 .unwrap()
                 .try_as_identifier_expr_ref()
                 .unwrap();
-            let target = ie.target().clone().unwrap().upgrade().unwrap();
+            let target = ie
+                .ast_base_ref()
+                .borrow()
+                .target
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap();
             // println!("==privacy_annotation_label===target======{:?}", target);
             if is_instance(&target, ASTType::Mapping) {
                 return target
@@ -3120,14 +3127,10 @@ impl FunctionCallExpr {
             && is_instances(
                 &self
                     .func()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .target()
+                    .target
                     .clone()
                     .unwrap()
                     .upgrade()
@@ -3922,19 +3925,18 @@ impl LocationExpr {
 pub trait LocationExprBaseRef: TupleOrLocationExprBaseRef {
     fn location_expr_base_ref(&self) -> &LocationExprBase;
 }
-pub trait LocationExprBaseProperty {
-    fn target(&self) -> &Option<ASTFlattenWeak>;
-}
-impl<T: LocationExprBaseRef> LocationExprBaseProperty for T {
-    fn target(&self) -> &Option<ASTFlattenWeak> {
-        &self.location_expr_base_ref().target
-    }
-}
+// pub trait LocationExprBaseProperty {
+//     fn target(&self) -> &Option<ASTFlattenWeak>;
+// }
+// impl<T: LocationExprBaseRef> LocationExprBaseProperty for T {
+//     fn target(&self) -> &Option<ASTFlattenWeak> {
+//         &self.location_expr_base_ref().target
+//     }
+// }
 #[impl_traits(TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(ImplBaseTrait, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct LocationExprBase {
     pub tuple_or_location_expr_base: TupleOrLocationExprBase,
-    pub target: Option<ASTFlattenWeak>,
     pub target_rc: Option<ASTFlatten>,
 }
 
@@ -3945,7 +3947,6 @@ impl LocationExprBase {
     ) -> Self {
         Self {
             tuple_or_location_expr_base: TupleOrLocationExprBase::new(annotated_type, idf),
-            target: None,
             target_rc: None,
         }
     }
@@ -4001,7 +4002,8 @@ impl IdentifierExpr {
     }
 
     pub fn get_annotated_type(&self) -> Option<AnnotatedTypeName> {
-        self.location_expr_base
+        self.ast_base_ref()
+            .borrow()
             .target
             .clone()
             .unwrap()
@@ -5653,6 +5655,15 @@ pub struct StatementListBase {
 }
 impl StatementListBase {
     pub fn new(statements: Vec<ASTFlatten>, excluded_from_simulation: bool) -> Self {
+        if statements
+            .iter()
+            .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+        {
+            println!(
+                "==StatementListBase=======new==========StatementListBase===={}=",
+                line!()
+            );
+        }
         Self {
             statement_base: StatementBase::new(None),
             statements,
@@ -5662,7 +5673,7 @@ impl StatementListBase {
 }
 impl IntoAST for StatementListBase {
     fn into_ast(self) -> AST {
-        StatementList::StatementList(self).into_ast()
+        AST::Statement(Statement::StatementList(StatementList::StatementList(self)))
     }
 }
 
@@ -6645,11 +6656,20 @@ impl PartialEq for UserDefinedTypeNameBase {
     fn eq(&self, other: &Self) -> bool {
         self.get_ast_type() == other.get_ast_type()
             && self
-                .target()
+                .ast_base_ref()
+                .borrow()
+                .target
                 .as_ref()
-                .zip(other.target().as_ref())
+                .zip(other.ast_base_ref().borrow().target.as_ref())
                 .map_or_else(
-                    || self.target().as_ref().or(other.target().as_ref()).is_none(),
+                    || {
+                        self.ast_base_ref()
+                            .borrow()
+                            .target
+                            .as_ref()
+                            .or(other.ast_base_ref().borrow().target.as_ref())
+                            .is_none()
+                    },
                     |(target, other_target)| {
                         target
                             .clone()
@@ -6681,15 +6701,15 @@ pub trait UserDefinedTypeNameBaseRef: TypeNameBaseRef {
 }
 pub trait UserDefinedTypeNameBaseProperty {
     fn names(&self) -> &Vec<RcCell<Identifier>>;
-    fn target(&self) -> &Option<ASTFlattenWeak>;
+    // fn target(&self) -> &Option<ASTFlattenWeak>;
 }
 impl<T: UserDefinedTypeNameBaseRef> UserDefinedTypeNameBaseProperty for T {
     fn names(&self) -> &Vec<RcCell<Identifier>> {
         &self.user_defined_type_name_base_ref().names
     }
-    fn target(&self) -> &Option<ASTFlattenWeak> {
-        &self.user_defined_type_name_base_ref().target
-    }
+    // fn target(&self) -> &Option<ASTFlattenWeak> {
+    //     &self.user_defined_type_name_base_ref().target
+    // }
 }
 #[impl_traits(TypeNameBase, ASTBase)]
 #[derive(
@@ -6708,14 +6728,12 @@ impl<T: UserDefinedTypeNameBaseRef> UserDefinedTypeNameBaseProperty for T {
 pub struct UserDefinedTypeNameBase {
     pub type_name_base: TypeNameBase,
     pub names: Vec<RcCell<Identifier>>,
-    pub target: Option<ASTFlattenWeak>,
 }
 impl UserDefinedTypeNameBase {
     pub fn new(names: Vec<Identifier>, target: Option<ASTFlattenWeak>) -> Self {
         Self {
             type_name_base: TypeNameBase::new(),
             names: names.into_iter().map(RcCell::new).collect(),
-            target,
         }
     }
 }
@@ -6806,7 +6824,8 @@ impl EnumValueTypeName {
         RcCell::new(
             EnumTypeName::new(
                 names,
-                self.user_defined_type_name_base
+                self.ast_base_ref()
+                    .borrow()
                     .target
                     .clone()
                     .unwrap()
@@ -8161,7 +8180,6 @@ pub struct ConstructorOrFunctionDefinition {
     pub return_parameters: Vec<RcCell<Parameter>>,
     pub body: Option<RcCell<Block>>,
     pub return_var_decls: Vec<RcCell<VariableDeclaration>>,
-    pub parent: Option<ContractDefinition>, //TODO recursive stackoverflow
     pub original_body: Option<RcCell<Block>>,
     pub called_functions: BTreeSet<RcCell<ConstructorOrFunctionDefinition>>,
     pub is_recursive: bool,
@@ -8174,9 +8192,7 @@ pub struct ConstructorOrFunctionDefinition {
 }
 impl IntoAST for ConstructorOrFunctionDefinition {
     fn into_ast(self) -> AST {
-        AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(
-            self.clone(),
-        ))
+        AST::NamespaceDefinition(NamespaceDefinition::ConstructorOrFunctionDefinition(self))
     }
 }
 
@@ -8250,7 +8266,6 @@ impl ConstructorOrFunctionDefinition {
             return_parameters: return_parameters.clone(),
             body: body.map(RcCell::new),
             return_var_decls,
-            parent: None,
             original_body: None,
             called_functions: BTreeSet::new(),
             is_recursive: false,
@@ -8411,9 +8426,7 @@ pub struct StateVariableDeclaration {
 }
 impl IntoAST for StateVariableDeclaration {
     fn into_ast(self) -> AST {
-        AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(
-            self.clone(),
-        ))
+        AST::IdentifierDeclaration(IdentifierDeclaration::StateVariableDeclaration(self))
     }
 }
 
@@ -8746,7 +8759,8 @@ pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten {
             IdentifierExprUnion::Identifier(plabel.try_as_identifier_ref().unwrap().clone()),
             Some(AnnotatedTypeName::address_all()),
         );
-        ie.location_expr_base.target = plabel.try_as_identifier_ref().unwrap().borrow().parent();
+        ie.ast_base_ref().borrow_mut().target =
+            plabel.try_as_identifier_ref().unwrap().borrow().parent();
         RcCell::new(ie).into()
     } else {
         plabel
@@ -8772,19 +8786,7 @@ impl InstanceTarget {
             } else {
                 match v.get_ast_type() {
                     ASTType::IdentifierExpr => {
-                        vec![
-                            v.to_ast()
-                                .try_as_expression_ref()
-                                .unwrap()
-                                .try_as_tuple_or_location_expr_ref()
-                                .unwrap()
-                                .try_as_location_expr_ref()
-                                .unwrap()
-                                .location_expr_base_ref()
-                                .target
-                                .clone(),
-                            None,
-                        ]
+                        vec![v.ast_base_ref().unwrap().borrow().target.clone(), None]
                     }
                     ASTType::MemberAccessExpr => vec![
                         v.to_ast()
@@ -8800,7 +8802,9 @@ impl InstanceTarget {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .target()
+                            .ast_base_ref()
+                            .borrow()
+                            .target
                             .clone(),
                         Some(
                             ASTFlatten::from(
@@ -8833,7 +8837,9 @@ impl InstanceTarget {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .target()
+                            .ast_base_ref()
+                            .borrow()
+                            .target
                             .clone(),
                         v.to_ast()
                             .try_as_expression_ref()
@@ -9386,24 +9392,15 @@ impl CodeVisitor {
         Err(eyre!("Did not implement code generation for {:?} ", ast))
     }
     pub fn visit_Comment(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(
-            if ast.try_as_comment_ref().unwrap().borrow().text() == String::new() {
-                String::new()
-            } else if ast
-                .try_as_comment_ref()
-                .unwrap()
-                .borrow()
-                .text()
-                .contains(' ')
-            {
-                format!(
-                    "/* {} */",
-                    ast.try_as_comment_ref().unwrap().borrow().text()
-                )
-            } else {
-                format!("// {}", ast.try_as_comment_ref().unwrap().borrow().text())
-            },
-        )
+        // println!("==visit_Comment====================={ast:?}");
+        let text = ast.to_ast().try_as_comment_ref().unwrap().text();
+        Ok(if text.is_empty() {
+            text
+        } else if text.contains(' ') {
+            format!("/* {} */", text)
+        } else {
+            format!("// {}", text)
+        })
     }
 
     pub fn visit_Identifier(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -10412,13 +10409,23 @@ impl CodeVisitor {
     }
 
     pub fn visit_Array(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_Array====================={ast:?}");
         let value_type = ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
             .try_as_array_ref()
             .unwrap()
-            .borrow()
             .value_type()
             .clone();
-        let expr = ast.try_as_array_ref().unwrap().borrow().expr().clone();
+        let expr = ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
+            .try_as_array_ref()
+            .unwrap()
+            .expr()
+            .clone();
         let t = self.visit(&value_type.clone().into());
         let e = expr
             .clone()
@@ -10562,16 +10569,13 @@ impl CodeVisitor {
                 .unwrap()
                 .into(),
         );
-        let i = self.visit(
-            &ast.try_as_parameter_ref()
-                .unwrap()
-                .borrow()
-                .idf()
-                .as_ref()
-                .unwrap()
-                .clone()
-                .into(),
-        );
+        let i = ast
+            .try_as_parameter_ref()
+            .unwrap()
+            .borrow()
+            .idf()
+            .as_ref()
+            .map(|idf| self.visit(&idf.clone().into()));
         let description: Vec<_> = [
             f,
             Some(t),
@@ -10581,7 +10585,7 @@ impl CodeVisitor {
                 .identifier_declaration_base
                 .storage_location
                 .clone(),
-            Some(i),
+            i,
         ]
         .iter()
         .filter_map(|d| d.clone())
@@ -10715,7 +10719,7 @@ impl CodeVisitor {
     // @staticmethod
     fn __cmp_type_size(v1: &ASTFlatten, v2: &ASTFlatten) -> Ordering {
         match (
-            v1.try_as_variable_declaration_ref()
+            v1.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -10724,7 +10728,7 @@ impl CodeVisitor {
                 .borrow()
                 .type_name
                 .clone(),
-            v2.try_as_variable_declaration_ref()
+            v2.ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
