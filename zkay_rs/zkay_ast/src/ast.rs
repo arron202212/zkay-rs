@@ -2030,9 +2030,10 @@ impl ASTBase {
     pub fn new(
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
         idf: Option<RcCell<Identifier>>,
+        target: Option<ASTFlattenWeak>,
     ) -> Self {
         Self {
-            target: None,
+            target: target,
             parent: None,
             namespace: None,
             names: BTreeMap::new(),
@@ -2074,7 +2075,7 @@ impl IntoAST for IdentifierBase {
 impl IdentifierBase {
     pub fn new(name: String) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, None)),
+            ast_base: RcCell::new(ASTBase::new(None, None, None)),
             name,
         }
     }
@@ -2200,7 +2201,7 @@ impl IntoAST for CommentBase {
 impl CommentBase {
     pub fn new(text: String) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, None)),
+            ast_base: RcCell::new(ASTBase::new(None, None, None)),
             text,
         }
     }
@@ -2638,7 +2639,7 @@ impl ExpressionBase {
         idf: Option<RcCell<Identifier>>,
     ) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(annotated_type, idf)),
+            ast_base: RcCell::new(ASTBase::new(annotated_type, idf, None)),
             statement: None,
             evaluate_privately: false,
         }
@@ -5019,7 +5020,7 @@ pub struct StatementBase {
 impl StatementBase {
     pub fn new(idf: Option<RcCell<Identifier>>) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, idf)),
+            ast_base: RcCell::new(ASTBase::new(None, idf, None)),
             before_analysis: None,
             after_analysis: None,
             function: None,
@@ -6135,9 +6136,9 @@ pub struct TypeNameBase {
     pub ast_base: RcCell<ASTBase>,
 }
 impl TypeNameBase {
-    pub fn new() -> Self {
+    pub fn new(target: Option<ASTFlattenWeak>) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, None)),
+            ast_base: RcCell::new(ASTBase::new(None, None, target)),
         }
     }
 }
@@ -6183,7 +6184,7 @@ pub struct ElementaryTypeNameBase {
 impl ElementaryTypeNameBase {
     pub fn new(name: String) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(None),
             name,
         }
     }
@@ -6732,7 +6733,7 @@ pub struct UserDefinedTypeNameBase {
 impl UserDefinedTypeNameBase {
     pub fn new(names: Vec<Identifier>, target: Option<ASTFlattenWeak>) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(target),
             names: names.into_iter().map(RcCell::new).collect(),
         }
     }
@@ -7064,7 +7065,7 @@ impl Mapping {
         value_type: AnnotatedTypeName,
     ) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(None),
             key_type: RcCell::new(key_type),
             key_label: key_label.map(RcCell::new),
             value_type: RcCell::new(value_type),
@@ -7201,7 +7202,7 @@ impl IntoAST for ArrayBase {
 impl ArrayBase {
     pub fn new(value_type: RcCell<AnnotatedTypeName>, expr: Option<ExprUnion>) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(None),
             value_type,
             expr: expr.map(|_expr| match _expr {
                 ExprUnion::I32(exp) => RcCell::new(NumberLiteralExpr::new(exp, false)).into(),
@@ -7457,7 +7458,7 @@ impl IntoAST for TupleType {
 impl TupleType {
     pub fn new(types: Vec<RcCell<AnnotatedTypeName>>) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(None),
             types,
         }
     }
@@ -7664,7 +7665,7 @@ impl FunctionTypeName {
         return_parameters: Vec<RcCell<Parameter>>,
     ) -> Self {
         Self {
-            type_name_base: TypeNameBase::new(),
+            type_name_base: TypeNameBase::new(None),
             parameters,
             modifiers,
             return_parameters,
@@ -7727,7 +7728,7 @@ impl AnnotatedTypeName {
             homomorphism
         );
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, None)),
+            ast_base: RcCell::new(ASTBase::new(None, None, None)),
             type_name,
             had_privacy_annotation: privacy_annotation.as_ref().is_some(),
             privacy_annotation,
@@ -7991,7 +7992,7 @@ impl IdentifierDeclarationBase {
         storage_location: Option<String>,
     ) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(annotated_type, idf)),
+            ast_base: RcCell::new(ASTBase::new(annotated_type, idf, None)),
             keywords,
             storage_location,
         }
@@ -8159,7 +8160,7 @@ impl NamespaceDefinitionBase {
         idf: Option<RcCell<Identifier>>,
     ) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(annotated_type, idf)),
+            ast_base: RcCell::new(ASTBase::new(annotated_type, idf, None)),
         }
     }
 }
@@ -8471,7 +8472,7 @@ impl IntoAST for EnumValue {
 impl EnumValue {
     pub fn new(idf: Option<Identifier>) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, idf.map(RcCell::new))),
+            ast_base: RcCell::new(ASTBase::new(None, idf.map(RcCell::new), None)),
         }
     }
 }
@@ -8668,7 +8669,7 @@ impl SourceUnit {
         used_contracts: Option<Vec<String>>,
     ) -> Self {
         Self {
-            ast_base: RcCell::new(ASTBase::new(None, None)),
+            ast_base: RcCell::new(ASTBase::new(None, None, None)),
             pragma_directive,
             contracts: contracts.into_iter().map(RcCell::new).collect(),
             used_contracts: if let Some(used_contracts) = used_contracts {

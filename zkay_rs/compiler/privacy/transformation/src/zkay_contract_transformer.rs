@@ -641,7 +641,11 @@ impl ZkayTransformer {
                     )))),
                     output_idfs,
                 );
-                println!("=====transform_contract===={}=", line!());
+                println!(
+                    "==44444444444===transform_contract={}==={}=",
+                    line!(),
+                    circuit.borrow().zk_data_struct_name()
+                );
                 c.borrow_mut()
                     .struct_definitions
                     .push(RcCell::new(zk_data_struct));
@@ -796,7 +800,11 @@ impl ZkayTransformer {
         println!("=====create_internal_verification_wrapper===={}=", line!());
         // Declare zk_data struct var (if needed)
         if circuit.borrow().requires_zk_data_struct() {
-            println!("=====create_internal_verification_wrapper===={}=", line!());
+            println!(
+                "===@@@@@@@@@@@@@@@@@@@@@@@@==create_internal_verification_wrapper=={}=={}=",
+                line!(),
+                circuit.borrow().zk_data_struct_name()
+            );
             let zk_struct_type = StructTypeName::new(
                 vec![Identifier::Identifier(IdentifierBase::new(
                     circuit.borrow().zk_data_struct_name(),
@@ -804,16 +812,22 @@ impl ZkayTransformer {
                 None,
             );
             let mut idf = IdentifierBase::new(CFG.lock().unwrap().zk_data_var_name());
-            idf.decl_var(
-                &RcCell::new(TypeName::UserDefinedTypeName(
-                    UserDefinedTypeName::StructTypeName(zk_struct_type),
-                ))
-                .into(),
-                None,
+            println!(
+                "===###############################==create_internal_verification_wrapper={}==={}=",
+                line!(),
+                CFG.lock().unwrap().zk_data_var_name()
             );
-            println!("=====create_internal_verification_wrapper===={}=", line!());
             stmts.extend(vec![
-                RcCell::new(Identifier::Identifier(idf)).into(),
+                RcCell::new(
+                    idf.decl_var(
+                        &RcCell::new(TypeName::UserDefinedTypeName(
+                            UserDefinedTypeName::StructTypeName(zk_struct_type),
+                        ))
+                        .into(),
+                        None,
+                    ),
+                )
+                .into(),
                 RcCell::new(BlankLine::new()).into(),
             ]);
         }

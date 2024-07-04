@@ -2290,10 +2290,10 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitFunctionCallExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!(
-            "===visitFunctionCallExpr==========code============={:?}",
-            ast.to_string()
-        );
+        // println!(
+        //     "===visitFunctionCallExpr==========code============={:?}",
+        //     ast.to_string()
+        // );
         let t = ast
             .ast_base_ref()
             .unwrap()
@@ -2331,25 +2331,25 @@ impl ZkayCircuitTransformer {
             )
             .ok_or(eyre::eyre!("unexpected"));
         }
-        println!(
-            "=BuiltinFunction===={:?}===={:?}=={:?}======{:?}=",
-            ast.to_string(),
-            ast.get_ast_type(),
-            ast.to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .get_ast_type(),
-            ast.to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .to_string()
-        );
+        // println!(
+        //     "=BuiltinFunction===={:?}===={:?}=={:?}======{:?}=",
+        //     ast.to_string(),
+        //     ast.get_ast_type(),
+        //     ast.to_ast()
+        //         .try_as_expression_ref()
+        //         .unwrap()
+        //         .try_as_function_call_expr_ref()
+        //         .unwrap()
+        //         .func()
+        //         .get_ast_type(),
+        //     ast.to_ast()
+        //         .try_as_expression_ref()
+        //         .unwrap()
+        //         .try_as_function_call_expr_ref()
+        //         .unwrap()
+        //         .func()
+        //         .to_string()
+        // );
         if is_instance(
             ast.to_ast()
                 .try_as_expression_ref()
@@ -2612,10 +2612,10 @@ impl ZkayCircuitTransformer {
             }
 
             //Builtin functions are supported natively by the circuit
-            println!(
-                "======visit_children=================={:?}",
-                ast.to_string()
-            );
+            // println!(
+            //     "======visit_children=================={:?}",
+            //     ast.to_string()
+            // );
             return self.visit_children(ast);
         }
 

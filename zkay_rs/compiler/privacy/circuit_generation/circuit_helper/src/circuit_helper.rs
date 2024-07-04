@@ -2326,23 +2326,23 @@ where
                 ));
         }
 
-        println!(
-            "====is_circ_val==={}=={}==={}===priv_result_idf========{:?}",
-            is_circ_val,
-            expr.try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .is_private(),
-            expr.try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .evaluate_privately(),
-            expr.to_string()
-        );
+        // println!(
+        //     "====is_circ_val==={}=={}==={}===priv_result_idf========{:?}",
+        //     is_circ_val,
+        //     expr.try_as_expression_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .annotated_type()
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .is_private(),
+        //     expr.try_as_expression_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .evaluate_privately(),
+        //     expr.to_string()
+        // );
         let priv_result_idf = if is_circ_val
             || expr
                 .try_as_expression_ref()

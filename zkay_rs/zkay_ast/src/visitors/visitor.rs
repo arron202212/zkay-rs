@@ -95,60 +95,60 @@ pub trait AstVisitor: AstVisitorBaseProperty {
     }
 
     fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<Self::Return> {
-        if ast.get_ast_type() == ASTType::StatementListBase {
-            if ast.is_statement_list_base() {
-                println!(
-                    "==========is_statement_list_base========{:?}==",
-                    ast.try_as_statement_list_base_ref()
-                        .unwrap()
-                        .borrow()
-                        .statements
-                        .len()
-                );
-                let _cc = ast
-                    .try_as_statement_list_base_ref()
-                    .unwrap()
-                    .borrow()
-                    .clone();
-                // let _a=_cc.into_ast();
-                ast.try_as_statement_list_base_ref()
-                    .unwrap()
-                    .borrow()
-                    .statements
-                    .iter()
-                    .for_each(|statement| {
-                        println!(
-                            "==statement.get_ast_type====={:?}",
-                            statement.get_ast_type()
-                        );
-                        if statement.get_ast_type() == ASTType::ExpressionStatement {
-                            if statement.is_expression_statement() {
-                                println!(
-                                    "==pre_statements.len====={:?}",
-                                    statement
-                                        .try_as_expression_statement_ref()
-                                        .unwrap()
-                                        .borrow()
-                                        .pre_statements()
-                                        .len()
-                                );
-                                // println!("==expr.====={:?}",statement.try_as_expression_statement_ref().unwrap().borrow().expr);
-                            }
-                        }
-                    });
-                println!(
-                    "==========aaaaaa======begin========{:?},{:?}",
-                    ast.get_ast_type(),
-                    c
-                );
-                // let _a=ast.to_ast();
-                println!(
-                    "==========aaaaaa======begin====after===={:?},{:?}",
-                    ast.get_ast_type(),
-                    c
-                );
-            }
-        }
+        // if ast.get_ast_type() == ASTType::StatementListBase {
+        //     if ast.is_statement_list_base() {
+        //         println!(
+        //             "==========is_statement_list_base========{:?}==",
+        //             ast.try_as_statement_list_base_ref()
+        //                 .unwrap()
+        //                 .borrow()
+        //                 .statements
+        //                 .len()
+        //         );
+        //         let _cc = ast
+        //             .try_as_statement_list_base_ref()
+        //             .unwrap()
+        //             .borrow()
+        //             .clone();
+        //         // let _a=_cc.into_ast();
+        //         ast.try_as_statement_list_base_ref()
+        //             .unwrap()
+        //             .borrow()
+        //             .statements
+        //             .iter()
+        //             .for_each(|statement| {
+        //                 println!(
+        //                     "==statement.get_ast_type====={:?}",
+        //                     statement.get_ast_type()
+        //                 );
+        //                 if statement.get_ast_type() == ASTType::ExpressionStatement {
+        //                     if statement.is_expression_statement() {
+        //                         println!(
+        //                             "==pre_statements.len====={:?}",
+        //                             statement
+        //                                 .try_as_expression_statement_ref()
+        //                                 .unwrap()
+        //                                 .borrow()
+        //                                 .pre_statements()
+        //                                 .len()
+        //                         );
+        //                         // println!("==expr.====={:?}",statement.try_as_expression_statement_ref().unwrap().borrow().expr);
+        //                     }
+        //                 }
+        //             });
+        //         // println!(
+        //         //     "==========aaaaaa======begin========{:?},{:?}",
+        //         //     ast.get_ast_type(),
+        //         //     c
+        //         // );
+        //         // let _a=ast.to_ast();
+        //         // println!(
+        //         //     "==========aaaaaa======begin====after===={:?},{:?}",
+        //         //     ast.get_ast_type(),
+        //         //     c
+        //         // );
+        //     }
+        // }
 
         if self.has_attr(&ast.to_ast()) {
             // println!("==========aaaaaa=============={:?},{:?}",ast.get_ast_type(),c);
