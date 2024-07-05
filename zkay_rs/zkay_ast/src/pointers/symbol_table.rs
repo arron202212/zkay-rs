@@ -420,10 +420,10 @@ impl SymbolTableFiller {
                 d.try_as_variable_declaration_ref()
                     .map(|id| {
                         let idf = id.borrow().idf().clone();
-                        println!(
-                            "=visitStructDefinition===name=={:?}",
-                            idf.as_ref().unwrap().borrow().name().clone()
-                        );
+                        // println!(
+                        //     "=visitStructDefinition===name=={:?}",
+                        //     idf.as_ref().unwrap().borrow().name().clone()
+                        // );
                         let x = (
                             idf.as_ref().unwrap().borrow().name().clone(),
                             idf.clone().unwrap().downgrade(),
@@ -481,18 +481,18 @@ impl SymbolTableFiller {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!(
-            "====visitVariableDeclaration===*********************==name==={:?}",
-            ast.try_as_variable_declaration_ref()
-                .unwrap()
-                .borrow()
-                .idf()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .name()
-                .clone()
-        );
+        // println!(
+        //     "====visitVariableDeclaration===*********************==name==={:?}",
+        //     ast.try_as_variable_declaration_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .idf()
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .name()
+        //         .clone()
+        // );
         let names = BTreeMap::from([(
             ast.try_as_variable_declaration_ref()
                 .unwrap()
@@ -719,7 +719,7 @@ impl SymbolTableLinker {
             ancestor = _ancestor.ast_base_ref().unwrap().borrow().parent().clone();
         }
         // raise UnknownIdentifierException(f"Undefined identifier {name}", ast)
-        println!("Undefined identifier {name},{:?}", ast.code());
+        // println!("Undefined identifier {name},{:?}", ast.code());
         eyre::bail!("Undefined identifier {name} fail")
     }
 
@@ -1255,7 +1255,7 @@ impl SymbolTableLinker {
 
             self.visit(&t.clone().unwrap().into());
 
-            println!("==========target is   none===========");
+            // println!("==========target is   none===========");
             //   println!(
             //             "===visitMemberAccessExpr======end======={:?}",
             //             ast

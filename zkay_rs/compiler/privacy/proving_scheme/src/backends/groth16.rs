@@ -82,12 +82,26 @@ impl ProvingScheme for ProvingSchemeGroth16 {
 
         // Verification contract uses the pairing library from ZoKrates (MIT license)
         // https://github.com/Zokrates/ZoKrates/blob/d8cde9e1c060cc654413f01c8414ea4eaa955d87/zokrates_core/src/proof_system/bn128/utils/solidity.rs#L398
+        let zkay_solc_version_compatibility = CFG.lock().unwrap().zkay_solc_version_compatibility();
+        let verify_libs_contract_filename =
+            <Self as ProvingScheme>::verify_libs_contract_filename();
+        let get_verification_contract_name = circuit.borrow().get_verification_contract_name();
+        let prover_key_hash_name = CFG.lock().unwrap().prover_key_hash_name();
+        let prover_key_hash = hex::encode(prover_key_hash);
+        let snark_scalar_field_var_name = <Self as ProvingScheme>::snark_scalar_field_var_name();
+        let zk_in_name = CFG.lock().unwrap().zk_in_name();
+        let in_size_trans = circuit.borrow().in_size_trans();
+        let zk_out_name = CFG.lock().unwrap().zk_out_name();
+        let out_size_trans = circuit.borrow().out_size_trans();
+        let verification_function_name = CFG.lock().unwrap().verification_function_name();
+
+        // println!("===ddddd====={}",line!());
         let x = MultiLineFormatter::new("").mul(format!(r#"
         pragma solidity {zkay_solc_version_compatibility};
 
         import {{ Pairing, G1Point as G1, G2Point as G2 }} from "{verify_libs_contract_filename}";
 
-        contract {get_verification_contract_name} {{"#,zkay_solc_version_compatibility=CFG.lock().unwrap().zkay_solc_version_compatibility(),verify_libs_contract_filename= <Self as ProvingScheme>::verify_libs_contract_filename(),get_verification_contract_name=circuit.borrow().get_verification_contract_name())).truediv(format!(r#"
+        contract {get_verification_contract_name} {{"#)).truediv(format!(r#"
             using Pairing for G1;
             using Pairing for G2;
 
@@ -108,7 +122,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
                 G1[{query_length}] gamma_abc;
             }}
 
-            function getVk() pure internal returns(Vk memory vk) {{"#,prover_key_hash_name=CFG.lock().unwrap().prover_key_hash_name(),prover_key_hash=hex::encode(prover_key_hash),snark_scalar_field_var_name=<Self as ProvingScheme>::snark_scalar_field_var_name())).truediv(format!(r#"
+            function getVk() pure internal returns(Vk memory vk) {{"#)).truediv(format!(r#"
                 vk.a_neg = G1({a});
                 vk.b = G2({b});
                 vk.gamma = G2({gamma});
@@ -117,12 +131,12 @@ vk.gamma_abc.iter().enumerate().map(|(idx, g )|format!("vk.gamma_abc[{idx}] = G1
             format!(r#"
             }}
 
-            function {verification_function_name}(uint[8] memory proof_, uint[] memory {zk_in_name}, uint[] memory {zk_out_name}) public {{"#,verification_function_name=CFG.lock().unwrap().verification_function_name(),zk_in_name=CFG.lock().unwrap().zk_in_name(),zk_out_name=CFG.lock().unwrap().zk_out_name())).truediv(format!(r#"
+            function {verification_function_name}(uint[8] memory proof_, uint[] memory {zk_in_name}, uint[] memory {zk_out_name}) public {{"#)).truediv(format!(r#"
                 // Check if input size correct
                 require({zk_in_name}.length == {in_size_trans});
 
                 // Check if output size correct
-                require({zk_out_name}.length == {out_size_trans});"#, zk_in_name=CFG.lock().unwrap().zk_in_name(),in_size_trans=circuit.borrow().in_size_trans(),zk_out_name=CFG.lock().unwrap().zk_out_name(),out_size_trans=circuit.borrow().out_size_trans())).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
+                require({zk_out_name}.length == {out_size_trans});"#)).mul(if potentially_overflowing_pi.is_empty(){String::new()}else{format!("
                 \n// Check that inputs do not overflow\n{}\n",
 potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self as ProvingScheme>::snark_scalar_field_var_name())).collect::<Vec<_>>().concat())}).mul(r#"
                 // Create proof and vk data structures
@@ -133,7 +147,7 @@ potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self a
                 Vk memory vk = getVk();
 
                 // Compute linear combination of public inputs"#.to_string()).mul(if should_hash{String::new()}else{
-                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),CFG.lock().unwrap().zk_in_name(),CFG.lock().unwrap().zk_out_name(),256 - *BN128_SCALAR_FIELD_BITS) }).mul(
+                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),zk_in_name,zk_out_name,256 - *BN128_SCALAR_FIELD_BITS) }).mul(
                 format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.gamma_abc[1].scalar_mul({})",first_pi)}  else {String::from("vk.gamma_abc[1]")})).mul( primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!(
     "lc = lc.add({}); ",format!("vk.gamma_abc[{}]{}",idx+2,if pi != "1"{format!(".scalar_mul({pi})")}else{String::new()}))).collect::<Vec<_>>().concat()).mul(r#"
                 lc = lc.add(vk.gamma_abc[0]);

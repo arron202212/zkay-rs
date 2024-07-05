@@ -404,17 +404,17 @@ impl ZkayStatementTransformer {
         {
             new_statements.pop();
         }
-        if ast.get_ast_type() == ASTType::StatementListBase {
-            if new_statements
-                .iter()
-                .any(|s| s.get_ast_type() == ASTType::StatementListBase)
-            {
-                println!(
-                    "==StatementListBase=========tt========StatementListBase===={}=",
-                    line!()
-                );
-            }
-        }
+        // if ast.get_ast_type() == ASTType::StatementListBase {
+        //     if new_statements
+        //         .iter()
+        //         .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+        //     {
+        //         println!(
+        //             "==StatementListBase=========tt========StatementListBase===={}=",
+        //             line!()
+        //         );
+        //     }
+        // }
         if ast.is_statement_list() {
             ast.try_as_statement_list_ref()
                 .unwrap()
@@ -1431,10 +1431,10 @@ impl ZkayExpressionTransformer {
     // The reclassified expression is evaluated in the circuit and its result is made available in solidity.
     // """
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!(
-            "====expression==transform=======visitReclassifyExpr======={:?}=====",
-            ast.to_string()
-        );
+        // println!(
+        //     "====expression==transform=======visitReclassifyExpr======={:?}=====",
+        //     ast.to_string()
+        // );
         let mut expr = ast
             .to_ast()
             .try_as_expression_ref()
@@ -1594,7 +1594,7 @@ impl ZkayExpressionTransformer {
                         .unwrap()
                         .op
                         .clone();
-                    println!("======guard_var============args[0]===========");
+                    // println!("======guard_var============args[0]===========");
                     let guard_var = self
                         .generator
                         .as_ref()
@@ -2140,7 +2140,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!("======visitIndexExpr===============transform_location======");
+        // println!("======visitIndexExpr===============transform_location======");
         // panic!("==");
         self.transform_location(ast)
             .ok_or(eyre::eyre!("unexpected"))
@@ -2268,7 +2268,7 @@ impl ZkayCircuitTransformer {
                 .unwrap()
                 .borrow()
                 .is_public());
-            println!("============transformer========expr====");
+            // println!("============transformer========expr====");
             self.generator
                 .as_ref()
                 .unwrap()
@@ -2359,25 +2359,25 @@ impl ZkayCircuitTransformer {
                 .func(),
             ASTType::BuiltinFunction,
         ) {
-            println!(
-                "=BuiltinFunction=in==={:?}===={:?}=={:?}======{:?}=",
-                ast.to_string(),
-                ast.get_ast_type(),
-                ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .func()
-                    .get_ast_type(),
-                ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .func()
-                    .to_string()
-            );
+            // println!(
+            //     "=BuiltinFunction=in==={:?}===={:?}=={:?}======{:?}=",
+            //     ast.to_string(),
+            //     ast.get_ast_type(),
+            //     ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_function_call_expr_ref()
+            //         .unwrap()
+            //         .func()
+            //         .get_ast_type(),
+            //     ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_function_call_expr_ref()
+            //         .unwrap()
+            //         .func()
+            //         .to_string()
+            // );
             if ast
                 .to_ast()
                 .try_as_expression_ref()

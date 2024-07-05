@@ -55,6 +55,11 @@ pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {
 // """Contract of the public key infrastructure used for asymmetric cryptography"""
 //TODO prove private key knowledge during announcePk
 pub fn get_pki_contract(params: &CryptoParams) -> String {
+    let expression = CFG.lock().unwrap().zkay_solc_version_compatibility();
+    let pki_contract_name = CFG
+        .lock()
+        .unwrap()
+        .get_pki_contract_name(&params.identifier_name());
     dedent(&format!(
         r#"
     pragma solidity {expression};
@@ -79,11 +84,6 @@ pub fn get_pki_contract(params: &CryptoParams) -> String {
         }}
     }}
     "#,
-        expression = CFG.lock().unwrap().zkay_solc_version_compatibility(),
-        pki_contract_name = CFG
-            .lock()
-            .unwrap()
-            .get_pki_contract_name(&params.identifier_name()),
         key_len = params.key_len(),
     ))
 }

@@ -193,13 +193,13 @@ pub trait ProvingScheme {
     }
 
     fn hash_var_name() -> String {
-        String::new()
+        String::from("hash")
     }
     fn verify_libs_contract_filename() -> String {
-        String::new()
+        String::from("./verify_libs.sol")
     }
     fn snark_scalar_field_var_name() -> String {
-        String::new()
+        String::from("snark_scalar_field")
     }
     // @abstractmethod
     fn generate_verification_contract(

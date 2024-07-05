@@ -91,11 +91,11 @@ impl NameFactory {
         t: &RcCell<TypeName>,
         priv_expr: Option<&ASTFlatten>,
     ) -> HybridArgumentIdf {
-        println!(
-            "===add_idf========{:?}==={}=",
-            t.borrow().get_ast_type(),
-            t.borrow().size_in_uints()
-        );
+        // println!(
+        //     "===add_idf========{:?}==={}=",
+        //     t.borrow().get_ast_type(),
+        //     t.borrow().size_in_uints()
+        // );
         let idf = HybridArgumentIdf::new(
             name,
             t.clone(),

@@ -5656,15 +5656,15 @@ pub struct StatementListBase {
 }
 impl StatementListBase {
     pub fn new(statements: Vec<ASTFlatten>, excluded_from_simulation: bool) -> Self {
-        if statements
-            .iter()
-            .any(|s| s.get_ast_type() == ASTType::StatementListBase)
-        {
-            println!(
-                "==StatementListBase=======new==========StatementListBase===={}=",
-                line!()
-            );
-        }
+        // if statements
+        //     .iter()
+        //     .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+        // {
+        //     println!(
+        //         "==StatementListBase=======new==========StatementListBase===={}=",
+        //         line!()
+        //     );
+        // }
         Self {
             statement_base: StatementBase::new(None),
             statements,
@@ -9591,12 +9591,17 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_ArrayLiteralExpr===================={ast:?}");
         Ok(format!(
             "[{}]",
             self.visit_list(
-                ast.try_as_array_literal_expr_ref()
+                ast.to_ast()
+                    .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
+                    .try_as_literal_expr_ref()
+                    .unwrap()
+                    .try_as_array_literal_expr_ref()
+                    .unwrap()
                     .values()
                     .iter()
                     .map(|value| ListUnion::AST(value.clone()))
@@ -10311,11 +10316,11 @@ impl CodeVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("===visit_AnnotatedTypeName=============");
+        // println!("===visit_AnnotatedTypeName============{ast:?}=");
         let t = ast
+            .to_ast()
             .try_as_annotated_type_name_ref()
             .unwrap()
-            .borrow()
             .type_name
             .as_ref()
             .map_or(String::new(), |type_name| {
@@ -10326,9 +10331,9 @@ impl CodeVisitor {
                 self.visit(&type_name.clone().into())
             });
         let p = ast
+            .to_ast()
             .try_as_annotated_type_name_ref()
             .unwrap()
-            .borrow()
             .privacy_annotation
             .as_ref()
             .map_or(String::new(), |privacy_annotation| {
@@ -10337,9 +10342,9 @@ impl CodeVisitor {
 
         Ok(
             if ast
+                .to_ast()
                 .try_as_annotated_type_name_ref()
                 .unwrap()
-                .borrow()
                 .had_privacy_annotation
             {
                 format!(
@@ -10348,9 +10353,9 @@ impl CodeVisitor {
                         .lock()
                         .unwrap()
                         .get(
-                            &ast.try_as_annotated_type_name_ref()
+                            &ast.to_ast()
+                                .try_as_annotated_type_name_ref()
                                 .unwrap()
-                                .borrow()
                                 .homomorphism
                         )
                         .unwrap()
@@ -10435,12 +10440,17 @@ impl CodeVisitor {
     }
 
     pub fn visit_CipherText(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let e = self.visit_Array(&ast.try_as_cipher_text_ref().unwrap().clone().into())?;
+        // println!("===visit_CipherText================={ast:?}");
+        let e = self.visit_Array(ast)?;
         Ok(format!(
             "{e}/*{}*/",
-            ast.try_as_cipher_text_ref()
+            ast.to_ast()
+                .try_as_type_name_ref()
                 .unwrap()
-                .borrow()
+                .try_as_array_ref()
+                .unwrap()
+                .try_as_cipher_text_ref()
+                .unwrap()
                 .plain_type
                 .as_ref()
                 .unwrap()

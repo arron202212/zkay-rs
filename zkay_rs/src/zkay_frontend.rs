@@ -152,6 +152,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     // Dump libraries
     print_step("Write library contract files");
     CFG.lock().unwrap().library_compilation_environment();
+    // println!("=========================={}",line!());
     for crypto_params in ast
         .try_as_source_unit_ref()
         .unwrap()
@@ -160,17 +161,20 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
         .clone()
         .unwrap()
     {
+        // println!("=========================={}",line!());
         // Write pki contract
         let pki_contract_code = library_contracts::get_pki_contract(&crypto_params);
+        // println!("=========================={}",line!());
         let pki_contract_file = format!(
             "{}.sol",
             CFG.lock()
                 .unwrap()
                 .get_pki_contract_name(&crypto_params.identifier_name())
         );
+        // println!("=========================={}",line!());
         _dump_to_output(&pki_contract_code, output_dir, &pki_contract_file, true);
     }
-
+    // println!("=========================={}",line!());
     // Write library contract
     _dump_to_output(
         &library_contracts::get_verify_libs_code(),
@@ -201,11 +205,10 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     //     //     ProvingSchemeGm17
     //     // },
     // );
-    let cg = generator_classes(&CFG.lock().unwrap().user_config.snark_backend())(
-        circuits,
-        CFG.lock().unwrap().user_config.proving_scheme(),
-        output_dir.to_string(),
-    );
+    let snark_backend = CFG.lock().unwrap().user_config.snark_backend();
+    let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme();
+    let cg = generator_classes(&snark_backend)(circuits, proving_scheme, output_dir.to_string());
+    println!("==============={}==", line!());
     let mut kwargs = std::collections::HashMap::new();
     if let Some(_v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));
@@ -474,7 +477,9 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
 // """
 fn _dump_to_output(content: &str, output_dir: &str, filename: &str, _dryrun_solc: bool) -> String {
     use std::io::Write;
+    //  println!("====================={:?},{:?}",1,filename);
     let path = std::path::Path::new(output_dir).join(filename);
+    // println!("====================={:?},{:?}",path,1);
     let mut f = std::fs::File::create(path).expect("create file {path} fail");
     write!(f, "{content}").expect("write content fail");
 

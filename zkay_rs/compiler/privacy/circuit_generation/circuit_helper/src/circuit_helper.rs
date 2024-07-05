@@ -139,7 +139,7 @@ where
         let (mut trans_priv_size, mut trans_in_size, mut trans_out_size) = (0, 0, 0); //Set later by transform_internal_calls
 
         if let Some(internal_circuit) = internal_circuit {
-            println!("======internal_circuit=============");
+            // println!("======internal_circuit=============");
             let internal_circuit = internal_circuit.upgrade().unwrap();
             //Inherit metadata from internal function"s circuit helper
             *verifier_contract_filename.borrow_mut() = internal_circuit
@@ -268,7 +268,7 @@ where
     // """Size of all private inputs required for self.fct only (without called functions, in #uints)"""
     pub fn priv_in_size(&self) -> i32 {
         let size = *self._secret_input_name_factory.size.borrow();
-        println!("=priv_in_size========={size}");
+        // println!("=priv_in_size========={size}");
         size
     }
     // """Total size of all public outputs for this circuit (in //uints)"""
@@ -278,7 +278,7 @@ where
     // """Size of all public outputs required for self.fct only (without called functions, in #uints)"""
     pub fn out_size(&self) -> i32 {
         let size = *self._out_name_factory.size.borrow();
-        println!("=out_size========={size}");
+        // println!("=out_size========={size}");
         size
     }
     // """Total size of all public inputs for this circuit (in //uints)"""
@@ -288,7 +288,7 @@ where
     // """Size of all public inputs required for self.fct only (without called functions, in #uints)"""
     pub fn in_size(&self) -> i32 {
         let size = *self._in_name_factory.size.borrow();
-        println!("=in_size========={size}");
+        // println!("=in_size========={size}");
         size
     }
     // """All public output HybridArgumentIdfs (for self.fct only, w/o called functions)"""
@@ -398,13 +398,13 @@ where
     pub fn requires_verification(&self) -> bool {
         let req =
             self.in_size_trans() > 0 || self.out_size_trans() > 0 || self.priv_in_size_trans() > 0;
-        println!(
-            "====={},===={},==={},==={}======",
-            self.in_size_trans(),
-            self.out_size_trans(),
-            self.priv_in_size_trans(),
-            self.fct.borrow().requires_verification
-        );
+        // println!(
+        //     "====={},===={},==={},==={}======",
+        //     self.in_size_trans(),
+        //     self.out_size_trans(),
+        //     self.priv_in_size_trans(),
+        //     self.fct.borrow().requires_verification
+        // );
         assert!(req == self.fct.borrow().requires_verification);
         req
     }
@@ -552,7 +552,7 @@ where
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
         self.circ_indent_block(&expr.code());
-        println!("==evaluate_expr_in_circuit======_get_circuit_output_for_private_expression=========={:?}",expr.to_string());
+        // println!("==evaluate_expr_in_circuit======_get_circuit_output_for_private_expression=========={:?}",expr.to_string());
         self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
     }
     // """
@@ -903,7 +903,7 @@ where
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) {
         //(Identifier,CircuitInputStatement)
-        println!("==request_public_key===============");
+        // println!("==request_public_key===============");
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
@@ -1182,10 +1182,10 @@ where
                     false
                 )
             );
-            println!(
-                "==add_to_circuit_inputs=======_in_name_factory======={}=",
-                line!()
-            );
+            // println!(
+            //     "==add_to_circuit_inputs=======_in_name_factory======={}=",
+            //     line!()
+            // );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 expr.ast_base_ref()
@@ -1228,10 +1228,10 @@ where
                         false
                     )
             );
-            println!(
-                "===========add_to_circuit_inputs=_secret_input_name_factory==========={}====",
-                line!()
-            );
+            // println!(
+            //     "===========add_to_circuit_inputs=_secret_input_name_factory==========={}====",
+            //     line!()
+            // );
             let _locally_decrypted_idf = self._secret_input_name_factory.add_idf(
                 tname,
                 expr.ast_base_ref()
@@ -1274,10 +1274,10 @@ where
                     .base_name_factory
                     .get_new_name(&cipher_t, false)
             );
-            println!(
-                "=add_to_circuit_inputs====_in_name_factory============{}===",
-                line!()
-            );
+            // println!(
+            //     "=add_to_circuit_inputs====_in_name_factory============{}===",
+            //     line!()
+            // );
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -1960,18 +1960,18 @@ where
                         cond.as_ref().unwrap().identifier_base.name
                     )),
                 )));
-            println!(
-                "=====else_branch==========_circ_trafo=={:?}==={}",
-                ast.try_as_if_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .else_branch
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .to_string(),
-                line!()
-            );
+            // println!(
+            //     "=====else_branch==========_circ_trafo=={:?}==={}",
+            //     ast.try_as_if_statement_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .else_branch
+            //         .as_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .to_string(),
+            //     line!()
+            // );
             self._circ_trafo.as_ref().unwrap().visitBlock(
                 Some(
                     ast.try_as_if_statement_ref()
@@ -2090,11 +2090,11 @@ where
             .iter_mut()
         {
             if is_instance(stmt, ASTType::StatementBase) {
-                println!(
-                    "=====_circ_trafo==========stmt=={:?}==={}",
-                    stmt.to_string(),
-                    line!()
-                );
+                // println!(
+                //     "=====_circ_trafo==========stmt=={:?}==={}",
+                //     stmt.to_string(),
+                //     line!()
+                // );
                 self._circ_trafo
                     .as_ref()
                     .unwrap()
@@ -2114,17 +2114,17 @@ where
             }
             // stmt.pre_statements = vec![];
         }
-        if ast.get_ast_type() == ASTType::StatementListBase {
-            if statements
-                .iter()
-                .any(|s| s.get_ast_type() == ASTType::StatementListBase)
-            {
-                println!(
-                    "==StatementListBase=======ch==========StatementListBase===={}=",
-                    line!()
-                );
-            }
-        }
+        // if ast.get_ast_type() == ASTType::StatementListBase {
+        //     if statements
+        //         .iter()
+        //         .any(|s| s.get_ast_type() == ASTType::StatementListBase)
+        //     {
+        //         println!(
+        //             "==StatementListBase=======ch==========StatementListBase===={}=",
+        //             line!()
+        //         );
+        //     }
+        // }
         ast.try_as_block_ref()
             .unwrap()
             .borrow_mut()
@@ -2197,11 +2197,11 @@ where
         } else {
             assert!(is_instance(lhs, ASTType::TupleExpr));
             if is_instance(&*rhs, ASTType::FunctionCallExprBase) {
-                println!(
-                    "=====rhs==========_circ_trafo=={:?}==={}",
-                    rhs.to_string(),
-                    line!()
-                );
+                // println!(
+                //     "=====rhs==========_circ_trafo=={:?}==={}",
+                //     rhs.to_string(),
+                //     line!()
+                // );
                 if let Some(expr) = self
                     ._circ_trafo
                     .as_ref()
@@ -2418,7 +2418,7 @@ where
                     false
                 )
             );
-            println!("=_get_circuit_output_for_private_expression========_out_name_factory============={}==",line!());
+            // println!("=_get_circuit_output_for_private_expression========_out_name_factory============={}==",line!());
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 expr.try_as_expression_ref()
@@ -2493,7 +2493,7 @@ where
                 privacy_label_expr.clone(),
                 Some(homomorphism.clone()),
             );
-            println!("=_get_circuit_output_for_private_expression=============_out_name_factory============={}==",line!());
+            // println!("=_get_circuit_output_for_private_expression=============_out_name_factory============={}==",line!());
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -2582,11 +2582,11 @@ where
         expr: &ASTFlatten,
         tmp_idf_suffix: &str,
     ) -> Option<HybridArgumentIdf> {
-        println!(
-            "===begin=====_evaluate_private_expression=======expr=={:?}==={}",
-            expr.to_string(),
-            line!()
-        );
+        // println!(
+        //     "===begin=====_evaluate_private_expression=======expr=={:?}==={}",
+        //     expr.to_string(),
+        //     line!()
+        // );
         assert!(
             !(is_instance(expr, ASTType::MemberAccessExpr)
                 && is_instance(
@@ -2639,11 +2639,11 @@ where
                 .clone()
                 .try_as_hybrid_argument_idf();
         }
-        println!(
-            "====_circ_trafo====_evaluate_private_expression=======expr=={:?}==={}",
-            expr.to_string(),
-            line!()
-        );
+        // println!(
+        //     "====_circ_trafo====_evaluate_private_expression=======expr=={:?}==={}",
+        //     expr.to_string(),
+        //     line!()
+        // );
         let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         let tname = format!(
             "{}{tmp_idf_suffix}",
@@ -2664,10 +2664,10 @@ where
                 false
             )
         );
-        println!(
-            "=_evaluate_private_expression========_circ_temp_name_factory==========={}====",
-            line!()
-        );
+        // println!(
+        //     "=_evaluate_private_expression========_circ_temp_name_factory==========={}====",
+        //     line!()
+        // );
         let tmp_circ_var_idf = self._circ_temp_name_factory.add_idf(
             tname,
             priv_expr
@@ -2752,10 +2752,10 @@ where
                     CircSymmEncConstraint::new(plain, other_pk, cipher, is_dec),
                 )));
         } else {
-            println!(
-                "=_ensure_encryption=====_secret_input_name_factory==========={}====",
-                line!()
-            );
+            // println!(
+            //     "=_ensure_encryption=====_secret_input_name_factory==========={}====",
+            //     line!()
+            // );
             let rnd = self._secret_input_name_factory.add_idf(
                 format!(
                     "{}_R",
@@ -2908,10 +2908,10 @@ where
                 .base_name_factory
                 .get_new_name(&key_t, false)
         );
-        println!(
-            "=====_get_public_key_in_sender_field=====_in_name_factory==========={}====",
-            line!()
-        );
+        // println!(
+        //     "=====_get_public_key_in_sender_field=====_in_name_factory==========={}====",
+        //     line!()
+        // );
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(

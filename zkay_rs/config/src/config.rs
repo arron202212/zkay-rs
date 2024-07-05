@@ -175,11 +175,10 @@ impl Config {
     }
 
     //     @contextmanager
-    pub fn library_compilation_environment(&self)
     //    Use this fixed configuration compiling libraries to get reproducible output.
-    {
+    pub fn library_compilation_environment(&self) {
         // old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
-        // self.override_solc(self.library_solc_version)
+        self.override_solc(self.library_solc_version());
         // self.opt_solc_optimizer_runs = 1000
         // yield
         // self.opt_solc_optimizer_runs = old_opt_runs
@@ -240,11 +239,7 @@ impl Config {
     //          but increases offchain resource usage during key and proof generation.
     pub fn should_use_hash(&self, pub_arg_size: i32) -> bool {
         // let pub_arg_size = circuit.trans_in_size + circuit.trans_out_size;
-        pub_arg_size
-            > self
-                .get_attr(&String::from("opt_hash_threshold"))
-                .parse::<i32>()
-                .unwrap()
+        pub_arg_size > self.user_config.opt_hash_threshold()
     }
 
     // Identifiers in user code must not start with this prefix.
