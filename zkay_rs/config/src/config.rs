@@ -22,7 +22,7 @@ use crate::config_user::UserConfig;
 use crate::lc_vec_s;
 use app_dirs2::*;
 use lazy_static::lazy_static;
-use serde_json::{Map, Result, Value};
+use serde_json::{json, Map, Result, Value};
 use std::collections::HashMap;
 use std::sync::Mutex;
 lazy_static! {
@@ -157,10 +157,23 @@ impl Config {
     }
 
     pub fn export_compiler_settings(&self) -> Value {
-        self._options_with_effect_on_circuit_output
-            .iter()
-            .map(|k| (k.clone(), self.get_attr(k)))
-            .collect()
+        // self._options_with_effect_on_circuit_output
+        //     .iter()
+        //     .map(|k| (k.clone(), self.get_attr(k)))
+        //     .collect()
+        let data = json!(
+        {
+                "proving_scheme":self.user_config.proving_scheme(),
+                "snark_backend": self.user_config.snark_backend(),
+                "main_crypto_backend": self.user_config.main_crypto_backend(),
+                "addhom_crypto_backend": self.user_config.addhom_crypto_backend(),
+                "opt_solc_optimizer_runs": self.user_config.opt_solc_optimizer_runs(),
+                "opt_hash_threshold": self.user_config.opt_hash_threshold(),
+                "opt_eval_constexpr_in_circuit": self.user_config.opt_eval_constexpr_in_circuit(),
+                "opt_cache_circuit_inputs": self.user_config.opt_cache_circuit_inputs(),
+                "opt_cache_circuit_outputs":self.user_config.opt_cache_circuit_outputs(),
+        });
+        data
     }
 
     pub fn import_compiler_settings(&mut self, vals: Value) {
@@ -195,13 +208,9 @@ impl Config {
         Versions::ZKAY_VERSION.to_string()
     }
 
-    pub fn zkay_solc_version_compatibility(&self) -> semver_rs::Version {
+    pub fn zkay_solc_version_compatibility(&self) -> String {
         // Target solidity language level for the current zkay version
-        VERSIONS
-            .lock()
-            .unwrap()
-            .zkay_solc_version_compatibility
-            .clone()
+        Versions::ZKAY_SOLC_VERSION_COMPATIBILITY.to_string()
     }
 
     pub fn solc_version(&self) -> String {

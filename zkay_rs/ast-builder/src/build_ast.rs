@@ -294,7 +294,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let version = ctx.ver.as_ref().unwrap().get_text();
         let version = version.trim();
         // spec = NpmSpec(version)
-        let name = ctx.name.as_ref().unwrap();
+        let name = ctx.name.as_ref().unwrap().get_text();
+        // println!("==visit_VersionPragma==={version:?}===name========{name:?}");
         // if name == "zkay" and Version(cfg.zkay_version) not in spec:
         //     raise SyntaxException(f"Contract requires a different zkay version.\n"
         //                           f"Current version is {cfg.zkay_version} but pragma zkay mandates {version}.",

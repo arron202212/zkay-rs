@@ -123,8 +123,8 @@ pub fn compile_zkay_file(
 // :raise ZkayCompilerError: if any compilation stage fails
 // :raise RuntimeError: if import_keys is true and zkay file, manifest file or any of the key files is missing
 // """
-fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitGenerator, String)
-{
+fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
+    // -> (CircuitGenerator, String)
     // Copy zkay code to output
     let zkay_filename = "contract.zkay";
     if import_keys
@@ -208,7 +208,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) // -> (CircuitG
     let snark_backend = CFG.lock().unwrap().user_config.snark_backend();
     let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme();
     let cg = generator_classes(&snark_backend)(circuits, proving_scheme, output_dir.to_string());
-    println!("==============={}==", line!());
+    // println!("==============={}==", line!());
     let mut kwargs = std::collections::HashMap::new();
     if let Some(_v) = kwargs.get("verifier_names") {
         // assert!(isinstance(v, list));

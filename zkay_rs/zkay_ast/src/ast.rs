@@ -7,9 +7,9 @@
 #![allow(unused_braces)]
 
 #[cfg(windows)]
-const LINE_ENDING: &str = "\r\n";
+pub const LINE_ENDING: &str = "\r\n";
 #[cfg(not(windows))]
-const LINE_ENDING: &str = "\n";
+pub const LINE_ENDING: &str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
 use crate::analysis::partition_state::PartitionState;
 use crate::circuit_constraints::{
@@ -1778,7 +1778,7 @@ impl AST {
     // }
 
     pub fn text(&self) -> String {
-        let v = CodeVisitor::new(true);
+        let v = CodeVisitorBase::new(true);
         v.visit(&RcCell::new(self.clone()).into())
     }
     // pub fn code(&self) -> String {
@@ -9154,12 +9154,12 @@ pub enum SingleOrListUnion {
     String(String),
 }
 #[derive(ASTVisitorBaseRefImpl)]
-pub struct CodeVisitor {
+pub struct CodeVisitorBase {
     pub ast_visitor_base: AstVisitorBase,
     pub display_final: bool,
 }
 
-impl AstVisitor for CodeVisitor {
+impl AstVisitor for CodeVisitorBase {
     type Return = String;
     fn temper_result(&self) -> Self::Return {
         String::new()
@@ -9337,15 +9337,85 @@ impl AstVisitor for CodeVisitor {
         }
     }
 }
-impl CodeVisitor {
+impl CodeVisitorBase {
     pub fn new(display_final: bool) -> Self {
         Self {
             ast_visitor_base: AstVisitorBase::new("node-or-children", false),
             display_final,
         }
     }
+}
+pub trait CodeVisitor: AstVisitor {
+    fn visit_AnnotatedTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return>;
+    fn visit_MeExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return>;
+    fn handle_pragma(&self, pragma: String) -> eyre::Result<<Self as AstVisitor>::Return>;
+}
+impl CodeVisitor for CodeVisitorBase {
+    fn visit_AnnotatedTypeName(
+        &self,
+        ast: &ASTFlatten,
+    ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_AnnotatedTypeName============{ast:?}=");
+        let t = ast
+            .to_ast()
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .type_name
+            .as_ref()
+            .map_or(String::new(), |type_name| {
+                // println!(
+                //     "===visit_AnnotatedTypeName========{:?}=====",
+                //     type_name.get_ast_type()
+                // );
+                self.visit(&type_name.clone().into())
+            });
+        let p = ast
+            .to_ast()
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .privacy_annotation
+            .as_ref()
+            .map_or(String::new(), |privacy_annotation| {
+                self.visit(privacy_annotation)
+            });
 
-    pub fn visit_list(
+        Ok(
+            if ast
+                .to_ast()
+                .try_as_annotated_type_name_ref()
+                .unwrap()
+                .had_privacy_annotation
+            {
+                format!(
+                    "{t}@{p}{:?}",
+                    HOMOMORPHISM_STORE
+                        .lock()
+                        .unwrap()
+                        .get(
+                            &ast.to_ast()
+                                .try_as_annotated_type_name_ref()
+                                .unwrap()
+                                .homomorphism
+                        )
+                        .unwrap()
+                )
+            } else {
+                t
+            },
+        )
+    }
+    fn visit_MeExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(String::from("me"))
+    }
+    fn handle_pragma(&self, pragma: String) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(pragma)
+    }
+}
+impl CodeVisitorBase {
+    fn visit_list(
         &self,
         l: Vec<ListUnion>,
         mut sep: &str,
@@ -9354,21 +9424,19 @@ impl CodeVisitor {
             sep = "\n";
         }
         if l.is_empty() {
-            return Ok(String::new());
+            return Ok(self.temper_result());
         }
 
-        fn handle(selfs: &CodeVisitor, e: &ListUnion) -> String {
-            match e {
-                ListUnion::String(e) => e.to_owned(),
-                ListUnion::AST(e) => selfs.visit(e),
-            }
-        }
-
-        let s: Vec<_> = l.iter().map(|e| handle(self, e)).collect();
+        let s: Vec<_> = l.iter().map(|e| self.handle(e).unwrap()).collect();
         let s = s.join(sep);
         Ok(s)
     }
-
+    fn handle(&self, e: &ListUnion) -> eyre::Result<<Self as AstVisitor>::Return> {
+        Ok(match e {
+            ListUnion::String(e) => e.to_owned(),
+            ListUnion::AST(e) => self.visit(e),
+        })
+    }
     pub fn visit_single_or_list(
         &self,
         v: SingleOrListUnion,
@@ -9704,10 +9772,6 @@ impl CodeVisitor {
                     .key
             )
         ))
-    }
-
-    pub fn visit_MeExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(String::from("me"))
     }
 
     pub fn visit_AllExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -10157,7 +10221,7 @@ impl CodeVisitor {
         Ok(String::new())
     }
 
-    fn handle_block(&self, ast: &StatementList) -> eyre::Result<<Self as AstVisitor>::Return> {
+    pub fn handle_block(&self, ast: &StatementList) -> eyre::Result<<Self as AstVisitor>::Return> {
         match ast {
             StatementList::Block(block) => Ok(indent(
                 self.visit_list(
@@ -10310,60 +10374,6 @@ impl CodeVisitor {
         _ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(String::from("address payable"))
-    }
-
-    pub fn visit_AnnotatedTypeName(
-        &self,
-        ast: &ASTFlatten,
-    ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("===visit_AnnotatedTypeName============{ast:?}=");
-        let t = ast
-            .to_ast()
-            .try_as_annotated_type_name_ref()
-            .unwrap()
-            .type_name
-            .as_ref()
-            .map_or(String::new(), |type_name| {
-                // println!(
-                //     "===visit_AnnotatedTypeName========{:?}=====",
-                //     type_name.get_ast_type()
-                // );
-                self.visit(&type_name.clone().into())
-            });
-        let p = ast
-            .to_ast()
-            .try_as_annotated_type_name_ref()
-            .unwrap()
-            .privacy_annotation
-            .as_ref()
-            .map_or(String::new(), |privacy_annotation| {
-                self.visit(privacy_annotation)
-            });
-
-        Ok(
-            if ast
-                .to_ast()
-                .try_as_annotated_type_name_ref()
-                .unwrap()
-                .had_privacy_annotation
-            {
-                format!(
-                    "{t}@{p}{:?}",
-                    HOMOMORPHISM_STORE
-                        .lock()
-                        .unwrap()
-                        .get(
-                            &ast.to_ast()
-                                .try_as_annotated_type_name_ref()
-                                .unwrap()
-                                .homomorphism
-                        )
-                        .unwrap()
-                )
-            } else {
-                t
-            },
-        )
     }
 
     pub fn visit_Mapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -10643,7 +10653,7 @@ impl CodeVisitor {
             &b,
         )
     }
-    fn function_definition_to_str(
+    pub fn function_definition_to_str(
         &self,
         idf: &RcCell<Identifier>,
         parameters: Vec<ParameterUnion>,
@@ -10728,7 +10738,7 @@ impl CodeVisitor {
     }
 
     // @staticmethod
-    fn __cmp_type_size(v1: &ASTFlatten, v2: &ASTFlatten) -> Ordering {
+    pub fn __cmp_type_size(v1: &ASTFlatten, v2: &ASTFlatten) -> Ordering {
         match (
             v1.ast_base_ref()
                 .unwrap()
@@ -10879,7 +10889,7 @@ impl CodeVisitor {
         Ok(ret + ";")
     }
 
-    fn contract_definition_to_str(
+    pub fn contract_definition_to_str(
         idf: Identifier,
         state_vars: Vec<String>,
         constructors: Vec<String>,
@@ -10964,18 +10974,22 @@ impl CodeVisitor {
         )
     }
 
-    fn handle_pragma(&self, pragma: String) -> String {
-        pragma
-    }
-
-    pub fn visit_SourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+    fn visit_SourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        println!(
+            "==========pragma_directive=================={:?}",
+            ast.try_as_source_unit_ref()
+                .unwrap()
+                .borrow()
+                .pragma_directive
+                .clone()
+        );
         let p = self.handle_pragma(
             ast.try_as_source_unit_ref()
                 .unwrap()
                 .borrow()
                 .pragma_directive
                 .clone(),
-        );
+        )?;
         let contracts = self.visit_list(
             ast.try_as_source_unit_ref()
                 .unwrap()

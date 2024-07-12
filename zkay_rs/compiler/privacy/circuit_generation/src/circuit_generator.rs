@@ -178,7 +178,7 @@ impl CircuitGeneratorBase {
             for circuit in &self.circuits_to_prove {
                 // let vk = self._parse_verification_key(circuit);
                 let pk_hash = self._get_prover_key_hash(circuit);
-                println!("======={}", line!());
+                // println!("======={}", line!());
                 let mut f = File::create(Path::new(
                     &PathBuf::from(&self.output_dir).join(
                         &circuit
@@ -190,16 +190,16 @@ impl CircuitGeneratorBase {
                     ),
                 ))
                 .expect("");
-                println!("======={}", line!());
+                // println!("======={}", line!());
                 let primary_inputs = self._get_primary_inputs(circuit);
-                println!("======={}", line!());
+                // println!("======={}", line!());
                 // if let VerifyingKeyType::ProvingSchemeGroth16(vk) = vk {
                 // let vk: <T as ProvingScheme>::VerifyingKey = vk;
                 // let vkk=||-><T as ProvingScheme>::VerifyingKeyX {vk};
                 match self.proving_scheme.as_str() {
                     "groth16" => {
                         let vk=<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::create_dummy_key();
-                        println!("======={}", line!());
+                        // println!("======={}", line!());
                         let _ = f.write_all(
                             ProvingSchemeGroth16::generate_verification_contract(
                                 vk,
@@ -209,12 +209,12 @@ impl CircuitGeneratorBase {
                             )
                             .as_bytes(),
                         );
-                        println!("======={}", line!());
+                        // println!("======={}", line!());
                     }
                     "gm17" => {
                         let vk =
                             <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::create_dummy_key();
-                        println!("======={}", line!());
+                        // println!("======={}", line!());
                         let _ = f.write_all(
                             ProvingSchemeGm17::generate_verification_contract(
                                 vk,
@@ -224,7 +224,7 @@ impl CircuitGeneratorBase {
                             )
                             .as_bytes(),
                         );
-                        println!("======={}", line!());
+                        // println!("======={}", line!());
                     }
                     other => {
                         println!("Unsupport proving scheme: {:?}", other);

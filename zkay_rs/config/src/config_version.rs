@@ -21,8 +21,10 @@ impl Default for Versions {
 }
 impl Versions {
     // pub const zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
-    pub const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "0.6.12";
+    pub const ZKAY_SOLC_VERSION_COMPATIBILITY: &'static str = "^0.6.0";
+    pub const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "v0.6.12";
     pub const ZKAY_VERSION: &'static str = include_str!("./VERSION");
+    pub const SOLC_VERSION: &'static str = "v0.6.12";
     // pub const solc_version:Option<&'static str>=Some("0.6.12");
     pub fn new() -> Self {
         Self {
@@ -33,10 +35,10 @@ impl Versions {
         }
     }
     pub fn set_solc_version(&mut self, version: String) {
-        self.solc_version = version
-            .strip_prefix('v')
-            .map(|version| version.to_string())
-            .or(Some(version));
+        self.solc_version = Some(version);
+        // .strip_prefix('v')
+        // .map(|version| version.to_string())
+        // .or(Some(version));
     }
 }
 // class Versions:

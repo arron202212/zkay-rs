@@ -29,7 +29,8 @@
 
 use crate::ast::{
     ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ChildListBuilder, CodeVisitor,
-    ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST, Statement, AST,
+    CodeVisitorBase, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST,
+    Statement, AST,
 };
 use crate::visitors::visitor::AstVisitor;
 use enum_dispatch::enum_dispatch;
