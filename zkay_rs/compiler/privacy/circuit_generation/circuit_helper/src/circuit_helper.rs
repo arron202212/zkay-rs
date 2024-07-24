@@ -303,6 +303,9 @@ where
     }
     // """All public input HybridArgumentIdfs (for self.fct only, w/o called functions)"""
     pub fn input_idfs(&self) -> Vec<HybridArgumentIdf> {
+        // println!("==input==idfs=======len====={}====",self._in_name_factory
+        //     .idfs
+        //     .borrow().len());
         self._in_name_factory
             .idfs
             .borrow()
@@ -466,10 +469,7 @@ where
             ),
             param.borrow().idf().as_ref().unwrap().borrow().name()
         );
-        println!(
-            "==_in_name_factory====ensure_parameter_encryption========{}==",
-            line!()
-        );
+        println!("==__in_name_factory.add_idf========={}==", name);
         let cipher_idf = self._in_name_factory.add_idf(
             name,
             param
@@ -903,7 +903,7 @@ where
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) {
         //(Identifier,CircuitInputStatement)
-        // println!("==request_public_key===============");
+        println!("==_in_name_factory.add_idf========{}========", name);
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
@@ -1042,12 +1042,11 @@ where
             Some(RcCell::new(Expression::all_expr()).into())
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
-        // println!(
-        //     "==is_public====={is_public}=={:?}===={:?}==={:?}===",
-        //     expr.to_string(),
-        //     expr.get_ast_type(),
-        //     privacy
-        // );
+        println!(
+            "==add_to_circuit_inputs begin====={is_public}=={}===={:?}======",
+            expr,
+            expr.get_ast_type(),
+        );
         let expr_text = expr.code();
         let input_expr = self
             ._expr_trafo
@@ -1107,7 +1106,6 @@ where
         let mut t_suffix = String::new();
         if is_instance(expr, ASTType::IdentifierExpr) {
             //Look in cache before doing expensive move-in
-
             if self._remapper.0.is_remapped(
                 &expr
                     .ast_base_ref()
@@ -1142,7 +1140,7 @@ where
                     None,
                 );
             }
-
+            // println!("===expr==code========{}=============", expr);
             t_suffix = format!(
                 "_{}",
                 expr.ast_base_ref()
@@ -1161,10 +1159,12 @@ where
                     .borrow()
                     .name()
             );
+            // print!("====t_suffix====={t_suffix},");
         }
 
         //Generate circuit inputs
         let (return_idf, input_idf) = if is_public {
+            //  print!("====t_suffix====={t_suffix},");
             let tname = format!(
                 "{}{t_suffix}",
                 self._in_name_factory.base_name_factory.get_new_name(
@@ -1182,10 +1182,7 @@ where
                     false
                 )
             );
-            // println!(
-            //     "==add_to_circuit_inputs=======_in_name_factory======={}=",
-            //     line!()
-            // );
+            println!("==_in_name_factory.add_idf========{}=", tname);
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 expr.ast_base_ref()
@@ -1274,10 +1271,7 @@ where
                     .base_name_factory
                     .get_new_name(&cipher_t, false)
             );
-            // println!(
-            //     "=add_to_circuit_inputs====_in_name_factory============{}===",
-            //     line!()
-            // );
+            println!("=_in_name_factory.add_idf==========={}===", tname);
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -1366,6 +1360,7 @@ where
                 .statement
                 .clone()
                 .unwrap();
+            // println!("======not public=========={}========",expr);
             self._ensure_encryption(
                 &statement.clone().upgrade().unwrap(),
                 locally_decrypted_idf.clone().unwrap(),
@@ -1375,15 +1370,15 @@ where
                 false,
                 true,
             );
-            if expr.is_expression() {
-                expr.try_as_expression_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .expression_base_mut_ref()
-                    .statement = Some(statement);
-            } else {
-                panic!("=========else========={expr:?}");
-            }
+            // if expr.is_expression() {
+            //     expr.try_as_expression_ref()
+            //         .unwrap()
+            //         .borrow_mut()
+            //         .expression_base_mut_ref()
+            //         .statement = Some(statement);
+            // } else {
+            //     panic!("=========else========={expr:?}");
+            // }
         }
 
         //Cache circuit input for later reuse if possible
@@ -2908,10 +2903,7 @@ where
                 .base_name_factory
                 .get_new_name(&key_t, false)
         );
-        // println!(
-        //     "=====_get_public_key_in_sender_field=====_in_name_factory==========={}====",
-        //     line!()
-        // );
+        println!("=====_in_name_factory.add_idf==========={}====", name);
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(

@@ -278,6 +278,26 @@ impl TypeCheckVisitor {
             rhs.ast_base_ref().unwrap().borrow().annotated_type(),
             rhs
         );
+        // println!(
+        //     "===={:?}==={:?}=======rhs.get_ast_type==={:?}==={}==",
+        //     rhs.ast_base_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .annotated_type()
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .type_name
+        //         .as_ref()
+        //         .map(|tn| tn.get_ast_type()),
+        //     expected_type
+        //         .borrow()
+        //         .type_name
+        //         .as_ref()
+        //         .map(|tn| tn.get_ast_type()),
+        //     rhs.get_ast_type(),
+        //     rhs
+        // );
         let rhs = if rhs
             .ast_base_ref()
             .unwrap()
@@ -289,15 +309,19 @@ impl TypeCheckVisitor {
             .type_name
             != expected_type.borrow().type_name
         {
+            // println!("==rhs.get_ast_type==={:?}==in===", rhs.get_ast_type());
             Self::implicitly_converted_to(rhs, expected_type.borrow().type_name.as_ref().unwrap())
-                .clone()
         } else {
             rhs.clone()
         };
-        let rhs = &rhs;
+        // println!(
+        //     "==rhs.get_ast_type==={:?}=after=={}==",
+        //     rhs.get_ast_type(),
+        //     rhs
+        // );
         Some(if instance == String::from("make-private") {
             Self::make_private(
-                rhs,
+                &rhs,
                 &expected_type.borrow().privacy_annotation,
                 &expected_type.borrow().homomorphism,
             )
@@ -306,9 +330,9 @@ impl TypeCheckVisitor {
             //     "===require_rehom=======try_rehom======={:?}",
             //     expected_type.borrow().to_string()
             // );
-            Self::try_rehom(rhs, expected_type)
+            Self::try_rehom(&rhs, expected_type)
         } else {
-            rhs.clone()
+            rhs
         })
     }
     //@staticmethod

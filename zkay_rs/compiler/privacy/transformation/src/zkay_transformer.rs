@@ -1431,11 +1431,11 @@ impl ZkayExpressionTransformer {
     // The reclassified expression is evaluated in the circuit and its result is made available in solidity.
     // """
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        // println!(
-        //     "====expression==transform=======visitReclassifyExpr======={:?}=====",
-        //     ast.to_string()
-        // );
-        let mut expr = ast
+        println!(
+            "===ZkayExpressionTransformer====visitReclassifyExpr======={}=====",
+            ast
+        );
+        let mut expr: ASTFlatten = ast
             .to_ast()
             .try_as_expression_ref()
             .unwrap()
@@ -1444,6 +1444,10 @@ impl ZkayExpressionTransformer {
             .expr()
             .clone()
             .into();
+        //   println!(
+        //             "====expression==transform=======visitReclassifyExpr==expr====={:?}=====",
+        //             expr.get_ast_type()
+        //         );
         self.generator
             .as_ref()
             .unwrap()
@@ -1743,7 +1747,6 @@ impl ZkayExpressionTransformer {
                 .requires_verification_when_external
             {
                 //Reroute the function call to the corresponding internal function if the called function was split into external/internal.
-
                 if !is_instance(
                     ast.to_ast()
                         .try_as_expression_ref()
@@ -2035,7 +2038,7 @@ impl ZkayExpressionTransformer {
     }
     #[allow(unreachable_code)]
     pub fn visitExpression(&self, _ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        panic!("=======visitExpression================NotImplementedError==========={_ast:?}");
+        // panic!("=======visitExpression================NotImplementedError==========={_ast:?}");
         // raise NotImplementedError()
         // unimplemented!();
         eyre::bail!("NotImplementedError")
@@ -2070,7 +2073,6 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
             ASTType::LiteralExprBase
                 | ASTType::IndexExpr
                 | ASTType::IdentifierExpr
-                | ASTType::ReclassifyExpr
                 | ASTType::ExpressionBase
                 | ASTType::FunctionCallExprBase
                 | ASTType::ReturnStatement
@@ -2079,7 +2081,8 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
                 | ASTType::IfStatement
                 | ASTType::Block
                 | ASTType::StatementBase
-        ) || matches!(ast, AST::Expression(Expression::LiteralExpr(_)))
+        ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
+            || matches!(ast, AST::Expression(Expression::LiteralExpr(_)))
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(ast, AST::Expression(_))
             || matches!(
@@ -2094,11 +2097,13 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         match name {
             ASTType::IndexExpr => self.visitIndexExpr(ast),
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
             ASTType::Block => self.visitBlock(ast, None, None),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::ReclassifyExpr(_))) => {
+                self.visitReclassifyExpr(ast)
+            }
             _ if matches!(ast.to_ast(), AST::Expression(Expression::LiteralExpr(_))) => {
                 self.visitLiteralExpr(ast)
             }
@@ -2147,11 +2152,13 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        // println!("======visitIdentifierExpr=======beg=========={:?}====",ast.get_ast_type());
         let mut ast = ast.clone();
         if !is_instance(
             ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
             ASTType::HybridArgumentIdf,
         ) {
+            // println!("======visitIdentifierExpr=======!=========={:?}====",ast.get_ast_type());
             //If ast is not already transformed, get current SSA version
             ast = self
                 .generator
@@ -2160,12 +2167,14 @@ impl ZkayCircuitTransformer {
                 .borrow()
                 .get_remapped_idf_expr(ast);
         }
+        // println!("======visitIdentifierExpr=======pp=========={:?}====",ast.get_ast_type());
         if is_instance(&ast, ASTType::IdentifierExpr)
             && is_instance(
                 ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
                 ASTType::HybridArgumentIdf,
             )
         {
+            // println!("======visitIdentifierExpr=========h========{:?}====",ast.get_ast_type());
             //The current version of ast.idf is already in the circuit
             assert!(
                 ast.ast_base_ref()
@@ -2183,7 +2192,7 @@ impl ZkayCircuitTransformer {
             Ok(ast)
         } else {
             //ast is not yet in the circuit -> move it in
-            // println!("======visitIdentifierExpr===============transform_location======");
+            // println!("======visitIdentifierExpr===============transform_location=={:?}====",ast.get_ast_type());
             self.transform_location(&ast)
                 .ok_or(eyre::eyre!("unexpected"))
         }
@@ -2200,8 +2209,26 @@ impl ZkayCircuitTransformer {
     }
     // """Rule (15), boundary crossing if analysis determined that it is """
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        println!(
+            "=====visitReclassifyExpr========get_ast_type==={:?}==={}===={}===={:?}==",
+            ast.get_ast_type(),
+            ast,
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .expr(),
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .expr()
+                .get_ast_type()
+        );
         if ast
-            .try_as_reclassify_expr_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
@@ -2210,9 +2237,10 @@ impl ZkayCircuitTransformer {
             .borrow()
             .is_cipher()
         {
+            println!("=====1======");
             //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
             let orig_type = ast
-                .try_as_reclassify_expr_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -2233,34 +2261,47 @@ impl ZkayCircuitTransformer {
                 .unwrap()
                 .borrow_mut()
                 .evaluate_expr_in_circuit(
-                    &ast.try_as_reclassify_expr_ref()
+                    ast.to_ast()
+                        .try_as_expression_ref()
                         .unwrap()
-                        .borrow()
-                        .reclassify_expr_base_ref()
-                        .expr,
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .expr(),
                     &orig_privacy.unwrap().into(),
                     &orig_homomorphism,
                 )
                 .ok_or(eyre::eyre!("unexpected"))
         } else if ast
-            .try_as_reclassify_expr_ref()
-            .unwrap()
-            .borrow()
-            .expr()
+            .to_ast()
             .try_as_expression_ref()
             .unwrap()
-            .borrow()
+            .try_as_reclassify_expr_ref()
+            .unwrap()
+            .expr()
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .evaluate_privately()
         {
-            self.visit(ast.try_as_reclassify_expr_ref().unwrap().borrow().expr())
-                .ok_or(eyre::eyre!("unexpected"))
+            println!("=====1==2====");
+            self.visit(
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .expr(),
+            )
+            .ok_or(eyre::eyre!("unexpected"))
         } else {
             assert!(ast
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
                 .try_as_reclassify_expr_ref()
                 .unwrap()
-                .borrow()
                 .expr()
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -2268,17 +2309,27 @@ impl ZkayCircuitTransformer {
                 .unwrap()
                 .borrow()
                 .is_public());
-            // println!("============transformer========expr====");
+            println!(
+                "===visitReclassifyExpr===add_to_circuit_inputs=====ast=={}====={}=",
+                ast,
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .expr()
+            );
             self.generator
                 .as_ref()
                 .unwrap()
-                .borrow_mut()
+                .borrow()
                 .add_to_circuit_inputs(
-                    &ast.try_as_reclassify_expr_ref()
+                    &ast.to_ast()
+                        .try_as_expression_ref()
                         .unwrap()
-                        .borrow()
-                        .reclassify_expr_base_ref()
-                        .expr,
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .expr(),
                 )
                 .get_idf_expr(None)
                 .ok_or(eyre::eyre!("unexpected"))
@@ -2286,6 +2337,10 @@ impl ZkayCircuitTransformer {
     }
     // """Rule (16), other expressions don"t need special treatment."""
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        // println!(
+        //     "===visitExpression==========get_ast_type============={:?}",
+        //     ast.get_ast_type()
+        // );
         self.visit_children(ast)
     }
 
@@ -2612,10 +2667,10 @@ impl ZkayCircuitTransformer {
             }
 
             //Builtin functions are supported natively by the circuit
-            // println!(
-            //     "======visit_children=================={:?}",
-            //     ast.to_string()
-            // );
+            println!(
+                "===visitFunctionCallExpr===visit_children=================={}",
+                ast
+            );
             return self.visit_children(ast);
         }
 

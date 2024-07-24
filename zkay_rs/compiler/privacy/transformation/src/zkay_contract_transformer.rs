@@ -972,7 +972,10 @@ impl ZkayTransformer {
                 .map(|s| s.clone_inner())
                 .collect::<Vec<_>>(),
         );
-        //println!("=====create_internal_verification_wrapper===={}=", line!());
+        println!(
+            "=====create_internal_verification_wrapper==input_idfs len=={}=",
+            circuit.borrow().input_idfs().len()
+        );
         // Serialize in parameters to in array (if any)
         let mut serialize_stmts = vec![];
         let mut offset = 0;

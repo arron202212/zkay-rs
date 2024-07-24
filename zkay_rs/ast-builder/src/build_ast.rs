@@ -1785,6 +1785,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 kw.get_text().to_owned()
             })
             .collect();
+        // println!("==visit_stateVariableDeclaration=====keywords================={:?}", keywords);
         Some(
             StateVariableDeclaration::new(
                 annotated_type.map(RcCell::new),
@@ -1867,7 +1868,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_annotated_type_name())
         });
-        // println!("======visit_variableDeclaration====================={annotated_type:?}======");
+
         let idf = ctx.idf.as_ref().and_then(|idf| {
             idf.accept(self);
             self.temp_result()
@@ -1875,6 +1876,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .and_then(|ast| ast.try_as_identifier())
         });
         let keywords: Vec<_> = ctx.keywords.iter().map(|kw| kw.to_string()).collect();
+        // println!("======visit_variableDeclaration=====build================{keywords:?}======");
         Some(
             VariableDeclaration::new(
                 keywords,

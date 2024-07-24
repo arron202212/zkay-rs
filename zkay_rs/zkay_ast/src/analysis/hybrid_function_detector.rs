@@ -48,22 +48,24 @@ impl AstVisitor for DirectHybridFunctionDetectionVisitor {
             ast.get_ast_type(),
             ASTType::SourceUnit
                 | ASTType::Parameter
-                | ASTType::ReclassifyExpr
                 | ASTType::PrimitiveCastExpr
                 | ASTType::AllExpr
                 | ASTType::FunctionCallExprBase
                 | ASTType::ConstructorOrFunctionDefinition
-        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+        ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
             ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             ASTType::AllExpr => self.visitAllExpr(ast),
             ASTType::ConstructorOrFunctionDefinition => {
                 self.visitConstructorOrFunctionDefinition(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::ReclassifyExpr(_))) => {
+                self.visitReclassifyExpr(ast)
             }
             _ if matches!(
                 ast.to_ast(),
@@ -141,9 +143,9 @@ impl DirectHybridFunctionDetectionVisitor {
                 .unwrap()
                 .upgrade()
                 .unwrap()
+                .to_ast()
                 .try_as_statement_ref()
                 .unwrap()
-                .borrow()
                 .statement_base_ref()
                 .unwrap()
                 .function

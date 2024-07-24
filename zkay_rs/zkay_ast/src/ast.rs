@@ -2074,6 +2074,9 @@ impl IntoAST for IdentifierBase {
 
 impl IdentifierBase {
     pub fn new(name: String) -> Self {
+        // if "zk__in2_plain_Choice" == name{
+        //     println!("==IdentifierBase========zk__in2_plain_Choice========");
+        // }
         Self {
             ast_base: RcCell::new(ASTBase::new(None, None, None)),
             name,
@@ -3203,7 +3206,8 @@ impl FunctionCallExprBase {
         sec_start_offset: Option<i32>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
-        // println("{:?}",args);
+        // args.iter().for_each(|arg|{print!("{:?},{},",arg.get_ast_type(),arg);});
+        // println!("=====func====={:?}========{}====",func.get_ast_type(),func);
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             func,
@@ -3993,8 +3997,12 @@ impl IdentifierExpr {
             location_expr_base: LocationExprBase::new(
                 annotated_type,
                 Some(match idf {
-                    IdentifierExprUnion::Identifier(idf) => idf,
+                    IdentifierExprUnion::Identifier(idf) => {
+                        // print!("=idfname==={:?},",idf.borrow().name());
+                        idf
+                    }
                     IdentifierExprUnion::String(idf) => {
+                        // print!("=idfname==={:?},",idf);
                         RcCell::new(Identifier::Identifier(IdentifierBase::new(idf)))
                     }
                 }),
@@ -4063,7 +4071,19 @@ impl IntoAST for MemberAccessExpr {
 
 impl MemberAccessExpr {
     pub fn new(expr: Option<RcCell<LocationExpr>>, member: RcCell<Identifier>) -> Self {
-        //  println!("====new==={:?}========={:?}==========",expr.as_ref().map(|ex|ex.get_ast_type()),member);
+        // println!(
+        //     "=MemberAccessExpr===new==={:?}========={:?}==========",
+        //     expr.as_ref().map(|ex| {
+        //         // print!("=asttype=={:?}", ex.borrow().get_ast_type());
+        //         ex.borrow()
+        //             .ast_base_ref()
+        //             .borrow()
+        //             .idf()
+        //             .as_ref()
+        //             .map(|idf| idf.borrow().name())
+        //     }),
+        //     member.borrow().name()
+        // );
         Self {
             location_expr_base: LocationExprBase::new(None, None),
             expr,
@@ -4342,7 +4362,17 @@ impl ReclassifyExprBase {
         homomorphism: Option<String>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
-        // println!("======ReclassifyExprBase=============={homomorphism:?}");
+        println!(
+            "======ReclassifyExprBase====new==expr.get_ast_type==={:?}====={:?}",
+            expr.to_string(),
+            expr.get_ast_type()
+        );
+        if expr.to_string() == "reveal(Choice.none, me)" {
+            panic!(
+                "==ReclassifyExprBase====new====reveal(Choice.none, me)===={}==",
+                expr.to_string()
+            );
+        }
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             expr,
@@ -4451,6 +4481,7 @@ impl HybridArgumentIdf {
         arg_type: HybridArgType,
         corresponding_priv_expression: Option<ASTFlatten>,
     ) -> Self {
+        // assert!("zk__in2_plain_Choice" != name);
         if is_instance(&t, ASTType::BooleanLiteralType) {
             t = RcCell::new(TypeName::bool_type());
         } else if is_instance(&t, ASTType::NumberLiteralType) {
@@ -4586,6 +4617,7 @@ impl HybridArgumentIdf {
                 Identifier::HybridArgumentIdf(self.clone()),
             )))
             .as_type(&self.t.clone().into());
+            // println!("===ma==={:?}",CFG.lock().unwrap().zk_data_var_name());
             ma.ast_base_ref().unwrap().borrow_mut().parent = parent.map(|p| p.clone().downgrade());
             let statement = parent.as_ref().and_then(|&p| {
                 if is_instance(p, ASTType::ExpressionBase) {
@@ -5740,7 +5772,7 @@ trait MyPartialEq {
 }
 
 // #[enum_dispatch(IntoAST, ASTInstanceOf, TypeNameBaseRef, ASTBaseRef)]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum TypeName {
     ElementaryTypeName(ElementaryTypeName),
     UserDefinedTypeName(UserDefinedTypeName),
@@ -5750,20 +5782,48 @@ pub enum TypeName {
     FunctionTypeName(FunctionTypeName),
     Literal(String),
 }
-// impl PartialEq for TypeName {
-//     fn eq(&self, other: &Self) -> bool {
-//        match (self,other){
-//             (Self::ElementaryTypeName(s),Self::ElementaryTypeName(o))=>s.my_eq(o),
-// (Self::UserDefinedTypeName(s),Self::UserDefinedTypeName(o))=>s.my_eq(o),
-// (Self::Mapping(s),Self::Mapping(o))=>s.my_eq(o),
-// (Self::Array(s),Self::Array(o))=>s.my_eq(o),
-// (Self::TupleType(s),Self::TupleType(o))=>s.my_eq(o),
-// (Self::FunctionTypeName(s),Self::FunctionTypeName(o))=>s.my_eq(o),
-// (Self::Literal(s),Self::Literal(o))=>s.my_eq(o),
-//             _=>false
-//         }
-//     }
-// }
+impl PartialEq for TypeName {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                    NumberTypeName::NumberLiteralType(s),
+                )),
+                Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
+                    NumberTypeName::NumberLiteralType(o),
+                )),
+            ) => s == o,
+            (
+                Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(s)),
+                Self::ElementaryTypeName(ElementaryTypeName::NumberTypeName(o)),
+            ) => s == o,
+            (
+                Self::ElementaryTypeName(ElementaryTypeName::BoolTypeName(s)),
+                Self::ElementaryTypeName(ElementaryTypeName::BoolTypeName(o)),
+            ) => s == o,
+            (Self::ElementaryTypeName(s), Self::ElementaryTypeName(o)) => s == o,
+            (
+                Self::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(s)),
+                Self::UserDefinedTypeName(UserDefinedTypeName::AddressPayableTypeName(o)),
+            ) => s == o,
+            (
+                Self::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(s)),
+                Self::UserDefinedTypeName(UserDefinedTypeName::AddressTypeName(o)),
+            ) => s == o,
+            (Self::UserDefinedTypeName(s), Self::UserDefinedTypeName(o)) => s == o,
+            (Self::Mapping(s), Self::Mapping(o)) => s == o,
+            (Self::Array(Array::Proof(s)), Self::Array(Array::Proof(o))) => s == o,
+            (Self::Array(Array::Key(s)), Self::Array(Array::Key(o))) => s == o,
+            (Self::Array(Array::Randomness(s)), Self::Array(Array::Randomness(o))) => s == o,
+            (Self::Array(Array::CipherText(s)), Self::Array(Array::CipherText(o))) => s == o,
+            (Self::Array(s), Self::Array(o)) => s == o,
+            (Self::TupleType(s), Self::TupleType(o)) => s == o,
+            (Self::FunctionTypeName(s), Self::FunctionTypeName(o)) => s == o,
+            (Self::Literal(s), Self::Literal(o)) => s == o,
+            _ => false,
+        }
+    }
+}
 impl IntoAST for TypeName {
     fn into_ast(self) -> AST {
         match self {
@@ -6152,15 +6212,20 @@ impl TypeNameBase {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum ElementaryTypeName {
     NumberTypeName(NumberTypeName),
     BoolTypeName(BoolTypeName),
     BooleanLiteralType(BooleanLiteralType),
 }
-impl PartialEq for ElementaryTypeNameBase {
+impl PartialEq for ElementaryTypeName {
     fn eq(&self, other: &Self) -> bool {
         self.get_ast_type() == other.get_ast_type() && self.name() == other.name()
+    }
+}
+impl PartialEq for ElementaryTypeNameBase {
+    fn eq(&self, other: &Self) -> bool {
+        self.name() == other.name()
     }
 }
 #[enum_dispatch]
@@ -6643,7 +6708,7 @@ impl UintTypeName {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum UserDefinedTypeName {
     EnumTypeName(EnumTypeName),
     EnumValueTypeName(EnumValueTypeName),
@@ -6653,47 +6718,88 @@ pub enum UserDefinedTypeName {
     AddressPayableTypeName(AddressPayableTypeName),
     UserDefinedTypeName(UserDefinedTypeNameBase),
 }
+impl PartialEq for UserDefinedTypeName {
+    fn eq(&self, other: &Self) -> bool {
+        // println!("==UserDefinedTypeName==========");
+        self.ast_base_ref()
+            .borrow()
+            .target
+            .as_ref()
+            .zip(other.ast_base_ref().borrow().target.as_ref())
+            .map_or_else(
+                || {
+                    self.ast_base_ref()
+                        .borrow()
+                        .target
+                        .as_ref()
+                        .or(other.ast_base_ref().borrow().target.as_ref())
+                        .is_none()
+                },
+                |(target, other_target)| {
+                    target
+                        .clone()
+                        .upgrade()
+                        .unwrap()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .qualified_name()
+                        .iter()
+                        .zip(
+                            &other_target
+                                .clone()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .qualified_name(),
+                        )
+                        .all(|e| e.0.name() == e.1.name())
+                },
+            )
+    }
+}
+
 impl PartialEq for UserDefinedTypeNameBase {
     fn eq(&self, other: &Self) -> bool {
-        self.get_ast_type() == other.get_ast_type()
-            && self
-                .ast_base_ref()
-                .borrow()
-                .target
-                .as_ref()
-                .zip(other.ast_base_ref().borrow().target.as_ref())
-                .map_or_else(
-                    || {
-                        self.ast_base_ref()
-                            .borrow()
-                            .target
-                            .as_ref()
-                            .or(other.ast_base_ref().borrow().target.as_ref())
-                            .is_none()
-                    },
-                    |(target, other_target)| {
-                        target
-                            .clone()
-                            .upgrade()
-                            .unwrap()
-                            .ast_base_ref()
-                            .unwrap()
-                            .borrow()
-                            .qualified_name()
-                            .iter()
-                            .zip(
-                                &other_target
-                                    .clone()
-                                    .upgrade()
-                                    .unwrap()
-                                    .ast_base_ref()
-                                    .unwrap()
-                                    .borrow()
-                                    .qualified_name(),
-                            )
-                            .all(|e| e.0.name() == e.1.name())
-                    },
-                )
+        self.ast_base_ref()
+            .borrow()
+            .target
+            .as_ref()
+            .zip(other.ast_base_ref().borrow().target.as_ref())
+            .map_or_else(
+                || {
+                    self.ast_base_ref()
+                        .borrow()
+                        .target
+                        .as_ref()
+                        .or(other.ast_base_ref().borrow().target.as_ref())
+                        .is_none()
+                },
+                |(target, other_target)| {
+                    target
+                        .clone()
+                        .upgrade()
+                        .unwrap()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .qualified_name()
+                        .iter()
+                        .zip(
+                            &other_target
+                                .clone()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .qualified_name(),
+                        )
+                        .all(|e| e.0.name() == e.1.name())
+                },
+            )
     }
 }
 #[enum_dispatch]
@@ -7104,7 +7210,7 @@ pub enum ExprUnion {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum Array {
     CipherText(CipherText),
     Randomness(Randomness),
@@ -7113,6 +7219,42 @@ pub enum Array {
     Array(ArrayBase),
 }
 impl PartialEq for ArrayBase {
+    fn eq(&self, other: &Self) -> bool {
+        if self.value_type() != other.value_type() {
+            return false;
+        }
+        if self.expr().as_ref().zip(other.expr().as_ref()).map_or_else(
+            || self.expr().as_ref().or(other.expr().as_ref()).is_none(),
+            |(expr, other_expr)| {
+                is_instance(expr, ASTType::NumberLiteralExpr)
+                    && is_instance(other_expr, ASTType::NumberLiteralExpr)
+                    && expr
+                        .to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_number_literal_expr_ref()
+                        .unwrap()
+                        .value
+                        == other_expr
+                            .to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_literal_expr_ref()
+                            .unwrap()
+                            .try_as_number_literal_expr_ref()
+                            .unwrap()
+                            .value
+            },
+        ) {
+            return true;
+        }
+
+        false
+    }
+}
+impl PartialEq for Array {
     fn eq(&self, other: &Self) -> bool {
         if self.value_type() != other.value_type() {
             return false;
@@ -7716,6 +7858,7 @@ impl AnnotatedTypeName {
         homomorphism: String,
     ) -> Self {
         // println!("==AnnotatedTypeName::new====={type_name:?}======");
+        let had_privacy_annotation = privacy_annotation.as_ref().is_some();
         privacy_annotation = privacy_annotation.or(Some(
             RcCell::new(Expression::AllExpr(AllExpr::new())).into(),
         ));
@@ -7730,7 +7873,7 @@ impl AnnotatedTypeName {
         Self {
             ast_base: RcCell::new(ASTBase::new(None, None, None)),
             type_name,
-            had_privacy_annotation: privacy_annotation.as_ref().is_some(),
+            had_privacy_annotation,
             privacy_annotation,
             homomorphism,
         }
@@ -8528,6 +8671,7 @@ impl IntoAST for StructDefinition {
 
 impl StructDefinition {
     pub fn new(idf: Option<RcCell<Identifier>>, members: Vec<ASTFlatten>) -> Self {
+        // members.iter().for_each(|m|{print!("=member==={:?}",m.get_ast_type())});
         Self {
             namespace_definition_base: NamespaceDefinitionBase::new(None, idf),
             members,
@@ -9358,7 +9502,7 @@ impl CodeVisitor for CodeVisitorBase {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("===visit_AnnotatedTypeName============{ast:?}=");
+        // println!("===visit_AnnotatedTypeName============{:?}=",ast.get_ast_type());
         let t = ast
             .to_ast()
             .try_as_annotated_type_name_ref()
@@ -9366,12 +9510,21 @@ impl CodeVisitor for CodeVisitorBase {
             .type_name
             .as_ref()
             .map_or(String::new(), |type_name| {
-                // println!(
-                //     "===visit_AnnotatedTypeName========{:?}=====",
+                // print!(
+                //     "=(==visit_AnnotatedTypeName==#======{:?}=====",
                 //     type_name.get_ast_type()
                 // );
                 self.visit(&type_name.clone().into())
             });
+        // print!(
+        //                     "=(==visit_AnnotatedTypeName==#======{:?}=====",
+        //                     ast
+        //             .to_ast()
+        //             .try_as_annotated_type_name_ref()
+        //             .unwrap()
+        //             .type_name.as_ref().unwrap().get_ast_type()
+        //                 );
+        //  println!("=*==visit_AnnotatedTypeName============{t}======)");
         let p = ast
             .to_ast()
             .try_as_annotated_type_name_ref()
@@ -9390,7 +9543,7 @@ impl CodeVisitor for CodeVisitorBase {
                 .had_privacy_annotation
             {
                 format!(
-                    "{t}@{p}{:?}",
+                    "{t}@{p}{}",
                     HOMOMORPHISM_STORE
                         .lock()
                         .unwrap()
@@ -9473,6 +9626,7 @@ impl CodeVisitorBase {
     }
 
     pub fn visit_Identifier(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // print!("==visit_Identifier====================={}",ast.to_ast().try_as_identifier_ref().unwrap().name().clone());
         Ok(ast.to_ast().try_as_identifier_ref().unwrap().name().clone())
     }
 
@@ -10434,6 +10588,7 @@ impl CodeVisitorBase {
             .unwrap()
             .value_type()
             .clone();
+        // println!("===visit_Array=====value_type================{:?}",value_type.get_ast_type());
         let expr = ast
             .to_ast()
             .try_as_type_name_ref()
@@ -10443,15 +10598,17 @@ impl CodeVisitorBase {
             .expr()
             .clone();
         let t = self.visit(&value_type.clone().into());
+        // print!("=={}",t);
         let e = expr
-            .clone()
-            .map_or(String::new(), |_expr| self.visit(expr.as_ref().unwrap()));
+            .as_ref()
+            .map_or(String::new(), |_expr| self.visit(_expr));
         Ok(format!("{t}[{e}]"))
     }
 
     pub fn visit_CipherText(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("===visit_CipherText================={ast:?}");
         let e = self.visit_Array(ast)?;
+        // println!("===visit_CipherText======e==========={e}");
         Ok(format!(
             "{e}/*{}*/",
             ast.to_ast()
@@ -10520,6 +10677,7 @@ impl CodeVisitorBase {
             .map_or(String::new(), |storage_location| {
                 format!(" {storage_location}")
             });
+
         let i = self.visit(
             &ast.ast_base_ref()
                 .unwrap()
@@ -10529,7 +10687,11 @@ impl CodeVisitorBase {
                 .unwrap()
                 .into(),
         );
-        // println!("=====visit_VariableDeclaration===================={k}, {t},{s} ,{i}");
+        //   print!("==idf==type={i}==={:?}",ast.ast_base_ref()
+        //                 .unwrap()
+        //                 .borrow()
+        //                 .idf().as_ref().unwrap().get_ast_type());
+        // println!("=====visit_VariableDeclaration===================={k},=====t== {t},====={s}, ==={i},");
         Ok(format!("{k} {t}{s} {i}").trim().to_string())
     }
 
@@ -10795,7 +10957,7 @@ impl CodeVisitorBase {
                 .iter()
                 .map(|member| self.visit(member))
                 .collect::<Vec<_>>()
-                .join("\n"),
+                .join(";\n"),
         );
         Ok(format!(
             "struct {} {{\n{body}\n}}",
@@ -10855,13 +11017,8 @@ impl CodeVisitorBase {
             .identifier_declaration_base
             .keywords
             .iter()
-            .filter_map(|k| {
-                if k != &final_string {
-                    Some(k.clone())
-                } else {
-                    None
-                }
-            })
+            .filter(|&k| k != &final_string)
+            .cloned()
             .collect::<Vec<_>>()
             .join(" ");
         if !k.is_empty() {

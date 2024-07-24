@@ -55,14 +55,14 @@ impl AstVisitor for DirectCanBePrivateDetector {
                 | ASTType::Parameter
                 | ASTType::FunctionCallExprBase
                 | ASTType::LocationExprBase
-                | ASTType::ReclassifyExpr
                 | ASTType::AssignmentStatementBase
                 | ASTType::VariableDeclarationStatement
                 | ASTType::ReturnStatement
                 | ASTType::IfStatement
                 | ASTType::StatementListBase
                 | ASTType::StatementBase
-        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+        ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(
                 ast,
                 AST::Expression(Expression::TupleOrLocationExpr(
@@ -82,10 +82,12 @@ impl AstVisitor for DirectCanBePrivateDetector {
         match name {
             ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
             ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
             ASTType::VariableDeclarationStatement => self.visitVariableDeclarationStatement(ast),
             ASTType::ReturnStatement => self.visitReturnStatement(ast),
             ASTType::IfStatement => self.visitIfStatement(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::ReclassifyExpr(_))) => {
+                self.visitReclassifyExpr(ast)
+            }
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
@@ -93,7 +95,6 @@ impl AstVisitor for DirectCanBePrivateDetector {
             {
                 self.visitFunctionCallExpr(ast)
             }
-
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::TupleOrLocationExpr(
@@ -317,7 +318,15 @@ impl DirectCanBePrivateDetector {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        self.visit(ast.try_as_reclassify_expr_ref().unwrap().borrow().expr());
+        // println!("=visitReclassifyExpr========={:?}",ast);
+        self.visit(
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .expr(),
+        );
         Ok(())
     }
 
@@ -450,18 +459,20 @@ impl AstVisitor for CircuitComplianceChecker {
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::IndexExpr
-                | ASTType::ReclassifyExpr
                 | ASTType::FunctionCallExprBase
                 | ASTType::PrimitiveCastExpr
                 | ASTType::IfStatement
-        ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
+        ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
+            || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {
             ASTType::SourceUnit => <Self as FunctionVisitor>::visitSourceUnit(self, ast),
             ASTType::Parameter => <Self as FunctionVisitor>::visitParameter(self, ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
-            ASTType::ReclassifyExpr => self.visitReclassifyExpr(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::ReclassifyExpr(_))) => {
+                self.visitReclassifyExpr(ast)
+            }
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
@@ -498,7 +509,7 @@ impl CircuitComplianceChecker {
         {
             if is_instances(
                 &*expr
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -517,9 +528,9 @@ impl CircuitComplianceChecker {
 
             if is_instance(expr, ASTType::PrimitiveCastExpr)
                 && is_instances(
-                    expr.try_as_expression_ref()
+                    expr.to_ast()
+                        .try_as_expression_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_primitive_cast_expr_ref()
                         .unwrap()
                         .annotated_type()
@@ -601,11 +612,13 @@ impl CircuitComplianceChecker {
                 &Expression::me_expr(None).to_ast(),
             ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
         if ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
             .try_as_reclassify_expr_ref()
             .unwrap()
-            .borrow()
             .expr()
-            .try_as_expression_ref()
+            .ast_base_ref()
             .unwrap()
             .borrow()
             .annotated_type()
@@ -621,18 +634,35 @@ impl CircuitComplianceChecker {
             //     eval_in_public = true
             if eval_in_public
                 || !Self::should_evaluate_public_expr_in_circuit(
-                    ast.try_as_reclassify_expr_ref().unwrap().borrow().expr(),
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .expr(),
                 )
             {
                 self.priv_setter.borrow_mut().set_evaluation(
-                    ast.try_as_reclassify_expr_ref().unwrap().borrow().expr(),
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .expr(),
                     false,
                 );
             }
         } else {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        self.visit(ast.try_as_reclassify_expr_ref().unwrap().borrow().expr());
+        self.visit(
+            ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_reclassify_expr_ref()
+                .unwrap()
+                .expr(),
+        );
         Ok(())
     }
 
@@ -925,6 +955,12 @@ impl PrivateSetter {
 
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(self.evaluate_privately.borrow().is_some());
+        if !self.evaluate_privately.borrow().unwrap() {
+            println!(
+                "====visitExpression=========********============={}=====",
+                ast
+            );
+        }
         if ast.is_expression() {
             ast.try_as_expression_ref()
                 .unwrap()

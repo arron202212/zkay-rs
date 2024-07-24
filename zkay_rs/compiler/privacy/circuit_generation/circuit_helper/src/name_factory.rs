@@ -1,7 +1,5 @@
 use rccell::RcCell;
-use zkay_ast::ast::{
-    ASTFlatten, ASTInstanceOf, HybridArgType, HybridArgumentIdf, Identifier, TypeName,
-};
+use zkay_ast::ast::{ASTFlatten, HybridArgType, HybridArgumentIdf, Identifier, TypeName};
 #[derive(Clone)]
 pub struct BaseNameFactory {
     pub base_name: String,
@@ -31,6 +29,7 @@ impl BaseNameFactory {
             _ => "plain",
         };
         let name = format!("{}{}_{postfix}", self.base_name, self.count.borrow());
+        // print!("==get_new_name============{name}");
         if inc {
             *self.count.borrow_mut() += 1;
         }
@@ -67,11 +66,11 @@ impl NameFactory {
         t: &RcCell<TypeName>,
         priv_expr: Option<ASTFlatten>,
     ) -> HybridArgumentIdf {
-        println!(
-            "===get_new_idf========{:?}==={}=",
-            t.borrow().get_ast_type(),
-            t.borrow().size_in_uints()
-        );
+        // println!(
+        //     "===get_new_idf========{:?}==={}=",
+        //     t.borrow().get_ast_type(),
+        //     t.borrow().size_in_uints()
+        // );
         let name = self.base_name_factory.get_new_name(t, true);
         let idf = HybridArgumentIdf::new(name, t.clone(), self.arg_type.clone(), priv_expr);
         *self.size.borrow_mut() += t.borrow().size_in_uints();
