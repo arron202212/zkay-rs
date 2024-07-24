@@ -500,7 +500,12 @@ impl CircuitComplianceChecker {
     }
     // @staticmethod
     pub fn should_evaluate_public_expr_in_circuit(expr: &ASTFlatten) -> bool {
-        // assert!(expr.annotated_type());
+        assert!(expr
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type()
+            .is_some());
         if CFG
             .lock()
             .unwrap()
@@ -508,8 +513,7 @@ impl CircuitComplianceChecker {
             .opt_eval_constexpr_in_circuit()
         {
             if is_instances(
-                &*expr
-                    .ast_base_ref()
+                expr.ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -518,8 +522,7 @@ impl CircuitComplianceChecker {
                     .borrow()
                     .type_name
                     .as_ref()
-                    .unwrap()
-                    .borrow(),
+                    .unwrap(),
                 vec![ASTType::NumberLiteralType, ASTType::BooleanLiteralType],
             ) {
                 //Expressions for which the value is known at compile time -> embed constant expression value into the circuit
@@ -533,6 +536,10 @@ impl CircuitComplianceChecker {
                         .unwrap()
                         .try_as_primitive_cast_expr_ref()
                         .unwrap()
+                        .expr
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
                         .annotated_type()
                         .as_ref()
                         .unwrap()
@@ -632,6 +639,14 @@ impl CircuitComplianceChecker {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
             // except TypeException
             //     eval_in_public = true
+            let flag = Self::should_evaluate_public_expr_in_circuit(
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .expr(),
+            );
             if eval_in_public
                 || !Self::should_evaluate_public_expr_in_circuit(
                     ast.to_ast()
@@ -642,6 +657,12 @@ impl CircuitComplianceChecker {
                         .expr(),
                 )
             {
+                println!("==eval_in_public==={eval_in_public}=====should_evaluate_public_expr_in_circuit====={}=={}={}===",flag,ast,ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_reclassify_expr_ref()
+                        .unwrap()
+                        .expr());
                 self.priv_setter.borrow_mut().set_evaluation(
                     ast.to_ast()
                         .try_as_expression_ref()
@@ -904,52 +925,49 @@ impl PrivateSetter {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        if self.evaluate_privately.borrow().is_some()
-            && is_instance(
-                ast.to_ast()
+        assert!(
+            !(self.evaluate_privately.borrow().is_some()
+                && is_instance(
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .func(),
+                    ASTType::LocationExprBase,
+                )
+                && !ast
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
                     .try_as_function_call_expr_ref()
                     .unwrap()
-                    .func(),
-                ASTType::LocationExprBase,
-            )
-            && !ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .is_cast()
-            && ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .ast_base_ref()
-                .unwrap()
-                .borrow()
-                .target
-                .as_ref()
-                .unwrap()
-                .clone()
-                .upgrade()
-                .unwrap()
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .has_side_effects()
-        {
-            assert!(
-                false,
-                "Expressions with side effects are not allowed inside private expressions {:?}",
-                ast
-            )
-        }
+                    .is_cast()
+                && ast
+                    .to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .func()
+                    .ast_base_ref()
+                    .unwrap()
+                    .borrow()
+                    .target
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_namespace_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .has_side_effects()),
+            "Expressions with side effects are not allowed inside private expressions {:?}",
+            ast
+        );
         self.visitExpression(ast)
     }
 
@@ -957,10 +975,15 @@ impl PrivateSetter {
         assert!(self.evaluate_privately.borrow().is_some());
         if !self.evaluate_privately.borrow().unwrap() {
             println!(
-                "====visitExpression=========********============={}=====",
-                ast
+                "====visitExpression=========********============={}==={:?}==",
+                ast,
+                ast.get_ast_type()
             );
+            // if ast.get_ast_type()==ASTType::PrimitiveCastExpr && ast.to_string()=="1"{
+            //     panic!("========={}======{:?}=====",ast,ast.get_ast_type());
+            // }
         }
+
         if ast.is_expression() {
             ast.try_as_expression_ref()
                 .unwrap()

@@ -2210,7 +2210,7 @@ impl ZkayCircuitTransformer {
     // """Rule (15), boundary crossing if analysis determined that it is """
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         println!(
-            "=====visitReclassifyExpr========get_ast_type==={:?}==={}===={}===={:?}==",
+            "=====visitReclassifyExpr====15====begin==={:?}==={}===={}===={:?}==",
             ast.get_ast_type(),
             ast,
             ast.to_ast()
@@ -2319,6 +2319,16 @@ impl ZkayCircuitTransformer {
                     .unwrap()
                     .expr()
             );
+            // if ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_reclassify_expr_ref()
+            //         .unwrap()
+            //         .expr()
+            //         .get_ast_type()==ASTType::PrimitiveCastExpr{
+            //         //TODO
+            //         eyre::bail!("")
+            // }
             self.generator
                 .as_ref()
                 .unwrap()
@@ -2667,10 +2677,10 @@ impl ZkayCircuitTransformer {
             }
 
             //Builtin functions are supported natively by the circuit
-            println!(
-                "===visitFunctionCallExpr===visit_children=================={}",
-                ast
-            );
+            // println!(
+            //     "===visitFunctionCallExpr===visit_children=================={}",
+            //     ast
+            // );
             return self.visit_children(ast);
         }
 

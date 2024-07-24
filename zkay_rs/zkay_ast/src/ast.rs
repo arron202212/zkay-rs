@@ -4362,17 +4362,17 @@ impl ReclassifyExprBase {
         homomorphism: Option<String>,
         annotated_type: Option<RcCell<AnnotatedTypeName>>,
     ) -> Self {
-        println!(
-            "======ReclassifyExprBase====new==expr.get_ast_type==={:?}====={:?}",
-            expr.to_string(),
-            expr.get_ast_type()
-        );
-        if expr.to_string() == "reveal(Choice.none, me)" {
-            panic!(
-                "==ReclassifyExprBase====new====reveal(Choice.none, me)===={}==",
-                expr.to_string()
-            );
-        }
+        // println!(
+        //     "======ReclassifyExprBase====new==expr.get_ast_type==={:?}====={:?}",
+        //     expr.to_string(),
+        //     expr.get_ast_type()
+        // );
+        // if expr.to_string() == "reveal(Choice.none, me)" {
+        //     panic!(
+        //         "==ReclassifyExprBase====new====reveal(Choice.none, me)===={}==",
+        //         expr.to_string()
+        //     );
+        // }
         Self {
             expression_base: ExpressionBase::new(annotated_type, None),
             expr,

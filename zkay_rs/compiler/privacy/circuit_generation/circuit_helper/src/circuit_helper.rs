@@ -903,7 +903,7 @@ where
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) {
         //(Identifier,CircuitInputStatement)
-        println!("==_in_name_factory.add_idf========{}========", name);
+        println!("==_in_name_factory.add_idf=====1==={}========", name);
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
@@ -1182,7 +1182,15 @@ where
                     false
                 )
             );
-            println!("==_in_name_factory.add_idf========{}=", tname);
+            println!(
+                "==_in_name_factory.add_idf======2=={}====={}===={:?}==",
+                tname,
+                expr,
+                expr.get_ast_type()
+            );
+            // if tname=="zk__in8_plain"{
+            // panic!("=====zk__in8_plain========");
+            // }
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 expr.ast_base_ref()
@@ -2903,7 +2911,7 @@ where
                 .base_name_factory
                 .get_new_name(&key_t, false)
         );
-        println!("=====_in_name_factory.add_idf==========={}====", name);
+        println!("=====_in_name_factory.add_idf=======3===={}====", name);
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(
