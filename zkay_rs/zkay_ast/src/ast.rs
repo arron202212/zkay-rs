@@ -2410,7 +2410,7 @@ impl Expression {
                 .unwrap()
                 .upgrade()
                 .unwrap();
-            // println!("==privacy_annotation_label===target======{:?}", target);
+            // println!("==privacy_annotation_label===target===instantiated_key==={}=====", target);
             if is_instance(&target, ASTType::Mapping) {
                 return target
                     .try_as_type_name_ref()
@@ -6025,6 +6025,7 @@ impl TypeName {
         )
     }
     pub fn is_cipher(&self) -> bool {
+        // println!("=====************=====is_cipher===={:?}======",self.get_ast_type());
         is_instance(self, ASTType::CipherText)
     }
     pub fn is_key(&self) -> bool {
@@ -7993,6 +7994,7 @@ impl AnnotatedTypeName {
         )
     }
     pub fn is_cipher(&self) -> bool {
+        // println!("=======type_name=====*******===get_ast_type========{:?}",self.type_name.as_ref().unwrap().get_ast_type());
         is_instance(self.type_name.as_ref().unwrap(), ASTType::CipherText)
     }
     pub fn with_homomorphism(&self, hom: String) -> RcCell<Self> {
@@ -8076,6 +8078,18 @@ impl AnnotatedTypeName {
             ));
         }
         t
+    }
+    pub fn clone_owned(&self) -> Self {
+        assert!(self.privacy_annotation.is_some());
+        let mut at = Self::new(
+            self.type_name
+                .as_ref()
+                .map(|tn| RcCell::new(tn.borrow().clone())),
+            self.privacy_annotation.as_ref().map(|pa| pa.clone_inner()),
+            self.homomorphism.clone(),
+        );
+        at.had_privacy_annotation = self.had_privacy_annotation;
+        at
     }
 }
 impl ASTChildren for AnnotatedTypeName {
@@ -9313,21 +9327,16 @@ impl AstVisitor for CodeVisitorBase {
         matches!(
             ast.get_ast_type(),
             ASTType::ASTBase
-                | ASTType::CommentBase
-                | ASTType::IdentifierBase
-                | ASTType::FunctionCallExprBase
                 | ASTType::PrimitiveCastExpr
                 | ASTType::BooleanLiteralExpr
                 | ASTType::NumberLiteralExpr
                 | ASTType::StringLiteralExpr
-                | ASTType::ArrayLiteralExprBase
                 | ASTType::TupleExpr
                 | ASTType::IdentifierExpr
                 | ASTType::MemberAccessExpr
                 | ASTType::IndexExpr
                 | ASTType::MeExpr
                 | ASTType::AllExpr
-                | ASTType::ReclassifyExprBase
                 | ASTType::RehomExpr
                 | ASTType::IfStatement
                 | ASTType::WhileStatement
@@ -9338,18 +9347,12 @@ impl AstVisitor for CodeVisitorBase {
                 | ASTType::ReturnStatement
                 | ASTType::ExpressionStatement
                 | ASTType::RequireStatement
-                | ASTType::AssignmentStatementBase
-                | ASTType::CircuitDirectiveStatementBase
-                | ASTType::StatementListBase
                 | ASTType::Block
                 | ASTType::IndentBlock
-                | ASTType::ElementaryTypeNameBase
-                | ASTType::UserDefinedTypeNameBase
                 | ASTType::AddressTypeName
                 | ASTType::AddressPayableTypeName
                 | ASTType::AnnotatedTypeName
                 | ASTType::Mapping
-                | ASTType::ArrayBase
                 | ASTType::CipherText
                 | ASTType::TupleType
                 | ASTType::VariableDeclaration
@@ -9364,6 +9367,7 @@ impl AstVisitor for CodeVisitorBase {
                 | ASTType::SourceUnit
         ) || matches!(ast, AST::Comment(_))
             || matches!(ast, AST::Identifier(_))
+            || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(
                 ast,
@@ -9385,19 +9389,16 @@ impl AstVisitor for CodeVisitorBase {
         // println!("====get_attr======code========={:?}",name);
         match name {
             ASTType::ASTBase => self.visit_AST(ast),
-
             ASTType::PrimitiveCastExpr => self.visit_PrimitiveCastExpr(ast),
             ASTType::BooleanLiteralExpr => self.visit_BooleanLiteralExpr(ast),
             ASTType::NumberLiteralExpr => self.visit_NumberLiteralExpr(ast),
             ASTType::StringLiteralExpr => self.visit_StringLiteralExpr(ast),
-
             ASTType::TupleExpr => self.visit_TupleExpr(ast),
             ASTType::IdentifierExpr => self.visit_IdentifierExpr(ast),
             ASTType::MemberAccessExpr => self.visit_MemberAccessExpr(ast),
             ASTType::IndexExpr => self.visit_IndexExpr(ast),
             ASTType::MeExpr => self.visit_MeExpr(ast),
             ASTType::AllExpr => self.visit_AllExpr(ast),
-            ASTType::ReclassifyExprBase => self.visit_ReclassifyExpr(ast),
             ASTType::RehomExpr => self.visit_RehomExpr(ast),
             ASTType::IfStatement => self.visit_IfStatement(ast),
             ASTType::WhileStatement => self.visit_WhileStatement(ast),
@@ -9408,10 +9409,8 @@ impl AstVisitor for CodeVisitorBase {
             ASTType::ReturnStatement => self.visit_ReturnStatement(ast),
             ASTType::ExpressionStatement => self.visit_ExpressionStatement(ast),
             ASTType::RequireStatement => self.visit_RequireStatement(ast),
-
             ASTType::Block => self.visit_Block(ast),
             ASTType::IndentBlock => self.visit_IndentBlock(ast),
-
             ASTType::AddressTypeName => self.visit_AddressTypeName(ast),
             ASTType::AddressPayableTypeName => self.visit_AddressPayableTypeName(ast),
             ASTType::AnnotatedTypeName => self.visit_AnnotatedTypeName(ast),
@@ -9430,33 +9429,24 @@ impl AstVisitor for CodeVisitorBase {
             ASTType::StateVariableDeclaration => self.visit_StateVariableDeclaration(ast),
             ASTType::ContractDefinition => self.visit_ContractDefinition(ast),
             ASTType::SourceUnit => self.visit_SourceUnit(ast),
-            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_))) => {
-                self.visit_ElementaryTypeName(ast)
-            }
-            _ if matches!(
-                ast.to_ast(),
-                AST::TypeName(TypeName::UserDefinedTypeName(_))
-            ) =>
-            {
-                self.visit_UserDefinedTypeName(ast)
-            }
-            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::Array(_))) => self.visit_Array(ast),
-
-            _ if matches!(
-                ast.to_ast(),
-                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
-            ) =>
-            {
-                self.visit_ArrayLiteralExpr(ast)
-            }
             _ if matches!(ast.to_ast(), AST::Comment(_)) => self.visit_Comment(ast),
             _ if matches!(ast.to_ast(), AST::Identifier(_)) => self.visit_Identifier(ast),
+            _ if matches!(ast.to_ast(), AST::Expression(Expression::ReclassifyExpr(_))) => {
+                self.visit_ReclassifyExpr(ast)
+            }
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
             ) =>
             {
                 self.visit_FunctionCallExpr(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::Expression(Expression::LiteralExpr(LiteralExpr::ArrayLiteralExpr(_)))
+            ) =>
+            {
+                self.visit_ArrayLiteralExpr(ast)
             }
             _ if matches!(
                 ast.to_ast(),
@@ -9477,6 +9467,17 @@ impl AstVisitor for CodeVisitorBase {
             _ if matches!(ast.to_ast(), AST::Statement(Statement::StatementList(_))) => {
                 self.visit_StatementList(ast)
             }
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::ElementaryTypeName(_))) => {
+                self.visit_ElementaryTypeName(ast)
+            }
+            _ if matches!(
+                ast.to_ast(),
+                AST::TypeName(TypeName::UserDefinedTypeName(_))
+            ) =>
+            {
+                self.visit_UserDefinedTypeName(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::TypeName(TypeName::Array(_))) => self.visit_Array(ast),
             _ => Ok(String::new()),
         }
     }
@@ -10531,11 +10532,11 @@ impl CodeVisitorBase {
     }
 
     pub fn visit_Mapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // //println!("=========visit_Mapping================={:?}",ast);
+        // println!("=========visit_Mapping================={:?}",ast);
         let k = self.visit(
-            &ast.try_as_type_name_ref()
+            &ast.to_ast()
+                .try_as_type_name_ref()
                 .unwrap()
-                .borrow()
                 .try_as_mapping_ref()
                 .unwrap()
                 .key_type
@@ -10543,18 +10544,18 @@ impl CodeVisitorBase {
                 .into(),
         );
         let label = if let Some(idf) = &ast
+            .to_ast()
             .try_as_type_name_ref()
             .unwrap()
-            .borrow()
             .try_as_mapping_ref()
             .unwrap()
             .key_label
         {
             format!("!{}", self.visit(&idf.clone().into()))
         } else if let Some(Identifier::HybridArgumentIdf(key_label)) = &ast
+            .to_ast()
             .try_as_type_name_ref()
             .unwrap()
-            .borrow()
             .try_as_mapping_ref()
             .unwrap()
             .key_label
@@ -10566,9 +10567,9 @@ impl CodeVisitorBase {
             String::new()
         };
         let v = self.visit(
-            &ast.try_as_type_name_ref()
+            &ast.to_ast()
+                .try_as_type_name_ref()
                 .unwrap()
-                .borrow()
                 .try_as_mapping_ref()
                 .unwrap()
                 .value_type
@@ -10608,7 +10609,29 @@ impl CodeVisitorBase {
     pub fn visit_CipherText(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("===visit_CipherText================={ast:?}");
         let e = self.visit_Array(ast)?;
-        // println!("===visit_CipherText======e==========={e}");
+        // println!("===visit_CipherText======e==========={}===={:?}===", ast.to_ast()
+        //         .try_as_type_name_ref()
+        //         .unwrap()
+        //         .try_as_array_ref()
+        //         .unwrap()
+        //         .try_as_cipher_text_ref()
+        //         .unwrap()
+        //         .plain_type
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .to_ast()
+        //         .code(),ast.to_ast()
+        //         .try_as_type_name_ref()
+        //         .unwrap()
+        //         .try_as_array_ref()
+        //         .unwrap()
+        //         .try_as_cipher_text_ref()
+        //         .unwrap()
+        //         .plain_type
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow().type_name.as_ref().unwrap().get_ast_type());
         Ok(format!(
             "{e}/*{}*/",
             ast.to_ast()
@@ -10955,9 +10978,9 @@ impl CodeVisitorBase {
         let body = indent(
             members_by_descending_size
                 .iter()
-                .map(|member| self.visit(member))
+                .map(|member| self.visit(member) + ";")
                 .collect::<Vec<_>>()
-                .join(";\n"),
+                .join("\n"),
         );
         Ok(format!(
             "struct {} {{\n{body}\n}}",
@@ -10978,7 +11001,7 @@ impl CodeVisitorBase {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let final_string = String::from("final");
+        let final_string = String::from("final ");
 
         let keywords: Vec<_> = ast
             .try_as_state_variable_declaration_ref()
@@ -11132,14 +11155,14 @@ impl CodeVisitorBase {
     }
 
     fn visit_SourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!(
-            "==========pragma_directive=================={:?}",
-            ast.try_as_source_unit_ref()
-                .unwrap()
-                .borrow()
-                .pragma_directive
-                .clone()
-        );
+        // println!(
+        //     "==========pragma_directive=================={:?}",
+        //     ast.try_as_source_unit_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .pragma_directive
+        //         .clone()
+        // );
         let p = self.handle_pragma(
             ast.try_as_source_unit_ref()
                 .unwrap()

@@ -223,7 +223,7 @@ impl CircCall {
 #[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircVarDecl {
     pub lhs: HybridArgumentIdf,
-    pub expr: RcCell<Expression>,
+    pub expr: ASTFlatten,
 }
 
 impl IntoAST for CircVarDecl {
@@ -239,7 +239,7 @@ impl IntoAST for CircVarDecl {
 //     }
 // }
 impl CircVarDecl {
-    pub fn new(lhs: HybridArgumentIdf, expr: RcCell<Expression>) -> Self {
+    pub fn new(lhs: HybridArgumentIdf, expr: ASTFlatten) -> Self {
         Self { lhs, expr }
     }
 }

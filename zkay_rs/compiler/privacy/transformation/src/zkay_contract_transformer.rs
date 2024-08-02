@@ -64,7 +64,7 @@ pub fn transform_ast(
     ASTFlatten,
     BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
 ) {
-    let zt = ZkayTransformer::new();
+    let zt = ZkayTransformer::new(global_vars.clone());
     // // println!("=============1======");
     let mut new_ast = zt.visit(ast.as_ref().unwrap());
     //// println!("======2=======1======");
@@ -175,6 +175,7 @@ pub struct ZkayTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     circuits: RcCell<BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>>,
     var_decl_trafo: ZkayVarDeclTransformer,
+    global_vars: RcCell<GlobalVars>,
 }
 impl AstTransformerVisitor for ZkayTransformer {
     // fn default() -> Self {
@@ -202,11 +203,12 @@ impl ZkayTransformer {
 
     //     self.var_decl_trafo = ZkayVarDeclTransformer()
     //     """Transformer for state variable declarations and parameters"""
-    pub fn new() -> Self {
+    pub fn new(global_vars: RcCell<GlobalVars>) -> Self {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
             circuits: RcCell::new(BTreeMap::new()),
-            var_decl_trafo: ZkayVarDeclTransformer::new(),
+            var_decl_trafo: ZkayVarDeclTransformer::new(global_vars.clone()),
+            global_vars,
         }
     }
     // """
@@ -336,6 +338,7 @@ impl ZkayTransformer {
         fct: &RcCell<ConstructorOrFunctionDefinition>,
         global_owners: Vec<ASTFlatten>,
         internal_circ: Option<&RcCell<CircuitHelper>>,
+        global_vars: RcCell<GlobalVars>,
     ) -> RcCell<CircuitHelper> {
         //// println!("=====create_circuit_helper==before=={}=", line!());
         CircuitHelper::new(
@@ -343,11 +346,17 @@ impl ZkayTransformer {
             global_owners,
             |ch: &WeakCell<CircuitHelper>| {
                 //// println!("=====create_circuit_helper==before=={}=", line!());
-                Some(Box::new(ZkayExpressionTransformer::new(Some(ch.clone()))))
+                Some(Box::new(ZkayExpressionTransformer::new(
+                    Some(ch.clone()),
+                    global_vars.clone(),
+                )))
             },
             |ch: &WeakCell<CircuitHelper>| {
                 //// println!("=====create_circuit_helper==before=={}=", line!());
-                Some(Box::new(ZkayCircuitTransformer::new(Some(ch.clone()))))
+                Some(Box::new(ZkayCircuitTransformer::new(
+                    Some(ch.clone()),
+                    global_vars.clone(),
+                )))
             },
             internal_circ.map(|c| c.downgrade()),
         )
@@ -494,7 +503,12 @@ impl ZkayTransformer {
                 //println!("=====transform_contract==before=={}=", line!());
                 self.circuits.borrow_mut().insert(
                     fct.clone(),
-                    Self::create_circuit_helper(fct, global_owners.clone(), None),
+                    Self::create_circuit_helper(
+                        fct,
+                        global_owners.clone(),
+                        None,
+                        self.global_vars.clone(),
+                    ),
                 );
                 //println!("=====transform_contract==after=={}=", line!());
             }
@@ -592,10 +606,12 @@ impl ZkayTransformer {
         for fct in all_fcts.iter_mut() {
             if let Some(circuit) = self.circuits.borrow().get(fct) {
                 let body = fct.borrow().body.clone();
-                fct.borrow_mut().body =
-                    ZkayStatementTransformer::new(Some(circuit.clone().downgrade()))
-                        .visit(&body.clone().unwrap().into())
-                        .and_then(|b| b.try_as_block());
+                fct.borrow_mut().body = ZkayStatementTransformer::new(
+                    Some(circuit.clone().downgrade()),
+                    self.global_vars.clone(),
+                )
+                .visit(&body.clone().unwrap().into())
+                .and_then(|b| b.try_as_block());
             }
         }
         // println!("=====transform_contract===={}=", line!());
@@ -972,10 +988,10 @@ impl ZkayTransformer {
                 .map(|s| s.clone_inner())
                 .collect::<Vec<_>>(),
         );
-        println!(
-            "=====create_internal_verification_wrapper==input_idfs len=={}=",
-            circuit.borrow().input_idfs().len()
-        );
+        // println!(
+        //     "=====create_internal_verification_wrapper==input_idfs len=={}=",
+        //     circuit.borrow().input_idfs().len()
+        // );
         // Serialize in parameters to in array (if any)
         let mut serialize_stmts = vec![];
         let mut offset = 0;
@@ -1125,8 +1141,12 @@ impl ZkayTransformer {
         f.borrow_mut().requires_verification_when_external = false;
         let mut new_f = RcCell::new(new_f);
         // Create new circuit for external function
-        let circuit =
-            Self::create_circuit_helper(&new_f, global_owners, self.circuits.borrow().get(f));
+        let circuit = Self::create_circuit_helper(
+            &new_f,
+            global_owners,
+            self.circuits.borrow().get(f),
+            self.global_vars.clone(),
+        );
         if !f.borrow().requires_verification {
             self.circuits.borrow_mut().remove(f);
         }

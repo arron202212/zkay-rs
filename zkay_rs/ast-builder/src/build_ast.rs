@@ -749,11 +749,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let mut homomorphism = String::from("NON_HOMOMORPHIC");
         if let Some(pa) = &ctx.privacy_annotation {
             pa.accept(self);
-            // ////println!("privacy_annotation==={:?},===={:?}", pa, self.temp_result().clone());
             privacy_annotation = self
                 .temp_result()
                 .clone()
                 .and_then(|ast| ast.try_as_expression());
+            if privacy_annotation.is_some()
+                && is_instance(privacy_annotation.as_ref().unwrap(), ASTType::MeExpr)
+            {
+                println!("========================MeExpr======visit_annotatedTypeName=======privacy_annotation======={:?}", self.temp_result().clone());
+            }
+
             if let Some(hom) = &ctx.homomorphism {
                 hom.accept(self);
 

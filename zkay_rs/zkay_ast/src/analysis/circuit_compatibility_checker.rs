@@ -639,14 +639,7 @@ impl CircuitComplianceChecker {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
             // except TypeException
             //     eval_in_public = true
-            let flag = Self::should_evaluate_public_expr_in_circuit(
-                ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr(),
-            );
+
             if eval_in_public
                 || !Self::should_evaluate_public_expr_in_circuit(
                     ast.to_ast()
@@ -657,12 +650,20 @@ impl CircuitComplianceChecker {
                         .expr(),
                 )
             {
-                println!("==eval_in_public==={eval_in_public}=====should_evaluate_public_expr_in_circuit====={}=={}={}===",flag,ast,ast.to_ast()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .try_as_reclassify_expr_ref()
-                        .unwrap()
-                        .expr());
+                // let flag = Self::should_evaluate_public_expr_in_circuit(
+                //                 ast.to_ast()
+                //                     .try_as_expression_ref()
+                //                     .unwrap()
+                //                     .try_as_reclassify_expr_ref()
+                //                     .unwrap()
+                //                     .expr(),
+                //             );
+                // println!("==eval_in_public==={eval_in_public}=====should_evaluate_public_expr_in_circuit====={}=={}={}===",flag,ast,ast.to_ast()
+                //         .try_as_expression_ref()
+                //         .unwrap()
+                //         .try_as_reclassify_expr_ref()
+                //         .unwrap()
+                //         .expr());
                 self.priv_setter.borrow_mut().set_evaluation(
                     ast.to_ast()
                         .try_as_expression_ref()
@@ -973,16 +974,16 @@ impl PrivateSetter {
 
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(self.evaluate_privately.borrow().is_some());
-        if !self.evaluate_privately.borrow().unwrap() {
-            println!(
-                "====visitExpression=========********============={}==={:?}==",
-                ast,
-                ast.get_ast_type()
-            );
-            // if ast.get_ast_type()==ASTType::PrimitiveCastExpr && ast.to_string()=="1"{
-            //     panic!("========={}======{:?}=====",ast,ast.get_ast_type());
-            // }
-        }
+        // if !self.evaluate_privately.borrow().unwrap() {
+        //     println!(
+        //         "====visitExpression=========********============={}==={:?}==",
+        //         ast,
+        //         ast.get_ast_type()
+        //     );
+        //     // if ast.get_ast_type()==ASTType::PrimitiveCastExpr && ast.to_string()=="1"{
+        //     //     panic!("========={}======{:?}=====",ast,ast.get_ast_type());
+        //     // }
+        // }
 
         if ast.is_expression() {
             ast.try_as_expression_ref()

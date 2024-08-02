@@ -50,21 +50,31 @@ pub fn replace_expr(
     old_expr: &ASTFlatten,
     new_expr: &ASTFlatten,
     copy_type: bool,
+    global_vars: RcCell<GlobalVars>,
 ) -> Option<ASTFlatten> {
-    _replace_ast(old_expr, new_expr);
+    _replace_ast(old_expr, new_expr, global_vars);
     if copy_type {
-        // new_expr.annotated_type = old_expr.annotated_type;
+        new_expr.ast_base_ref().unwrap().borrow_mut().annotated_type = old_expr
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type
+            .clone();
     }
     Some(new_expr.clone())
 }
 
-pub fn _replace_ast(old_ast: &ASTFlatten, mut new_ast: &ASTFlatten) {
+pub fn _replace_ast(
+    old_ast: &ASTFlatten,
+    mut new_ast: &ASTFlatten,
+    global_vars: RcCell<GlobalVars>,
+) {
     new_ast.ast_base_ref().unwrap().borrow_mut().parent =
         old_ast.ast_base_ref().unwrap().borrow().parent().clone();
     DeepCopyVisitor::copy_ast_fields(old_ast, new_ast);
     if old_ast.ast_base_ref().unwrap().borrow().parent().is_some() {
         set_parents(new_ast);
-        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        // let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
         link_identifiers(new_ast, global_vars.clone());
     }
 }
@@ -172,11 +182,18 @@ impl DeepCopyVisitor {
     }
 
     // @staticmethod
-    pub fn copy_ast_fields(_ast: &ASTFlatten, _ast_copy: &ASTFlatten) {
-        // ast_copy.line = ast.line;
-        // ast_copy.column = ast.column;
-        // ast_copy.modified_values = ast.modified_values;
-        // ast_copy.read_values = ast.read_values;
+    pub fn copy_ast_fields(ast: &ASTFlatten, ast_copy: &ASTFlatten) {
+        ast_copy.ast_base_ref().unwrap().borrow_mut().line =
+            ast.ast_base_ref().unwrap().borrow().line;
+        ast_copy.ast_base_ref().unwrap().borrow_mut().column =
+            ast.ast_base_ref().unwrap().borrow().column;
+        ast_copy
+            .ast_base_ref()
+            .unwrap()
+            .borrow_mut()
+            .modified_values = ast.ast_base_ref().unwrap().borrow().modified_values.clone();
+        ast_copy.ast_base_ref().unwrap().borrow_mut().read_values =
+            ast.ast_base_ref().unwrap().borrow().read_values.clone();
     }
 
     pub fn visitAnnotatedTypeName(

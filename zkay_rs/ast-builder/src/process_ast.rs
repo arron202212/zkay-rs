@@ -170,7 +170,7 @@ fn process_ast(
         // println!("======type_check=========process==========");
         print_step("Zkay type checking");
         // try:
-        t(ast);
+        t(ast, global_vars.clone());
         // println!("======check_circuit_compliance================*****************===========");
         check_circuit_compliance(ast);
         //  println!("======check_circuit_compliance================*******222222**********===========");

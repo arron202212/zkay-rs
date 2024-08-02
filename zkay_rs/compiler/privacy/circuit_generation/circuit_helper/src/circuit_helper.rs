@@ -903,7 +903,7 @@ where
         name: &str,
     ) -> (HybridArgumentIdf, AssignmentStatement) {
         //(Identifier,CircuitInputStatement)
-        println!("==_in_name_factory.add_idf=====1==={}========", name);
+        // println!("==_in_name_factory.add_idf=====1==={}========", name);
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
             &RcCell::new(TypeName::key_type(crypto_params.clone())),
@@ -1042,11 +1042,11 @@ where
             Some(RcCell::new(Expression::all_expr()).into())
         };
         let is_public = privacy == Some(RcCell::new(Expression::all_expr()).into());
-        println!(
-            "==add_to_circuit_inputs begin====={is_public}=={}===={:?}======",
-            expr,
-            expr.get_ast_type(),
-        );
+        // println!(
+        //     "==add_to_circuit_inputs begin====={is_public}=={}===={:?}======",
+        //     expr,
+        //     expr.get_ast_type(),
+        // );
         let expr_text = expr.code();
         let input_expr = self
             ._expr_trafo
@@ -1182,12 +1182,12 @@ where
                     false
                 )
             );
-            println!(
-                "==_in_name_factory.add_idf======2=={}====={}===={:?}==",
-                tname,
-                expr,
-                expr.get_ast_type()
-            );
+            // println!(
+            //     "==_in_name_factory.add_idf======2=={}====={}===={:?}==",
+            //     tname,
+            //     expr,
+            //     expr.get_ast_type()
+            // );
             // if tname=="zk__in8_plain"{
             // panic!("=====zk__in8_plain========");
             // }
@@ -1252,6 +1252,7 @@ where
                 None,
             );
             let return_idf = _locally_decrypted_idf.clone();
+            println!("===============MeExpr========add_to_circuit_inputs====cipher_t====");
             let cipher_t = RcCell::new(TypeName::cipher_type(
                 input_expr
                     .as_ref()
@@ -1279,7 +1280,7 @@ where
                     .base_name_factory
                     .get_new_name(&cipher_t, false)
             );
-            println!("=_in_name_factory.add_idf==========={}===", tname);
+            // println!("=_in_name_factory.add_idf==========={}===", tname);
             let input_idf = self._in_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -2348,7 +2349,7 @@ where
         // );
         let priv_result_idf = if is_circ_val
             || expr
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -2357,9 +2358,9 @@ where
                 .borrow()
                 .is_private()
             || expr
+                .to_ast()
                 .try_as_expression_ref()
                 .unwrap()
-                .borrow()
                 .evaluate_privately()
         {
             self._evaluate_private_expression(expr, "").unwrap()
@@ -2390,7 +2391,7 @@ where
 
         let (out_var, new_out_param) = if is_instance(new_privacy, ASTType::AllExpr)
             || expr
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
                 .annotated_type()
@@ -2421,7 +2422,9 @@ where
                     false
                 )
             );
-            // println!("=_get_circuit_output_for_private_expression========_out_name_factory============={}==",line!());
+            println!("=_out_name_factory.add_idf====================={}==", tname);
+            // if tname=="zk__out4_cipher"
+
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 expr.try_as_expression_ref()
@@ -2467,16 +2470,17 @@ where
             //is equal to the correctly encrypted circuit evaluation result
             let new_privacy = self._get_canonical_privacy_label(
                 &expr
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .analysis()
                     .unwrap(),
                 new_privacy,
             );
             let privacy_label_expr = get_privacy_expr_from_label(new_privacy.clone());
+            println!("============MeExpr=====cipher_t======_get_circuit_output_for_private_expression=======");
             let cipher_t = RcCell::new(TypeName::cipher_type(
-                expr.try_as_expression_ref()
+                expr.ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -2496,7 +2500,10 @@ where
                 privacy_label_expr.clone(),
                 Some(homomorphism.clone()),
             );
-            // println!("=_get_circuit_output_for_private_expression=============_out_name_factory============={}==",line!());
+            println!(
+                "=_out_name_factory.add_idf==========2================{}==",
+                tname
+            );
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 &cipher_t,
@@ -2509,9 +2516,9 @@ where
                 .get_crypto_params(homomorphism);
             self._ensure_encryption(
                 &expr
+                    .to_ast()
                     .try_as_expression_ref()
                     .unwrap()
-                    .borrow()
                     .expression_base_ref()
                     .statement
                     .clone()
@@ -2531,10 +2538,10 @@ where
         //Add an invisible CircuitComputationStatement to the solidity code, which signals the offchain simulator,
         //that the value the contained out variable must be computed at this point by simulating expression evaluation
         let statement = expr
+            .to_ast()
             .try_as_expression_ref()
             .unwrap()
-            .borrow_mut()
-            .expression_base_mut_ref()
+            .expression_base_ref()
             .statement
             .clone()
             .unwrap()
@@ -2654,7 +2661,7 @@ where
                 &*priv_expr
                     .as_ref()
                     .unwrap()
-                    .try_as_expression_ref()
+                    .ast_base_ref()
                     .unwrap()
                     .borrow()
                     .annotated_type()
@@ -2688,10 +2695,8 @@ where
                 .unwrap(),
             priv_expr.as_ref(),
         );
-        let stmt = CircVarDecl::new(
-            tmp_circ_var_idf.clone(),
-            priv_expr.unwrap().try_as_expression_ref().unwrap().clone(),
-        );
+        // println!("======priv_expr.unwrap().get_ast_type()============{:?}========={:?}",priv_expr,priv_expr.as_ref().unwrap().get_ast_type());
+        let stmt = CircVarDecl::new(tmp_circ_var_idf.clone(), priv_expr.clone().unwrap());
         self._phi
             .borrow_mut()
             .push(RcCell::new(CircuitStatement::CircVarDecl(stmt)));
@@ -2911,7 +2916,7 @@ where
                 .base_name_factory
                 .get_new_name(&key_t, false)
         );
-        println!("=====_in_name_factory.add_idf=======3===={}====", name);
+        // println!("=====_in_name_factory.add_idf=======3===={}====", name);
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
         let key_expr = KeyLiteralExpr::new(
