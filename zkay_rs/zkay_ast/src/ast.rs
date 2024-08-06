@@ -19,7 +19,7 @@ use crate::circuit_constraints::{
 use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
-use ethnum::{i256, int, u256, uint, AsI256, I256, U256};
+use ethnum::{i256, int, u256, uint, AsI256, AsU256, I256, U256};
 use eyre::{eyre, Result};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
@@ -2065,6 +2065,7 @@ impl<T: IdentifierBaseRef> IdentifierBaseProperty for T {
 pub struct IdentifierBase {
     pub ast_base: RcCell<ASTBase>,
     pub name: String,
+    pub is_string: bool,
 }
 impl IntoAST for IdentifierBase {
     fn into_ast(self) -> AST {
@@ -2080,6 +2081,7 @@ impl IdentifierBase {
         Self {
             ast_base: RcCell::new(ASTBase::new(None, None, None)),
             name,
+            is_string: false,
         }
     }
     pub fn ast_base_ref(&self) -> RcCell<ASTBase> {
@@ -2157,20 +2159,16 @@ pub enum Comment {
     Comment(CommentBase),
     BlankLine(BlankLine),
 }
-impl Comment {
-    pub fn code(&self) -> String {
-        String::new()
-    }
-    pub fn text(&self) -> String {
-        String::new()
-    }
-}
+
 #[enum_dispatch]
 pub trait CommentBaseRef: ASTBaseRef {
     fn comment_base_ref(&self) -> &CommentBase;
 }
 pub trait CommentBaseProperty {
     fn text(&self) -> &String;
+    fn code(&self) -> String {
+        self.text().clone()
+    }
 }
 impl<T: CommentBaseRef> CommentBaseProperty for T {
     fn text(&self) -> &String {
@@ -3446,6 +3444,10 @@ impl NumberLiteralExpr {
         }
     }
     pub fn new_string(value_string: String) -> Self {
+        println!(
+            "=value_string====={}==============",
+            U256::from_str_prefixed(&value_string).unwrap().to_string()
+        );
         Self {
             literal_expr_base: LiteralExprBase::new(Some(RcCell::new(AnnotatedTypeName::new(
                 NumberLiteralType::new(NumberLiteralTypeUnion::String(value_string.clone()))
@@ -3456,8 +3458,8 @@ impl NumberLiteralExpr {
                 Homomorphism::non_homomorphic(),
             )))),
             value: 0,
-            value_string: Some(value_string.clone()),
-            was_hex: true,
+            value_string: Some(U256::from_str_prefixed(&value_string).unwrap().to_string()),
+            was_hex: false,
         }
     }
 }
@@ -4719,8 +4721,9 @@ impl HybridArgumentIdf {
     ) -> AssignmentStatement {
         self._set_serialized_loc(source_idf.clone(), base.clone(), start_offset);
 
-        let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None)
-            .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
+        let src = IdentifierExpr::new(IdentifierExprUnion::String(source_idf), None).as_type(
+            &RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
+        );
         let loc_expr = self.get_loc_expr(None);
         if let TypeName::Array(_a) = self.t.borrow().clone() {
             SliceExpr::new(Some(loc_expr), None, 0, self.t.borrow().size_in_uints())
@@ -4790,8 +4793,9 @@ impl HybridArgumentIdf {
     ) -> AssignmentStatement {
         self._set_serialized_loc(target_idf.clone(), base.clone(), start_offset);
 
-        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None)
-            .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
+        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None).as_type(
+            &RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
+        );
         if let TypeName::Array(_t) = self.t.borrow().clone() {
             let loc = self.get_loc_expr(None);
             LocationExpr::IdentifierExpr(
@@ -4881,6 +4885,12 @@ impl HybridArgumentIdf {
             }
         }
     }
+}
+
+#[derive(EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum IdentifierUnion {
+    Identifier(Option<RcCell<Identifier>>),
+    String(String),
 }
 #[enum_dispatch(
     IntoAST,
@@ -5949,6 +5959,7 @@ impl TypeName {
         TypeName::Array(Array::Array(ArrayBase::new(
             AnnotatedTypeName::uint_all(),
             None,
+            None,
         )))
     }
     // """How many uints this type occupies when serialized."""
@@ -6520,21 +6531,32 @@ impl IntoAST for NumberLiteralType {
 impl NumberLiteralType {
     pub fn new(name: NumberLiteralTypeUnion) -> Self {
         // println!("{name:?}");
-        let name = match name {
-            NumberLiteralTypeUnion::String(v) => I256::from_str_prefixed(&v).unwrap(), //TODO U256
-            NumberLiteralTypeUnion::I32(v) => v.as_i256(),
+        let (iname, uname) = match name {
+            NumberLiteralTypeUnion::String(v) => (
+                I256::from_str_prefixed(&v).ok(),
+                U256::from_str_prefixed(&v).ok(),
+            ), //TODO U256
+            NumberLiteralTypeUnion::I32(v) => (Some(v.as_i256()), None),
         };
-        let blen = (I256::BITS - name.leading_zeros()) as i32;
+        let blen = if iname.is_some() {
+            (I256::BITS - iname.unwrap().leading_zeros()) as i32
+        } else {
+            (U256::BITS - uname.unwrap().leading_zeros()) as i32
+        };
         let (mut signed, mut bitwidth) = (false, blen);
-        if name < 0 {
+        if iname.is_some() && iname.unwrap() < 0 {
             signed = true;
-            if name != -(1 << (blen - 1)) {
+            if iname.unwrap() != -(1 << (blen - 1)) {
                 bitwidth += 1;
             }
         };
         bitwidth = 8i32.max((bitwidth + 7) / 8 * 8);
         assert!(bitwidth <= 256);
-        let name = name.to_string();
+        let name = if iname.is_some() {
+            iname.unwrap().to_string()
+        } else {
+            uname.unwrap().to_string()
+        };
         let prefix = name.clone();
         Self {
             number_type_name_base: NumberTypeNameBase::new(name, prefix, signed, Some(bitwidth)),
@@ -7309,6 +7331,7 @@ pub trait ArrayBaseProperty {
     fn value_type(&self) -> &RcCell<AnnotatedTypeName>;
     fn expr(&self) -> &Option<ASTFlatten>;
     fn elem_bitwidth(&self) -> i32;
+    fn crypto_params(&self) -> &Option<CryptoParams>;
 }
 impl<T: ArrayBaseRef> ArrayBaseProperty for T {
     fn value_type(&self) -> &RcCell<AnnotatedTypeName> {
@@ -7326,6 +7349,9 @@ impl<T: ArrayBaseRef> ArrayBaseProperty for T {
             .borrow()
             .elem_bitwidth()
     }
+    fn crypto_params(&self) -> &Option<CryptoParams> {
+        &self.array_base_ref().crypto_params
+    }
 }
 #[impl_traits(TypeNameBase, ASTBase)]
 #[derive(
@@ -7335,6 +7361,7 @@ pub struct ArrayBase {
     pub type_name_base: TypeNameBase,
     pub value_type: RcCell<AnnotatedTypeName>,
     pub expr: Option<ASTFlatten>,
+    pub crypto_params: Option<CryptoParams>,
 }
 impl IntoAST for ArrayBase {
     fn into_ast(self) -> AST {
@@ -7343,7 +7370,11 @@ impl IntoAST for ArrayBase {
 }
 
 impl ArrayBase {
-    pub fn new(value_type: RcCell<AnnotatedTypeName>, expr: Option<ExprUnion>) -> Self {
+    pub fn new(
+        value_type: RcCell<AnnotatedTypeName>,
+        expr: Option<ExprUnion>,
+        crypto_params: Option<CryptoParams>,
+    ) -> Self {
         Self {
             type_name_base: TypeNameBase::new(None),
             value_type,
@@ -7351,6 +7382,7 @@ impl ArrayBase {
                 ExprUnion::I32(exp) => RcCell::new(NumberLiteralExpr::new(exp, false)).into(),
                 ExprUnion::Expression(exp) => exp,
             }),
+            crypto_params,
         }
     }
     pub fn size_in_uints(&self) -> i32 {
@@ -7380,12 +7412,11 @@ impl ArrayBase {
 pub struct CipherText {
     pub array_base: ArrayBase,
     pub plain_type: Option<RcCell<AnnotatedTypeName>>,
-    pub crypto_params: CryptoParams,
 }
 impl PartialEq for CipherText {
     fn eq(&self, other: &Self) -> bool {
         (self.plain_type.is_none() || self.plain_type == other.plain_type)
-            && self.crypto_params == other.crypto_params
+            && self.array_base.crypto_params == other.array_base.crypto_params
     }
 }
 impl IntoAST for CipherText {
@@ -7414,24 +7445,27 @@ impl CipherText {
                 Some(ExprUnion::Expression(
                     RcCell::new(NumberLiteralExpr::new(crypto_params.cipher_len(), false)).into(),
                 )),
+                Some(crypto_params),
             ),
             plain_type,
-            crypto_params,
         }
     }
     pub fn size_in_uints(&self) -> i32 {
-        self.crypto_params.cipher_payload_len()
+        self.array_base
+            .crypto_params
+            .as_ref()
+            .unwrap()
+            .cipher_payload_len()
     }
 }
 #[impl_traits(ArrayBase, TypeNameBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub struct Randomness {
     pub array_base: ArrayBase,
-    pub crypto_params: CryptoParams,
 }
 impl PartialEq for Randomness {
     fn eq(&self, other: &Self) -> bool {
-        self.crypto_params == other.crypto_params
+        self.array_base.crypto_params == other.array_base.crypto_params
     }
 }
 impl IntoAST for Randomness {
@@ -7455,8 +7489,8 @@ impl Randomness {
                         RcCell::new(NumberLiteralExpr::new(randomness_len, false)).into(),
                     )
                 }),
+                Some(crypto_params),
             ),
-            crypto_params,
         }
     }
 }
@@ -7464,11 +7498,10 @@ impl Randomness {
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub struct Key {
     pub array_base: ArrayBase,
-    pub crypto_params: CryptoParams,
 }
 impl PartialEq for Key {
     fn eq(&self, other: &Self) -> bool {
-        self.crypto_params == other.crypto_params
+        self.array_base.crypto_params == other.array_base.crypto_params
     }
 }
 impl IntoAST for Key {
@@ -7490,8 +7523,8 @@ impl Key {
                 Some(ExprUnion::Expression(
                     RcCell::new(NumberLiteralExpr::new(crypto_params.key_len(), false)).into(),
                 )),
+                Some(crypto_params),
             ),
-            crypto_params,
         }
     }
 }
@@ -7528,6 +7561,7 @@ impl Proof {
                     ))
                     .into(),
                 )),
+                None,
             ),
         }
     }
@@ -8072,6 +8106,7 @@ impl AnnotatedTypeName {
                 Some(RcCell::new(TypeName::Array(Array::Array(ArrayBase::new(
                     t,
                     Some(ExprUnion::I32(l)),
+                    None,
                 ))))),
                 None,
                 Homomorphism::non_homomorphic(),
@@ -9616,10 +9651,10 @@ impl CodeVisitorBase {
     }
     pub fn visit_Comment(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visit_Comment====================={ast:?}");
-        let text = ast.to_ast().try_as_comment_ref().unwrap().text();
+        let text = ast.to_ast().try_as_comment_ref().unwrap().text().clone();
         Ok(if text.is_empty() {
             text
-        } else if text.contains(' ') {
+        } else if text.contains('\n') {
             format!("/* {} */", text)
         } else {
             format!("// {}", text)
@@ -9794,8 +9829,19 @@ impl CodeVisitorBase {
                     .unwrap()
                     .try_as_number_literal_expr_ref()
                     .unwrap()
-                    .value
-                    .to_string()
+                    .value_string
+                    .clone()
+                    .unwrap_or(
+                        ast.to_ast()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .try_as_literal_expr_ref()
+                            .unwrap()
+                            .try_as_number_literal_expr_ref()
+                            .unwrap()
+                            .value
+                            .to_string(),
+                    )
             },
         )
     }
@@ -10532,7 +10578,7 @@ impl CodeVisitorBase {
     }
 
     pub fn visit_Mapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("=========visit_Mapping================={:?}",ast);
+        // println!("=========visit_Mapping=====begin===code=========");
         let k = self.visit(
             &ast.to_ast()
                 .try_as_type_name_ref()
@@ -10551,18 +10597,16 @@ impl CodeVisitorBase {
             .unwrap()
             .key_label
         {
-            format!("!{}", self.visit(&idf.clone().into()))
-        } else if let Some(Identifier::HybridArgumentIdf(key_label)) = &ast
-            .to_ast()
-            .try_as_type_name_ref()
-            .unwrap()
-            .try_as_mapping_ref()
-            .unwrap()
-            .key_label
-            .as_ref()
-            .map(|kl| (*kl.borrow()).clone())
-        {
-            format!("/*!{:?}*/", key_label)
+            if idf.borrow().is_identifier()
+                && idf.borrow().try_as_identifier_ref().unwrap().is_string
+            {
+                format!(
+                    "/*!{}*/",
+                    idf.borrow().try_as_identifier_ref().unwrap().name
+                )
+            } else {
+                format!("!{}", self.visit(&idf.clone().into()))
+            }
         } else {
             String::new()
         };
@@ -10668,6 +10712,7 @@ impl CodeVisitorBase {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("=====self.display_final ========={}====",self.display_final );
         let keywords: Vec<_> = ast
             .try_as_variable_declaration_ref()
             .unwrap()
@@ -10751,7 +10796,7 @@ impl CodeVisitorBase {
     }
 
     pub fn visit_Parameter(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let final_string = String::from("final");
+        let final_string = String::from("final ");
         let f = if !self.display_final {
             None
         } else if ast
@@ -10760,7 +10805,7 @@ impl CodeVisitorBase {
             .borrow()
             .identifier_declaration_base
             .keywords
-            .contains(&final_string)
+            .contains(&"final".to_owned())
         {
             Some(final_string)
         } else {
@@ -10796,6 +10841,7 @@ impl CodeVisitorBase {
         .iter()
         .filter_map(|d| d.clone())
         .collect();
+        // println!("=====description================{:?}=========",description);
         Ok(description.join(" "))
     }
 
@@ -11011,15 +11057,9 @@ impl CodeVisitorBase {
             .keywords
             .iter()
             .cloned()
-            .filter_map(|k| {
-                if self.display_final || k != final_string {
-                    Some(k)
-                } else {
-                    None
-                }
-            })
+            .filter_map(|k| (self.display_final || k != "final").then_some(k))
             .collect();
-        let f = if keywords.contains(&final_string) {
+        let f = if keywords.contains(&"final".to_owned()) {
             final_string.clone()
         } else {
             String::new()
@@ -11040,13 +11080,15 @@ impl CodeVisitorBase {
             .identifier_declaration_base
             .keywords
             .iter()
-            .filter(|&k| k != &final_string)
+            .filter(|&k| k != "final")
             .cloned()
             .collect::<Vec<_>>()
             .join(" ");
         if !k.is_empty() {
             k = format!("{k} ");
         }
+        // println!("==visit_StateVariableDeclaration================={f} =========={k}=======");
+
         let i = self.visit(
             &ast.try_as_state_variable_declaration_ref()
                 .unwrap()

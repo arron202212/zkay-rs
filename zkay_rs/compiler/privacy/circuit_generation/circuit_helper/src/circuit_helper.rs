@@ -19,7 +19,7 @@ use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
     get_privacy_expr_from_label, is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty,
-    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName,
+    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName, ArrayBaseProperty,
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, AssignmentStatementBaseRef, Block, BooleanLiteralType,
     BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
@@ -499,10 +499,9 @@ where
                 .borrow()
                 .try_as_array_ref()
                 .unwrap()
-                .try_as_cipher_text_ref()
-                .unwrap()
-                .crypto_params
-                .clone(),
+                .crypto_params()
+                .clone()
+                .unwrap(),
             cipher_idf,
             true,
             false,
@@ -525,10 +524,9 @@ where
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_randomness_ref()
-                    .unwrap()
-                    .crypto_params
-                    .clone(),
+                    .crypto_params()
+                    .clone()
+                    .unwrap(),
             )),
             None,
         );
@@ -953,36 +951,29 @@ where
                     .borrow()
                     .parameters
                     .iter()
-                    .filter_map(|p| {
-                        if p.borrow()
+                    .filter_map(|p| p
+                        .borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .is_cipher()
+                        .then(|| p
+                            .borrow()
                             .annotated_type()
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .is_cipher()
-                        {
-                            Some(
-                                p.borrow()
-                                    .annotated_type()
-                                    .as_ref()
-                                    .unwrap()
-                                    .borrow()
-                                    .type_name
-                                    .as_ref()
-                                    .unwrap()
-                                    .borrow()
-                                    .try_as_array_ref()
-                                    .unwrap()
-                                    .try_as_key_ref()
-                                    .unwrap()
-                                    .crypto_params
-                                    .clone(),
-                            )
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
+                            .type_name
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .try_as_array_ref()
+                            .unwrap()
+                            .crypto_params()
+                            .clone()
+                            .unwrap()))
+                    .collect::<Vec<CryptoParams>>()
                     .contains(crypto_params)
         );
         let key_name = Self::get_own_secret_key_name(crypto_params);
@@ -1252,7 +1243,7 @@ where
                 None,
             );
             let return_idf = _locally_decrypted_idf.clone();
-            println!("===============MeExpr========add_to_circuit_inputs====cipher_t====");
+            // println!("===============MeExpr========add_to_circuit_inputs====cipher_t====");
             let cipher_t = RcCell::new(TypeName::cipher_type(
                 input_expr
                     .as_ref()
@@ -2422,7 +2413,7 @@ where
                     false
                 )
             );
-            println!("=_out_name_factory.add_idf====================={}==", tname);
+            // println!("=_out_name_factory.add_idf====================={}==", tname);
             // if tname=="zk__out4_cipher"
 
             let new_out_param = self._out_name_factory.add_idf(
@@ -2478,7 +2469,7 @@ where
                 new_privacy,
             );
             let privacy_label_expr = get_privacy_expr_from_label(new_privacy.clone());
-            println!("============MeExpr=====cipher_t======_get_circuit_output_for_private_expression=======");
+            // println!("============MeExpr=====cipher_t======_get_circuit_output_for_private_expression=======");
             let cipher_t = RcCell::new(TypeName::cipher_type(
                 expr.ast_base_ref()
                     .unwrap()
@@ -2500,10 +2491,10 @@ where
                 privacy_label_expr.clone(),
                 Some(homomorphism.clone()),
             );
-            println!(
-                "=_out_name_factory.add_idf==========2================{}==",
-                tname
-            );
+            // println!(
+            //     "=_out_name_factory.add_idf==========2================{}==",
+            //     tname
+            // );
             let new_out_param = self._out_name_factory.add_idf(
                 tname,
                 &cipher_t,

@@ -341,6 +341,12 @@ impl ExpressionToStatementVisitor {
                 .borrow_mut()
                 .expression_base_mut_ref()
                 .statement = parent.map(|p| p.clone().downgrade());
+        } else if ast.is_array_literal_expr() {
+            ast.try_as_array_literal_expr_ref()
+                .unwrap()
+                .borrow_mut()
+                .expression_base_mut_ref()
+                .statement = parent.map(|p| p.clone().downgrade());
         } else {
             panic!("===================else======={ast:?}");
         }

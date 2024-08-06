@@ -558,17 +558,17 @@ impl SymbolTableFiller {
             .unwrap()
             .key_label
             .is_some()
-            && is_instance(
-                ast.to_ast()
-                    .try_as_type_name_ref()
-                    .unwrap()
-                    .try_as_mapping_ref()
-                    .unwrap()
-                    .key_label
-                    .as_ref()
-                    .unwrap(),
-                ASTType::IdentifierBase,
-            )
+            && ast
+                .to_ast()
+                .try_as_type_name_ref()
+                .unwrap()
+                .try_as_mapping_ref()
+                .unwrap()
+                .key_label
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_identifier()
         {
             ast.ast_base_ref().unwrap().borrow_mut().names = BTreeMap::from([(
                 ast.to_ast()
@@ -968,12 +968,12 @@ impl SymbolTableLinker {
         //     .borrow()
         //     .name());
         let fid = self.find_identifier_declaration(&ast).ok();
-        // println!("====visitIdentifierExpr====fid===ast.get_ast_type()===={:?}====={:?}",fid, ast.get_ast_type());
+        // println!("====visitIdentifierExpr====fid===ast.get_ast_type()========={:?}", fid.as_ref().unwrap().get_ast_type());
         let ta = fid.map(|d| d.downgrade());
         // println!("====visitIdentifierExpr=======ta========={:?}", ta);
 
         ast.ast_base_ref().unwrap().borrow_mut().target = ta;
-        // println!("====visitIdentifierExpr======end=========={:?}", ast.to_string());
+        // println!("====visitIdentifierExpr======end====={:?}====={:?}", ast.get_ast_type(),ast.to_string());
 
         assert!(ast
             .ast_base_ref()

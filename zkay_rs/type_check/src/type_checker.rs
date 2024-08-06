@@ -143,29 +143,29 @@ impl TypeCheckVisitor {
         rhs: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
     ) -> Option<ASTFlatten> {
-        if rhs
-            .ast_base_ref()
-            .unwrap()
-            .borrow()
-            .annotated_type()
-            .is_some()
-        {
-            println!(
-                "===^^^^^^^^^^^^^^^^^^======get_rhs================{}======{:?}=======",
-                rhs,
-                rhs.ast_base_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type()
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .privacy_annotation
-                    .as_ref()
-                    .unwrap()
-                    .get_ast_type()
-            );
-        }
+        // if rhs
+        //     .ast_base_ref()
+        //     .unwrap()
+        //     .borrow()
+        //     .annotated_type()
+        //     .is_some()
+        // {
+        //     println!(
+        //         "===^^^^^^^^^^^^^^^^^^======get_rhs================{}======{:?}=======",
+        //         rhs,
+        //         rhs.ast_base_ref()
+        //             .unwrap()
+        //             .borrow()
+        //             .annotated_type()
+        //             .as_ref()
+        //             .unwrap()
+        //             .borrow()
+        //             .privacy_annotation
+        //             .as_ref()
+        //             .unwrap()
+        //             .get_ast_type()
+        //     );
+        // }
         if is_instance(rhs, ASTType::TupleExpr) {
             assert!(
                 is_instance(
@@ -333,26 +333,26 @@ impl TypeCheckVisitor {
             .type_name
             != expected_type.borrow().type_name
         {
-            println!(
-                "===implicitly_converted_to=====#######=========rhs.get_ast_type==={:?}==in={:?}==",
-                rhs.ast_base_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type()
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .privacy_annotation
-                    .as_ref()
-                    .unwrap()
-                    .get_ast_type(),
-                expected_type
-                    .borrow()
-                    .privacy_annotation
-                    .as_ref()
-                    .unwrap()
-                    .get_ast_type()
-            );
+            // println!(
+            //     "===implicitly_converted_to=====#######=========rhs.get_ast_type==={:?}==in={:?}==",
+            //     rhs.ast_base_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .annotated_type()
+            //         .as_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .privacy_annotation
+            //         .as_ref()
+            //         .unwrap()
+            //         .get_ast_type(),
+            //     expected_type
+            //         .borrow()
+            //         .privacy_annotation
+            //         .as_ref()
+            //         .unwrap()
+            //         .get_ast_type()
+            // );
             Self::implicitly_converted_to(rhs, expected_type.borrow().type_name.as_ref().unwrap())
         } else {
             rhs.clone()
@@ -860,7 +860,7 @@ impl TypeCheckVisitor {
                 } else {
                     panic!("==========else========{func:?}");
                 }
-                println!("==========MeExpr===cond_t.is_private====handle_unhom_builtin_function_call==========");
+                // println!("==========MeExpr===cond_t.is_private====handle_unhom_builtin_function_call==========");
                 res_t
                     .unwrap()
                     .borrow()
@@ -1377,28 +1377,28 @@ impl TypeCheckVisitor {
                 RcCell::new(Expression::me_expr(None)).into(),
             )));
         }
-        fn dfs(p: &CombinedPrivacyUnion, s: &str) {
-            match p {
-                CombinedPrivacyUnion::AST(expr) => {
-                    if expr.is_some() && is_instance(expr.as_ref().unwrap(), ASTType::MeExpr) {
-                        println!(
-                            "=========================MeExpr============={}==========",
-                            s
-                        );
-                    }
-                }
-                CombinedPrivacyUnion::Vec(list) => {
-                    list.iter().for_each(|expr| {
-                        dfs(expr, s);
-                    });
-                }
-            }
-        }
+        // fn dfs(p: &CombinedPrivacyUnion, s: &str) {
+        //     match p {
+        //         CombinedPrivacyUnion::AST(expr) => {
+        //             if expr.is_some() && is_instance(expr.as_ref().unwrap(), ASTType::MeExpr) {
+        //                 println!(
+        //                     "=========================MeExpr============={}==========",
+        //                     s
+        //                 );
+        //             }
+        //         }
+        //         CombinedPrivacyUnion::Vec(list) => {
+        //             list.iter().for_each(|expr| {
+        //                 dfs(expr, s);
+        //             });
+        //         }
+        //     }
+        // }
         if arg_t != Some(RcCell::new(TypeName::Literal(String::from("lit")))) {
             //Add implicit casts for arguments
             let arg_pt = arg_t.unwrap().borrow().annotate(p.clone().unwrap());
 
-            dfs(p.as_ref().unwrap(), "lit");
+            // dfs(p.as_ref().unwrap(), "lit");
             if func
                 .to_ast()
                 .try_as_expression_ref()
@@ -1449,7 +1449,7 @@ impl TypeCheckVisitor {
         // if is_instance(p.clone().unwrap().as_expression().as_ref().unwrap(),ASTType::MeExpr){
         // println!("===============MeExpr=============out_t.unwrap().borrow().annotate===========");
         // }
-        dfs(p.as_ref().unwrap(), "out");
+        // dfs(p.as_ref().unwrap(), "out");
         // println!("=====handle_unhom_builtin_function_call========end======annotated_type========={:?}====={:?}==========",ast.ast_base_ref().unwrap().borrow_mut().annotated_type,at);
         ast.ast_base_ref().unwrap().borrow_mut().annotated_type = at;
     }
@@ -2003,17 +2003,17 @@ impl TypeCheckVisitor {
         //     .borrow_mut()
         //     .annotated_type , at);
         //set type
-        if is_instance(
-            at.as_ref()
-                .unwrap()
-                .borrow()
-                .privacy_annotation
-                .as_ref()
-                .unwrap(),
-            ASTType::MeExpr,
-        ) {
-            println!("==========================MeExpr=====make_private==========");
-        }
+        // if is_instance(
+        //     at.as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .privacy_annotation
+        //         .as_ref()
+        //         .unwrap(),
+        //     ASTType::MeExpr,
+        // ) {
+        //     println!("==========================MeExpr=====make_private==========");
+        // }
         r.borrow_mut()
             .ast_base_mut_ref()
             .borrow_mut()
@@ -2094,11 +2094,11 @@ impl TypeCheckVisitor {
 
     //@staticmethod
     pub fn implicitly_converted_to(expr: &ASTFlatten, t: &RcCell<TypeName>) -> ASTFlatten {
-        println!(
-            "=======implicitly_converted_to=======begin======{}======{:?}===========",
-            expr,
-            expr.get_ast_type()
-        );
+        // println!(
+        //     "=======implicitly_converted_to=======begin======{}======{:?}===========",
+        //     expr,
+        //     expr.get_ast_type()
+        // );
         if is_instance(expr, ASTType::ReclassifyExprBase)
             && !expr
                 .try_as_expression_ref()
@@ -2112,17 +2112,17 @@ impl TypeCheckVisitor {
                 .borrow()
                 .is_all_expr()
         {
-            println!("=======implicitly_converted_to======%%%%%%%%%%%%%%%%%=====ReclassifyExpr====is_all_expr========{}===={}==={:?}===",expr,expr.try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr(),expr.try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr().ast_base_ref().unwrap().borrow().annotated_type().as_ref().unwrap().borrow().privacy_annotation);
+            // println!("=======implicitly_converted_to======%%%%%%%%%%%%%%%%%=====ReclassifyExpr====is_all_expr========{}===={}==={:?}===",expr,expr.try_as_expression_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .try_as_reclassify_expr_ref()
+            //         .unwrap()
+            //         .expr(),expr.try_as_expression_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .try_as_reclassify_expr_ref()
+            //         .unwrap()
+            //         .expr().ast_base_ref().unwrap().borrow().annotated_type().as_ref().unwrap().borrow().privacy_annotation);
             //Cast the argument of the ReclassifyExpr instead
             let exp = Self::implicitly_converted_to(
                 expr.try_as_expression_ref()
@@ -2194,14 +2194,14 @@ impl TypeCheckVisitor {
             .borrow()
             .parent()
             .clone();
-        println!("========*********************==================implicitly_converted_to==============in==============={}========{}====",expr, expr.ast_base_ref()
-                .unwrap()
-                .borrow()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .privacy_annotation.as_ref().unwrap());
+        // println!("========*********************==================implicitly_converted_to==============in==============={}========{}====",expr, expr.ast_base_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .annotated_type()
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .privacy_annotation.as_ref().unwrap());
 
         cast.borrow_mut().expression_base_mut_ref().statement = expr
             .try_as_expression_ref()
@@ -2246,23 +2246,23 @@ impl TypeCheckVisitor {
         //     .ast_base_mut_ref()
         //     .borrow_mut()
         //     .annotated_type , at);
-        if is_instance(
-            expr.ast_base_ref()
-                .unwrap()
-                .borrow()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .privacy_annotation
-                .as_ref()
-                .unwrap(),
-            ASTType::MeExpr,
-        ) {
-            println!(
-                "=============MeExpr=====@@@@@@@@@@@@@@@@@@@@@===implicitly_converted_to======"
-            );
-        }
+        // if is_instance(
+        //     expr.ast_base_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .annotated_type()
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .privacy_annotation
+        //         .as_ref()
+        //         .unwrap(),
+        //     ASTType::MeExpr,
+        // ) {
+        //     println!(
+        //         "=============MeExpr=====@@@@@@@@@@@@@@@@@@@@@===implicitly_converted_to======"
+        //     );
+        // }
         at.as_ref()
             .unwrap()
             .borrow()
@@ -2598,7 +2598,7 @@ impl TypeCheckVisitor {
                     Some(RcCell::new(Expression::me_expr(None)).into()),
                     Homomorphism::non_homomorphic(),
                 ));
-                println!("====================MeExpr======handle_cast=============");
+                // println!("====================MeExpr======handle_cast=============");
                 assert!(
                     String::from("false")
                         != expr
@@ -2895,17 +2895,17 @@ impl TypeCheckVisitor {
             ast
         );
 
-        if is_instance(
-            ast.to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_reclassify_expr_ref()
-                .unwrap()
-                .privacy(),
-            ASTType::MeExpr,
-        ) {
-            println!("==============MeExpr=================visitReclassifyExpr========");
-        }
+        // if is_instance(
+        //     ast.to_ast()
+        //         .try_as_expression_ref()
+        //         .unwrap()
+        //         .try_as_reclassify_expr_ref()
+        //         .unwrap()
+        //         .privacy(),
+        //     ASTType::MeExpr,
+        // ) {
+        //     println!("==============MeExpr=================visitReclassifyExpr========");
+        // }
         //NB prevent any redundant reveal (not just for public)
         let at = Some(RcCell::new(AnnotatedTypeName::new(
             ast.to_ast()
@@ -3317,23 +3317,23 @@ impl TypeCheckVisitor {
             .annotated_type()
             .clone(); //.map(|at|RcCell::new(at.borrow().clone_owned()))
 
-        if at.is_some()
-            && is_instance(
-                at.as_ref()
-                    .unwrap()
-                    .borrow()
-                    .privacy_annotation
-                    .as_ref()
-                    .unwrap(),
-                ASTType::MeExpr,
-            )
-        {
-            println!(
-            "=====================MeExpr====visitIdentifierExpr================={}====={}========annotated_type========",
-            file!(),
-            line!()
-        );
-        }
+        // if at.is_some()
+        //     && is_instance(
+        //         at.as_ref()
+        //             .unwrap()
+        //             .borrow()
+        //             .privacy_annotation
+        //             .as_ref()
+        //             .unwrap(),
+        //         ASTType::MeExpr,
+        //     )
+        // {
+        //     println!(
+        //     "=====================MeExpr====visitIdentifierExpr================={}====={}========annotated_type========",
+        //     file!(),
+        //     line!()
+        // );
+        // }
         ast.ast_base_ref().unwrap().borrow_mut().annotated_type = at;
 
         assert!(
@@ -3430,7 +3430,7 @@ impl TypeCheckVisitor {
                     map_t,
                     ast
                 );
-                println!("===instantiated_key================update====================instantiated_key===={}====",tn.borrow().to_ast().to_string());
+                // println!("===instantiated_key================update====================instantiated_key===={}====",tn.borrow().to_ast().to_string());
                 tn.borrow_mut()
                     .try_as_mapping_mut()
                     .unwrap()

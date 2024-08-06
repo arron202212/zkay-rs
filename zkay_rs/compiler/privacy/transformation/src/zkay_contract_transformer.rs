@@ -22,7 +22,7 @@ use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
     is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType,
-    AnnotatedTypeName, Array, ArrayBase, ArrayLiteralExpr, ArrayLiteralExprBase,
+    AnnotatedTypeName, Array, ArrayBase, ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase,
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
     CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
     ContractTypeName, ExprUnion, Expression, ExpressionASType, ExpressionStatement,
@@ -521,7 +521,10 @@ impl ZkayTransformer {
                 new_fcts.push(fct.clone());
             }
         }
-        // println!("=====transform_contract===={}=", line!());
+        println!(
+            "=====transform_contract=====BN128_SCALAR_FIELD.to_hex_string()============{}=",
+            BN128_SCALAR_FIELD.to_hex_string()
+        );
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
             Some(AnnotatedTypeName::uint_all()),
@@ -720,7 +723,7 @@ impl ZkayTransformer {
         //println!("=====create_internal_verification_wrapper===={}=", line!());
         // Add additional params
         ast.borrow_mut().add_param(
-            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into(),
+            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
             None,
         );
@@ -730,7 +733,7 @@ impl ZkayTransformer {
             None,
         );
         ast.borrow_mut().add_param(
-            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into(),
+            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_out_name()),
             None,
         );
@@ -757,7 +760,7 @@ impl ZkayTransformer {
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
             None,
         )
-        .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
+        .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into());
         //println!("=====create_internal_verification_wrapper===={}=", line!());
         stmts.push(
             RcCell::new(RequireStatement::new(
@@ -890,9 +893,9 @@ impl ZkayTransformer {
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_cipher_text_ref()
+                    .crypto_params()
+                    .as_ref()
                     .unwrap()
-                    .crypto_params
                     .is_symmetric_cipher()
             {
                 // Assign sender field to user-encrypted values if necessary
@@ -902,9 +905,9 @@ impl ZkayTransformer {
                         &s.t.borrow()
                             .try_as_array_ref()
                             .unwrap()
-                            .try_as_cipher_text_ref()
+                            .crypto_params()
+                            .as_ref()
                             .unwrap()
-                            .crypto_params
                     ),
                     "Symmetric cipher but did not request me key"
                 );
@@ -913,9 +916,9 @@ impl ZkayTransformer {
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_cipher_text_ref()
-                    .unwrap()
-                    .crypto_params];
+                    .crypto_params()
+                    .as_ref()
+                    .unwrap()];
                 let sender_key = LocationExpr::IdentifierExpr(
                     in_var
                         .clone()
@@ -929,9 +932,9 @@ impl ZkayTransformer {
                     s.t.borrow()
                         .try_as_array_ref()
                         .unwrap()
-                        .try_as_cipher_text_ref()
+                        .crypto_params()
+                        .as_ref()
                         .unwrap()
-                        .crypto_params
                         .cipher_payload_len();
                 deserialize_stmts.push(
                     s.get_loc_expr(None)
@@ -1171,7 +1174,7 @@ impl ZkayTransformer {
             "memory"
         };
         new_f.borrow_mut().add_param(
-            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into(),
+            RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
             IdentifierExprUnion::Identifier(RcCell::new(Identifier::Identifier(
                 IdentifierBase::new(CFG.lock().unwrap().zk_out_name()),
             ))),
@@ -1231,9 +1234,9 @@ impl ZkayTransformer {
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_cipher_text_ref()
+                    .crypto_params()
+                    .as_ref()
                     .unwrap()
-                    .crypto_params
                     .clone()
             })
             .collect();
@@ -1293,7 +1296,7 @@ impl ZkayTransformer {
             IdentifierExprUnion::String(CFG.lock().unwrap().zk_in_name()),
             None,
         )
-        .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None)).into());
+        .as_type(&RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into());
 
         // Request static public keys
         let mut offset = 0;
@@ -1403,9 +1406,9 @@ impl ZkayTransformer {
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_cipher_text_ref()
+                    .crypto_params()
+                    .as_ref()
                     .unwrap()
-                    .crypto_params
                     .cipher_payload_len();
                 let assign_stmt = LocationExpr::IdentifierExpr(
                     in_arr_var
@@ -1466,9 +1469,9 @@ impl ZkayTransformer {
                     .borrow()
                     .try_as_array_ref()
                     .unwrap()
-                    .try_as_cipher_text_ref()
+                    .crypto_params()
+                    .as_ref()
                     .unwrap()
-                    .crypto_params
                     .is_symmetric_cipher()
                 {
                     let sender_key = LocationExpr::IdentifierExpr(
@@ -1485,9 +1488,9 @@ impl ZkayTransformer {
                             .borrow()
                             .try_as_array_ref()
                             .unwrap()
-                            .try_as_cipher_text_ref()
-                            .unwrap()
-                            .crypto_params],
+                            .crypto_params()
+                            .as_ref()
+                            .unwrap()],
                     ));
                     let idf = IdentifierExpr::new(
                         IdentifierExprUnion::Identifier(p.borrow().idf().clone().unwrap()),

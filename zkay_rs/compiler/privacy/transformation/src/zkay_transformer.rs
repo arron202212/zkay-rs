@@ -27,10 +27,10 @@ use zkay_ast::ast::{
     FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
     FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
     IdentifierBaseMutRef, IdentifierBaseProperty, IdentifierDeclaration,
-    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IndexExpr,
-    IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr, Mapping, MeExpr,
-    MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType, NumberTypeName,
-    Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IdentifierUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
+    Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
+    NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
     ReclassifyExprBaseProperty, ReclassifyExprBaseRef, ReturnStatement, SimpleStatement,
     StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty, StatementList,
     StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
@@ -107,9 +107,10 @@ impl ZkayVarDeclTransformer {
             .is_private()
         {
             println!(
-                "===============MeExpr======visitAnnotatedTypeName====={}====",
-                file!()
+                "=====ZkayVarDeclTransformer================visitAnnotatedTypeName====={}====",
+                ast
             );
+
             Some(
                 RcCell::new(TypeName::cipher_type(
                     ast.try_as_annotated_type_name_ref().unwrap().clone(),
@@ -122,6 +123,7 @@ impl ZkayVarDeclTransformer {
                 .into(),
             )
         } else {
+            println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else============");
             self.visit(
                 &ast.try_as_annotated_type_name_ref()
                     .unwrap()
@@ -133,6 +135,21 @@ impl ZkayVarDeclTransformer {
                     .into(),
             )
         };
+        if t.is_some() {
+            // println!("=======none==={:?}==",ast.try_as_annotated_type_name_ref()
+            //             .unwrap()
+            //             .borrow()
+            //             .type_name
+            //             .as_ref()
+            //             .unwrap().get_ast_type());
+            *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
+                t.clone().and_then(|t| t.try_as_type_name()),
+                None,
+                Homomorphism::non_homomorphic(),
+            );
+        }
+
+        // println!("=======tT==========={},{}====",t.is_some(),t.clone().and_then(|t| t.try_as_type_name()).is_some());
         Ok(RcCell::new(AnnotatedTypeName::new(
             t.and_then(|t| t.try_as_type_name()),
             None,
@@ -240,7 +257,9 @@ impl ZkayVarDeclTransformer {
                 .as_mut()
             {
                 let kl = key_label.borrow().name().clone();
-                *key_label = RcCell::new(Identifier::Identifier(IdentifierBase::new(kl)));
+                let mut idfbase = IdentifierBase::new(kl);
+                idfbase.is_string = true;
+                *key_label = RcCell::new(Identifier::Identifier(idfbase));
             }
         } else if ast.is_type_name() {
             if let Some(key_label) = ast
@@ -253,7 +272,9 @@ impl ZkayVarDeclTransformer {
                 .as_mut()
             {
                 let kl = key_label.borrow().name().clone();
-                *key_label = RcCell::new(Identifier::Identifier(IdentifierBase::new(kl)));
+                let mut idfbase = IdentifierBase::new(kl);
+                idfbase.is_string = true;
+                *key_label = RcCell::new(Identifier::Identifier(idfbase));
             }
         } else {
             panic!("====else====={ast:?}===");
@@ -1444,10 +1465,10 @@ impl ZkayExpressionTransformer {
     // The reclassified expression is evaluated in the circuit and its result is made available in solidity.
     // """
     pub fn visitReclassifyExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!(
-            "===ZkayExpressionTransformer====visitReclassifyExpr======={}=====",
-            ast
-        );
+        // println!(
+        //     "===ZkayExpressionTransformer====visitReclassifyExpr======={}=====",
+        //     ast
+        // );
         let mut expr: ASTFlatten = ast
             .to_ast()
             .try_as_expression_ref()
@@ -2277,7 +2298,7 @@ impl ZkayCircuitTransformer {
             .borrow()
             .is_cipher()
         {
-            println!("=====1===is_cipher===");
+            // println!("=====1===is_cipher===");
             //We need a homomorphic ciphertext -> make sure the correct encryption of the value is available
             let orig_type = ast
                 .ast_base_ref()
