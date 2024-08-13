@@ -74,7 +74,7 @@ impl ParentSetterVisitor {
             .borrow_mut()
             .ast_base
             .borrow_mut()
-            .namespace = Some(vec![]);
+            .namespace = vec![];
         Ok(())
     }
 
@@ -96,8 +96,7 @@ impl ParentSetterVisitor {
                     .unwrap()
                     .borrow()
                     .namespace
-                    .clone()
-                    .unwrap();
+                    .clone();
                 p.push(
                     ast.try_as_namespace_definition_ref()
                         .unwrap()
@@ -120,7 +119,7 @@ impl ParentSetterVisitor {
             .unwrap()
             .ast_base_ref()
             .borrow_mut()
-            .namespace = namespace;
+            .namespace = namespace.unwrap();
         Ok(())
     }
 
@@ -143,10 +142,7 @@ impl ParentSetterVisitor {
                     .ast_base_ref()
                     .unwrap()
                     .borrow()
-                    .namespace()
-                    .as_ref()
-                    .unwrap()
-                    .to_vec();
+                    .namespace();
                 p.push(
                     ast.try_as_constructor_or_function_definition_ref()
                         .unwrap()
@@ -173,7 +169,7 @@ impl ParentSetterVisitor {
             .namespace_definition_base
             .ast_base
             .borrow_mut()
-            .namespace = namespace;
+            .namespace = namespace.unwrap();
         // println!("=======ddddd======2==1====");
         Ok(())
     }

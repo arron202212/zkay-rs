@@ -684,33 +684,31 @@ where
             Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
                 String::from("<stmt_fct>"),
             )))),
-            Some(vec![]),
-            Some(zkay_config::lc_vec_s!["private"]),
-            Some(
-                ret_params
-                    .iter()
-                    .map(|ret| {
-                        RcCell::new(Parameter::new(
-                            vec![],
-                            ret.annotated_type().clone(),
-                            ret.ast_base_ref()
-                                .borrow_mut()
-                                .target
-                                .clone()
-                                .unwrap()
-                                .upgrade()
-                                .unwrap()
-                                .try_as_identifier_declaration_ref()
-                                .unwrap()
-                                .borrow()
-                                .idf()
-                                .clone(),
-                            None,
-                        ))
-                    })
-                    .collect(),
-            ),
-            Some(Block::new(
+            vec![],
+            zkay_config::lc_vec_s!["private"],
+            ret_params
+                .iter()
+                .map(|ret| {
+                    RcCell::new(Parameter::new(
+                        vec![],
+                        ret.annotated_type().clone(),
+                        ret.ast_base_ref()
+                            .borrow_mut()
+                            .target
+                            .clone()
+                            .unwrap()
+                            .upgrade()
+                            .unwrap()
+                            .try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .borrow()
+                            .idf()
+                            .clone(),
+                        None,
+                    ))
+                })
+                .collect(),
+            Some(RcCell::new(Block::new(
                 vec![
                     ast.clone(),
                     RcCell::new(ReturnStatement::new(Some(
@@ -725,7 +723,7 @@ where
                     .into(),
                 ],
                 false,
-            )),
+            ))),
         );
         fdef.original_body = fdef.body.clone();
         // fdef.parent = None; //TODO Statement to ContractDefinition   ast.clone();

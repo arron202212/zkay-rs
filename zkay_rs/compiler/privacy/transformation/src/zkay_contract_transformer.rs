@@ -232,9 +232,9 @@ impl ZkayTransformer {
 
         if let Some(corresponding_circuit) = corresponding_circuit {
             let c_type = ContractTypeName::new(
-                vec![Identifier::Identifier(IdentifierBase::new(
+                vec![RcCell::new(Identifier::Identifier(IdentifierBase::new(
                     cname.to_string(),
-                ))],
+                )))],
                 None,
             );
             corresponding_circuit
@@ -253,9 +253,9 @@ impl ZkayTransformer {
             CFG.lock().unwrap().get_contract_var_name(cname.to_string()),
         ));
         let c_type = ContractTypeName::new(
-            vec![Identifier::Identifier(IdentifierBase::new(
+            vec![RcCell::new(Identifier::Identifier(IdentifierBase::new(
                 cname.to_string(),
-            ))],
+            )))],
             None,
         );
 
@@ -294,7 +294,7 @@ impl ZkayTransformer {
     ) -> Vec<ASTFlatten> {
         //// println!("-====================");
         let mut contract_var_decls = vec![];
-        for crypto_params in c.borrow().used_crypto_backends.clone().unwrap() {
+        for crypto_params in c.borrow().used_crypto_backends.clone() {
             let contract_name = CFG
                 .lock()
                 .unwrap()
@@ -521,10 +521,10 @@ impl ZkayTransformer {
                 new_fcts.push(fct.clone());
             }
         }
-        println!(
-            "=====transform_contract=====BN128_SCALAR_FIELD.to_hex_string()============{}=",
-            BN128_SCALAR_FIELD.to_hex_string()
-        );
+        // println!(
+        //     "=====transform_contract=====BN128_SCALAR_FIELD.to_hex_string()============{}=",
+        //     BN128_SCALAR_FIELD.to_hex_string()
+        // );
         // Add constant state variables for external contracts and field prime
         let field_prime_decl = StateVariableDeclaration::new(
             Some(AnnotatedTypeName::uint_all()),
@@ -825,9 +825,9 @@ impl ZkayTransformer {
             //     circuit.borrow().zk_data_struct_name()
             // );
             let zk_struct_type = StructTypeName::new(
-                vec![Identifier::Identifier(IdentifierBase::new(
+                vec![RcCell::new(Identifier::Identifier(IdentifierBase::new(
                     circuit.borrow().zk_data_struct_name(),
-                ))],
+                )))],
                 None,
             );
             let mut idf = IdentifierBase::new(CFG.lock().unwrap().zk_data_var_name());
@@ -1120,10 +1120,10 @@ impl ZkayTransformer {
         }
         let mut new_f = ConstructorOrFunctionDefinition::new(
             f.borrow().idf().clone(),
-            Some(original_params.clone()),
-            Some(new_modifiers),
-            Some(f.borrow().return_parameters.clone()),
-            Some(Block::new(vec![], false)),
+            original_params.clone(),
+            new_modifiers,
+            f.borrow().return_parameters.clone(),
+            Some(RcCell::new(Block::new(vec![], false))),
         );
 
         // Make original function internal
@@ -1549,11 +1549,11 @@ impl ZkayTransformer {
 
         // Declare in array
         let new_in_array_expr = NewExpr::new(
-            AnnotatedTypeName::new(
+            Some(RcCell::new(AnnotatedTypeName::new(
                 Some(RcCell::new(TypeName::dyn_uint_array())),
                 None,
                 zkay_ast::homomorphism::Homomorphism::non_homomorphic(),
-            ),
+            ))),
             vec![RcCell::new(NumberLiteralExpr::new(
                 ext_circuit.borrow().in_size_trans(),
                 false,

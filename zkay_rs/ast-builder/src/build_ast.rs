@@ -365,6 +365,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             ast.try_as_namespace_definition()
                                 .unwrap()
                                 .try_as_constructor_or_function_definition()
+                                .map(RcCell::new)
                         })
                 })
             })
@@ -382,6 +383,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             ast.try_as_namespace_definition()
                                 .unwrap()
                                 .try_as_constructor_or_function_definition()
+                                .map(RcCell::new)
                         })
                 })
             })
@@ -399,6 +401,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                             ast.try_as_namespace_definition()
                                 .unwrap()
                                 .try_as_enum_definition()
+                                .map(RcCell::new)
                         })
                 })
             })
@@ -415,8 +418,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 constructor_definitions,
                 function_definitions,
                 enum_definitions,
-                None,
-                None,
+                vec![],
+                vec![],
             )
             .into_ast(),
         )
@@ -443,83 +446,95 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_identifier())
         });
-        let return_parameters = ctx.return_parameters.as_ref().and_then(|_rp| {
-            _rp.return_parameters.as_ref().map(|rp| {
-                rp.params
+        let return_parameters = ctx
+            .return_parameters
+            .as_ref()
+            .and_then(|_rp| {
+                _rp.return_parameters.as_ref().map(|rp| {
+                    rp.params
+                        .iter()
+                        .filter_map(|param| {
+                            param.accept(self);
+                            self.temp_result()
+                                .clone()
+                                .filter(|ast| is_instance(ast, ASTType::Parameter))
+                                .and_then(|ast| {
+                                    ast.try_as_identifier_declaration()
+                                        .unwrap()
+                                        .try_as_parameter()
+                                })
+                        })
+                        .map(RcCell::new)
+                        .collect()
+                })
+            })
+            .unwrap_or(vec![]);
+        let parameters = ctx
+            .parameters
+            .as_ref()
+            .map(|p| {
+                p.params
                     .iter()
-                    .filter_map(|param| {
-                        param.accept(self);
-                        self.temp_result()
-                            .clone()
-                            .filter(|ast| is_instance(ast, ASTType::Parameter))
-                            .and_then(|ast| {
-                                ast.try_as_identifier_declaration()
-                                    .unwrap()
-                                    .try_as_parameter()
-                            })
+                    .map(|param| {
+                        // param.accept(self);
+                        // //println!("=====parameter==== self.temp_result()====={:?}", self.temp_result());
+                        let annotated_type = param.annotated_type.as_ref().and_then(|at| {
+                            at.accept(self);
+                            self.temp_result()
+                                .clone()
+                                .and_then(|ast| ast.try_as_annotated_type_name())
+                        });
+                        // println!("======visit_functionDefinition====================={annotated_type:?}======");
+                        let idf = param.idf.as_ref().and_then(|idf| {
+                            idf.accept(self);
+                            self.temp_result()
+                                .clone()
+                                .and_then(|ast| ast.try_as_identifier())
+                        });
+                        let keywords: Vec<_> = param
+                            .keywords
+                            .iter()
+                            .map(|kw| kw.get_text().to_string())
+                            .collect();
+                        // //println!("===functdefini===Parameter==========={:?},{:?},{:?}",keywords,annotated_type,idf);
+                        // println!(
+                        //     "==functdefini==keywords.len()==={:?}=={:?}==={}=====",
+                        //     annotated_type,
+                        //     idf,
+                        //     keywords.len()
+                        // );
+                        Parameter::new(
+                            keywords,
+                            annotated_type.map(RcCell::new),
+                            idf.map(RcCell::new),
+                            None,
+                        )
+                        // if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
+                        //     self.temp_result().clone()
+                        // {
+                        //     Some(a)
+                        // } else {
+                        // None
+                        // }
                     })
                     .map(RcCell::new)
                     .collect()
             })
-        });
-        let parameters = ctx.parameters.as_ref().map(|p| {
-            p.params
-                .iter()
-                .map(|param| {
-                    // param.accept(self);
-                    // //println!("=====parameter==== self.temp_result()====={:?}", self.temp_result());
-                    let annotated_type = param.annotated_type.as_ref().and_then(|at| {
-                        at.accept(self);
-                        self.temp_result()
-                            .clone()
-                            .and_then(|ast| ast.try_as_annotated_type_name())
-                    });
-                    // println!("======visit_functionDefinition====================={annotated_type:?}======");
-                    let idf = param.idf.as_ref().and_then(|idf| {
-                        idf.accept(self);
-                        self.temp_result()
-                            .clone()
-                            .and_then(|ast| ast.try_as_identifier())
-                    });
-                    let keywords: Vec<_> = param
-                        .keywords
-                        .iter()
-                        .map(|kw| kw.get_text().to_string())
-                        .collect();
-                    // //println!("===functdefini===Parameter==========={:?},{:?},{:?}",keywords,annotated_type,idf);
-                    // println!(
-                    //     "==functdefini==keywords.len()==={:?}=={:?}==={}=====",
-                    //     annotated_type,
-                    //     idf,
-                    //     keywords.len()
-                    // );
-                    Parameter::new(
-                        keywords,
-                        annotated_type.map(RcCell::new),
-                        idf.map(RcCell::new),
-                        None,
-                    )
-                    // if let Some(AST::IdentifierDeclaration(IdentifierDeclaration::Parameter(a))) =
-                    //     self.temp_result().clone()
-                    // {
-                    //     Some(a)
-                    // } else {
-                    // None
-                    // }
-                })
-                .map(RcCell::new)
-                .collect()
-        });
+            .unwrap_or(vec![]);
         // println!("=====parameters=====len===={:?}",parameters.as_ref().unwrap().len());
-        let modifiers = ctx.modifiers.as_ref().map(|p| {
-            p.modifiers
-                .iter()
-                .filter_map(|modifier| {
-                    modifier.accept(self);
-                    self.temp_result().clone().and_then(|a| a.try_as_modifier())
-                })
-                .collect()
-        });
+        let modifiers = ctx
+            .modifiers
+            .as_ref()
+            .map(|p| {
+                p.modifiers
+                    .iter()
+                    .filter_map(|modifier| {
+                        modifier.accept(self);
+                        self.temp_result().clone().and_then(|a| a.try_as_modifier())
+                    })
+                    .collect()
+            })
+            .unwrap_or(vec![]);
         let body = ctx.body.as_ref().and_then(|p| {
             p.accept(self);
             self.temp_result()
@@ -539,7 +554,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 parameters,
                 modifiers,
                 return_parameters,
-                body,
+                body.map(RcCell::new),
             )
             .into_ast(),
         )
@@ -552,43 +567,51 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // println!("====visit_constructorDefinition=====begin=============");
         // self.handle_fdef(ctx)
         let idf = None;
-        let return_parameters = None;
-        let parameters = ctx.parameters.as_ref().map(|p| {
-            p.params
-                .iter()
-                .filter_map(|param| {
-                    param.accept(self);
-                    // println!(
-                    //     "====visit_constructorDefinition=====filter======={:?}=======",
-                    //     self.temp_result().clone()
-                    // );
-                    self.temp_result()
-                        .clone()
-                        .filter(|ast| is_instance(ast, ASTType::Parameter))
-                        .map(|ast| {
-                            // println!(
-                            //     "====visit_constructorDefinition=====param======={:?}=======",
-                            //     ast
-                            // );
-                            ast.try_as_identifier_declaration()
-                                .unwrap()
-                                .try_as_parameter()
-                                .unwrap()
-                        })
-                })
-                .map(RcCell::new)
-                .collect()
-        });
+        let return_parameters = vec![];
+        let parameters = ctx
+            .parameters
+            .as_ref()
+            .map(|p| {
+                p.params
+                    .iter()
+                    .filter_map(|param| {
+                        param.accept(self);
+                        // println!(
+                        //     "====visit_constructorDefinition=====filter======={:?}=======",
+                        //     self.temp_result().clone()
+                        // );
+                        self.temp_result()
+                            .clone()
+                            .filter(|ast| is_instance(ast, ASTType::Parameter))
+                            .map(|ast| {
+                                // println!(
+                                //     "====visit_constructorDefinition=====param======={:?}=======",
+                                //     ast
+                                // );
+                                ast.try_as_identifier_declaration()
+                                    .unwrap()
+                                    .try_as_parameter()
+                                    .unwrap()
+                            })
+                    })
+                    .map(RcCell::new)
+                    .collect()
+            })
+            .unwrap_or(vec![]);
         //  //println!("==visit_constructorDefinition===parameters========={:?}",parameters);
-        let modifiers = ctx.modifiers.as_ref().map(|p| {
-            p.modifiers
-                .iter()
-                .filter_map(|modifier| {
-                    modifier.accept(self);
-                    self.temp_result().clone().and_then(|a| a.try_as_modifier())
-                })
-                .collect()
-        });
+        let modifiers = ctx
+            .modifiers
+            .as_ref()
+            .map(|p| {
+                p.modifiers
+                    .iter()
+                    .filter_map(|modifier| {
+                        modifier.accept(self);
+                        self.temp_result().clone().and_then(|a| a.try_as_modifier())
+                    })
+                    .collect()
+            })
+            .unwrap_or(vec![]);
         let body = ctx.body.as_ref().and_then(|p| {
             p.accept(self);
             self.temp_result()
@@ -600,6 +623,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                         .try_as_statement_list()
                         .unwrap()
                         .try_as_block()
+                        .map(RcCell::new)
                 })
         });
         Some(
@@ -629,12 +653,12 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         let values: Vec<_> = ctx
             .values
             .iter()
-            .map(|v| {
+            .filter_map(|v| {
                 v.accept(self);
                 self.temp_result()
                     .clone()
                     .filter(|ast| is_instance(ast, ASTType::EnumValue))
-                    .map_or(EnumValue::new(None), |ast| ast.try_as_enum_value().unwrap())
+                    .and_then(|ast| ast.try_as_enum_value().map(RcCell::new))
             })
             .collect();
         Some(EnumDefinition::new(idf.map(RcCell::new), values).into_ast())
@@ -649,7 +673,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             idf.accept(self);
             self.temp_result()
                 .clone()
-                .and_then(|ast| ast.try_as_identifier())
+                .and_then(|ast| ast.try_as_identifier().map(RcCell::new))
         });
         Some(EnumValue::new(idf).into_ast())
     }
@@ -912,7 +936,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             })
             .map(RcCell::new);
 
-        Some(IndexExpr::new(arr, index.unwrap().into()).into_ast())
+        Some(IndexExpr::new(arr.map(RcCell::new), index.unwrap().into()).into_ast())
     }
 
     fn visit_ParenthesisExpr(&mut self, ctx: &ParenthesisExprContext<'input>) -> Self::Return {
@@ -1275,8 +1299,8 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         Some(
             IfStatement::new(
                 RcCell::new(cond.unwrap()).into(),
-                then_branch.unwrap(),
-                else_branch,
+                RcCell::new(then_branch.unwrap()),
+                else_branch.map(RcCell::new),
             )
             .into_ast(),
         )
@@ -1313,7 +1337,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 })
         });
 
-        Some(WhileStatement::new(RcCell::new(cond.unwrap()).into(), body.unwrap()).into_ast())
+        Some(
+            WhileStatement::new(
+                RcCell::new(cond.unwrap()).into(),
+                RcCell::new(body.unwrap()),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_doWhileStatement(&mut self, ctx: &DoWhileStatementContext<'input>) -> Self::Return {
@@ -1347,7 +1377,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .and_then(|ast| ast.try_as_expression())
         });
 
-        Some(DoWhileStatement::new(body.unwrap(), RcCell::new(cond.unwrap()).into()).into_ast())
+        Some(
+            DoWhileStatement::new(
+                RcCell::new(body.unwrap()),
+                RcCell::new(cond.unwrap()).into(),
+            )
+            .into_ast(),
+        )
     }
 
     fn visit_forStatement(&mut self, ctx: &ForStatementContext<'input>) -> Self::Return {
@@ -1411,10 +1447,10 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         });
 
         Some(AST::Statement(Statement::ForStatement(ForStatement::new(
-            init,
+            init.map(RcCell::new),
             RcCell::new(cond.unwrap()).into(),
-            update,
-            body.unwrap(),
+            update.map(RcCell::new),
+            RcCell::new(body.unwrap()),
         ))))
     }
 
@@ -1712,14 +1748,16 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             .filter_map(|contract| {
                 contract.accept(self);
                 self.temp_result().clone().map(|c| {
-                    c.try_as_namespace_definition()
-                        .unwrap()
-                        .try_as_contract_definition()
-                        .unwrap()
+                    RcCell::new(
+                        c.try_as_namespace_definition()
+                            .unwrap()
+                            .try_as_contract_definition()
+                            .unwrap(),
+                    )
                 })
             })
             .collect();
-        Some(SourceUnit::new(pragma_directive, contracts, None).into_ast())
+        Some(SourceUnit::new(pragma_directive, contracts, vec![]).into_ast())
     }
 
     fn visit_version(&mut self, ctx: &VersionContext<'input>) -> Self::Return {
@@ -1945,11 +1983,13 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 //     "===visit_userDefinedTypeName====name======{:?}=============",
                 //     self.temp_result().clone()
                 // );
-                self.temp_result()
-                    .clone()
-                    .unwrap()
-                    .try_as_identifier()
-                    .unwrap()
+                RcCell::new(
+                    self.temp_result()
+                        .clone()
+                        .unwrap()
+                        .try_as_identifier()
+                        .unwrap(),
+                )
             })
             .collect();
         // println!("{:?}",identifier.as_ref().unwrap().name().as_str() );
@@ -1970,20 +2010,20 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
             // ////println!("======{:?}===ctx.key_type========{:?}", self.temp_result(),ctx.key_type);
             self.temp_result()
                 .clone()
-                .and_then(|ast| ast.try_as_type_name())
+                .and_then(|ast| ast.try_as_type_name().map(RcCell::new))
         });
         assert!(key_type.is_some(), "key_type is none");
         let key_label = ctx.key_label.as_ref().and_then(|key_label| {
             key_label.accept(self);
             self.temp_result()
                 .clone()
-                .and_then(|ast| ast.try_as_identifier())
+                .and_then(|ast| ast.try_as_identifier().map(RcCell::new))
         });
         let value_type = ctx.value_type.as_ref().and_then(|value_type| {
             value_type.accept(self);
             self.temp_result()
                 .clone()
-                .and_then(|ast| ast.try_as_annotated_type_name())
+                .and_then(|ast| ast.try_as_annotated_type_name().map(RcCell::new))
         });
         assert!(value_type.is_some(), "value_type is none");
         Some(Mapping::new(key_type.unwrap(), key_label, value_type.unwrap()).into_ast())

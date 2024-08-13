@@ -6,8 +6,8 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, Expression, ExpressionBaseProperty,
-    IntoAST, Statement, UserDefinedTypeName, AST,
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, Expression,
+    ExpressionBaseProperty, IntoAST, Statement, TypeName, UserDefinedTypeName, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::pointers::parent_setter::set_parents;
@@ -140,11 +140,29 @@ impl AstVisitor for DeepCopyVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn has_attr(&self, _ast: &AST) -> bool {
-        false
+    fn has_attr(&self, ast: &AST) -> bool {
+        matches!(
+            ast.get_ast_type(),
+            ASTType::AnnotatedTypeName | ASTType::BuiltinFunction
+        ) || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
+            || matches!(ast, AST::Expression(_))
+            || matches!(ast, AST::Statement(_))
     }
-    fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
-        Ok(None)
+    fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+        match name {
+            ASTType::AnnotatedTypeName => self.visitAnnotatedTypeName(ast),
+            ASTType::BuiltinFunction => self.visitBuiltinFunction(ast),
+            _ if matches!(
+                ast.to_ast(),
+                AST::TypeName(TypeName::UserDefinedTypeName(_))
+            ) =>
+            {
+                self.visitUserDefinedTypeName(ast)
+            }
+            _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
+            _ => eyre::bail!(String::new()),
+        }
     }
     fn visit_children(&self, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         // let c = ast;
@@ -197,7 +215,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitAnnotatedTypeName(
-        self,
+        &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // let mut ast_copy = self.visit_children(ast);
@@ -206,7 +224,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitUserDefinedTypeName(
-        self,
+        &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // let mut ast_copy = self.visit_children(ast);
@@ -215,7 +233,7 @@ impl DeepCopyVisitor {
     }
 
     pub fn visitBuiltinFunction(
-        self,
+        &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // let mut ast_copy = self.visit_children(ast);
@@ -224,7 +242,7 @@ impl DeepCopyVisitor {
         self.visit_children(ast)
     }
 
-    pub fn visitExpression(self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+    pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut ast_copy = self.visit_children(ast);
         if self.with_types
             && ast
@@ -240,7 +258,7 @@ impl DeepCopyVisitor {
         ast_copy
     }
 
-    pub fn visitStatement(self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+    pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut ast_copy = self.visit_children(ast);
         if self.with_analysis {
             // ast_copy.before_analysis = ast.before_analysis();
@@ -248,7 +266,7 @@ impl DeepCopyVisitor {
         ast_copy
     }
 
-    pub fn copy_field(self, field: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+    pub fn copy_field(&self, field: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // if field.is_none() {
         //     None
         // } else if isinstance(field, str)

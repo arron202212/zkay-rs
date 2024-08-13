@@ -106,10 +106,10 @@ impl ZkayVarDeclTransformer {
             .borrow()
             .is_private()
         {
-            println!(
-                "=====ZkayVarDeclTransformer================visitAnnotatedTypeName====={}====",
-                ast
-            );
+            // println!(
+            //     "=====ZkayVarDeclTransformer================visitAnnotatedTypeName====={}====",
+            //     ast
+            // );
 
             Some(
                 RcCell::new(TypeName::cipher_type(
@@ -123,7 +123,7 @@ impl ZkayVarDeclTransformer {
                 .into(),
             )
         } else {
-            println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else============");
+            // println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else============");
             self.visit(
                 &ast.try_as_annotated_type_name_ref()
                     .unwrap()
@@ -136,16 +136,21 @@ impl ZkayVarDeclTransformer {
             )
         };
         if t.is_some() {
-            // println!("=======none==={:?}==",ast.try_as_annotated_type_name_ref()
-            //             .unwrap()
-            //             .borrow()
-            //             .type_name
-            //             .as_ref()
-            //             .unwrap().get_ast_type());
-            *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
-                t.clone().and_then(|t| t.try_as_type_name()),
-                None,
-                Homomorphism::non_homomorphic(),
+            // *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
+            //     t.clone().and_then(|t| t.try_as_type_name()),
+            //     None,
+            //     Homomorphism::non_homomorphic(),
+            // );
+        } else {
+            println!(
+                "=======none==={:?}==",
+                ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .get_ast_type()
             );
         }
 
@@ -2001,7 +2006,7 @@ impl ZkayExpressionTransformer {
                 .map(|ps| ps.clone_inner())
                 .chain([RcCell::new(IfStatement::new(
                     cond_expr.clone(),
-                    Block::new(new_pre_stmts, false),
+                    RcCell::new(Block::new(new_pre_stmts, false)),
                     None,
                 ))
                 .clone()

@@ -104,7 +104,7 @@ impl UsedHomomorphismsVisitor {
             ast.try_as_contract_definition_ref()
                 .unwrap()
                 .borrow_mut()
-                .used_crypto_backends = Some(Self::used_crypto_backends(all_homs.clone()));
+                .used_crypto_backends = Self::used_crypto_backends(all_homs.clone());
         }
         all_homs
     }

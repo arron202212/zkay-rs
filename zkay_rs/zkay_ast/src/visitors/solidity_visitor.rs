@@ -156,13 +156,11 @@ impl AstVisitor for SolidityVisitor {
             ASTType::CipherText => self.visit_CipherText(ast),
             ASTType::TupleType => self.visit_TupleType(ast),
             ASTType::VariableDeclaration => self.visit_VariableDeclaration(ast),
-            ASTType::VariableDeclarationStatement => self
-                .code_visitor_base
-                .visit_VariableDeclarationStatement(ast),
+            ASTType::VariableDeclarationStatement => self.visit_VariableDeclarationStatement(ast),
             ASTType::Parameter => self.visit_Parameter(ast),
-            ASTType::ConstructorOrFunctionDefinition => self
-                .code_visitor_base
-                .visit_ConstructorOrFunctionDefinition(ast),
+            ASTType::ConstructorOrFunctionDefinition => {
+                self.visit_ConstructorOrFunctionDefinition(ast)
+            }
             ASTType::EnumValue => self.visit_EnumValue(ast),
             ASTType::EnumDefinition => self.visit_EnumDefinition(ast),
             ASTType::StructDefinition => self.visit_StructDefinition(ast),
@@ -225,31 +223,94 @@ impl CodeVisitor for SolidityVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        //only display data type, not privacy annotation
-        println!(
-            "====visit_AnnotatedTypeName========================={:?}",
-            ast.to_ast()
+        // println!("===visit_AnnotatedTypeName============{:?}=",ast.get_ast_type());
+        let t = ast
+            .to_ast()
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .type_name
+            .as_ref()
+            .map_or(String::new(), |type_name| {
+                // print!(
+                //     "=(==visit_AnnotatedTypeName==#======{:?}=====",
+                //     type_name.get_ast_type()
+                // );
+                self.visit(&type_name.clone().into())
+            });
+        // print!(
+        //                     "=(==visit_AnnotatedTypeName==#======{:?}=====",
+        //                     ast
+        //             .to_ast()
+        //             .try_as_annotated_type_name_ref()
+        //             .unwrap()
+        //             .type_name.as_ref().unwrap().get_ast_type()
+        //                 );
+        //  println!("=*==visit_AnnotatedTypeName============{t}======)");
+        let p = ast
+            .to_ast()
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .privacy_annotation
+            .as_ref()
+            .map_or(String::new(), |privacy_annotation| {
+                self.visit(privacy_annotation)
+            });
+
+        Ok(
+            if ast
+                .to_ast()
                 .try_as_annotated_type_name_ref()
                 .unwrap()
-                .type_name
-                .as_ref()
-                .unwrap()
-                .get_ast_type()
-        );
-        let res = self.visit(
-            &ast.to_ast()
-                .try_as_annotated_type_name_ref()
-                .unwrap()
-                .type_name
-                .clone()
-                .unwrap()
-                .into(),
-        );
-        println!("===visit_AnnotatedTypeName===res===={res}=========");
-        Ok(res)
+                .had_privacy_annotation
+            {
+                format!(
+                    "{t}@{p}{}",
+                    HOMOMORPHISM_STORE
+                        .lock()
+                        .unwrap()
+                        .get(
+                            &ast.to_ast()
+                                .try_as_annotated_type_name_ref()
+                                .unwrap()
+                                .homomorphism
+                        )
+                        .unwrap()
+                )
+            } else {
+                t
+            },
+        )
     }
+    // fn visit_AnnotatedTypeName(
+    //     &self,
+    //     ast: &ASTFlatten,
+    // ) -> eyre::Result<<Self as AstVisitor>::Return> {
+    //     //only display data type, not privacy annotation
+    //     // println!(
+    //     //     "====visit_AnnotatedTypeName========================={:?}",
+    //     //     ast.to_ast()
+    //     //         .try_as_annotated_type_name_ref()
+    //     //         .unwrap()
+    //     //         .type_name
+    //     //         .as_ref()
+    //     //         .unwrap()
+    //     //         .get_ast_type()
+    //     // );
+    //     let res = self.visit(
+    //         &ast.to_ast()
+    //             .try_as_annotated_type_name_ref()
+    //             .unwrap()
+    //             .type_name
+    //             .clone()
+    //             .unwrap()
+    //             .into(),
+    //     );
+    //     // println!("===visit_AnnotatedTypeName===res===={res}=========");
+    //     Ok(res)
+    // }
 
     fn visit_MeExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("===visit_MeExpr===SOL========");
         Ok(String::from("msg.sender"))
     }
 
@@ -1103,7 +1164,7 @@ impl SolidityVisitor {
                 }
                 s[..s.len() - 1].to_string()
             } else {
-                //   println!("=visit_AssignmentStatement===sss===op={:?}====fstr========{:?}",op,fstr);
+                //   println!("=visit_AssignmentStatement===type===op={:?}============",rhs.as_ref().unwrap().get_ast_type);
                 format_string(
                     self.visit(lhs.as_ref().unwrap()),
                     self.visit(rhs.as_ref().unwrap()),
@@ -1274,7 +1335,7 @@ impl SolidityVisitor {
     }
 
     pub fn visit_Mapping(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!("=========visit_Mapping=======begin==========");
+        // println!("=========visit_Mapping=======begin==========");
         let k = self.visit(
             &ast.to_ast()
                 .try_as_type_name_ref()
@@ -1306,7 +1367,7 @@ impl SolidityVisitor {
         } else {
             String::new()
         };
-        println!("=========visit_Mapping=======value_type=====begin=====");
+        // println!("=========visit_Mapping=======value_type=====begin=====");
         let v = self.visit(
             &ast.to_ast()
                 .try_as_type_name_ref()
@@ -1317,12 +1378,12 @@ impl SolidityVisitor {
                 .clone()
                 .into(),
         );
-        println!("=========visit_Mapping====value_type============={v}====");
+        // println!("=========visit_Mapping====value_type============={v}====");
         Ok(format!("mapping({k}{label} => {v})"))
     }
 
     pub fn visit_Array(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!("===visit_Array====================={ast}");
+        // println!("===visit_Array====================={ast}");
         let value_type = ast
             .to_ast()
             .try_as_type_name_ref()
@@ -1331,13 +1392,13 @@ impl SolidityVisitor {
             .unwrap()
             .value_type()
             .clone();
-        println!(
-            "===visit_Array=====value_type================{:?}",
-            value_type.get_ast_type()
-        );
+        // println!(
+        //     "===visit_Array=====value_type================{:?}",
+        //     value_type.get_ast_type()
+        // );
 
         let t = self.visit(&value_type.clone().into());
-        print!("====visit_Array===t======={}", t);
+        // print!("====visit_Array===t======={}", t);
         let expr = ast
             .to_ast()
             .try_as_type_name_ref()
@@ -1348,34 +1409,34 @@ impl SolidityVisitor {
             .clone();
 
         let e = expr.as_ref().map_or(String::new(), |_expr| {
-            println!(
-                "===visit_Array=====expr================{:?}",
-                _expr.get_ast_type()
-            );
+            // println!(
+            //     "===visit_Array=====expr================{:?}",
+            //     _expr.get_ast_type()
+            // );
             self.visit(_expr)
         });
         Ok(format!("{t}[{e}]"))
     }
 
     pub fn visit_CipherText(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!(
-            "===visit_CipherText================={}",
-            ast.to_ast()
-                .try_as_type_name_ref()
-                .unwrap()
-                .try_as_array_ref()
-                .unwrap()
-                .try_as_cipher_text_ref()
-                .unwrap()
-                .plain_type
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .to_ast()
-                .code()
-        );
+        // println!(
+        //     "===visit_CipherText================={}",
+        //     ast.to_ast()
+        //         .try_as_type_name_ref()
+        //         .unwrap()
+        //         .try_as_array_ref()
+        //         .unwrap()
+        //         .try_as_cipher_text_ref()
+        //         .unwrap()
+        //         .plain_type
+        //         .as_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .to_ast()
+        //         .code()
+        // );
         let e = self.visit_Array(ast)?;
-        println!("==visit_CipherText=====e==={e}=======");
+        // println!("==visit_CipherText=====e==={e}=======");
         // println!("===visit_CipherText======e==========={}===={:?}===", ast.to_ast()
         //         .try_as_type_name_ref()
         //         .unwrap()
@@ -1399,22 +1460,34 @@ impl SolidityVisitor {
         //         .as_ref()
         //         .unwrap()
         //         .borrow().type_name.as_ref().unwrap().get_ast_type());
-        Ok(format!(
-            "{e}/*{}*/",
-            ast.to_ast()
-                .try_as_type_name_ref()
-                .unwrap()
-                .try_as_array_ref()
-                .unwrap()
-                .try_as_cipher_text_ref()
-                .unwrap()
-                .plain_type
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .to_ast()
-                .code()
-        ))
+        let code = ast
+            .to_ast()
+            .try_as_type_name_ref()
+            .unwrap()
+            .try_as_array_ref()
+            .unwrap()
+            .try_as_cipher_text_ref()
+            .unwrap()
+            .plain_type
+            .as_ref()
+            .unwrap()
+            .borrow()
+            .to_ast()
+            .code();
+        // let pt = self.visit(
+        //     &ast.to_ast()
+        //         .try_as_type_name_ref()
+        //         .unwrap()
+        //         .try_as_array_ref()
+        //         .unwrap()
+        //         .try_as_cipher_text_ref()
+        //         .unwrap()
+        //         .plain_type
+        //         .clone()
+        //         .unwrap()
+        //         .into(),
+        // );
+        Ok(format!("{e}/*{}*/", code))
     }
 
     pub fn visit_TupleType(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -1478,10 +1551,11 @@ impl SolidityVisitor {
                 .unwrap()
                 .into(),
         );
-        //   print!("==idf==type={i}==={:?}",ast.ast_base_ref()
+        // let ii:ASTFlatten=ast.ast_base_ref()
         //                 .unwrap()
         //                 .borrow()
-        //                 .idf().as_ref().unwrap().get_ast_type());
+        //                 .idf().clone().unwrap().into();
+        //   println!("==idf==type={i}==ii={}====",ii);
         // println!("=====visit_VariableDeclaration===================={k},=====t== {t},====={s}, ==={i},");
         Ok(format!("{k} {t}{s} {i}").trim().to_string())
     }
@@ -1843,7 +1917,7 @@ impl SolidityVisitor {
         enums: Vec<String>,
         structs: Vec<String>,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let i = idf.to_string();
+        let i = idf.to_string(); //Self::new().visit(&RcCell::new(idf).into());
         let structs = structs.join("\n\n");
         let enums = enums.join("\n\n");
         let state_vars = state_vars.join("\n\n");

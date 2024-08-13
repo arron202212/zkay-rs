@@ -89,33 +89,33 @@ impl GlobalDefs {
                 .into(),
                 RcCell::new(ConstructorOrFunctionDefinition::new(
                     Identifier::identifier("send"),
-                    Some(vec![RcCell::new(Parameter::new(
+                    vec![RcCell::new(Parameter::new(
                         vec![],
                         Some(AnnotatedTypeName::uint_all()),
                         Identifier::identifier(""),
                         None,
-                    ))]),
-                    Some(vec![String::from("public")]),
-                    Some(vec![RcCell::new(Parameter::new(
+                    ))],
+                    vec![String::from("public")],
+                    vec![RcCell::new(Parameter::new(
                         vec![],
                         Some(AnnotatedTypeName::bool_all()),
                         Identifier::identifier(""),
                         None,
-                    ))]),
-                    Some(Block::new(vec![], false)),
+                    ))],
+                    Some(RcCell::new(Block::new(vec![], false))),
                 ))
                 .into(),
                 RcCell::new(ConstructorOrFunctionDefinition::new(
                     Identifier::identifier("transfer"),
-                    Some(vec![RcCell::new(Parameter::new(
+                    vec![RcCell::new(Parameter::new(
                         vec![],
                         Some(AnnotatedTypeName::uint_all()),
                         Identifier::identifier(""),
                         None,
-                    ))]),
-                    Some(vec![String::from("public")]),
-                    Some(vec![]),
-                    Some(Block::new(vec![], false)),
+                    ))],
+                    vec![String::from("public")],
+                    vec![],
+                    Some(RcCell::new(Block::new(vec![], false))),
                 ))
                 .into(),
             ],
@@ -260,15 +260,17 @@ impl GlobalVars {
         let mut msg = RcCell::new(StateVariableDeclaration::new(
             Some(AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs
-                        .borrow()
-                        .msg_struct
-                        .borrow()
-                        .idf()
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .clone()],
+                    vec![RcCell::new(
+                        global_defs
+                            .borrow()
+                            .msg_struct
+                            .borrow()
+                            .idf()
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .clone(),
+                    )],
                     Some(ASTFlatten::from(global_defs.borrow().msg_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
@@ -291,15 +293,17 @@ impl GlobalVars {
         let mut block = RcCell::new(StateVariableDeclaration::new(
             Some(AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs
-                        .borrow()
-                        .block_struct
-                        .borrow()
-                        .idf()
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .clone()],
+                    vec![RcCell::new(
+                        global_defs
+                            .borrow()
+                            .block_struct
+                            .borrow()
+                            .idf()
+                            .as_ref()
+                            .unwrap()
+                            .borrow()
+                            .clone(),
+                    )],
                     Some(ASTFlatten::from(global_defs.borrow().block_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
@@ -323,14 +327,16 @@ impl GlobalVars {
         let mut tx = RcCell::new(StateVariableDeclaration::new(
             Some(AnnotatedTypeName::all(
                 StructTypeName::new(
-                    vec![global_defs
-                        .borrow()
-                        .tx_struct
-                        .borrow()
-                        .idf()
-                        .unwrap()
-                        .borrow()
-                        .clone()],
+                    vec![RcCell::new(
+                        global_defs
+                            .borrow()
+                            .tx_struct
+                            .borrow()
+                            .idf()
+                            .unwrap()
+                            .borrow()
+                            .clone(),
+                    )],
                     Some(ASTFlatten::from(global_defs.borrow().tx_struct.clone()).downgrade()),
                 )
                 .to_type_name(),
