@@ -359,6 +359,7 @@ impl ZkayTransformer {
                 )))
             },
             internal_circ.map(|c| c.downgrade()),
+            global_vars.clone(),
         )
     }
     // Figure out which crypto backends were used
@@ -476,8 +477,13 @@ impl ZkayTransformer {
         // println!("=====transform_contract===={}=", line!());
         // Backup untransformed function bodies
         for fct in &all_fcts {
-            let body = fct.borrow().body.clone(); //deep_copy(fct.body, true, true);
-            fct.borrow_mut().original_body = body;
+            let body = deep_copy(
+                &fct.borrow().body.clone().unwrap().into(),
+                true,
+                true,
+                self.global_vars.clone(),
+            );
+            fct.borrow_mut().original_body = body.and_then(|b| b.try_as_block());
         }
 
         // Transform types of normal state variables
@@ -1091,14 +1097,15 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let mut pp = deep_copy(&p.clone().into(), true, false)
-                        .unwrap()
-                        .to_ast()
-                        .try_as_identifier_declaration_ref()
-                        .unwrap()
-                        .try_as_parameter_ref()
-                        .unwrap()
-                        .clone();
+                    let mut pp =
+                        deep_copy(&p.clone().into(), true, false, self.global_vars.clone())
+                            .unwrap()
+                            .to_ast()
+                            .try_as_identifier_declaration_ref()
+                            .unwrap()
+                            .try_as_parameter_ref()
+                            .unwrap()
+                            .clone();
                     RcCell::new(
                         pp.with_changed_storage(String::from("memory"), String::from("calldata"))
                             .clone(),
@@ -1160,7 +1167,7 @@ impl ZkayTransformer {
         new_f.borrow_mut().called_functions = f.borrow().called_functions.clone();
         new_f.borrow_mut().called_functions.insert(f.clone());
         new_f.borrow_mut().used_crypto_backends = f.borrow().used_crypto_backends.clone();
-        new_f.borrow_mut().body = Some(Self::create_external_wrapper_body(
+        new_f.borrow_mut().body = Some(self.create_external_wrapper_body(
             f.clone(),
             &circuit,
             original_params.clone(),
@@ -1202,6 +1209,7 @@ impl ZkayTransformer {
     // :return: body with wrapper code
     // """
     pub fn create_external_wrapper_body(
+        &self,
         int_fct: RcCell<ConstructorOrFunctionDefinition>,
         ext_circuit: &RcCell<CircuitHelper>,
         original_params: Vec<RcCell<Parameter>>,
@@ -1638,7 +1646,7 @@ impl ZkayTransformer {
                     .iter()
                     .map(|vd| {
                         RcCell::new(VariableDeclarationStatement::new(
-                            deep_copy(&vd.clone().into(), false, false)
+                            deep_copy(&vd.clone().into(), false, false, self.global_vars.clone())
                                 .unwrap()
                                 .try_as_variable_declaration()
                                 .unwrap(),

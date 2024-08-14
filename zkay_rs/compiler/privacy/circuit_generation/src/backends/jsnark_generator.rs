@@ -518,7 +518,8 @@ impl JsnarkVisitor {
                         .unwrap()
                         .borrow()
                         .is_true
-                        .map_or(String::new(), |v| v.to_string().to_ascii_lowercase())
+                        .to_string()
+                        .to_ascii_lowercase()
                 )
             } else {
                 String::from("popGuard();")

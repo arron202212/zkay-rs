@@ -26,10 +26,15 @@ use zkay_derive::ASTVisitorBaseRefImpl;
 
 // Only parents and identifiers are updated in the returned ast (e.g., inferred types are not preserved)
 // """
-pub fn deep_copy(ast: &ASTFlatten, _with_types: bool, _with_analysis: bool) -> Option<ASTFlatten> {
-    // assert!(isinstance(ast,AST,ASTFlatten,));
-    // let v = DeepCopyVisitor::new(with_types, with_analysis);
-    let mut ast_copy = Some(ast.clone()); //v.visit(ast);
+pub fn deep_copy(
+    ast: &ASTFlatten,
+    with_types: bool,
+    with_analysis: bool,
+    global_vars: RcCell<GlobalVars>,
+) -> Option<ASTFlatten> {
+    // assert!(matches!(ast.to_ast(), AST(_)));
+    let v = DeepCopyVisitor::new(with_types, with_analysis);
+    let mut ast_copy = v.visit(ast);
     let parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
     ast_copy
         .as_ref()
@@ -39,7 +44,7 @@ pub fn deep_copy(ast: &ASTFlatten, _with_types: bool, _with_analysis: bool) -> O
         .borrow_mut()
         .parent = parent;
     set_parents(ast_copy.as_mut().unwrap());
-    let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+    // let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
     link_identifiers(ast_copy.as_mut().unwrap(), global_vars.clone());
     ast_copy
 }
@@ -164,7 +169,7 @@ impl AstVisitor for DeepCopyVisitor {
             _ => eyre::bail!(String::new()),
         }
     }
-    fn visit_children(&self, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         // let c = ast;
         // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
         // let new_fields = BTreeMap::new();
@@ -218,50 +223,129 @@ impl DeepCopyVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // let mut ast_copy = self.visit_children(ast);
-        // ast_copy.had_privacy_annotation = ast.had_privacy_annotation;
-        self.visit_children(ast)
+        let mut ast_copy = self.visit_children(ast);
+        ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow_mut()
+            .had_privacy_annotation = ast
+            .try_as_annotated_type_name_ref()
+            .unwrap()
+            .borrow()
+            .had_privacy_annotation;
+        ast_copy
     }
 
     pub fn visitUserDefinedTypeName(
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // let mut ast_copy = self.visit_children(ast);
-        // ast_copy.target = ast.target;
-        self.visit_children(ast)
+        let mut ast_copy = self.visit_children(ast);
+        ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .ast_base_ref()
+            .unwrap()
+            .borrow_mut()
+            .target = ast.ast_base_ref().unwrap().borrow().target.clone();
+        ast_copy
     }
 
     pub fn visitBuiltinFunction(
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // let mut ast_copy = self.visit_children(ast);
-        // ast_copy.is_private = ast.is_private;
-        // ast_copy.homomorphism = ast.homomorphism;
-        self.visit_children(ast)
+        let mut ast_copy = self.visit_children(ast);
+        ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .borrow_mut()
+            .is_private = ast
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .borrow()
+            .is_private;
+        ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .borrow_mut()
+            .homomorphism = ast
+            .try_as_builtin_function_ref()
+            .unwrap()
+            .borrow()
+            .homomorphism
+            .clone();
+        ast_copy
     }
 
     pub fn visitExpression(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut ast_copy = self.visit_children(ast);
         if self.with_types
             && ast
-                .try_as_expression_ref()
+                .ast_base_ref()
                 .unwrap()
                 .borrow()
-                .annotated_type()
+                .annotated_type
                 .is_some()
         {
-            // ast_copy.annotated_type = ast.annotated_type.clone();
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .ast_base_ref()
+                .unwrap()
+                .borrow_mut()
+                .annotated_type = ast.ast_base_ref().unwrap().borrow().annotated_type.clone();
         }
-        // ast_copy.evaluate_privately = ast.evaluate_privately();
+        ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .set_expression_base_mut_ref_property(|expr| {
+                expr.evaluate_privately = ast
+                    .to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .evaluate_privately();
+            });
+
         ast_copy
     }
 
     pub fn visitStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let mut ast_copy = self.visit_children(ast);
         if self.with_analysis {
-            // ast_copy.before_analysis = ast.before_analysis();
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .set_statement_base_mut_ref_property(|stmt| {
+                    stmt.before_analysis = ast
+                        .to_ast()
+                        .try_as_statement_ref()
+                        .unwrap()
+                        .statement_base_ref()
+                        .unwrap()
+                        .before_analysis
+                        .clone();
+                });
         }
         ast_copy
     }

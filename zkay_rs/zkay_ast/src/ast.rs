@@ -43,7 +43,7 @@ use zkay_config::{
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
     impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
-    ASTVisitorBaseRefImpl, ExpressionASTypeImpl, ImplBaseTrait,
+    ASTVisitorBaseRefImpl, EnumDispatchWithFields, ExpressionASTypeImpl, ImplBaseTrait,
 };
 use zkay_utils::progress_printer::warn_print;
 use zkp_u256::{Zero, U256 as ZU256};
@@ -167,6 +167,24 @@ pub fn is_instance<T: ASTInstanceOf + IntoAST>(var: &T, ast_type: ASTType) -> bo
 }
 pub fn is_instances<T: ASTInstanceOf + IntoAST>(var: &T, ast_types: Vec<ASTType>) -> bool {
     ast_types.into_iter().any(|t| is_instance(var, t))
+}
+
+#[derive(EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum ArgType {
+    Str(Option<String>),
+    Int(Option<i32>),
+    Bool(bool),
+    CryptoParams(Option<CryptoParams>),
+    ASTFlattenWeak(Option<ASTFlattenWeak>),
+    ASTFlatten(Option<ASTFlatten>),
+    Vec(Vec<ArgType>),
+}
+#[enum_dispatch]
+pub trait FullArgsSpec {
+    fn get_attr(&self) -> Vec<ArgType>;
+}
+pub trait FullArgsSpecInit {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self;
 }
 
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -1226,6 +1244,18 @@ impl ASTFlatten {
             // Self::CircEqConstraint(astf) => Some(astf.borrow().ast_base_ref()),
         }
     }
+    pub fn set_expression_base_mut_ref_property<F: Fn(&mut ExpressionBase) -> ()>(&self, f: F) {
+        match self {
+            Self::Expression(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            _ => {}
+        }
+    }
+    pub fn set_statement_base_mut_ref_property<F: Fn(&mut StatementBase) -> ()>(&self, f: F) {
+        match self {
+            Self::Statement(astf) => f(astf.borrow_mut().statement_base_mut_ref().unwrap()),
+            _ => {}
+        }
+    }
     pub fn ast_base_ref(&self) -> Option<RcCell<ASTBase>> {
         match self {
             Self::AST(astf) => astf.borrow().ast_base_ref(),
@@ -1712,6 +1742,47 @@ impl IntoAST for AST {
     }
 }
 
+impl FullArgsSpec for AST {
+    fn get_attr(&self) -> Vec<ArgType> {
+        match self {
+            AST::Identifier(ast) => ast.get_attr(),
+            AST::Comment(ast) => ast.get_attr(),
+            AST::Expression(ast) => ast.get_attr(),
+            AST::Statement(ast) => ast.get_attr(),
+            AST::TypeName(ast) => ast.get_attr(),
+            AST::AnnotatedTypeName(ast) => ast.get_attr(),
+            AST::IdentifierDeclaration(ast) => ast.get_attr(),
+            AST::NamespaceDefinition(ast) => ast.get_attr(),
+            AST::EnumValue(ast) => ast.get_attr(),
+            AST::SourceUnit(ast) => ast.get_attr(),
+            AST::Pragma(s) => vec![ArgType::Str(Some(s.clone()))],
+            AST::VersionPragma(s) => vec![ArgType::Str(Some(s.clone()))],
+            AST::Modifier(s) => vec![ArgType::Str(Some(s.clone()))],
+            AST::Homomorphism(s) => vec![ArgType::Str(Some(s.clone()))],
+        }
+    }
+}
+impl FullArgsSpecInit for AST {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        match self {
+            AST::Identifier(ast) => AST::Identifier(ast.from_fields(fields)),
+            AST::Comment(ast) => AST::Comment(ast.from_fields(fields)),
+            AST::Expression(ast) => AST::Expression(ast.from_fields(fields)),
+            AST::Statement(ast) => AST::Statement(ast.from_fields(fields)),
+            AST::TypeName(ast) => AST::TypeName(ast.from_fields(fields)),
+            AST::AnnotatedTypeName(ast) => AST::AnnotatedTypeName(ast.from_fields(fields)),
+            AST::IdentifierDeclaration(ast) => AST::IdentifierDeclaration(ast.from_fields(fields)),
+            AST::NamespaceDefinition(ast) => AST::NamespaceDefinition(ast.from_fields(fields)),
+            AST::EnumValue(ast) => AST::EnumValue(ast.from_fields(fields)),
+            AST::SourceUnit(ast) => AST::SourceUnit(ast.from_fields(fields)),
+            AST::Pragma(_) => self.clone(),
+            AST::VersionPragma(_) => self.clone(),
+            AST::Modifier(_) => self.clone(),
+            AST::Homomorphism(_) => self.clone(),
+        }
+    }
+}
+
 impl ASTInstanceOf for AST {
     fn get_ast_type(&self) -> ASTType {
         match self {
@@ -2067,11 +2138,12 @@ impl IntoAST for IdentifierBase {
 }
 
 impl FullArgsSpec for IdentifierBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.name.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IdentifierBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IdentifierBase::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -2155,8 +2227,17 @@ impl fmt::Display for IdentifierBase {
         write!(f, "{}", self.name)
     }
 }
-#[enum_dispatch(IntoAST, ASTFlattenImpl, ASTInstanceOf, CommentBaseRef, ASTBaseRef)]
-#[derive(EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[enum_dispatch(
+    FullArgsSpec,
+    IntoAST,
+    ASTFlattenImpl,
+    ASTInstanceOf,
+    CommentBaseRef,
+    ASTBaseRef
+)]
+#[derive(
+    EnumDispatchWithFields, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash,
+)]
 pub enum Comment {
     Comment(CommentBase),
     BlankLine(BlankLine),
@@ -2201,11 +2282,13 @@ impl IntoAST for CommentBase {
     }
 }
 impl FullArgsSpec for CommentBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.text.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for CommentBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CommentBase::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -2258,11 +2341,13 @@ impl IntoAST for BlankLine {
     }
 }
 impl FullArgsSpec for BlankLine {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for BlankLine {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         BlankLine::new()
     }
 }
@@ -2274,6 +2359,7 @@ impl BlankLine {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -2284,7 +2370,19 @@ impl BlankLine {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum Expression {
     BuiltinFunction(BuiltinFunction),
     FunctionCallExpr(FunctionCallExpr),
@@ -2653,7 +2751,6 @@ pub struct ExpressionBase {
     pub evaluate_privately: bool,
 }
 impl FullArgsSpec for ExpressionBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.annotated_type()
@@ -2661,7 +2758,10 @@ impl FullArgsSpec for ExpressionBase {
                 .map(|tn| ASTFlatten::from(tn.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for ExpressionBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ExpressionBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -2815,7 +2915,6 @@ pub struct HomomorphicBuiltin {
     pub public_args: Vec<bool>,
 }
 impl FullArgsSpec for HomomorphicBuiltin {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Str(Some(self.op.clone())),
@@ -2828,7 +2927,10 @@ impl FullArgsSpec for HomomorphicBuiltin {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for HomomorphicBuiltin {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         HomomorphicBuiltin::new(
             fields[0].clone().try_as_str().flatten().unwrap().as_str(),
             fields[1].clone().try_as_str().flatten().unwrap(),
@@ -2901,11 +3003,13 @@ impl IntoAST for BuiltinFunction {
     }
 }
 impl FullArgsSpec for BuiltinFunction {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.op.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for BuiltinFunction {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         BuiltinFunction::new(fields[0].clone().try_as_str().flatten().unwrap().as_str())
     }
 }
@@ -3139,7 +3243,6 @@ pub struct HomomorphicBuiltinFunction {
     pub public_args: Vec<bool>,
 }
 impl FullArgsSpec for HomomorphicBuiltinFunction {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.target_type.clone()))),
@@ -3151,7 +3254,10 @@ impl FullArgsSpec for HomomorphicBuiltinFunction {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for HomomorphicBuiltinFunction {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         HomomorphicBuiltinFunction::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -3205,6 +3311,7 @@ impl HomomorphicBuiltinFunction {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -3217,7 +3324,19 @@ impl HomomorphicBuiltinFunction {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum FunctionCallExpr {
     FunctionCallExpr(FunctionCallExprBase),
     NewExpr(NewExpr),
@@ -3303,7 +3422,6 @@ impl IntoAST for FunctionCallExprBase {
     }
 }
 impl FullArgsSpec for FunctionCallExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.func.clone())),
@@ -3321,7 +3439,10 @@ impl FullArgsSpec for FunctionCallExprBase {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for FunctionCallExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         FunctionCallExprBase::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1]
@@ -3392,7 +3513,6 @@ impl IntoAST for NewExpr {
     }
 }
 impl FullArgsSpec for NewExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(
@@ -3408,7 +3528,10 @@ impl FullArgsSpec for NewExpr {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for NewExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         NewExpr::new(
             fields[0]
                 .clone()
@@ -3480,7 +3603,6 @@ impl IntoAST for PrimitiveCastExpr {
     }
 }
 impl FullArgsSpec for PrimitiveCastExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.elem_type.clone()))),
@@ -3488,7 +3610,10 @@ impl FullArgsSpec for PrimitiveCastExpr {
             ArgType::Bool(self.is_implicit),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for PrimitiveCastExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         PrimitiveCastExpr::new(
             fields[0]
                 .clone()
@@ -3520,6 +3645,7 @@ impl ASTChildren for PrimitiveCastExpr {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -3531,7 +3657,19 @@ impl ASTChildren for PrimitiveCastExpr {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum LiteralExpr {
     BooleanLiteralExpr(BooleanLiteralExpr),
     NumberLiteralExpr(NumberLiteralExpr),
@@ -3549,13 +3687,15 @@ pub struct LiteralExprBase {
     pub expression_base: ExpressionBase,
 }
 impl FullArgsSpec for LiteralExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.annotated_type().map(|tn| ASTFlatten::from(tn.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for LiteralExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         LiteralExprBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -3599,11 +3739,13 @@ impl IntoAST for BooleanLiteralExpr {
     }
 }
 impl FullArgsSpec for BooleanLiteralExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Bool(self.value)]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for BooleanLiteralExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         BooleanLiteralExpr::new(fields[0].clone().try_as_bool().unwrap())
     }
 }
@@ -3652,15 +3794,28 @@ impl IntoAST for NumberLiteralExpr {
     }
 }
 impl FullArgsSpec for NumberLiteralExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
-        vec![ArgType::Int(Some(self.value)), ArgType::Bool(self.was_hex)]
+        if let Some(value) = &self.value_string {
+            vec![
+                ArgType::Str(Some(value.clone())),
+                ArgType::Bool(self.was_hex),
+            ]
+        } else {
+            vec![ArgType::Int(Some(self.value)), ArgType::Bool(self.was_hex)]
+        }
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
-        NumberLiteralExpr::new(
-            fields[0].clone().try_as_int().flatten().unwrap(),
-            fields[1].clone().try_as_bool().unwrap(),
-        )
+}
+
+impl FullArgsSpecInit for NumberLiteralExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        if fields[0].is_str() {
+            NumberLiteralExpr::new_string(fields[0].clone().try_as_str().flatten().unwrap())
+        } else {
+            NumberLiteralExpr::new(
+                fields[0].clone().try_as_int().flatten().unwrap(),
+                fields[1].clone().try_as_bool().unwrap(),
+            )
+        }
     }
 }
 impl NumberLiteralExpr {
@@ -3726,11 +3881,13 @@ impl IntoAST for StringLiteralExpr {
     }
 }
 impl FullArgsSpec for StringLiteralExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.value.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for StringLiteralExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StringLiteralExpr::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -3743,6 +3900,7 @@ impl StringLiteralExpr {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -3755,7 +3913,19 @@ impl StringLiteralExpr {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum ArrayLiteralExpr {
     ArrayLiteralExpr(ArrayLiteralExprBase),
     KeyLiteralExpr(KeyLiteralExpr),
@@ -3801,7 +3971,6 @@ impl IntoAST for ArrayLiteralExprBase {
     }
 }
 impl FullArgsSpec for ArrayLiteralExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
             self.values
@@ -3810,7 +3979,10 @@ impl FullArgsSpec for ArrayLiteralExprBase {
                 .collect(),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for ArrayLiteralExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ArrayLiteralExprBase::new(
             fields[0]
                 .try_as_vec_ref()
@@ -3864,7 +4036,6 @@ impl IntoAST for KeyLiteralExpr {
     }
 }
 impl FullArgsSpec for KeyLiteralExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -3876,7 +4047,9 @@ impl FullArgsSpec for KeyLiteralExpr {
             ArgType::CryptoParams(Some(self.crypto_params.clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for KeyLiteralExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         KeyLiteralExpr::new(
             fields[0]
                 .try_as_vec_ref()
@@ -3897,6 +4070,7 @@ impl KeyLiteralExpr {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -3908,7 +4082,19 @@ impl KeyLiteralExpr {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum TupleOrLocationExpr {
     TupleExpr(TupleExpr),
     LocationExpr(LocationExpr),
@@ -4043,14 +4229,15 @@ pub struct TupleOrLocationExprBase {
     pub expression_base: ExpressionBase,
 }
 impl FullArgsSpec for TupleOrLocationExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.annotated_type().map(|tn| ASTFlatten::from(tn.clone()))),
             ArgType::ASTFlatten(self.idf().map(|idf| ASTFlatten::from(idf.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for TupleOrLocationExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TupleOrLocationExprBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -4102,7 +4289,6 @@ impl IntoAST for TupleExpr {
     }
 }
 impl FullArgsSpec for TupleExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
             self.elements
@@ -4111,7 +4297,10 @@ impl FullArgsSpec for TupleExpr {
                 .collect(),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for TupleExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TupleExpr::new(
             fields[0]
                 .try_as_vec_ref()
@@ -4146,6 +4335,7 @@ impl ASTChildren for TupleExpr {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -4159,7 +4349,19 @@ impl ASTChildren for TupleExpr {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum LocationExpr {
     IdentifierExpr(IdentifierExpr),
     MemberAccessExpr(MemberAccessExpr),
@@ -4278,14 +4480,15 @@ pub struct LocationExprBase {
     pub target_rc: Option<ASTFlatten>,
 }
 impl FullArgsSpec for LocationExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.annotated_type().map(|tn| ASTFlatten::from(tn.clone()))),
             ArgType::ASTFlatten(self.idf().map(|idf| ASTFlatten::from(idf.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for LocationExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         LocationExprBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -4344,14 +4547,15 @@ impl IntoAST for IdentifierExpr {
     }
 }
 impl FullArgsSpec for IdentifierExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.idf().map(|idf| ASTFlatten::from(idf.clone()))),
             ArgType::ASTFlatten(self.annotated_type().map(|tn| ASTFlatten::from(tn.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IdentifierExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IdentifierExpr::new(
             IdentifierExprUnion::Identifier(
                 fields[0]
@@ -4452,14 +4656,15 @@ impl IntoAST for MemberAccessExpr {
     }
 }
 impl FullArgsSpec for MemberAccessExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.expr.as_ref().map(|tn| ASTFlatten::from(tn.clone()))),
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.member.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for MemberAccessExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         MemberAccessExpr::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -4535,14 +4740,15 @@ impl IntoAST for IndexExpr {
     }
 }
 impl FullArgsSpec for IndexExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.arr.as_ref().map(|tn| ASTFlatten::from(tn.clone()))),
             ArgType::ASTFlatten(Some(self.key.clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IndexExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IndexExpr::new(
             fields[0]
                 .clone()
@@ -4601,7 +4807,6 @@ impl IntoAST for SliceExpr {
     }
 }
 impl FullArgsSpec for SliceExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.arr.clone()),
@@ -4610,7 +4815,9 @@ impl FullArgsSpec for SliceExpr {
             ArgType::Int(Some(self.size)),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for SliceExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         SliceExpr::new(
             fields[0].clone().try_as_ast_flatten().unwrap(),
             fields[1].clone().try_as_ast_flatten().unwrap(),
@@ -4664,11 +4871,12 @@ impl IntoAST for MeExpr {
     }
 }
 impl FullArgsSpec for MeExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for MeExpr {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         MeExpr::new()
     }
 }
@@ -4714,11 +4922,12 @@ impl IntoAST for AllExpr {
     }
 }
 impl FullArgsSpec for AllExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for AllExpr {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         AllExpr::new()
     }
 }
@@ -4736,6 +4945,7 @@ impl Immutable for AllExpr {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ExpressionASType,
     ASTChildren,
     IntoAST,
@@ -4748,7 +4958,19 @@ impl Immutable for AllExpr {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum ReclassifyExpr {
     ReclassifyExpr(ReclassifyExprBase),
     RehomExpr(RehomExpr),
@@ -4814,7 +5036,6 @@ impl IntoAST for ReclassifyExprBase {
     }
 }
 impl FullArgsSpec for ReclassifyExprBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.expr.clone())),
@@ -4827,7 +5048,9 @@ impl FullArgsSpec for ReclassifyExprBase {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ReclassifyExprBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ReclassifyExprBase::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1].clone().try_as_ast_flatten().flatten().unwrap(),
@@ -4915,14 +5138,15 @@ impl ASTChildren for RehomExpr {
     }
 }
 impl FullArgsSpec for RehomExpr {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.expr().clone())),
             ArgType::Str(self.homomorphism().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for RehomExpr {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         RehomExpr::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1].clone().try_as_str().unwrap(),
@@ -4976,7 +5200,6 @@ impl IntoAST for HybridArgumentIdf {
     }
 }
 impl FullArgsSpec for HybridArgumentIdf {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Str(Some(self.identifier_base.name.clone())),
@@ -4985,7 +5208,9 @@ impl FullArgsSpec for HybridArgumentIdf {
             ArgType::ASTFlatten(self.corresponding_priv_expression.clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for HybridArgumentIdf {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         HybridArgumentIdf::new(
             fields[0].clone().try_as_str().flatten().unwrap(),
             fields[1]
@@ -5417,6 +5642,7 @@ pub enum IdentifierUnion {
     String(String),
 }
 #[enum_dispatch(
+    FullArgsSpec,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -5424,7 +5650,19 @@ pub enum IdentifierUnion {
     IdentifierBaseMutRef,
     ASTBaseRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum Identifier {
     Identifier(IdentifierBase),
     HybridArgumentIdf(HybridArgumentIdf),
@@ -5479,7 +5717,6 @@ impl ASTChildren for EncryptionExpression {
     }
 }
 impl FullArgsSpec for EncryptionExpression {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.expr().clone())),
@@ -5487,7 +5724,9 @@ impl FullArgsSpec for EncryptionExpression {
             ArgType::Str(self.homomorphism().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EncryptionExpression {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EncryptionExpression::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1].clone().try_as_ast_flatten().flatten().unwrap(),
@@ -5517,8 +5756,20 @@ impl EncryptionExpression {
         }
     }
 }
-#[enum_dispatch(ASTChildren, IntoAST, ASTFlattenImpl, ASTInstanceOf)]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[enum_dispatch(FullArgsSpec, ASTChildren, IntoAST, ASTFlattenImpl, ASTInstanceOf)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum Statement {
     CircuitDirectiveStatement(CircuitDirectiveStatement),
     IfStatement(IfStatement),
@@ -5601,13 +5852,14 @@ pub struct StatementBase {
     pub pre_statements: Vec<ASTFlatten>,
 }
 impl FullArgsSpec for StatementBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.idf().map(|idf| ASTFlatten::from(idf.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for StatementBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StatementBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -5629,6 +5881,7 @@ impl StatementBase {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -5639,7 +5892,19 @@ impl StatementBase {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum CircuitDirectiveStatement {
     CircuitComputationStatement(CircuitComputationStatement),
     EnterPrivateKeyStatement(EnterPrivateKeyStatement),
@@ -5656,13 +5921,14 @@ pub struct CircuitDirectiveStatementBase {
     pub statement_base: StatementBase,
 }
 impl FullArgsSpec for CircuitDirectiveStatementBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.idf().map(|idf| ASTFlatten::from(idf.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for CircuitDirectiveStatementBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CircuitDirectiveStatementBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -5705,13 +5971,14 @@ impl IntoAST for CircuitComputationStatement {
     }
 }
 impl FullArgsSpec for CircuitComputationStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.idf().map(|idf| ASTFlatten::from(idf.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for CircuitComputationStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CircuitComputationStatement::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -5755,11 +6022,12 @@ impl IntoAST for EnterPrivateKeyStatement {
     }
 }
 impl FullArgsSpec for EnterPrivateKeyStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::CryptoParams(Some(self.crypto_params.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EnterPrivateKeyStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnterPrivateKeyStatement::new(fields[0].clone().try_as_crypto_params().flatten().unwrap())
     }
 }
@@ -5786,7 +6054,6 @@ impl IntoAST for IfStatement {
     }
 }
 impl FullArgsSpec for IfStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.condition.clone())),
@@ -5798,7 +6065,9 @@ impl FullArgsSpec for IfStatement {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IfStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IfStatement::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1]
@@ -5852,14 +6121,15 @@ impl IntoAST for WhileStatement {
     }
 }
 impl FullArgsSpec for WhileStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.condition.clone())),
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.body.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for WhileStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         WhileStatement::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1]
@@ -5900,14 +6170,15 @@ impl IntoAST for DoWhileStatement {
     }
 }
 impl FullArgsSpec for DoWhileStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.body.clone()))),
             ArgType::ASTFlatten(Some(self.condition.clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for DoWhileStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         DoWhileStatement::new(
             fields[0]
                 .clone()
@@ -5950,7 +6221,6 @@ impl IntoAST for ForStatement {
     }
 }
 impl FullArgsSpec for ForStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.init.as_ref().map(|b| ASTFlatten::from(b.clone()))),
@@ -5959,7 +6229,9 @@ impl FullArgsSpec for ForStatement {
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.body.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ForStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ForStatement::new(
             fields[0]
                 .clone()
@@ -6047,11 +6319,12 @@ impl IntoAST for BreakStatement {
     }
 }
 impl FullArgsSpec for BreakStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for BreakStatement {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         BreakStatement::new()
     }
 }
@@ -6086,11 +6359,12 @@ impl IntoAST for ContinueStatement {
     }
 }
 impl FullArgsSpec for ContinueStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ContinueStatement {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         ContinueStatement::new()
     }
 }
@@ -6113,11 +6387,12 @@ impl IntoAST for ReturnStatement {
     }
 }
 impl FullArgsSpec for ReturnStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(self.expr.clone())]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ReturnStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ReturnStatement::new(fields[0].clone().try_as_ast_flatten().flatten())
     }
 }
@@ -6138,6 +6413,7 @@ impl ASTChildren for ReturnStatement {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -6148,7 +6424,19 @@ impl ASTChildren for ReturnStatement {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum SimpleStatement {
     ExpressionStatement(ExpressionStatement),
     RequireStatement(RequireStatement),
@@ -6166,11 +6454,12 @@ pub struct SimpleStatementBase {
     pub statement_base: StatementBase,
 }
 impl FullArgsSpec for SimpleStatementBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for SimpleStatementBase {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         SimpleStatementBase::new()
     }
 }
@@ -6196,11 +6485,12 @@ impl IntoAST for ExpressionStatement {
     }
 }
 impl FullArgsSpec for ExpressionStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(Some(self.expr.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ExpressionStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ExpressionStatement::new(fields[0].clone().try_as_ast_flatten().flatten().unwrap())
     }
 }
@@ -6234,14 +6524,15 @@ impl IntoAST for RequireStatement {
     }
 }
 impl FullArgsSpec for RequireStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(self.condition.clone())),
             ArgType::Str(Some(self.unmodified_code.clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for RequireStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         RequireStatement::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1].clone().try_as_str().unwrap(),
@@ -6264,6 +6555,7 @@ impl ASTChildren for RequireStatement {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -6276,7 +6568,19 @@ impl ASTChildren for RequireStatement {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum AssignmentStatement {
     AssignmentStatement(AssignmentStatementBase),
     CircuitInputStatement(CircuitInputStatement),
@@ -6331,7 +6635,6 @@ impl IntoAST for AssignmentStatementBase {
     }
 }
 impl FullArgsSpec for AssignmentStatementBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.lhs().clone()),
@@ -6339,7 +6642,9 @@ impl FullArgsSpec for AssignmentStatementBase {
             ArgType::Str(Some(self.op().clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for AssignmentStatementBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         AssignmentStatementBase::new(
             fields[0].clone().try_as_ast_flatten().flatten(),
             fields[1].clone().try_as_ast_flatten().flatten(),
@@ -6386,7 +6691,6 @@ impl ASTChildren for CircuitInputStatement {
     }
 }
 impl FullArgsSpec for CircuitInputStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.lhs().clone()),
@@ -6394,7 +6698,9 @@ impl FullArgsSpec for CircuitInputStatement {
             ArgType::Str(Some(self.op().clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for CircuitInputStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CircuitInputStatement::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1].clone().try_as_ast_flatten().flatten().unwrap(),
@@ -6411,6 +6717,7 @@ impl CircuitInputStatement {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -6422,7 +6729,19 @@ impl CircuitInputStatement {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum StatementList {
     Block(Block),
     IndentBlock(IndentBlock),
@@ -6488,7 +6807,6 @@ pub struct StatementListBase {
     pub excluded_from_simulation: bool,
 }
 impl FullArgsSpec for StatementListBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -6500,7 +6818,9 @@ impl FullArgsSpec for StatementListBase {
             ArgType::Bool(self.excluded_from_simulation),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for StatementListBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StatementListBase::new(
             fields[0]
                 .try_as_vec_ref()
@@ -6561,7 +6881,6 @@ impl ASTChildren for Block {
     }
 }
 impl FullArgsSpec for Block {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -6573,7 +6892,9 @@ impl FullArgsSpec for Block {
             ArgType::Bool(self.was_single_statement),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Block {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Block::new(
             fields[0]
                 .clone()
@@ -6610,7 +6931,6 @@ impl ASTChildren for IndentBlock {
     }
 }
 impl FullArgsSpec for IndentBlock {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
             self.statements()
@@ -6619,7 +6939,9 @@ impl FullArgsSpec for IndentBlock {
                 .collect(),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IndentBlock {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IndentBlock::new(
             fields[0]
                 .clone()
@@ -6643,7 +6965,7 @@ trait MyPartialEq {
     fn my_eq(&self, other: &Self) -> bool;
 }
 
-// #[enum_dispatch(IntoAST, ASTInstanceOf, TypeNameBaseRef, ASTBaseRef)]
+// #[enum_dispatch(FullArgsSpec,IntoAST, ASTInstanceOf, TypeNameBaseRef, ASTBaseRef)]
 #[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum TypeName {
     ElementaryTypeName(ElementaryTypeName),
@@ -6709,19 +7031,36 @@ impl IntoAST for TypeName {
         }
     }
 }
-// impl TypeName {
-//     pub fn to_ast_flatten<'a>(&'a mut self) -> Option<ASTFlatten<'a>> {
-//         match self {
-//             TypeName::ElementaryTypeName(ast) => Some(ast.to_ast_flatten()),
-//             TypeName::UserDefinedTypeName(ast) => Some(ast.to_ast_flatten()),
-//             TypeName::Mapping(ast) => Some(ast.to_ast_flatten()),
-//             TypeName::Array(ast) => Some(ast.to_ast_flatten()),
-//             TypeName::TupleType(ast) => Some(ast.to_ast_flatten()),
-//             TypeName::FunctionTypeName(ast) => Some(ast.to_ast_flatten()),
-//             _ => None,
-//         }
-//     }
-// }
+impl FullArgsSpec for TypeName {
+    fn get_attr(&self) -> Vec<ArgType> {
+        match self {
+            TypeName::ElementaryTypeName(ast) => ast.get_attr(),
+            TypeName::UserDefinedTypeName(ast) => ast.get_attr(),
+            TypeName::Mapping(ast) => ast.get_attr(),
+            TypeName::Array(ast) => ast.get_attr(),
+            TypeName::TupleType(ast) => ast.get_attr(),
+            TypeName::FunctionTypeName(ast) => ast.get_attr(),
+            TypeName::Literal(s) => vec![ArgType::Str(Some(s.clone()))],
+        }
+    }
+}
+impl FullArgsSpecInit for TypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        match self {
+            TypeName::ElementaryTypeName(ast) => {
+                TypeName::ElementaryTypeName(ast.from_fields(fields))
+            }
+            TypeName::UserDefinedTypeName(ast) => {
+                TypeName::UserDefinedTypeName(ast.from_fields(fields))
+            }
+            TypeName::Mapping(ast) => TypeName::Mapping(ast.from_fields(fields)),
+            TypeName::Array(ast) => TypeName::Array(ast.from_fields(fields)),
+            TypeName::TupleType(ast) => TypeName::TupleType(ast.from_fields(fields)),
+            TypeName::FunctionTypeName(ast) => TypeName::FunctionTypeName(ast.from_fields(fields)),
+            TypeName::Literal(_) => self.clone(),
+        }
+    }
+}
 impl ASTInstanceOf for TypeName {
     fn get_ast_type(&self) -> ASTType {
         match self {
@@ -7070,11 +7409,12 @@ pub struct TypeNameBase {
     pub ast_base: RcCell<ASTBase>,
 }
 impl FullArgsSpec for TypeNameBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlattenWeak(self.target().clone())]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for TypeNameBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TypeNameBase::new(fields[0].try_as_ast_flatten_weak_ref().unwrap().clone())
     }
 }
@@ -7086,6 +7426,7 @@ impl TypeNameBase {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -7095,7 +7436,18 @@ impl TypeNameBase {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum ElementaryTypeName {
     NumberTypeName(NumberTypeName),
     BoolTypeName(BoolTypeName),
@@ -7130,11 +7482,12 @@ pub struct ElementaryTypeNameBase {
     pub name: String,
 }
 impl FullArgsSpec for ElementaryTypeNameBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.name.clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ElementaryTypeNameBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ElementaryTypeNameBase::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -7166,11 +7519,12 @@ impl IntoAST for BoolTypeName {
     }
 }
 impl FullArgsSpec for BoolTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for BoolTypeName {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         BoolTypeName::new()
     }
 }
@@ -7206,13 +7560,14 @@ impl IntoAST for BooleanLiteralType {
     }
 }
 impl FullArgsSpec for BooleanLiteralType {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Bool(
             &self.elementary_type_name_base.name == "true",
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for BooleanLiteralType {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         BooleanLiteralType::new(fields[0].clone().try_as_bool().unwrap())
     }
 }
@@ -7261,6 +7616,7 @@ impl BooleanLiteralType {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -7271,7 +7627,18 @@ impl BooleanLiteralType {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum NumberTypeName {
     NumberLiteralType(NumberLiteralType),
     IntTypeName(IntTypeName),
@@ -7361,7 +7728,6 @@ impl IntoAST for NumberTypeNameBase {
     }
 }
 impl FullArgsSpec for NumberTypeNameBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Str(Some(self.name().clone())),
@@ -7370,7 +7736,9 @@ impl FullArgsSpec for NumberTypeNameBase {
             ArgType::Int(self.bitwidth),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for NumberTypeNameBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         NumberTypeNameBase::new(
             fields[0].clone().try_as_str().flatten().unwrap(),
             fields[1].clone().try_as_str().flatten().unwrap(),
@@ -7444,11 +7812,12 @@ impl IntoAST for NumberLiteralType {
     }
 }
 impl FullArgsSpec for NumberLiteralType {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.name().clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for NumberLiteralType {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         NumberLiteralType::new(NumberLiteralTypeUnion::String(
             fields[0].clone().try_as_str().flatten().unwrap(),
         ))
@@ -7588,11 +7957,12 @@ impl IntoAST for IntTypeName {
     }
 }
 impl FullArgsSpec for IntTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.name().clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for IntTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         IntTypeName::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -7634,11 +8004,12 @@ impl IntoAST for UintTypeName {
     }
 }
 impl FullArgsSpec for UintTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Str(Some(self.name().clone()))]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for UintTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         UintTypeName::new(fields[0].clone().try_as_str().flatten().unwrap())
     }
 }
@@ -7663,6 +8034,7 @@ impl UintTypeName {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -7673,7 +8045,18 @@ impl UintTypeName {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum UserDefinedTypeName {
     EnumTypeName(EnumTypeName),
     EnumValueTypeName(EnumValueTypeName),
@@ -7802,7 +8185,6 @@ pub struct UserDefinedTypeNameBase {
     pub names: Vec<RcCell<Identifier>>,
 }
 impl FullArgsSpec for UserDefinedTypeNameBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -7814,7 +8196,9 @@ impl FullArgsSpec for UserDefinedTypeNameBase {
             ArgType::ASTFlattenWeak(self.target().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for UserDefinedTypeNameBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         UserDefinedTypeNameBase::new(
             fields[0]
                 .clone()
@@ -7873,7 +8257,6 @@ impl IntoAST for EnumTypeName {
     }
 }
 impl FullArgsSpec for EnumTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -7886,7 +8269,9 @@ impl FullArgsSpec for EnumTypeName {
             ArgType::ASTFlattenWeak(self.target().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EnumTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumTypeName::new(
             fields[0]
                 .clone()
@@ -7940,7 +8325,6 @@ impl IntoAST for EnumValueTypeName {
     }
 }
 impl FullArgsSpec for EnumValueTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -7953,7 +8337,9 @@ impl FullArgsSpec for EnumValueTypeName {
             ArgType::ASTFlattenWeak(self.target().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EnumValueTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumValueTypeName::new(
             fields[0]
                 .clone()
@@ -8076,7 +8462,6 @@ impl IntoAST for StructTypeName {
     }
 }
 impl FullArgsSpec for StructTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -8089,7 +8474,9 @@ impl FullArgsSpec for StructTypeName {
             ArgType::ASTFlattenWeak(self.target().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for StructTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StructTypeName::new(
             fields[0]
                 .clone()
@@ -8143,7 +8530,6 @@ impl IntoAST for ContractTypeName {
     }
 }
 impl FullArgsSpec for ContractTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -8156,7 +8542,9 @@ impl FullArgsSpec for ContractTypeName {
             ArgType::ASTFlattenWeak(self.target().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ContractTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ContractTypeName::new(
             fields[0]
                 .clone()
@@ -8202,11 +8590,12 @@ impl IntoAST for AddressTypeName {
     }
 }
 impl FullArgsSpec for AddressTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for AddressTypeName {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         AddressTypeName::new()
     }
 }
@@ -8245,11 +8634,12 @@ impl IntoAST for AddressPayableTypeName {
     }
 }
 impl FullArgsSpec for AddressPayableTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for AddressPayableTypeName {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         AddressPayableTypeName::new()
     }
 }
@@ -8300,7 +8690,6 @@ impl IntoAST for Mapping {
     }
 }
 impl FullArgsSpec for Mapping {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.key_type.clone()))),
@@ -8312,7 +8701,9 @@ impl FullArgsSpec for Mapping {
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.value_type.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Mapping {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Mapping::new(
             fields[0]
                 .clone()
@@ -8353,6 +8744,25 @@ impl Mapping {
     pub fn has_key_label(&self) -> bool {
         self.key_label.is_some()
     }
+    pub fn clone_owned(&self) -> Self {
+        use crate::global_defs::{
+            array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+        };
+        use crate::visitors::deep_copy::deep_copy;
+        let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+        let mapping = deep_copy(
+            &RcCell::new(self.clone()).into(),
+            false,
+            false,
+            global_vars.clone(),
+        )
+        .unwrap()
+        .try_as_mapping()
+        .unwrap()
+        .borrow()
+        .clone();
+        mapping
+    }
 }
 impl ASTChildren for Mapping {
     fn process_children(&self, cb: &mut ChildListBuilder) {
@@ -8373,6 +8783,7 @@ pub enum ExprUnion {
 }
 
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -8382,7 +8793,18 @@ pub enum ExprUnion {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum Array {
     CipherText(CipherText),
     Randomness(Randomness),
@@ -8518,7 +8940,6 @@ impl IntoAST for ArrayBase {
     }
 }
 impl FullArgsSpec for ArrayBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.value_type.clone()))),
@@ -8526,7 +8947,9 @@ impl FullArgsSpec for ArrayBase {
             ArgType::CryptoParams(self.crypto_params.clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ArrayBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ArrayBase::new(
             fields[0]
                 .clone()
@@ -8605,7 +9028,6 @@ impl ASTChildren for CipherText {
     }
 }
 impl FullArgsSpec for CipherText {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(
@@ -8616,7 +9038,9 @@ impl FullArgsSpec for CipherText {
             ArgType::CryptoParams(self.crypto_params().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for CipherText {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CipherText::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -8676,11 +9100,12 @@ impl ASTChildren for Randomness {
     }
 }
 impl FullArgsSpec for Randomness {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::CryptoParams(self.crypto_params().clone())]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Randomness {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Randomness::new(fields[0].clone().try_as_crypto_params().flatten().unwrap())
     }
 }
@@ -8720,11 +9145,12 @@ impl ASTChildren for Key {
     }
 }
 impl FullArgsSpec for Key {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::CryptoParams(self.crypto_params().clone())]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Key {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Key::new(fields[0].clone().try_as_crypto_params().flatten().unwrap())
     }
 }
@@ -8762,11 +9188,12 @@ impl ASTChildren for Proof {
     }
 }
 impl FullArgsSpec for Proof {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Proof {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         Proof::new()
     }
 }
@@ -8811,11 +9238,12 @@ impl IntoAST for DummyAnnotation {
     }
 }
 impl FullArgsSpec for DummyAnnotation {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
     }
-    fn from_fields(_fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for DummyAnnotation {
+    fn from_fields(&self, _fields: Vec<ArgType>) -> Self {
         DummyAnnotation::new()
     }
 }
@@ -8861,7 +9289,6 @@ impl IntoAST for TupleType {
     }
 }
 impl FullArgsSpec for TupleType {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
             self.types
@@ -8870,7 +9297,9 @@ impl FullArgsSpec for TupleType {
                 .collect(),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for TupleType {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TupleType::new(
             fields[0]
                 .clone()
@@ -9091,7 +9520,6 @@ impl IntoAST for FunctionTypeName {
     }
 }
 impl FullArgsSpec for FunctionTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -9114,7 +9542,9 @@ impl FullArgsSpec for FunctionTypeName {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for FunctionTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         FunctionTypeName::new(
             fields[0]
                 .try_as_vec_ref()
@@ -9201,23 +9631,7 @@ impl IntoAST for AnnotatedTypeName {
         AST::AnnotatedTypeName(self)
     }
 }
-#[derive(EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-enum ArgType {
-    Str(Option<String>),
-    Int(Option<i32>),
-    Bool(bool),
-    CryptoParams(Option<CryptoParams>),
-    ASTFlattenWeak(Option<ASTFlattenWeak>),
-    ASTFlatten(Option<ASTFlatten>),
-    Vec(Vec<ArgType>),
-}
-trait FullArgsSpec {
-    type Target;
-    fn get_attr(&self) -> Vec<ArgType>;
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target;
-}
 impl FullArgsSpec for AnnotatedTypeName {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(
@@ -9229,7 +9643,9 @@ impl FullArgsSpec for AnnotatedTypeName {
             ArgType::Str(Some(self.homomorphism.clone())),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for AnnotatedTypeName {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         AnnotatedTypeName::new(
             fields[0]
                 .clone()
@@ -9493,6 +9909,7 @@ impl ASTChildren for AnnotatedTypeName {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -9501,7 +9918,19 @@ impl ASTChildren for AnnotatedTypeName {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum IdentifierDeclaration {
     VariableDeclaration(VariableDeclaration),
     Parameter(Parameter),
@@ -9577,7 +10006,6 @@ impl ASTChildren for VariableDeclaration {
     }
 }
 impl FullArgsSpec for VariableDeclaration {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -9591,7 +10019,9 @@ impl FullArgsSpec for VariableDeclaration {
             ArgType::Str(self.storage_location().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for VariableDeclaration {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         VariableDeclaration::new(
             fields[0]
                 .try_as_vec_ref()
@@ -9642,14 +10072,15 @@ impl IntoAST for VariableDeclarationStatement {
     }
 }
 impl FullArgsSpec for VariableDeclarationStatement {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(Some(ASTFlatten::from(self.variable_declaration.clone()))),
             ArgType::ASTFlatten(self.expr.clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for VariableDeclarationStatement {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         VariableDeclarationStatement::new(
             fields[0]
                 .clone()
@@ -9705,7 +10136,6 @@ pub enum ParameterUnion {
     String(String),
 }
 impl FullArgsSpec for Parameter {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Vec(
@@ -9719,7 +10149,9 @@ impl FullArgsSpec for Parameter {
             ArgType::Str(self.storage_location().clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for Parameter {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Parameter::new(
             fields[0]
                 .try_as_vec_ref()
@@ -9761,6 +10193,7 @@ impl Parameter {
     }
 }
 #[enum_dispatch(
+    FullArgsSpec,
     ASTChildren,
     IntoAST,
     ASTFlattenImpl,
@@ -9769,7 +10202,19 @@ impl Parameter {
     ASTBaseRef,
     ASTBaseMutRef
 )]
-#[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields,
+    ASTFlattenImpl,
+    EnumIs,
+    EnumTryAs,
+    Clone,
+    Debug,
+    PartialEq,
+    PartialOrd,
+    Eq,
+    Ord,
+    Hash,
+)]
 pub enum NamespaceDefinition {
     ConstructorOrFunctionDefinition(ConstructorOrFunctionDefinition),
     EnumDefinition(EnumDefinition),
@@ -9786,14 +10231,15 @@ pub struct NamespaceDefinitionBase {
     pub ast_base: RcCell<ASTBase>,
 }
 impl FullArgsSpec for NamespaceDefinitionBase {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.annotated_type().map(|tn| ASTFlatten::from(tn.clone()))),
             ArgType::ASTFlatten(self.idf().map(|tn| ASTFlatten::from(tn.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for NamespaceDefinitionBase {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         NamespaceDefinitionBase::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -9847,7 +10293,6 @@ impl IntoAST for ConstructorOrFunctionDefinition {
     }
 }
 impl FullArgsSpec for ConstructorOrFunctionDefinition {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.idf().map(|tn| ASTFlatten::from(tn.clone()))),
@@ -9872,7 +10317,9 @@ impl FullArgsSpec for ConstructorOrFunctionDefinition {
             ArgType::ASTFlatten(self.body.as_ref().map(|tn| ASTFlatten::from(tn.clone()))),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ConstructorOrFunctionDefinition {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ConstructorOrFunctionDefinition::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10146,7 +10593,6 @@ impl IntoAST for StateVariableDeclaration {
     }
 }
 impl FullArgsSpec for StateVariableDeclaration {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.annotated_type().map(|tn| ASTFlatten::from(tn.clone()))),
@@ -10160,7 +10606,9 @@ impl FullArgsSpec for StateVariableDeclaration {
             ArgType::ASTFlatten(self.expr.clone()),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for StateVariableDeclaration {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StateVariableDeclaration::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10216,13 +10664,14 @@ impl IntoAST for EnumValue {
     }
 }
 impl FullArgsSpec for EnumValue {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::ASTFlatten(
             self.idf().map(|tn| ASTFlatten::from(tn.clone())),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EnumValue {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumValue::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10259,7 +10708,6 @@ impl IntoAST for EnumDefinition {
     }
 }
 impl FullArgsSpec for EnumDefinition {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.idf().map(|tn| ASTFlatten::from(tn.clone()))),
@@ -10271,7 +10719,9 @@ impl FullArgsSpec for EnumDefinition {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for EnumDefinition {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumDefinition::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10324,7 +10774,6 @@ impl IntoAST for StructDefinition {
     }
 }
 impl FullArgsSpec for StructDefinition {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.idf().map(|tn| ASTFlatten::from(tn.clone()))),
@@ -10336,7 +10785,9 @@ impl FullArgsSpec for StructDefinition {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for StructDefinition {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StructDefinition::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10391,7 +10842,6 @@ impl IntoAST for ContractDefinition {
     }
 }
 impl FullArgsSpec for ContractDefinition {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::ASTFlatten(self.idf().map(|tn| ASTFlatten::from(tn.clone()))),
@@ -10433,7 +10883,9 @@ impl FullArgsSpec for ContractDefinition {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for ContractDefinition {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ContractDefinition::new(
             fields[0]
                 .try_as_ast_flatten_ref()
@@ -10606,7 +11058,6 @@ impl IntoAST for SourceUnit {
     }
 }
 impl FullArgsSpec for SourceUnit {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
             ArgType::Str(Some(self.pragma_directive.clone())),
@@ -10624,7 +11075,9 @@ impl FullArgsSpec for SourceUnit {
             ),
         ]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+impl FullArgsSpecInit for SourceUnit {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         SourceUnit::new(
             fields[0].clone().try_as_str().flatten().unwrap(),
             fields[1]
@@ -10760,7 +11213,6 @@ impl fmt::Display for InstanceTarget {
     }
 }
 impl FullArgsSpec for InstanceTarget {
-    type Target = Self;
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
             self.target_key
@@ -10769,7 +11221,10 @@ impl FullArgsSpec for InstanceTarget {
                 .collect(),
         )]
     }
-    fn from_fields(fields: Vec<ArgType>) -> Self::Target {
+}
+
+impl FullArgsSpecInit for InstanceTarget {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         InstanceTarget::new(
             fields[0]
                 .try_as_vec_ref()

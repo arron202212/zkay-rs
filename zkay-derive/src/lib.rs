@@ -397,6 +397,59 @@ macro_rules! derive_error {
     };
 }
 
+#[proc_macro_derive(EnumDispatchWithFields)]
+pub fn derive_enum_dispatch_with_fields(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = input.ident;
+    let data = input.data;
+
+    let mut variant_checker_functions;
+
+    match data {
+        Data::Enum(data_enum) => {
+            variant_checker_functions = TokenStream2::new();
+
+            for variant in &data_enum.variants {
+                let variant_name = &variant.ident;
+                // let fields_in_variant = match &variant.fields {
+                //     Fields::Unnamed(_) => quote_spanned! {variant.span()=> (..) },
+                //     Fields::Unit => quote_spanned! { variant.span()=> },
+                //     Fields::Named(_) => quote_spanned! {variant.span()=> {..} },
+                // };
+
+                // let mut is_variant_func_name =
+                //     format_ident!("is_{}", variant_name.to_string().to_case(Case::Snake));
+                // is_variant_func_name.set_span(variant_name.span());
+
+                // let mut as_variant_func_name =
+                //     format_ident!("as_{}", variant_name.to_string().to_case(Case::Snake));
+                // as_variant_func_name.set_span(variant_name.span());
+
+                variant_checker_functions.extend(quote_spanned! {variant.span()=>
+                    #name::#variant_name (ast) => #name::#variant_name(ast.from_fields(fields)),
+                });
+            }
+        }
+        _ => return derive_error!("IsVariant is only implemented for enums"),
+    };
+
+    // let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let expanded = quote! {
+        impl FullArgsSpecInit for #name  {
+            fn from_fields(&self,fields: Vec<ArgType>) -> Self {
+            match self
+            {
+                #variant_checker_functions
+            }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
 #[proc_macro_derive(IsVariant)]
 pub fn derive_is_variant(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

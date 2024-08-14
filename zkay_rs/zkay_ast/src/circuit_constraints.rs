@@ -28,20 +28,22 @@
 // """
 
 use crate::ast::{
-    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ChildListBuilder, CodeVisitor,
-    CodeVisitorBase, ConstructorOrFunctionDefinition, Expression, HybridArgumentIdf, IntoAST,
-    Statement, AST,
+    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, CodeVisitor,
+    CodeVisitorBase, ConstructorOrFunctionDefinition, Expression, FullArgsSpec, FullArgsSpecInit,
+    HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use crate::visitors::visitor::AstVisitor;
 use enum_dispatch::enum_dispatch;
 use rccell::RcCell;
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumIs, EnumTryAs};
-use zkay_derive::{impl_trait, impl_traits, ASTFlattenImpl, ASTKind, ImplBaseTrait};
+use zkay_derive::{
+    impl_trait, impl_traits, ASTFlattenImpl, ASTKind, EnumDispatchWithFields, ImplBaseTrait,
+};
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
-#[enum_dispatch(IntoAST, IntoASTFlatten, ASTInstanceOf)]
-#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[enum_dispatch(FullArgsSpec, IntoAST, IntoASTFlatten, ASTInstanceOf)]
+#[derive(EnumDispatchWithFields, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CircuitStatement {
     CircComment(CircComment),
     CircIndentBlock(CircIndentBlock),
@@ -58,40 +60,10 @@ impl From<RcCell<CircuitStatement>> for ASTFlatten {
         ASTFlatten::CircuitStatement(a)
     }
 }
-// impl IntoAST for CircuitStatement {
-//     fn into_ast(self) -> AST {
-//         match self {
-//             Self::CircComment(ast) => ast.to_ast(),
-//             Self::CircIndentBlock(ast) => ast.to_ast(),
-//             Self::CircCall(ast) => ast.to_ast(),
-//             Self::CircVarDecl(ast) => ast.to_ast(),
-//             Self::CircGuardModification(ast) => ast.to_ast(),
-//             Self::CircEncConstraint(ast) => ast.to_ast(),
-//             Self::CircSymmEncConstraint(ast) => ast.to_ast(),
-//             Self::CircEqConstraint(ast) => ast.to_ast(),
-//         }
-//     }
-// }
-// impl ASTInstanceOf for CircuitStatement {
-//     fn get_ast_type(&self) -> ASTType {
-//         match self {
-//             Self::CircComment(ast) => ast.get_ast_type(),
-//             Self::CircIndentBlock(ast) => ast.get_ast_type(),
-//             Self::CircCall(ast) => ast.get_ast_type(),
-//             Self::CircVarDecl(ast) => ast.get_ast_type(),
-//             Self::CircGuardModification(ast) => ast.get_ast_type(),
-//             Self::CircEncConstraint(ast) => ast.get_ast_type(),
-//             Self::CircSymmEncConstraint(ast) => ast.get_ast_type(),
-//             Self::CircEqConstraint(ast) => ast.get_ast_type(),
-//         }
-//     }
-// }
 impl ASTChildren for CircuitStatement {
     fn process_children(&self, _cb: &mut ChildListBuilder) {}
 }
-// impl ASTChildrenMut for CircuitStatement {
-//     fn process_children_mut<'a>(&'a mut self, _cb: &mut Vec<ASTFlatten<'a>>) {}
-// }
+
 // class CircComment(CircuitStatement)
 // """
 // A textual comment, has no impact on circuit semantics (meta statement)
@@ -113,11 +85,16 @@ impl IntoAST for CircComment {
         )))
     }
 }
-// impl ASTInstanceOf for CircComment {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircComment
-//     }
-// }
+impl FullArgsSpec for CircComment {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![ArgType::Str(Some(self.text.clone()))]
+    }
+}
+impl FullArgsSpecInit for CircComment {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircComment::new(fields[0].clone().try_as_str().flatten().unwrap())
+    }
+}
 impl CircComment {
     pub fn new(text: String) -> Self {
         Self { text }
@@ -148,11 +125,39 @@ impl IntoAST for CircIndentBlock {
         ))
     }
 }
-// impl ASTInstanceOf for CircIndentBlock {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircIndentBlock
-//     }
-// }
+impl FullArgsSpec for CircIndentBlock {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::Str(Some(self.name.clone())),
+            ArgType::Vec(
+                self.statements
+                    .iter()
+                    .map(|s| ArgType::ASTFlatten(Some(s.clone().into())))
+                    .collect(),
+            ),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircIndentBlock {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircIndentBlock::new(
+            fields[0].clone().try_as_str().flatten().unwrap(),
+            fields[1]
+                .clone()
+                .try_as_vec()
+                .unwrap()
+                .into_iter()
+                .map(|s| {
+                    s.try_as_ast_flatten()
+                        .flatten()
+                        .unwrap()
+                        .try_as_circuit_statement()
+                        .unwrap()
+                })
+                .collect(),
+        )
+    }
+}
 impl CircIndentBlock {
     pub fn new(name: String, statements: Vec<RcCell<CircuitStatement>>) -> Self {
         Self { name, statements }
@@ -197,11 +202,28 @@ impl IntoAST for CircCall {
     }
 }
 
-// impl ASTInstanceOf for CircCall {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircCall
-//     }
-// }
+impl FullArgsSpec for CircCall {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![ArgType::ASTFlatten(Some(
+            RcCell::new(self.fct.clone()).into(),
+        ))]
+    }
+}
+impl FullArgsSpecInit for CircCall {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircCall::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_constructor_or_function_definition()
+                .unwrap()
+                .borrow()
+                .clone(),
+        )
+    }
+}
 impl CircCall {
     pub fn new(fct: ConstructorOrFunctionDefinition) -> Self {
         Self { fct }
@@ -233,11 +255,30 @@ impl IntoAST for CircVarDecl {
         )))
     }
 }
-// impl ASTInstanceOf for CircVarDecl {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircVarDecl
-//     }
-// }
+impl FullArgsSpec for CircVarDecl {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::ASTFlatten(Some(RcCell::new(self.lhs.clone()).into())),
+            ArgType::ASTFlatten(Some(self.expr.clone())),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircVarDecl {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircVarDecl::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[1].clone().try_as_ast_flatten().flatten().unwrap(),
+        )
+    }
+}
 impl CircVarDecl {
     pub fn new(lhs: HybridArgumentIdf, expr: ASTFlatten) -> Self {
         Self { lhs, expr }
@@ -267,7 +308,7 @@ impl CircVarDecl {
 #[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircGuardModification {
     pub new_cond: Option<HybridArgumentIdf>,
-    pub is_true: Option<bool>,
+    pub is_true: bool,
 }
 impl IntoAST for CircGuardModification {
     fn into_ast(self) -> AST {
@@ -276,13 +317,32 @@ impl IntoAST for CircGuardModification {
         ))
     }
 }
-// impl ASTInstanceOf for CircGuardModification {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircGuardModification
-//     }
-// }
+impl FullArgsSpec for CircGuardModification {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::ASTFlatten(
+                self.new_cond
+                    .as_ref()
+                    .map(|nc| RcCell::new(nc.clone()).into()),
+            ),
+            ArgType::Bool(self.is_true.clone()),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircGuardModification {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircGuardModification::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .map(|a| a.try_as_hybrid_argument_idf().unwrap().borrow().clone()),
+            fields[1].clone().try_as_bool().unwrap(),
+        )
+    }
+}
 impl CircGuardModification {
-    pub fn new(new_cond: Option<HybridArgumentIdf>, is_true: Option<bool>) -> Self {
+    pub fn new(new_cond: Option<HybridArgumentIdf>, is_true: bool) -> Self {
         Self { new_cond, is_true }
     }
 
@@ -303,12 +363,12 @@ impl CircGuardModification {
     ) {
         phi.borrow_mut()
             .push(RcCell::new(CircuitStatement::CircGuardModification(
-                CircGuardModification::new(Some(guard_idf), Some(is_true)),
+                CircGuardModification::new(Some(guard_idf), is_true),
             )));
         // yield
         phi.borrow_mut()
             .push(RcCell::new(CircuitStatement::CircGuardModification(
-                CircGuardModification::new(None, None),
+                CircGuardModification::new(None, false),
             )));
     }
 }
@@ -351,11 +411,60 @@ impl IntoAST for CircEncConstraint {
         ))
     }
 }
-// impl ASTInstanceOf for CircEncConstraint {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircEncConstraint
-//     }
-// }
+impl FullArgsSpec for CircEncConstraint {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::ASTFlatten(Some(RcCell::new(self.plain.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.rnd.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.pk.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.cipher.clone()).into())),
+            ArgType::Bool(self.is_dec),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircEncConstraint {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircEncConstraint::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[1]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[2]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[3]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[4].clone().try_as_bool().unwrap(),
+        )
+    }
+}
 impl CircEncConstraint {
     pub fn new(
         plain: HybridArgumentIdf,
@@ -404,11 +513,50 @@ impl IntoAST for CircSymmEncConstraint {
         ))
     }
 }
-// impl ASTInstanceOf for CircSymmEncConstraint {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircSymmEncConstraint
-//     }
-// }
+impl FullArgsSpec for CircSymmEncConstraint {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::ASTFlatten(Some(RcCell::new(self.plain.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.other_pk.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.iv_cipher.clone()).into())),
+            ArgType::Bool(self.is_dec),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircSymmEncConstraint {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircSymmEncConstraint::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[1]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[2]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[3].clone().try_as_bool().unwrap(),
+        )
+    }
+}
 impl CircSymmEncConstraint {
     pub fn new(
         plain: HybridArgumentIdf,
@@ -446,11 +594,38 @@ impl IntoAST for CircEqConstraint {
         ))
     }
 }
-// impl ASTInstanceOf for CircEqConstraint {
-//     fn get_ast_type(&self) -> ASTType {
-//         ASTType::CircEqConstraint
-//     }
-// }
+impl FullArgsSpec for CircEqConstraint {
+    fn get_attr(&self) -> Vec<ArgType> {
+        vec![
+            ArgType::ASTFlatten(Some(RcCell::new(self.tgt.clone()).into())),
+            ArgType::ASTFlatten(Some(RcCell::new(self.val.clone()).into())),
+        ]
+    }
+}
+impl FullArgsSpecInit for CircEqConstraint {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        CircEqConstraint::new(
+            fields[0]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+            fields[1]
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .unwrap()
+                .try_as_hybrid_argument_idf()
+                .unwrap()
+                .borrow()
+                .clone(),
+        )
+    }
+}
 impl CircEqConstraint {
     pub fn new(tgt: HybridArgumentIdf, val: HybridArgumentIdf) -> Self {
         Self { tgt, val }

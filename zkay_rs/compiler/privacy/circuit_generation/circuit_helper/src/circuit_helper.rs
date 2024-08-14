@@ -39,6 +39,9 @@ use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
+use zkay_ast::global_defs::{
+    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+};
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::deep_copy::deep_copy;
 use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
@@ -99,6 +102,7 @@ where
     // Remapper instance used for SSA simulation
     pub _remapper: CircVarRemapper,
     me: Option<WeakCell<CircuitHelper>>,
+    global_vars: RcCell<GlobalVars>,
 }
 
 impl CircuitHelper
@@ -123,6 +127,7 @@ where
         expr_trafo_constructor: impl FnOnce(&WeakCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
         circ_trafo_constructor: impl FnOnce(&WeakCell<Self>) -> Option<Box<dyn TransformerVisitorEx>>,
         internal_circuit: Option<WeakCell<Self>>,
+        global_vars: RcCell<GlobalVars>,
     ) -> RcCell<Self>
     where
         Self: Sized,
@@ -213,6 +218,7 @@ where
                 trans_in_size,
                 trans_out_size,
                 _remapper: CircVarRemapper::new(),
+                global_vars,
             })
         }));
         let weakselfs = selfs.downgrade();
@@ -1627,27 +1633,34 @@ where
         }
 
         //Visit the untransformed target function body to include all statements in this circuit
-        let inlined_body = fdef
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .original_body
-            .clone(); //deep_copy(fdef.original_body, true, true);
+        let inlined_body = deep_copy(
+            &fdef
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .borrow()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .original_body
+                .clone()
+                .unwrap()
+                .into(),
+            true,
+            true,
+            self.global_vars.clone(),
+        );
         println!(
             "==_circ_trafo=============inlined_body=={:?}==={}",
-            inlined_body.as_ref().unwrap().borrow().to_string(),
+            inlined_body.as_ref().unwrap().code(),
             line!()
         );
         self._circ_trafo
             .as_ref()
             .unwrap()
-            .visit(&inlined_body.clone().unwrap().into());
+            .visit(inlined_body.as_ref().unwrap());
 
         fcall
             .try_as_function_call_expr_ref()
@@ -1669,7 +1682,11 @@ where
                 inlined_body
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .statement_base_ref()
+                    .unwrap()
                     .pre_statements()
                     .clone(),
             );
