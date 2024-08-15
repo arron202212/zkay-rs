@@ -1341,8 +1341,7 @@ impl SymbolTableLinker {
             ),
             "Function call return value indexing not yet supported"
         );
-
-        let source_t = ast
+        let target = ast
             .to_ast()
             .try_as_expression_ref()
             .unwrap()
@@ -1362,7 +1361,9 @@ impl SymbolTableLinker {
             .clone()
             .unwrap()
             .upgrade()
-            .unwrap()
+            .unwrap();
+        println!("===target===={},{:?}", target, target.get_ast_type());
+        let source_t = target
             .ast_base_ref()
             .unwrap()
             .borrow()

@@ -2277,7 +2277,7 @@ impl AST {
         e == selfs
     }
 
-    pub fn bases(_child: ASTType) -> Option<ASTType> {
+    pub fn bases(_child: &ASTType) -> Option<ASTType> {
         match _child {
             ASTType::IdentifierBase
             | ASTType::CommentBase

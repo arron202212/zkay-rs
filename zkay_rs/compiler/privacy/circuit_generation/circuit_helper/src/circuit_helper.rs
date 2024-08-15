@@ -1921,14 +1921,12 @@ where
             line!()
         );
         self._circ_trafo.as_ref().unwrap().visitBlock(
-            Some(
-                ast.try_as_if_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .then_branch
-                    .clone()
-                    .into(),
-            ),
+            &ast.try_as_if_statement_ref()
+                .unwrap()
+                .borrow()
+                .then_branch
+                .clone()
+                .into(),
             Some(cond.clone().unwrap()),
             Some(true),
         );
@@ -1983,16 +1981,14 @@ where
             //     line!()
             // );
             self._circ_trafo.as_ref().unwrap().visitBlock(
-                Some(
-                    ast.try_as_if_statement_ref()
-                        .unwrap()
-                        .borrow()
-                        .else_branch
-                        .as_ref()
-                        .unwrap()
-                        .clone()
-                        .into(),
-                ),
+                &ast.try_as_if_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .else_branch
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .into(),
                 Some(cond.clone().unwrap()),
                 Some(false),
             );

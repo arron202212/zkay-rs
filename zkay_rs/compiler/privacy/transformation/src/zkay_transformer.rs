@@ -70,14 +70,15 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::AnnotatedTypeName
                 | ASTType::VariableDeclaration
                 | ASTType::Parameter
                 | ASTType::StateVariableDeclaration
                 | ASTType::Mapping
+                | ASTType::ASTBase
         )
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
@@ -87,6 +88,7 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
             ASTType::Parameter => self.visitParameter(ast),
             ASTType::StateVariableDeclaration => self.visitStateVariableDeclaration(ast),
             ASTType::Mapping => self.visitMapping(ast),
+            ASTType::ASTBase => <Self as AstTransformerVisitor>::visitAST(self, ast),
             _ => Err(eyre::eyre!("unreach")),
         }
     }
@@ -94,7 +96,7 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
 impl ZkayVarDeclTransformer {
     pub fn new(global_vars: RcCell<GlobalVars>) -> Self {
         Self {
-            ast_transformer_visitor_base: AstTransformerVisitorBase::new(false),
+            ast_transformer_visitor_base: AstTransformerVisitorBase::new(true),
             expr_trafo: Some(ZkayExpressionTransformer::new(None, global_vars)),
         }
     }
@@ -123,7 +125,12 @@ impl ZkayVarDeclTransformer {
                 .into(),
             )
         } else {
-            // println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else============");
+            println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else====typename=={:?}======",ast.try_as_annotated_type_name_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .as_ref()
+                    .unwrap().get_ast_type());
             self.visit(
                 &ast.try_as_annotated_type_name_ref()
                     .unwrap()
@@ -136,11 +143,11 @@ impl ZkayVarDeclTransformer {
             )
         };
         if t.is_some() {
-            // *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
-            //     t.clone().and_then(|t| t.try_as_type_name()),
-            //     None,
-            //     Homomorphism::non_homomorphic(),
-            // );
+            *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
+                t.clone().and_then(|t| t.try_as_type_name()),
+                None,
+                Homomorphism::non_homomorphic(),
+            );
         } else {
             println!(
                 "=======none==={:?}==",
@@ -306,9 +313,9 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
     //     None
     // }
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::StatementListBase
                 | ASTType::StatementBase
                 | ASTType::IfStatement
@@ -318,6 +325,7 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
                 | ASTType::ContinueStatement
                 | ASTType::BreakStatement
                 | ASTType::ReturnStatement
+                | ASTType::ASTBase
         ) || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::Statement(Statement::StatementList(_)))
             || matches!(
@@ -351,6 +359,7 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
                 self.visitAssignmentStatement(ast)
             }
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
+            ASTType::ASTBase => <Self as AstTransformerVisitor>::visitAST(self, ast),
             _ => Err(eyre::eyre!("unreach")),
         }
     }
@@ -1305,7 +1314,16 @@ pub struct ZkayExpressionTransformer {
     generator: Option<RcCell<CircuitHelper>>,
     global_vars: RcCell<GlobalVars>,
 }
-impl TransformerVisitorEx for ZkayExpressionTransformer {}
+impl TransformerVisitorEx for ZkayExpressionTransformer {
+    fn visitBlock(
+        &self,
+        _ast: &ASTFlatten,
+        _guard_cond: Option<HybridArgumentIdf>,
+        _guard_val: Option<bool>,
+    ) -> eyre::Result<ASTFlatten> {
+        eyre::bail!("")
+    }
+}
 impl AstTransformerVisitor for ZkayExpressionTransformer {
     // fn default() -> Self {
     //     Self::new(None)
@@ -1316,9 +1334,9 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
     //     None
     // }
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::MeExpr
                 | ASTType::IdentifierExpr
                 | ASTType::IndexExpr
@@ -1326,6 +1344,7 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
                 | ASTType::TupleExpr
                 | ASTType::BuiltinFunction
                 | ASTType::PrimitiveCastExpr
+                | ASTType::ASTBase
         ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
             || matches!(ast, AST::Expression(Expression::LiteralExpr(_)))
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
@@ -1354,6 +1373,7 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
                 self.visitFunctionCallExpr(ast)
             }
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
+            ASTType::ASTBase => <Self as AstTransformerVisitor>::visitAST(self, ast),
             _ => Err(eyre::eyre!("unreach")),
         }
     }
@@ -2098,7 +2118,21 @@ pub struct ZkayCircuitTransformer {
     global_vars: RcCell<GlobalVars>,
 }
 
-impl TransformerVisitorEx for ZkayCircuitTransformer {}
+impl TransformerVisitorEx for ZkayCircuitTransformer {
+    fn visitBlock(
+        &self,
+        ast: &ASTFlatten,
+        guard_cond: Option<HybridArgumentIdf>,
+        guard_val: Option<bool>,
+    ) -> eyre::Result<ASTFlatten> {
+        self.generator
+            .as_ref()
+            .unwrap()
+            .borrow_mut()
+            .add_block_to_circuit(ast, guard_cond, guard_val)
+            .ok_or(eyre::eyre!("unexpected"))
+    }
+}
 impl AstTransformerVisitor for ZkayCircuitTransformer {
     // fn default() -> Self {
     //     Self::new(None)
@@ -2107,9 +2141,9 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::LiteralExprBase
                 | ASTType::IndexExpr
                 | ASTType::IdentifierExpr
@@ -2121,6 +2155,7 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
                 | ASTType::IfStatement
                 | ASTType::Block
                 | ASTType::StatementBase
+                | ASTType::ASTBase
         ) || matches!(ast, AST::Expression(Expression::ReclassifyExpr(_)))
             || matches!(ast, AST::Expression(Expression::LiteralExpr(_)))
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
@@ -2165,6 +2200,7 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
             }
             _ if matches!(ast.to_ast(), AST::Expression(_)) => self.visitExpression(ast),
             _ if matches!(ast.to_ast(), AST::Statement(_)) => self.visitStatement(ast),
+            ASTType::ASTBase => <Self as AstTransformerVisitor>::visitAST(self, ast),
             _ => Err(eyre::eyre!("unreach")),
         }
     }
@@ -2880,19 +2916,6 @@ impl ZkayCircuitTransformer {
             .ok_or(eyre::eyre!("unexpected"))
     }
 
-    pub fn visitBlock(
-        &self,
-        ast: &ASTFlatten,
-        guard_cond: Option<HybridArgumentIdf>,
-        guard_val: Option<bool>,
-    ) -> eyre::Result<ASTFlatten> {
-        self.generator
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .add_block_to_circuit(ast, guard_cond, guard_val)
-            .ok_or(eyre::eyre!("unexpected"))
-    }
     // """Fail if statement type was not handled."""
     // raise NotImplementedError("Unsupported statement")
     #[allow(unreachable_code)]

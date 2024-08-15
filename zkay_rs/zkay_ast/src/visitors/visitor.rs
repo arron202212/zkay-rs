@@ -69,7 +69,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
             ret_children = self.visit_children(ast).ok();
         }
         // println!("==before=get_visit_function={:?}==",ast.get_ast_type());
-        let f = self.get_visit_function(ast.get_ast_type(), ast);
+        let f = self.get_visit_function(&ast.get_ast_type(), ast);
         // println!("===get_visit_function={:?}==",ast.get_ast_type());
         if f.is_some() {
             ret = f;
@@ -94,7 +94,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         }
     }
 
-    fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<Self::Return> {
+    fn get_visit_function(&self, c: &ASTType, ast: &ASTFlatten) -> Option<Self::Return> {
         // if ast.get_ast_type() == ASTType::StatementListBase {
         //     if ast.is_statement_list_base() {
         //         println!(
@@ -153,9 +153,9 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         if self.has_attr(&ast.to_ast()) {
             // println!("==========aaaaaa=============={:?},{:?}",ast.get_ast_type(),c);
             return self.get_attr(&c, ast).ok();
-        } else if let Some(c) = AST::bases(c.clone()) {
+        } else if let Some(_c) = AST::bases(c) {
             // println!("======bbbbb=================={:?},{:?}",ast.get_ast_type(),c);
-            return self.get_visit_function(c, ast);
+            return self.get_visit_function(&_c, ast);
         }
         // println!("==========none=====end========={:?},{:?}",ast.get_ast_type(),c);
         None

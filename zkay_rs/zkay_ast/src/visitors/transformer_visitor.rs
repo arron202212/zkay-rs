@@ -15,12 +15,10 @@ use dyn_clone::DynClone;
 pub trait TransformerVisitorEx: DynClone + AstTransformerVisitor {
     fn visitBlock(
         &self,
-        _ast: Option<ASTFlatten>,
+        _ast: &ASTFlatten,
         _guard_cond: Option<HybridArgumentIdf>,
         _guard_val: Option<bool>,
-    ) -> Option<ASTFlatten> {
-        None
-    }
+    ) -> eyre::Result<ASTFlatten>;
 }
 dyn_clone::clone_trait_object!(TransformerVisitorEx);
 #[derive(Clone)]
@@ -61,7 +59,7 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     fn visit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         self._visit_internal(ast)
     }
-    fn has_attr(&self, ast: &AST) -> bool;
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten>;
     fn visit_list(&self, ast_list: &[ASTFlatten]) -> Vec<ASTFlatten> {
         ast_list.iter().filter_map(|a| self.visit(a)).collect()
@@ -75,19 +73,25 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
-            print!("Visiting {:?}", ast);
+            // print!("Visiting {:?}", ast);
         }
 
-        self.get_visit_function(ast.get_ast_type(), ast)
+        self.get_visit_function(&ast.get_ast_type(), ast)
     }
 
-    fn get_visit_function(&self, c: ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
-        if self.has_attr(&ast.to_ast()) {
-            self.get_attr(&c, ast).ok()
-        } else if let Some(c) = AST::bases(c) {
-            self.get_visit_function(c, ast)
+    fn get_visit_function(&self, c: &ASTType, ast: &ASTFlatten) -> Option<ASTFlatten> {
+        if self.has_attr(c, &ast.to_ast()) {
+            // if self.log() {
+            //             print!("==get_attr========= {:?}", ast.get_ast_type());
+            //         }
+            self.get_attr(c, ast).ok()
+        } else if let Some(_c) = AST::bases(c) {
+            // if self.log() {
+            //             print!("==get_visit_function==bases======{:?}==== {:?}", ast.get_ast_type(),_c);
+            //         }
+            self.get_visit_function(&_c, ast)
         } else {
-            None
+            panic!("====get_visit_function====None");
         }
     }
 

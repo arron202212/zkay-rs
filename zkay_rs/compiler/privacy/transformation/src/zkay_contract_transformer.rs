@@ -182,7 +182,7 @@ impl AstTransformerVisitor for ZkayTransformer {
     //     Self::new()
     // }
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         //println!("======has_attr========={:?}", ast.get_ast_type());
         matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::ASTBase)
     }
