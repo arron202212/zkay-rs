@@ -6,8 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, Expression,
-    ExpressionBaseProperty, IntoAST, Statement, TypeName, UserDefinedTypeName, AST,
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, ArgType, Expression,
+    ExpressionBaseProperty, FullArgsSpec, FullArgsSpecInit, IntoAST, Statement, TypeName,
+    UserDefinedTypeName, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::pointers::parent_setter::set_parents;
@@ -171,12 +172,11 @@ impl AstVisitor for DeepCopyVisitor {
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         // let c = ast;
-        // let args_names = vec![]; //inspect.getfullargspec(c.__init__).args[1..];
-        // let new_fields = BTreeMap::new();
-        // for arg_name in args_names {
-        //     let old_field = getattr(ast, arg_name);
-        //     new_fields[arg_name] = self.copy_field(old_field);
-        // }
+        let new_fields: Vec<_> = ast
+            .get_attr()
+            .iter()
+            .map(|old_field| self.copy_field(old_field))
+            .collect();
 
         // for k in ast.keys() {
         //     if !new_fields.contains(&k)
@@ -186,10 +186,9 @@ impl AstVisitor for DeepCopyVisitor {
         //         panic!( "Not copying,{}", k);
         //     }
         // }
-        // let mut ast_copy = c(new_fields);
-        // self.copy_ast_fields(ast, ast_copy);
-        // ast_copy
-        Ok(None)
+        let mut ast_copy = ast.from_fields(new_fields);
+        Self::copy_ast_fields(ast, &ast_copy);
+        Ok(Some(ast_copy))
     }
 }
 impl DeepCopyVisitor {
@@ -261,34 +260,75 @@ impl DeepCopyVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("==visitBuiltinFunction==========={ast:?}");
         let mut ast_copy = self.visit_children(ast);
-        ast_copy
-            .as_ref()
-            .unwrap()
-            .as_ref()
+        let is_private = ast
+            .to_ast()
+            .try_as_expression_ref()
             .unwrap()
             .try_as_builtin_function_ref()
             .unwrap()
-            .borrow_mut()
-            .is_private = ast
-            .try_as_builtin_function_ref()
-            .unwrap()
-            .borrow()
             .is_private;
-        ast_copy
-            .as_ref()
-            .unwrap()
-            .as_ref()
+        let homomorphism = ast
+            .to_ast()
+            .try_as_expression_ref()
             .unwrap()
             .try_as_builtin_function_ref()
             .unwrap()
-            .borrow_mut()
-            .homomorphism = ast
-            .try_as_builtin_function_ref()
-            .unwrap()
-            .borrow()
             .homomorphism
             .clone();
+        if ast_copy
+            .as_ref()
+            .unwrap()
+            .as_ref()
+            .unwrap()
+            .is_builtin_function()
+        {
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .borrow_mut()
+                .is_private = is_private;
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .try_as_builtin_function_ref()
+                .unwrap()
+                .borrow_mut()
+                .homomorphism = homomorphism;
+        } else if ast_copy.as_ref().unwrap().as_ref().unwrap().is_expression() {
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_builtin_function_mut()
+                .unwrap()
+                .is_private = is_private;
+            ast_copy
+                .as_ref()
+                .unwrap()
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_builtin_function_mut()
+                .unwrap()
+                .homomorphism = homomorphism;
+        } else {
+            panic!("==============else==========={ast:?}");
+        }
+
         ast_copy
     }
 
@@ -350,21 +390,17 @@ impl DeepCopyVisitor {
         ast_copy
     }
 
-    pub fn copy_field(&self, field: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // if field.is_none() {
-        //     None
-        // } else if isinstance(field, str)
-        //     || isinstance(field, int)
-        //     || isinstance(field, bool)
-        //     || isinstance(field, Enum)
-        //     || isinstance(field, CryptoParams)
-        // {
-        //     field
-        // } else if isinstance(field, list) {
-        //     field.iter().map(|e| self.copy_field(e)).collect()
-        // } else {
-        //     self.visit(field)
-        // }
-        Ok(Some(field.clone()))
+    pub fn copy_field(&self, field: &ArgType) -> ArgType {
+        match field {
+            ArgType::Str(_)
+            | ArgType::Int(_)
+            | ArgType::Bool(_)
+            | ArgType::CryptoParams(_)
+            | ArgType::ASTFlattenWeak(_) => field.clone(),
+            ArgType::Vec(v) => ArgType::Vec(v.iter().map(|a| self.copy_field(a)).collect()),
+            ArgType::ASTFlatten(astf) => {
+                ArgType::ASTFlatten(astf.as_ref().and_then(|_astf| self.visit(_astf)))
+            }
+        }
     }
 }

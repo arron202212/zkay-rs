@@ -621,6 +621,7 @@ impl ASTChildren for ASTFlatten {
         }
     }
 }
+
 impl ASTInstanceOf for ASTFlatten {
     fn get_ast_type(&self) -> ASTType {
         match self {
@@ -730,6 +731,409 @@ impl ASTInstanceOf for ASTFlatten {
         }
     }
 }
+
+impl FullArgsSpec for ASTFlatten {
+    fn get_attr(&self) -> Vec<ArgType> {
+        match self {
+            Self::AST(astf) => astf.borrow().get_attr(),
+            Self::Expression(astf) => astf.borrow().get_attr(),
+            Self::Identifier(astf) => astf.borrow().get_attr(),
+            Self::IdentifierBase(astf) => astf.borrow().get_attr(),
+            Self::Comment(astf) => astf.borrow().get_attr(),
+            Self::CommentBase(astf) => astf.borrow().get_attr(),
+            Self::AnnotatedTypeName(astf) => astf.borrow().get_attr(),
+            Self::EnumValue(astf) => astf.borrow().get_attr(),
+            Self::SourceUnit(astf) => astf.borrow().get_attr(),
+            Self::BlankLine(astf) => astf.borrow().get_attr(),
+            Self::BuiltinFunction(astf) => astf.borrow().get_attr(),
+            Self::FunctionCallExprBase(astf) => astf.borrow().get_attr(),
+            Self::FunctionCallExpr(astf) => astf.borrow().get_attr(),
+            Self::NewExpr(astf) => astf.borrow().get_attr(),
+            Self::PrimitiveCastExpr(astf) => astf.borrow().get_attr(),
+            Self::MeExpr(astf) => astf.borrow().get_attr(),
+            Self::AllExpr(astf) => astf.borrow().get_attr(),
+            Self::ReclassifyExpr(astf) => astf.borrow().get_attr(),
+            Self::LiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::BooleanLiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::NumberLiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::StringLiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::ArrayLiteralExprBase(astf) => astf.borrow().get_attr(),
+            Self::ArrayLiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::KeyLiteralExpr(astf) => astf.borrow().get_attr(),
+            Self::TupleOrLocationExpr(astf) => astf.borrow().get_attr(),
+            Self::TupleExpr(astf) => astf.borrow().get_attr(),
+            Self::IdentifierExpr(astf) => astf.borrow().get_attr(),
+            Self::MemberAccessExpr(astf) => astf.borrow().get_attr(),
+            Self::LocationExpr(astf) => astf.borrow().get_attr(),
+            Self::IndexExpr(astf) => astf.borrow().get_attr(),
+            Self::SliceExpr(astf) => astf.borrow().get_attr(),
+            Self::ReclassifyExprBase(astf) => astf.borrow().get_attr(),
+            Self::RehomExpr(astf) => astf.borrow().get_attr(),
+            Self::EncryptionExpression(astf) => astf.borrow().get_attr(),
+            Self::HybridArgumentIdf(astf) => astf.borrow().get_attr(),
+            Self::Statement(astf) => astf.borrow().get_attr(),
+            Self::IfStatement(astf) => astf.borrow().get_attr(),
+            Self::WhileStatement(astf) => astf.borrow().get_attr(),
+            Self::DoWhileStatement(astf) => astf.borrow().get_attr(),
+            Self::ForStatement(astf) => astf.borrow().get_attr(),
+            Self::BreakStatement(astf) => astf.borrow().get_attr(),
+            Self::ContinueStatement(astf) => astf.borrow().get_attr(),
+            Self::ReturnStatement(astf) => astf.borrow().get_attr(),
+            Self::StatementListBase(astf) => astf.borrow().get_attr(),
+            Self::StatementList(astf) => astf.borrow().get_attr(),
+            Self::CircuitDirectiveStatement(astf) => astf.borrow().get_attr(),
+            Self::CircuitComputationStatement(astf) => astf.borrow().get_attr(),
+            Self::EnterPrivateKeyStatement(astf) => astf.borrow().get_attr(),
+            Self::ExpressionStatement(astf) => astf.borrow().get_attr(),
+            Self::RequireStatement(astf) => astf.borrow().get_attr(),
+            Self::AssignmentStatementBase(astf) => astf.borrow().get_attr(),
+            Self::AssignmentStatement(astf) => astf.borrow().get_attr(),
+            Self::VariableDeclarationStatement(astf) => astf.borrow().get_attr(),
+            Self::CircuitInputStatement(astf) => astf.borrow().get_attr(),
+            Self::SimpleStatement(astf) => astf.borrow().get_attr(),
+            Self::Block(astf) => astf.borrow().get_attr(),
+            Self::IndentBlock(astf) => astf.borrow().get_attr(),
+            Self::Mapping(astf) => astf.borrow().get_attr(),
+            Self::TupleType(astf) => astf.borrow().get_attr(),
+            Self::TypeName(astf) => astf.borrow().get_attr(),
+            Self::ElementaryTypeName(astf) => astf.borrow().get_attr(),
+            Self::FunctionTypeName(astf) => astf.borrow().get_attr(),
+            Self::BoolTypeName(astf) => astf.borrow().get_attr(),
+            Self::BooleanLiteralType(astf) => astf.borrow().get_attr(),
+            Self::NumberLiteralType(astf) => astf.borrow().get_attr(),
+            Self::IntTypeName(astf) => astf.borrow().get_attr(),
+            Self::UintTypeName(astf) => astf.borrow().get_attr(),
+            Self::NumberTypeNameBase(astf) => astf.borrow().get_attr(),
+            Self::NumberTypeName(astf) => astf.borrow().get_attr(),
+            Self::UserDefinedTypeNameBase(astf) => astf.borrow().get_attr(),
+            Self::EnumTypeName(astf) => astf.borrow().get_attr(),
+            Self::EnumValueTypeName(astf) => astf.borrow().get_attr(),
+            Self::StructTypeName(astf) => astf.borrow().get_attr(),
+            Self::ContractTypeName(astf) => astf.borrow().get_attr(),
+            Self::AddressTypeName(astf) => astf.borrow().get_attr(),
+            Self::AddressPayableTypeName(astf) => astf.borrow().get_attr(),
+            Self::UserDefinedTypeName(astf) => astf.borrow().get_attr(),
+            Self::CipherText(astf) => astf.borrow().get_attr(),
+            Self::Randomness(astf) => astf.borrow().get_attr(),
+            Self::Key(astf) => astf.borrow().get_attr(),
+            Self::Proof(astf) => astf.borrow().get_attr(),
+            Self::ArrayBase(astf) => astf.borrow().get_attr(),
+            Self::Array(astf) => astf.borrow().get_attr(),
+            Self::IdentifierDeclaration(astf) => astf.borrow().get_attr(),
+            Self::VariableDeclaration(astf) => astf.borrow().get_attr(),
+            Self::Parameter(astf) => astf.borrow().get_attr(),
+            Self::StateVariableDeclaration(astf) => astf.borrow().get_attr(),
+            Self::NamespaceDefinition(astf) => astf.borrow().get_attr(),
+            Self::ConstructorOrFunctionDefinition(astf) => astf.borrow().get_attr(),
+            Self::EnumDefinition(astf) => astf.borrow().get_attr(),
+            Self::StructDefinition(astf) => astf.borrow().get_attr(),
+            Self::ContractDefinition(astf) => astf.borrow().get_attr(),
+            Self::DummyAnnotation(astf) => astf.borrow().get_attr(),
+            Self::CircuitStatement(astf) => astf.borrow().get_attr(),
+            Self::CircComment(astf) => astf.borrow().get_attr(),
+            Self::CircIndentBlock(astf) => astf.borrow().get_attr(),
+            Self::CircCall(astf) => astf.borrow().get_attr(),
+            Self::CircVarDecl(astf) => astf.borrow().get_attr(),
+            Self::CircGuardModification(astf) => astf.borrow().get_attr(),
+            Self::CircEncConstraint(astf) => astf.borrow().get_attr(),
+            Self::CircSymmEncConstraint(astf) => astf.borrow().get_attr(),
+            Self::CircEqConstraint(astf) => astf.borrow().get_attr(),
+        }
+    }
+}
+
+impl FullArgsSpecInit for ASTFlatten {
+    fn from_fields(&self, fields: Vec<ArgType>) -> Self {
+        match self {
+            Self::AST(astf) => Self::AST(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::Expression(astf) => {
+                Self::Expression(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Identifier(astf) => {
+                Self::Identifier(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::IdentifierBase(astf) => {
+                Self::IdentifierBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Comment(astf) => Self::Comment(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::CommentBase(astf) => {
+                Self::CommentBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::AnnotatedTypeName(astf) => {
+                Self::AnnotatedTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::EnumValue(astf) => {
+                Self::EnumValue(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::SourceUnit(astf) => {
+                Self::SourceUnit(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BlankLine(astf) => {
+                Self::BlankLine(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BuiltinFunction(astf) => {
+                Self::BuiltinFunction(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::FunctionCallExprBase(astf) => {
+                Self::FunctionCallExprBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::FunctionCallExpr(astf) => {
+                Self::FunctionCallExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NewExpr(astf) => Self::NewExpr(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::PrimitiveCastExpr(astf) => {
+                Self::PrimitiveCastExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::MeExpr(astf) => Self::MeExpr(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::AllExpr(astf) => Self::AllExpr(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::ReclassifyExpr(astf) => {
+                Self::ReclassifyExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::LiteralExpr(astf) => {
+                Self::LiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BooleanLiteralExpr(astf) => {
+                Self::BooleanLiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NumberLiteralExpr(astf) => {
+                Self::NumberLiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StringLiteralExpr(astf) => {
+                Self::StringLiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ArrayLiteralExprBase(astf) => {
+                Self::ArrayLiteralExprBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ArrayLiteralExpr(astf) => {
+                Self::ArrayLiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::KeyLiteralExpr(astf) => {
+                Self::KeyLiteralExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::TupleOrLocationExpr(astf) => {
+                Self::TupleOrLocationExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::TupleExpr(astf) => {
+                Self::TupleExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::IdentifierExpr(astf) => {
+                Self::IdentifierExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::MemberAccessExpr(astf) => {
+                Self::MemberAccessExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::LocationExpr(astf) => {
+                Self::LocationExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::IndexExpr(astf) => {
+                Self::IndexExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::SliceExpr(astf) => {
+                Self::SliceExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ReclassifyExprBase(astf) => {
+                Self::ReclassifyExprBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::RehomExpr(astf) => {
+                Self::RehomExpr(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::EncryptionExpression(astf) => {
+                Self::EncryptionExpression(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::HybridArgumentIdf(astf) => {
+                Self::HybridArgumentIdf(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Statement(astf) => {
+                Self::Statement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::IfStatement(astf) => {
+                Self::IfStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::WhileStatement(astf) => {
+                Self::WhileStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::DoWhileStatement(astf) => {
+                Self::DoWhileStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ForStatement(astf) => {
+                Self::ForStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BreakStatement(astf) => {
+                Self::BreakStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ContinueStatement(astf) => {
+                Self::ContinueStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ReturnStatement(astf) => {
+                Self::ReturnStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StatementListBase(astf) => {
+                Self::StatementListBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StatementList(astf) => {
+                Self::StatementList(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircuitDirectiveStatement(astf) => {
+                Self::CircuitDirectiveStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircuitComputationStatement(astf) => {
+                Self::CircuitComputationStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::EnterPrivateKeyStatement(astf) => {
+                Self::EnterPrivateKeyStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ExpressionStatement(astf) => {
+                Self::ExpressionStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::RequireStatement(astf) => {
+                Self::RequireStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::AssignmentStatementBase(astf) => {
+                Self::AssignmentStatementBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::AssignmentStatement(astf) => {
+                Self::AssignmentStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::VariableDeclarationStatement(astf) => {
+                Self::VariableDeclarationStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircuitInputStatement(astf) => {
+                Self::CircuitInputStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::SimpleStatement(astf) => {
+                Self::SimpleStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Block(astf) => Self::Block(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::IndentBlock(astf) => {
+                Self::IndentBlock(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Mapping(astf) => Self::Mapping(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::TupleType(astf) => {
+                Self::TupleType(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::TypeName(astf) => Self::TypeName(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::ElementaryTypeName(astf) => {
+                Self::ElementaryTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::FunctionTypeName(astf) => {
+                Self::FunctionTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BoolTypeName(astf) => {
+                Self::BoolTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::BooleanLiteralType(astf) => {
+                Self::BooleanLiteralType(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NumberLiteralType(astf) => {
+                Self::NumberLiteralType(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::IntTypeName(astf) => {
+                Self::IntTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::UintTypeName(astf) => {
+                Self::UintTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NumberTypeNameBase(astf) => {
+                Self::NumberTypeNameBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NumberTypeName(astf) => {
+                Self::NumberTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::UserDefinedTypeNameBase(astf) => {
+                Self::UserDefinedTypeNameBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::EnumTypeName(astf) => {
+                Self::EnumTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::EnumValueTypeName(astf) => {
+                Self::EnumValueTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StructTypeName(astf) => {
+                Self::StructTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ContractTypeName(astf) => {
+                Self::ContractTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::AddressTypeName(astf) => {
+                Self::AddressTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::AddressPayableTypeName(astf) => {
+                Self::AddressPayableTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::UserDefinedTypeName(astf) => {
+                Self::UserDefinedTypeName(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CipherText(astf) => {
+                Self::CipherText(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Randomness(astf) => {
+                Self::Randomness(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Key(astf) => Self::Key(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::Proof(astf) => Self::Proof(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::ArrayBase(astf) => {
+                Self::ArrayBase(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Array(astf) => Self::Array(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::IdentifierDeclaration(astf) => {
+                Self::IdentifierDeclaration(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::VariableDeclaration(astf) => {
+                Self::VariableDeclaration(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::Parameter(astf) => {
+                Self::Parameter(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StateVariableDeclaration(astf) => {
+                Self::StateVariableDeclaration(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::NamespaceDefinition(astf) => {
+                Self::NamespaceDefinition(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ConstructorOrFunctionDefinition(astf) => Self::ConstructorOrFunctionDefinition(
+                RcCell::new(astf.borrow().from_fields(fields)),
+            ),
+            Self::EnumDefinition(astf) => {
+                Self::EnumDefinition(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::StructDefinition(astf) => {
+                Self::StructDefinition(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::ContractDefinition(astf) => {
+                Self::ContractDefinition(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::DummyAnnotation(astf) => {
+                Self::DummyAnnotation(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircuitStatement(astf) => {
+                Self::CircuitStatement(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircComment(astf) => {
+                Self::CircComment(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircIndentBlock(astf) => {
+                Self::CircIndentBlock(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircCall(astf) => Self::CircCall(RcCell::new(astf.borrow().from_fields(fields))),
+            Self::CircVarDecl(astf) => {
+                Self::CircVarDecl(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircGuardModification(astf) => {
+                Self::CircGuardModification(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircEncConstraint(astf) => {
+                Self::CircEncConstraint(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircSymmEncConstraint(astf) => {
+                Self::CircSymmEncConstraint(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+            Self::CircEqConstraint(astf) => {
+                Self::CircEqConstraint(RcCell::new(astf.borrow().from_fields(fields)))
+            }
+        }
+    }
+}
+
 impl IntoAST for ASTFlatten {
     fn into_ast(self) -> AST {
         match self {
@@ -2764,15 +3168,15 @@ impl FullArgsSpecInit for ExpressionBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ExpressionBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -2935,10 +3339,11 @@ impl FullArgsSpecInit for HomomorphicBuiltin {
             fields[0].clone().try_as_str().flatten().unwrap().as_str(),
             fields[1].clone().try_as_str().flatten().unwrap(),
             fields[2]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| *arg.try_as_bool_ref().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_bool().unwrap())
                 .collect(),
         )
     }
@@ -3260,16 +3665,17 @@ impl FullArgsSpecInit for HomomorphicBuiltinFunction {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         HomomorphicBuiltinFunction::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name())
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name())
                 .unwrap(),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| *arg.try_as_bool_ref().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_bool().unwrap())
                 .collect(),
         )
     }
@@ -3446,17 +3852,18 @@ impl FullArgsSpecInit for FunctionCallExprBase {
         FunctionCallExprBase::new(
             fields[0].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| arg.try_as_ast_flatten_ref().unwrap().clone().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
             fields[2].clone().try_as_int().unwrap(),
             fields[3]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
         )
     }
 }
@@ -3537,7 +3944,7 @@ impl FullArgsSpecInit for NewExpr {
                 .clone()
                 .try_as_ast_flatten()
                 .flatten()
-                .and_then(|a| a.try_as_annotated_type_name()),
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
                 .clone()
                 .try_as_vec()
@@ -3698,10 +4105,10 @@ impl FullArgsSpecInit for LiteralExprBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         LiteralExprBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
         )
     }
 }
@@ -3985,10 +4392,11 @@ impl FullArgsSpecInit for ArrayLiteralExprBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ArrayLiteralExprBase::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| arg.try_as_ast_flatten_ref().unwrap().clone().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
         )
     }
@@ -4052,10 +4460,11 @@ impl FullArgsSpecInit for KeyLiteralExpr {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         KeyLiteralExpr::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| arg.try_as_ast_flatten_ref().unwrap().clone().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
             fields[1].clone().try_as_crypto_params().flatten().unwrap(),
         )
@@ -4240,15 +4649,15 @@ impl FullArgsSpecInit for TupleOrLocationExprBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TupleOrLocationExprBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -4303,10 +4712,11 @@ impl FullArgsSpecInit for TupleExpr {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         TupleExpr::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|arg| arg.try_as_ast_flatten_ref().unwrap().clone().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
         )
     }
@@ -4491,15 +4901,15 @@ impl FullArgsSpecInit for LocationExprBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         LocationExprBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -4667,10 +5077,10 @@ impl FullArgsSpecInit for MemberAccessExpr {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         MemberAccessExpr::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_location_expr()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_location_expr()),
             fields[1]
                 .clone()
                 .try_as_ast_flatten()
@@ -5056,10 +5466,10 @@ impl FullArgsSpecInit for ReclassifyExprBase {
             fields[1].clone().try_as_ast_flatten().flatten().unwrap(),
             fields[2].clone().try_as_str().unwrap(),
             fields[3]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
         )
     }
 }
@@ -5862,10 +6272,10 @@ impl FullArgsSpecInit for StatementBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StatementBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -5931,10 +6341,10 @@ impl FullArgsSpecInit for CircuitDirectiveStatementBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CircuitDirectiveStatementBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -5981,10 +6391,10 @@ impl FullArgsSpecInit for CircuitComputationStatement {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CircuitComputationStatement::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -6823,10 +7233,11 @@ impl FullArgsSpecInit for StatementListBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StatementListBase::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|a| a.clone().try_as_ast_flatten().flatten().unwrap())
+                .into_iter()
+                .map(|arg| arg.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
             fields[1].clone().try_as_bool().unwrap(),
         )
@@ -9043,10 +9454,10 @@ impl FullArgsSpecInit for CipherText {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         CipherText::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1].clone().try_as_crypto_params().flatten().unwrap(),
         )
     }
@@ -9547,12 +9958,12 @@ impl FullArgsSpecInit for FunctionTypeName {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         FunctionTypeName::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten()
+                    astf.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_parameter()
@@ -9560,18 +9971,19 @@ impl FullArgsSpecInit for FunctionTypeName {
                 })
                 .collect(),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|astf| astf.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|astf| astf.try_as_str().flatten().unwrap())
                 .collect(),
             fields[2]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten()
+                    astf.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_parameter()
@@ -10024,17 +10436,22 @@ impl FullArgsSpecInit for VariableDeclaration {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         VariableDeclaration::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|astf| astf.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|astf| astf.try_as_str().flatten().unwrap())
                 .collect(),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[2]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
             fields[3].clone().try_as_str().unwrap(),
         )
     }
@@ -10154,17 +10571,22 @@ impl FullArgsSpecInit for Parameter {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         Parameter::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|astf| astf.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|astf| astf.try_as_str().flatten().unwrap())
                 .collect(),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[2]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_identifier()),
             fields[3].clone().try_as_str().unwrap(),
         )
     }
@@ -10242,11 +10664,15 @@ impl FullArgsSpecInit for NamespaceDefinitionBase {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         NamespaceDefinitionBase::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_identifier()),
         )
     }
 }
@@ -10322,15 +10748,17 @@ impl FullArgsSpecInit for ConstructorOrFunctionDefinition {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ConstructorOrFunctionDefinition::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_identifier()),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten()
+                    astf.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_parameter()
@@ -10338,18 +10766,19 @@ impl FullArgsSpecInit for ConstructorOrFunctionDefinition {
                 })
                 .collect(),
             fields[2]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|astf| astf.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|astf| astf.try_as_str().flatten().unwrap())
                 .collect(),
             fields[3]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten()
+                    astf.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_parameter()
@@ -10359,7 +10788,8 @@ impl FullArgsSpecInit for ConstructorOrFunctionDefinition {
             fields[4]
                 .clone()
                 .try_as_ast_flatten()
-                .map(|astf| astf.unwrap().try_as_block().unwrap()),
+                .flatten()
+                .and_then(|astf| astf.try_as_block()),
         )
     }
 }
@@ -10611,17 +11041,22 @@ impl FullArgsSpecInit for StateVariableDeclaration {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StateVariableDeclaration::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_annotated_type_name()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_annotated_type_name()),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|astf| astf.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|astf| astf.try_as_str().flatten().unwrap())
                 .collect(),
             fields[2]
-                .try_as_ast_flatten_ref()
-                .and_then(|astf| astf.clone().unwrap().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|astf| astf.try_as_identifier()),
             fields[3].clone().try_as_ast_flatten().flatten(),
         )
     }
@@ -10674,10 +11109,10 @@ impl FullArgsSpecInit for EnumValue {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumValue::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
         )
     }
 }
@@ -10724,17 +11159,17 @@ impl FullArgsSpecInit for EnumDefinition {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         EnumDefinition::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|f| {
-                    f.clone()
-                        .try_as_ast_flatten()
+                    f.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_enum_value()
@@ -10790,15 +11225,16 @@ impl FullArgsSpecInit for StructDefinition {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         StructDefinition::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|v| v.clone().try_as_ast_flatten().flatten().unwrap())
+                .into_iter()
+                .map(|v| v.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
         )
     }
@@ -10888,54 +11324,52 @@ impl FullArgsSpecInit for ContractDefinition {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         ContractDefinition::new(
             fields[0]
-                .try_as_ast_flatten_ref()
-                .unwrap()
-                .as_ref()
-                .and_then(|astf| astf.clone().try_as_identifier()),
+                .clone()
+                .try_as_ast_flatten()
+                .flatten()
+                .and_then(|a| a.try_as_identifier()),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|f| f.clone().try_as_ast_flatten().flatten().unwrap())
+                .into_iter()
+                .map(|f| f.try_as_ast_flatten().flatten().unwrap())
                 .collect(),
             fields[2]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|f| {
-                    f.clone()
-                        .try_as_ast_flatten()
+                    f.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
-                        .clone()
                         .try_as_constructor_or_function_definition()
                         .unwrap()
                 })
                 .collect(),
             fields[3]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|f| {
-                    f.clone()
-                        .try_as_ast_flatten()
+                    f.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
-                        .clone()
                         .try_as_constructor_or_function_definition()
                         .unwrap()
                 })
                 .collect(),
             fields[4]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|f| {
-                    f.clone()
-                        .try_as_ast_flatten()
+                    f.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
-                        .clone()
                         .try_as_enum_definition()
                         .unwrap()
                 })
@@ -10949,7 +11383,6 @@ impl FullArgsSpecInit for ContractDefinition {
                     f.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
-                        .clone()
                         .try_as_struct_definition()
                         .unwrap()
                 })
@@ -11081,12 +11514,12 @@ impl FullArgsSpecInit for SourceUnit {
         SourceUnit::new(
             fields[0].clone().try_as_str().flatten().unwrap(),
             fields[1]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten()
+                    astf.try_as_ast_flatten()
                         .flatten()
                         .unwrap()
                         .try_as_contract_definition()
@@ -11094,10 +11527,11 @@ impl FullArgsSpecInit for SourceUnit {
                 })
                 .collect(),
             fields[2]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
-                .map(|v| v.clone().try_as_str().flatten().unwrap())
+                .into_iter()
+                .map(|v| v.try_as_str().flatten().unwrap())
                 .collect(),
         )
     }
@@ -11227,13 +11661,13 @@ impl FullArgsSpecInit for InstanceTarget {
     fn from_fields(&self, fields: Vec<ArgType>) -> Self {
         InstanceTarget::new(
             fields[0]
-                .try_as_vec_ref()
+                .clone()
+                .try_as_vec()
                 .unwrap()
-                .iter()
+                .into_iter()
                 .map(|astf| {
-                    astf.clone()
-                        .try_as_ast_flatten_weak()
-                        .and_then(|a| a.unwrap().upgrade())
+                    astf.try_as_ast_flatten_weak()
+                        .and_then(|a| a.and_then(|c| c.upgrade()))
                 })
                 .collect(),
         )
