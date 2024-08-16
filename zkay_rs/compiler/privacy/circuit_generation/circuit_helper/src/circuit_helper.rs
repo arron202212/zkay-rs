@@ -1920,7 +1920,7 @@ where
                 .to_string(),
             line!()
         );
-        self._circ_trafo.as_ref().unwrap().visitBlock(
+        let _ = self._circ_trafo.as_ref().unwrap().visitBlock(
             &ast.try_as_if_statement_ref()
                 .unwrap()
                 .borrow()
@@ -1980,7 +1980,7 @@ where
             //         .to_string(),
             //     line!()
             // );
-            self._circ_trafo.as_ref().unwrap().visitBlock(
+            let _ = self._circ_trafo.as_ref().unwrap().visitBlock(
                 &ast.try_as_if_statement_ref()
                     .unwrap()
                     .borrow()

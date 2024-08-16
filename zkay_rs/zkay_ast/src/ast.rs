@@ -1651,13 +1651,72 @@ impl ASTFlatten {
     pub fn set_expression_base_mut_ref_property<F: Fn(&mut ExpressionBase) -> ()>(&self, f: F) {
         match self {
             Self::Expression(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
-            _ => {}
+            Self::FunctionCallExprBase(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::FunctionCallExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::NewExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::PrimitiveCastExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::MeExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::AllExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::ReclassifyExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::LiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::BooleanLiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::NumberLiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::StringLiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::ArrayLiteralExprBase(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::ArrayLiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::KeyLiteralExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::TupleOrLocationExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::TupleExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::IdentifierExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::MemberAccessExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::LocationExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::IndexExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::SliceExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::ReclassifyExprBase(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::RehomExpr(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            Self::EncryptionExpression(astf) => f(astf.borrow_mut().expression_base_mut_ref()),
+            _ => {
+                panic!(
+                    "set_expression_base_mut_ref_property===={:?}",
+                    self.get_ast_type()
+                );
+            }
         }
     }
     pub fn set_statement_base_mut_ref_property<F: Fn(&mut StatementBase) -> ()>(&self, f: F) {
         match self {
             Self::Statement(astf) => f(astf.borrow_mut().statement_base_mut_ref().unwrap()),
-            _ => {}
+            Self::IfStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::WhileStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::DoWhileStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::ForStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::BreakStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::ContinueStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::ReturnStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::StatementListBase(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::StatementList(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::CircuitDirectiveStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::CircuitComputationStatement(astf) => {
+                f(astf.borrow_mut().statement_base_mut_ref())
+            }
+            Self::EnterPrivateKeyStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::ExpressionStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::RequireStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::AssignmentStatementBase(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::AssignmentStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::VariableDeclarationStatement(astf) => {
+                f(astf.borrow_mut().statement_base_mut_ref())
+            }
+            Self::CircuitInputStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::SimpleStatement(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::Block(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            Self::IndentBlock(astf) => f(astf.borrow_mut().statement_base_mut_ref()),
+            _ => {
+                panic!(
+                    "set_statement_base_mut_ref_property=={:?}",
+                    self.get_ast_type()
+                );
+            }
         }
     }
     pub fn ast_base_ref(&self) -> Option<RcCell<ASTBase>> {
@@ -12061,10 +12120,10 @@ impl AstVisitor for CodeVisitorBase {
     fn temper_result(&self) -> Self::Return {
         String::new()
     }
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         // println!("======has_attr========{:?}======",ast.get_ast_type());
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::ASTBase
                 | ASTType::PrimitiveCastExpr
                 | ASTType::BooleanLiteralExpr

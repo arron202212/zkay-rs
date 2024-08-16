@@ -49,10 +49,10 @@ impl AstVisitor for SolidityVisitor {
     fn temper_result(&self) -> Self::Return {
         String::new()
     }
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         // println!("======has_attr========{:?}======",ast.get_ast_type());
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::ASTBase
                 | ASTType::CommentBase
                 | ASTType::IdentifierBase

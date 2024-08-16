@@ -30,8 +30,8 @@ struct ReturnCheckVisitor {
 impl AstVisitor for ReturnCheckVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
-        ASTType::ReturnStatement == ast.get_ast_type()
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
+        matches!(name, ASTType::ReturnStatement)
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         match name {

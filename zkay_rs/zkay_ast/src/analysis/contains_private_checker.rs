@@ -36,9 +36,9 @@ impl AstVisitor for ContainsPrivVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::FunctionCallExprBase | ASTType::ExpressionBase
         ) || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
             || matches!(ast, AST::Expression(_))

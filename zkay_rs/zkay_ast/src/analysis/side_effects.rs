@@ -48,9 +48,9 @@ impl AstVisitor for SideEffectsDetector {
         false
     }
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::FunctionCallExprBase
                 | ASTType::ExpressionBase
                 | ASTType::AssignmentStatementBase
@@ -159,9 +159,9 @@ impl AstVisitor for DirectModificationDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::LocationExprBase
@@ -349,8 +349,8 @@ impl AstVisitor for IndirectModificationDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
-        matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::Parameter)
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+        matches!(name, ASTType::SourceUnit | ASTType::Parameter)
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
@@ -515,9 +515,9 @@ impl AstVisitor for EvalOrderUBChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::FunctionCallExprBase
                 | ASTType::ExpressionBase
                 | ASTType::AssignmentStatementBase

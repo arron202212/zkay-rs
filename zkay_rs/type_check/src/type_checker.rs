@@ -51,9 +51,9 @@ pub struct TypeCheckVisitor {
 impl AstVisitor for TypeCheckVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::VariableDeclarationStatement
                 | ASTType::PrimitiveCastExpr
                 | ASTType::NewExpr

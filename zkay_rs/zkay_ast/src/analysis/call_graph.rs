@@ -42,9 +42,9 @@ impl FunctionVisitor for DirectCalledFunctionDetector {}
 impl AstVisitor for DirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::FunctionCallExprBase
@@ -236,9 +236,9 @@ impl AstVisitor for IndirectCalledFunctionDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
         )
     }
@@ -344,9 +344,9 @@ impl FunctionVisitor for IndirectDynamicBodyDetector {}
 impl AstVisitor for IndirectDynamicBodyDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
         )
     }

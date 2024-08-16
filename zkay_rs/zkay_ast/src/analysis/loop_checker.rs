@@ -38,9 +38,9 @@ impl AstVisitor for LoopChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::WhileStatement

@@ -53,7 +53,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         res
         // self._visit_internal(ast).unwrap()
     }
-    fn has_attr(&self, ast: &AST) -> bool;
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return>;
     fn temper_result(&self) -> Self::Return;
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<Self::Return> {
@@ -150,9 +150,9 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         //     }
         // }
 
-        if self.has_attr(&ast.to_ast()) {
+        if self.has_attr(c, &ast.to_ast()) {
             // println!("==========aaaaaa=============={:?},{:?}",ast.get_ast_type(),c);
-            return self.get_attr(&c, ast).ok();
+            return self.get_attr(c, ast).ok();
         } else if let Some(_c) = AST::bases(c) {
             // println!("======bbbbb=================={:?},{:?}",ast.get_ast_type(),c);
             return self.get_visit_function(&_c, ast);

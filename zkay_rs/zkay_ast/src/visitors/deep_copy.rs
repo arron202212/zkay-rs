@@ -146,11 +146,9 @@ impl AstVisitor for DeepCopyVisitor {
     fn temper_result(&self) -> Self::Return {
         None
     }
-    fn has_attr(&self, ast: &AST) -> bool {
-        matches!(
-            ast.get_ast_type(),
-            ASTType::AnnotatedTypeName | ASTType::BuiltinFunction
-        ) || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+        matches!(name, ASTType::AnnotatedTypeName | ASTType::BuiltinFunction)
+            || matches!(ast, AST::TypeName(TypeName::UserDefinedTypeName(_)))
             || matches!(ast, AST::Expression(_))
             || matches!(ast, AST::Statement(_))
     }

@@ -48,9 +48,9 @@ impl FunctionVisitor for DirectCanBePrivateDetector {}
 impl AstVisitor for DirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::FunctionCallExprBase
@@ -390,9 +390,9 @@ impl FunctionVisitor for IndirectCanBePrivateDetector {}
 impl AstVisitor for IndirectCanBePrivateDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
         )
     }
@@ -453,9 +453,9 @@ impl FunctionVisitor for CircuitComplianceChecker {}
 impl AstVisitor for CircuitComplianceChecker {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::IndexExpr
@@ -879,9 +879,9 @@ impl AstVisitor for PrivateSetter {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::FunctionCallExprBase
@@ -1039,8 +1039,8 @@ impl FunctionVisitor for NonstaticOrIncompatibilityDetector {}
 impl AstVisitor for NonstaticOrIncompatibilityDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
-        matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::Parameter)
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+        matches!(name, ASTType::SourceUnit | ASTType::Parameter)
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {

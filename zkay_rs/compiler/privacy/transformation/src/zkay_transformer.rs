@@ -70,7 +70,7 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
     // type Return = Option<ASTFlatten>;
     // fn temper_result(&self) -> Option<ASTFlatten> {None}
 
-    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
             name,
             ASTType::AnnotatedTypeName
@@ -125,12 +125,12 @@ impl ZkayVarDeclTransformer {
                 .into(),
             )
         } else {
-            println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else====typename=={:?}======",ast.try_as_annotated_type_name_ref()
-                    .unwrap()
-                    .borrow()
-                    .type_name
-                    .as_ref()
-                    .unwrap().get_ast_type());
+            // println!("=====ZkayVarDeclTransformer================visitAnnotatedTypeName====else====typename=={:?}======",ast.try_as_annotated_type_name_ref()
+            //         .unwrap()
+            //         .borrow()
+            //         .type_name
+            //         .as_ref()
+            //         .unwrap().get_ast_type());
             self.visit(
                 &ast.try_as_annotated_type_name_ref()
                     .unwrap()

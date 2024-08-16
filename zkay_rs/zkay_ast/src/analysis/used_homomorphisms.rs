@@ -28,9 +28,9 @@ impl AstVisitor for UsedHomomorphismsVisitor {
         BTreeSet::new()
     }
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::AnnotatedTypeName
                 | ASTType::ExpressionBase
                 | ASTType::IdentifierDeclarationBase

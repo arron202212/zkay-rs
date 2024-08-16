@@ -36,9 +36,9 @@ struct AliasAnalysisVisitor {
 impl AstVisitor for AliasAnalysisVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::ContractDefinition
                 | ASTType::ConstructorOrFunctionDefinition
@@ -1638,7 +1638,7 @@ impl AstVisitor for GuardConditionAnalyzer {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, _name: &ASTType, ast: &AST) -> bool {
         matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {

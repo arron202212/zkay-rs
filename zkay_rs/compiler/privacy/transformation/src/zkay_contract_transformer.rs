@@ -182,9 +182,9 @@ impl AstTransformerVisitor for ZkayTransformer {
     //     Self::new()
     // }
 
-    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         //println!("======has_attr========={:?}", ast.get_ast_type());
-        matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::ASTBase)
+        matches!(name, ASTType::SourceUnit | ASTType::ASTBase)
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         //println!("======get_attr========={:?}", name);

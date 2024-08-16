@@ -43,9 +43,9 @@ impl FunctionVisitor for DirectHybridFunctionDetectionVisitor {}
 impl AstVisitor for DirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit
                 | ASTType::Parameter
                 | ASTType::PrimitiveCastExpr
@@ -299,9 +299,9 @@ impl AstVisitor for IndirectHybridFunctionDetectionVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit | ASTType::Parameter | ASTType::ConstructorOrFunctionDefinition
         )
     }
@@ -368,8 +368,8 @@ impl AstVisitor for NonInlineableCallDetector {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
 
-    fn has_attr(&self, ast: &AST) -> bool {
-        matches!(ast.get_ast_type(), ASTType::SourceUnit | ASTType::Parameter)
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
+        matches!(name, ASTType::SourceUnit | ASTType::Parameter)
             || matches!(ast, AST::Expression(Expression::FunctionCallExpr(_)))
     }
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {

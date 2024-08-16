@@ -21,9 +21,9 @@ struct ParentSetterVisitor {
 impl AstVisitor for ParentSetterVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, name: &ASTType, ast: &AST) -> bool {
         matches!(
-            ast.get_ast_type(),
+            name,
             ASTType::SourceUnit | ASTType::ConstructorOrFunctionDefinition
         ) || matches!(ast, AST::NamespaceDefinition(_))
     }
@@ -182,7 +182,7 @@ struct ExpressionToStatementVisitor {
 impl AstVisitor for ExpressionToStatementVisitor {
     type Return = ();
     fn temper_result(&self) -> Self::Return {}
-    fn has_attr(&self, ast: &AST) -> bool {
+    fn has_attr(&self, _name: &ASTType, ast: &AST) -> bool {
         matches!(ast, AST::Expression(_)) || matches!(ast, AST::Statement(_))
     }
     fn get_attr(
