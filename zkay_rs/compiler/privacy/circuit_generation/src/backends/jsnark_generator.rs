@@ -59,16 +59,16 @@ pub fn _get_t(mut t: Option<ASTFlatten>) -> String
                 .type_name
                 .clone()
         } else {
-            t.try_as_type_name()
+            Some(t)
         }
     });
     assert!(t.is_some());
     let t = t.unwrap();
-    let bits = t.borrow().elem_bitwidth();
+    let bits = t.to_ast().try_as_type_name().unwrap().elem_bitwidth();
     if bits == 1 {
         return String::from("ZkBool");
     }
-    if t.borrow().is_signed_numeric() {
+    if t.to_ast().try_as_type_name().unwrap().is_signed_numeric() {
         format!(r#"ZkInt({bits})"#)
     } else {
         format!(r#"ZkUint({bits})"#)
@@ -244,7 +244,9 @@ impl JsnarkVisitor {
                 .borrow()
                 .tgt
                 .t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .size_in_uints()
                 == stmt
                     .try_as_circ_eq_constraint_ref()
@@ -252,7 +254,9 @@ impl JsnarkVisitor {
                     .borrow()
                     .val
                     .t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .size_in_uints()
         );
         Ok(format!(
@@ -282,7 +286,9 @@ impl JsnarkVisitor {
             .borrow()
             .cipher
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_cipher());
         assert!(stmt
             .try_as_circ_enc_constraint_ref()
@@ -290,7 +296,9 @@ impl JsnarkVisitor {
             .borrow()
             .pk
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_key());
         assert!(stmt
             .try_as_circ_enc_constraint_ref()
@@ -298,7 +306,9 @@ impl JsnarkVisitor {
             .borrow()
             .rnd
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_randomness());
         assert!(
             stmt.try_as_circ_enc_constraint_ref()
@@ -306,7 +316,9 @@ impl JsnarkVisitor {
                 .borrow()
                 .cipher
                 .t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .try_as_array_ref()
                 .unwrap()
                 .crypto_params()
@@ -318,7 +330,9 @@ impl JsnarkVisitor {
                     .borrow()
                     .pk
                     .t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -330,7 +344,9 @@ impl JsnarkVisitor {
                     .borrow()
                     .pk
                     .t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -342,7 +358,9 @@ impl JsnarkVisitor {
                         .borrow()
                         .rnd
                         .t
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .try_as_array_ref()
                         .unwrap()
                         .crypto_params()
@@ -355,7 +373,9 @@ impl JsnarkVisitor {
             .borrow()
             .pk
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .try_as_array_ref()
             .unwrap()
             .crypto_params()
@@ -412,7 +432,9 @@ impl JsnarkVisitor {
             .borrow()
             .iv_cipher
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_cipher());
         assert!(stmt
             .try_as_circ_symm_enc_constraint_ref()
@@ -420,7 +442,9 @@ impl JsnarkVisitor {
             .borrow()
             .other_pk
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_key());
         assert!(
             stmt.try_as_circ_symm_enc_constraint_ref()
@@ -428,7 +452,9 @@ impl JsnarkVisitor {
                 .borrow()
                 .iv_cipher
                 .t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .try_as_array_ref()
                 .unwrap()
                 .crypto_params()
@@ -440,7 +466,9 @@ impl JsnarkVisitor {
                     .borrow()
                     .other_pk
                     .t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -453,7 +481,9 @@ impl JsnarkVisitor {
             .borrow()
             .other_pk
             .t
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .try_as_array_ref()
             .unwrap()
             .crypto_params()
@@ -546,10 +576,7 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let t = _get_t(
-            ast.try_as_number_literal_expr_ref()
-                .map(|x| x.clone().into()),
-        );
+        let t = _get_t(Some(ast.clone()));
         Ok(
             if ast.try_as_number_literal_expr_ref().unwrap().borrow().value < (1 << 31) {
                 format!(
@@ -584,7 +611,9 @@ impl JsnarkVisitor {
                 .try_as_hybrid_argument_idf_ref()
                 .unwrap()
                 .t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .is_cipher()
             {
                 format!(
@@ -632,7 +661,9 @@ impl JsnarkVisitor {
                 .try_as_hybrid_argument_idf_ref()
                 .unwrap()
                 .t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .is_cipher()
             {
                 format!(
@@ -654,7 +685,9 @@ impl JsnarkVisitor {
                         .try_as_hybrid_argument_idf_ref()
                         .unwrap()
                         .t
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .size_in_uints()
                         == 1
                 );
@@ -723,7 +756,9 @@ impl JsnarkVisitor {
                         .type_name
                         .as_ref()
                         .unwrap()
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .is_literals()
                 );
                 args[1] = ast.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
@@ -737,7 +772,9 @@ impl JsnarkVisitor {
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_elementary_type_name_ref()
                     .unwrap()
                     .try_as_number_type_name_ref()
@@ -890,7 +927,9 @@ impl JsnarkVisitor {
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .elem_bitwidth()
                     == 256
             );
@@ -900,7 +939,7 @@ impl JsnarkVisitor {
                         .clone()
                         .into(),
                 ),
-                &RcCell::new(TypeName::uint_type()),
+                &RcCell::new(TypeName::uint_type()).into(),
             );
         }
 
@@ -942,12 +981,9 @@ impl JsnarkVisitor {
     pub fn handle_cast(
         &self,
         wire: String,
-        t: &RcCell<TypeName>,
+        t: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(format!(
-            r#"cast({wire}, {})"#,
-            _get_t(Some(t.clone().into()))
-        ))
+        Ok(format!(r#"cast({wire}, {})"#, _get_t(Some(t.clone()))))
     }
 }
 // """Generate java code which adds circuit IO as described by circuit"""
@@ -957,43 +993,67 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
         input_init_stmts.push(format!(
             r#"addS("{}", {}, {});"#,
             sec_input.identifier_base.name,
-            sec_input.t.borrow().size_in_uints(),
-            _get_t(Some(sec_input.t.clone().into()))
+            sec_input
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .size_in_uints(),
+            _get_t(Some(sec_input.t.clone()))
         ));
     }
 
     for pub_input in circuit.borrow().input_idfs() {
-        input_init_stmts.push(if pub_input.t.borrow().is_key() {
-            let backend = pub_input
-                .t
-                .borrow()
-                .try_as_array_ref()
-                .unwrap()
-                .crypto_params()
-                .as_ref()
-                .unwrap()
-                .crypto_name
-                .clone();
-            format!(
-                r#"addK("{backend}", "{}", {});"#,
-                pub_input.identifier_base.name,
-                pub_input.t.borrow().size_in_uints()
-            )
-        } else {
-            format!(
-                r#"addIn("{}", {}, {});"#,
-                pub_input.identifier_base.name,
-                pub_input.t.borrow().size_in_uints(),
-                _get_t(Some(pub_input.t.clone().into()))
-            )
-        });
+        input_init_stmts.push(
+            if pub_input.t.to_ast().try_as_type_name().unwrap().is_key() {
+                let backend = pub_input
+                    .t
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
+                    .try_as_array_ref()
+                    .unwrap()
+                    .crypto_params()
+                    .as_ref()
+                    .unwrap()
+                    .crypto_name
+                    .clone();
+                format!(
+                    r#"addK("{backend}", "{}", {});"#,
+                    pub_input.identifier_base.name,
+                    pub_input
+                        .t
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .size_in_uints()
+                )
+            } else {
+                format!(
+                    r#"addIn("{}", {}, {});"#,
+                    pub_input.identifier_base.name,
+                    pub_input
+                        .t
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .size_in_uints(),
+                    _get_t(Some(pub_input.t.clone()))
+                )
+            },
+        );
     }
     for pub_output in circuit.borrow().output_idfs() {
         input_init_stmts.push(format!(
             r#"addOut("{}", {}, {});"#,
             pub_output.identifier_base.name,
-            pub_output.t.borrow().size_in_uints(),
-            _get_t(Some(pub_output.t.clone().into()))
+            pub_output
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .size_in_uints(),
+            _get_t(Some(pub_output.t.clone()))
         ));
     }
 

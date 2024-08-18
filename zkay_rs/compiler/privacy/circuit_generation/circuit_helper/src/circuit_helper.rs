@@ -502,7 +502,9 @@ where
                 .type_name
                 .as_ref()
                 .unwrap()
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .try_as_array_ref()
                 .unwrap()
                 .crypto_params()
@@ -527,13 +529,16 @@ where
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
                     .clone()
                     .unwrap(),
-            )),
+            ))
+            .into(),
             None,
         );
         RcCell::new(IdentifierExpr::new(
@@ -651,7 +656,15 @@ where
                     .unwrap()
                     .borrow()
                     .zkay_type();
-                if !t.type_name.as_ref().unwrap().borrow().is_primitive_type() {
+                if !t
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
+                    .is_primitive_type()
+                {
                     unimplemented!(
                         "Reference types inside private if statements are not supported"
                     );
@@ -908,7 +921,7 @@ where
         // println!("==_in_name_factory.add_idf=====1==={}========", name);
         let idf = self._in_name_factory.add_idf(
             name.to_owned(),
-            &RcCell::new(TypeName::key_type(crypto_params.clone())),
+            &RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
             None,
         );
         let pki_contract_name = CFG
@@ -971,7 +984,9 @@ where
                             .type_name
                             .as_ref()
                             .unwrap()
-                            .borrow()
+                            .to_ast()
+                            .try_as_type_name()
+                            .unwrap()
                             .try_as_array_ref()
                             .unwrap()
                             .crypto_params()
@@ -984,7 +999,7 @@ where
         println!("==request_private_key===============");
         self._secret_input_name_factory.add_idf(
             key_name,
-            &RcCell::new(TypeName::key_type(crypto_params.clone())),
+            &RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
             None,
         );
         vec![RcCell::new(EnterPrivateKeyStatement::new(crypto_params.clone())).into()]
@@ -1070,7 +1085,9 @@ where
                     input_expr.as_ref().unwrap(),
                     &t.as_ref()
                         .unwrap()
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .try_as_elementary_type_name_ref()
                         .unwrap()
                         .try_as_boolean_literal_type_ref()
@@ -1085,7 +1102,9 @@ where
                     input_expr.as_ref().unwrap(),
                     &t.as_ref()
                         .unwrap()
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .try_as_elementary_type_name_ref()
                         .unwrap()
                         .try_as_number_type_name_ref()
@@ -1268,7 +1287,8 @@ where
                     .borrow()
                     .homomorphism
                     .clone(),
-            ));
+            ))
+            .into();
             let tname = format!(
                 "{}{t_suffix}",
                 self._in_name_factory
@@ -1786,7 +1806,13 @@ where
                 .borrow()
                 .type_name
                 .clone();
-            assert!(t.as_ref().unwrap().borrow().can_be_private());
+            assert!(t
+                .as_ref()
+                .unwrap()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .can_be_private());
             let mut nle = NumberLiteralExpr::new(0, false);
             nle.ast_base_mut_ref().borrow_mut().parent = Some(ast.clone().downgrade());
             nle.literal_expr_base.expression_base.statement = Some(ast.clone().downgrade());
@@ -2403,7 +2429,9 @@ where
                 .type_name
                 .as_ref()
                 .unwrap()
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .is_cipher()
         {
             //If the result is public, add an equality constraint to ensure that the user supplied public output
@@ -2490,7 +2518,8 @@ where
                     .unwrap()
                     .clone(),
                 homomorphism.clone(),
-            ));
+            ))
+            .into();
             let tname = format!(
                 "{}{t_suffix}",
                 self._out_name_factory
@@ -2775,7 +2804,7 @@ where
                         cipher.clone().identifier_base.name
                     }
                 ),
-                &RcCell::new(TypeName::rnd_type(crypto_params.clone())),
+                &RcCell::new(TypeName::rnd_type(crypto_params.clone())).into(),
                 None,
             );
             let pk =
@@ -2807,7 +2836,7 @@ where
         let key_name = Self::get_own_secret_key_name(crypto_params);
         HybridArgumentIdf::new(
             key_name,
-            RcCell::new(TypeName::key_type(crypto_params.clone())),
+            RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
             HybridArgType::PrivCircuitVal,
             None,
         )
@@ -2834,7 +2863,7 @@ where
                 .insert((privacy.clone().into(), crypto_params.clone()));
             return HybridArgumentIdf::new(
                 Self::get_glob_key_name(&privacy, crypto_params),
-                RcCell::new(TypeName::key_type(crypto_params.clone())),
+                RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
                 HybridArgType::PubCircuitArg,
                 None,
             );
@@ -2870,7 +2899,7 @@ where
         let name = format!(
             "{}_{}",
             self._in_name_factory.base_name_factory.get_new_name(
-                &RcCell::new(TypeName::key_type(crypto_params.clone())),
+                &RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
                 false
             ),
             privacy.try_as_identifier_ref().unwrap().borrow().name()
@@ -2911,7 +2940,7 @@ where
         cipher: HybridArgumentIdf,
         crypto_params: CryptoParams,
     ) -> HybridArgumentIdf {
-        let key_t = RcCell::new(TypeName::key_type(crypto_params.clone()));
+        let key_t = RcCell::new(TypeName::key_type(crypto_params.clone())).into();
         let name = format!(
             "{}_sender",
             self._in_name_factory

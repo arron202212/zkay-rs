@@ -827,7 +827,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         assert!(type_name.is_some(), "type name is none");
         Some(
             AnnotatedTypeName::new(
-                type_name.map(RcCell::new),
+                type_name.map(|tn| RcCell::new(tn).into()),
                 privacy_annotation
                     .map(RcCell::new)
                     .map(Into::<ASTFlatten>::into),
@@ -2216,7 +2216,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         });
         Some(
             PrimitiveCastExpr::new(
-                elem_type.map(RcCell::new).unwrap(),
+                elem_type.map(RcCell::new).unwrap().into(),
                 expr.map(RcCell::new).map(Into::<ASTFlatten>::into).unwrap(),
                 false,
             )

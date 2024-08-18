@@ -210,7 +210,9 @@ impl DirectCanBePrivateDetector {
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .can_be_private();
             }
             ast.to_ast()
@@ -310,7 +312,13 @@ impl DirectCanBePrivateDetector {
             .try_as_constructor_or_function_definition_mut()
             .unwrap()
             .borrow_mut()
-            .can_be_private &= t.as_ref().unwrap().borrow().can_be_private();
+            .can_be_private &= t
+            .as_ref()
+            .unwrap()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
+            .can_be_private();
         self.visit_children(ast)
     }
 
@@ -835,7 +843,9 @@ impl CircuitComplianceChecker {
                     .zkay_type()
                     .type_name
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .is_primitive_type()
                 {
                     panic!("Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
@@ -1213,7 +1223,9 @@ impl NonstaticOrIncompatibilityDetector {
                         .type_name
                         .as_ref()
                         .unwrap()
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .is_literals();
                 if ast
                     .to_ast()
@@ -1259,7 +1271,9 @@ impl NonstaticOrIncompatibilityDetector {
                         .type_name
                         .as_ref()
                         .unwrap()
-                        .borrow()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .can_be_private();
                 }
             }

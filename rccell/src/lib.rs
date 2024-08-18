@@ -271,6 +271,9 @@ impl<T> WeakCell<T> {
     pub fn ptr_eq(&self, other: &Self) -> bool {
         self.0.ptr_eq(&other.0)
     }
+    pub fn ptr_string(&self) -> String {
+        format!("{:?}", self.0.as_ptr())
+    }
 }
 
 impl<T> Clone for RcCell<T> {
@@ -335,6 +338,8 @@ impl<T> Hash for WeakCell<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         if let Some(s) = self.upgrade() {
             s.0.as_ptr().hash(state);
+        } else {
+            self.0.as_ptr().hash(state);
         }
     }
 }

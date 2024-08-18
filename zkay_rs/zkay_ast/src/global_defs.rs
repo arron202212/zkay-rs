@@ -139,7 +139,7 @@ impl GlobalDefs {
                 RcCell::new(VariableDeclaration::new(
                     vec![],
                     Some(RcCell::new(AnnotatedTypeName::new(
-                        Some(RcCell::new(TypeName::address_payable_type())),
+                        Some(RcCell::new(TypeName::address_payable_type()).into()),
                         None,
                         Homomorphism::non_homomorphic(),
                     ))),
@@ -164,7 +164,7 @@ impl GlobalDefs {
                 RcCell::new(VariableDeclaration::new(
                     vec![],
                     Some(RcCell::new(AnnotatedTypeName::new(
-                        Some(RcCell::new(TypeName::address_payable_type())),
+                        Some(RcCell::new(TypeName::address_payable_type()).into()),
                         None,
                         Homomorphism::non_homomorphic(),
                     ))),
@@ -217,7 +217,7 @@ impl GlobalDefs {
                 RcCell::new(VariableDeclaration::new(
                     vec![],
                     Some(RcCell::new(AnnotatedTypeName::new(
-                        Some(RcCell::new(TypeName::address_payable_type())),
+                        Some(RcCell::new(TypeName::address_payable_type()).into()),
                         None,
                         Homomorphism::non_homomorphic(),
                     ))),

@@ -639,6 +639,7 @@ impl AstVisitor for SymbolTableLinker {
 }
 impl SymbolTableLinker {
     pub fn new(global_vars: RcCell<GlobalVars>) -> Self {
+        println!("=========SymbolTableLinker=================");
         Self {
             ast_visitor_base: AstVisitorBase::new("post", false),
             global_vars,
@@ -968,8 +969,13 @@ impl SymbolTableLinker {
         //     .borrow()
         //     .name());
         let fid = self.find_identifier_declaration(&ast).ok();
+        println!("==={}======fid==", fid.as_ref().unwrap());
         // println!("====visitIdentifierExpr====fid===ast.get_ast_type()========={:?}", fid.as_ref().unwrap().get_ast_type());
-        let ta = fid.map(|d| d.downgrade());
+        let ta = fid.map(|d| {
+            let dd = d.downgrade();
+            println!("=========ptr_string===={:?}", dd.ptr_string());
+            dd
+        });
         // println!("====visitIdentifierExpr=======ta========={:?}", ta);
 
         ast.ast_base_ref().unwrap().borrow_mut().target = ta;
@@ -1183,8 +1189,8 @@ impl SymbolTableLinker {
             .borrow()
             .type_name
             .clone();
-        if t.clone()
-            .map_or(false, |tn| is_instance(&tn, ASTType::ArrayBase))
+        if t.as_ref()
+            .map_or(false, |tn| is_instance(tn, ASTType::ArrayBase))
         {
             assert!(
                 &ast.to_ast()
@@ -1229,16 +1235,15 @@ impl SymbolTableLinker {
             return Ok(());
         }
         assert!(
-            t.clone()
-                .map_or(false, |t| is_instance(&t, ASTType::UserDefinedTypeNameBase)),
+            t.as_ref()
+                .map_or(false, |t| is_instance(t, ASTType::UserDefinedTypeNameBase)),
             "is not UserDefinedTypeNameBase"
         );
 
         // assert!(isinstance(t, UserDefinedTypeName));
 
-        if t.clone()
+        if t.as_ref()
             .unwrap()
-            .borrow()
             .ast_base_ref()
             .unwrap()
             .borrow()
@@ -1247,13 +1252,12 @@ impl SymbolTableLinker {
         {
             t.as_ref()
                 .unwrap()
-                .borrow()
                 .ast_base_ref()
                 .unwrap()
                 .borrow_mut()
                 .parent = Some(ast.clone().downgrade());
 
-            self.visit(&t.clone().unwrap().into());
+            self.visit(t.as_ref().unwrap());
 
             // println!("==========target is   none===========");
             //   println!(
@@ -1263,9 +1267,8 @@ impl SymbolTableLinker {
             //             return Ok(());
         }
 
-        if t.clone()
+        if t.as_ref()
             .unwrap()
-            .borrow()
             .ast_base_ref()
             .unwrap()
             .borrow()
@@ -1273,9 +1276,8 @@ impl SymbolTableLinker {
             .is_some()
         {
             let idf = t
-                .clone()
+                .as_ref()
                 .unwrap()
-                .borrow()
                 .ast_base_ref()
                 .unwrap()
                 .borrow()
@@ -1375,16 +1377,20 @@ impl SymbolTableLinker {
             .clone()
             .unwrap();
         // println!("====source_t=================={:?}",source_t);
-        let value_type = if source_t.borrow().is_mapping() {
+        let value_type = if source_t.to_ast().try_as_type_name().unwrap().is_mapping() {
             source_t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .try_as_mapping_ref()
                 .unwrap()
                 .value_type
                 .clone()
-        } else if source_t.borrow().is_array() {
+        } else if source_t.to_ast().try_as_type_name().unwrap().is_array() {
             source_t
-                .borrow()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
                 .try_as_array_ref()
                 .unwrap()
                 .value_type()

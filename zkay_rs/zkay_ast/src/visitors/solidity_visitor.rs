@@ -1793,13 +1793,17 @@ impl SolidityVisitor {
             (Some(_), None) => Ordering::Greater,
             (Some(t1), Some(t2)) => {
                 let cmp = t1
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .size_in_uints()
-                    .cmp(&t2.borrow().size_in_uints());
+                    .cmp(&t2.to_ast().try_as_type_name().unwrap().size_in_uints());
                 if cmp == Ordering::Equal {
-                    t1.borrow()
+                    t1.to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .elem_bitwidth()
-                        .cmp(&t2.borrow().elem_bitwidth())
+                        .cmp(&t2.to_ast().try_as_type_name().unwrap().elem_bitwidth())
                 } else {
                     cmp
                 }

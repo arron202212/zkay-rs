@@ -30,7 +30,7 @@ impl ExpressionASType for {struct_name} {{
         }} else  {{
             selfs.ast_base_mut_ref().borrow_mut().annotated_type =
                 Some(RcCell::new(AnnotatedTypeName::new(
-                    t.to_ast().try_as_type_name().map(RcCell::new),
+                    Some(t.clone()),
                     None,
                     Homomorphism::non_homomorphic(),
                 )));

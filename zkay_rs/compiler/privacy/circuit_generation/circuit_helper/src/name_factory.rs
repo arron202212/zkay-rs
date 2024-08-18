@@ -1,5 +1,5 @@
 use rccell::RcCell;
-use zkay_ast::ast::{ASTFlatten, HybridArgType, HybridArgumentIdf, Identifier, TypeName};
+use zkay_ast::ast::{ASTFlatten, HybridArgType, HybridArgumentIdf, Identifier, IntoAST, TypeName};
 #[derive(Clone)]
 pub struct BaseNameFactory {
     pub base_name: String,
@@ -21,8 +21,8 @@ impl BaseNameFactory {
     // :param t: transformed type
     // :param inc: if true, the internal counter, which is used as part of fresh ids, is incremented
     // """
-    pub fn get_new_name(&self, t: &RcCell<TypeName>, inc: bool) -> String {
-        let postfix = match t.borrow() {
+    pub fn get_new_name(&self, t: &ASTFlatten, inc: bool) -> String {
+        let postfix = match t.to_ast().try_as_type_name().unwrap() {
             _t if _t.is_key() => "key",
             _t if _t.is_cipher() => "cipher",
             _t if _t.is_randomness() => "rnd",
@@ -61,11 +61,7 @@ impl NameFactory {
         }
     }
     // """Generate a new HybridArgumentIdf which references priv_expr and has transformed type t."""
-    pub fn get_new_idf(
-        &self,
-        t: &RcCell<TypeName>,
-        priv_expr: Option<ASTFlatten>,
-    ) -> HybridArgumentIdf {
+    pub fn get_new_idf(&self, t: &ASTFlatten, priv_expr: Option<ASTFlatten>) -> HybridArgumentIdf {
         // println!(
         //     "===get_new_idf========{:?}==={}=",
         //     t.borrow().get_ast_type(),
@@ -73,7 +69,7 @@ impl NameFactory {
         // );
         let name = self.base_name_factory.get_new_name(t, true);
         let idf = HybridArgumentIdf::new(name, t.clone(), self.arg_type.clone(), priv_expr);
-        *self.size.borrow_mut() += t.borrow().size_in_uints();
+        *self.size.borrow_mut() += t.to_ast().try_as_type_name().unwrap().size_in_uints();
         self.idfs
             .borrow_mut()
             .push(Identifier::HybridArgumentIdf(idf.clone()));
@@ -87,7 +83,7 @@ impl NameFactory {
     pub fn add_idf(
         &self,
         name: String,
-        t: &RcCell<TypeName>,
+        t: &ASTFlatten,
         priv_expr: Option<&ASTFlatten>,
     ) -> HybridArgumentIdf {
         // println!(
@@ -102,7 +98,7 @@ impl NameFactory {
             priv_expr.clone().cloned(),
         );
         *self.base_name_factory.count.borrow_mut() += 1;
-        *self.size.borrow_mut() += t.borrow().size_in_uints();
+        *self.size.borrow_mut() += t.to_ast().try_as_type_name().unwrap().size_in_uints();
         self.idfs
             .borrow_mut()
             .push(Identifier::HybridArgumentIdf(idf.clone()));

@@ -262,15 +262,19 @@ impl ZkayTransformer {
         let cast_0_to_c = RcCell::new(PrimitiveCastExpr::new(
             RcCell::new(TypeName::UserDefinedTypeName(
                 UserDefinedTypeName::ContractTypeName(c_type.clone()),
-            )),
+            ))
+            .into(),
             RcCell::new(NumberLiteralExpr::new(0, false)).into(),
             false,
         ));
         RcCell::new(StateVariableDeclaration::new(
             Some(RcCell::new(AnnotatedTypeName::new(
-                Some(RcCell::new(TypeName::UserDefinedTypeName(
-                    UserDefinedTypeName::ContractTypeName(c_type.clone()),
-                ))),
+                Some(
+                    RcCell::new(TypeName::UserDefinedTypeName(
+                        UserDefinedTypeName::ContractTypeName(c_type.clone()),
+                    ))
+                    .into(),
+                ),
                 None,
                 String::from("NON_HOMOMORPHIC"),
             ))),
@@ -896,7 +900,9 @@ impl ZkayTransformer {
             //println!("=====create_internal_verification_wrapper===={}=", line!());
             if is_instance(&s.t, ASTType::CipherText)
                 && s.t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -908,7 +914,9 @@ impl ZkayTransformer {
                 // Assumption: s.t.crypto_params.key_len == 1 for all symmetric ciphers
                 assert!(
                     me_key_idx.contains_key(
-                        &s.t.borrow()
+                        &s.t.to_ast()
+                            .try_as_type_name()
+                            .unwrap()
                             .try_as_array_ref()
                             .unwrap()
                             .crypto_params()
@@ -919,7 +927,9 @@ impl ZkayTransformer {
                 );
                 let key_idx = me_key_idx[&s
                     .t
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -935,7 +945,9 @@ impl ZkayTransformer {
                 )
                 .index(ExprUnion::I32(key_idx));
                 let cipher_payload_len =
-                    s.t.borrow()
+                    s.t.to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .try_as_array_ref()
                         .unwrap()
                         .crypto_params()
@@ -962,7 +974,7 @@ impl ZkayTransformer {
                         .assign(sender_key),
                 );
             }
-            offset += s.t.borrow().size_in_uints();
+            offset += s.t.to_ast().try_as_type_name().unwrap().size_in_uints();
         }
         //println!("=====create_internal_verification_wrapper===={}=", line!());
         if !deserialize_stmts.is_empty() {
@@ -1011,7 +1023,7 @@ impl ZkayTransformer {
                 Some(RcCell::new(in_start_idx.clone()).into()),
                 offset,
             ));
-            offset += s.t.borrow().size_in_uints();
+            offset += s.t.to_ast().try_as_type_name().unwrap().size_in_uints();
         }
         //println!("=====create_internal_verification_wrapper===={}=", line!());
         if offset != 0 {
@@ -1239,7 +1251,9 @@ impl ZkayTransformer {
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -1411,7 +1425,9 @@ impl ZkayTransformer {
                     .type_name
                     .as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -1474,7 +1490,9 @@ impl ZkayTransformer {
                 assert!(is_instance(c.as_ref().unwrap(), ASTType::CipherText));
                 if c.as_ref()
                     .unwrap()
-                    .borrow()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
                     .try_as_array_ref()
                     .unwrap()
                     .crypto_params()
@@ -1493,7 +1511,9 @@ impl ZkayTransformer {
                         me_key_idx[&c
                             .as_ref()
                             .unwrap()
-                            .borrow()
+                            .to_ast()
+                            .try_as_type_name()
+                            .unwrap()
                             .try_as_array_ref()
                             .unwrap()
                             .crypto_params()
@@ -1558,7 +1578,7 @@ impl ZkayTransformer {
         // Declare in array
         let new_in_array_expr = NewExpr::new(
             Some(RcCell::new(AnnotatedTypeName::new(
-                Some(RcCell::new(TypeName::dyn_uint_array())),
+                Some(RcCell::new(TypeName::dyn_uint_array()).into()),
                 None,
                 zkay_ast::homomorphism::Homomorphism::non_homomorphic(),
             ))),

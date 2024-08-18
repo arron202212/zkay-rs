@@ -61,6 +61,7 @@ use zkay_derive::AstTransformerVisitorBaseRefImpl;
 pub struct ZkayVarDeclTransformer {
     ast_transformer_visitor_base: AstTransformerVisitorBase,
     expr_trafo: Option<ZkayExpressionTransformer>,
+    global_vars: RcCell<GlobalVars>,
 }
 
 impl AstTransformerVisitor for ZkayVarDeclTransformer {
@@ -97,7 +98,8 @@ impl ZkayVarDeclTransformer {
     pub fn new(global_vars: RcCell<GlobalVars>) -> Self {
         Self {
             ast_transformer_visitor_base: AstTransformerVisitorBase::new(true),
-            expr_trafo: Some(ZkayExpressionTransformer::new(None, global_vars)),
+            expr_trafo: Some(ZkayExpressionTransformer::new(None, global_vars.clone())),
+            global_vars,
         }
     }
 
@@ -131,23 +133,46 @@ impl ZkayVarDeclTransformer {
             //         .type_name
             //         .as_ref()
             //         .unwrap().get_ast_type());
-            self.visit(
-                &ast.try_as_annotated_type_name_ref()
-                    .unwrap()
-                    .borrow()
-                    .type_name
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .into(),
-            )
+            if ast
+                .try_as_annotated_type_name_ref()
+                .unwrap()
+                .borrow()
+                .type_name
+                .as_ref()
+                .unwrap()
+                .get_ast_type()
+                == ASTType::Mapping
+            {
+                self.visit(
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .try_as_mapping_ref()
+                        .unwrap()
+                        .clone_owned(self.global_vars.clone())
+                        .as_ref()
+                        .unwrap(),
+                )
+            } else {
+                self.visit(
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap(),
+                )
+            }
         };
         if t.is_some() {
-            *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() = AnnotatedTypeName::new(
-                t.clone().and_then(|t| t.try_as_type_name()),
-                None,
-                Homomorphism::non_homomorphic(),
-            );
+            *ast.try_as_annotated_type_name_ref().unwrap().borrow_mut() =
+                AnnotatedTypeName::new(t.clone(), None, Homomorphism::non_homomorphic());
         } else {
             println!(
                 "=======none==={:?}==",
@@ -163,7 +188,7 @@ impl ZkayVarDeclTransformer {
 
         // println!("=======tT==========={},{}====",t.is_some(),t.clone().and_then(|t| t.try_as_type_name()).is_some());
         Ok(RcCell::new(AnnotatedTypeName::new(
-            t.and_then(|t| t.try_as_type_name()),
+            t,
             None,
             Homomorphism::non_homomorphic(),
         ))
@@ -208,7 +233,9 @@ impl ZkayVarDeclTransformer {
             .type_name
             .as_ref()
             .unwrap()
-            .borrow()
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
             .is_primitive_type()
         {
             ast.as_ref()
@@ -2475,7 +2502,7 @@ impl ZkayCircuitTransformer {
 
         //Constant folding for literal types
         if let TypeName::ElementaryTypeName(ElementaryTypeName::BooleanLiteralType(t)) =
-            &t.borrow().clone()
+            &t.to_ast().try_as_type_name().unwrap().clone()
         {
             return replace_expr(
                 ast,
@@ -2486,7 +2513,7 @@ impl ZkayCircuitTransformer {
             .ok_or(eyre::eyre!("unexpected"));
         } else if let TypeName::ElementaryTypeName(ElementaryTypeName::NumberTypeName(
             NumberTypeName::NumberLiteralType(t),
-        )) = &*t.borrow()
+        )) = t.to_ast().try_as_type_name().unwrap()
         {
             return replace_expr(
                 &ast,
