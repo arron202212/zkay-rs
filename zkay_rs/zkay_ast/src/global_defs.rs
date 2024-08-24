@@ -9,8 +9,8 @@
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
     ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, AnnotatedTypeName, Block,
-    ConstructorOrFunctionDefinition, FunctionTypeName, Identifier, IdentifierBase, IntoAST,
-    Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
+    ConstructorOrFunctionDefinition, DeepClone, FunctionTypeName, Identifier, IdentifierBase,
+    IntoAST, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
     UserDefinedTypeName, VariableDeclaration,
 };
 use crate::homomorphism::Homomorphism;
@@ -269,7 +269,7 @@ impl GlobalVars {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .clone(),
+                            .clone_inner(),
                     )],
                     Some(ASTFlatten::from(global_defs.borrow().msg_struct.clone()).downgrade()),
                 )
@@ -302,7 +302,7 @@ impl GlobalVars {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .clone(),
+                            .clone_inner(),
                     )],
                     Some(ASTFlatten::from(global_defs.borrow().block_struct.clone()).downgrade()),
                 )
@@ -335,7 +335,7 @@ impl GlobalVars {
                             .idf()
                             .unwrap()
                             .borrow()
-                            .clone(),
+                            .clone_inner(),
                     )],
                     Some(ASTFlatten::from(global_defs.borrow().tx_struct.clone()).downgrade()),
                 )

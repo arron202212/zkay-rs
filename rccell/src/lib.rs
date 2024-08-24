@@ -211,6 +211,16 @@ impl<T> RcCell<T> {
     pub fn borrow_mut(&self) -> RefMut<T> {
         self.0.borrow_mut()
     }
+    pub fn ptr_string(&self) -> String {
+        format!("{:?}", self.0.as_ptr())
+    }
+}
+
+impl<T: Clone> RcCell<T> {
+    /// Constructs a new `Pin<RcCell<T>>`. It is only implemented if T implements [Unpin].
+    pub fn clone_inner(&self) -> Self {
+        Self::new(self.0.borrow().clone())
+    }
 }
 
 impl<T: std::marker::Unpin> RcCell<T> {

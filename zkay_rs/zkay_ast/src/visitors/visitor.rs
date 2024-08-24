@@ -59,7 +59,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<Self::Return> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
-            print!("Visiting {:?}", ast);
+            // print!("Visiting {:?}", ast);
         }
         let mut ret = None;
         let mut ret_children = None;
@@ -164,7 +164,9 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         // println!("====={:?}=========visit_children=========begin====",ast.get_ast_type());
         let mut ret = self.temper_result();
         for c in ast.children() {
+            // if self.log() {
             // println!("=========={:?}====visit_children====ddddd==={:?}======",ast.get_ast_type(),c.get_ast_type());
+            // }
             ret = self.visit(&c);
         }
         // println!("====={:?}=========visit_children=========end====",ast.get_ast_type());

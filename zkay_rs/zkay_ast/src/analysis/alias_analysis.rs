@@ -10,7 +10,7 @@ use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
     is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AssignmentStatement,
     AssignmentStatementBaseProperty, Block, BreakStatement, BuiltinFunction,
-    ConstructorOrFunctionDefinition, ContinueStatement, DoWhileStatement, Expression,
+    ConstructorOrFunctionDefinition, ContinueStatement, DeepClone, DoWhileStatement, Expression,
     ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
     IdentifierDeclarationBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
     RequireStatement, ReturnStatement, SimpleStatement, Statement, StatementBaseMutRef,
@@ -149,6 +149,7 @@ impl AliasAnalysisVisitor {
                     .idf()
                     .as_ref()
                     .unwrap()
+                    .clone_inner()
                     .to_ast(),
             );
         }
@@ -165,6 +166,7 @@ impl AliasAnalysisVisitor {
                     .idf()
                     .as_ref()
                     .unwrap()
+                    .clone_inner()
                     .to_ast(),
             );
         }
@@ -1108,7 +1110,7 @@ impl AliasAnalysisVisitor {
             .variable_declaration
             .borrow()
             .idf()
-            .clone();
+            .clone_inner();
         //   println!("{:?},=============={:?}",after,name);
         assert!(after
             .as_ref()

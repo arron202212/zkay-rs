@@ -9,7 +9,7 @@
 use crate::ast::{
     indent, is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName,
     ArrayBaseProperty, ArrayLiteralExprBaseProperty, AssignmentStatementBaseProperty, CodeVisitor,
-    CodeVisitorBase, CommentBaseProperty, ElementaryTypeNameBaseProperty, Expression,
+    CodeVisitorBase, CommentBaseProperty, DeepClone, ElementaryTypeNameBaseProperty, Expression,
     FunctionCallExprBaseProperty, Identifier, IdentifierBaseProperty, IntoAST, IntoStatement,
     ListUnion, LiteralExpr, MeExpr, Parameter, ParameterUnion, ReclassifyExprBaseProperty,
     SimpleStatement, SingleOrListUnion, Statement, StatementList, TypeName,

@@ -434,10 +434,10 @@ where
             .unwrap()
             .borrow()
             .is_cipher());
-        println!(
-            "==_secret_input_name_factory=====ensure_parameter_encryption======{}====",
-            line!()
-        );
+        // println!(
+        //     "==_secret_input_name_factory=====ensure_parameter_encryption======{}====",
+        //     line!()
+        // );
         let plain_idf = self._secret_input_name_factory.add_idf(
             param
                 .borrow()
@@ -475,7 +475,7 @@ where
             ),
             param.borrow().idf().as_ref().unwrap().borrow().name()
         );
-        println!("==__in_name_factory.add_idf========={}==", name);
+        // println!("==__in_name_factory.add_idf========={}==", name);
         let cipher_idf = self._in_name_factory.add_idf(
             name,
             param
@@ -681,8 +681,7 @@ where
                             .try_as_identifier_declaration_ref()
                             .unwrap()
                             .borrow()
-                            .idf()
-                            .clone()
+                            .idf_inner()
                             .unwrap(),
                     ),
                     Some(RcCell::new(ret_t)),
@@ -721,8 +720,7 @@ where
                             .try_as_identifier_declaration_ref()
                             .unwrap()
                             .borrow()
-                            .idf()
-                            .clone(),
+                            .idf_inner(),
                         None,
                     ))
                 })
@@ -996,7 +994,7 @@ where
                     .contains(crypto_params)
         );
         let key_name = Self::get_own_secret_key_name(crypto_params);
-        println!("==request_private_key===============");
+        // println!("==request_private_key===============");
         self._secret_input_name_factory.add_idf(
             key_name,
             &RcCell::new(TypeName::key_type(crypto_params.clone())).into(),
@@ -1645,10 +1643,7 @@ where
             // with
             self.circ_indent_block("");
             {
-                self.create_new_idf_version_from_value(
-                    &param.borrow().idf().as_ref().unwrap().clone(),
-                    arg,
-                );
+                self.create_new_idf_version_from_value(&param.borrow().idf_inner().unwrap(), arg);
             }
         }
 

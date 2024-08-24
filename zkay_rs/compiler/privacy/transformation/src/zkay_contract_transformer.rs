@@ -25,7 +25,7 @@ use zkay_ast::ast::{
     AnnotatedTypeName, Array, ArrayBase, ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase,
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
     CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
-    ContractTypeName, ExprUnion, Expression, ExpressionASType, ExpressionStatement,
+    ContractTypeName, DeepClone, ExprUnion, Expression, ExpressionASType, ExpressionStatement,
     FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier, IdentifierBase,
     IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration, IdentifierExpr,
     IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr,
@@ -470,8 +470,7 @@ impl ZkayTransformer {
                             .unwrap()
                             .try_as_state_variable_declaration_ref()
                             .unwrap()
-                            .idf()
-                            .clone()
+                            .idf_inner()
                             .unwrap()
                             .into(),
                     );
@@ -1050,7 +1049,7 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 let mut idf = IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        vd.borrow().idf().clone().unwrap(),
+                                        vd.borrow().idf_inner().unwrap(),
                                     ),
                                     None,
                                 );
@@ -1138,7 +1137,7 @@ impl ZkayTransformer {
             new_modifiers.push(String::from("view"));
         }
         let mut new_f = ConstructorOrFunctionDefinition::new(
-            f.borrow().idf().clone(),
+            f.borrow().idf_inner(),
             original_params.clone(),
             new_modifiers,
             f.borrow().return_parameters.clone(),
@@ -1451,7 +1450,7 @@ impl ZkayTransformer {
                 .assign(
                     RcCell::new(
                         IdentifierExpr::new(
-                            IdentifierExprUnion::Identifier(p.borrow().idf().clone().unwrap()),
+                            IdentifierExprUnion::Identifier(p.borrow().idf_inner().unwrap()),
                             None,
                         )
                         .slice(0, cipher_payload_len, None),
@@ -1521,7 +1520,7 @@ impl ZkayTransformer {
                             .unwrap()],
                     ));
                     let idf = IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(p.borrow().idf().clone().unwrap()),
+                        IdentifierExprUnion::Identifier(p.borrow().idf_inner().unwrap()),
                         None,
                     )
                     .as_type(&p.borrow().annotated_type().clone().unwrap().into());
@@ -1554,7 +1553,7 @@ impl ZkayTransformer {
                             RcCell::new(VariableDeclaration::new(
                                 vec![],
                                 p.borrow().annotated_type().clone(),
-                                p.borrow().idf().clone(),
+                                p.borrow().idf_inner(),
                                 None,
                             )),
                             Some(RcCell::new(lit).into()),
@@ -1617,14 +1616,14 @@ impl ZkayTransformer {
             .iter()
             .map(|param| {
                 RcCell::new(IdentifierExpr::new(
-                    IdentifierExprUnion::Identifier(param.borrow().idf().clone().unwrap()),
+                    IdentifierExprUnion::Identifier(param.borrow().idf_inner().unwrap()),
                     None,
                 ))
                 .into()
             })
             .collect();
         let mut idf = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(int_fct.borrow().idf().clone().unwrap()),
+            IdentifierExprUnion::Identifier(int_fct.borrow().idf_inner().unwrap()),
             None,
         );
         idf.ast_base_ref().borrow_mut().target =
@@ -1684,7 +1683,7 @@ impl ZkayTransformer {
                         .iter()
                         .map(|vd| {
                             RcCell::new(IdentifierExpr::new(
-                                IdentifierExprUnion::Identifier(vd.borrow().idf().clone().unwrap()),
+                                IdentifierExprUnion::Identifier(vd.borrow().idf_inner().unwrap()),
                                 None,
                             ))
                             .into()
@@ -1762,7 +1761,7 @@ impl ZkayTransformer {
                             .map(|vd| {
                                 RcCell::new(IdentifierExpr::new(
                                     IdentifierExprUnion::Identifier(
-                                        vd.borrow().idf().clone().unwrap(),
+                                        vd.borrow().idf_inner().unwrap(),
                                     ),
                                     None,
                                 ))

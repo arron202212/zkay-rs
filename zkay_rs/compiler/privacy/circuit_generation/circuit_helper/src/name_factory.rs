@@ -1,5 +1,5 @@
 use rccell::RcCell;
-use zkay_ast::ast::{ASTFlatten, HybridArgType, HybridArgumentIdf, Identifier, IntoAST, TypeName};
+use zkay_ast::ast::{ASTFlatten, HybridArgType, HybridArgumentIdf, Identifier, IntoAST};
 #[derive(Clone)]
 pub struct BaseNameFactory {
     pub base_name: String,

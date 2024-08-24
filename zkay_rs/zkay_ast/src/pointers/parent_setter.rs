@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
+    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
     ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
     Identifier, IntoAST, NamespaceDefinition, SourceUnit, Statement, StatementBaseMutRef, AST,
 };
@@ -46,7 +46,28 @@ impl AstVisitor for ParentSetterVisitor {
             c.ast_base_ref().unwrap().borrow_mut().parent = Some(ast.clone().downgrade());
             c.ast_base_ref().unwrap().borrow_mut().namespace =
                 ast.ast_base_ref().unwrap().borrow().namespace().clone();
-            // println!("====visit_children========parent============{:?},========{:?}",ast.get_ast_type(),c.get_ast_type());
+            if c.code() == "votum"
+                || is_instances(
+                    &c,
+                    vec![
+                        ASTType::VariableDeclaration,
+                        ASTType::VariableDeclarationStatement,
+                        ASTType::FunctionCallExprBase,
+                        ASTType::RequireStatement,
+                        ASTType::IndentBlock,
+                        ASTType::Block,
+                    ],
+                )
+            {
+                println!(
+                    "====visit_children======{}==parent=={}=={}====={:?},======={:?}",
+                    c.code() == "votum",
+                    ast.ptr_string(),
+                    c.ptr_string(),
+                    ast.get_ast_type(),
+                    c.get_ast_type()
+                );
+            }
             // println!(
             //         "=0000000={:?}==={:?}===children=={:?}======={:?}",
             //         ast.get_ast_type(),
@@ -64,6 +85,7 @@ impl AstVisitor for ParentSetterVisitor {
 
 impl ParentSetterVisitor {
     pub fn new() -> Self {
+        println!("======ParentSetterVisitor===============================");
         Self {
             ast_visitor_base: AstVisitorBase::new("pre", false),
         }
@@ -236,116 +258,119 @@ impl ExpressionToStatementVisitor {
         //     //     parent.as_ref().unwrap().get_ast_type()
         //     // );
         // }
-        if ast.is_expression() {
-            ast.try_as_expression_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-            //      println!("=====statement=====is_expression===={:?}===========",ast.try_as_expression_ref()
-            // .unwrap()
-            // .borrow_mut()
-            // .expression_base_mut_ref()
-            // .statement.is_some());
-        } else if ast.is_location_expr() {
-            ast.try_as_location_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_tuple_or_location_expr() {
-            ast.try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_member_access_expr() {
-            ast.try_as_member_access_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_index_expr() {
-            ast.try_as_index_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_primitive_cast_expr() {
-            ast.try_as_primitive_cast_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_tuple_expr() {
-            ast.try_as_tuple_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_function_call_expr() {
-            ast.try_as_function_call_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_number_literal_expr() {
-            ast.try_as_number_literal_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_new_expr() {
-            ast.try_as_new_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_identifier_expr() {
-            ast.try_as_identifier_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_slice_expr() {
-            ast.try_as_slice_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_key_literal_expr() {
-            ast.try_as_key_literal_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_reclassify_expr() {
-            ast.try_as_reclassify_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_reclassify_expr_base() {
-            ast.try_as_reclassify_expr_base_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_function_call_expr_base() {
-            ast.try_as_function_call_expr_base_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_array_literal_expr() {
-            ast.try_as_array_literal_expr_ref()
-                .unwrap()
-                .borrow_mut()
-                .expression_base_mut_ref()
-                .statement = parent.map(|p| p.clone().downgrade());
-        } else {
-            panic!("===================else======={ast:?}");
-        }
+        ast.set_expression_base_mut_ref_property(|expr| {
+            expr.statement = parent.clone().map(|p| p.downgrade());
+        });
+        // if ast.is_expression() {
+        //     ast.try_as_expression_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        //     //      println!("=====statement=====is_expression===={:?}===========",ast.try_as_expression_ref()
+        //     // .unwrap()
+        //     // .borrow_mut()
+        //     // .expression_base_mut_ref()
+        //     // .statement.is_some());
+        // } else if ast.is_location_expr() {
+        //     ast.try_as_location_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_tuple_or_location_expr() {
+        //     ast.try_as_tuple_or_location_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_member_access_expr() {
+        //     ast.try_as_member_access_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_index_expr() {
+        //     ast.try_as_index_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_primitive_cast_expr() {
+        //     ast.try_as_primitive_cast_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_tuple_expr() {
+        //     ast.try_as_tuple_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_function_call_expr() {
+        //     ast.try_as_function_call_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_number_literal_expr() {
+        //     ast.try_as_number_literal_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_new_expr() {
+        //     ast.try_as_new_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_identifier_expr() {
+        //     ast.try_as_identifier_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_slice_expr() {
+        //     ast.try_as_slice_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_key_literal_expr() {
+        //     ast.try_as_key_literal_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_reclassify_expr() {
+        //     ast.try_as_reclassify_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_reclassify_expr_base() {
+        //     ast.try_as_reclassify_expr_base_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_function_call_expr_base() {
+        //     ast.try_as_function_call_expr_base_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_array_literal_expr() {
+        //     ast.try_as_array_literal_expr_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .expression_base_mut_ref()
+        //         .statement = parent.map(|p| p.clone().downgrade());
+        // } else {
+        //     panic!("===================else======={ast:?}");
+        // }
 
         Ok(())
     }
@@ -378,34 +403,37 @@ impl ExpressionToStatementVisitor {
         //     "=====visitStatement====get_ast_type===={:?}",
         //     ast.get_ast_type()
         // );
-        if ast.is_block() {
-            ast.try_as_block_ref()
-                .unwrap()
-                .borrow_mut()
-                .statement_base_mut_ref()
-                .function = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_ast() {
-            ast.try_as_ast_ref()
-                .unwrap()
-                .borrow_mut()
-                .try_as_statement_mut()
-                .unwrap()
-                .statement_base_mut_ref()
-                .unwrap()
-                .function = parent.map(|p| p.clone().downgrade());
-        } else if ast.is_simple_statement() {
-            ast.try_as_simple_statement_ref()
-                .unwrap()
-                .borrow_mut()
-                .statement_base_mut_ref()
-                .function = parent.map(|p| p.clone().downgrade());
-        } else {
-            // println!(
-            //     "=====visitStatement=======else==={:?}=====",
-            //     ast.get_ast_type()
-            // );
-            eyre::bail!("=========else===========");
-        }
+        ast.set_statement_base_mut_ref_property(|stmt| {
+            stmt.function = parent.clone().map(|p| p.downgrade());
+        });
+        // if ast.is_block() {
+        //     ast.try_as_block_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .statement_base_mut_ref()
+        //         .function = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_ast() {
+        //     ast.try_as_ast_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .try_as_statement_mut()
+        //         .unwrap()
+        //         .statement_base_mut_ref()
+        //         .unwrap()
+        //         .function = parent.map(|p| p.clone().downgrade());
+        // } else if ast.is_simple_statement() {
+        //     ast.try_as_simple_statement_ref()
+        //         .unwrap()
+        //         .borrow_mut()
+        //         .statement_base_mut_ref()
+        //         .function = parent.map(|p| p.clone().downgrade());
+        // } else {
+        //     panic!(
+        //         "=====visitStatement=======else==={:?}=====",
+        //         ast
+        //     );
+        //     // eyre::bail!("=========else===========");
+        // }
         // println!("====ExpressionToStatementVisitor=====6=====visitStatement==={:?}==",ast.get_ast_type());
         Ok(())
     }

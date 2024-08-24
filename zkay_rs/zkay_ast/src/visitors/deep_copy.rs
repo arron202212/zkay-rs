@@ -46,7 +46,7 @@ pub fn deep_copy(
         .parent = parent;
     set_parents(ast_copy.as_mut().unwrap());
     // let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
-    println!("===deep_copy==========");
+    // println!("===deep_copy==========");
     link_identifiers(ast_copy.as_mut().unwrap(), global_vars.clone());
     ast_copy
 }
@@ -82,7 +82,7 @@ pub fn _replace_ast(
     if old_ast.ast_base_ref().unwrap().borrow().parent().is_some() {
         set_parents(new_ast);
         // let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
-        println!("===_replace_ast==========");
+        // println!("===_replace_ast==========");
         link_identifiers(new_ast, global_vars.clone());
     }
 }

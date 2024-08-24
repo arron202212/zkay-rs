@@ -22,9 +22,9 @@ use zkay_ast::ast::{
     AnnotatedTypeName, AssignmentStatement, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, BlankLine, Block, BooleanLiteralExpr, BooleanLiteralType,
     BreakStatement, BuiltinFunction, ChildListBuilder, Comment, CommentBase, ContinueStatement,
-    DoWhileStatement, ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion,
-    Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement,
-    FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
+    DeepClone, DoWhileStatement, ElementaryTypeName, EncryptionExpression, EnumDefinition,
+    ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty,
+    ForStatement, FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
     FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
     IdentifierBaseMutRef, IdentifierBaseProperty, IdentifierDeclaration,
     IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IdentifierUnion,
@@ -771,7 +771,7 @@ impl ZkayStatementTransformer {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .clone()
+                        .clone_inner()
                 } else {
                     ast.to_ast()
                         .try_as_statement_ref()
@@ -806,7 +806,7 @@ impl ZkayStatementTransformer {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .clone()
+                        .clone_inner()
                 };
                 assert!(is_instance(&ridf, ASTType::HybridArgumentIdf));
                 if let Identifier::HybridArgumentIdf(ridf) = ridf {
@@ -1285,7 +1285,7 @@ impl ZkayStatementTransformer {
                 .iter()
                 .map(|vd| {
                     let mut idf = IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(vd.borrow().idf().clone().unwrap()),
+                        IdentifierExprUnion::Identifier(vd.borrow().idf_inner().unwrap()),
                         None,
                     );
                     idf.ast_base_ref().borrow_mut().target =

@@ -36,7 +36,7 @@ use zkay_ast::visitors::deep_copy::replace_expr;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn type_check(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
-    println!("==========type_check=====================");
+    // println!("==========type_check=====================");
     check_final(ast);
     let v = TypeCheckVisitor::new(global_vars);
     v.visit(&ast);

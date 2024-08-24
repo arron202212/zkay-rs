@@ -29,8 +29,8 @@
 
 use crate::ast::{
     ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, CodeVisitor,
-    CodeVisitorBase, ConstructorOrFunctionDefinition, Expression, FullArgsSpec, FullArgsSpecInit,
-    HybridArgumentIdf, IntoAST, Statement, AST,
+    CodeVisitorBase, ConstructorOrFunctionDefinition, DeepClone, Expression, FullArgsSpec,
+    FullArgsSpecInit, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use crate::visitors::visitor::AstVisitor;
 use enum_dispatch::enum_dispatch;
@@ -42,7 +42,7 @@ use zkay_derive::{
 };
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
-#[enum_dispatch(FullArgsSpec, IntoAST, IntoASTFlatten, ASTInstanceOf)]
+#[enum_dispatch(DeepClone, FullArgsSpec, IntoAST, IntoASTFlatten, ASTInstanceOf)]
 #[derive(EnumDispatchWithFields, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum CircuitStatement {
     CircComment(CircComment),
@@ -55,11 +55,11 @@ pub enum CircuitStatement {
     CircEqConstraint(CircEqConstraint),
 }
 
-impl From<RcCell<CircuitStatement>> for ASTFlatten {
-    fn from(a: RcCell<CircuitStatement>) -> ASTFlatten {
-        ASTFlatten::CircuitStatement(a)
-    }
-}
+// impl From<RcCell<CircuitStatement>> for ASTFlatten {
+//     fn from(a: RcCell<CircuitStatement>) -> ASTFlatten {
+//         ASTFlatten::CircuitStatement(a)
+//     }
+// }
 impl ASTChildren for CircuitStatement {
     fn process_children(&self, _cb: &mut ChildListBuilder) {}
 }
@@ -77,6 +77,11 @@ impl ASTChildren for CircuitStatement {
 #[derive(ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircComment {
     pub text: String,
+}
+impl DeepClone for CircComment {
+    fn clone_inner(&self) -> Self {
+        self.clone()
+    }
 }
 impl IntoAST for CircComment {
     fn into_ast(self) -> AST {
@@ -117,6 +122,18 @@ impl CircComment {
 pub struct CircIndentBlock {
     pub name: String,
     pub statements: Vec<RcCell<CircuitStatement>>,
+}
+impl DeepClone for CircIndentBlock {
+    fn clone_inner(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            statements: self
+                .statements
+                .iter()
+                .map(|stmt| RcCell::new(stmt.borrow().clone_inner()))
+                .collect(),
+        }
+    }
 }
 impl IntoAST for CircIndentBlock {
     fn into_ast(self) -> AST {
@@ -194,6 +211,13 @@ impl CircIndentBlock {
 pub struct CircCall {
     pub fct: ConstructorOrFunctionDefinition,
 }
+impl DeepClone for CircCall {
+    fn clone_inner(&self) -> Self {
+        Self {
+            fct: self.fct.clone_inner(),
+        }
+    }
+}
 impl IntoAST for CircCall {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::CircuitStatement(CircuitStatement::CircCall(
@@ -247,7 +271,14 @@ pub struct CircVarDecl {
     pub lhs: HybridArgumentIdf,
     pub expr: ASTFlatten,
 }
-
+impl DeepClone for CircVarDecl {
+    fn clone_inner(&self) -> Self {
+        Self {
+            lhs: self.lhs.clone_inner(),
+            expr: self.expr.clone_inner(),
+        }
+    }
+}
 impl IntoAST for CircVarDecl {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::CircuitStatement(CircuitStatement::CircVarDecl(
@@ -309,6 +340,14 @@ impl CircVarDecl {
 pub struct CircGuardModification {
     pub new_cond: Option<HybridArgumentIdf>,
     pub is_true: bool,
+}
+impl DeepClone for CircGuardModification {
+    fn clone_inner(&self) -> Self {
+        Self {
+            new_cond: self.new_cond.as_ref().map(|nc| nc.clone_inner()),
+            is_true: self.is_true,
+        }
+    }
 }
 impl IntoAST for CircGuardModification {
     fn into_ast(self) -> AST {
@@ -403,6 +442,17 @@ pub struct CircEncConstraint {
     pub pk: HybridArgumentIdf,
     pub cipher: HybridArgumentIdf,
     pub is_dec: bool,
+}
+impl DeepClone for CircEncConstraint {
+    fn clone_inner(&self) -> Self {
+        Self {
+            plain: self.plain.clone_inner(),
+            rnd: self.rnd.clone_inner(),
+            pk: self.pk.clone_inner(),
+            cipher: self.cipher.clone_inner(),
+            is_dec: self.is_dec,
+        }
+    }
 }
 impl IntoAST for CircEncConstraint {
     fn into_ast(self) -> AST {
@@ -506,6 +556,16 @@ pub struct CircSymmEncConstraint {
     pub iv_cipher: HybridArgumentIdf,
     pub is_dec: bool,
 }
+impl DeepClone for CircSymmEncConstraint {
+    fn clone_inner(&self) -> Self {
+        Self {
+            plain: self.plain.clone_inner(),
+            other_pk: self.other_pk.clone_inner(),
+            iv_cipher: self.iv_cipher.clone_inner(),
+            is_dec: self.is_dec,
+        }
+    }
+}
 impl IntoAST for CircSymmEncConstraint {
     fn into_ast(self) -> AST {
         AST::Statement(Statement::CircuitStatement(
@@ -586,6 +646,14 @@ impl CircSymmEncConstraint {
 pub struct CircEqConstraint {
     pub tgt: HybridArgumentIdf,
     pub val: HybridArgumentIdf,
+}
+impl DeepClone for CircEqConstraint {
+    fn clone_inner(&self) -> Self {
+        Self {
+            tgt: self.tgt.clone_inner(),
+            val: self.val.clone_inner(),
+        }
+    }
 }
 impl IntoAST for CircEqConstraint {
     fn into_ast(self) -> AST {
