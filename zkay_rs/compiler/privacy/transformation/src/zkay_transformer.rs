@@ -443,12 +443,12 @@ impl ZkayStatementTransformer {
             if transformed_stmt.is_none() {
                 continue;
             }
-            println!(
-                "==transformed_stmt===={:?}===={:?}======{old_code},===to====={}",
-                ast.get_ast_type(),
-                transformed_stmt.as_ref().unwrap().get_ast_type(),
-                transformed_stmt.as_ref().unwrap().code()
-            );
+            // println!(
+            //     "==transformed_stmt===={:?}===={:?}======{old_code},===to====={}",
+            //     ast.get_ast_type(),
+            //     transformed_stmt.as_ref().unwrap().get_ast_type(),
+            //     transformed_stmt.as_ref().unwrap().code()
+            // );
             let r = Regex::new(&format!(r"@{WS_PATTERN}*{ID_PATTERN}"))
                 .unwrap()
                 .replace_all(&old_code, "");
@@ -568,7 +568,7 @@ impl ZkayStatementTransformer {
     }
     // """Rule (2)"""
     pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!("==visitAssignmentStatement======================={ast}");
+        // println!("==visitAssignmentStatement======================={ast}");
         let a = self.expr_trafo.visit(
             ast.to_ast()
                 .try_as_statement_ref()
@@ -904,7 +904,7 @@ impl ZkayStatementTransformer {
                 }
             }
         }
-        println!("==visitAssignmentStatement======ret================={ast}");
+        // println!("==visitAssignmentStatement======ret================={ast}");
         Ok(ast.clone())
     }
     // """
@@ -1267,7 +1267,7 @@ impl ZkayStatementTransformer {
     // Otherwise only the expression is transformed.
     // """
     pub fn visitReturnStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!("==visitReturnStatement======================={ast}");
+        // println!("==visitReturnStatement======================={ast}");
         if ast
             .to_ast()
             .try_as_statement_ref()
@@ -1344,10 +1344,10 @@ impl ZkayStatementTransformer {
                 .iter()
                 .map(|ps| ps.clone_inner())
                 .collect();
-            println!(
-                "==visitReturnStatement=====ret=================={}",
-                te.code()
-            );
+            // println!(
+            //     "==visitReturnStatement=====ret=================={}",
+            //     te.code()
+            // );
             Ok(RcCell::new(te).into())
         } else {
             let expr = self.expr_trafo.visit(
@@ -1363,7 +1363,7 @@ impl ZkayStatementTransformer {
             } else {
                 panic!("==============else========{ast:?}");
             }
-            println!("==visitReturnStatement=====ret=======else==========={ast}");
+            // println!("==visitReturnStatement=====ret=======else==========={ast}");
             Ok(ast.clone().into())
         }
     }
@@ -1676,10 +1676,10 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .borrow()
                     .privacy_annotation_label();
-                println!(
-                    "=========privacy_label========{}===",
-                    privacy_label.as_ref().unwrap()
-                );
+                // println!(
+                //     "=========privacy_label========{}===",
+                //     privacy_label.as_ref().unwrap()
+                // );
                 let ret = self
                     .generator
                     .as_ref()
@@ -1705,13 +1705,13 @@ impl ZkayExpressionTransformer {
                             .into()),
                     )
                     .ok_or(eyre::eyre!("unexpected"));
-                println!(
-                    "=========visitFunctionCallExpr========{}={}==={}=={:?}=",
-                    ret.as_ref().unwrap(),
-                    ast.is_expression(),
-                    ret.as_ref().unwrap().is_member_access_expr(),
-                    ret.as_ref().unwrap().get_ast_type()
-                );
+                // println!(
+                //     "=========visitFunctionCallExpr========{}={}==={}=={:?}=",
+                //     ret.as_ref().unwrap(),
+                //     ast.is_expression(),
+                //     ret.as_ref().unwrap().is_member_access_expr(),
+                //     ret.as_ref().unwrap().get_ast_type()
+                // );
                 if ast.is_expression() {
                     if ret.as_ref().unwrap().is_member_access_expr() {
                         let r = ret

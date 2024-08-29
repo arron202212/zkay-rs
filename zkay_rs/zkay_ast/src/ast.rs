@@ -3850,7 +3850,7 @@ impl BuiltinFunction {
             "parenthesis" => format!("({})", args[0]),
             "ite" => {
                 let (cond, then, else_then) = (args[0].clone(), args[1].clone(), args[2].clone());
-                format!("{cond}?{then}:{else_then}")
+                format!("{cond} ? {then} : {else_then}")
             }
             _ => format!("{} {op} {}", args[0], args[1]),
         }
@@ -13105,7 +13105,16 @@ impl InstanceTarget {
 // // UTIL FUNCTIONS
 
 pub fn indent(s: String) -> String {
-    format!("{}{}", CFG.lock().unwrap().user_config.indentation(), s)
+    s.split("\n")
+        .map(|v| {
+            if v.trim().is_empty() {
+                String::new()
+            } else {
+                format!("{}{}", CFG.lock().unwrap().user_config.indentation(), v)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 // // EXCEPTIONS

@@ -586,21 +586,21 @@ impl ZkayTransformer {
         }
         // println!("=====transform_contract===={}=", line!());
         for f in c.borrow_mut().function_definitions.iter_mut() {
-            f.borrow().return_var_decls.iter().for_each(|r| {
-                println!(
-                    "=======return_var_decls==={}===={:?}======={:?}==",
-                    r.borrow(),
-                    r.borrow()
-                        .ast_base_ref()
-                        .borrow()
-                        .annotated_type
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .is_private(),
-                    r.borrow().storage_location()
-                );
-            });
+            // f.borrow().return_var_decls.iter().for_each(|r| {
+            //     println!(
+            //         "=======return_var_decls==={}===={:?}======={:?}==",
+            //         r.borrow(),
+            //         r.borrow()
+            //             .ast_base_ref()
+            //             .borrow()
+            //             .annotated_type
+            //             .as_ref()
+            //             .unwrap()
+            //             .borrow()
+            //             .is_private(),
+            //         r.borrow().storage_location()
+            //     );
+            // });
             let return_parameters: Vec<_> = self
                 .var_decl_trafo
                 .visit_list(

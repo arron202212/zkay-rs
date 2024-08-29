@@ -844,7 +844,7 @@ impl SolidityVisitor {
         //             .try_as_if_statement_ref()
         //             .unwrap()
         //             .then_branch.get_ast_type());
-        let mut ret = format!("if ({c})  {t} ");
+        let mut ret = format!("if ({c}) {t}");
         if let Some(else_branch) = &ast
             .to_ast()
             .try_as_statement_ref()
@@ -1247,7 +1247,7 @@ impl SolidityVisitor {
             {
                 b
             } else {
-                format!("{{\n {b}\n }}")
+                format!("{{\n{b}\n}}")
             },
         )
     }
@@ -1534,7 +1534,9 @@ impl SolidityVisitor {
         //                 .borrow()
         //                 .idf().clone().unwrap().into();
         //   println!("==idf==type={i}==ii={}====",ii);
-        // println!("=====visit_VariableDeclaration================k===={k},=====t== {t},===s=={s}, =i={i},");
+        // println!("=====visit_VariableDeclaration====={k} {t}{s} {i}==========k===={k},=====t=={t},===s=={s}, =i={i},");
+        // let vd=format!("{k} {t}{s} {i}");
+        // println!("====visit_VariableDeclaration============{vd}=====");
         Ok(format!("{k} {t}{s} {i}").trim().to_string())
     }
 
@@ -1567,6 +1569,8 @@ impl SolidityVisitor {
             s += format!(" = {}", self.visit(expr)).as_str();
         }
         s += ";";
+        // s=s.trim().to_owned();
+        // println!("=========s========{s}========");
         Ok(s)
     }
 
@@ -1698,6 +1702,7 @@ impl SolidityVisitor {
                 .collect(),
             ", ",
         )?;
+
         let mut m = modifiers.join(" ");
         if !m.is_empty() {
             m = format!(" {m}");
@@ -1916,7 +1921,7 @@ impl SolidityVisitor {
         let i = idf.to_string(); //Self::new().visit(&RcCell::new(idf).into());
         let structs = structs.join("\n\n");
         let enums = enums.join("\n\n");
-        let state_vars = state_vars.join("\n\n");
+        let state_vars = state_vars.join("\n");
         let constructors = constructors.join("\n\n");
         let functions = functions.join("\n\n");
         let mut body = [structs, enums, state_vars, constructors, functions]
