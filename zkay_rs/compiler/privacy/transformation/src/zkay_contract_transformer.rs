@@ -26,13 +26,14 @@ use zkay_ast::ast::{
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
     CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
     ContractTypeName, DeepClone, ExprUnion, Expression, ExpressionASType, ExpressionStatement,
-    FunctionCallExpr, FunctionCallExprBase, HybridArgumentIdf, Identifier, IdentifierBase,
-    IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration, IdentifierExpr,
-    IdentifierExprUnion, IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr,
-    NamespaceDefinition, NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr,
-    RequireStatement, ReturnStatement, SourceUnit, StateVariableDeclaration, Statement,
-    StatementList, StatementListBase, StructDefinition, StructTypeName, TupleExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseRef,
+    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef,
+    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
+    IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr, NamespaceDefinition,
+    NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement,
+    SourceUnit, StateVariableDeclaration, Statement, StatementList, StatementListBase,
+    StructDefinition, StructTypeName, TupleExpr, TypeName, UserDefinedTypeName,
+    VariableDeclaration, VariableDeclarationStatement, AST,
 };
 use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
@@ -585,6 +586,21 @@ impl ZkayTransformer {
         }
         // println!("=====transform_contract===={}=", line!());
         for f in c.borrow_mut().function_definitions.iter_mut() {
+            f.borrow().return_var_decls.iter().for_each(|r| {
+                println!(
+                    "=======return_var_decls==={}===={:?}======={:?}==",
+                    r.borrow(),
+                    r.borrow()
+                        .ast_base_ref()
+                        .borrow()
+                        .annotated_type
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .is_private(),
+                    r.borrow().storage_location()
+                );
+            });
             let return_parameters: Vec<_> = self
                 .var_decl_trafo
                 .visit_list(
@@ -599,6 +615,18 @@ impl ZkayTransformer {
                 .filter_map(|p| p.try_as_parameter())
                 .collect();
             f.borrow_mut().return_parameters = return_parameters;
+            // println!("=======return_var_decls=========={}==",f.borrow()
+            //             .return_var_decls.len());
+            // f.borrow()
+            //             .return_var_decls
+            //             .iter().for_each(|r|{println!("=======return_var_decls==={}===={:?}======={:?}==",r.borrow(),r.borrow() .ast_base_ref()
+            // .borrow()
+            // .annotated_type
+            // .as_ref()
+            // .unwrap()
+            // .borrow()
+            // .is_private(),r.borrow().storage_location());}
+            // );
             let return_var_decls: Vec<_> = self
                 .var_decl_trafo
                 .visit_list(
@@ -611,6 +639,10 @@ impl ZkayTransformer {
                 .into_iter()
                 .filter_map(|p| p.try_as_variable_declaration())
                 .collect();
+            // println!("====vvv===return_var_decls=========={}==",return_var_decls.len());
+            // return_var_decls
+            //             .iter().for_each(|r|{println!("==vvv=====return_var_decls=========={:?}==",r.borrow().storage_location());}
+            // );
             f.borrow_mut().return_var_decls = return_var_decls;
         }
         // println!("=====transform_contract===={}=", line!());
@@ -618,12 +650,13 @@ impl ZkayTransformer {
         for fct in all_fcts.iter_mut() {
             if let Some(circuit) = self.circuits.borrow().get(fct) {
                 let body = fct.borrow().body.clone();
-                fct.borrow_mut().body = ZkayStatementTransformer::new(
+                let body = ZkayStatementTransformer::new(
                     Some(circuit.clone().downgrade()),
                     self.global_vars.clone(),
                 )
                 .visit(&body.clone().unwrap().into())
                 .and_then(|b| b.try_as_block());
+                fct.borrow_mut().body = body;
             }
         }
         // println!("=====transform_contract===={}=", line!());
@@ -868,7 +901,8 @@ impl ZkayTransformer {
                     .return_var_decls
                     .iter()
                     .map(|vd| {
-                        RcCell::new(VariableDeclarationStatement::new(vd.clone(), None)).into()
+                        RcCell::new(VariableDeclarationStatement::new(vd.clone_inner(), None))
+                            .into()
                     })
                     .collect(),
             ));
@@ -1016,6 +1050,7 @@ impl ZkayTransformer {
         let mut serialize_stmts = vec![];
         let mut offset = 0;
         let zk_in_name = CFG.lock().unwrap().zk_in_name();
+        //    println!("=====create_internal_verification_wrapper==zk_in_name=={}=", zk_in_name);
         for s in circuit.borrow_mut().input_idfs().iter_mut() {
             serialize_stmts.push(s.serialize(
                 zk_in_name.clone(),
@@ -1024,7 +1059,7 @@ impl ZkayTransformer {
             ));
             offset += s.t.to_ast().try_as_type_name().unwrap().size_in_uints();
         }
-        //println!("=====create_internal_verification_wrapper===={}=", line!());
+
         if offset != 0 {
             stmts.push(RcCell::new(CommentBase::new(String::new())).into());
             stmts.extend(CommentBase::comment_wrap_block(
@@ -1108,15 +1143,19 @@ impl ZkayTransformer {
             *original_params = original_params
                 .iter()
                 .map(|p| {
-                    let mut pp =
-                        deep_copy(&p.clone().into(), true, false, self.global_vars.clone())
-                            .unwrap()
-                            .to_ast()
-                            .try_as_identifier_declaration_ref()
-                            .unwrap()
-                            .try_as_parameter_ref()
-                            .unwrap()
-                            .clone();
+                    let mut pp = deep_copy(
+                        &p.clone_inner().into(),
+                        true,
+                        false,
+                        self.global_vars.clone(),
+                    )
+                    .unwrap()
+                    .to_ast()
+                    .try_as_identifier_declaration_ref()
+                    .unwrap()
+                    .try_as_parameter_ref()
+                    .unwrap()
+                    .clone_inner();
                     RcCell::new(
                         pp.with_changed_storage(String::from("memory"), String::from("calldata"))
                             .clone(),
@@ -1144,6 +1183,8 @@ impl ZkayTransformer {
             Some(RcCell::new(Block::new(vec![], false))),
         );
 
+        // let _name=CFG.lock().unwrap().get_internal_name(&f.borrow().clone());
+        // println!("===get_internal_name==========={name}===");
         // Make original function internal
         let idf = Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
             CFG.lock().unwrap().get_internal_name(&f.borrow().clone()),
@@ -1179,7 +1220,7 @@ impl ZkayTransformer {
         new_f.borrow_mut().called_functions.insert(f.clone());
         new_f.borrow_mut().used_crypto_backends = f.borrow().used_crypto_backends.clone();
         new_f.borrow_mut().body = Some(self.create_external_wrapper_body(
-            f.clone(),
+            f.clone_inner(),
             &circuit,
             original_params.clone(),
             requires_proof.clone(),
@@ -1370,19 +1411,12 @@ impl ZkayTransformer {
                 let key_len = crypto_params.key_len();
                 key_req_stmts.push(
                     RcCell::new(
-                        LocationExpr::IdentifierExpr(
+                        LocationExpr::SliceExpr(
                             in_arr_var
                                 .try_as_identifier_expr_ref()
                                 .unwrap()
                                 .borrow()
-                                .slice(offset, key_len, None)
-                                .arr
-                                .as_ref()
-                                .unwrap()
-                                .try_as_identifier_expr_ref()
-                                .unwrap()
-                                .borrow()
-                                .clone(),
+                                .slice(offset, key_len, None),
                         )
                         .assign(
                             RcCell::new(
@@ -1433,19 +1467,12 @@ impl ZkayTransformer {
                     .as_ref()
                     .unwrap()
                     .cipher_payload_len();
-                let assign_stmt = LocationExpr::IdentifierExpr(
+                let assign_stmt = LocationExpr::SliceExpr(
                     in_arr_var
                         .try_as_identifier_expr_ref()
                         .unwrap()
                         .borrow()
-                        .slice(offset, cipher_payload_len, None)
-                        .arr
-                        .as_ref()
-                        .unwrap()
-                        .try_as_identifier_expr_ref()
-                        .unwrap()
-                        .borrow()
-                        .clone(),
+                        .slice(offset, cipher_payload_len, None),
                 )
                 .assign(
                     RcCell::new(
@@ -1478,6 +1505,7 @@ impl ZkayTransformer {
                 .borrow()
                 .is_cipher()
             {
+                // println!("=============is_cipher============");
                 let c = p
                     .borrow()
                     .annotated_type()
@@ -1499,12 +1527,13 @@ impl ZkayTransformer {
                     .unwrap()
                     .is_symmetric_cipher()
                 {
+                    //  println!("=============is_symmetric_cipher============");
                     let sender_key = LocationExpr::IdentifierExpr(
                         in_arr_var
                             .try_as_identifier_expr_ref()
                             .unwrap()
                             .borrow()
-                            .clone(),
+                            .clone_inner(),
                     )
                     .index(ExprUnion::I32(
                         me_key_idx[&c
@@ -1523,7 +1552,7 @@ impl ZkayTransformer {
                         IdentifierExprUnion::Identifier(p.borrow().idf_inner().unwrap()),
                         None,
                     )
-                    .as_type(&p.borrow().annotated_type().clone().unwrap().into());
+                    .as_type(&p.borrow().annotated_type().clone_inner().unwrap().into());
                     let cipher_payload_len = CFG
                         .lock()
                         .unwrap()
@@ -1541,7 +1570,10 @@ impl ZkayTransformer {
                         (0..cipher_payload_len)
                             .map(|i| {
                                 LocationExpr::IdentifierExpr(
-                                    idf.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                                    idf.try_as_identifier_expr_ref()
+                                        .unwrap()
+                                        .borrow()
+                                        .clone_inner(),
                                 )
                                 .index(ExprUnion::I32(i))
                             })
@@ -1552,18 +1584,20 @@ impl ZkayTransformer {
                         RcCell::new(VariableDeclarationStatement::new(
                             RcCell::new(VariableDeclaration::new(
                                 vec![],
-                                p.borrow().annotated_type().clone(),
+                                p.borrow().annotated_type().clone_inner(),
                                 p.borrow().idf_inner(),
-                                None,
+                                Some(String::from("memory")),
                             )),
                             Some(RcCell::new(lit).into()),
                         ))
                         .into(),
                     );
+                    // println!("====!copy_stmts.is_empty()============{}===",!copy_stmts.is_empty() );
                 }
             }
         }
         if !copy_stmts.is_empty() {
+            // println!("====!copy_stmts.is_empty()======ddddd======{}===",!copy_stmts.is_empty() );
             param_stmts.extend([
                 RcCell::new(CommentBase::new(String::new())).into(),
                 RcCell::new(CommentBase::new(String::from(
@@ -1622,6 +1656,8 @@ impl ZkayTransformer {
                 .into()
             })
             .collect();
+        // println!("====args.len()====={}=====",args.len());
+
         let mut idf = IdentifierExpr::new(
             IdentifierExprUnion::Identifier(int_fct.borrow().idf_inner().unwrap()),
             None,
@@ -1632,6 +1668,7 @@ impl ZkayTransformer {
             FunctionCallExprBase::new(RcCell::new(idf).into(), args.clone(), None, None);
         internal_call.sec_start_offset = Some(ext_circuit.borrow().priv_in_size());
         let mut internal_call = RcCell::new(FunctionCallExpr::FunctionCallExpr(internal_call));
+        // println!("====internal_call.borrow_mut().function_call_expr_base_mut_ref().args.len()====={}=====",internal_call.borrow().function_call_expr_base_ref().args.len());
         if int_fct.borrow().requires_verification {
             ext_circuit
                 .borrow_mut()
@@ -1654,7 +1691,12 @@ impl ZkayTransformer {
                 ))
                 .into(),
             ]);
+            internal_call
+                .borrow_mut()
+                .function_call_expr_base_mut_ref()
+                .args = args;
         }
+        // println!("==222==internal_call.borrow_mut().function_call_expr_base_mut_ref().args.len()====={}=====",internal_call.borrow().function_call_expr_base_ref().args.len());
 
         let in_call: ASTFlatten = if !int_fct.borrow().return_parameters.is_empty() {
             stmts.extend(CommentBase::comment_list(
@@ -1665,10 +1707,15 @@ impl ZkayTransformer {
                     .iter()
                     .map(|vd| {
                         RcCell::new(VariableDeclarationStatement::new(
-                            deep_copy(&vd.clone().into(), false, false, self.global_vars.clone())
-                                .unwrap()
-                                .try_as_variable_declaration()
-                                .unwrap(),
+                            deep_copy(
+                                &vd.clone_inner().into(),
+                                false,
+                                false,
+                                self.global_vars.clone(),
+                            )
+                            .unwrap()
+                            .try_as_variable_declaration()
+                            .unwrap(),
                             None,
                         ))
                         .into()
@@ -1703,6 +1750,7 @@ impl ZkayTransformer {
         // Call verifier
         let disable_verification = CFG.lock().unwrap().user_config.disable_verification();
         if requires_proof && !disable_verification {
+            // println!("==========requires_proof && !disable_verification====***************===================");
             let verifier = IdentifierExpr::new(
                 IdentifierExprUnion::String(
                     CFG.lock().unwrap().get_contract_var_name(

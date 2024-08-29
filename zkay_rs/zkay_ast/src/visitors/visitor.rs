@@ -90,6 +90,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
             ret_children
         } else {
             // println!("=555=666 ======3===get_visit_function={:?}==",ast.get_ast_type());
+            // panic!("--_visit_internal---");
             None
         }
     }

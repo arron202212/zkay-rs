@@ -111,6 +111,7 @@ strum_macros = "0.26.1"
 fancy-regex="0.13.0"
 bevy_reflect = "0.14.1"
 num_enum="0.7.3"
+backtrace-on-stack-overflow="0.3.0"
 [workspace.dependencies.uuid]
 version = "1.6.1"
 features = [

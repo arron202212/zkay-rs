@@ -3092,13 +3092,7 @@ impl CommentBase {
         vec![
             RcCell::new(CommentBase::new(text)).into(),
             RcCell::new(CommentBase::new(String::from("{"))).into(),
-            RcCell::new(IndentBlock::new(
-                block
-                    .into_iter()
-                    .filter(|b| is_instance(b, ASTType::StatementBase))
-                    .collect(),
-            ))
-            .into(),
+            RcCell::new(IndentBlock::new(block)).into(),
             RcCell::new(CommentBase::new(String::from("}"))).into(),
             RcCell::new(BlankLine::new()).into(),
         ]
@@ -6278,7 +6272,7 @@ impl HybridArgumentIdf {
                 .try_as_number_literal_type_ref()
                 .unwrap()
                 .to_abstract_type();
-            t = tt;
+            t = tt.clone_inner();
         } else if is_instance(&t, ASTType::EnumValueTypeName) {
             let tt = t
                 .to_ast()
@@ -6289,14 +6283,14 @@ impl HybridArgumentIdf {
                 .try_as_enum_value_type_name_ref()
                 .unwrap()
                 .to_abstract_type();
-            t = tt;
+            t = tt.clone_inner();
         }
 
         Self {
             identifier_base: IdentifierBase::new(name),
             t,
             arg_type,
-            corresponding_priv_expression,
+            corresponding_priv_expression: corresponding_priv_expression.clone_inner(),
             serialized_loc: SliceExpr::new(
                 Some(
                     RcCell::new(IdentifierExpr::new(
@@ -6402,20 +6396,24 @@ impl HybridArgumentIdf {
                 None,
             ))
             .dot(IdentifierExprUnion::Identifier(RcCell::new(
-                Identifier::HybridArgumentIdf(self.clone()),
+                Identifier::HybridArgumentIdf(self.clone_inner()),
             )))
-            .as_type(&self.t.clone().into());
-            // println!("===ma==={:?}",CFG.lock().unwrap().zk_data_var_name());
+            .as_type(&self.t.clone_inner().into());
+            // println!("===ma==parent={}===",parent.is_some());
+            // if ma.code()=="zk__data.zk__out0_plain"{
+            //     panic!("zk__data.zk__out0_plain");
+            //     }
+
             ma.ast_base_ref().unwrap().borrow_mut().parent = parent.map(|p| p.clone().downgrade());
             let statement = parent.as_ref().and_then(|&p| {
-                if is_instance(p, ASTType::ExpressionBase) {
+                if is_instance(p, ASTType::StatementBase) {
+                    Some(p.clone().downgrade())
+                } else {
                     p.try_as_expression_ref()
                         .unwrap()
                         .borrow()
                         .statement()
                         .clone()
-                } else {
-                    Some(p.clone().downgrade())
                 }
             });
             if ma.is_identifier_expr() {
@@ -6511,25 +6509,16 @@ impl HybridArgumentIdf {
             &RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
         );
         let loc_expr = self.get_loc_expr(None);
-        if let TypeName::Array(_a) = self.t.to_ast().try_as_type_name().unwrap().clone() {
-            SliceExpr::new(
+        if is_instance(&self.t, ASTType::ArrayBase) {
+            return LocationExpr::SliceExpr(SliceExpr::new(
                 Some(loc_expr),
                 None,
                 0,
                 self.t.to_ast().try_as_type_name().unwrap().size_in_uints(),
-            )
-            .arr
-            .as_ref()
-            .unwrap()
-            .to_ast()
-            .try_as_expression_ref()
-            .unwrap()
-            .try_as_tuple_or_location_expr_ref()
-            .unwrap()
-            .try_as_location_expr_ref()
-            .unwrap()
-            .assign(RcCell::new(self.serialized_loc.clone()).into())
-        } else if let Some(base) = &base {
+            ))
+            .assign(RcCell::new(self.serialized_loc.clone()).into());
+        }
+        if let Some(base) = &base {
             loc_expr
                 .to_ast()
                 .try_as_expression_ref()
@@ -6582,24 +6571,18 @@ impl HybridArgumentIdf {
         base: Option<ASTFlatten>,
         start_offset: i32,
     ) -> AssignmentStatement {
+        // if target_idf=="zk__in"{
+        // println!("================serialize=========begin====");
+        // }
         self._set_serialized_loc(target_idf.clone(), base.clone(), start_offset);
 
-        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf), None).as_type(
-            &RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
-        );
-        if let TypeName::Array(_t) = self.t.to_ast().try_as_type_name().unwrap() {
+        let tgt = IdentifierExpr::new(IdentifierExprUnion::String(target_idf.clone()), None)
+            .as_type(
+                &RcCell::new(ArrayBase::new(AnnotatedTypeName::uint_all(), None, None)).into(),
+            );
+        if is_instance(&self.t, ASTType::ArrayBase) {
             let loc = self.get_loc_expr(None);
-            LocationExpr::IdentifierExpr(
-                self.serialized_loc
-                    .arr
-                    .as_ref()
-                    .unwrap()
-                    .try_as_identifier_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .clone(),
-            )
-            .assign(
+            let res = LocationExpr::SliceExpr(self.serialized_loc.clone_inner()).assign(
                 RcCell::new(SliceExpr::new(
                     Some(loc),
                     None,
@@ -6607,87 +6590,90 @@ impl HybridArgumentIdf {
                     self.t.to_ast().try_as_type_name().unwrap().size_in_uints(),
                 ))
                 .into(),
-            )
-        } else {
-            let expr = self.get_loc_expr(None);
-            let expr = if self
-                .t
-                .to_ast()
-                .try_as_type_name()
+            );
+            // if target_idf=="zk__in"{
+            // println!("================serialize=========array=={}==",res.code());
+            // }
+            return res;
+        }
+        let expr = self.get_loc_expr(None);
+        let expr = if self
+            .t
+            .to_ast()
+            .try_as_type_name()
+            .unwrap()
+            .is_signed_numeric()
+        {
+            // Cast to same size uint to prevent sign extension
+            expr.try_as_expression()
                 .unwrap()
-                .is_signed_numeric()
-            {
-                // Cast to same size uint to prevent sign extension
-                expr.try_as_expression()
-                    .unwrap()
-                    .borrow()
-                    .explicitly_converted(
-                        &RcCell::new(
-                            UintTypeName::new(format!(
-                                "uint{}",
-                                self.t.to_ast().try_as_type_name().unwrap().elem_bitwidth()
-                            ))
-                            .into_ast()
-                            .try_as_type_name()
-                            .unwrap(),
-                        )
-                        .into(),
-                    )
-            } else if self.t.to_ast().try_as_type_name().unwrap().is_numeric()
-                && self.t.to_ast().try_as_type_name().unwrap().elem_bitwidth() == 256
-            {
-                expr.try_as_expression()
-                    .unwrap()
-                    .borrow()
-                    .binop(
-                        String::from("%"),
-                        IdentifierExpr::new(
-                            IdentifierExprUnion::String(CFG.lock().unwrap().field_prime_var_name()),
-                            None,
-                        )
-                        .into_expr(),
-                    )
-                    .as_type(&self.t.clone().into())
-            } else {
-                // println!("==========================={expr:?}");
-                expr.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .explicitly_converted(&RcCell::new(TypeName::uint_type()).into())
-                //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
-            };
-
-            if let Some(base) = &base {
-                LocationExpr::IndexExpr(
-                    LocationExpr::IdentifierExpr(
-                        tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
-                    )
-                    .index(ExprUnion::Expression(
-                        RcCell::new(base.to_ast().try_as_expression_ref().unwrap().binop(
-                            String::from("+"),
-                            NumberLiteralExpr::new(start_offset, false).into_expr(),
+                .borrow()
+                .explicitly_converted(
+                    &RcCell::new(
+                        UintTypeName::new(format!(
+                            "uint{}",
+                            self.t.to_ast().try_as_type_name().unwrap().elem_bitwidth()
                         ))
-                        .into(),
-                    ))
-                    .try_as_index_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .clone(),
-                )
-                .assign(expr)
-            } else {
-                LocationExpr::IndexExpr(
-                    LocationExpr::IdentifierExpr(
-                        tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                        .into_ast()
+                        .try_as_type_name()
+                        .unwrap(),
                     )
-                    .index(ExprUnion::I32(start_offset))
-                    .try_as_index_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .clone(),
+                    .into(),
                 )
-                .assign(expr)
-            }
+        } else if self.t.to_ast().try_as_type_name().unwrap().is_numeric()
+            && self.t.to_ast().try_as_type_name().unwrap().elem_bitwidth() == 256
+        {
+            expr.try_as_expression()
+                .unwrap()
+                .borrow()
+                .binop(
+                    String::from("%"),
+                    IdentifierExpr::new(
+                        IdentifierExprUnion::String(CFG.lock().unwrap().field_prime_var_name()),
+                        None,
+                    )
+                    .into_expr(),
+                )
+                .as_type(&self.t.clone().into())
+        } else {
+            // println!("==========================={expr:?}");
+            expr.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .explicitly_converted(&RcCell::new(TypeName::uint_type()).into())
+            //if let ExplicitlyConvertedUnion::FunctionCallExpr(fce)={fce}else{FunctionCallExpr::default()}
+        };
+
+        if let Some(base) = &base {
+            LocationExpr::IndexExpr(
+                LocationExpr::IdentifierExpr(
+                    tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                )
+                .index(ExprUnion::Expression(
+                    RcCell::new(base.to_ast().try_as_expression_ref().unwrap().binop(
+                        String::from("+"),
+                        NumberLiteralExpr::new(start_offset, false).into_expr(),
+                    ))
+                    .into(),
+                ))
+                .try_as_index_expr_ref()
+                .unwrap()
+                .borrow()
+                .clone(),
+            )
+            .assign(expr)
+        } else {
+            LocationExpr::IndexExpr(
+                LocationExpr::IdentifierExpr(
+                    tgt.try_as_identifier_expr_ref().unwrap().borrow().clone(),
+                )
+                .index(ExprUnion::I32(start_offset))
+                .try_as_index_expr_ref()
+                .unwrap()
+                .borrow()
+                .clone(),
+            )
+            .assign(expr)
         }
     }
 }
@@ -6807,7 +6793,7 @@ impl EncryptionExpression {
                 .annotated_type()
                 .as_ref()
                 .unwrap()
-                .clone(),
+                .clone_inner(),
             homomorphism.clone(),
         ));
         Self {
@@ -11997,7 +11983,7 @@ impl ConstructorOrFunctionDefinition {
             .map(|(idx, rp)| {
                 RcCell::new(VariableDeclaration::new(
                     vec![],
-                    rp.borrow().annotated_type().clone(),
+                    rp.borrow().annotated_type().clone_inner(),
                     Some(RcCell::new(Identifier::Identifier(IdentifierBase::new(
                         format!("{}_{idx}", return_var_name),
                     )))),
@@ -12865,7 +12851,7 @@ impl ConstructorOrFunctionDefinitionAttr for ASTFlatten {
 pub fn get_privacy_expr_from_label(plabel: ASTFlatten) -> ASTFlatten {
     if plabel.is_identifier() {
         let mut ie = IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(plabel.try_as_identifier_ref().unwrap().clone()),
+            IdentifierExprUnion::Identifier(plabel.try_as_identifier_ref().unwrap().clone_inner()),
             Some(AnnotatedTypeName::address_all()),
         );
         ie.ast_base_ref().borrow_mut().target =
@@ -13602,13 +13588,15 @@ impl CodeVisitorBase {
         Err(eyre!("Did not implement code generation for {:?} ", ast))
     }
     pub fn visit_Comment(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("==visit_Comment====================={ast:?}");
         let text = ast.to_ast().try_as_comment_ref().unwrap().text().clone();
+        // println!("==visit_Comment=======ast=============={text}");
+
         Ok(if text.is_empty() {
             text
         } else if text.contains('\n') {
             format!("/* {} */", text)
         } else {
+            // println!("==visit_Comment=====2==ast=============={text}");
             format!("// {}", text)
         })
     }
@@ -14030,7 +14018,8 @@ impl CodeVisitorBase {
             ),
             "",
         )?;
-        let mut ret = format!("if ({c}) {t}");
+        println!("====if stmt===={t}====");
+        let mut ret = format!("if ({c}) {{ {t} }}");
         if let Some(else_branch) = &ast
             .to_ast()
             .try_as_statement_ref()
@@ -14290,9 +14279,7 @@ impl CodeVisitorBase {
                 let (lhs, rhs) = (
                     lhs.as_ref()
                         .unwrap()
-                        .try_as_ast_ref()
-                        .unwrap()
-                        .borrow()
+                        .to_ast()
                         .try_as_expression_ref()
                         .unwrap()
                         .try_as_tuple_or_location_expr_ref()
@@ -14304,9 +14291,9 @@ impl CodeVisitorBase {
                         .clone(),
                     rhs.as_ref()
                         .unwrap()
+                        .to_ast()
                         .try_as_expression_ref()
                         .unwrap()
-                        .borrow()
                         .try_as_tuple_or_location_expr_ref()
                         .unwrap()
                         .try_as_location_expr_ref()

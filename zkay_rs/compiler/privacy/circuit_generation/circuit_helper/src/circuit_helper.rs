@@ -23,7 +23,7 @@ use zkay_ast::ast::{
     AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, AssignmentStatementBaseRef, Block, BooleanLiteralType,
     BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
-    ConstructorOrFunctionDefinition, ElementaryTypeName, EncryptionExpression,
+    ConstructorOrFunctionDefinition, DeepClone, ElementaryTypeName, EncryptionExpression,
     EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
     ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
     FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
@@ -1328,6 +1328,7 @@ where
             None,
         ))
         .into();
+        // println!("====pre_statement===================={pre_statement}=====");
         if statement.is_ast() {
             statement
                 .try_as_ast_ref()
@@ -2522,8 +2523,8 @@ where
                     .get_new_name(&cipher_t, false)
             );
             let enc_expr = EncryptionExpression::new(
-                private_expr.clone().unwrap(),
-                privacy_label_expr.clone(),
+                private_expr.clone_inner().unwrap(),
+                privacy_label_expr.clone_inner(),
                 Some(homomorphism.clone()),
             );
             // println!(
@@ -2558,6 +2559,7 @@ where
                 false,
                 false,
             );
+
             (new_out_param.get_loc_expr(None).into(), new_out_param)
         };
 
@@ -2600,6 +2602,9 @@ where
         } else {
             panic!("========else======{statement:?}");
         }
+        // if out_var.code()=="zk__data.zk__out0_plain"{
+        //     panic!("========zk__out0_plain============");
+        // }
         if is_instance(&out_var, ASTType::LocationExprBase) {
             Some(out_var)
         } else {
@@ -2945,25 +2950,24 @@ where
         // println!("=====_in_name_factory.add_idf=======3===={}====", name);
         let key_idf = self._in_name_factory.add_idf(name, &key_t, None);
         let cipher_payload_len = crypto_params.cipher_payload_len();
-        let key_expr = KeyLiteralExpr::new(
-            if let Some(le) = cipher
-                .get_loc_expr(Some(stmt))
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-            {
-                vec![le.index(ExprUnion::I32(cipher_payload_len))]
-            } else {
-                vec![]
-            },
-            crypto_params,
-        )
-        .as_type(&key_t.clone().into());
+        // println!("=====get_loc_expr(Some(stmt))============");
+        let cs = if let Some(le) = cipher
+            .get_loc_expr(Some(stmt))
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_tuple_or_location_expr_ref()
+            .unwrap()
+            .try_as_location_expr_ref()
+        {
+            vec![le.index(ExprUnion::I32(cipher_payload_len))]
+        } else {
+            vec![]
+        };
+        // println!("=====get_loc_expr(Some(stmt))=====after=======");
+        let key_expr = KeyLiteralExpr::new(cs, crypto_params).as_type(&key_t.clone().into());
         let pre_statement = RcCell::new(AssignmentStatementBase::new(
-            Some(RcCell::new(key_idf.clone()).into()),
+            Some(key_idf.get_loc_expr(None)),
             Some(key_expr),
             None,
         ))

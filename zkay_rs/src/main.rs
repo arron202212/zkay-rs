@@ -330,6 +330,7 @@ WARNING: This account will be charged with the deployment costs.",
 }
 
 fn main() {
+    unsafe { backtrace_on_stack_overflow::enable() };
     // println!("==main=====");
     //     // parse arguments
     let a = parse_arguments();

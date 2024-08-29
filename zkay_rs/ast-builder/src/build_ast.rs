@@ -446,6 +446,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 .clone()
                 .and_then(|ast| ast.try_as_identifier())
         });
+        // println!("==visit_functionDefinition=====idf========={}==",idf.as_ref().unwrap().name());
         let return_parameters = ctx
             .return_parameters
             .as_ref()
@@ -2057,7 +2058,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             })
             .collect();
-        let was_single_statement = statements.len() == 1;
         Some(
             Block::new(
                 statements
@@ -2065,7 +2065,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .map(RcCell::new)
                     .map(Into::<ASTFlatten>::into)
                     .collect(),
-                was_single_statement,
+                false,
             )
             .into_ast(),
         )

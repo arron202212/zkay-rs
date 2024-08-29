@@ -56,3 +56,4 @@ chrono={ workspace = true }
 bitflags={ workspace = true }
 dyn-clone ={ workspace = true }
 uuid={ workspace = true }
+backtrace-on-stack-overflow={workspace=true}

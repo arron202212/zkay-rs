@@ -196,6 +196,8 @@ impl ZkayVarDeclTransformer {
     }
 
     pub fn visitVariableDeclaration(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        //  println!("===========visitVariableDeclaration=====begin======={}",ast);
+
         if ast
             .ast_base_ref()
             .unwrap()
@@ -206,13 +208,17 @@ impl ZkayVarDeclTransformer {
             .borrow()
             .is_private()
         {
+            // println!("===========visitVariableDeclaration=====private======={}",ast);
             ast.try_as_variable_declaration_ref()
                 .unwrap()
                 .borrow_mut()
                 .identifier_declaration_base
                 .storage_location = Some(String::from("memory"));
         }
-        self.visit_children(ast)
+        // println!("===========visitVariableDeclaration=====midd======={}",ast);
+        let c = self.visit_children(ast);
+        // println!("=======ret====visitVariableDeclaration============{}",c.as_ref().unwrap());
+        c
     }
 
     pub fn visitParameter(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
@@ -433,9 +439,16 @@ impl ZkayStatementTransformer {
         {
             let old_code = ASTFlatten::from(stmt.clone()).code();
             let transformed_stmt = self.visit(&stmt.clone().into());
+
             if transformed_stmt.is_none() {
                 continue;
             }
+            println!(
+                "==transformed_stmt===={:?}===={:?}======{old_code},===to====={}",
+                ast.get_ast_type(),
+                transformed_stmt.as_ref().unwrap().get_ast_type(),
+                transformed_stmt.as_ref().unwrap().code()
+            );
             let r = Regex::new(&format!(r"@{WS_PATTERN}*{ID_PATTERN}"))
                 .unwrap()
                 .replace_all(&old_code, "");
@@ -449,6 +462,16 @@ impl ZkayStatementTransformer {
             if old_code_wo_annotations == new_code_wo_annotation_comments {
                 new_statements.push(transformed_stmt.unwrap())
             } else {
+                // transformed_stmt
+                //         .as_ref()
+                //         .unwrap()
+                //         .to_ast()
+                //         .try_as_statement_ref()
+                //         .unwrap()
+                //         .statement_base_ref()
+                //         .unwrap()
+                //         .pre_statements
+                //         .iter().for_each(|ps|{println!("====ps========={}====",ps);});
                 new_statements.extend(CommentBase::comment_wrap_block(
                     old_code,
                     transformed_stmt
@@ -503,7 +526,21 @@ impl ZkayStatementTransformer {
     // """Default statement child handling. Expressions and declarations are visited by the corresponding transformers."""
     pub fn process_statement_child(&self, child: &ASTFlatten) -> Option<ASTFlatten> {
         if is_instance(child, ASTType::ExpressionBase) {
-            self.expr_trafo.visit(child)
+            let res = self.expr_trafo.visit(child);
+            if child.is_expression() && res.as_ref().unwrap().is_expression() {
+                let rr = res
+                    .as_ref()
+                    .unwrap()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .clone();
+                *child.try_as_expression_ref().unwrap().borrow_mut() = rr;
+            } else {
+                panic!("==process_statement_child=====else==========={child:?},{res:?}");
+            }
+            // println!("====child======{:?}======={:?}===={}===={}=====",child.get_ast_type(),res.as_ref().unwrap().get_ast_type(),child.is_expression(),res.as_ref().unwrap().is_expression());
+            res
         } else {
             assert!(is_instance(child, ASTType::VariableDeclaration));
             self.var_decl_trafo.visit(child)
@@ -531,7 +568,7 @@ impl ZkayStatementTransformer {
     }
     // """Rule (2)"""
     pub fn visitAssignmentStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        //  println!("==visitAssignmentStatement======================={ast:?}");
+        println!("==visitAssignmentStatement======================={ast}");
         let a = self.expr_trafo.visit(
             ast.to_ast()
                 .try_as_statement_ref()
@@ -577,6 +614,7 @@ impl ZkayStatementTransformer {
                 .as_ref()
                 .unwrap(),
         );
+        // println!("======rhs==============={}====",rhs.as_ref().unwrap());
         if ast.is_assignment_statement() {
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -866,6 +904,7 @@ impl ZkayStatementTransformer {
                 }
             }
         }
+        println!("==visitAssignmentStatement======ret================={ast}");
         Ok(ast.clone())
     }
     // """
@@ -1228,6 +1267,7 @@ impl ZkayStatementTransformer {
     // Otherwise only the expression is transformed.
     // """
     pub fn visitReturnStatement(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+        println!("==visitReturnStatement======================={ast}");
         if ast
             .to_ast()
             .try_as_statement_ref()
@@ -1304,6 +1344,10 @@ impl ZkayStatementTransformer {
                 .iter()
                 .map(|ps| ps.clone_inner())
                 .collect();
+            println!(
+                "==visitReturnStatement=====ret=================={}",
+                te.code()
+            );
             Ok(RcCell::new(te).into())
         } else {
             let expr = self.expr_trafo.visit(
@@ -1319,6 +1363,7 @@ impl ZkayStatementTransformer {
             } else {
                 panic!("==============else========{ast:?}");
             }
+            println!("==visitReturnStatement=====ret=======else==========={ast}");
             Ok(ast.clone().into())
         }
     }
@@ -1534,7 +1579,8 @@ impl ZkayExpressionTransformer {
         //             "====expression==transform=======visitReclassifyExpr==expr====={:?}=====",
         //             expr.get_ast_type()
         //         );
-        self.generator
+        let res = self
+            .generator
             .as_ref()
             .unwrap()
             .borrow()
@@ -1561,7 +1607,23 @@ impl ZkayExpressionTransformer {
                     .borrow()
                     .homomorphism,
             )
-            .ok_or(eyre::eyre!("unexpected"))
+            .ok_or(eyre::eyre!("unexpected"));
+        if ast.is_expression() && res.as_ref().unwrap().is_expression() {
+            let a = res
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .clone();
+            *ast.try_as_expression_ref().unwrap().borrow_mut() = a;
+        } else {
+            panic!(
+                "====visitReclassifyExpr=======else========{ast:?}================={res:?}======="
+            );
+        }
+        // println!("====visitReclassifyExpr======res====={}====",res.as_ref().unwrap().code());
+        res
     }
 
     pub fn visitBuiltinFunction(ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
@@ -1614,7 +1676,12 @@ impl ZkayExpressionTransformer {
                     .unwrap()
                     .borrow()
                     .privacy_annotation_label();
-                self.generator
+                println!(
+                    "=========privacy_label========{}===",
+                    privacy_label.as_ref().unwrap()
+                );
+                let ret = self
+                    .generator
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -1637,7 +1704,35 @@ impl ZkayExpressionTransformer {
                             .clone()
                             .into()),
                     )
-                    .ok_or(eyre::eyre!("unexpected"))
+                    .ok_or(eyre::eyre!("unexpected"));
+                println!(
+                    "=========visitFunctionCallExpr========{}={}==={}=={:?}=",
+                    ret.as_ref().unwrap(),
+                    ast.is_expression(),
+                    ret.as_ref().unwrap().is_member_access_expr(),
+                    ret.as_ref().unwrap().get_ast_type()
+                );
+                if ast.is_expression() {
+                    if ret.as_ref().unwrap().is_member_access_expr() {
+                        let r = ret
+                            .as_ref()
+                            .unwrap()
+                            .try_as_member_access_expr_ref()
+                            .unwrap()
+                            .borrow()
+                            .clone_inner()
+                            .to_expr();
+                        *ast.try_as_expression_ref().unwrap().borrow_mut() = r;
+                    } else if ret.as_ref().unwrap().is_expression() {
+                        // let r=ret.as_ref().unwrap().try_as_expression_ref().unwrap().borrow().clone_inner();
+                        //     *ast.try_as_expression_ref().unwrap().borrow_mut()=r;
+                    } else {
+                        panic!("==visitFunctionCallExpr===else===expr======{ast:?}=====***********************************************************==={ret:?}=======");
+                    }
+                } else {
+                    panic!("==visitFunctionCallExpr===else========={ast:?}=====***********************************************************==={ret:?}=======");
+                }
+                ret
             } else {
                 // """
                 // Rule (10) with additional short-circuit handling.

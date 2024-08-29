@@ -46,28 +46,28 @@ impl AstVisitor for ParentSetterVisitor {
             c.ast_base_ref().unwrap().borrow_mut().parent = Some(ast.clone().downgrade());
             c.ast_base_ref().unwrap().borrow_mut().namespace =
                 ast.ast_base_ref().unwrap().borrow().namespace().clone();
-            if c.code() == "votum"
-                || is_instances(
-                    &c,
-                    vec![
-                        ASTType::VariableDeclaration,
-                        ASTType::VariableDeclarationStatement,
-                        ASTType::FunctionCallExprBase,
-                        ASTType::RequireStatement,
-                        ASTType::IndentBlock,
-                        ASTType::Block,
-                    ],
-                )
-            {
-                println!(
-                    "====visit_children======{}==parent=={}=={}====={:?},======={:?}",
-                    c.code() == "votum",
-                    ast.ptr_string(),
-                    c.ptr_string(),
-                    ast.get_ast_type(),
-                    c.get_ast_type()
-                );
-            }
+            // if c.code() == "votum"
+            //     || is_instances(
+            //         &c,
+            //         vec![
+            //             ASTType::VariableDeclaration,
+            //             ASTType::VariableDeclarationStatement,
+            //             ASTType::FunctionCallExprBase,
+            //             ASTType::RequireStatement,
+            //             ASTType::IndentBlock,
+            //             ASTType::Block,
+            //         ],
+            //     )
+            // {
+            //     println!(
+            //         "====visit_children======{}==parent=={}=={}====={:?},======={:?}",
+            //         c.code() == "votum",
+            //         ast.ptr_string(),
+            //         c.ptr_string(),
+            //         ast.get_ast_type(),
+            //         c.get_ast_type()
+            //     );
+            // }
             // println!(
             //         "=0000000={:?}==={:?}===children=={:?}======={:?}",
             //         ast.get_ast_type(),
@@ -85,7 +85,7 @@ impl AstVisitor for ParentSetterVisitor {
 
 impl ParentSetterVisitor {
     pub fn new() -> Self {
-        println!("======ParentSetterVisitor===============================");
+        // println!("======ParentSetterVisitor===============================");
         Self {
             ast_visitor_base: AstVisitorBase::new("pre", false),
         }
