@@ -10,11 +10,36 @@ use zkay_utils::{
     helpers::hash_file,
     run_command::{run_command, run_commands},
 };
+#[macro_export]
+macro_rules! file_abs_workspace {
+    () => {
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            $crate::jsnark_interface::pop_first_two_path_components(file!()),
+        )
+    };
+}
+
+pub fn pop_first_two_path_components(path: &str) -> std::path::PathBuf {
+    let mut components = std::path::Path::new(path).components();
+    components.next();
+    components.next();
+    components.as_path().to_path_buf()
+}
 //path to jsnark interface jar
 const CIRCUIT_BUILDER_JAR: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
-    pub static ref CIRCUIT_BUILDER_JAR_HASH: String =
-        hex::encode(hash_file(CIRCUIT_BUILDER_JAR, 0));
+    pub static ref JARS_DIR: String = file_abs_workspace!()
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string();
+    pub static ref CIRCUIT_BUILDER_JAR_HASH: String = hex::encode(hash_file(
+        &(JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR),
+        0
+    ));
 }
 // """
 // Compile the given circuit java code and then compile the circuit which it describes using jsnark.
@@ -26,7 +51,7 @@ lazy_static! {
 pub fn compile_circuit(circuit_dir: &str, javacode: &str) {
     let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let jfile = Path::new(circuit_dir).join(class_name.clone() + ".java");
-    let mut f = File::open(jfile.clone()).expect("");
+    let mut f = File::open(jfile.clone()).expect(jfile.as_path().to_str().expect("jfile"));
     let _ = f.write_all(javacode.as_bytes());
 
     compile_and_run_with_circuit_builder(
@@ -125,6 +150,13 @@ pub fn get_jsnark_circuit_class_str(
     fdefs: Vec<String>,
     circuit_statements: Vec<String>,
 ) -> String {
+    let circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname();
+    let use_input_hashing = CFG
+        .lock()
+        .unwrap()
+        .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
+        .to_string()
+        .to_ascii_lowercase();
     let mut function_definitions = fdefs.join("\n\n");
     if function_definitions.is_empty() {
         function_definitions = format!("\n{function_definitions}\n");
@@ -156,18 +188,11 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
     }}
 }}
 "#,
-        circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname(),
         circuit_name = circuit.borrow().get_verification_contract_name(),
         crypto_init_stmts = indent(indent(crypto_init_stmts.join("\n"))),
         pub_in_size = circuit.borrow().in_size_trans(),
         pub_out_size = circuit.borrow().out_size_trans(),
         priv_in_size = circuit.borrow().priv_in_size_trans(),
-        use_input_hashing = CFG
-            .lock()
-            .unwrap()
-            .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
-            .to_string()
-            .to_ascii_lowercase(),
         fdefs = indent(function_definitions),
         circuit_statements = indent(indent(circuit_statements.join("\n")))
     );

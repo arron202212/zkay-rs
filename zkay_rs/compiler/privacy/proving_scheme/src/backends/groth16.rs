@@ -33,9 +33,9 @@ impl<G1: Default, G2: Default> VerifyingKey<G1, G2> {
         }
     }
 }
-impl VK for <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX
-// where PS:ProvingScheme<VerifyingKeyX=<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX>,
-{
+impl VK for <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX {
+    // where PS:ProvingScheme<VerifyingKeyX=<ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX>,
+
     type Output = Self;
     type G1 = G1Point;
     type G2 = G2Point;
@@ -63,7 +63,11 @@ impl ProvingScheme for ProvingSchemeGroth16 {
             .lock()
             .unwrap()
             .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size);
-
+        println!(
+            "=====len============{},{}",
+            vk.gamma_abc.len(),
+            primary_inputs.len()
+        );
         let query_length = vk.gamma_abc.len();
         assert!(query_length == primary_inputs.len() + 1);
 

@@ -27,24 +27,22 @@ use zkay_config::{config::CFG, zk_print};
 use std::collections::HashMap;
 use std::env::{current_dir, set_current_dir};
 use std::fs::File;
+
+// Compile the given solidity file using solc json interface with the provided options.
+
+// :param sol_filename: path to solidity file
+// :param libs: [OPTIONAL] dictionary containing <LibraryContractName, LibraryContractAddress> pairs, used for linking
+// :param optimizer_runs: controls the optimize-runs flag, negative values disable the optimizer
+// :param output_selection: determines which fields are included in the compiler output dict
+// :param cwd: working directory
+// :return: dictionary with the compilation results according to output_selection
 fn compile_solidity_json(
     sol_filename: &str,
     libs: Option<HashMap<String, String>>,
     optimizer_runs: i32,
     output_selection: Vec<String>,
     cwd: &str,
-) -> Option<Map<String, Value>>
-// """
-    // Compile the given solidity file using solc json interface with the provided options.
-
-    // :param sol_filename: path to solidity file
-    // :param libs: [OPTIONAL] dictionary containing <LibraryContractName, LibraryContractAddress> pairs, used for linking
-    // :param optimizer_runs: controls the optimize-runs flag, negative values disable the optimizer
-    // :param output_selection: determines which fields are included in the compiler output dict
-    // :param cwd: working directory
-    // :return: dictionary with the compilation results according to output_selection
-    // """
-{
+) -> Option<Map<String, Value>> {
     // sol_filename: str, libs: Optional[Dict[str, str]] = None, optimizer_runs: int = -1,
     //                           output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'),
     //                           cwd: str = None) -> Dict
@@ -58,7 +56,7 @@ fn compile_solidity_json(
     // }
     let optimizer = if optimizer_runs >= 0 {
         format!(
-            r#"{{
+            r#",{{
             "enabled": "true",
             "runs": {optimizer_runs}
         }}"#
@@ -67,9 +65,9 @@ fn compile_solidity_json(
         String::new()
     };
 
-    let libraries = if libs.is_some() {
+    let libraries = if let Some(libs) = libs {
         format!(
-            "{{
+            ",{{
             {sol_filename}: {:?}
         }}",
             libs
@@ -77,7 +75,7 @@ fn compile_solidity_json(
     } else {
         String::new()
     };
-    let solps = std::fs::canonicalize(sol_filename);
+    let solps = std::fs::canonicalize(sol_filename).unwrap();
     let solp = PathBuf::from(sol_filename);
     let mut json_in = format!(
         r#"{{
@@ -92,14 +90,15 @@ fn compile_solidity_json(
         "settings": {{
             "outputSelection": {{
                 "*": {{"*": {output_selection:?}  }}
-            }},
+            }}
             {optimizer}{libraries}
           }}
    }}"#
     );
+
     let mut cwd = cwd.to_string();
     if cwd.is_empty() {
-        cwd = std::fs::canonicalize(solp)
+        cwd = std::fs::canonicalize(solp.clone())
             .unwrap()
             .parent()
             .unwrap()
@@ -107,23 +106,75 @@ fn compile_solidity_json(
             .unwrap()
             .to_string();
     }
+    let input_json_file_path = json_input(&cwd, &json_in);
     let old_cwd = std::env::current_dir().unwrap();
     let _ = set_current_dir(&cwd);
-    let ret = compile(&json_in);
+    let ret = compile(&json_in, &cwd, &input_json_file_path);
     let _ = set_current_dir(old_cwd);
     ret
 }
+pub fn json_input(dir: &str, json_in: &str) -> String {
+    use std::env::temp_dir;
+    use std::fs::File;
+    use std::io::Result;
+    use std::io::{BufRead, BufReader, Error, Write};
+    use uuid::Uuid;
+
+    // let mut dir = temp_dir();
+    // println!("{}", dir.to_str().unwrap());
+
+    // let file_name = format!("{}.json", Uuid::new_v4());
+    // println!("{}", file_name);
+    // dir.push(json_in.clone());
+    let input_json_file_path = dir.to_owned() + "input.json";
+    let mut file = File::create(input_json_file_path.clone()).unwrap();
+    write!(file, "{}", json_in).expect("write file failed");
+    // dump fake solidity code into temporary file
+    // with tempfile.NamedTemporaryFile('w', suffix='.sol') as f
+    //     f.write(fake_solidity_code)
+    //     f.flush()
+    // check_compilation(dir.to_str().unwrap(), true, zkay_code);
+    input_json_file_path
+}
 //TODO
-fn compile(_input: &str) -> Option<Map<String, Value>> {
-    let output = "{}"; //solc::compile(&input);
+fn compile(input: &str, solp: &str, input_json_file_path: &str) -> Option<Map<String, Value>> {
+    // println!("====compile======TODO==={}======",input);
+    let output = solc_compile(&input, solp, input_json_file_path); //String::from("{}"); //
     assert_ne!(output.len(), 0);
-    let v: Value = serde_json::from_str(output).unwrap();
+    let v: Value = serde_json::from_str(&output).unwrap();
     if let Value::Object(m) = v {
         Some(m)
     } else {
         None
     }
 }
+fn solc_compile(_input: &str, solp: &str, input_json_file_path: &str) -> String {
+    use std::fs::File;
+    use std::process::{Command, Stdio};
+
+    // With the `foo.txt` file containing "Hello, world!"
+    let input = File::open(input_json_file_path).unwrap();
+
+    // let input = Command::new("echo")
+    //     .arg(_input)
+    //     .stdout(Stdio::piped())
+    //     .spawn()
+    //     .expect("failed echo command");
+    let arg = format!("{solp},.");
+    let mut solc = Command::new("/Users/lisheng/mygit/arron/zkay-rs/solc-macos")
+        .args(["--standard-json", "--allow-paths", &arg])
+        .stdin(input)
+        .output()
+        .expect("failed solc command");
+    let output = String::from_utf8(solc.stdout).unwrap();
+    println!(
+        "==erro=={}========output==={output}",
+        String::from_utf8(solc.stderr).unwrap()
+    );
+    let _ = std::fs::remove_file(input_json_file_path);
+    output
+}
+
 // """ Get line and column (1-based) from character index """
 fn _get_line_col(code: &str, idx: i32) -> (i32, i32) {
     let i = idx as usize;
@@ -145,22 +196,19 @@ pub fn get_error_order_key(error: &Value) -> i64 {
     -1
 }
 
-pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
-// """
 // Run the given file through solc without output to check for compiler errors.
 
 // :param filename: file to dry-compile
 // :param show_errors: if true, errors and warnings are printed
 // :param display_code: code to use when displaying the compiler errors
 // :raise SolcException: raised if solc reports a compiler error
-// """
-{
+pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str) {
     let p = PathBuf::from(filename);
     let sol_name = p.file_name().unwrap();
     let mut f = File::open(filename).unwrap();
     let mut code = String::new();
     f.read_to_string(&mut code).unwrap();
-
+    // println!("==filename========{filename}==code={code}");
     let display_code = if display_code.is_empty() {
         code.clone()
     } else {
@@ -270,14 +318,11 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str)
     }
 }
 
-pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str)
-// """
 // Run fake solidity code (stripped privacy features) through solc and report errors in the context of the original zkay code.
 // Fake solidity code = zkay code with privacy features removed in a source-location preserving way (whitespace padding)
 // :param zkay_code: Original zkay code
 // :param fake_solidity_code: Corresponding "fake solidity code"
-// """
-{
+pub fn check_for_zkay_solc_errors(zkay_code: &str, fake_solidity_code: &str) {
     use std::env::temp_dir;
     use std::fs::File;
     use std::io::Result;

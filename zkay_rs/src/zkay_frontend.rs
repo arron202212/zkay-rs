@@ -270,7 +270,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
     }
 
     // Generate circuits and corresponding verification contracts
-    cg.circuit_generator_base.generate_circuits(import_keys);
+    cg.generate_circuits(import_keys);
 
     // Check that all verification contracts and the main contract compile
     let fns = cg

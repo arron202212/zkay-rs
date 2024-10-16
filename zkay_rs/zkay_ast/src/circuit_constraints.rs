@@ -43,7 +43,9 @@ use zkay_derive::{
 // class CircuitStatement(metaclass=ABCMeta)
 // pass
 #[enum_dispatch(DeepClone, FullArgsSpec, IntoAST, IntoASTFlatten, ASTInstanceOf)]
-#[derive(EnumDispatchWithFields, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(
+    EnumDispatchWithFields, EnumIs, EnumTryAs, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash,
+)]
 pub enum CircuitStatement {
     CircComment(CircComment),
     CircIndentBlock(CircIndentBlock),

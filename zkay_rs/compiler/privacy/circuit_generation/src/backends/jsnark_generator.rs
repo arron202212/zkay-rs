@@ -44,9 +44,9 @@ use zkp_u256::Binary;
 pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
     TypeId::of::<S>() == s
 }
-pub fn _get_t(mut t: Option<ASTFlatten>) -> String
+
 // """Return the corresponding jsnark type name for a given type or expression."""
-{
+pub fn _get_t(mut t: Option<ASTFlatten>) -> String {
     let t = t.and_then(|t| {
         if t.is_expression() {
             t.ast_base_ref()
@@ -154,17 +154,25 @@ impl JsnarkVisitor {
         &self,
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("====visitCircComment====={:?}",stmt);
         Ok(
             if !stmt
-                .try_as_circ_comment_ref()
+                .try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_comment_ref()
+                .unwrap()
                 .text
                 .is_empty()
             {
                 format!(
                     r#"// {}"#,
-                    stmt.try_as_circ_comment_ref().unwrap().borrow().text
+                    stmt.try_as_circuit_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_circ_comment_ref()
+                        .unwrap()
+                        .text
                 )
             } else {
                 String::new()
@@ -176,26 +184,37 @@ impl JsnarkVisitor {
         &self,
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("====visitCircIndentBlock====={:?}",stmt);
         let stmts: Vec<_> = stmt
-            .try_as_circ_indent_block_ref()
+            .try_as_circuit_statement_ref()
             .unwrap()
             .borrow()
+            .try_as_circ_indent_block_ref()
+            .unwrap()
             .statements
             .iter()
             .map(|s| self.visit(&s.clone().into()))
             .collect();
         Ok(
             if !stmt
-                .try_as_circ_indent_block_ref()
+                .try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_indent_block_ref()
+                .unwrap()
                 .name
                 .is_empty()
             {
                 format!(
                     r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
                     indent(stmts.join("\n")),
-                    name = stmt.try_as_circ_indent_block_ref().unwrap().borrow().name
+                    name = stmt
+                        .try_as_circuit_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_circ_indent_block_ref()
+                        .unwrap()
+                        .name
                 )
             } else {
                 indent(stmts.join("\n"))
@@ -206,7 +225,13 @@ impl JsnarkVisitor {
     pub fn visitCircCall(&self, stmt: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(format!(
             r#"_{}();"#,
-            stmt.try_as_circ_call_ref().unwrap().borrow().fct.name()
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_call_ref()
+                .unwrap()
+                .fct
+                .name()
         ))
     }
 
@@ -216,17 +241,21 @@ impl JsnarkVisitor {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(format!(
             r#"decl("{}", {});"#,
-            stmt.try_as_circ_var_decl_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_var_decl_ref()
+                .unwrap()
                 .lhs
                 .identifier_base
                 .name,
             self.visit(
                 &stmt
-                    .try_as_circ_var_decl_ref()
+                    .try_as_circuit_statement_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_circ_var_decl_ref()
+                    .unwrap()
                     .expr
                     .clone()
                     .into()
@@ -239,9 +268,11 @@ impl JsnarkVisitor {
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(
-            stmt.try_as_circ_eq_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_eq_constraint_ref()
+                .unwrap()
                 .tgt
                 .t
                 .to_ast()
@@ -249,9 +280,11 @@ impl JsnarkVisitor {
                 .unwrap()
                 .size_in_uints()
                 == stmt
-                    .try_as_circ_eq_constraint_ref()
+                    .try_as_circuit_statement_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_circ_eq_constraint_ref()
+                    .unwrap()
                     .val
                     .t
                     .to_ast()
@@ -261,15 +294,19 @@ impl JsnarkVisitor {
         );
         Ok(format!(
             r#"checkEq("{}", "{}");"#,
-            stmt.try_as_circ_eq_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_eq_constraint_ref()
+                .unwrap()
                 .tgt
                 .identifier_base
                 .name,
-            stmt.try_as_circ_eq_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_eq_constraint_ref()
+                .unwrap()
                 .val
                 .identifier_base
                 .name
@@ -281,9 +318,11 @@ impl JsnarkVisitor {
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         assert!(stmt
-            .try_as_circ_enc_constraint_ref()
+            .try_as_circuit_statement_ref()
             .unwrap()
             .borrow()
+            .try_as_circ_enc_constraint_ref()
+            .unwrap()
             .cipher
             .t
             .to_ast()
@@ -291,9 +330,11 @@ impl JsnarkVisitor {
             .unwrap()
             .is_cipher());
         assert!(stmt
-            .try_as_circ_enc_constraint_ref()
+            .try_as_circuit_statement_ref()
             .unwrap()
             .borrow()
+            .try_as_circ_enc_constraint_ref()
+            .unwrap()
             .pk
             .t
             .to_ast()
@@ -301,9 +342,11 @@ impl JsnarkVisitor {
             .unwrap()
             .is_key());
         assert!(stmt
-            .try_as_circ_enc_constraint_ref()
+            .try_as_circuit_statement_ref()
             .unwrap()
             .borrow()
+            .try_as_circ_enc_constraint_ref()
+            .unwrap()
             .rnd
             .t
             .to_ast()
@@ -311,9 +354,11 @@ impl JsnarkVisitor {
             .unwrap()
             .is_randomness());
         assert!(
-            stmt.try_as_circ_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .cipher
                 .t
                 .to_ast()
@@ -325,9 +370,11 @@ impl JsnarkVisitor {
                 .as_ref()
                 .unwrap()
                 == stmt
-                    .try_as_circ_enc_constraint_ref()
+                    .try_as_circuit_statement_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_circ_enc_constraint_ref()
+                    .unwrap()
                     .pk
                     .t
                     .to_ast()
@@ -339,9 +386,11 @@ impl JsnarkVisitor {
                     .as_ref()
                     .unwrap()
                 && stmt
-                    .try_as_circ_enc_constraint_ref()
+                    .try_as_circuit_statement_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_circ_enc_constraint_ref()
+                    .unwrap()
                     .pk
                     .t
                     .to_ast()
@@ -353,9 +402,11 @@ impl JsnarkVisitor {
                     .as_ref()
                     .unwrap()
                     == stmt
-                        .try_as_circ_enc_constraint_ref()
+                        .try_as_circuit_statement_ref()
                         .unwrap()
                         .borrow()
+                        .try_as_circ_enc_constraint_ref()
+                        .unwrap()
                         .rnd
                         .t
                         .to_ast()
@@ -368,9 +419,11 @@ impl JsnarkVisitor {
                         .unwrap()
         );
         let backend = stmt
-            .try_as_circ_enc_constraint_ref()
+            .try_as_circuit_statement_ref()
             .unwrap()
             .borrow()
+            .try_as_circ_enc_constraint_ref()
+            .unwrap()
             .pk
             .t
             .to_ast()
@@ -387,36 +440,46 @@ impl JsnarkVisitor {
         Ok(format!(
             r#"check{}("{backend}", "{}", "{}", "{}", "{}");"#,
             if stmt
-                .try_as_circ_enc_constraint_ref()
+                .try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .is_dec
             {
                 "Dec"
             } else {
                 "Enc"
             },
-            stmt.try_as_circ_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .plain
                 .identifier_base
                 .name,
-            stmt.try_as_circ_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .pk
                 .identifier_base
                 .name,
-            stmt.try_as_circ_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .rnd
                 .identifier_base
                 .name,
-            stmt.try_as_circ_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
                 .unwrap()
                 .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
                 .cipher
                 .identifier_base
                 .name
@@ -576,17 +639,42 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("======visitNumberLiteralExpr=============={:?}",ast);
         let t = _get_t(Some(ast.clone()));
         Ok(
-            if ast.try_as_number_literal_expr_ref().unwrap().borrow().value < (1 << 31) {
+            if ast
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_literal_expr_ref()
+                .unwrap()
+                .try_as_number_literal_expr_ref()
+                .unwrap()
+                .value
+                < (1 << 31)
+            {
                 format!(
                     r#"val({}, {t})"#,
-                    ast.try_as_number_literal_expr_ref().unwrap().borrow().value
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_number_literal_expr_ref()
+                        .unwrap()
+                        .value
                 )
             } else {
                 format!(
                     r#"val("{}", {t})"#,
-                    ast.try_as_number_literal_expr_ref().unwrap().borrow().value
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_literal_expr_ref()
+                        .unwrap()
+                        .try_as_number_literal_expr_ref()
+                        .unwrap()
+                        .value
                 )
             },
         )
@@ -713,55 +801,82 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        // println!("======visitFunctionCallExpr=============={:?}",ast.try_as_expression_ref().unwrap().borrow().try_as_function_call_expr_ref().unwrap()
+        //         .func());
         if is_instance(
-            ast.try_as_function_call_expr_ref().unwrap().borrow().func(),
+            ast.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func(),
             ASTType::BuiltinFunction,
         ) {
             assert!(ast
-                .try_as_function_call_expr_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .func()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .try_as_builtin_function_ref()
                 .unwrap()
-                .borrow()
                 .can_be_private());
             let mut args: Vec<_> = ast
-                .try_as_function_call_expr_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .args()
                 .iter()
                 .map(|arg| self.visit(&arg.clone().into()))
                 .collect();
             if ast
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
-                .try_as_builtin_function_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
                 .is_shiftop()
             {
-                assert!(
-                    ast.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .borrow()
-                        .annotated_type()
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .type_name
-                        .as_ref()
-                        .unwrap()
-                        .to_ast()
-                        .try_as_type_name()
-                        .unwrap()
-                        .is_literals()
-                );
-                args[1] = ast.try_as_function_call_expr_ref().unwrap().borrow().args()[1]
+                assert!(ast
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .args()[1]
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .type_name
+                    .as_ref()
+                    .unwrap()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
+                    .is_literals());
+                args[1] = ast
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .args()[1]
                     .try_as_expression_ref()
                     .unwrap()
                     .borrow()
@@ -786,13 +901,17 @@ impl JsnarkVisitor {
             }
 
             let mut op = &ast
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
-                .try_as_builtin_function_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
                 .op
                 .clone();
             let op = if op == "sign-" { "-" } else { op };
@@ -801,29 +920,36 @@ impl JsnarkVisitor {
                 eyre::bail!("unimplemented")
             }
             let homomorphism = ast
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
                 .try_as_function_call_expr_ref()
                 .unwrap()
-                .borrow()
                 .func()
-                .try_as_builtin_function_ref()
+                .try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_builtin_function_ref()
+                .unwrap()
                 .homomorphism
                 .clone();
             let (f_start, crypto_backend, public_key_name) =
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
                 } else {
-                    let crypto_backend = CFG
-                        .lock()
-                        .unwrap()
-                        .user_config
-                        .get_crypto_params(&homomorphism)
-                        .crypto_name;
+                    let crypto_backend = String::from("elgamal");
+                    // CFG
+                    // .lock()
+                    // .unwrap()
+                    // .user_config
+                    // .get_crypto_params(&homomorphism)
+                    // .crypto_name;
                     let public_key_name = ast
-                        .try_as_function_call_expr_ref()
+                        .try_as_expression_ref()
                         .unwrap()
                         .borrow()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
                         .public_key()
                         .as_ref()
                         .unwrap()
@@ -862,25 +988,33 @@ impl JsnarkVisitor {
                     assert!(args.len() == 2);
                     if op == "*"
                         && ast
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .borrow()
                             .try_as_function_call_expr_ref()
                             .unwrap()
-                            .borrow()
                             .func()
-                            .try_as_builtin_function_ref()
+                            .try_as_expression_ref()
                             .unwrap()
                             .borrow()
+                            .try_as_builtin_function_ref()
+                            .unwrap()
                             .rerand_using
                             .is_some()
                     {
                         // re-randomize homomorphic scalar multiplication
                         let rnd = self.visit(
-                            &ast.try_as_function_call_expr_ref()
+                            &ast.try_as_expression_ref()
                                 .unwrap()
                                 .borrow()
+                                .try_as_function_call_expr_ref()
+                                .unwrap()
                                 .func()
+                                .try_as_expression_ref()
+                                .unwrap()
+                                .borrow()
                                 .try_as_builtin_function_ref()
                                 .unwrap()
-                                .borrow()
                                 .rerand_using
                                 .clone()
                                 .unwrap()
@@ -896,14 +1030,18 @@ impl JsnarkVisitor {
                 }
             });
         } else if ast
-            .try_as_function_call_expr_ref()
+            .try_as_expression_ref()
             .unwrap()
             .borrow()
+            .try_as_function_call_expr_ref()
+            .unwrap()
             .is_cast()
             && is_instance(
-                &ast.try_as_function_call_expr_ref()
+                &ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
                     .func()
                     .ast_base_ref()
                     .unwrap()
@@ -917,9 +1055,11 @@ impl JsnarkVisitor {
             )
         {
             assert!(
-                ast.try_as_function_call_expr_ref()
+                ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
                     .annotated_type()
                     .as_ref()
                     .unwrap()
@@ -935,7 +1075,12 @@ impl JsnarkVisitor {
             );
             return self.handle_cast(
                 self.visit(
-                    &ast.try_as_function_call_expr_ref().unwrap().borrow().args()[0]
+                    &ast.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .args()[0]
                         .clone()
                         .into(),
                 ),
@@ -950,9 +1095,11 @@ impl JsnarkVisitor {
         // );
         Err(eyre::eyre!(
             "Unsupported function {} inside circuit",
-            ast.try_as_function_call_expr_ref()
+            ast.try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
                 .func()
                 .code()
         ))
@@ -962,18 +1109,23 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        //   println!("======visitPrimitiveCastExpr=============={:?}",ast);
         self.handle_cast(
             self.visit(
-                &ast.try_as_primitive_cast_expr_ref()
+                &ast.try_as_expression_ref()
                     .unwrap()
                     .borrow()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
                     .expr
                     .clone()
                     .into(),
             ),
-            &ast.try_as_primitive_cast_expr_ref()
+            &ast.try_as_expression_ref()
                 .unwrap()
                 .borrow()
+                .try_as_primitive_cast_expr_ref()
+                .unwrap()
                 .elem_type,
         )
     }
@@ -1063,7 +1215,8 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
         .iter()
         .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
-    for crypto_params in &CFG.lock().unwrap().user_config.all_crypto_params() {
+    let all_crypto_params = CFG.lock().unwrap().user_config.all_crypto_params();
+    for crypto_params in &all_crypto_params {
         let pk_name =
             CircuitHelper::get_glob_key_name(&RcCell::new(MeExpr::new()).into(), crypto_params);
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
@@ -1113,14 +1266,18 @@ impl JsnarkGenerator {
             ),
         }
     }
+}
+impl CircuitGenerator for JsnarkGenerator {
+    fn base(&self) -> &CircuitGeneratorBase {
+        &self.circuit_generator_base
+    }
     //Create output directory
-    pub fn _generate_zkcircuit(&self, import_keys: bool, circuit: &RcCell<CircuitHelper>) -> bool {
+    fn _generate_zkcircuit(&self, import_keys: bool, circuit: &RcCell<CircuitHelper>) -> bool {
         let p = self.circuit_generator_base._get_circuit_output_dir(circuit);
         let output_dir = Path::new(&p);
         if let Err(_) | Ok(false) = output_dir.try_exists() {
             std::fs::create_dir_all(output_dir).expect(output_dir.to_str().unwrap());
         }
-
         //Generate java code to add used crypto backends by calling addCryptoBackend
         let mut crypto_init_stmts = vec![];
         for params in &circuit
@@ -1139,7 +1296,6 @@ impl JsnarkGenerator {
             );
             crypto_init_stmts.push(init_stmt);
         }
-
         //Generate java code for all functions which are transitively called by the fct corresponding to this circuit
         //(outside private expressions)
         let mut fdefs = vec![];
@@ -1162,11 +1318,9 @@ impl JsnarkGenerator {
             );
             fdefs.push(format!(r#"{fdef}"#))
         }
-
         //Generate java code for the function corresponding to this circuit
         let input_init_stmts = add_function_circuit_arguments(circuit);
         let constraints = JsnarkVisitor::new(circuit.borrow().phi()).visitCircuit();
-
         //Inject the function definitions into the java template
         let code = jsnark::get_jsnark_circuit_class_str(
             circuit,
@@ -1185,11 +1339,16 @@ impl JsnarkGenerator {
             r#"{}.hash"#,
             CFG.lock().unwrap().jsnark_circuit_classname()
         ));
-        let digest = hex::encode(hash_string(
-            &(jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string()
-                + &code
-                + &CFG.lock().unwrap().user_config.proving_scheme()),
-        ));
+        println!("========");
+        let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme(); //String::from("groth16");//
+        println!("====1====");
+        let jar_hash_string =
+            jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string() + &code + &proving_scheme;
+        println!("====1==0==");
+        let hs = hash_string(&jar_hash_string);
+        println!("====1=1===");
+        let digest = hex::encode(hs);
+        println!("===2=====");
         let oldhash = if let Ok(true) = hashfile.try_exists() {
             read_file(hashfile.to_str().unwrap())
         } else {
@@ -1199,7 +1358,7 @@ impl JsnarkGenerator {
         //Invoke jsnark compilation if either the jsnark-wrapper or the current circuit was modified (based on hash comparison)
         if oldhash != digest
             || output_dir
-                .join("circuit.borrow().arith")
+                .join("circuit.arith")
                 .try_exists()
                 .map_or(false, |v| v)
         {
@@ -1223,7 +1382,7 @@ impl JsnarkGenerator {
         }
     }
     //Invoke the custom libsnark interface to generate keys
-    pub fn _generate_keys(&self, circuit: &RcCell<CircuitHelper>) {
+    fn _generate_keys(&self, circuit: &RcCell<CircuitHelper>) {
         let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
         libsnark::generate_keys(
             &output_dir,
@@ -1233,17 +1392,14 @@ impl JsnarkGenerator {
     }
 
     // @classmethod
-    pub fn get_vk_and_pk_filenames() -> Vec<String> {
+    fn get_vk_and_pk_filenames() -> Vec<String> {
         ["verification.key", "proving.key", "verification.key.bin"]
             .into_iter()
             .map(String::from)
             .collect()
     }
 
-    pub fn _parse_verification_key(
-        &self,
-        circuit: &RcCell<CircuitHelper>,
-    ) -> Option<VerifyingKeyType> {
+    fn _parse_verification_key(&self, circuit: &RcCell<CircuitHelper>) -> Option<VerifyingKeyType> {
         let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
         let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
@@ -1291,7 +1447,7 @@ impl JsnarkGenerator {
         None
     }
 
-    pub fn _get_prover_key_hash(&self, circuit: &RcCell<CircuitHelper>) -> Vec<u8> {
+    fn _get_prover_key_hash(&self, circuit: &RcCell<CircuitHelper>) -> Vec<u8> {
         hash_file(
             &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
             0,
@@ -1299,7 +1455,8 @@ impl JsnarkGenerator {
     }
 
     //Jsnark requires an additional public input with the value 1 as first input
-    pub fn _get_primary_inputs(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
+    fn _get_primary_inputs(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
+        println!("==_get_primary_inputs========");
         [String::from("1")]
             .into_iter()
             .chain(self.circuit_generator_base._get_primary_inputs(circuit))

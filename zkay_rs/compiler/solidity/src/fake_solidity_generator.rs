@@ -2,7 +2,7 @@
 // // so that code can be passed to solc for type checking.
 
 // import re
-use fancy_regex::Regex as Regexf;
+use fancy_regex::{Captures, Regex as Regexf};
 use lazy_static::lazy_static;
 use regex::Regex;
 use zkay_config::config::CFG;
@@ -46,7 +46,7 @@ static ref ATYPE_PATTERN : Regex =  Regex::new(&format!(r"(?P<keep>{NONID_START}
   static ref ALL_PATTERN : Regexf =  Regexf::new(&format!("(?P<keep>{NONID_START})(?P<repl>all)(?={NONID_END})")).unwrap();
 
 // Pragma regex
-  static ref PRAGMA_PATTERN : Regex =  Regex::new(&format!(r"(?P<keep>{NONID_START}pragma\\s*)(?P<repl>zkay.*?);")).unwrap();
+  static ref PRAGMA_PATTERN : Regex =  Regex::new(&format!(r"(?P<keep>{NONID_START}pragma\s*)(?P<repl>zkay.*?);")).unwrap();
 
 // Regex to match tagged mapping declarations
   static ref MAP_PATTERN : Regexf =  Regexf::new(&format!(
@@ -197,9 +197,15 @@ pub fn replace_with_surrogate(
     search_pattern: &Regex,
     replacement_fstr: &str,
 ) -> String {
+    if !replacement_fstr.is_empty() {
+        println!(
+            "=====!replacement_fstr.is_empty()===={}====================={search_pattern:?}",
+            search_pattern.as_str()
+        );
+    }
     let mut code = code.to_owned();
     let keep_repl_pattern = if search_pattern.as_str().contains("(?P<keep>") {
-        r"\g<keep>"
+        r"$keep"
     } else {
         ""
     };
@@ -211,6 +217,9 @@ pub fn replace_with_surrogate(
     for _ in 0..100 {
         c = code.clone();
         let matches = search_pattern.captures(&c[search_idx..]);
+        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+            println!("=======matches====={search_idx}====={replacement}====={matches:?}");
+        }
         if matches.is_none() {
             flag = false;
             break;
@@ -222,12 +231,20 @@ pub fn replace_with_surrogate(
                 .unwrap();
             replacement = create_surrogate_string(repl);
         }
-
+        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+            println!(
+                "====code===={}======={code:?}",
+                keep_repl_pattern.to_owned() + &replacement
+            );
+        }
         code = code[..search_idx].to_owned()
             + &search_pattern.replace(
                 &code[search_idx..],
                 keep_repl_pattern.to_owned() + &replacement,
             );
+        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+            println!("=after==code==={search_idx}========{code:?}");
+        }
         search_idx += end + 1;
     }
     if flag {
@@ -243,7 +260,7 @@ pub fn replace_with_surrogatef(
 ) -> String {
     let mut code = code.to_owned();
     let keep_repl_pattern = if search_pattern.as_str().contains("(?P<keep>") {
-        r"\g<keep>"
+        r"keep"
     } else {
         ""
     };
@@ -252,11 +269,15 @@ pub fn replace_with_surrogatef(
     let mut search_idx = 0;
     let mut c;
     let mut flag = true;
-    for _ in 0..100 {
+    for _ in 0..1000 {
+        // println!("===code.len()========={}",code.len());
         c = code.clone();
         let matches = search_pattern
             .captures(&c[search_idx..])
             .expect("Error running regex");
+        // if search_pattern.as_str()==MAP_PATTERN.as_str(){
+        //     println!("=matches=========={matches:?}=======");
+        // }
         if matches.is_none() {
             flag = false;
             // println!("===========matches.is_none()=======");
@@ -268,13 +289,24 @@ pub fn replace_with_surrogatef(
                 .and_then(|cap| cap.name("repl").map(|repl| repl.as_str()))
                 .unwrap();
             replacement = create_surrogate_string(repl);
+            // println!("===replacement========{replacement}=======");
         }
 
         code = code[..search_idx].to_owned()
-            + &search_pattern.replace(
-                &code[search_idx..],
-                keep_repl_pattern.to_owned() + &replacement,
-            );
+            + &search_pattern.replace(&code[search_idx..], |caps: &Captures| {
+                format!(
+                    "{}{}",
+                    if keep_repl_pattern.is_empty() {
+                        keep_repl_pattern
+                    } else {
+                        &caps[keep_repl_pattern]
+                    },
+                    replacement
+                )
+            });
+        // if search_pattern.as_str()==MAP_PATTERN.as_str(){
+        //     println!("====end========{end},======={code}======");
+        // }
         search_idx += end + 1;
     }
     if flag {
@@ -295,7 +327,7 @@ pub fn fake_solidity_code(code: &str) -> String {
         &code,
         &PRAGMA_PATTERN,
         &format!(
-            "solidity {};",
+            " solidity {};",
             CFG.lock().unwrap().zkay_solc_version_compatibility()
         ),
     );
@@ -306,8 +338,10 @@ pub fn fake_solidity_code(code: &str) -> String {
     // Strip ownership annotations
     code = replace_with_surrogate(&code, &ATYPE_PATTERN, "");
 
+    // println!("===={}====before====={code}",MAP_PATTERN.as_str());
     // Strip map key tags
     code = replace_with_surrogatef(&code, &MAP_PATTERN, "");
+    // println!("======after======={code}");
 
     // Strip addhom / unhom expressions
     code = replace_with_surrogatef(&code, &ADDHOM_UNHOM_PATTERN, "");
@@ -319,5 +353,5 @@ pub fn fake_solidity_code(code: &str) -> String {
     // An alternative would be to replace me by msg.sender, but this would affect code length (error locations)
     code = inject_me_decls(&code);
 
-    code
+    format!("//SPDX-License-Identifier: UNLICENSED\n{code}")
 }
