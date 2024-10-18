@@ -660,6 +660,125 @@ impl ASTChildren for ASTFlatten {
         }
     }
 }
+
+impl ASTChildrenCallBack for ASTFlatten {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        match self {
+            Self::AST(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Expression(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::Identifier(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::IdentifierBase(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::Comment(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CommentBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AnnotatedTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::EnumValue(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::SourceUnit(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::BlankLine(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::BuiltinFunction(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::FunctionCallExprBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::FunctionCallExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NewExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::PrimitiveCastExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::MeExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AllExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ReclassifyExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::LiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::BooleanLiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NumberLiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StringLiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ArrayLiteralExprBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ArrayLiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::KeyLiteralExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::TupleOrLocationExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::TupleExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IdentifierExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::MemberAccessExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::LocationExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IndexExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::SliceExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ReclassifyExprBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::RehomExpr(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::EncryptionExpression(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::HybridArgumentIdf(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Statement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IfStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::WhileStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::DoWhileStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ForStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::BreakStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ContinueStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ReturnStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StatementListBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StatementList(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::CircuitDirectiveStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::CircuitComputationStatement(astf) => {
+                astf.borrow_mut().process_children_callback(f)
+            }
+            Self::EnterPrivateKeyStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ExpressionStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::RequireStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AssignmentStatementBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AssignmentStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::VariableDeclarationStatement(astf) => {
+                astf.borrow_mut().process_children_callback(f)
+            }
+            Self::CircuitInputStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::SimpleStatement(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Block(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IndentBlock(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Mapping(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::TupleType(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::TypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ElementaryTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::FunctionTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::BoolTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::BooleanLiteralType(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NumberLiteralType(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IntTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::UintTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NumberTypeNameBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NumberTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::UserDefinedTypeNameBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::EnumTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::EnumValueTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StructTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ContractTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AddressTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::AddressPayableTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::UserDefinedTypeName(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::CipherText(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Randomness(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Key(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Proof(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ArrayBase(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Array(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::IdentifierDeclaration(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::VariableDeclaration(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::Parameter(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StateVariableDeclaration(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::NamespaceDefinition(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ConstructorOrFunctionDefinition(astf) => {
+                astf.borrow_mut().process_children_callback(f)
+            }
+            Self::EnumDefinition(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::StructDefinition(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::ContractDefinition(astf) => astf.borrow_mut().process_children_callback(f),
+            Self::DummyAnnotation(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircComment(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircIndentBlock(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircCall(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircVarDecl(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircGuardModification(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircEncConstraint(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircSymmEncConstraint(astf) => astf.borrow_mut().process_children_callback(f),
+            // Self::CircEqConstraint(astf) => astf.borrow_mut().process_children_callback(f),
+            _ => {}
+        }
+    }
+}
 // impl<T:ASTInstanceOf> ASTInstanceOf for RcCell<T>{
 //  fn get_ast_type(&self) -> ASTType {
 //     self.borrow().get_ast_type()
@@ -2407,6 +2526,14 @@ impl ASTFlattenWeak {
 }
 
 #[enum_dispatch]
+pub trait ASTChildrenCallBack {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    );
+}
+
+#[enum_dispatch]
 pub trait ASTChildren {
     fn children(&self) -> Vec<ASTFlatten> {
         let mut cb = ChildListBuilder::new();
@@ -2567,6 +2694,26 @@ impl ASTChildren for AST {
     }
 }
 
+impl ASTChildrenCallBack for AST {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        match self {
+            AST::Expression(ast) => ast.process_children_callback(f),
+            AST::Statement(ast) => ast.process_children_callback(f),
+            AST::SourceUnit(ast) => ast.process_children_callback(f),
+            // AST::Identifier(ast) => ast.process_children_callback(f),
+            // AST::Comment(ast) => ast.process_children_callback(f),
+            AST::TypeName(ast) => ast.process_children_callback(f),
+            AST::AnnotatedTypeName(ast) => ast.process_children_callback(f),
+            AST::IdentifierDeclaration(ast) => ast.process_children_callback(f),
+            AST::NamespaceDefinition(ast) => ast.process_children_callback(f),
+            AST::EnumValue(ast) => ast.process_children_callback(f),
+            _ => {}
+        }
+    }
+}
 #[macro_export]
 macro_rules! impl_base_ref {
     ($fn_name: ident,$self: ident) => {
@@ -3139,6 +3286,7 @@ impl BlankLine {
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -4141,6 +4289,7 @@ impl HomomorphicBuiltinFunction {
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -4326,6 +4475,16 @@ impl ASTChildren for FunctionCallExprBase {
     }
 }
 
+impl ASTChildrenCallBack for FunctionCallExprBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.func = f(&self.func).unwrap();
+        self.args.iter_mut().for_each(|arg| *arg = f(arg).unwrap());
+    }
+}
+
 #[impl_traits(FunctionCallExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
@@ -4421,6 +4580,22 @@ impl ASTChildren for NewExpr {
         });
     }
 }
+impl ASTChildrenCallBack for NewExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.ast_base_ref().borrow_mut().annotated_type =
+            f(&self.annotated_type().clone().unwrap().into())
+                .and_then(|at| at.try_as_annotated_type_name());
+        self.function_call_expr_base
+            .args
+            .iter_mut()
+            .for_each(|arg| {
+                *arg = f(arg).unwrap();
+            });
+    }
+}
 
 #[impl_traits(ExpressionBase, ASTBase)]
 #[derive(
@@ -4488,16 +4663,25 @@ impl PrimitiveCastExpr {
 }
 impl ASTChildren for PrimitiveCastExpr {
     fn process_children(&self, cb: &mut ChildListBuilder) {
-        cb.add_child(self.elem_type.clone().into());
+        cb.add_child(self.elem_type.clone());
         cb.add_child(self.expr.clone());
     }
 }
-
+impl ASTChildrenCallBack for PrimitiveCastExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.elem_type = f(&self.elem_type).unwrap();
+        self.expr = f(&self.expr).unwrap();
+    }
+}
 #[enum_dispatch(
     DeepClone,
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -4785,6 +4969,7 @@ impl StringLiteralExpr {
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -4899,7 +5084,16 @@ impl ASTChildren for ArrayLiteralExprBase {
         });
     }
 }
-
+impl ASTChildrenCallBack for ArrayLiteralExprBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.values.iter_mut().for_each(|value| {
+            *value = f(value).unwrap();
+        });
+    }
+}
 #[impl_traits(ArrayLiteralExprBase, LiteralExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
@@ -4974,6 +5168,7 @@ impl KeyLiteralExpr {
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -5252,12 +5447,22 @@ impl ASTChildren for TupleExpr {
         });
     }
 }
-
+impl ASTChildrenCallBack for TupleExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.elements.iter_mut().for_each(|element| {
+            *element = f(element).unwrap();
+        });
+    }
+}
 #[enum_dispatch(
     DeepClone,
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -5571,6 +5776,17 @@ impl ASTChildren for IdentifierExpr {
     }
 }
 
+impl ASTChildrenCallBack for IdentifierExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        if let Some(idf) = &self.idf() {
+            self.ast_base_ref().borrow_mut().idf =
+                f(&idf.clone().into()).and_then(|_idf| _idf.try_as_identifier());
+        }
+    }
+}
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
@@ -5668,6 +5884,21 @@ impl ASTChildren for MemberAccessExpr {
     }
 }
 
+impl ASTChildrenCallBack for MemberAccessExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.expr = self
+            .expr
+            .as_ref()
+            .and_then(|expr| f(&expr.clone().into()).and_then(|astf| astf.try_as_location_expr()));
+        self.member = f(&self.member.clone().into())
+            .unwrap()
+            .try_as_identifier()
+            .unwrap();
+    }
+}
 #[impl_traits(LocationExprBase, TupleOrLocationExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
@@ -5742,6 +5973,18 @@ impl ASTChildren for IndexExpr {
             cb.add_child(arr.clone().into());
         }
         cb.add_child(self.key.clone());
+    }
+}
+impl ASTChildrenCallBack for IndexExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.arr = self
+            .arr
+            .as_ref()
+            .and_then(|a| f(&a.clone().into()).and_then(|astf| astf.try_as_location_expr()));
+        self.key = f(&self.key).unwrap();
     }
 }
 
@@ -5947,6 +6190,7 @@ impl Immutable for AllExpr {
     FullArgsSpec,
     ExpressionASType,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -6118,7 +6362,15 @@ impl ASTChildren for ReclassifyExprBase {
         cb.add_child(self.privacy.clone());
     }
 }
-
+impl ASTChildrenCallBack for ReclassifyExprBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.expr = f(&self.expr).unwrap();
+        self.expr = f(&self.privacy).unwrap();
+    }
+}
 #[impl_traits(ReclassifyExprBase, ExpressionBase, ASTBase)]
 #[derive(
     ExpressionASTypeImpl,
@@ -6153,6 +6405,16 @@ impl ASTChildren for RehomExpr {
         self.reclassify_expr_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for RehomExpr {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.reclassify_expr_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for RehomExpr {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -6766,6 +7028,16 @@ impl ASTChildren for EncryptionExpression {
         self.reclassify_expr_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for EncryptionExpression {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.reclassify_expr_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for EncryptionExpression {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -6810,6 +7082,7 @@ impl EncryptionExpression {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf
@@ -6952,6 +7225,7 @@ impl StatementBase {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -7206,6 +7480,24 @@ impl ASTChildren for IfStatement {
         }
     }
 }
+
+impl ASTChildrenCallBack for IfStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.condition = f(&self.condition).unwrap();
+        self.then_branch = f(&self.then_branch.clone().into())
+            .unwrap()
+            .try_as_block()
+            .unwrap();
+        self.else_branch = self
+            .else_branch
+            .as_ref()
+            .and_then(|b| f(&b.clone().into()).and_then(|astf| astf.try_as_block()));
+    }
+}
+
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct WhileStatement {
@@ -7264,6 +7556,20 @@ impl ASTChildren for WhileStatement {
         cb.add_child(self.body.clone().into());
     }
 }
+
+impl ASTChildrenCallBack for WhileStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.condition = f(&self.condition).unwrap();
+        self.body = f(&self.body.clone().into())
+            .unwrap()
+            .try_as_block()
+            .unwrap();
+    }
+}
+
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct DoWhileStatement {
@@ -7320,6 +7626,18 @@ impl ASTChildren for DoWhileStatement {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         cb.add_child(self.body.clone().into());
         cb.add_child(self.condition.clone());
+    }
+}
+impl ASTChildrenCallBack for DoWhileStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.body = f(&self.body.clone().into())
+            .unwrap()
+            .try_as_block()
+            .unwrap();
+        self.condition = f(&self.condition).unwrap();
     }
 }
 #[impl_traits(StatementBase, ASTBase)]
@@ -7430,6 +7748,28 @@ impl ASTChildren for ForStatement {
         cb.add_child(self.body.clone().into());
     }
 }
+
+impl ASTChildrenCallBack for ForStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.init = self
+            .init
+            .as_ref()
+            .and_then(|ss| f(&ss.clone().into()).and_then(|astf| astf.try_as_simple_statement()));
+        self.condition = f(&self.condition).unwrap();
+        self.update = self
+            .update
+            .as_ref()
+            .and_then(|ss| f(&ss.clone().into()).and_then(|astf| astf.try_as_simple_statement()));
+        self.body = f(&self.body.clone().into())
+            .unwrap()
+            .try_as_block()
+            .unwrap();
+    }
+}
+
 #[impl_traits(StatementBase, ASTBase)]
 #[derive(
     ASTChildrenImpl,
@@ -7569,10 +7909,20 @@ impl ASTChildren for ReturnStatement {
     }
 }
 
+impl ASTChildrenCallBack for ReturnStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.expr = self.expr.as_ref().and_then(|astf| f(astf));
+    }
+}
+
 #[enum_dispatch(
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -7680,6 +8030,15 @@ impl ASTChildren for ExpressionStatement {
     }
 }
 
+impl ASTChildrenCallBack for ExpressionStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.expr = f(&self.expr).unwrap();
+    }
+}
+
 #[impl_traits(SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct RequireStatement {
@@ -7734,10 +8093,20 @@ impl ASTChildren for RequireStatement {
     }
 }
 
+impl ASTChildrenCallBack for RequireStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.condition = f(&self.condition).unwrap();
+    }
+}
+
 #[enum_dispatch(
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -7852,6 +8221,7 @@ impl AssignmentStatementBase {
         }
     }
 }
+
 impl ASTChildren for AssignmentStatementBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         if let Some(lhs) = &self.lhs {
@@ -7862,6 +8232,17 @@ impl ASTChildren for AssignmentStatementBase {
         }
     }
 }
+
+impl ASTChildrenCallBack for AssignmentStatementBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.lhs = self.lhs.as_ref().and_then(|astf| f(astf));
+        self.rhs = self.rhs.as_ref().and_then(|astf| f(astf));
+    }
+}
+
 #[impl_traits(AssignmentStatementBase, SimpleStatementBase, StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct CircuitInputStatement {
@@ -7886,6 +8267,16 @@ impl ASTChildren for CircuitInputStatement {
         self.assignment_statement_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for CircuitInputStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.assignment_statement_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for CircuitInputStatement {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -7916,6 +8307,7 @@ impl CircuitInputStatement {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -8071,6 +8463,17 @@ impl ASTChildren for StatementListBase {
     }
 }
 
+impl ASTChildrenCallBack for StatementListBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.statements.iter_mut().for_each(|statement| {
+            *statement = f(statement).unwrap();
+        });
+    }
+}
+
 #[impl_traits(StatementListBase, StatementBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Block {
@@ -8095,6 +8498,16 @@ impl ASTChildren for Block {
         self.statement_list_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for Block {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.statement_list_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for Block {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -8152,6 +8565,16 @@ impl ASTChildren for IndentBlock {
         self.statement_list_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for IndentBlock {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.statement_list_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for IndentBlock {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::Vec(
@@ -8310,6 +8733,24 @@ impl ASTChildren for TypeName {
         }
     }
 }
+
+impl ASTChildrenCallBack for TypeName {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        match self {
+            TypeName::ElementaryTypeName(ast) => ast.process_children_callback(f),
+            TypeName::UserDefinedTypeName(ast) => ast.process_children_callback(f),
+            TypeName::Mapping(ast) => ast.process_children_callback(f),
+            TypeName::Array(ast) => ast.process_children_callback(f),
+            // TypeName::TupleType(ast) => ast.process_children_callback(f),
+            TypeName::FunctionTypeName(ast) => ast.process_children_callback(f),
+            _ => {}
+        }
+    }
+}
+
 #[macro_export]
 macro_rules! impl_base_ref_for_typename {
     ($fn_name: ident,$self: ident) => {
@@ -8670,6 +9111,7 @@ impl TypeNameBase {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -8880,6 +9322,7 @@ impl BooleanLiteralType {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -9344,6 +9787,7 @@ impl UintTypeName {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -10138,6 +10582,27 @@ impl ASTChildren for Mapping {
     }
 }
 
+impl ASTChildrenCallBack for Mapping {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.key_type = f(&self.key_type.clone().into())
+            .unwrap()
+            .try_as_type_name()
+            .unwrap();
+        if let Some(idf) = self.key_label.as_mut() {
+            if is_instance(idf, ASTType::IdentifierBase) {
+                *idf = f(&idf.clone().into()).unwrap().try_as_identifier().unwrap();
+            }
+        }
+        self.value_type = f(&self.value_type.clone().into())
+            .unwrap()
+            .try_as_annotated_type_name()
+            .unwrap();
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum ExprUnion {
     I32(i32),
@@ -10148,6 +10613,7 @@ pub enum ExprUnion {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -10247,12 +10713,26 @@ impl PartialEq for Array {
         false
     }
 }
+
 impl ASTChildren for ArrayBase {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         cb.add_child(self.value_type.clone().into());
         if let Some(expr) = &self.expr {
             cb.add_child(expr.clone());
         }
+    }
+}
+
+impl ASTChildrenCallBack for ArrayBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.value_type = f(&self.value_type.clone().into())
+            .unwrap()
+            .try_as_annotated_type_name()
+            .unwrap();
+        self.expr = self.expr.as_ref().and_then(|astf| f(astf));
     }
 }
 
@@ -10405,11 +10885,22 @@ impl IntoAST for CipherText {
         AST::TypeName(TypeName::Array(Array::CipherText(self)))
     }
 }
+
 impl ASTChildren for CipherText {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         self.array_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for CipherText {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.array_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for CipherText {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -10491,6 +10982,16 @@ impl ASTChildren for Randomness {
         self.array_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for Randomness {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.array_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for Randomness {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::CryptoParams(self.crypto_params().clone())]
@@ -10538,11 +11039,22 @@ impl IntoAST for Key {
         AST::TypeName(TypeName::Array(Array::Key(self)))
     }
 }
+
 impl ASTChildren for Key {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         self.array_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for Key {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.array_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for Key {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![ArgType::CryptoParams(self.crypto_params().clone())]
@@ -10593,6 +11105,15 @@ impl ASTChildren for Proof {
         self.array_base.process_children(cb);
     }
 }
+impl ASTChildrenCallBack for Proof {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.array_base.process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for Proof {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![]
@@ -11095,6 +11616,26 @@ impl ASTChildren for FunctionTypeName {
     }
 }
 
+impl ASTChildrenCallBack for FunctionTypeName {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.parameters.iter_mut().for_each(|parameter| {
+            *parameter = f(&parameter.clone().into())
+                .unwrap()
+                .try_as_parameter()
+                .unwrap();
+        });
+        self.return_parameters.iter_mut().for_each(|parameter| {
+            *parameter = f(&parameter.clone().into())
+                .unwrap()
+                .try_as_parameter()
+                .unwrap();
+        });
+    }
+}
+
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub struct AnnotatedTypeName {
     pub ast_base: RcCell<ASTBase>,
@@ -11409,17 +11950,27 @@ impl AnnotatedTypeName {
 impl ASTChildren for AnnotatedTypeName {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         if let Some(type_name) = &self.type_name {
-            cb.add_child(type_name.clone().into());
+            cb.add_child(type_name.clone());
         }
         if let Some(privacy_annotation) = &self.privacy_annotation {
             cb.add_child(privacy_annotation.clone());
         }
     }
 }
+impl ASTChildrenCallBack for AnnotatedTypeName {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.type_name = self.type_name.as_ref().and_then(|astf| f(astf));
+        self.privacy_annotation = self.privacy_annotation.as_ref().and_then(|astf| f(astf));
+    }
+}
 #[enum_dispatch(
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -11505,6 +12056,21 @@ impl ASTChildren for IdentifierDeclarationBase {
         }
     }
 }
+impl ASTChildrenCallBack for IdentifierDeclarationBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.ast_base_ref().borrow_mut().annotated_type =
+            self.annotated_type().as_ref().and_then(|at| {
+                f(&at.clone().into()).and_then(|astf| astf.try_as_annotated_type_name())
+            });
+        self.ast_base_ref().borrow_mut().idf = self
+            .idf()
+            .as_ref()
+            .and_then(|idf| f(&idf.clone().into()).and_then(|astf| astf.try_as_identifier()));
+    }
+}
 
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -11523,11 +12089,23 @@ impl IntoAST for VariableDeclaration {
         AST::IdentifierDeclaration(IdentifierDeclaration::VariableDeclaration(self))
     }
 }
+
 impl ASTChildren for VariableDeclaration {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         self.identifier_declaration_base.process_children(cb);
     }
 }
+
+impl ASTChildrenCallBack for VariableDeclaration {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.identifier_declaration_base
+            .process_children_callback(f);
+    }
+}
+
 impl FullArgsSpec for VariableDeclaration {
     fn get_attr(&self) -> Vec<ArgType> {
         vec![
@@ -11655,6 +12233,19 @@ impl ASTChildren for VariableDeclarationStatement {
     }
 }
 
+impl ASTChildrenCallBack for VariableDeclarationStatement {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.variable_declaration = f(&self.variable_declaration.clone().into())
+            .unwrap()
+            .try_as_variable_declaration()
+            .unwrap();
+        self.expr = self.expr.as_ref().and_then(|expr| f(expr));
+    }
+}
+
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Parameter {
@@ -11675,6 +12266,16 @@ impl IntoAST for Parameter {
 impl ASTChildren for Parameter {
     fn process_children(&self, cb: &mut ChildListBuilder) {
         self.identifier_declaration_base.process_children(cb);
+    }
+}
+
+impl ASTChildrenCallBack for Parameter {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.identifier_declaration_base
+            .process_children_callback(f);
     }
 }
 
@@ -11752,6 +12353,7 @@ impl Parameter {
     DeepClone,
     FullArgsSpec,
     ASTChildren,
+    ASTChildrenCallBack,
     IntoAST,
     ASTFlattenImpl,
     ASTInstanceOf,
@@ -11838,7 +12440,17 @@ impl ASTChildren for NamespaceDefinitionBase {
         }
     }
 }
-
+impl ASTChildrenCallBack for NamespaceDefinitionBase {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.ast_base_ref().borrow_mut().idf = self
+            .idf()
+            .as_ref()
+            .and_then(|idf| f(&idf.clone().into()).and_then(|astf| astf.try_as_identifier()));
+    }
+}
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct ConstructorOrFunctionDefinition {
@@ -12044,22 +12656,22 @@ impl ConstructorOrFunctionDefinition {
             || self.modifiers.contains(&String::from("view")))
     }
 
-    pub fn can_be_external(&self) -> bool
-// return not ("private" in self.modifiers or "internal" in self.modifiers)
-    {
+    pub fn can_be_external(&self) -> bool {
+        // return not ("private" in self.modifiers or "internal" in self.modifiers)
+
         !(self.modifiers.contains(&String::from("private"))
             || self.modifiers.contains(&String::from("internal")))
     }
 
-    pub fn is_external(&self) -> bool
-// return "external" in self.modifiers
-    {
+    pub fn is_external(&self) -> bool {
+        // return "external" in self.modifiers
+
         self.modifiers.contains(&String::from("external"))
     }
 
-    pub fn is_payable(&self) -> bool
-// return "payable" in self.modifiers
-    {
+    pub fn is_payable(&self) -> bool {
+        // return "payable" in self.modifiers
+
         self.modifiers.contains(&String::from("payable"))
     }
 
@@ -12180,6 +12792,32 @@ impl ASTChildren for ConstructorOrFunctionDefinition {
     }
 }
 
+impl ASTChildrenCallBack for ConstructorOrFunctionDefinition {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.namespace_definition_base.process_children_callback(f);
+        self.parameters.iter_mut().for_each(|parameter| {
+            *parameter = f(&parameter.clone().into())
+                .unwrap()
+                .try_as_parameter()
+                .unwrap();
+        });
+        self.return_parameters.iter_mut().for_each(|parameter| {
+            *parameter = f(&parameter.clone().into())
+                .unwrap()
+                .try_as_parameter()
+                .unwrap();
+        });
+
+        self.body = self
+            .body
+            .as_ref()
+            .and_then(|body| f(&body.clone().into()).and_then(|astf| astf.try_as_block()));
+    }
+}
+
 #[impl_traits(IdentifierDeclarationBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StateVariableDeclaration {
@@ -12267,7 +12905,16 @@ impl ASTChildren for StateVariableDeclaration {
         }
     }
 }
-
+impl ASTChildrenCallBack for StateVariableDeclaration {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.identifier_declaration_base
+            .process_children_callback(f);
+        self.expr = self.expr.as_ref().and_then(|expr| f(expr));
+    }
+}
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumValue {
     pub ast_base: RcCell<ASTBase>,
@@ -12316,7 +12963,17 @@ impl ASTChildren for EnumValue {
         }
     }
 }
-
+impl ASTChildrenCallBack for EnumValue {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.ast_base_ref().borrow_mut().idf = self
+            .idf()
+            .as_ref()
+            .and_then(|idf| f(&idf.clone().into()).and_then(|astf| astf.try_as_identifier()));
+    }
+}
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct EnumDefinition {
@@ -12390,7 +13047,20 @@ impl ASTChildren for EnumDefinition {
         });
     }
 }
-
+impl ASTChildrenCallBack for EnumDefinition {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.namespace_definition_base.process_children_callback(f);
+        self.values.iter_mut().for_each(|value| {
+            *value = f(&value.clone().into())
+                .unwrap()
+                .try_as_enum_value()
+                .unwrap();
+        });
+    }
+}
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct StructDefinition {
@@ -12461,7 +13131,17 @@ impl ASTChildren for StructDefinition {
         });
     }
 }
-
+impl ASTChildrenCallBack for StructDefinition {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.namespace_definition_base.process_children_callback(f);
+        self.members.iter_mut().for_each(|member| {
+            *member = f(member).unwrap();
+        });
+    }
+}
 #[impl_traits(NamespaceDefinitionBase, ASTBase)]
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 
@@ -12690,6 +13370,52 @@ impl ASTChildren for ContractDefinition {
     }
 }
 
+impl ASTChildrenCallBack for ContractDefinition {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.namespace_definition_base.process_children_callback(f);
+        self.enum_definitions
+            .iter_mut()
+            .for_each(|enum_definition| {
+                *enum_definition = f(&enum_definition.clone().into())
+                    .unwrap()
+                    .try_as_enum_definition()
+                    .unwrap();
+            });
+        self.struct_definitions
+            .iter_mut()
+            .for_each(|struct_definition| {
+                *struct_definition = f(&struct_definition.clone().into())
+                    .unwrap()
+                    .try_as_struct_definition()
+                    .unwrap();
+            });
+        self.state_variable_declarations
+            .iter_mut()
+            .for_each(|state_variable_declarations| {
+                *state_variable_declarations = f(state_variable_declarations).unwrap();
+            });
+        self.constructor_definitions
+            .iter_mut()
+            .for_each(|constructor_definition| {
+                *constructor_definition = f(&constructor_definition.clone().into())
+                    .unwrap()
+                    .try_as_constructor_or_function_definition()
+                    .unwrap();
+            });
+        self.function_definitions
+            .iter_mut()
+            .for_each(|function_definition| {
+                *function_definition = f(&function_definition.clone().into())
+                    .unwrap()
+                    .try_as_constructor_or_function_definition()
+                    .unwrap();
+            });
+    }
+}
+
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct SourceUnit {
     pub ast_base: RcCell<ASTBase>,
@@ -12802,7 +13528,19 @@ impl ASTChildren for SourceUnit {
         });
     }
 }
-
+impl ASTChildrenCallBack for SourceUnit {
+    fn process_children_callback(
+        &mut self,
+        f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+        self.contracts.iter_mut().for_each(|contract| {
+            *contract = f(&contract.clone().into())
+                .unwrap()
+                .try_as_contract_definition()
+                .unwrap();
+        });
+    }
+}
 impl ConstructorOrFunctionDefinitionAttr for AST {
     fn get_requires_verification_when_external(&self) -> bool {
         self.try_as_namespace_definition_ref()

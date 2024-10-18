@@ -124,13 +124,17 @@ pub fn derive_ast_children(item: TokenStream) -> TokenStream {
     let struct_name = get_name("struct", item);
     format!(
         r#"
-impl ASTChildren for {} {{
+impl ASTChildren for {struct_name} {{
     fn process_children(&self, _cb: &mut ChildListBuilder) {{
         
     }}
                 }}
-                    "#,
-        struct_name
+impl ASTChildrenCallBack for {struct_name} {{
+    fn process_children_callback(&mut self, f: impl Fn(&ASTFlatten)->Option<ASTFlatten>+ std::marker::Copy) {{
+        
+    }}
+                }}
+                    "#
     )
     .parse()
     .unwrap()

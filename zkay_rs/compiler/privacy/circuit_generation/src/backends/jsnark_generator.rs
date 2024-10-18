@@ -122,6 +122,7 @@ impl AstVisitor for JsnarkVisitor {
             ASTType::IdentifierExpr => self.visitIdentifierExpr(ast),
             ASTType::MemberAccessExpr => self.visitMemberAccessExpr(ast),
             ASTType::IndexExpr => self.visitIndexExpr(ast),
+            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             _ if matches!(
                 ast.to_ast(),
                 AST::Expression(Expression::FunctionCallExpr(_))
@@ -129,7 +130,6 @@ impl AstVisitor for JsnarkVisitor {
             {
                 self.visitFunctionCallExpr(ast)
             }
-            ASTType::PrimitiveCastExpr => self.visitPrimitiveCastExpr(ast),
             _ => Err(eyre::eyre!("unreach")),
         }
     }
@@ -239,6 +239,16 @@ impl JsnarkVisitor {
         &self,
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        println!(
+            "======visitCircVarDecl============={:?}",
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_var_decl_ref()
+                .unwrap()
+                .expr
+                .get_ast_type()
+        );
         Ok(format!(
             r#"decl("{}", {});"#,
             stmt.try_as_circuit_statement_ref()
@@ -684,6 +694,7 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        println!("====visitIdentifierExpr================");
         Ok(
             if is_instance(
                 ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
@@ -716,6 +727,18 @@ impl JsnarkVisitor {
                         .name()
                 )
             } else {
+                panic!("=====visitIdentifierExpr=============");
+                println!(
+                    "====visitIdentifierExpr=========get==={}====",
+                    ast.ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .idf
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .name()
+                );
                 format!(
                     r#"get("{}")"#,
                     ast.ast_base_ref()
@@ -801,8 +824,16 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("======visitFunctionCallExpr=============={:?}",ast.try_as_expression_ref().unwrap().borrow().try_as_function_call_expr_ref().unwrap()
-        //         .func());
+        println!(
+            "======visitFunctionCallExpr=============={:?}",
+            ast.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_function_call_expr_ref()
+                .unwrap()
+                .func()
+                .get_ast_type()
+        );
         if is_instance(
             ast.try_as_expression_ref()
                 .unwrap()
@@ -937,13 +968,12 @@ impl JsnarkVisitor {
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
                 } else {
-                    let crypto_backend = String::from("elgamal");
-                    // CFG
-                    // .lock()
-                    // .unwrap()
-                    // .user_config
-                    // .get_crypto_params(&homomorphism)
-                    // .crypto_name;
+                    let crypto_backend = CFG
+                        .lock()
+                        .unwrap()
+                        .user_config
+                        .get_crypto_params(&homomorphism)
+                        .crypto_name; // String::from("elgamal");
                     let public_key_name = ast
                         .try_as_expression_ref()
                         .unwrap()
@@ -975,15 +1005,15 @@ impl JsnarkVisitor {
                     args[0], args[1], args[2]
                 )
             } else if op == "parenthesis" {
-                String::from("({})")
+                format!(r#"({})"#, args[0])
             } else {
                 let o = if op.len() == 1 {
-                    format!(r#"'{op}'"#)
+                    format!("'{op}'")
                 } else {
                     format!(r#""{op}""#)
                 };
                 if args.len() == 1 {
-                    format!(r#"{f_start}{o}, {{{}}})"#, args[0])
+                    format!(r#"{f_start}{o}, {})"#, args[0])
                 } else {
                     assert!(args.len() == 2);
                     if op == "*"
@@ -1021,11 +1051,11 @@ impl JsnarkVisitor {
                                 .into(),
                         );
                         format!(
-                            r#"o_rerand({f_start}{{{}}}, {o}, {{{}}}), "{crypto_backend}", "{public_key_name}", {rnd})"#,
+                            r#"o_rerand({f_start}{}, {o}, {}), "{crypto_backend}", "{public_key_name}", {rnd})"#,
                             args[0], args[1]
                         )
                     } else {
-                        format!(r#"{f_start}{{{}}}, {o}, {{{}}})"#, args[0], args[1])
+                        format!(r#"{f_start}{}, {o},{})"#, args[0], args[1])
                     }
                 }
             });
@@ -1109,18 +1139,30 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        //   println!("======visitPrimitiveCastExpr=============={:?}",ast);
+        println!(
+            "======visitPrimitiveCastExpr===={}=========={:?}",
+            ast,
+            ast.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_primitive_cast_expr_ref()
+                .unwrap()
+                .expr
+                .get_ast_type()
+        );
+        let wire = self.visit(
+            &ast.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .try_as_primitive_cast_expr_ref()
+                .unwrap()
+                .expr
+                .clone()
+                .into(),
+        );
+        println!("=========wire======={wire}");
         self.handle_cast(
-            self.visit(
-                &ast.try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_primitive_cast_expr_ref()
-                    .unwrap()
-                    .expr
-                    .clone()
-                    .into(),
-            ),
+            wire,
             &ast.try_as_expression_ref()
                 .unwrap()
                 .borrow()
@@ -1135,6 +1177,7 @@ impl JsnarkVisitor {
         wire: String,
         t: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
+        println!("=handle_cast=======wire========{wire}");
         Ok(format!(r#"cast({wire}, {})"#, _get_t(Some(t.clone()))))
     }
 }
@@ -1312,7 +1355,7 @@ impl CircuitGenerator for JsnarkGenerator {
                 .collect::<Vec<_>>()
                 .join("\n");
             let fdef = format!(
-                r#"private void _{name}() {{\n {body} \n}}"#,
+                "private void _{name}() {{\n {body} \n}}",
                 body = indent(body),
                 name = fct.borrow().name()
             );

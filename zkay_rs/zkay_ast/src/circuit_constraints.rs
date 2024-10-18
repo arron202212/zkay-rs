@@ -28,9 +28,9 @@
 // """
 
 use crate::ast::{
-    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, CodeVisitor,
-    CodeVisitorBase, ConstructorOrFunctionDefinition, DeepClone, Expression, FullArgsSpec,
-    FullArgsSpecInit, HybridArgumentIdf, IntoAST, Statement, AST,
+    ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, ArgType,
+    ChildListBuilder, CodeVisitor, CodeVisitorBase, ConstructorOrFunctionDefinition, DeepClone,
+    Expression, FullArgsSpec, FullArgsSpecInit, HybridArgumentIdf, IntoAST, Statement, AST,
 };
 use crate::visitors::visitor::AstVisitor;
 use enum_dispatch::enum_dispatch;
@@ -65,7 +65,13 @@ pub enum CircuitStatement {
 impl ASTChildren for CircuitStatement {
     fn process_children(&self, _cb: &mut ChildListBuilder) {}
 }
-
+impl ASTChildrenCallBack for CircuitStatement {
+    fn process_children_callback(
+        &mut self,
+        _f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
+    ) {
+    }
+}
 // class CircComment(CircuitStatement)
 // """
 // A textual comment, has no impact on circuit semantics (meta statement)

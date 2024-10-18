@@ -2686,6 +2686,10 @@ where
         //     line!()
         // );
         let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
+        println!(
+            "===========priv_expr==*******************======{}",
+            priv_expr.as_ref().unwrap()
+        );
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory.base_name_factory.get_new_name(

@@ -51,7 +51,7 @@ lazy_static! {
 pub fn compile_circuit(circuit_dir: &str, javacode: &str) {
     let class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let jfile = Path::new(circuit_dir).join(class_name.clone() + ".java");
-    let mut f = File::open(jfile.clone()).expect(jfile.as_path().to_str().expect("jfile"));
+    let mut f = File::create(jfile.clone()).expect(jfile.as_path().to_str().expect("jfile"));
     let _ = f.write_all(javacode.as_bytes());
 
     compile_and_run_with_circuit_builder(
@@ -73,7 +73,7 @@ pub fn compile_and_run_with_circuit_builder(
         vec![
             "javac",
             "-cp",
-            &format!("{CIRCUIT_BUILDER_JAR}"),
+            &format!("{}", (JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR)),
             java_file_name,
         ],
         Some(working_dir),
@@ -86,7 +86,10 @@ pub fn compile_and_run_with_circuit_builder(
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
-            &format!("{CIRCUIT_BUILDER_JAR}:{working_dir}"),
+            &format!(
+                "{}:{working_dir}",
+                (JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR)
+            ),
             class_name,
         ]
         .into_iter()
@@ -158,7 +161,7 @@ pub fn get_jsnark_circuit_class_str(
         .to_string()
         .to_ascii_lowercase();
     let mut function_definitions = fdefs.join("\n\n");
-    if function_definitions.is_empty() {
+    if !function_definitions.is_empty() {
         function_definitions = format!("\n{function_definitions}\n");
     }
 

@@ -2354,7 +2354,7 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        // println!("======visitIdentifierExpr=======beg=========={:?}====",ast.get_ast_type());
+        // println!("======visitIdentifierExpr====zt===beg=========={:?}====",ast);
         let mut ast = ast.clone();
         if !is_instance(
             ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
@@ -2394,9 +2394,20 @@ impl ZkayCircuitTransformer {
             Ok(ast)
         } else {
             //ast is not yet in the circuit -> move it in
-            // println!("======visitIdentifierExpr===============transform_location=={:?}====",ast.get_ast_type());
-            self.transform_location(&ast)
-                .ok_or(eyre::eyre!("unexpected"))
+
+            let ret = self
+                .transform_location(&ast)
+                .ok_or(eyre::eyre!("unexpected"));
+            //  println!("======visitIdentifierExpr=======end========transform_location=={:?}====",ret);
+            //             if ret.as_ref().unwrap().is_expression()
+            //            { *ast.try_as_expression_mut().unwrap().borrow_mut()=ret.as_ref().unwrap().try_as_expression_ref().unwrap().borrow().clone();
+            //             }
+            //             else if ret.as_ref().unwrap().is_identifier_expr(){
+            // *ast.try_as_expression_mut().unwrap().borrow_mut()=ret.as_ref().unwrap().try_as_identifier_expr_ref().unwrap().borrow().to_ast().try_as_expression().unwrap();
+            //             }else{
+            //                 panic!("======visitIdentifierExpr=======else========transform_location=={:?}====",ret);
+            //             }
+            ret
         }
     }
     // """Rule (14), move location into the circuit."""

@@ -217,9 +217,9 @@ pub fn replace_with_surrogate(
     for _ in 0..100 {
         c = code.clone();
         let matches = search_pattern.captures(&c[search_idx..]);
-        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
-            println!("=======matches====={search_idx}====={replacement}====={matches:?}");
-        }
+        // if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+        //     println!("=======matches====={search_idx}====={replacement}====={matches:?}");
+        // }
         if matches.is_none() {
             flag = false;
             break;
@@ -231,20 +231,20 @@ pub fn replace_with_surrogate(
                 .unwrap();
             replacement = create_surrogate_string(repl);
         }
-        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
-            println!(
-                "====code===={}======={code:?}",
-                keep_repl_pattern.to_owned() + &replacement
-            );
-        }
+        // if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+        //     println!(
+        //         "====code===={}======={code:?}",
+        //         keep_repl_pattern.to_owned() + &replacement
+        //     );
+        // }
         code = code[..search_idx].to_owned()
             + &search_pattern.replace(
                 &code[search_idx..],
                 keep_repl_pattern.to_owned() + &replacement,
             );
-        if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
-            println!("=after==code==={search_idx}========{code:?}");
-        }
+        // if PRAGMA_PATTERN.as_str() == search_pattern.as_str() {
+        //     println!("=after==code==={search_idx}========{code:?}");
+        // }
         search_idx += end + 1;
     }
     if flag {
