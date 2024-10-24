@@ -43,7 +43,7 @@ use lazy_static::lazy_static;
 use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use zkay_ast::ast::IntoAST;
+use zkay_ast::ast::{DeepClone, IntoAST};
 use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
 };
@@ -147,7 +147,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 
     // Contract transformation
     print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(Some(zkay_ast.clone()), global_vars.clone());
+    let (ast, circuits) = transform_ast(Some(zkay_ast.clone_inner()), global_vars.clone());
 
     // Dump libraries
     print_step("Write library contract files");

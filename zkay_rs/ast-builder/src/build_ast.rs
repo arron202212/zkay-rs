@@ -908,23 +908,14 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // return IndexExpr(arr, index)
         let arr = ctx.arr.as_ref().and_then(|arr| {
             arr.accept(self);
-            self.temp_result()
-                .clone()
-                .filter(|ast| {
-                    matches!(
-                        ast,
-                        AST::Expression(Expression::TupleOrLocationExpr(
-                            TupleOrLocationExpr::LocationExpr(_)
-                        ))
-                    )
-                })
-                .and_then(|ast| {
-                    ast.try_as_expression()
-                        .unwrap()
-                        .try_as_tuple_or_location_expr()
-                        .unwrap()
-                        .try_as_location_expr()
-                })
+            self.temp_result().clone().filter(|ast| {
+                matches!(
+                    ast,
+                    AST::Expression(Expression::TupleOrLocationExpr(
+                        TupleOrLocationExpr::LocationExpr(_)
+                    ))
+                )
+            })
         });
         let index = ctx
             .index
@@ -2233,22 +2224,11 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         });
         let expr = ctx.expr.as_ref().and_then(|expr| {
             expr.accept(self);
-            self.temp_result()
-                .clone()
-                .and_then(|ast| ast.try_as_expression())
+            self.temp_result().clone()
         });
         Some(
-            MemberAccessExpr::new(
-                expr.map(|e| {
-                    e.try_as_tuple_or_location_expr()
-                        .unwrap()
-                        .try_as_location_expr()
-                        .unwrap()
-                })
-                .map(RcCell::new),
-                member.map(RcCell::new).unwrap(),
-            )
-            .into_ast(),
+            MemberAccessExpr::new(expr.map(RcCell::new), member.map(RcCell::new).unwrap())
+                .into_ast(),
         )
     }
 

@@ -45,8 +45,40 @@ use zkay_ast::global_defs::{
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::deep_copy::deep_copy;
 use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, with_context_block};
 use zkay_crypto::params::CryptoParams;
+
+struct WithCircIndentBlock {
+    _phi: RcCell<Vec<RcCell<CircuitStatement>>>,
+    name: String,
+    old_len: usize,
+}
+impl WithCircIndentBlock {
+    pub fn new(name: String, _phi: RcCell<Vec<RcCell<CircuitStatement>>>) -> Self {
+        let old_len = _phi.borrow().len();
+        Self {
+            old_len,
+            _phi,
+            name,
+        }
+    }
+}
+impl Drop for WithCircIndentBlock {
+    fn drop(&mut self) {
+        let mut phi = self._phi.borrow().clone();
+        let post = phi.split_off(self.old_len);
+        phi.push(RcCell::new(CircuitStatement::CircIndentBlock(
+            CircIndentBlock::new(self.name.clone(), post),
+        )));
+        *self._phi.borrow_mut() = phi;
+    }
+}
+
+// #[derive(Clone, Copy)]
+// struct ContextManager<O, C> {
+//     open: O,
+//     close: C,
+// }
 // class CircuitHelper
 
 // """
@@ -351,24 +383,39 @@ where
             ),
         ]
     }
+    // fn with<F, R, O, C, E>(&self, ctx: ContextManager<O, C>, name: &str, f: F) -> Result<R, E>
+    // where
+    //     F: FnOnce(&Self) -> Result<R, E>,
+    //     O: FnOnce(&Self) -> Result<usize, E>,
+    //     C: FnOnce(&Self, &str, usize) -> Result<(), E>,
+    // {
+    //     let old_len = (ctx.open)(self)?;
+    //     let ret = f(self)?;
+    //     (ctx.close)(self, name, old_len)?;
+    //     Ok(ret)
+    // }
     // """
     // Return context manager which manages the lifetime of a CircIndentBlock.
 
     // All statements which are inserted into self.phi during the lifetime of this context manager are automatically wrapped inside
     // a CircIndentBlock statement with the supplied name.
     // """
-    pub fn circ_indent_block(&self, name: &str) {
-        let old_len = self.phi().len();
-        // yield
-        let mut phi = self.phi();
-        let post = phi.split_off(old_len);
-        phi.push(RcCell::new(CircuitStatement::CircIndentBlock(
-            CircIndentBlock::new(name.to_string(), post),
-        )));
-        *self._phi.borrow_mut() = phi;
+    pub fn circ_indent_block(&self, name: String) -> WithCircIndentBlock {
+        WithCircIndentBlock::new(name, self._phi.clone())
     }
+    //  pub fn circ_indent_block_before(&self)->Result<usize,()>{
+    //    Ok(self.phi().len())
+    // }
+    // pub fn circ_indent_block_after(&self, name: &str,old_len:usize)->Result<(),()> {
+    //     let mut phi = self.phi();
+    //     let post = phi.split_off(old_len);
+    //     phi.push(RcCell::new(CircuitStatement::CircIndentBlock(
+    //         CircIndentBlock::new(name.to_string(), post),
+    //     )));
+    //     *self._phi.borrow_mut() = phi;
+    //     Ok(())
+    // }
     // """Return a context manager which manages the lifetime of a guard variable."""
-
     pub fn guarded(&self, guard_idf: HybridArgumentIdf, is_true: bool) {
         CircGuardModification::guarded(self._phi.clone(), guard_idf, is_true);
     }
@@ -516,7 +563,7 @@ where
         );
     }
 
-    pub fn get_randomness_for_rerand(&self, expr: &ASTFlatten) -> RcCell<IdentifierExpr> {
+    pub fn get_randomness_for_rerand(&self, expr: &ASTFlatten) -> RcCell<AST> {
         let idf = self._secret_input_name_factory.get_new_idf(
             &RcCell::new(TypeName::rnd_type(
                 expr.try_as_expression_ref()
@@ -541,10 +588,13 @@ where
             .into(),
             None,
         );
-        RcCell::new(IdentifierExpr::new(
-            IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(idf))),
-            None,
-        ))
+        RcCell::new(
+            IdentifierExpr::new(
+                IdentifierExprUnion::Identifier(RcCell::new(Identifier::HybridArgumentIdf(idf))),
+                None,
+            )
+            .into_ast(),
+        )
     }
     // """
     // Evaluate private expression and return result as a fresh out variable.
@@ -560,9 +610,21 @@ where
         new_privacy: &ASTFlatten,
         homomorphism: &String,
     ) -> Option<ASTFlatten> {
-        self.circ_indent_block(&expr.code());
+        //    let old_len= self.circ_indent_block_before();
         // println!("==evaluate_expr_in_circuit======_get_circuit_output_for_private_expression=========={:?}",expr.to_string());
-        self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism)
+        // let circ_indent_block=  ContextManager{
+        //     open: |selfs: &Self| selfs.circ_indent_block_before(),
+        //     close: |selfs: &Self,name:&str,old_len:usize| selfs.circ_indent_block_after(name,old_len),
+        // };
+        // let ctx=self.circ_indent_block();
+        let ret;
+        with_context_block!(var _a=self.circ_indent_block(expr.code())=>{
+        //ccnt
+        ret=self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism);
+        });
+
+        // self.circ_indent_block_after(&expr.code(),old_len);
+        ret
     }
     // """
     // Evaluate an entire statement privately.
@@ -732,7 +794,7 @@ where
                         RcCell::new(TupleExpr::new(
                             ret_params
                                 .iter()
-                                .map(|r| RcCell::new(r.clone()).into())
+                                .map(|r| RcCell::new(r.to_ast()).into())
                                 .collect(),
                         ))
                         .into(),
@@ -1263,7 +1325,8 @@ where
                     .unwrap(),
                 None,
             );
-            let return_idf = _locally_decrypted_idf.clone();
+            // "secret0_plain_c_count"
+            let return_idf = _locally_decrypted_idf.clone_inner();
             // println!("===============MeExpr========add_to_circuit_inputs====cipher_t====");
             let cipher_t = RcCell::new(TypeName::cipher_type(
                 input_expr
@@ -1298,12 +1361,15 @@ where
                 tname,
                 &cipher_t,
                 Some(
-                    &RcCell::new(IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(RcCell::new(
-                            Identifier::HybridArgumentIdf(_locally_decrypted_idf.clone()),
-                        )),
-                        None,
-                    ))
+                    &RcCell::new(
+                        IdentifierExpr::new(
+                            IdentifierExprUnion::Identifier(RcCell::new(
+                                Identifier::HybridArgumentIdf(_locally_decrypted_idf.clone()),
+                            )),
+                            None,
+                        )
+                        .into_ast(),
+                    )
                     .into(),
                 ),
             );
@@ -1370,7 +1436,7 @@ where
                 .borrow_mut()
                 .push(RcCell::new(CircuitStatement::CircComment(
                     CircComment::new(format!(
-                        "{:?} = dec({expr_text}) [{}]",
+                        "{} = dec({expr_text}) [{}]",
                         locally_decrypted_idf.clone().unwrap(),
                         input_idf.identifier_base.name
                     )),
@@ -1428,7 +1494,10 @@ where
                 return_idf.clone(),
             );
         }
-
+        println!(
+            "=====return_idf======***********=================={return_idf},======={:?}",
+            return_idf.get_ast_type()
+        );
         return_idf
     }
     // """
@@ -1559,188 +1628,217 @@ where
             .borrow()
             .target
             .clone();
+        let ret;
         //with
-        self._remapper.0.remap_scope(Some(
-            &fcall
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .borrow()
-                .func()
-                .ast_base_ref()
-                .unwrap()
-                .borrow()
-                .target
-                .clone()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .body
-                .clone()
-                .unwrap()
-                .into(),
-        ));
+        with_context_block!(var _a=self._remapper.0.remap_scope(Some(
+                   &fcall
+                       .try_as_function_call_expr_ref()
+                       .unwrap()
+                       .borrow()
+                       .func()
+                       .ast_base_ref()
+                       .unwrap()
+                       .borrow()
+                       .target
+                       .clone()
+                       .unwrap()
+                       .upgrade()
+                       .unwrap()
+                       .try_as_namespace_definition_ref()
+                       .unwrap()
+                       .borrow()
+                       .try_as_constructor_or_function_definition_ref()
+                       .unwrap()
+                       .body
+                       .clone()
+                       .unwrap()
+                       .into(),
+               ))=>{
 
-        //with
-        if fcall
-            .try_as_function_call_expr_ref()
-            .unwrap()
-            .borrow()
-            .func()
-            .ast_base_ref()
-            .unwrap()
-            .borrow()
-            .target
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_namespace_definition()
-            .unwrap()
-            .borrow()
-            .idf()
-            .unwrap()
-            .borrow()
-            .name()
-            != "<stmt_fct>"
-        {
-            self.circ_indent_block(&format!("INLINED {}", fcall.code()));
-        }
+               //with
+               // let old_len_inline=self.circ_indent_block_before().unwrap();
+               with_context_block!(var _a=(fcall
+                   .try_as_function_call_expr_ref()
+                   .unwrap()
+                   .borrow()
+                   .func()
+                   .ast_base_ref()
+                   .unwrap()
+                   .borrow()
+                   .target
+                   .clone()
+                   .unwrap()
+                   .upgrade()
+                   .unwrap()
+                   .try_as_namespace_definition()
+                   .unwrap()
+                   .borrow()
+                   .idf()
+                   .unwrap()
+                   .borrow()
+                   .name()
+                   != "<stmt_fct>").then(|| self.circ_indent_block(format!("INLINED {}", fcall.code())))=>{
+               //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
+               for (param, arg) in fdef
+                   .clone()
+                   .unwrap()
+                   .upgrade()
+                   .unwrap()
+                   .try_as_namespace_definition_ref()
+                   .unwrap()
+                   .borrow()
+                   .try_as_constructor_or_function_definition_ref()
+                   .unwrap()
+                   .parameters
+                   .iter()
+                   .zip(
+                       fcall
+                           .try_as_function_call_expr_ref()
+                           .unwrap()
+                           .borrow()
+                           .args(),
+                   )
+               {
+                   self._phi
+                       .borrow_mut()
+                       .push(RcCell::new(CircuitStatement::CircComment(
+                           CircComment::new(format!(
+                               "ARG {}: {}",
+                               param.borrow().idf().as_ref().unwrap().borrow().name(),
+                               arg.code()
+                           )),
+                       )));
+                   // with
+               // let circ_indent_block=  ContextManager{
+               //     open: |selfs: &Self| selfs.circ_indent_block_before(),
+               //     close: |selfs: &Self,name:&str,old_len:usize| selfs.circ_indent_block_after(name,old_len),
+               // };
+                   // let old_len=self.circ_indent_block_before().unwrap();
+               with_context_block!(var _a=self.circ_indent_block(String::new())=>{
+           self.create_new_idf_version_from_value(&param.borrow().idf_inner().unwrap(), arg);
+        });
+                   // self.circ_indent_block_after("",old_len);
 
-        //Assign all arguments to temporary circuit variables which are designated as the current version of the parameter idfs
-        for (param, arg) in fdef
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .parameters
-            .iter()
-            .zip(
-                fcall
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .borrow()
-                    .args(),
-            )
-        {
-            self._phi
-                .borrow_mut()
-                .push(RcCell::new(CircuitStatement::CircComment(
-                    CircComment::new(format!(
-                        "ARG {}: {}",
-                        param.borrow().idf().as_ref().unwrap().borrow().name(),
-                        arg.code()
-                    )),
-                )));
-            // with
-            self.circ_indent_block("");
-            {
-                self.create_new_idf_version_from_value(&param.borrow().idf_inner().unwrap(), arg);
-            }
-        }
+               }
 
-        //Visit the untransformed target function body to include all statements in this circuit
-        let inlined_body = deep_copy(
-            &fdef
-                .clone()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .borrow()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .original_body
-                .clone()
-                .unwrap()
-                .into(),
-            true,
-            true,
-            self.global_vars.clone(),
-        );
-        println!(
-            "==_circ_trafo=============inlined_body=={:?}==={}",
-            inlined_body.as_ref().unwrap().code(),
-            line!()
-        );
-        self._circ_trafo
-            .as_ref()
-            .unwrap()
-            .visit(inlined_body.as_ref().unwrap());
+               //Visit the untransformed target function body to include all statements in this circuit
+               let inlined_body = deep_copy(
+                   &fdef
+                       .clone()
+                       .unwrap()
+                       .upgrade()
+                       .unwrap()
+                       .try_as_namespace_definition_ref()
+                       .unwrap()
+                       .borrow()
+                       .try_as_constructor_or_function_definition_ref()
+                       .unwrap()
+                       .original_body
+                       .clone()
+                       .unwrap()
+                       .into(),
+                   true,
+                   true,
+                   self.global_vars.clone(),
+               );
+               println!(
+                   "==_circ_trafo=============inlined_body=={:?}==={}",
+                   inlined_body.as_ref().unwrap().code(),
+                   line!()
+               );
+               self._circ_trafo
+                   .as_ref()
+                   .unwrap()
+                   .visit(inlined_body.as_ref().unwrap());
 
-        fcall
-            .try_as_function_call_expr_ref()
-            .unwrap()
-            .borrow_mut()
-            .expression_base_mut_ref()
-            .statement
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_statement_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_base_mut_ref()
-            .unwrap()
-            .pre_statements
-            .extend(
-                inlined_body
-                    .as_ref()
-                    .unwrap()
-                    .to_ast()
-                    .try_as_statement_ref()
-                    .unwrap()
-                    .statement_base_ref()
-                    .unwrap()
-                    .pre_statements()
-                    .clone(),
-            );
+               fcall
+                   .try_as_function_call_expr_ref()
+                   .unwrap()
+                   .borrow_mut()
+                   .expression_base_mut_ref()
+                   .statement
+                   .clone()
+                   .unwrap()
+                   .upgrade()
+                   .unwrap()
+                   .try_as_statement_ref()
+                   .unwrap()
+                   .borrow_mut()
+                   .statement_base_mut_ref()
+                   .unwrap()
+                   .pre_statements
+                   .extend(
+                       inlined_body
+                           .as_ref()
+                           .unwrap()
+                           .to_ast()
+                           .try_as_statement_ref()
+                           .unwrap()
+                           .statement_base_ref()
+                           .unwrap()
+                           .pre_statements()
+                           .clone(),
+                   );
 
-        //Create TupleExpr with location expressions corresponding to the function return values as elements
-        let ret_idfs: Vec<_> = fdef
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .return_var_decls
-            .iter()
-            .map(|vd| {
-                self._remapper
-                    .0
-                    .get_current(vd.borrow().idf().as_ref().unwrap(), None)
-            })
-            .collect();
-        let mut ret = TupleExpr::new(
-            ret_idfs
-                .iter()
-                .map(|idf| {
-                    IdentifierExpr::new(
-                        IdentifierExprUnion::Identifier(RcCell::new(
-                            Identifier::HybridArgumentIdf(idf.clone()),
-                        )),
-                        None,
-                    )
-                    .as_type(&idf.t.clone().into())
-                })
-                .collect(),
-        );
-
+               //Create TupleExpr with location expressions corresponding to the function return values as elements
+               let ret_idfs: Vec<_> = fdef
+                   .clone()
+                   .unwrap()
+                   .upgrade()
+                   .unwrap()
+                   .try_as_namespace_definition_ref()
+                   .unwrap()
+                   .borrow()
+                   .try_as_constructor_or_function_definition_ref()
+                   .unwrap()
+                   .return_var_decls
+                   .iter()
+                   .map(|vd| {
+                       self._remapper
+                           .0
+                           .get_current(vd.borrow().idf().as_ref().unwrap(), None)
+                   })
+                   .collect();
+               ret = TupleExpr::new(
+                   ret_idfs
+                       .iter()
+                       .map(|idf| {
+                           IdentifierExpr::new(
+                               IdentifierExprUnion::Identifier(RcCell::new(
+                                   Identifier::HybridArgumentIdf(idf.clone()),
+                               )),
+                               None,
+                           )
+                           .as_type(&idf.t.clone().into())
+                       })
+                       .collect(),
+               );
+               // if fcall
+               //     .try_as_function_call_expr_ref()
+               //     .unwrap()
+               //     .borrow()
+               //     .func()
+               //     .ast_base_ref()
+               //     .unwrap()
+               //     .borrow()
+               //     .target
+               //     .clone()
+               //     .unwrap()
+               //     .upgrade()
+               //     .unwrap()
+               //     .try_as_namespace_definition()
+               //     .unwrap()
+               //     .borrow()
+               //     .idf()
+               //     .unwrap()
+               //     .borrow()
+               //     .name()
+               //     != "<stmt_fct>"
+               // {
+               //     let _=self.circ_indent_block_after(&format!("INLINED {}", fcall.code()),old_len_inline);
+               // }
+         });
+               });
         Some(if ret.elements.len() == 1 {
             //Unpack 1-length tuple
             // ret = if let Expression::TupleOrLocationExpr(TupleOrLocationExpr::TupleExpr(ret))=&ret.elements[0]{ret.clone()}else{TupleExpr::default()};
@@ -1910,8 +2008,10 @@ where
     // """Include private if statement in this circuit."""
     pub fn add_if_statement_to_circuit(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         //Handle if branch
+        let cond;
+        let then_remap;
         // with
-        self._remapper.0.remap_scope(None);
+        with_context_block!(var _b=self._remapper.0.remap_scope(None)=>{
         let mut comment = CircComment::new(format!(
             "if ({})",
             ast.try_as_if_statement_ref()
@@ -1923,7 +2023,7 @@ where
         self._phi
             .borrow_mut()
             .push(RcCell::new(CircuitStatement::CircComment(comment.clone())));
-        let cond = self._evaluate_private_expression(
+         cond = self._evaluate_private_expression(
             &ast.try_as_if_statement_ref()
                 .unwrap()
                 .borrow()
@@ -1952,7 +2052,7 @@ where
             Some(cond.clone().unwrap()),
             Some(true),
         );
-        let then_remap = self._remapper.0.get_state();
+         then_remap = self._remapper.0.get_state();
 
         //Bubble up nested pre statements
         let mut ps: Vec<_> = ast
@@ -1973,6 +2073,7 @@ where
             .pre_statements
             .append(&mut ps);
         // ast.then_branch.pre_statements = vec![];
+        });
 
         //Handle else branch
         if ast
@@ -2040,23 +2141,32 @@ where
 
         //SSA join branches (if both branches write to same external value -> cond assignment to select correct version)
         // with
-        self.circ_indent_block(&format!(
-            "JOIN [{}]",
-            cond.as_ref().unwrap().identifier_base.name
-        ));
-        let cond_idf_expr = cond.unwrap().get_idf_expr(Some(ast));
-        assert!(is_instance(
-            cond_idf_expr.as_ref().unwrap(),
-            ASTType::IdentifierExpr
-        ));
-        let mut selfs = RcCell::new(self.clone());
-        self._remapper.0.join_branch(
-            ast,
-            cond_idf_expr.as_ref().unwrap(),
-            then_remap,
-            // |s: String, e: Expression| -> HybridArgumentIdf { selfs._create_temp_var(&s, e) },
-            &selfs,
-        );
+        // let old_len=self.circ_indent_block_before().unwrap();
+        // let circ_indent_block=  ContextManager{
+        //     open: |selfs: &Self| selfs.circ_indent_block_before(),
+        //     close: |selfs: &Self,name:&str,old_len:usize| selfs.circ_indent_block_after(name,old_len),
+        // };
+        with_context_block!(var _b= self.circ_indent_block(String::from("JOIN [{}]"))=>
+        {
+         let cond_idf_expr = cond.as_ref().unwrap().get_idf_expr(Some(ast));
+         assert!(is_instance(
+             cond_idf_expr.as_ref().unwrap(),
+             ASTType::IdentifierExpr
+         ));
+         let mut selfs = RcCell::new(self.clone());
+         self._remapper.0.join_branch(
+             ast,
+             cond_idf_expr.as_ref().unwrap(),
+             then_remap,
+             // |s: String, e: Expression| -> HybridArgumentIdf { selfs._create_temp_var(&s, e) },
+             &selfs,
+         );
+         });
+
+        // self.circ_indent_block_after(&format!(
+        //     "JOIN [{}]",
+        //     cond.as_ref().unwrap().identifier_base.name
+        // ),old_len);
         Some(ast.clone())
     }
     pub fn add_block_to_circuit(
@@ -2099,49 +2209,52 @@ where
                 CircComment::new(String::from("{")),
             )));
         // with
-        self.circ_indent_block("");
-        // with
-        if let Some(guard_cond) = guard_cond {
-            self.guarded(guard_cond, guard_val.unwrap());
-        }
-        //with
-        if !is_already_scoped {
-            self._remapper.0.remap_scope(Some(ast));
-        }
+        // let old_len=self.circ_indent_block_before().unwrap();
         let mut statements = vec![];
-        for stmt in ast
-            .try_as_block_ref()
-            .unwrap()
-            .borrow_mut()
-            .statement_list_base
-            .statements
-            .iter_mut()
-        {
-            if is_instance(stmt, ASTType::StatementBase) {
-                // println!(
-                //     "=====_circ_trafo==========stmt=={:?}==={}",
-                //     stmt.to_string(),
-                //     line!()
-                // );
-                self._circ_trafo
-                    .as_ref()
+
+        with_context_block!(var _a = self.circ_indent_block(String::new()) => {
+                // with
+                with_context_block!(var _b = guard_cond.map(|guard_cond| self.guarded(guard_cond, guard_val.unwrap())) => {
+                //with
+                with_context_block!(var _c= (!is_already_scoped).then(||self._remapper.0.remap_scope(Some(ast)))=>{
+
+                for stmt in ast
+                    .try_as_block_ref()
                     .unwrap()
-                    .visit(&stmt.clone().into());
-                //Bubble up nested pre statements
-                statements.append(
-                    &mut stmt
-                        .try_as_statement_mut()
-                        .unwrap()
-                        .borrow_mut()
-                        .statement_base_mut_ref()
-                        .unwrap()
-                        .pre_statements
-                        .drain(..)
-                        .collect::<Vec<_>>(),
-                );
-            }
-            // stmt.pre_statements = vec![];
-        }
+                    .borrow_mut()
+                    .statement_list_base
+                    .statements
+                    .iter_mut()
+                {
+                    if is_instance(stmt, ASTType::StatementBase) {
+                        // println!(
+                        //     "=====_circ_trafo==========stmt=={:?}==={}",
+                        //     stmt.to_string(),
+                        //     line!()
+                        // );
+                        self._circ_trafo
+                            .as_ref()
+                            .unwrap()
+                            .visit(&stmt.clone().into());
+                        //Bubble up nested pre statements
+                        statements.append(
+                            &mut stmt
+                                .try_as_statement_mut()
+                                .unwrap()
+                                .borrow_mut()
+                                .statement_base_mut_ref()
+                                .unwrap()
+                                .pre_statements
+                                .drain(..)
+                                .collect::<Vec<_>>(),
+                        );
+                    }
+                    // stmt.pre_statements = vec![];
+                }
+        });
+                });
+                });
+        // let _=self.circ_indent_block_after("",old_len);
         // if ast.get_ast_type() == ASTType::StatementListBase {
         //     if statements
         //         .iter()
@@ -2387,6 +2500,7 @@ where
                 .unwrap()
                 .evaluate_privately()
         {
+            //ccnt
             self._evaluate_private_expression(expr, "").unwrap()
         } else {
             //For public expressions which should not be evaluated in private, only the result is moved into the circuit
@@ -2603,7 +2717,11 @@ where
             panic!("========else======{statement:?}");
         }
         // if out_var.code()=="zk__data.zk__out0_plain"{
-        //     panic!("========zk__out0_plain============");
+        println!(
+            "===out_var=====ccnt====={}=={:?}=====",
+            out_var,
+            out_var.get_ast_type()
+        );
         // }
         if is_instance(&out_var, ASTType::LocationExprBase) {
             Some(out_var)
@@ -2680,15 +2798,17 @@ where
                 .clone()
                 .try_as_hybrid_argument_idf();
         }
-        // println!(
-        //     "====_circ_trafo====_evaluate_private_expression=======expr=={:?}==={}",
-        //     expr.to_string(),
-        //     line!()
-        // );
-        let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         println!(
-            "===========priv_expr==*******************======{}",
-            priv_expr.as_ref().unwrap()
+            "====_circ_trafo====_evaluate_private_expression===*****====expr=={expr}===={:?}==",
+            expr.get_ast_type()
+        );
+        // self._circ_trafo.as_ref().unwrap().set_is_callback(true);///ccnt
+        let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
+        self._circ_trafo.as_ref().unwrap().set_is_callback(false);
+        println!(
+            "===========priv_expr==*******************======{}======={:?}",
+            priv_expr.as_ref().unwrap(),
+            priv_expr.as_ref().unwrap().get_ast_type()
         );
         let tname = format!(
             "{}{tmp_idf_suffix}",

@@ -25,6 +25,15 @@ use lazy_static::lazy_static;
 use serde_json::{json, Map, Result, Value};
 use std::collections::HashMap;
 use std::sync::Mutex;
+
+#[macro_export]
+macro_rules! with_context_block {
+    (var $name:ident = $initializer:expr => $body:expr) => {{
+        let $name = $initializer;
+        $body;
+    }};
+}
+
 lazy_static! {
     pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
     pub static ref VERSIONS: Mutex<Versions> = Mutex::new({

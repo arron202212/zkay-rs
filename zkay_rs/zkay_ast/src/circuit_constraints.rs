@@ -67,7 +67,7 @@ impl ASTChildren for CircuitStatement {
 }
 impl ASTChildrenCallBack for CircuitStatement {
     fn process_children_callback(
-        &mut self,
+        &self,
         _f: impl Fn(&ASTFlatten) -> Option<ASTFlatten> + std::marker::Copy,
     ) {
     }
@@ -388,6 +388,30 @@ impl FullArgsSpecInit for CircGuardModification {
         )
     }
 }
+pub struct WithGuarded(RcCell<Vec<RcCell<CircuitStatement>>>);
+impl WithGuarded {
+    pub fn new(
+        phi: RcCell<Vec<RcCell<CircuitStatement>>>,
+        guard_idf: HybridArgumentIdf,
+        is_true: bool,
+    ) -> Self {
+        phi.borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircGuardModification(
+                CircGuardModification::new(Some(guard_idf), is_true),
+            )));
+        Self(phi)
+    }
+}
+impl Drop for WithGuarded {
+    fn drop(&mut self) {
+        self.0
+            .borrow_mut()
+            .push(RcCell::new(CircuitStatement::CircGuardModification(
+                CircGuardModification::new(None, false),
+            )));
+    }
+}
+
 impl CircGuardModification {
     pub fn new(new_cond: Option<HybridArgumentIdf>, is_true: bool) -> Self {
         Self { new_cond, is_true }
@@ -407,16 +431,17 @@ impl CircGuardModification {
         phi: RcCell<Vec<RcCell<CircuitStatement>>>,
         guard_idf: HybridArgumentIdf,
         is_true: bool,
-    ) {
-        phi.borrow_mut()
-            .push(RcCell::new(CircuitStatement::CircGuardModification(
-                CircGuardModification::new(Some(guard_idf), is_true),
-            )));
-        // yield
-        phi.borrow_mut()
-            .push(RcCell::new(CircuitStatement::CircGuardModification(
-                CircGuardModification::new(None, false),
-            )));
+    ) -> WithGuarded {
+        // phi.borrow_mut()
+        //     .push(RcCell::new(CircuitStatement::CircGuardModification(
+        //         CircGuardModification::new(Some(guard_idf), is_true),
+        //     )));
+        // // yield   MY TODO
+        // phi.borrow_mut()
+        //     .push(RcCell::new(CircuitStatement::CircGuardModification(
+        //         CircGuardModification::new(None, false),
+        //     )));
+        WithGuarded::new(phi, guard_idf, is_true)
     }
 }
 // class CircEncConstraint(CircuitStatement)

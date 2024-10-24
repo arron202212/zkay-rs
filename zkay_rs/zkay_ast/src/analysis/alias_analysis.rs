@@ -20,6 +20,7 @@ use crate::ast::{
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
+use zkay_config::with_context_block;
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn alias_analysis(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let v = AliasAnalysisVisitor::new(false, global_vars);
@@ -1630,6 +1631,25 @@ impl AliasAnalysisVisitor {
         Err(eyre::eyre!("unimplemented"))
     }
 }
+
+pub struct WithNegated {
+    _neg: RcCell<bool>,
+}
+impl WithNegated {
+    pub fn new(_neg: RcCell<bool>) -> Self {
+        let v = !*_neg.borrow();
+        *_neg.borrow_mut() = v;
+        Self { _neg }
+    }
+}
+
+impl Drop for WithNegated {
+    fn drop(&mut self) {
+        let v = !*self._neg.borrow();
+        *self._neg.borrow_mut() = v;
+    }
+}
+
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct GuardConditionAnalyzer {
     pub ast_visitor_base: AstVisitorBase,
@@ -1681,11 +1701,12 @@ impl GuardConditionAnalyzer {
         }
     }
 
-    pub fn _negated(&self) {
-        let v = !*self._neg.borrow();
-        *self._neg.borrow_mut() = v;
-        // yield
+    pub fn _negated(&self) -> WithNegated {
+        // let v = !*self._neg.borrow();
+        // *self._neg.borrow_mut() = v;
+        // yield   MY TODO
         // self._neg = ! self._neg
+        WithNegated::new(self._neg.clone())
     }
 
     pub fn visitFunctionCallExpr(
@@ -1728,9 +1749,8 @@ impl GuardConditionAnalyzer {
                 .op
                 .clone();
             if op == "!" {
-                self._negated();
-                self.visit(&args[0]);
-                self._negated();
+                with_context_block!(var _a = self._negated()=>{
+                self.visit(&args[0]);});
             } else if (op == "&&" && !*self._neg.borrow()) || (op == "||" && *self._neg.borrow()) {
                 self.visit(&args[0]);
                 self.visit(&args[1]);

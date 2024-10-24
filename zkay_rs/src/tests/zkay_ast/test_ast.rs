@@ -22,8 +22,8 @@ mod tests {
         let lhs = IdentifierExpr::new(IdentifierExprUnion::String(String::from("x")), None);
         let rhs = BooleanLiteralExpr::new(true);
         let a = AssignmentStatementBase::new(
-            Some(RcCell::new(lhs.clone()).into()),
-            Some(RcCell::new(rhs.clone()).into()),
+            Some(RcCell::new(lhs.to_ast()).into()),
+            Some(RcCell::new(rhs.to_ast()).into()),
             None,
         );
         // assert!(a.is_some());

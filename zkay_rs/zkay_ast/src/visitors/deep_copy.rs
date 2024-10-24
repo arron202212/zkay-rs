@@ -44,15 +44,13 @@ pub fn deep_copy(
         .unwrap()
         .borrow_mut()
         .parent = parent;
-    set_parents(ast_copy.as_mut().unwrap());
+    set_parents(ast_copy.as_ref().unwrap());
     // let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
     // println!("===deep_copy==========");
-    link_identifiers(ast_copy.as_mut().unwrap(), global_vars.clone());
+    link_identifiers(ast_copy.as_ref().unwrap(), global_vars.clone());
     ast_copy
 }
-// """
 //     Copies over ast common ast attributes and reruns, parent setter, symbol table, side effect detector
-// """
 pub fn replace_expr(
     old_expr: &ASTFlatten,
     new_expr: &ASTFlatten,

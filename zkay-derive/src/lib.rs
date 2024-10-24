@@ -36,7 +36,7 @@ impl ExpressionASType for {struct_name} {{
                 )));
         }}
 
-        ASTFlatten::from(RcCell::new(selfs.clone()))
+        ASTFlatten::from(RcCell::new(selfs.to_ast()))
     }}
 }}
                     "#
@@ -130,7 +130,7 @@ impl ASTChildren for {struct_name} {{
     }}
                 }}
 impl ASTChildrenCallBack for {struct_name} {{
-    fn process_children_callback(&mut self, f: impl Fn(&ASTFlatten)->Option<ASTFlatten>+ std::marker::Copy) {{
+    fn process_children_callback(&self, f: impl Fn(&ASTFlatten)->Option<ASTFlatten>+ std::marker::Copy) {{
         
     }}
                 }}

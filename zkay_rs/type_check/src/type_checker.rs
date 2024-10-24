@@ -1797,6 +1797,7 @@ impl TypeCheckVisitor {
             .borrow()
             .is_private_at_me(&rhs.to_ast().try_as_expression_ref().unwrap().analysis())
         {
+            println!("======@@@@@@@@@@@@@@@@@@@@@@@@==========make_rehom============");
             //The value is @me, so we can just insert a ReclassifyExpr to change
             //the homomorphism of this value, just like we do for public values.
             return Self::make_rehom(rhs, expected_type);
@@ -2030,12 +2031,10 @@ impl TypeCheckVisitor {
                 .unwrap()
                 .into(),
         );
-        let mut r = RcCell::new(ReclassifyExprBase::new(
-            expr.clone(),
-            pl.clone(),
-            Some(homomorphism.clone()),
-            None,
-        ));
+        let mut r = RcCell::new(
+            ReclassifyExprBase::new(expr.clone(), pl.clone(), Some(homomorphism.clone()), None)
+                .into_ast(),
+        );
         let at = Some(RcCell::new(AnnotatedTypeName::new(
             expr.ast_base_ref()
                 .unwrap()
@@ -2065,8 +2064,9 @@ impl TypeCheckVisitor {
         // ) {
         //     println!("==========================MeExpr=====make_private==========");
         // }
-        r.borrow_mut()
-            .ast_base_mut_ref()
+        r.borrow()
+            .ast_base_ref()
+            .unwrap()
             .borrow_mut()
             .annotated_type = at;
 
@@ -2101,8 +2101,17 @@ impl TypeCheckVisitor {
                 .borrow_mut()
                 .expression_base_mut_ref()
                 .statement = s;
+        } else if target.is_ast() {
+            target
+                .try_as_ast_ref()
+                .unwrap()
+                .borrow_mut()
+                .try_as_expression_mut()
+                .unwrap()
+                .expression_base_mut_ref()
+                .statement = s;
         } else {
-            panic!("==================================={:?}", target);
+            panic!("==========else========================={:?}", target);
         }
         let t = ASTFlatten::from(target.clone()).downgrade();
         //set parents
@@ -2714,7 +2723,10 @@ impl TypeCheckVisitor {
                 .as_ref()
                 .unwrap()
                 .borrow()
-                .annotated_type()
+                .ast_base_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type
                 .as_ref()
                 .unwrap()
                 .borrow()
@@ -2733,7 +2745,10 @@ impl TypeCheckVisitor {
                     .as_ref()
                     .unwrap()
                     .borrow()
-                    .annotated_type()
+                    .ast_base_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type
                     .as_ref()
                     .unwrap()
                     .borrow()
@@ -3440,7 +3455,15 @@ impl TypeCheckVisitor {
             .unwrap()
             .key
             .clone();
-        let mut map_t = arr.borrow().annotated_type().as_ref().unwrap().clone();
+        let mut map_t = arr
+            .borrow()
+            .ast_base_ref()
+            .unwrap()
+            .borrow()
+            .annotated_type
+            .as_ref()
+            .unwrap()
+            .clone();
         //should have already been checked
         assert!(map_t
             .borrow()
@@ -3537,7 +3560,10 @@ impl TypeCheckVisitor {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .annotated_type()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type
                         .as_ref()
                         .unwrap()
                         .borrow()
@@ -3559,7 +3585,10 @@ impl TypeCheckVisitor {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .annotated_type()
+                            .ast_base_ref()
+                            .unwrap()
+                            .borrow()
+                            .annotated_type
                             .as_ref()
                             .unwrap()
                             .borrow()
@@ -3586,7 +3615,10 @@ impl TypeCheckVisitor {
                         .as_ref()
                         .unwrap()
                         .borrow()
-                        .annotated_type()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type
                         .as_ref()
                         .unwrap()
                         .borrow()
@@ -3608,7 +3640,10 @@ impl TypeCheckVisitor {
                             .as_ref()
                             .unwrap()
                             .borrow()
-                            .annotated_type()
+                            .ast_base_ref()
+                            .unwrap()
+                            .borrow()
+                            .annotated_type
                             .as_ref()
                             .unwrap()
                             .borrow()
@@ -3635,7 +3670,10 @@ impl TypeCheckVisitor {
                                 .as_ref()
                                 .unwrap()
                                 .borrow()
-                                .annotated_type()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .annotated_type
                                 .as_ref()
                                 .unwrap()
                                 .borrow()

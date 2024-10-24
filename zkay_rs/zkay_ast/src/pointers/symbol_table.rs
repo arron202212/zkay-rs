@@ -684,6 +684,7 @@ impl SymbolTableLinker {
                 );
             }
             if let Some(nameo) = _ancestor.ast_base_ref().unwrap().borrow().names().get(name) {
+                // println!("==nameo===name======={name}");
                 let decl = nameo.upgrade().unwrap().borrow().parent();
                 if ast.code() == "secret0_plain_votum" {
                     if decl
@@ -1085,7 +1086,7 @@ impl SymbolTableLinker {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        // println!("====visitIdentifierExpr=======begin========={:?}", ast.get_ast_type());
+        // println!("====visitIdentifierExpr=======begin========={}======{:?}===", ast,ast.get_ast_type());
         let mut ast = ast.clone();
 
         // println!("====visitIdentifierExpr=======begin========={:?}",  ast
@@ -1209,6 +1210,7 @@ impl SymbolTableLinker {
             .unwrap()
             .borrow()
             .ast_base_ref()
+            .unwrap()
             .borrow()
             .target
             .is_some()
@@ -1227,6 +1229,7 @@ impl SymbolTableLinker {
                     .unwrap()
                     .borrow()
                     .ast_base_ref()
+                    .unwrap()
                     .borrow()
                     .target
                     .clone()
@@ -1251,6 +1254,7 @@ impl SymbolTableLinker {
                 .unwrap()
                 .borrow()
                 .ast_base_ref()
+                .unwrap()
                 .borrow()
                 .target
                 .clone()
@@ -1303,6 +1307,7 @@ impl SymbolTableLinker {
             .unwrap()
             .borrow()
             .ast_base_ref()
+            .unwrap()
             .borrow()
             .target
             .clone()
@@ -1487,6 +1492,7 @@ impl SymbolTableLinker {
             .unwrap()
             .borrow()
             .ast_base_ref()
+            .unwrap()
             .borrow()
             .target
             .clone()

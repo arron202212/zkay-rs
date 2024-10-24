@@ -22,6 +22,37 @@ use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // HybridArgumentIdf = TypeVar("HybridArgumentIdf")
 // class Remapper(Generic[Identifier, HybridArgumentIdf]):
 type RemapMapType = BTreeMap<RcCell<Identifier>, HybridArgumentIdf>; //#[(bool, Identifier), HybridArgumentIdf]
+pub struct WithRemapScope {
+    prev: RemapMapType,
+    rmap: RcCell<RemapMapType>,
+    scope_stmt: Option<ASTFlatten>,
+}
+impl WithRemapScope {
+    pub fn new(rmap: RcCell<RemapMapType>, scope_stmt: Option<ASTFlatten>) -> Self {
+        let prev = rmap.borrow().clone();
+        Self {
+            prev,
+            rmap,
+            scope_stmt,
+        }
+    }
+}
+impl Drop for WithRemapScope {
+    fn drop(&mut self) {
+        if let Some(scope_stmt) = self.scope_stmt.as_ref() {
+            self.prev.append(
+                &mut self
+                    .rmap
+                    .borrow()
+                    .clone()
+                    .into_iter()
+                    .filter(|(key, _)| SymbolTableLinker::in_scope_at(key, scope_stmt))
+                    .collect(),
+            );
+        }
+        *self.rmap.borrow_mut() = self.prev.clone();
+    }
+}
 #[derive(Clone)]
 pub struct Remapper {
     rmap: RcCell<RemapMapType>,
@@ -93,21 +124,22 @@ impl Remapper {
     //                               already in scope at scope_stmt will not be reset during rollback
     // :return: context manager
     // """
-    pub fn remap_scope(&self, scope_stmt: Option<&ASTFlatten>) {
-        let mut prev = self.rmap.borrow().clone();
-        // yield
-        if let Some(scope_stmt) = scope_stmt {
-            prev.append(
-                &mut self
-                    .rmap
-                    .borrow()
-                    .clone()
-                    .into_iter()
-                    .filter(|(key, _)| SymbolTableLinker::in_scope_at(key, scope_stmt))
-                    .collect(),
-            );
-        }
-        *self.rmap.borrow_mut() = prev;
+    pub fn remap_scope(&self, scope_stmt: Option<&ASTFlatten>) -> WithRemapScope {
+        // let mut prev = self.rmap.borrow().clone();
+        // // yield    MY TODO
+        // if let Some(scope_stmt) = scope_stmt {
+        //     prev.append(
+        //         &mut self
+        //             .rmap
+        //             .borrow()
+        //             .clone()
+        //             .into_iter()
+        //             .filter(|(key, _)| SymbolTableLinker::in_scope_at(key, scope_stmt))
+        //             .collect(),
+        //     );
+        // }
+        // *self.rmap.borrow_mut() = prev;
+        WithRemapScope::new(self.rmap.clone(), scope_stmt.cloned())
     }
 
     pub fn is_remapped(&self, key: &RcCell<Identifier>) -> bool {

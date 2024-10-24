@@ -179,10 +179,10 @@ pub fn transform_internal_calls(
                 .function_call_expr_base_mut_ref()
                 .args
                 .extend(vec![
-                    RcCell::new(IdentifierExpr::new(
-                        IdentifierExprUnion::String(zk_in_name.clone()),
-                        None,
-                    ))
+                    RcCell::new(
+                        IdentifierExpr::new(IdentifierExprUnion::String(zk_in_name.clone()), None)
+                            .into_ast(),
+                    )
                     .into(),
                     RcCell::new(
                         IdentifierExpr::new(
@@ -199,10 +199,10 @@ pub fn transform_internal_calls(
                         ),
                     )
                     .into(),
-                    RcCell::new(IdentifierExpr::new(
-                        IdentifierExprUnion::String(zk_out_name.clone()),
-                        None,
-                    ))
+                    RcCell::new(
+                        IdentifierExpr::new(IdentifierExprUnion::String(zk_out_name.clone()), None)
+                            .into_ast(),
+                    )
                     .into(),
                     RcCell::new(
                         IdentifierExpr::new(

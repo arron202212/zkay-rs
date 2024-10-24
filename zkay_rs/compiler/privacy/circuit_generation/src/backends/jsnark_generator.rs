@@ -195,6 +195,7 @@ impl JsnarkVisitor {
             .iter()
             .map(|s| self.visit(&s.clone().into()))
             .collect();
+        //  println!("====visitCircIndentBlock===stmts=={:?}",stmts);
         Ok(
             if !stmt
                 .try_as_circuit_statement_ref()
@@ -206,7 +207,7 @@ impl JsnarkVisitor {
                 .is_empty()
             {
                 format!(
-                    r#"//[ --- {name} ---\n {} \n //] --- {name} ---\n"#,
+                    "//[ --- {name} ---\n{}\n //] --- {name} ---\n",
                     indent(stmts.join("\n")),
                     name = stmt
                         .try_as_circuit_statement_ref()
@@ -215,8 +216,10 @@ impl JsnarkVisitor {
                         .try_as_circ_indent_block_ref()
                         .unwrap()
                         .name
+                        .clone(),
                 )
             } else {
+                println!("====visitCircIndentBlock==else =stmts=={:?}", stmts);
                 indent(stmts.join("\n"))
             },
         )
@@ -727,18 +730,14 @@ impl JsnarkVisitor {
                         .name()
                 )
             } else {
-                panic!("=====visitIdentifierExpr=============");
-                println!(
-                    "====visitIdentifierExpr=========get==={}====",
-                    ast.ast_base_ref()
-                        .unwrap()
-                        .borrow()
-                        .idf
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .name()
-                );
+                //  panic!("=====visitIdentifierExpr===get==={ast}={:?}==={}===",ast.get_ast_type(), ast.ast_base_ref()
+                //         .unwrap()
+                //         .borrow()
+                //         .idf
+                //         .as_ref()
+                //         .unwrap()
+                //         .borrow()
+                //         .name());
                 format!(
                     r#"get("{}")"#,
                     ast.ast_base_ref()
@@ -1355,7 +1354,7 @@ impl CircuitGenerator for JsnarkGenerator {
                 .collect::<Vec<_>>()
                 .join("\n");
             let fdef = format!(
-                "private void _{name}() {{\n {body} \n}}",
+                "private void _{name}() {{\n{body} \n}}",
                 body = indent(body),
                 name = fct.borrow().name()
             );

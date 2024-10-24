@@ -7,7 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, Block, HybridArgumentIdf, IntoAST, AST,
+    ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, Block, DeepClone,
+    HybridArgumentIdf, IntoAST, AST,
 };
 use dyn_clone::DynClone;
 // T = TypeVar("T")
@@ -19,6 +20,7 @@ pub trait TransformerVisitorEx: DynClone + AstTransformerVisitor {
         _guard_cond: Option<HybridArgumentIdf>,
         _guard_val: Option<bool>,
     ) -> eyre::Result<ASTFlatten>;
+    fn set_is_callback(&self, _value: bool) {}
 }
 dyn_clone::clone_trait_object!(TransformerVisitorEx);
 #[derive(Clone)]
@@ -62,13 +64,23 @@ pub trait AstTransformerVisitor: AstTransformerVisitorBaseProperty {
     fn has_attr(&self, name: &ASTType, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<ASTFlatten>;
     fn visit_list(&self, ast_list: &[ASTFlatten]) -> Vec<ASTFlatten> {
-        ast_list.iter().filter_map(|a| self.visit(a)).collect()
+        let mut r = vec![];
+        for a in ast_list {
+            if let Some(v) = self.visit(a) {
+                r.push(v.clone());
+            }
+        }
+
+        r
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         for c in ast.children() {
             self.visit(&c);
         }
         Ok(ast.clone())
+        // let mut ast=ast.clone();
+        // ast.process_children_callback(|a|   self.visit(a));
+        // Ok(ast)
     }
     fn _visit_internal(&self, ast: &ASTFlatten) -> Option<ASTFlatten> {
         if self.log() {
