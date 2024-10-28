@@ -66,9 +66,9 @@ pub fn transform_ast(
     BTreeMap<RcCell<ConstructorOrFunctionDefinition>, RcCell<CircuitHelper>>,
 ) {
     let zt = ZkayTransformer::new(global_vars.clone());
-    // // println!("=============1======");
-    let mut new_ast = zt.visit(ast.as_ref().unwrap());
-    //// println!("======2=======1======");
+    // println!("===transform_ast==========1===={}==",ast.as_ref().unwrap());
+    let mut new_ast = zt.visit(ast.as_ref().unwrap());//=priv_expr
+    // println!("===transform_ast===2=======1=={}===",new_ast.as_ref().unwrap());
     // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
     //// println!("======2===2====1======");
@@ -398,7 +398,7 @@ impl ZkayTransformer {
             .clone();
         for c in &contracts {
             // println!("=====visitSourceUnit====={:?}===", c.get_ast_type());
-            self.transform_contract(ast, c);
+            self.transform_contract(ast, c);//=priv_expr
         }
         // println!("=====visitSourceUnit======3====");
         ast.try_as_source_unit_ref().unwrap().borrow_mut().contracts = contracts;
@@ -647,7 +647,7 @@ impl ZkayTransformer {
         }
         // println!("=====transform_contract===={}=", line!());
         // Transform bodies
-        for fct in all_fcts.iter_mut() {
+        for fct in &all_fcts {
             if let Some(circuit) = self.circuits.borrow().get(fct) {
                 let body = fct.borrow().body.clone();
                 let body = ZkayStatementTransformer::new(
@@ -655,7 +655,7 @@ impl ZkayTransformer {
                     self.global_vars.clone(),
                 )
                 .visit(&body.clone().unwrap().into())
-                .and_then(|b| b.try_as_block());
+                .and_then(|b| b.try_as_block());//=priv_expr
                 fct.borrow_mut().body = body;
             }
         }

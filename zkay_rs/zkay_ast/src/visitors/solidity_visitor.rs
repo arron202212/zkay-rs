@@ -22,7 +22,7 @@ use rccell::RcCell;
 use std::cmp::Ordering;
 use zkay_config::config::CFG;
 pub fn to_solidity(ast: &ASTFlatten) -> String {
-    SolidityVisitor::new().visit(ast)
+    SolidityVisitor::new().visit(ast).unwrap()
 }
 
 // class SolidityVisitor(CodeVisitor)
@@ -235,7 +235,7 @@ impl CodeVisitor for SolidityVisitor {
                 //     "=(==visit_AnnotatedTypeName==#======{:?}=====",
                 //     type_name.get_ast_type()
                 // );
-                self.visit(&type_name.clone().into())
+                self.visit(&type_name.clone().into()).unwrap()
             });
         // print!(
         //                     "=(==visit_AnnotatedTypeName==#======{:?}=====",
@@ -253,7 +253,7 @@ impl CodeVisitor for SolidityVisitor {
             .privacy_annotation
             .as_ref()
             .map_or(String::new(), |privacy_annotation| {
-                self.visit(privacy_annotation)
+                self.visit(privacy_annotation).unwrap()
             });
 
         Ok(
@@ -340,10 +340,10 @@ impl SolidityVisitor {
         Ok(s)
     }
     fn handle(&self, e: &ListUnion) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(match e {
-            ListUnion::String(e) => e.to_owned(),
+        match e {
+            ListUnion::String(e) => Ok(e.to_owned()),
             ListUnion::AST(e) => self.visit(e),
-        })
+        }
     }
     fn visit_SourceUnit(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         let p = self.handle_pragma(
@@ -394,7 +394,7 @@ impl SolidityVisitor {
         match v {
             SingleOrListUnion::Vec(v) => self.visit_list(v, sep),
             SingleOrListUnion::String(v) => Ok(v),
-            SingleOrListUnion::AST(v) => Ok(self.visit(&v)),
+            SingleOrListUnion::AST(v) => self.visit(&v),
         }
     }
 
@@ -448,7 +448,7 @@ impl SolidityVisitor {
                     .unwrap()
                     .args()
                     .iter()
-                    .map(|a| self.visit(a))
+                    .map(|a| self.visit(a).unwrap())
                     .collect();
                 ast.to_ast()
                     .try_as_expression_ref()
@@ -470,7 +470,7 @@ impl SolidityVisitor {
                         .try_as_function_call_expr_ref()
                         .unwrap()
                         .func(),
-                );
+                )?;
                 let a = self.visit_list(
                     ast.to_ast()
                         .try_as_expression_ref()
@@ -493,7 +493,7 @@ impl SolidityVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visit_PrimitiveCastExpr==={:?}=====",ast);
-        Ok(
+    
             if ast
                 .to_ast()
                 .try_as_expression_ref()
@@ -511,9 +511,7 @@ impl SolidityVisitor {
                         .expr,
                 )
             } else {
-                format!(
-                    "{}({})",
-                    self.visit(
+                 self.visit(
                         &ast.to_ast()
                             .try_as_expression_ref()
                             .unwrap()
@@ -522,18 +520,18 @@ impl SolidityVisitor {
                             .elem_type
                             .clone()
                             .into()
-                    ),
-                    self.visit(
+                    ).ok().zip(self.visit(
                         &ast.to_ast()
                             .try_as_expression_ref()
                             .unwrap()
                             .try_as_primitive_cast_expr_ref()
                             .unwrap()
                             .expr
-                    )
-                )
-            },
-        )
+                    ).ok()).map(|(elem_type,expr)|format!(
+                    "{elem_type}({expr})")
+                    ).ok_or(eyre::eyre!("None"))
+            }
+        
     }
 
     pub fn visit_BooleanLiteralExpr(
@@ -665,7 +663,7 @@ impl SolidityVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // //println!("======visit_IdentifierExpr========={:?}", ast);
-        Ok(self.visit(
+        self.visit(
             &ast.ast_base_ref()
                 .unwrap()
                 .borrow()
@@ -674,7 +672,7 @@ impl SolidityVisitor {
                 .unwrap()
                 .clone()
                 .into(),
-        ))
+        )
     }
 
     pub fn visit_MemberAccessExpr(
@@ -693,18 +691,14 @@ impl SolidityVisitor {
             .try_as_member_access_expr_ref()
             .unwrap()
             .clone();
-        Ok(format!(
-            "{}.{}",
-            self.visit(&mae.expr.as_ref().unwrap().clone().into()),
-            self.visit(&mae.member.clone().into())
-        ))
+        self.visit(&mae.expr.as_ref().unwrap().clone().into()).ok().zip(self.visit(&mae.member.clone().into()).ok()).map(|(expr,member)|format!(
+            "{expr}.{member}")
+        ).ok_or(eyre::eyre!("None"))
     }
 
     pub fn visit_IndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // //println!("=======visit_IndexExpr================={:?}",ast);
-        Ok(format!(
-            "{}[{}]",
-            self.visit(
+        self.visit(
                 &ast.to_ast()
                     .try_as_expression_ref()
                     .unwrap()
@@ -719,7 +713,7 @@ impl SolidityVisitor {
                     .unwrap()
                     .clone()
                     .into()
-            ),
+            ).ok().zip(
             self.visit(
                 &ast.to_ast()
                     .try_as_expression_ref()
@@ -731,8 +725,10 @@ impl SolidityVisitor {
                     .try_as_index_expr_ref()
                     .unwrap()
                     .key
-            )
-        ))
+            ).ok()).map(|(arr,key)|format!(
+            "{arr}[{key}]",
+        )).ok_or(eyre::eyre!("None"))
+        
     }
 
     pub fn visit_AllExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -750,7 +746,7 @@ impl SolidityVisitor {
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .expr(),
-        );
+        )?;
         let p = self.visit(
             ast.to_ast()
                 .try_as_expression_ref()
@@ -758,7 +754,7 @@ impl SolidityVisitor {
                 .try_as_reclassify_expr_ref()
                 .unwrap()
                 .privacy(),
-        );
+        )?;
         // println!(
         //     "===visit_ReclassifyExpr==============={:?}",
         //     ast.to_ast()
@@ -798,7 +794,7 @@ impl SolidityVisitor {
                 .unwrap()
                 .reclassify_expr_base
                 .expr,
-        );
+        )?;
         Ok(format!(
             "{}({e})",
             ast.to_ast()
@@ -824,7 +820,7 @@ impl SolidityVisitor {
                 .try_as_if_statement_ref()
                 .unwrap()
                 .condition,
-        );
+        )?;
         let t = self.visit_single_or_list(
             SingleOrListUnion::AST(
                 ast.to_ast()
@@ -872,7 +868,7 @@ impl SolidityVisitor {
                 .try_as_while_statement_ref()
                 .unwrap()
                 .condition,
-        );
+        )?;
         let b = self.visit_single_or_list(
             SingleOrListUnion::AST(
                 ast.to_ast()
@@ -913,7 +909,7 @@ impl SolidityVisitor {
                 .try_as_do_while_statement_ref()
                 .unwrap()
                 .condition,
-        );
+        )?;
         Ok(format!("do {b} while ({c});"))
     }
 
@@ -934,7 +930,7 @@ impl SolidityVisitor {
         } else {
             String::from(";")
         };
-        let c = self.visit(&for_statement.condition);
+        let c = self.visit(&for_statement.condition)?;
         let u = for_statement
             .update
             .as_ref()
@@ -995,7 +991,7 @@ impl SolidityVisitor {
                         .expr
                         .as_ref()
                         .unwrap(),
-                );
+                )?;
                 format!("return {e};")
             },
         )
@@ -1006,7 +1002,7 @@ impl SolidityVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         //  println!("===visit_ExpressionStatement=========={:?}",ast);
-        Ok(self.visit(
+        self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
@@ -1015,7 +1011,7 @@ impl SolidityVisitor {
                 .try_as_expression_statement_ref()
                 .unwrap()
                 .expr,
-        ) + ";")
+        ).map(|expr|expr+ ";") 
     }
 
     pub fn visit_RequireStatement(
@@ -1032,7 +1028,7 @@ impl SolidityVisitor {
                 .try_as_require_statement_ref()
                 .unwrap()
                 .condition,
-        );
+        )?;
         Ok(format!("require({c});"))
     }
 
@@ -1130,16 +1126,16 @@ impl SolidityVisitor {
                 assert!(lhs.size == rhs.size, "Slice ranges don't have same size");
                 let mut s = String::new();
                 let (lexpr, rexpr) = (
-                    self.visit(&lhs.arr.as_ref().unwrap().clone().into()),
-                    self.visit(&rhs.arr.as_ref().unwrap().clone().into()),
+                    self.visit(&lhs.arr.as_ref().unwrap().clone().into())?,
+                    self.visit(&rhs.arr.as_ref().unwrap().clone().into())?,
                 );
                 let mut lbase = if let Some(base) = &lhs.base {
-                    format!("{} + ", self.visit(base))
+                    format!("{} + ", self.visit(base)?)
                 } else {
                     String::new()
                 };
                 let mut rbase = if let Some(base) = &rhs.base {
-                    format!("{} + ", self.visit(base))
+                    format!("{} + ", self.visit(base)?)
                 } else {
                     String::new()
                 };
@@ -1173,8 +1169,8 @@ impl SolidityVisitor {
             } else {
                 //   println!("=visit_AssignmentStatement===type===op={:?}============",rhs.as_ref().unwrap().get_ast_type);
                 format_string(
-                    self.visit(lhs.as_ref().unwrap()),
-                    self.visit(rhs.as_ref().unwrap()),
+                    self.visit(lhs.as_ref().unwrap())?,
+                    self.visit(rhs.as_ref().unwrap())?,
                 )
             },
         )
@@ -1323,7 +1319,7 @@ impl SolidityVisitor {
                 .key_type
                 .clone()
                 .into(),
-        );
+        )?;
         let label = if let Some(idf) = &ast
             .to_ast()
             .try_as_type_name_ref()
@@ -1340,7 +1336,7 @@ impl SolidityVisitor {
                     idf.borrow().try_as_identifier_ref().unwrap().name
                 )
             } else {
-                format!("!{}", self.visit(&idf.clone().into()))
+                format!("!{}", self.visit(&idf.clone().into())?)
             }
         } else {
             String::new()
@@ -1355,7 +1351,7 @@ impl SolidityVisitor {
                 .value_type
                 .clone()
                 .into(),
-        );
+        )?;
         // println!("=========visit_Mapping====value_type============={v}====");
         Ok(format!("mapping({k}{label} => {v})"))
     }
@@ -1375,7 +1371,7 @@ impl SolidityVisitor {
         //     value_type.get_ast_type()
         // );
 
-        let t = self.visit(&value_type.clone().into());
+        let t = self.visit(&value_type.clone().into())?;
         // print!("====visit_Array===t======={}", t);
         let expr = ast
             .to_ast()
@@ -1391,7 +1387,7 @@ impl SolidityVisitor {
             //     "===visit_Array=====expr================{:?}",
             //     _expr.get_ast_type()
             // );
-            self.visit(_expr)
+            self.visit(_expr).unwrap()
         });
         Ok(format!("{t}[{e}]"))
     }
@@ -1507,7 +1503,7 @@ impl SolidityVisitor {
                 .clone()
                 .unwrap()
                 .into(),
-        );
+        )?;
 
         let s = ast
             .try_as_variable_declaration_ref()
@@ -1528,7 +1524,7 @@ impl SolidityVisitor {
                 .clone()
                 .unwrap()
                 .into(),
-        );
+        )?;
         // let ii:ASTFlatten=ast.ast_base_ref()
         //                 .unwrap()
         //                 .borrow()
@@ -1555,7 +1551,7 @@ impl SolidityVisitor {
                 .variable_declaration
                 .clone()
                 .into(),
-        );
+        )?;
         if let Some(expr) = &ast
             .to_ast()
             .try_as_statement_ref()
@@ -1566,7 +1562,7 @@ impl SolidityVisitor {
             .unwrap()
             .expr
         {
-            s += format!(" = {}", self.visit(expr)).as_str();
+            s += format!(" = {}", self.visit(expr)?).as_str();
         }
         s += ";";
         // s=s.trim().to_owned();
@@ -1598,14 +1594,14 @@ impl SolidityVisitor {
                 .clone()
                 .unwrap()
                 .into(),
-        );
+        )?;
         let i = ast
             .try_as_parameter_ref()
             .unwrap()
             .borrow()
             .idf()
             .as_ref()
-            .map(|idf| self.visit(&idf.clone().into()));
+            .map(|idf| self.visit(&idf.clone().into()).unwrap());
         let description: Vec<_> = [
             f,
             Some(t),
@@ -1686,7 +1682,7 @@ impl SolidityVisitor {
         body: &String,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         let definition = if idf.borrow().name() != "constructor" {
-            let i = self.visit(&idf.clone().into());
+            let i = self.visit(&idf.clone().into())?;
             format!("function {i}")
         } else {
             String::from("constructor")
@@ -1722,14 +1718,12 @@ impl SolidityVisitor {
     }
 
     pub fn visit_EnumValue(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(
             if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf() {
                 // println!("==visit_EnumValue=========={}====",idf.borrow().name());
-                self.visit(&idf.clone().into())
-            } else {
-                String::new()
-            },
-        )
+                return self.visit(&idf.clone().into())
+            } 
+                Ok(String::new())
+            
     }
 
     pub fn visit_EnumDefinition(
@@ -1759,7 +1753,7 @@ impl SolidityVisitor {
                     .unwrap()
                     .clone()
                     .into()
-            )
+            )?
         ))
     }
 
@@ -1823,7 +1817,7 @@ impl SolidityVisitor {
         let body = indent(
             members_by_descending_size
                 .iter()
-                .map(|member| self.visit(member) + ";")
+                .map(|member| self.visit(member).unwrap() + ";")
                 .collect::<Vec<_>>()
                 .join("\n"),
         );
@@ -1838,7 +1832,7 @@ impl SolidityVisitor {
                     .unwrap()
                     .clone()
                     .into()
-            )
+            )?
         ))
     }
 
@@ -1871,7 +1865,7 @@ impl SolidityVisitor {
                 .clone()
                 .unwrap()
                 .into(),
-        );
+        )?;
         let mut k = ast
             .try_as_state_variable_declaration_ref()
             .unwrap()
@@ -1897,7 +1891,7 @@ impl SolidityVisitor {
                 .unwrap()
                 .clone()
                 .into(),
-        );
+        )?;
         let mut ret = format!("{f}{t} {k}{i}").trim().to_string();
         if let Some(expr) = &ast
             .try_as_state_variable_declaration_ref()
@@ -1905,7 +1899,7 @@ impl SolidityVisitor {
             .borrow()
             .expr
         {
-            ret += &format!(" = {}", self.visit(expr));
+            ret += &format!(" = {}", self.visit(expr)?);
         }
         Ok(ret + ";")
     }
@@ -1943,7 +1937,7 @@ impl SolidityVisitor {
             .borrow()
             .state_variable_declarations
             .iter()
-            .map(|e| self.visit(e))
+            .map(|e| self.visit(e).unwrap())
             .collect::<Vec<_>>(); //[ for e in ast.state_variable_declarations]
         let constructors = ast
             .try_as_contract_definition_ref()
@@ -1951,7 +1945,7 @@ impl SolidityVisitor {
             .borrow()
             .constructor_definitions
             .iter()
-            .map(|e| self.visit(&e.clone().into()))
+            .map(|e| self.visit(&e.clone().into()).unwrap())
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.constructor_definitions]
         let functions = ast
             .try_as_contract_definition_ref()
@@ -1959,7 +1953,7 @@ impl SolidityVisitor {
             .borrow()
             .function_definitions
             .iter()
-            .map(|e| self.visit(&e.clone().into()))
+            .map(|e| self.visit(&e.clone().into()).unwrap())
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.function_definitions]
         let enums = ast
             .try_as_contract_definition_ref()
@@ -1967,7 +1961,7 @@ impl SolidityVisitor {
             .borrow()
             .enum_definitions
             .iter()
-            .map(|e| self.visit(&e.clone().into()))
+            .map(|e| self.visit(&e.clone().into()).unwrap())
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.enum_definitions]
         let structs = ast
             .try_as_contract_definition_ref()
@@ -1975,7 +1969,7 @@ impl SolidityVisitor {
             .borrow()
             .struct_definitions
             .iter()
-            .map(|e| self.visit(&e.clone().into()))
+            .map(|e| self.visit(&e.clone().into()).unwrap())
             .collect::<Vec<_>>(); //[self.visit(e) for e in ast.struct_definitions]
 
         Self::contract_definition_to_str(

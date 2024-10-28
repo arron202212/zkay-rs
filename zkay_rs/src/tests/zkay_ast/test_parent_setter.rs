@@ -22,11 +22,11 @@ mod tests {
         }
     }
     impl AstVisitor for ParentChecker {
-        fn visit(&self, ast: &ASTFlatten) -> Self::Return {
+        fn visit(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
             if !is_instance(ast, ASTType::SourceUnit) {
                 assert!(ast.ast_base_ref().unwrap().borrow().parent().is_some());
             }
-            self._visit_internal(ast);
+            self._visit_internal(ast)
         }
         type Return = ();
         fn temper_result(&self) -> Self::Return {}

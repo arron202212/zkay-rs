@@ -26,7 +26,7 @@ pub trait FunctionVisitor: AstVisitor {
             }
         }
         for def in definitions {
-            self.visit(&def);
+            let _=self.visit(&def);
         }
         Ok(<Self as AstVisitor>::temper_result(self))
     }

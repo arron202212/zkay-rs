@@ -29,13 +29,13 @@ use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn fill_symbol_table(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let mut v = SymbolTableFiller::new(global_vars);
-    v.visit(ast);
+    let _=v.visit(ast);
 }
 
 pub fn link_symbol_table(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let mut v = SymbolTableLinker::new(global_vars);
     v.ast_visitor_base.log = true;
-    v.visit(ast);
+    let _=v.visit(ast);
 }
 
 pub fn link_identifiers(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
@@ -164,7 +164,7 @@ impl SymbolTableFiller {
             .vars()
             .clone();
         for d in &global_defs {
-            self.visit(&d.clone().into());
+            let _=self.visit(&d.clone().into());
         }
         let global_defs = global_defs
             .iter()
@@ -1391,7 +1391,7 @@ impl SymbolTableLinker {
                 .borrow_mut()
                 .parent = Some(ast.clone().downgrade());
 
-            self.visit(t.as_ref().unwrap());
+            let _= self.visit(t.as_ref().unwrap());
 
             // println!("==========target is   none===========");
             //   println!(

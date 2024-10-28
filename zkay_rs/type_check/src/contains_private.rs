@@ -15,7 +15,7 @@ use zkay_derive::ASTVisitorBaseRefImpl;
 
 pub fn contains_private(ast: &ASTFlatten) -> bool {
     let v = ContainsPrivateVisitor::new();
-    v.visit(ast);
+    let _= v.visit(ast);
     let contains_private = *v.contains_private.borrow();
     contains_private
 }

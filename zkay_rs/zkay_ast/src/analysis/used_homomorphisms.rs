@@ -75,7 +75,7 @@ impl UsedHomomorphismsVisitor {
     }
     pub fn visit(&self, ast: &ASTFlatten) -> <Self as AstVisitor>::Return {
         // println!("===visit=======out======={:?}",ast.get_ast_type());
-        let all_homs = <Self as AstVisitor>::visit(self, ast); //TODO super()
+        let all_homs = <Self as AstVisitor>::visit(self, ast).unwrap(); //TODO super()
 
         if is_instance(ast, ASTType::SourceUnit) {
             // println!("===visit=============={:?}",ast.get_ast_type());

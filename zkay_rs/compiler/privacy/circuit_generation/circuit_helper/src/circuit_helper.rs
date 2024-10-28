@@ -48,7 +48,7 @@ use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, Transformer
 use zkay_config::{config::CFG, with_context_block};
 use zkay_crypto::params::CryptoParams;
 
-struct WithCircIndentBlock {
+pub struct WithCircIndentBlock {
     _phi: RcCell<Vec<RcCell<CircuitStatement>>>,
     name: String,
     old_len: usize,
@@ -620,7 +620,7 @@ where
         let ret;
         with_context_block!(var _a=self.circ_indent_block(expr.code())=>{
         //ccnt
-        ret=self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism);
+        ret=self._get_circuit_output_for_private_expression(expr, &new_privacy, &homomorphism);//=priv_expr
         });
 
         // self.circ_indent_block_after(&expr.code(),old_len);
@@ -2501,7 +2501,7 @@ where
                 .evaluate_privately()
         {
             //ccnt
-            self._evaluate_private_expression(expr, "").unwrap()
+            self._evaluate_private_expression(expr, "").unwrap()//=priv_expr
         } else {
             //For public expressions which should not be evaluated in private, only the result is moved into the circuit
             println!(
@@ -2802,14 +2802,19 @@ where
             "====_circ_trafo====_evaluate_private_expression===*****====expr=={expr}===={:?}==",
             expr.get_ast_type()
         );
-        // self._circ_trafo.as_ref().unwrap().set_is_callback(true);///ccnt
+        self._circ_trafo.as_ref().unwrap().set_is_callback(true);//ccnt
         let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         self._circ_trafo.as_ref().unwrap().set_is_callback(false);
         println!(
-            "===========priv_expr==*******************======{}======={:?}",
+            "={expr}==={:?}======priv_expr==*******************======{}======={:?}",
+            expr.get_ast_type(),
             priv_expr.as_ref().unwrap(),
             priv_expr.as_ref().unwrap().get_ast_type()
         );
+        // if priv_expr.as_ref().unwrap().code()=="(uint192(unhom(c_count)) << 128) | (uint192(unhom(b_count)) << 64) | uint192(unhom(a_count))"||priv_expr.as_ref().unwrap().code()=="(uint192(secret0_plain_c_count) << 128) | (uint192(secret2_plain_b_count) << 64) | uint192(secret4_plain_a_count)"{
+        // panic!("===================");
+        // }
+        
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory.base_name_factory.get_new_name(

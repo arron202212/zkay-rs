@@ -94,6 +94,12 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
             _ => Err(eyre::eyre!("unreach")),
         }
     }
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+            let mut ast = ast.clone();
+            ast.process_children_callback(|a| self.visit(a));
+            Ok(ast)
+
+    }
 }
 impl ZkayVarDeclTransformer {
     pub fn new(global_vars: RcCell<GlobalVars>) -> Self {
@@ -397,6 +403,12 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
             _ => Err(eyre::eyre!("unreach")),
         }
     }
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+            let mut ast = ast.clone();
+            ast.process_children_callback(|a| self.visit(a));
+            Ok(ast)
+
+    }
 }
 impl ZkayStatementTransformer {
     // pub fn __init__(&self, current_gen: CircuitHelper)
@@ -440,7 +452,7 @@ impl ZkayStatementTransformer {
         {
             let old_code = ASTFlatten::from(stmt.clone()).code();
             //
-            let transformed_stmt = self.visit(&stmt.clone().into());
+            let transformed_stmt = self.visit(&stmt.clone().into());//=priv_expr
 
             if transformed_stmt.is_none() {
                 continue;
@@ -616,7 +628,7 @@ impl ZkayStatementTransformer {
                 .rhs()
                 .as_ref()
                 .unwrap(),
-        );
+        );//=priv_expr
         // println!("======rhs==============={}====",rhs.as_ref().unwrap());
         if ast.is_assignment_statement() {
             ast.try_as_assignment_statement_ref()
@@ -1452,6 +1464,12 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
             _ => Err(eyre::eyre!("unreach")),
         }
     }
+    fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
+            let mut ast = ast.clone();
+            ast.process_children_callback(|a| self.visit(a));
+            Ok(ast)
+
+    }
 }
 impl ZkayExpressionTransformer {
     pub fn new(
@@ -1610,7 +1628,7 @@ impl ZkayExpressionTransformer {
                     .borrow()
                     .homomorphism,
             )
-            .ok_or(eyre::eyre!("unexpected"));
+            .ok_or(eyre::eyre!("unexpected"));//=priv_expr
         if ast.is_expression() && res.as_ref().unwrap().is_expression() {
             let a = res
                 .as_ref()
@@ -2217,7 +2235,7 @@ impl ZkayExpressionTransformer {
                 )
                 .ok_or(eyre::eyre!("unexpected"))
         } else {
-            // ccnt
+            // ccnt  //=priv_expr
             self.visit_children(ast)
         }
     }
@@ -2335,15 +2353,15 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
         }
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        if *self.is_callback.borrow() {
+        // if *self.is_callback.borrow() {
             let mut ast = ast.clone();
             ast.process_children_callback(|a| self.visit(a));
-            return Ok(ast);
-        }
-        for c in ast.children() {
-            self.visit(&c);
-        }
-        Ok(ast.clone())
+             Ok(ast)
+        // }
+        // for c in ast.children() {
+        //     self.visit(&c);
+        // }
+        // Ok(ast.clone())
     }
 }
 impl ZkayCircuitTransformer {

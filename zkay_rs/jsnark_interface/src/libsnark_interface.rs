@@ -18,8 +18,6 @@ lazy_static! {
     static ref proving_scheme_map: HashMap<&'static str, i32> =
         HashMap::from([("pghr13", 0), ("groth16", 1), ("gm17", 2)]);
 }
-
-pub fn generate_keys(input_dir: &str, output_dir: &str, proving_scheme: &str)
 // """
 // Generate prover and verification keys for the circuit in output_dir with the specified proving_scheme.
 
@@ -29,6 +27,8 @@ pub fn generate_keys(input_dir: &str, output_dir: &str, proving_scheme: &str)
 // :raise SubprocessError: if key generation fails
 // :raise KeyError: if proving scheme name is invalid
 // """
+pub fn generate_keys(input_dir: &str, output_dir: &str, proving_scheme: &str)
+
 {
     run_command(
         vec![

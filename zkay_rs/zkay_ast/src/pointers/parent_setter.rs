@@ -77,7 +77,7 @@ impl AstVisitor for ParentSetterVisitor {
             //     );
             // if ast.get_ast_type()==ASTType::Block &&   c.get_ast_type()==ASTType::StatementListBase{//stack overflow TODO
             // continue}
-            self.visit(&c); //stack overflow TODO
+            let _=self.visit(&c); //stack overflow TODO
         }
         Ok(())
     }
@@ -442,10 +442,10 @@ impl ExpressionToStatementVisitor {
 pub fn set_parents(ast: &ASTFlatten) {
     let v = ParentSetterVisitor::new();
     //  println!("=======set_parents======0==1====");
-    v.visit(ast);
+    let _=v.visit(ast);
     // println!("=======set_parents========1====");
     let v = ExpressionToStatementVisitor::new();
     //   println!("=======set_parents=====3===1====");
-    v.visit(ast);
+    let _=v.visit(ast);
     //  println!("=======set_parents====2====1====");
 }

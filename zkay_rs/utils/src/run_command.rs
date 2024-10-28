@@ -59,13 +59,14 @@ pub fn run_commands(
         //run
         //  let process1 = Command::new(cmd[0].clone());
         // println!("====get_program========={:?}",process1.get_program());
+
         let process = Command::new(cmd[0].clone())
             .args(&cmd[1..])
             .current_dir(cwd.clone())
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
-            .expect("spawn")
+            .expect(format!("{cmd:?}"))
             .wait_with_output()
             .expect("wait_with_output");
 
@@ -78,11 +79,12 @@ pub fn run_commands(
 
     //check for error
     if !process.status.success() {
+        println!("===cmd======={cmd:?}");
         let cmd = get_command(cmd);
         // raise subprocess.SubprocessError(msg)
         panic!(
-            "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{output:?}\n{error:?}",
-            process.status
+            "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{:?}\n{:?}",
+            process.status,String::from_utf8(output),String::from_utf8(error)
         );
     } else if CFG.lock().unwrap().user_config.verbosity() >= 2 {
         print!("Ran command {}:\n\n{output:?}\n{error:?}", get_command(cmd));

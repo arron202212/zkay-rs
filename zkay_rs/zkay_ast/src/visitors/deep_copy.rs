@@ -35,7 +35,7 @@ pub fn deep_copy(
 ) -> Option<ASTFlatten> {
     // assert!(matches!(ast.to_ast(), AST(_)));
     let v = DeepCopyVisitor::new(with_types, with_analysis, global_vars.clone());
-    let mut ast_copy = v.visit(ast);
+    let mut ast_copy = v.visit(ast).unwrap();
     let parent = ast.ast_base_ref().unwrap().borrow().parent().clone();
     ast_copy
         .as_ref()
@@ -405,7 +405,7 @@ impl DeepCopyVisitor {
             | ArgType::ASTFlattenWeak(_) => field.clone(),
             ArgType::Vec(v) => ArgType::Vec(v.iter().map(|a| self.copy_field(a)).collect()),
             ArgType::ASTFlatten(astf) => {
-                ArgType::ASTFlatten(astf.as_ref().and_then(|_astf| self.visit(_astf)))
+                ArgType::ASTFlatten(astf.as_ref().and_then(|_astf| self.visit(_astf).unwrap()))
             }
         }
     }

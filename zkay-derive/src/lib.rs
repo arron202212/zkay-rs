@@ -70,7 +70,7 @@ pub fn derive_ast_flatten_impl(item: TokenStream) -> TokenStream {
 impl {struct_name} {{
  pub fn code(&self) -> String {{
         let v = CodeVisitorBase::new(true);
-        v.visit(&RcCell::new(self.clone()).into())
+        v.visit(&RcCell::new(self.clone()).into()).unwrap_or(String::new())
     }}
 }}
 

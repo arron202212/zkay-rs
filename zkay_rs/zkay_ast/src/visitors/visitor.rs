@@ -44,10 +44,10 @@ impl<T: AstVisitorBaseRef> AstVisitorBaseProperty for T {
 }
 pub trait AstVisitor: AstVisitorBaseProperty {
     type Return;
-    fn visit(&self, ast: &ASTFlatten) -> Self::Return {
+    fn visit(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return>{
         //     if ast.get_ast_type()==ASTType::SourceUnit
         //    { // println!("==AstVisitor=====visit======{:?}",ast.get_ast_type());}
-        let res = self._visit_internal(ast).unwrap();
+        let res = self._visit_internal(ast);
         // println!("==AstVisitor=====visit======{:?}",ast.get_ast_type());
         //   // println!("==AstVisitor=====visit===return=={:?}={:?}",ast.to_string(),ast.get_ast_type());
         res
@@ -56,46 +56,46 @@ pub trait AstVisitor: AstVisitorBaseProperty {
     fn has_attr(&self, name: &ASTType, ast: &AST) -> bool;
     fn get_attr(&self, name: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return>;
     fn temper_result(&self) -> Self::Return;
-    fn _visit_internal(&self, ast: &ASTFlatten) -> Option<Self::Return> {
+    fn _visit_internal(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         if self.log() {
             // std::any::type_name::<Option<String>>(),
             // print!("Visiting {:?}", ast);
         }
-        let mut ret = None;
-        let mut ret_children = None;
+        let mut ret = Err(eyre::eyre!("None"));
+        let mut ret_children = Err(eyre::eyre!("None"));
 
         if self.traversal() == "post" {
             // println!("===post={:?}==",ast.get_ast_type());
-            ret_children = self.visit_children(ast).ok();
+            ret_children = self.visit_children(ast);
         }
         // println!("==before=get_visit_function={:?}==",ast.get_ast_type());
         let f = self.get_visit_function(&ast.get_ast_type(), ast);
         // println!("===get_visit_function={:?}==",ast.get_ast_type());
-        if f.is_some() {
+        if f.is_ok() {
             ret = f;
         } else if self.traversal() == "node-or-children" {
-            ret_children = self.visit_children(ast).ok();
+            ret_children = self.visit_children(ast);
         }
         // println!("=555==get_visit_function={:?}==",ast.get_ast_type());
         if self.traversal() == "pre" {
-            ret_children = self.visit_children(ast).ok();
+            ret_children = self.visit_children(ast);
         }
         // println!("=555=666=get_visit_function={:?}==",ast.get_ast_type());
-        if ret.is_some() {
+        if ret.is_ok() {
             // println!("=555=666 ======1===get_visit_function={:?}==",ast.get_ast_type());
             // Some(ret)
             ret
-        } else if ret_children.is_some() {
+        } else if ret_children.is_ok() {
             // println!("=555=666 =======2==get_visit_function={:?}==",ast.get_ast_type());
             ret_children
         } else {
             // println!("=555=666 ======3===get_visit_function={:?}==",ast.get_ast_type());
             // panic!("--_visit_internal---");
-            None
+            Err(eyre::eyre!("None"))
         }
     }
 
-    fn get_visit_function(&self, c: &ASTType, ast: &ASTFlatten) -> Option<Self::Return> {
+    fn get_visit_function(&self, c: &ASTType, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         // if ast.get_ast_type() == ASTType::StatementListBase {
         //     if ast.is_statement_list_base() {
         //         println!(
@@ -153,24 +153,26 @@ pub trait AstVisitor: AstVisitorBaseProperty {
 
         if self.has_attr(c, &ast.to_ast()) {
             // println!("==========aaaaaa=============={:?},{:?}",ast.get_ast_type(),c);
-            return self.get_attr(c, ast).ok();
-        } else if let Some(_c) = AST::bases(c) {
+            return self.get_attr(c, ast);
+        } 
+        if let Some(_c) = AST::bases(c) {
             // println!("======bbbbb=================={:?},{:?}",ast.get_ast_type(),c);
             return self.get_visit_function(&_c, ast);
         }
         // println!("==========none=====end========={:?},{:?}",ast.get_ast_type(),c);
-        None
+        Err(eyre::eyre!("None"))
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         // println!("====={:?}=========visit_children=========begin====",ast.get_ast_type());
-        let mut ret = self.temper_result();
+        // let mut ret = self.temper_result();
         for c in ast.children() {
-            // if self.log() {
-            // println!("=========={:?}====visit_children====ddddd==={:?}======",ast.get_ast_type(),c.get_ast_type());
-            // }
-            ret = self.visit(&c);
+            if self.log() {
+                if c.to_string().contains("secret0_plain_votum")
+           { println!("=========={:?}====visit_children====%%%%%%%%%%%%==={:?}===",ast.get_ast_type(),c.get_ast_type());}
+            }
+             let _=self.visit(&c);
         }
         // println!("====={:?}=========visit_children=========end====",ast.get_ast_type());
-        Ok(ret)
+        Err(eyre::eyre!("None"))
     }
 }
