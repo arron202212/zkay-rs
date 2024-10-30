@@ -24,7 +24,7 @@ pub fn check_loops(ast: &ASTFlatten) {
     // Checks if loops don't contain private expressions
     // """
     let mut v = LoopChecker::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 
 // class LoopChecker(FunctionVisitor)

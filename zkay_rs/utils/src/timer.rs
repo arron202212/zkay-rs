@@ -12,18 +12,43 @@ use my_logging::logger;
 use std::time::{Duration, Instant};
 use zkay_config::config::CFG;
 use zkay_config::zk_print;
-// @contextlib.contextmanager
-pub fn time_measure(key: &str, should_print: bool, skip: bool) {
-    let start = Instant::now();
-    // yield
-    let elapsed = start.elapsed();
 
-    if !skip {
-        if should_print {
-            zk_print!("Took {} s", elapsed.as_secs());
+pub struct WithTimeMeasure {
+    key: String,
+    should_print: bool,
+    skip: bool,
+    start: Instant,
+}
+impl WithTimeMeasure {
+    pub fn new(key: String, should_print: bool, skip: bool) -> Self {
+        let start = Instant::now();
+        Self {
+            key,
+            should_print,
+            skip,
+            start,
         }
-        logger::data(&("time_".to_owned() + key), &elapsed.as_secs().to_string());
     }
+}
+impl Drop for WithTimeMeasure {
+    fn drop(&mut self) {
+        let elapsed = self.start.elapsed();
+
+        if !self.skip {
+            if self.should_print {
+                zk_print!("Took {} s", elapsed.as_secs());
+            }
+            logger::data(
+                &("time_".to_owned() + &self.key),
+                &elapsed.as_secs().to_string(),
+            );
+        }
+    }
+}
+// @contextlib.contextmanager
+pub fn time_measure(key: &str, should_print: bool, skip: bool) -> WithTimeMeasure {
+    // yield
+    WithTimeMeasure::new(key.to_owned(), should_print, skip)
 }
 
 pub struct Timer {

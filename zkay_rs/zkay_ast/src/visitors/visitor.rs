@@ -44,7 +44,7 @@ impl<T: AstVisitorBaseRef> AstVisitorBaseProperty for T {
 }
 pub trait AstVisitor: AstVisitorBaseProperty {
     type Return;
-    fn visit(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return>{
+    fn visit(&self, ast: &ASTFlatten) -> eyre::Result<Self::Return> {
         //     if ast.get_ast_type()==ASTType::SourceUnit
         //    { // println!("==AstVisitor=====visit======{:?}",ast.get_ast_type());}
         let res = self._visit_internal(ast);
@@ -154,7 +154,7 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         if self.has_attr(c, &ast.to_ast()) {
             // println!("==========aaaaaa=============={:?},{:?}",ast.get_ast_type(),c);
             return self.get_attr(c, ast);
-        } 
+        }
         if let Some(_c) = AST::bases(c) {
             // println!("======bbbbb=================={:?},{:?}",ast.get_ast_type(),c);
             return self.get_visit_function(&_c, ast);
@@ -166,11 +166,12 @@ pub trait AstVisitor: AstVisitorBaseProperty {
         // println!("====={:?}=========visit_children=========begin====",ast.get_ast_type());
         // let mut ret = self.temper_result();
         for c in ast.children() {
-            if self.log() {
-                if c.to_string().contains("secret0_plain_votum")
-           { println!("=========={:?}====visit_children====%%%%%%%%%%%%==={:?}===",ast.get_ast_type(),c.get_ast_type());}
-            }
-             let _=self.visit(&c);
+            //     if self.log() {
+            //         if c.to_string().contains("secret0_plain_votum")
+            //    {
+            //         println!("=========={:?}====visit_children====%%%%%%%%%%%%==={:?}===",ast.get_ast_type(),c.get_ast_type());}
+            //     }
+            let _ = self.visit(&c);
         }
         // println!("====={:?}=========visit_children=========end====",ast.get_ast_type());
         Err(eyre::eyre!("None"))

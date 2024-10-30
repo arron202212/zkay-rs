@@ -13,7 +13,7 @@ use crate::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as
 use circuit_helper::circuit_helper::CircuitHelper;
 use privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
 use zkay_utils::multiline_formatter::MultiLineFormatter;
-
+use zkp_u256::{Zero, U256};
 pub struct VerifyingKey<G1: Default, G2: Default> {
     a: G1,
     b: G2,
@@ -98,7 +98,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
         let zk_out_name = CFG.lock().unwrap().zk_out_name();
         let out_size_trans = circuit.borrow().out_size_trans();
         let verification_function_name = CFG.lock().unwrap().verification_function_name();
-
+        let bn128_scalar_field_value: U256 = BN128_SCALAR_FIELD.clone();
         // println!("===ddddd====={}",line!());
         let x = MultiLineFormatter::new("").mul(format!(r#"
         pragma solidity {zkay_solc_version_compatibility};
@@ -110,7 +110,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
             using Pairing for G2;
 
             bytes32 public constant {prover_key_hash_name} = 0x{prover_key_hash};
-            uint256 constant {snark_scalar_field_var_name} = {BN128_SCALAR_FIELD:?};
+            uint256 constant {snark_scalar_field_var_name} = {bn128_scalar_field_value};
 
             struct Proof {{
                 G1 a;

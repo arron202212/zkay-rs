@@ -47,14 +47,14 @@ lazy_static! {
 pub trait CircuitGenerator {
     fn _generate_zkcircuit(&self, import_keys: bool, circuit: &RcCell<CircuitHelper>) -> bool;
     fn _generate_keys(&self, circuit: &RcCell<CircuitHelper>);
-    fn get_vk_and_pk_filenames() -> Vec<String>;
+    fn get_vk_and_pk_filenames(&self) -> Vec<String>;
     fn _parse_verification_key(&self, circuit: &RcCell<CircuitHelper>) -> Option<VerifyingKeyType>;
     fn _get_prover_key_hash(&self, circuit: &RcCell<CircuitHelper>) -> Vec<u8>;
     fn _get_primary_inputs(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String>;
     fn base(&self) -> &CircuitGeneratorBase;
     fn generate_circuits(&self, import_keys: bool) {
         let _c_count = self.base().circuits_to_prove.len();
-        zk_print!("Compiling {} circuits...", c_count.lock().unwrap());
+        zk_print!("Compiling {_c_count} circuits...");
 
         let gen_circs = |circuit: &RcCell<CircuitHelper>| -> bool {
             self._generate_zkcircuit(import_keys, circuit)
@@ -94,10 +94,7 @@ pub trait CircuitGenerator {
                 })
                 .collect();
             //Generate keys in parallel
-            zk_print!(
-                "Generating keys for {} circuits...",
-                c_count.lock().unwrap()
-            );
+            zk_print!("Generating keys for {_c_count} circuits...",);
             time_measure("key_generation", true, false);
             {
                 if self.base().parallel_keygen && !is_unit_test {
@@ -156,7 +153,7 @@ pub trait CircuitGenerator {
                                 .as_bytes(),
                             );
                         } else {
-                            panic!("==ProvingSchemeGroth16===else=={}", line!());
+                            panic!("==ProvingSchemeGroth16=================else=={}", line!());
                         }
                     }
                     "gm17" => {
@@ -237,7 +234,7 @@ pub trait CircuitGenerator {
     // """Return a tuple which contains the paths to the verification and prover key files."""
     fn _get_vk_and_pk_paths(&self, circuit: &RcCell<CircuitHelper>) -> Vec<String> {
         let output_dir = self._get_circuit_output_dir(circuit);
-        Self::get_vk_and_pk_filenames()
+        self.get_vk_and_pk_filenames()
             .iter()
             .map(|fname| {
                 PathBuf::from(&output_dir)
@@ -570,7 +567,8 @@ impl CircuitGenerator for CircuitGeneratorBase {
 
     // @classmethod
     // @abstractmethod
-    fn get_vk_and_pk_filenames() -> Vec<String> {
+    fn get_vk_and_pk_filenames(&self) -> Vec<String> {
+        println!("===========get_vk_and_pk_filenames================");
         vec![]
     }
     // pass

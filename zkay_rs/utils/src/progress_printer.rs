@@ -3,11 +3,24 @@
 // from typing import ContextManager
 
 use zkay_config::{config::CFG, zk_print};
+
+pub struct WithPrintStep;
+impl WithPrintStep {
+    pub fn new(name: &str) -> Self {
+        zk_print!("{name}... ");
+        Self
+    }
+}
+impl Drop for WithPrintStep {
+    fn drop(&mut self) {
+        zk_print!("done");
+    }
+}
+
 // @contextlib.contextmanager
-pub fn print_step(name: &str) {
-    zk_print!("{name}... ");
+pub fn print_step(name: &str) -> WithPrintStep {
     // yield
-    zk_print!("done");
+    WithPrintStep::new(name)
 }
 
 pub enum TermColor {
@@ -35,19 +48,33 @@ impl TermColor {
     }
 }
 
+pub struct WithColoredPrint;
+impl WithColoredPrint {
+    pub fn new(color: TermColor) -> Self {
+        print!("{},''", color.value());
+        Self
+    }
+}
+impl Drop for WithColoredPrint {
+    fn drop(&mut self) {
+        print!("{},''", TermColor::ENDC.value());
+    }
+}
+
 // @contextlib.contextmanager
-pub fn colored_print(color: TermColor) {
-    print!("{},''", color.value());
+pub fn colored_print(color: TermColor) -> WithColoredPrint {
     // yield
-    print!("{},''", TermColor::ENDC.value());
+    WithColoredPrint::new(color)
 }
 
-// def fail_print() -> ContextManager:
-//     return colored_print(TermColor.FAIL)
-
-pub fn warn_print() {
-    colored_print(TermColor::WARNING);
+pub fn fail_print() -> WithColoredPrint {
+    colored_print(TermColor::FAIL)
 }
 
-// def success_print() -> ContextManager:
-//     return colored_print(TermColor.OKGREEN)
+pub fn warn_print() -> WithColoredPrint {
+    colored_print(TermColor::WARNING)
+}
+
+pub fn success_print() -> WithColoredPrint {
+    colored_print(TermColor::OKGREEN)
+}

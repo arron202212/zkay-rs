@@ -39,7 +39,7 @@ pub fn type_check(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     // println!("==========type_check=====================");
     check_final(ast);
     let v = TypeCheckVisitor::new(global_vars);
-    let _=v.visit(&ast);
+    let _ = v.visit(&ast);
 }
 
 // class TypeCheckVisitor(AstVisitor)

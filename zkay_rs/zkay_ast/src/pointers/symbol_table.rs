@@ -29,13 +29,13 @@ use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn fill_symbol_table(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let mut v = SymbolTableFiller::new(global_vars);
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 
 pub fn link_symbol_table(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let mut v = SymbolTableLinker::new(global_vars);
     v.ast_visitor_base.log = true;
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 
 pub fn link_identifiers(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
@@ -164,7 +164,7 @@ impl SymbolTableFiller {
             .vars()
             .clone();
         for d in &global_defs {
-            let _=self.visit(&d.clone().into());
+            let _ = self.visit(&d.clone().into());
         }
         let global_defs = global_defs
             .iter()
@@ -676,12 +676,12 @@ impl SymbolTableLinker {
                 //             .unwrap()
                 //     );
                 // }
-                println!(
-                    "==={}==========_ancestor===={:?}=========={:?}=",
-                    name,
-                    _ancestor.get_ast_type(),
-                    _ancestor.ast_base_ref().unwrap().borrow().names().len()
-                );
+                // println!(
+                //     "==={}==========_ancestor===={:?}=========={:?}=",
+                //     name,
+                //     _ancestor.get_ast_type(),
+                //     _ancestor.ast_base_ref().unwrap().borrow().names().len()
+                // );
             }
             if let Some(nameo) = _ancestor.ast_base_ref().unwrap().borrow().names().get(name) {
                 // println!("==nameo===name======={name}");
@@ -815,15 +815,15 @@ impl SymbolTableLinker {
                         .unwrap()
                         .is_parent_of(ast)
                 {
-                    if ast.code() == "secret0_plain_votum" {
-                        println!(
-                            "===_find_next_decl======return ==={:?}===",
-                            decl.as_ref()
-                                .and_then(|d| d.clone().upgrade())
-                                .unwrap()
-                                .get_ast_type()
-                        );
-                    }
+                    // if ast.code() == "secret0_plain_votum" {
+                    //     println!(
+                    //         "===_find_next_decl======return ==={:?}===",
+                    //         decl.as_ref()
+                    //             .and_then(|d| d.clone().upgrade())
+                    //             .unwrap()
+                    //             .get_ast_type()
+                    //     );
+                    // }
                     return Ok((
                         ancestor.unwrap().upgrade().unwrap(),
                         decl.unwrap().upgrade().unwrap(),
@@ -1391,7 +1391,7 @@ impl SymbolTableLinker {
                 .borrow_mut()
                 .parent = Some(ast.clone().downgrade());
 
-            let _= self.visit(t.as_ref().unwrap());
+            let _ = self.visit(t.as_ref().unwrap());
 
             // println!("==========target is   none===========");
             //   println!(

@@ -29,13 +29,13 @@ pub fn check_circuit_compliance(ast: &ASTFlatten) {
     // determines for every function whether it can be used inside a circuit
     // """
     let mut v = DirectCanBePrivateDetector::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 
     let mut v = IndirectCanBePrivateDetector::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 
     let mut v = CircuitComplianceChecker::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 
     check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(ast)
 }
@@ -249,7 +249,7 @@ impl DirectCanBePrivateDetector {
             .unwrap()
             .args()
         {
-            let _= self.visit(arg);
+            let _ = self.visit(arg);
         }
         Ok(())
     }
@@ -327,7 +327,7 @@ impl DirectCanBePrivateDetector {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("=visitReclassifyExpr========={:?}",ast);
-        let _= self.visit(
+        let _ = self.visit(
             ast.to_ast()
                 .try_as_expression_ref()
                 .unwrap()
@@ -685,7 +685,7 @@ impl CircuitComplianceChecker {
         } else {
             self.priv_setter.borrow_mut().set_evaluation(ast, true);
         }
-        let _= self.visit(
+        let _ = self.visit(
             ast.to_ast()
                 .try_as_expression_ref()
                 .unwrap()
@@ -928,7 +928,7 @@ impl PrivateSetter {
     }
     pub fn set_evaluation(&self, ast: &ASTFlatten, evaluate_privately: bool) {
         *self.evaluate_privately.borrow_mut() = Some(evaluate_privately);
-        let _= self.visit(ast);
+        let _ = self.visit(ast);
         *self.evaluate_privately.borrow_mut() = None;
     }
 
@@ -1036,7 +1036,7 @@ impl PrivateSetter {
 pub fn check_for_nonstatic_function_calls_or_not_circuit_inlineable_in_private_exprs(
     ast: &ASTFlatten,
 ) {
-    let _= NonstaticOrIncompatibilityDetector::new().visit(ast);
+    let _ = NonstaticOrIncompatibilityDetector::new().visit(ast);
 }
 
 // class NonstaticOrIncompatibilityDetector(FunctionVisitor)

@@ -6794,7 +6794,7 @@ impl FullArgsSpecInit for RehomExpr {
 }
 impl RehomExpr {
     pub fn new(expr: ASTFlatten, homomorphism: Option<String>) -> Self {
-        println!("==RehomExpr=====new========{expr}");
+        // println!("==RehomExpr=====new========{expr}");
         // assert!( expr.to_string()!="c_count");
 
         Self {
@@ -7093,13 +7093,10 @@ impl HybridArgumentIdf {
             None,
         )
         .as_type(&self.t.clone().into());
-        if parent.is_none(){
-            println!("==get_idf_expr====else=={}",self);
-        }
-        ie.ast_base_ref()
-            .unwrap()
-            .borrow_mut()
-            .parent = parent.map(|p| p.clone().downgrade());
+        // if parent.is_none(){
+        //     println!("==get_idf_expr====else=={}",self);
+        // }
+        ie.ast_base_ref().unwrap().borrow_mut().parent = parent.map(|p| p.clone().downgrade());
 
         ie.try_as_ast_ref()
             .unwrap()
@@ -7110,14 +7107,14 @@ impl HybridArgumentIdf {
             .statement = parent.as_ref().and_then(|&p| {
             if is_instance(p, ASTType::StatementBase) {
                 Some(p.clone().downgrade())
-            }else if is_instance(p, ASTType::ExpressionBase) {
+            } else if is_instance(p, ASTType::ExpressionBase) {
                 p.try_as_expression_ref()
                     .unwrap()
                     .borrow()
                     .statement()
                     .clone()
             } else {
-                println!("===statement====else=parent====type====={:?}=====",p);
+                println!("===statement====else=parent====type====={:?}=====", p);
                 // panic!("===statement====else=parent====type====={:?}=====",p);
                 None
             }
@@ -14793,7 +14790,6 @@ impl CodeVisitor for CodeVisitorBase {
     }
 }
 
-
 impl CodeVisitorBase {
     fn visit_list(
         &self,
@@ -14965,15 +14961,36 @@ impl CodeVisitorBase {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visit_PrimitiveCastExpr==={:?}=====",ast);
-    
-            if ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_primitive_cast_expr_ref()
-                .unwrap()
-                .is_implicit
-            {
+
+        if ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_primitive_cast_expr_ref()
+            .unwrap()
+            .is_implicit
+        {
+            self.visit(
+                &ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .expr,
+            )
+        } else {
+            self.visit(
+                &ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .elem_type
+                    .clone()
+                    .into(),
+            )
+            .ok()
+            .zip(
                 self.visit(
                     &ast.to_ast()
                         .try_as_expression_ref()
@@ -14982,28 +14999,11 @@ impl CodeVisitorBase {
                         .unwrap()
                         .expr,
                 )
-            } else {
-                 self.visit(
-                        &ast.to_ast()
-                            .try_as_expression_ref()
-                            .unwrap()
-                            .try_as_primitive_cast_expr_ref()
-                            .unwrap()
-                            .elem_type
-                            .clone()
-                            .into()
-                    ).ok().zip(self.visit(
-                        &ast.to_ast()
-                            .try_as_expression_ref()
-                            .unwrap()
-                            .try_as_primitive_cast_expr_ref()
-                            .unwrap()
-                            .expr
-                    ).ok()).map(|(elem_type,expr)|format!(
-                    "{elem_type}({expr})")
-                    ).ok_or(eyre::eyre!("None"))
-            }
-        
+                .ok(),
+            )
+            .map(|(elem_type, expr)| format!("{elem_type}({expr})"))
+            .ok_or(eyre::eyre!("None"))
+        }
     }
 
     pub fn visit_BooleanLiteralExpr(
@@ -15163,29 +15163,33 @@ impl CodeVisitorBase {
             .try_as_member_access_expr_ref()
             .unwrap()
             .clone();
-        self.visit(&mae.expr.as_ref().unwrap().clone().into()).ok().zip(self.visit(&mae.member.clone().into()).ok()).map(|(expr,member)|format!(
-            "{expr}.{member}")
-        ).ok_or(eyre::eyre!("None"))
+        self.visit(&mae.expr.as_ref().unwrap().clone().into())
+            .ok()
+            .zip(self.visit(&mae.member.clone().into()).ok())
+            .map(|(expr, member)| format!("{expr}.{member}"))
+            .ok_or(eyre::eyre!("None"))
     }
 
     pub fn visit_IndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // //println!("=======visit_IndexExpr================={:?}",ast);
         self.visit(
-                &ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_index_expr_ref()
-                    .unwrap()
-                    .arr
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .into()
-            ).ok().zip(
+            &ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_index_expr_ref()
+                .unwrap()
+                .arr
+                .as_ref()
+                .unwrap()
+                .clone()
+                .into(),
+        )
+        .ok()
+        .zip(
             self.visit(
                 &ast.to_ast()
                     .try_as_expression_ref()
@@ -15196,11 +15200,12 @@ impl CodeVisitorBase {
                     .unwrap()
                     .try_as_index_expr_ref()
                     .unwrap()
-                    .key
-            ).ok()).map(|(arr,key)|format!(
-            "{arr}[{key}]",
-        )).ok_or(eyre::eyre!("None"))
-        
+                    .key,
+            )
+            .ok(),
+        )
+        .map(|(arr, key)| format!("{arr}[{key}]",))
+        .ok_or(eyre::eyre!("None"))
     }
 
     pub fn visit_AllExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -15483,7 +15488,8 @@ impl CodeVisitorBase {
                 .try_as_expression_statement_ref()
                 .unwrap()
                 .expr,
-        ).map(|expr|expr+ ";") 
+        )
+        .map(|expr| expr + ";")
     }
 
     pub fn visit_RequireStatement(
@@ -16190,12 +16196,11 @@ impl CodeVisitorBase {
     }
 
     pub fn visit_EnumValue(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-            if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf() {
-                // println!("==visit_EnumValue=========={}====",idf.borrow().name());
-                return self.visit(&idf.clone().into())
-            } 
-                Ok(String::new())
-            
+        if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf() {
+            // println!("==visit_EnumValue=========={}====",idf.borrow().name());
+            return self.visit(&idf.clone().into());
+        }
+        Ok(String::new())
     }
 
     pub fn visit_EnumDefinition(
@@ -16461,7 +16466,6 @@ impl CodeVisitorBase {
         )
     }
 }
-
 
 // impl CodeVisitorBase {
 //     fn visit_list(

@@ -24,7 +24,7 @@ use zkay_config::with_context_block;
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn alias_analysis(ast: &ASTFlatten, global_vars: RcCell<GlobalVars>) {
     let v = AliasAnalysisVisitor::new(false, global_vars);
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 }
 #[derive(ASTVisitorBaseRefImpl)]
 struct AliasAnalysisVisitor {
@@ -180,7 +180,7 @@ impl AliasAnalysisVisitor {
             .borrow_mut()
             .statement_base_mut_ref()
             .before_analysis = Some(s);
-        let _= self.visit(
+        let _ = self.visit(
             &ast.try_as_constructor_or_function_definition_ref()
                 .unwrap()
                 .borrow()
@@ -211,7 +211,7 @@ impl AliasAnalysisVisitor {
                 .unwrap()
                 .before_analysis = Some(last.clone());
             // print!("before  {:?},{:?}", statement, last);
-            let _= self.visit(statement);
+            let _ = self.visit(statement);
             last = statement
                 .to_ast()
                 .try_as_statement_ref()
@@ -405,7 +405,7 @@ impl AliasAnalysisVisitor {
             .statement_list_base
             .statement_base
             .before_analysis = Some(before_then);
-        let _= self.visit(
+        let _ = self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
@@ -476,7 +476,7 @@ impl AliasAnalysisVisitor {
                         .unwrap(),
                 ),
             );
-            let _= self.visit(
+            let _ = self.visit(
                 &ast.to_ast()
                     .try_as_statement_ref()
                     .unwrap()
@@ -571,7 +571,7 @@ impl AliasAnalysisVisitor {
             &ws.condition,
             ws.statement_base.before_analysis.as_ref().unwrap(),
         ));
-        let _= self.visit(&ws.body.clone().into());
+        let _ = self.visit(&ws.body.clone().into());
 
         // Either no loop iteration or at least one loop iteration
         let skip_loop = self.cond_analyzer.analyze(
@@ -662,7 +662,7 @@ impl AliasAnalysisVisitor {
             .statement_list_base
             .statement_base
             .before_analysis = dws.statement_base.before_analysis.clone();
-        let _= self.visit(&dws.body.clone().into());
+        let _ = self.visit(&dws.body.clone().into());
 
         // ast.before_analysis is only used by expressions inside condition -> body has already happened at that point
         ast.try_as_ast_ref()
@@ -764,7 +764,7 @@ impl AliasAnalysisVisitor {
                 .borrow_mut()
                 .statement_base_mut_ref()
                 .before_analysis = Some(last.clone());
-            let _= self.visit(
+            let _ = self.visit(
                 &ast.to_ast()
                     .try_as_statement_ref()
                     .unwrap()
@@ -888,7 +888,7 @@ impl AliasAnalysisVisitor {
                     .unwrap(),
             ),
         );
-        let _= self.visit(
+        let _ = self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
@@ -919,7 +919,7 @@ impl AliasAnalysisVisitor {
                 .statement_base
                 .after_analysis
                 .clone();
-            let _= self.visit(&update.clone().into());
+            let _ = self.visit(&update.clone().into());
         }
 
         let skip_loop = self.cond_analyzer.analyze(
@@ -1082,7 +1082,7 @@ impl AliasAnalysisVisitor {
 
         // visit expression
         if let Some(e) = e {
-            let _= self.visit(e);
+            let _ = self.visit(e);
         }
 
         // state after declaration
@@ -1202,7 +1202,7 @@ impl AliasAnalysisVisitor {
             );
         }
 
-        let _= self.visit(
+        let _ = self.visit(
             &ast.try_as_ast_ref()
                 .unwrap()
                 .borrow()
@@ -1399,8 +1399,8 @@ impl AliasAnalysisVisitor {
             .rhs()
             .clone();
         // visit expression
-        let _= self.visit(lhs.as_ref().unwrap());
-        let _= self.visit(rhs.as_ref().unwrap());
+        let _ = self.visit(lhs.as_ref().unwrap());
+        let _ = self.visit(rhs.as_ref().unwrap());
 
         // state after assignment
         let after = ast
@@ -1500,7 +1500,7 @@ impl AliasAnalysisVisitor {
         }
 
         // visit expression
-        let _= self.visit(
+        let _ = self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
@@ -1696,7 +1696,7 @@ impl GuardConditionAnalyzer {
         } else {
             *self._neg.borrow_mut() = false;
             *self._analysis.borrow_mut() = Some(before_analysis.clone());
-            let _= self.visit(cond);
+            let _ = self.visit(cond);
             self._analysis.borrow().clone().unwrap()
         }
     }
@@ -1752,10 +1752,10 @@ impl GuardConditionAnalyzer {
                 with_context_block!(var _a = self._negated()=>{
                 let _= self.visit(&args[0]);});
             } else if (op == "&&" && !*self._neg.borrow()) || (op == "||" && *self._neg.borrow()) {
-                let _= self.visit(&args[0]);
-                let _= self.visit(&args[1]);
+                let _ = self.visit(&args[0]);
+                let _ = self.visit(&args[1]);
             } else if op == "parenthesis" {
-                let _= self.visit(&args[0]);
+                let _ = self.visit(&args[0]);
             } else if (op == "==" && !*self._neg.borrow()) || (op == "!=" && *self._neg.borrow()) {
                 recursive_merge(&args[0], &args[1], &self._analysis);
             }

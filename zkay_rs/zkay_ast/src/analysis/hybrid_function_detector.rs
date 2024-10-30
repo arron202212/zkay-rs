@@ -22,17 +22,15 @@ use zkay_derive::ASTVisitorBaseRefImpl;
 // :param ast
 // :return: marks all functions which will require verification
 // """
-pub fn detect_hybrid_functions(ast: &ASTFlatten)
-
-{
+pub fn detect_hybrid_functions(ast: &ASTFlatten) {
     let v = DirectHybridFunctionDetectionVisitor::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 
     let v = IndirectHybridFunctionDetectionVisitor::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 
     let v = NonInlineableCallDetector::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 
 // class DirectHybridFunctionDetectionVisitor(FunctionVisitor)
@@ -244,7 +242,7 @@ impl DirectHybridFunctionDetectionVisitor {
             .borrow()
             .body
             .clone();
-        let _=self.visit(&body.unwrap().into());
+        let _ = self.visit(&body.unwrap().into());
 
         if ast
             .try_as_constructor_or_function_definition_ref()

@@ -62,11 +62,11 @@ use zkay_ast::visitors::solidity_visitor::to_solidity;
 // }
 fn generator_classes(
     _snark_backend: &String,
-) -> impl FnOnce(Vec<RcCell<CircuitHelper>>, String, String) -> JsnarkGenerator //<T, VK>
-// where
-//     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
-//     VK: VerifyingKeyMeta<Output = VK>,
-{
+) -> impl FnOnce(Vec<RcCell<CircuitHelper>>, String, String) -> JsnarkGenerator {
+    //<T, VK>
+    // where
+    //     T: ProvingScheme<VerifyingKeyX = VK> + std::marker::Sync,
+    //     VK: VerifyingKeyMeta<Output = VK>,
     JsnarkGenerator::new
 }
 
@@ -191,7 +191,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 
     // Get all circuit helpers for the transformed contract
     let circuits: Vec<_> = circuits.values().cloned().collect();
-
+    println!("==circuits===len={}=======================", circuits.len());
     // Generate offchain simulation code (transforms transactions, interface to deploy and access the zkay contract)
     //    let  offchain_simulation_code = PythonOffchainVisitor::new(circuits).visit(ast);//TODO LS
     //     _dump_to_output(offchain_simulation_code, output_dir, "contract.py");

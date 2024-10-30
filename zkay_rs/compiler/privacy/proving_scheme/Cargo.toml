@@ -19,3 +19,4 @@ circuit_helper={workspace=true}
  zkay-utils={workspace = true }
 lazy_static = { workspace = true }
 hex={ workspace = true }
+zkp-u256 = { workspace = true }

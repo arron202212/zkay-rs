@@ -493,15 +493,36 @@ impl SolidityVisitor {
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visit_PrimitiveCastExpr==={:?}=====",ast);
-    
-            if ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_primitive_cast_expr_ref()
-                .unwrap()
-                .is_implicit
-            {
+
+        if ast
+            .to_ast()
+            .try_as_expression_ref()
+            .unwrap()
+            .try_as_primitive_cast_expr_ref()
+            .unwrap()
+            .is_implicit
+        {
+            self.visit(
+                &ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .expr,
+            )
+        } else {
+            self.visit(
+                &ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_primitive_cast_expr_ref()
+                    .unwrap()
+                    .elem_type
+                    .clone()
+                    .into(),
+            )
+            .ok()
+            .zip(
                 self.visit(
                     &ast.to_ast()
                         .try_as_expression_ref()
@@ -510,28 +531,11 @@ impl SolidityVisitor {
                         .unwrap()
                         .expr,
                 )
-            } else {
-                 self.visit(
-                        &ast.to_ast()
-                            .try_as_expression_ref()
-                            .unwrap()
-                            .try_as_primitive_cast_expr_ref()
-                            .unwrap()
-                            .elem_type
-                            .clone()
-                            .into()
-                    ).ok().zip(self.visit(
-                        &ast.to_ast()
-                            .try_as_expression_ref()
-                            .unwrap()
-                            .try_as_primitive_cast_expr_ref()
-                            .unwrap()
-                            .expr
-                    ).ok()).map(|(elem_type,expr)|format!(
-                    "{elem_type}({expr})")
-                    ).ok_or(eyre::eyre!("None"))
-            }
-        
+                .ok(),
+            )
+            .map(|(elem_type, expr)| format!("{elem_type}({expr})"))
+            .ok_or(eyre::eyre!("None"))
+        }
     }
 
     pub fn visit_BooleanLiteralExpr(
@@ -691,29 +695,33 @@ impl SolidityVisitor {
             .try_as_member_access_expr_ref()
             .unwrap()
             .clone();
-        self.visit(&mae.expr.as_ref().unwrap().clone().into()).ok().zip(self.visit(&mae.member.clone().into()).ok()).map(|(expr,member)|format!(
-            "{expr}.{member}")
-        ).ok_or(eyre::eyre!("None"))
+        self.visit(&mae.expr.as_ref().unwrap().clone().into())
+            .ok()
+            .zip(self.visit(&mae.member.clone().into()).ok())
+            .map(|(expr, member)| format!("{expr}.{member}"))
+            .ok_or(eyre::eyre!("None"))
     }
 
     pub fn visit_IndexExpr(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
         // //println!("=======visit_IndexExpr================={:?}",ast);
         self.visit(
-                &ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_tuple_or_location_expr_ref()
-                    .unwrap()
-                    .try_as_location_expr_ref()
-                    .unwrap()
-                    .try_as_index_expr_ref()
-                    .unwrap()
-                    .arr
-                    .as_ref()
-                    .unwrap()
-                    .clone()
-                    .into()
-            ).ok().zip(
+            &ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_index_expr_ref()
+                .unwrap()
+                .arr
+                .as_ref()
+                .unwrap()
+                .clone()
+                .into(),
+        )
+        .ok()
+        .zip(
             self.visit(
                 &ast.to_ast()
                     .try_as_expression_ref()
@@ -724,11 +732,12 @@ impl SolidityVisitor {
                     .unwrap()
                     .try_as_index_expr_ref()
                     .unwrap()
-                    .key
-            ).ok()).map(|(arr,key)|format!(
-            "{arr}[{key}]",
-        )).ok_or(eyre::eyre!("None"))
-        
+                    .key,
+            )
+            .ok(),
+        )
+        .map(|(arr, key)| format!("{arr}[{key}]",))
+        .ok_or(eyre::eyre!("None"))
     }
 
     pub fn visit_AllExpr(&self, _: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
@@ -1011,7 +1020,8 @@ impl SolidityVisitor {
                 .try_as_expression_statement_ref()
                 .unwrap()
                 .expr,
-        ).map(|expr|expr+ ";") 
+        )
+        .map(|expr| expr + ";")
     }
 
     pub fn visit_RequireStatement(
@@ -1718,12 +1728,11 @@ impl SolidityVisitor {
     }
 
     pub fn visit_EnumValue(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-            if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf() {
-                // println!("==visit_EnumValue=========={}====",idf.borrow().name());
-                return self.visit(&idf.clone().into())
-            } 
-                Ok(String::new())
-            
+        if let Some(idf) = &ast.try_as_enum_value_ref().unwrap().borrow().idf() {
+            // println!("==visit_EnumValue=========={}====",idf.borrow().name());
+            return self.visit(&idf.clone().into());
+        }
+        Ok(String::new())
     }
 
     pub fn visit_EnumDefinition(

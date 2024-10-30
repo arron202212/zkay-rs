@@ -95,10 +95,9 @@ impl AstTransformerVisitor for ZkayVarDeclTransformer {
         }
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-            let mut ast = ast.clone();
-            ast.process_children_callback(|a| self.visit(a));
-            Ok(ast)
-
+        let mut ast = ast.clone();
+        ast.process_children_callback(|a| self.visit(a));
+        Ok(ast)
     }
 }
 impl ZkayVarDeclTransformer {
@@ -404,10 +403,9 @@ impl AstTransformerVisitor for ZkayStatementTransformer {
         }
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-            let mut ast = ast.clone();
-            ast.process_children_callback(|a| self.visit(a));
-            Ok(ast)
-
+        let mut ast = ast.clone();
+        ast.process_children_callback(|a| self.visit(a));
+        Ok(ast)
     }
 }
 impl ZkayStatementTransformer {
@@ -452,7 +450,7 @@ impl ZkayStatementTransformer {
         {
             let old_code = ASTFlatten::from(stmt.clone()).code();
             //
-            let transformed_stmt = self.visit(&stmt.clone().into());//=priv_expr
+            let transformed_stmt = self.visit(&stmt.clone().into()); //=priv_expr
 
             if transformed_stmt.is_none() {
                 continue;
@@ -628,8 +626,8 @@ impl ZkayStatementTransformer {
                 .rhs()
                 .as_ref()
                 .unwrap(),
-        );//=priv_expr
-        // println!("======rhs==============={}====",rhs.as_ref().unwrap());
+        ); //=priv_expr
+           // println!("======rhs==============={}====",rhs.as_ref().unwrap());
         if ast.is_assignment_statement() {
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -1465,10 +1463,9 @@ impl AstTransformerVisitor for ZkayExpressionTransformer {
         }
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-            let mut ast = ast.clone();
-            ast.process_children_callback(|a| self.visit(a));
-            Ok(ast)
-
+        let mut ast = ast.clone();
+        ast.process_children_callback(|a| self.visit(a));
+        Ok(ast)
     }
 }
 impl ZkayExpressionTransformer {
@@ -1596,10 +1593,10 @@ impl ZkayExpressionTransformer {
             .expr()
             .clone()
             .into();
-        println!(
-            "====expression==transform====ccnt===visitReclassifyExpr==expr====={:?}=====",
-            expr.get_ast_type()
-        );
+        // println!(
+        //     "====expression==transform====ccnt===visitReclassifyExpr==expr====={:?}=====",
+        //     expr.get_ast_type()
+        // );
         let res = self
             .generator
             .as_ref()
@@ -1628,7 +1625,7 @@ impl ZkayExpressionTransformer {
                     .borrow()
                     .homomorphism,
             )
-            .ok_or(eyre::eyre!("unexpected"));//=priv_expr
+            .ok_or(eyre::eyre!("unexpected")); //=priv_expr
         if ast.is_expression() && res.as_ref().unwrap().is_expression() {
             let a = res
                 .as_ref()
@@ -2354,9 +2351,9 @@ impl AstTransformerVisitor for ZkayCircuitTransformer {
     }
     fn visit_children(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
         // if *self.is_callback.borrow() {
-            let mut ast = ast.clone();
-            ast.process_children_callback(|a| self.visit(a));
-             Ok(ast)
+        let mut ast = ast.clone();
+        ast.process_children_callback(|a| self.visit(a));
+        Ok(ast)
         // }
         // for c in ast.children() {
         //     self.visit(&c);
@@ -2392,28 +2389,28 @@ impl ZkayCircuitTransformer {
     }
 
     pub fn visitIdentifierExpr(&self, ast: &ASTFlatten) -> eyre::Result<ASTFlatten> {
-        println!(
-            "======visitIdentifierExpr====zt===beg====={}====={:?}===={:?}======",
-            ast,
-            ast.get_ast_type(),
-            ast.ast_base_ref()
-                .unwrap()
-                .borrow()
-                .idf
-                .as_ref()
-                .unwrap()
-                .get_ast_type()
-        );
+        // println!(
+        //     "======visitIdentifierExpr====zt===beg====={}====={:?}===={:?}======",
+        //     ast,
+        //     ast.get_ast_type(),
+        //     ast.ast_base_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .idf
+        //         .as_ref()
+        //         .unwrap()
+        //         .get_ast_type()
+        // );
 
         let mut ast = ast.clone();
         if !is_instance(
             ast.ast_base_ref().unwrap().borrow().idf.as_ref().unwrap(),
             ASTType::HybridArgumentIdf,
         ) {
-            println!(
-                "======visitIdentifierExpr=======!=========={:?}====",
-                ast.get_ast_type()
-            );
+            // println!(
+            //     "======visitIdentifierExpr=======!=========={:?}====",
+            //     ast.get_ast_type()
+            // );
             //If ast is not already transformed, get current SSA version
             ast = self
                 .generator
@@ -2430,10 +2427,10 @@ impl ZkayCircuitTransformer {
                 ASTType::HybridArgumentIdf,
             )
         {
-            println!(
-                "======visitIdentifierExpr==zt==***********=====h========{:?}====",
-                ast.get_ast_type()
-            );
+            // println!(
+            //     "======visitIdentifierExpr==zt==***********=====h========{:?}====",
+            //     ast.get_ast_type()
+            // );
             //The current version of ast.idf is already in the circuit
             assert!(
                 ast.ast_base_ref()
@@ -2455,7 +2452,7 @@ impl ZkayCircuitTransformer {
             let ret = self
                 .transform_location(&ast)
                 .ok_or(eyre::eyre!("unexpected"));
-            println!("======visitIdentifierExpr=====*************==end========transform_location=={:?}====",ret.as_ref().unwrap().get_ast_type());
+            // println!("======visitIdentifierExpr=====*************==end========transform_location=={:?}====",ret.as_ref().unwrap().get_ast_type());
             //             if ret.as_ref().unwrap().is_expression()
             //            { *ast.try_as_expression_mut().unwrap().borrow_mut()=ret.as_ref().unwrap().try_as_expression_ref().unwrap().borrow().clone();
             //             }
@@ -2478,11 +2475,11 @@ impl ZkayCircuitTransformer {
             .borrow()
             .add_to_circuit_inputs(loc)
             .get_idf_expr(None);
-        println!(
-            "===========loc======{}======={:?}========",
-            r.as_ref().unwrap(),
-            r.as_ref().unwrap().get_ast_type()
-        );
+        // println!(
+        //     "===========loc======{}======={:?}========",
+        //     r.as_ref().unwrap(),
+        //     r.as_ref().unwrap().get_ast_type()
+        // );
         return r;
     }
     // """Rule (15), boundary crossing if analysis determined that it is """
@@ -2583,22 +2580,22 @@ impl ZkayCircuitTransformer {
             .unwrap()
             .evaluate_privately()
         {
-            println!(
-                "=====1==2==ccnt={ast}=={}===={:?}",
-                ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr(),
-                ast.to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_reclassify_expr_ref()
-                    .unwrap()
-                    .expr()
-                    .get_ast_type()
-            );
+            // println!(
+            //     "=====1==2==ccnt={ast}=={}===={:?}",
+            //     ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_reclassify_expr_ref()
+            //         .unwrap()
+            //         .expr(),
+            //     ast.to_ast()
+            //         .try_as_expression_ref()
+            //         .unwrap()
+            //         .try_as_reclassify_expr_ref()
+            //         .unwrap()
+            //         .expr()
+            //         .get_ast_type()
+            // );
             let r = self
                 .visit(
                     ast.to_ast()
@@ -2611,11 +2608,11 @@ impl ZkayCircuitTransformer {
                 .ok_or(eyre::eyre!("unexpected"));
             //  println!("===ccnt=====res===visitReclassifyExpr ****************==={:?}==",r);
 
-            println!(
-                "===ccnt========visitReclassifyExpr ****************==={}====={:?}=",
-                r.as_ref().unwrap(),
-                r.as_ref().unwrap().get_ast_type()
-            );
+            // println!(
+            //     "===ccnt========visitReclassifyExpr ****************==={}====={:?}=",
+            //     r.as_ref().unwrap(),
+            //     r.as_ref().unwrap().get_ast_type()
+            // );
             r
         } else {
             assert!(ast
@@ -3053,16 +3050,16 @@ impl ZkayCircuitTransformer {
             }
 
             //Builtin functions are supported natively by the circuit
-            println!(
-                "===visitFunctionCallExpr===visit_children=======ccnt==========={}============{:?}",
-                ast,
-                ast.get_ast_type()
-            );
+            // println!(
+            //     "===visitFunctionCallExpr===visit_children=======ccnt==========={}============{:?}",
+            //     ast,
+            //     ast.get_ast_type()
+            // );
             let ret = self.visit_children(ast);
-            println!(
-                "===visitFunctionCallExpr===visit_children=======ccnt====ret======={}============{:?}",
-                ret.as_ref().unwrap(),ret.as_ref().unwrap().get_ast_type()
-            );
+            // println!(
+            //     "===visitFunctionCallExpr===visit_children=======ccnt====ret======={}============{:?}",
+            //     ret.as_ref().unwrap(),ret.as_ref().unwrap().get_ast_type()
+            // );
             return ret;
         }
 

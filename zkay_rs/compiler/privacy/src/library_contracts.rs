@@ -40,6 +40,8 @@ pub fn get_verify_libs_code() -> String {
 }
 
 use once_cell::sync::Lazy;
+use std::convert::Infallible;
+use std::string::ParseError;
 use tiny_keccak::{Hasher, Keccak};
 use zkp_u256::{Zero, U256};
 pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {

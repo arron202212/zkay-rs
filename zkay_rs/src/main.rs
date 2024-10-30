@@ -331,7 +331,29 @@ WARNING: This account will be charged with the deployment costs.",
 
 fn main() {
     unsafe { backtrace_on_stack_overflow::enable() };
-    // println!("==main=====");
+    assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
+    //   println!("==main==begin===");
+    // use std::process::{Command, Stdio};
+    //     let cmd=["/Users/lisheng/mygit/arron/zkay-rs/zkay_rs/jsnark_interface/run_snark", "keygen", "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out", "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out", "1"];
+    //     let process = std::process::Command::new(cmd[0].clone())
+    //             .args(&cmd[1..])
+    //             .current_dir("/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out")
+    //             .stderr(Stdio::piped())
+    //             .stdout(Stdio::piped())
+    //             .spawn()
+    //             .expect(&format!("{cmd:?}"))
+    //             .wait_with_output()
+    //             .expect("wait_with_output");
+    //         if !process.status.success() {
+    //         println!("===cmd======={cmd:?}");
+    //         // let cmd = get_command(cmd);
+    //         // raise subprocess.SubprocessError(msg)
+    //         panic!(
+    //             "Non-zero exit status {} for command:\n: $ {cmd:?}\n\n{:?}\n{:?}",
+    //             process.status,String::from_utf8(process.stdout.clone()),String::from_utf8(process.stderr.clone())
+    //         );
+    //     }
+    //     println!("==main=====");
     //     // parse arguments
     let a = parse_arguments();
     // println!("==main==1===");

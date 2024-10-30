@@ -43,7 +43,7 @@ pub fn run_commands(
             .unwrap()
             .to_string()
     } else {
-        String::new()
+        String::from(".")
     };
 
     let (output, error, process) = if allow_verbose
@@ -66,7 +66,7 @@ pub fn run_commands(
             .stderr(Stdio::piped())
             .stdout(Stdio::piped())
             .spawn()
-            .expect(format!("{cmd:?}"))
+            .expect(&format!("{cmd:?}"))
             .wait_with_output()
             .expect("wait_with_output");
 
@@ -84,7 +84,9 @@ pub fn run_commands(
         // raise subprocess.SubprocessError(msg)
         panic!(
             "Non-zero exit status {} for command:\n{cwd}: $ {cmd}\n\n{:?}\n{:?}",
-            process.status,String::from_utf8(output),String::from_utf8(error)
+            process.status,
+            String::from_utf8(output),
+            String::from_utf8(error)
         );
     } else if CFG.lock().unwrap().user_config.verbosity() >= 2 {
         print!("Ran command {}:\n\n{output:?}\n{error:?}", get_command(cmd));

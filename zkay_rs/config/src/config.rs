@@ -38,7 +38,7 @@ lazy_static! {
     pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
     pub static ref VERSIONS: Mutex<Versions> = Mutex::new({
         let mut versions_internal = Versions::new();
-        versions_internal.set_solc_version(String::from("latest"));
+        versions_internal.set_solc_version(String::from("0.6.12"));
         versions_internal
     });
 }
@@ -198,13 +198,14 @@ impl Config {
 
     //     @contextmanager
     //    Use this fixed configuration compiling libraries to get reproducible output.
-    pub fn library_compilation_environment(&self) {
+    pub fn library_compilation_environment(&mut self) -> WithLibraryCompilationEnvironment {
         // old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
-        self.override_solc(self.library_solc_version());
+        // self.override_solc(self.library_solc_version());
         // self.opt_solc_optimizer_runs = 1000
         // yield
         // self.opt_solc_optimizer_runs = old_opt_runs
         // self.override_solc(old_solc)
+        WithLibraryCompilationEnvironment::new(self)
     }
 
     // Note: Changing this version breaks compatibility with already deployed library contracts
@@ -224,6 +225,7 @@ impl Config {
 
     pub fn solc_version(&self) -> String {
         let version = VERSIONS.lock().unwrap().solc_version.clone();
+        println!("==version====={version:?}");
         assert!(version.is_some() && version != Some(String::from("latest")));
         version.unwrap().to_string()
     }
@@ -345,5 +347,34 @@ impl Config {
 
     pub fn is_unit_test(&self) -> bool {
         self._is_unit_test
+    }
+}
+
+pub struct WithLibraryCompilationEnvironment<'a> {
+    old_solc: Option<String>,
+    old_opt_runs: i32,
+    config: &'a mut Config,
+}
+impl<'a> WithLibraryCompilationEnvironment<'a> {
+    pub fn new(config: &'a mut Config) -> Self {
+        let (old_solc, old_opt_runs) = (
+            Some(config.solc_version()),
+            config.user_config.opt_solc_optimizer_runs(),
+        );
+        config.override_solc(config.library_solc_version());
+        config.user_config.set_opt_solc_optimizer_runs(1000);
+        Self {
+            old_solc,
+            old_opt_runs,
+            config,
+        }
+    }
+}
+impl<'a> Drop for WithLibraryCompilationEnvironment<'a> {
+    fn drop(&mut self) {
+        self.config
+            .user_config
+            .set_opt_solc_optimizer_runs(self.old_opt_runs);
+        self.config.override_solc(self.old_solc.clone().unwrap());
     }
 }

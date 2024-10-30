@@ -14,7 +14,7 @@ use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_return(ast: &ASTFlatten) {
     let v = ReturnCheckVisitor::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 // class ReturnPositionException(AstException):
 

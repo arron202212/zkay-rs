@@ -13,7 +13,7 @@ use privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
 use rccell::RcCell;
 use zkay_config::config::CFG;
 use zkay_utils::multiline_formatter::MultiLineFormatter;
-
+use zkp_u256::{Zero, U256};
 pub struct VerifyingKey<G1: Default, G2: Default> {
     h: G2,
     g_alpha: G1,
@@ -111,7 +111,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
         let zk_out_name = CFG.lock().unwrap().zk_out_name();
         let in_size_trans = circuit.borrow().in_size_trans();
         let out_size_trans = circuit.borrow().out_size_trans();
-
+        let bn128_scalar_field_value: U256 = BN128_SCALAR_FIELD.clone();
         let x = MultiLineFormatter::new("").mul(format!(r#"
         pragma solidity {zkay_solc_version_compatibility};
 
@@ -122,7 +122,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
             using Pairing for G2;
 
             bytes32 public constant {prover_key_hash_name} = 0x{prover_key_hash};
-            uint256 constant {snark_scalar_field_var_name} = {BN128_SCALAR_FIELD:?};
+            uint256 constant {snark_scalar_field_var_name} = {bn128_scalar_field_value};
 
             struct Proof {{
                 G1 a;

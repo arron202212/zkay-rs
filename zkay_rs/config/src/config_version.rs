@@ -28,7 +28,7 @@ impl Versions {
     // pub const solc_version:Option<&'static str>=Some("0.6.12");
     pub fn new() -> Self {
         Self {
-            solc_version: None,
+            solc_version: Some(String::from("0.6.12")),
             zkay_solc_version_compatibility: Version::new("^0.6.0")
                 .parse()
                 .expect("zkay_solc_version_compatibility"),

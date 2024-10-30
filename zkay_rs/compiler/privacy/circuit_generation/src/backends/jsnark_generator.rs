@@ -503,7 +503,10 @@ impl JsnarkVisitor {
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visitCircSymmEncConstraint============{stmt:?}");
-        assert!(stmt.try_as_circuit_statement_ref().unwrap().borrow()
+        assert!(stmt
+            .try_as_circuit_statement_ref()
+            .unwrap()
+            .borrow()
             .try_as_circ_symm_enc_constraint_ref()
             .unwrap()
             .iv_cipher
@@ -512,7 +515,10 @@ impl JsnarkVisitor {
             .try_as_type_name()
             .unwrap()
             .is_cipher());
-        assert!(stmt.try_as_circuit_statement_ref().unwrap().borrow()
+        assert!(stmt
+            .try_as_circuit_statement_ref()
+            .unwrap()
+            .borrow()
             .try_as_circ_symm_enc_constraint_ref()
             .unwrap()
             .other_pk
@@ -522,7 +528,10 @@ impl JsnarkVisitor {
             .unwrap()
             .is_key());
         assert!(
-            stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_symm_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
                 .unwrap()
                 .iv_cipher
                 .t
@@ -534,7 +543,10 @@ impl JsnarkVisitor {
                 .crypto_params()
                 .as_ref()
                 .unwrap()
-                == stmt.try_as_circuit_statement_ref().unwrap().borrow()
+                == stmt
+                    .try_as_circuit_statement_ref()
+                    .unwrap()
+                    .borrow()
                     .try_as_circ_symm_enc_constraint_ref()
                     .unwrap()
                     .other_pk
@@ -548,7 +560,10 @@ impl JsnarkVisitor {
                     .as_ref()
                     .unwrap()
         );
-        let backend = stmt.try_as_circuit_statement_ref().unwrap().borrow()
+        let backend = stmt
+            .try_as_circuit_statement_ref()
+            .unwrap()
+            .borrow()
             .try_as_circ_symm_enc_constraint_ref()
             .unwrap()
             .other_pk
@@ -565,7 +580,10 @@ impl JsnarkVisitor {
             .clone();
         Ok(format!(
             r#"checkSymm{}("{backend}", "{}", "{}", "{}");"#,
-            if stmt.try_as_circuit_statement_ref().unwrap().borrow()
+            if stmt
+                .try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
                 .try_as_circ_symm_enc_constraint_ref()
                 .unwrap()
                 .is_dec
@@ -574,17 +592,26 @@ impl JsnarkVisitor {
             } else {
                 "Enc"
             },
-            stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_symm_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
                 .unwrap()
                 .plain
                 .identifier_base
                 .name,
-            stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_symm_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
                 .unwrap()
                 .other_pk
                 .identifier_base
                 .name,
-            stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_symm_enc_constraint_ref()
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
                 .unwrap()
                 .iv_cipher
                 .identifier_base
@@ -596,21 +623,30 @@ impl JsnarkVisitor {
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         Ok(
-            if let Some(_new_cond) = &stmt.try_as_circuit_statement_ref().unwrap().borrow()
+            if let Some(_new_cond) = &stmt
+                .try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
                 .try_as_circ_guard_modification_ref()
                 .unwrap()
                 .new_cond
             {
                 format!(
                     r#"addGuard("{}", {});"#,
-                    stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_guard_modification_ref()
+                    stmt.try_as_circuit_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_circ_guard_modification_ref()
                         .unwrap()
                         .new_cond
                         .as_ref()
                         .unwrap()
                         .identifier_base
                         .name,
-                    stmt.try_as_circuit_statement_ref().unwrap().borrow().try_as_circ_guard_modification_ref()
+                    stmt.try_as_circuit_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_circ_guard_modification_ref()
                         .unwrap()
                         .is_true
                         .to_string()
@@ -748,12 +784,29 @@ impl JsnarkVisitor {
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("====visitMemberAccessExpr============={ast:?}===");
         assert!(is_instance(
-            &ast.to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap().member,
+            &ast.to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_member_access_expr_ref()
+                .unwrap()
+                .member,
             ASTType::HybridArgumentIdf
         ));
         Ok(
             if ast
-                .to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap()
+                .to_ast()
+                .try_as_expression_ref()
+                .unwrap()
+                .try_as_tuple_or_location_expr_ref()
+                .unwrap()
+                .try_as_location_expr_ref()
+                .unwrap()
+                .try_as_member_access_expr_ref()
+                .unwrap()
                 .member
                 .borrow()
                 .try_as_hybrid_argument_idf_ref()
@@ -766,14 +819,30 @@ impl JsnarkVisitor {
             {
                 format!(
                     r#"getCipher("{}")"#,
-                    ast.to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap()
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
                         .member
                         .borrow()
                         .name()
                 )
             } else {
                 assert!(
-                    ast.to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap()
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
                         .member
                         .borrow()
                         .try_as_hybrid_argument_idf_ref()
@@ -787,7 +856,15 @@ impl JsnarkVisitor {
                 );
                 format!(
                     r#"get("{}")"#,
-                    ast.to_ast().try_as_expression_ref().unwrap().try_as_tuple_or_location_expr_ref().unwrap().try_as_location_expr_ref().unwrap().try_as_member_access_expr_ref().unwrap()
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_tuple_or_location_expr_ref()
+                        .unwrap()
+                        .try_as_location_expr_ref()
+                        .unwrap()
+                        .try_as_member_access_expr_ref()
+                        .unwrap()
                         .member
                         .borrow()
                         .name()
@@ -805,16 +882,16 @@ impl JsnarkVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!(
-            "======visitFunctionCallExpr=============={:?}",
-            ast.try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .get_ast_type()
-        );
+        // println!(
+        //     "======visitFunctionCallExpr=============={:?}",
+        //     ast.try_as_expression_ref()
+        //         .unwrap()
+        //         .borrow()
+        //         .try_as_function_call_expr_ref()
+        //         .unwrap()
+        //         .func()
+        //         .get_ast_type()
+        // );
         if is_instance(
             ast.try_as_expression_ref()
                 .unwrap()
@@ -1125,7 +1202,8 @@ impl JsnarkVisitor {
         //     ast,
         // );
         let wire = self.visit(
-            &ast.to_ast().try_as_expression_ref()
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
                 .try_as_primitive_cast_expr_ref()
                 .unwrap()
@@ -1133,10 +1211,11 @@ impl JsnarkVisitor {
                 .clone()
                 .into(),
         )?;
-        println!("=========wire======={wire}");
+        // println!("=========wire======={wire}");
         self.handle_cast(
             wire,
-            &ast.to_ast().try_as_expression_ref()
+            &ast.to_ast()
+                .try_as_expression_ref()
                 .unwrap()
                 .try_as_primitive_cast_expr_ref()
                 .unwrap()
@@ -1149,7 +1228,7 @@ impl JsnarkVisitor {
         wire: String,
         t: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        println!("=handle_cast=======wire========{wire}");
+        // println!("=handle_cast=======wire========{wire}");
         Ok(format!(r#"cast({wire}, {})"#, _get_t(Some(t.clone()))))
     }
 }
@@ -1288,7 +1367,7 @@ impl CircuitGenerator for JsnarkGenerator {
     }
     //Create output directory
     fn _generate_zkcircuit(&self, import_keys: bool, circuit: &RcCell<CircuitHelper>) -> bool {
-        let p = self.circuit_generator_base._get_circuit_output_dir(circuit);
+        let p = self._get_circuit_output_dir(circuit);
         let output_dir = Path::new(&p);
         if let Err(_) | Ok(false) = output_dir.try_exists() {
             std::fs::create_dir_all(output_dir).expect(output_dir.to_str().unwrap());
@@ -1354,16 +1433,16 @@ impl CircuitGenerator for JsnarkGenerator {
             r#"{}.hash"#,
             CFG.lock().unwrap().jsnark_circuit_classname()
         ));
-        println!("========");
+        // println!("========");
         let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme(); //String::from("groth16");//
-        println!("====1====");
+                                                                               // println!("====1====");
         let jar_hash_string =
             jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string() + &code + &proving_scheme;
-        println!("====1==0==");
+        // println!("====1==0==");
         let hs = hash_string(&jar_hash_string);
-        println!("====1=1===");
+        // println!("====1=1===");
         let digest = hex::encode(hs);
-        println!("===2=====");
+        // println!("===2=====");
         let oldhash = if let Ok(true) = hashfile.try_exists() {
             read_file(hashfile.to_str().unwrap())
         } else {
@@ -1379,7 +1458,7 @@ impl CircuitGenerator for JsnarkGenerator {
         {
             if !import_keys {
                 //Remove old keys
-                for f in self.circuit_generator_base._get_vk_and_pk_paths(circuit) {
+                for f in self._get_vk_and_pk_paths(circuit) {
                     if Path::new(&f).try_exists().map_or(false, |v| v) {
                         let _ = std::fs::remove_file(f);
                     }
@@ -1398,7 +1477,7 @@ impl CircuitGenerator for JsnarkGenerator {
     }
     //Invoke the custom libsnark interface to generate keys
     fn _generate_keys(&self, circuit: &RcCell<CircuitHelper>) {
-        let output_dir = self.circuit_generator_base._get_circuit_output_dir(circuit);
+        let output_dir = self._get_circuit_output_dir(circuit);
         libsnark::generate_keys(
             &output_dir,
             &output_dir,
@@ -1407,7 +1486,8 @@ impl CircuitGenerator for JsnarkGenerator {
     }
 
     // @classmethod
-    fn get_vk_and_pk_filenames() -> Vec<String> {
+    fn get_vk_and_pk_filenames(&self) -> Vec<String> {
+        println!("===========get_vk_and_pk_filenames================");
         ["verification.key", "proving.key", "verification.key.bin"]
             .into_iter()
             .map(String::from)
@@ -1415,14 +1495,12 @@ impl CircuitGenerator for JsnarkGenerator {
     }
 
     fn _parse_verification_key(&self, circuit: &RcCell<CircuitHelper>) -> Option<VerifyingKeyType> {
-        let p = &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[0];
+        let p = &self._get_vk_and_pk_paths(circuit)[0];
         let f = File::open(p).expect("");
         // data = iter(f.read().splitlines());
         let buf = BufReader::new(f);
         let mut data = buf.lines();
-        if self.circuit_generator_base.proving_scheme.type_id()
-            == TypeId::of::<ProvingSchemeGroth16>()
-        {
+        if self.circuit_generator_base.proving_scheme == "groth16" {
             let a = G1Point::from_it(&mut data);
             let b = G2Point::from_it(&mut data);
             let gamma = G2Point::from_it(&mut data);
@@ -1430,16 +1508,14 @@ impl CircuitGenerator for JsnarkGenerator {
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let mut gamma_abc = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
-                gamma_abc.insert(idx, G1Point::from_it(&mut data));
+                gamma_abc[idx] = G1Point::from_it(&mut data);
             }
             return Some(VerifyingKeyType::ProvingSchemeGroth16(
                 <ProvingSchemeGroth16 as ProvingScheme>::VerifyingKeyX::new(
                     a, b, gamma, delta, gamma_abc,
                 ),
             ));
-        } else if self.circuit_generator_base.proving_scheme.type_id()
-            == TypeId::of::<ProvingSchemeGm17>()
-        {
+        } else if self.circuit_generator_base.proving_scheme == "gm17" {
             let h = G2Point::from_it(&mut data);
             let g_alpha = G1Point::from_it(&mut data);
             let h_beta = G2Point::from_it(&mut data);
@@ -1448,7 +1524,7 @@ impl CircuitGenerator for JsnarkGenerator {
             let query_len = data.next().unwrap().unwrap().parse::<usize>().unwrap();
             let mut query = vec![G1Point::default(); query_len];
             for idx in 0..query_len {
-                query.insert(idx, G1Point::from_it(&mut data));
+                query[idx] = G1Point::from_it(&mut data);
             }
             return Some(VerifyingKeyType::ProvingSchemeGm17(
                 <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX::new(
@@ -1463,10 +1539,7 @@ impl CircuitGenerator for JsnarkGenerator {
     }
 
     fn _get_prover_key_hash(&self, circuit: &RcCell<CircuitHelper>) -> Vec<u8> {
-        hash_file(
-            &self.circuit_generator_base._get_vk_and_pk_paths(circuit)[1],
-            0,
-        )
+        hash_file(&self._get_vk_and_pk_paths(circuit)[1], 0)
     }
 
     //Jsnark requires an additional public input with the value 1 as first input

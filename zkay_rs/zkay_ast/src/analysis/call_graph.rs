@@ -24,13 +24,13 @@ pub fn call_graph_analysis(ast: &ASTFlatten)
 // """
 {
     let mut v = DirectCalledFunctionDetector::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 
     let mut v = IndirectCalledFunctionDetector::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 
     let mut v = IndirectDynamicBodyDetector::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
 }
 #[derive(ASTVisitorBaseRefImpl)]
 struct DirectCalledFunctionDetector {

@@ -27,14 +27,14 @@ pub fn has_side_effects(ast: &ASTFlatten) -> bool {
 
 pub fn compute_modified_sets(ast: &ASTFlatten) {
     let mut v = DirectModificationDetector::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 
     let mut v = IndirectModificationDetector::new();
     v.iterate_until_fixed_point(ast);
 }
 
 pub fn check_for_undefined_behavior_due_to_eval_order(ast: &ASTFlatten) {
-    let _= EvalOrderUBChecker::new().visit(ast);
+    let _ = EvalOrderUBChecker::new().visit(ast);
 }
 
 // class SideEffectsDetector(AstVisitor)
@@ -146,7 +146,10 @@ impl SideEffectsDetector {
     }
 
     pub fn visitAST(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        Ok(ast.children().iter().any(|c| self.visit(c).map_or(false,|b|b)))
+        Ok(ast
+            .children()
+            .iter()
+            .any(|c| self.visit(c).map_or(false, |b| b)))
     }
 }
 // class DirectModificationDetector(FunctionVisitor)
@@ -323,7 +326,7 @@ impl DirectModificationDetector {
         let mut modified_values = BTreeSet::new();
         let mut read_values = BTreeSet::new();
         for child in ast.children() {
-            let _=self.visit(&child);
+            let _ = self.visit(&child);
             modified_values = modified_values
                 .union(&child.ast_base_ref().unwrap().borrow().modified_values)
                 .cloned()
@@ -381,7 +384,7 @@ impl IndirectModificationDetector {
     }
     pub fn iterate_until_fixed_point(&self, ast: &ASTFlatten) {
         for _ in 0..10 {
-            let _=self.visit(ast);
+            let _ = self.visit(ast);
             if *self.fixed_point_reached.borrow() {
                 return;
             } else {
@@ -473,7 +476,7 @@ impl IndirectModificationDetector {
         let mlen = ast.ast_base_ref().unwrap().borrow().modified_values.len();
         let rlen = ast.ast_base_ref().unwrap().borrow().read_values.len();
         for child in ast.children() {
-            let _=self.visit(&child);
+            let _ = self.visit(&child);
             let mv: BTreeSet<_> = ast
                 .ast_base_ref()
                 .unwrap()

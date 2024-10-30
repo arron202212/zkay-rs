@@ -67,14 +67,18 @@ pub fn transform_ast(
 ) {
     let zt = ZkayTransformer::new(global_vars.clone());
     // println!("===transform_ast==========1===={}==",ast.as_ref().unwrap());
-    let mut new_ast = zt.visit(ast.as_ref().unwrap());//=priv_expr
-    // println!("===transform_ast===2=======1=={}===",new_ast.as_ref().unwrap());
-    // restore all parent pointers and identifier targets
+    let mut new_ast = zt.visit(ast.as_ref().unwrap()); //=priv_expr
+                                                       // println!("===transform_ast===2=======1=={}===",new_ast.as_ref().unwrap());
+                                                       // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
     //// println!("======2===2====1======");
     link_identifiers(new_ast.as_ref().unwrap(), global_vars.clone());
     //// println!("======2====3===1======");
     let circuits = zt.circuits.borrow().clone();
+    println!(
+        "====circuits.len()==========={}==============",
+        circuits.len()
+    );
     (new_ast.unwrap(), circuits)
 }
 
@@ -398,7 +402,7 @@ impl ZkayTransformer {
             .clone();
         for c in &contracts {
             // println!("=====visitSourceUnit====={:?}===", c.get_ast_type());
-            self.transform_contract(ast, c);//=priv_expr
+            self.transform_contract(ast, c); //=priv_expr
         }
         // println!("=====visitSourceUnit======3====");
         ast.try_as_source_unit_ref().unwrap().borrow_mut().contracts = contracts;
@@ -519,6 +523,10 @@ impl ZkayTransformer {
                         None,
                         self.global_vars.clone(),
                     ),
+                );
+                println!(
+                    "=====self.circuits.len====insert==5=={}===========",
+                    self.circuits.borrow().len()
                 );
                 //println!("=====transform_contract==after=={}=", line!());
             }
@@ -655,7 +663,7 @@ impl ZkayTransformer {
                     self.global_vars.clone(),
                 )
                 .visit(&body.clone().unwrap().into())
-                .and_then(|b| b.try_as_block());//=priv_expr
+                .and_then(|b| b.try_as_block()); //=priv_expr
                 fct.borrow_mut().body = body;
             }
         }
@@ -1216,6 +1224,10 @@ impl ZkayTransformer {
         );
         if !f.borrow().requires_verification {
             self.circuits.borrow_mut().remove(f);
+            println!(
+                "=====self.circuits.len=====rm==={}===========",
+                self.circuits.borrow().len()
+            );
         }
 
         // Set meta attributes and populate body
@@ -1255,6 +1267,10 @@ impl ZkayTransformer {
             );
         }
         self.circuits.borrow_mut().insert(new_f.clone(), circuit);
+        println!(
+            "=====self.circuits.len=====2==={}===========",
+            self.circuits.borrow().len()
+        );
         (new_f, f.clone())
     }
     // """

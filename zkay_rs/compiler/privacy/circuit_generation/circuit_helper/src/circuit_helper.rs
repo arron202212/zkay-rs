@@ -1494,10 +1494,10 @@ where
                 return_idf.clone(),
             );
         }
-        println!(
-            "=====return_idf======***********=================={return_idf},======={:?}",
-            return_idf.get_ast_type()
-        );
+        // println!(
+        //     "=====return_idf======***********=================={return_idf},======={:?}",
+        //     return_idf.get_ast_type()
+        // );
         return_idf
     }
     // """
@@ -2501,7 +2501,7 @@ where
                 .evaluate_privately()
         {
             //ccnt
-            self._evaluate_private_expression(expr, "").unwrap()//=priv_expr
+            self._evaluate_private_expression(expr, "").unwrap() //=priv_expr
         } else {
             //For public expressions which should not be evaluated in private, only the result is moved into the circuit
             println!(
@@ -2717,11 +2717,11 @@ where
             panic!("========else======{statement:?}");
         }
         // if out_var.code()=="zk__data.zk__out0_plain"{
-        println!(
-            "===out_var=====ccnt====={}=={:?}=====",
-            out_var,
-            out_var.get_ast_type()
-        );
+        // println!(
+        //     "===out_var=====ccnt====={}=={:?}=====",
+        //     out_var,
+        //     out_var.get_ast_type()
+        // );
         // }
         if is_instance(&out_var, ASTType::LocationExprBase) {
             Some(out_var)
@@ -2798,23 +2798,23 @@ where
                 .clone()
                 .try_as_hybrid_argument_idf();
         }
-        println!(
-            "====_circ_trafo====_evaluate_private_expression===*****====expr=={expr}===={:?}==",
-            expr.get_ast_type()
-        );
-        self._circ_trafo.as_ref().unwrap().set_is_callback(true);//ccnt
+        // println!(
+        //     "====_circ_trafo====_evaluate_private_expression===*****====expr=={expr}===={:?}==",
+        //     expr.get_ast_type()
+        // );
+        self._circ_trafo.as_ref().unwrap().set_is_callback(true); //ccnt
         let priv_expr = self._circ_trafo.as_ref().unwrap().visit(expr);
         self._circ_trafo.as_ref().unwrap().set_is_callback(false);
-        println!(
-            "={expr}==={:?}======priv_expr==*******************======{}======={:?}",
-            expr.get_ast_type(),
-            priv_expr.as_ref().unwrap(),
-            priv_expr.as_ref().unwrap().get_ast_type()
-        );
+        // println!(
+        //     "={expr}==={:?}======priv_expr==*******************======{}======={:?}",
+        //     expr.get_ast_type(),
+        //     priv_expr.as_ref().unwrap(),
+        //     priv_expr.as_ref().unwrap().get_ast_type()
+        // );
         // if priv_expr.as_ref().unwrap().code()=="(uint192(unhom(c_count)) << 128) | (uint192(unhom(b_count)) << 64) | uint192(unhom(a_count))"||priv_expr.as_ref().unwrap().code()=="(uint192(secret0_plain_c_count) << 128) | (uint192(secret2_plain_b_count) << 64) | uint192(secret4_plain_a_count)"{
         // panic!("===================");
         // }
-        
+
         let tname = format!(
             "{}{tmp_idf_suffix}",
             self._circ_temp_name_factory.base_name_factory.get_new_name(

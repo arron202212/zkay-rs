@@ -167,10 +167,10 @@ fn solc_compile(_input: &str, solp: &str, input_json_file_path: &str) -> String 
         .output()
         .expect("failed solc command");
     let output = String::from_utf8(solc.stdout).unwrap();
-    println!(
-        "==erro=={}========output==={output}",
-        String::from_utf8(solc.stderr).unwrap()
-    );
+    // println!(
+    //     "==erro=={}========output==={output}",
+    //     String::from_utf8(solc.stderr).unwrap()
+    // );
     let _ = std::fs::remove_file(input_json_file_path);
     output
 }

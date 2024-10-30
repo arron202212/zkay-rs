@@ -18,7 +18,7 @@ use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef}
 use zkay_derive::ASTVisitorBaseRefImpl;
 pub fn check_final(ast: &ASTFlatten) {
     let v = FinalVisitor::new();
-    let _=v.visit(ast);
+    let _ = v.visit(ast);
 }
 
 // class FinalVisitor(AstVisitor)
@@ -129,7 +129,7 @@ impl FinalVisitor {
                 .unwrap()
                 .borrow()
                 .constructor_definitions[0];
-            let _=self.visit(&c.borrow().body.clone().unwrap().into());
+            let _ = self.visit(&c.borrow().body.clone().unwrap().into());
         }
 
         for (sv, assigned) in self.state_vars_assigned.borrow().as_ref().unwrap() {
@@ -157,7 +157,7 @@ impl FinalVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let _= self.visit(
+        let _ = self.visit(
             &ast.to_ast()
                 .try_as_statement_ref()
                 .unwrap()
@@ -203,7 +203,7 @@ impl FinalVisitor {
     }
 
     pub fn visitIfStatement(&self, ast: &ASTFlatten) -> eyre::Result<<Self as AstVisitor>::Return> {
-        let _=self.visit(
+        let _ = self.visit(
             &ast.try_as_if_statement_ref()
                 .unwrap()
                 .borrow()
@@ -212,7 +212,7 @@ impl FinalVisitor {
                 .into(),
         );
         let prev = self.state_vars_assigned.borrow().as_ref().unwrap().clone();
-        let _=self.visit(
+        let _ = self.visit(
             &ast.try_as_if_statement_ref()
                 .unwrap()
                 .borrow()
@@ -223,7 +223,7 @@ impl FinalVisitor {
         let then_b = self.state_vars_assigned.borrow().as_ref().unwrap().clone();
         *self.state_vars_assigned.borrow_mut() = Some(prev);
         if let Some(else_branch) = &ast.try_as_if_statement_ref().unwrap().borrow().else_branch {
-            let _=self.visit(&else_branch.clone().into());
+            let _ = self.visit(&else_branch.clone().into());
         }
 
         assert!(

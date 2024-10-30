@@ -41,7 +41,7 @@ pub fn read_file(filename: &str) -> String {
 }
 
 pub fn hash_string(data: &str) -> Vec<u8> {
-    println!("=====3===");
+    // println!("=====3===");
     // let digest = hashlib.sha512(data).digest();
     let mut sha512hasher = Sha512State::default().build_hasher();
     sha512hasher.write(data.as_bytes());
@@ -49,7 +49,7 @@ pub fn hash_string(data: &str) -> Vec<u8> {
     let bytes_result = HasherContext::finish(&mut sha512hasher);
     let digest = format!("{bytes_result:02x}");
     assert!(digest.len() == 128);
-    println!("=====4===");
+    // println!("=====4===");
     digest[..64].bytes().collect()
 }
 
@@ -61,7 +61,10 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
     // let mut digest = hashlib.sha512();
     let mut digest = Sha512State::default().build_hasher();
     let mut f = File::open(filename).expect(filename);
-    for _ in 0..10 {
+    use std::time::{Duration, Instant};
+    let start = Instant::now();
+    for i in 0..10 {
+        let start1 = Instant::now();
         // Hash prover key in 128mb chunks
         let mut data = vec![0; chunk_size as usize];
         let res = f.read(&mut data);
@@ -69,10 +72,11 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
             println!("===hash_file=err=={res:?}========");
             break;
         }
-        println!("===hash_file===1=======");
+        println!("===hash_file==={i}=======");
         digest.write(&data);
+        println!("===hash_file==={i}====={:?}==", start1.elapsed());
     }
-    println!("===hash_file=====end======");
+    println!("===hash_file=====end===={:?}==", start.elapsed());
     // let digest = digest.finish();
     let bytes_result = HasherContext::finish(&mut digest);
     let digest = format!("{bytes_result:02x}");

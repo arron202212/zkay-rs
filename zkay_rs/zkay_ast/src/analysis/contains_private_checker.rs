@@ -17,7 +17,7 @@ pub fn contains_private_expr(ast: &ASTFlatten) -> bool {
     //     return false;
     // }
     let mut v = ContainsPrivVisitor::new();
-    let _= v.visit(ast);
+    let _ = v.visit(ast);
     let contains_private = *v.contains_private.borrow();
     contains_private
 }

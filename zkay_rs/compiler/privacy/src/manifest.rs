@@ -26,7 +26,6 @@ impl Manifest {
 
     // @staticmethod
     // """Returned parsed manifest json file located in project dir::"""
-
     pub fn load(project_dir: &str) -> Value {
         let f = File::open(Path::new(project_dir).join("manifest::json"));
         let mut s = String::new();
@@ -36,9 +35,8 @@ impl Manifest {
     }
 
     // @staticmethod
-    pub fn import_manifest_config(manifest: Value)
     // Check if zkay version matches
-    {
+    pub fn import_manifest_config(manifest: Value) {
         if let Value::Object(manifest) = manifest {
             if let Some(v) = manifest.get(&Manifest::zkay_version.to_string()) {
                 if v != &Value::String(CFG.lock().unwrap().zkay_version()) {
@@ -62,14 +60,36 @@ impl Manifest {
 
     // @staticmethod
     // @contextmanager
-    pub fn with_manifest_config(manifest: &str) {
-        let old_solc = CFG.lock().unwrap().solc_version();
-        let old_settings = CFG.lock().unwrap().export_compiler_settings();
+    pub fn with_manifest_config(manifest: &str) -> WithManifestConfig {
         // try
-        Manifest::import_manifest_config(Value::String(manifest.to_string()));
         // yield
         // finally
-        CFG.lock().unwrap().override_solc(old_solc);
-        CFG.lock().unwrap().import_compiler_settings(old_settings);
+        WithManifestConfig::new(manifest)
+    }
+}
+
+pub struct WithManifestConfig {
+    old_solc: Option<String>,
+    old_settings: Value,
+}
+impl WithManifestConfig {
+    pub fn new(manifest: &str) -> Self {
+        let old_solc = Some(CFG.lock().unwrap().solc_version());
+        let old_settings = CFG.lock().unwrap().export_compiler_settings();
+        Manifest::import_manifest_config(Value::String(manifest.to_string()));
+        Self {
+            old_solc,
+            old_settings,
+        }
+    }
+}
+impl Drop for WithManifestConfig {
+    fn drop(&mut self) {
+        CFG.lock()
+            .unwrap()
+            .override_solc(self.old_solc.clone().unwrap());
+        CFG.lock()
+            .unwrap()
+            .import_compiler_settings(self.old_settings.clone());
     }
 }

@@ -86,7 +86,7 @@ impl NameFactory {
         t: &ASTFlatten,
         priv_expr: Option<&ASTFlatten>,
     ) -> HybridArgumentIdf {
-        println!("===add_idf===={}=====", name,);
+        // println!("===add_idf===={}=====", name,);
         // assert!(&name != "secret0_plain_c_count");
         let idf = HybridArgumentIdf::new(
             name,
