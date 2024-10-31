@@ -50,7 +50,7 @@ pub fn hash_string(data: &str) -> Vec<u8> {
     let digest = format!("{bytes_result:02x}");
     assert!(digest.len() == 128);
     // println!("=====4===");
-    digest[..64].bytes().collect()
+    digest[..32].bytes().collect()
 }
 
 pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
@@ -81,11 +81,11 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
     let bytes_result = HasherContext::finish(&mut digest);
     let digest = format!("{bytes_result:02x}");
     println!(
-        "==digest==len===={}={bytes_result:02x}=={bytes_result:x}=======",
+        "==digest==len===={}={bytes_result:02x}=={bytes_result:?}=======",
         digest.len()
     );
     assert!(digest.len() == 128);
-    digest[..64].bytes().collect()
+    digest[..32].bytes().collect()
 }
 
 // pub fn without_extension(filename: str) -> str

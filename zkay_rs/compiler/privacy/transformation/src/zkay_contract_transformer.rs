@@ -524,10 +524,10 @@ impl ZkayTransformer {
                         self.global_vars.clone(),
                     ),
                 );
-                println!(
-                    "=====self.circuits.len====insert==5=={}===========",
-                    self.circuits.borrow().len()
-                );
+                // println!(
+                //     "=====self.circuits.len====insert==5=={}===========",
+                //     self.circuits.borrow().len()
+                // );
                 //println!("=====transform_contract==after=={}=", line!());
             }
 
@@ -1224,10 +1224,10 @@ impl ZkayTransformer {
         );
         if !f.borrow().requires_verification {
             self.circuits.borrow_mut().remove(f);
-            println!(
-                "=====self.circuits.len=====rm==={}===========",
-                self.circuits.borrow().len()
-            );
+            // println!(
+            //     "=====self.circuits.len=====rm==={}===========",
+            //     self.circuits.borrow().len()
+            // );
         }
 
         // Set meta attributes and populate body
@@ -1267,10 +1267,10 @@ impl ZkayTransformer {
             );
         }
         self.circuits.borrow_mut().insert(new_f.clone(), circuit);
-        println!(
-            "=====self.circuits.len=====2==={}===========",
-            self.circuits.borrow().len()
-        );
+        // println!(
+        //     "=====self.circuits.len=====2==={}===========",
+        //     self.circuits.borrow().len()
+        // );
         (new_f, f.clone())
     }
     // """

@@ -111,7 +111,8 @@ impl ProvingScheme for ProvingSchemeGm17 {
         let zk_out_name = CFG.lock().unwrap().zk_out_name();
         let in_size_trans = circuit.borrow().in_size_trans();
         let out_size_trans = circuit.borrow().out_size_trans();
-        let bn128_scalar_field_value: U256 = BN128_SCALAR_FIELD.clone();
+        let bn128_scalar_field_value: &str =
+            "21888242871839275222246405745257275088548364400416034343698204186575808495617"; //BN128_SCALAR_FIELD.clone();
         let x = MultiLineFormatter::new("").mul(format!(r#"
         pragma solidity {zkay_solc_version_compatibility};
 
@@ -163,8 +164,8 @@ potentially_overflowing_pi.iter().map(|pi| format!("require({pi} < {});",<Self a
                 proof.c = G1(proof_[6], proof_[7]);
                 Vk memory vk = getVk();
 
-                // Compute linear combination of public inputs"#)).mul(if should_hash{String::new()}else{
-                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),zk_in_name,zk_out_name,256usize - *BN128_SCALAR_FIELD_BITS) }).mul(
+                // Compute linear combination of public inputs"#)).mul(if should_hash{
+                format!("uint256 {} = uint256(sha256(abi.encodePacked({}, {})) >> {});",<Self as ProvingScheme>::hash_var_name(),zk_in_name,zk_out_name,256usize - *BN128_SCALAR_FIELD_BITS) }else{String::new()}).mul(
                 format!("G1 memory lc = {};",if first_pi != "1"{format!("vk.query[1].scalar_mul({})",first_pi)}  else {String::from("vk.query[1]")})).mul(
                  primary_inputs[1..].iter().enumerate().map(|(idx, pi )| format!(
     "lc = lc.add({}); ",format!("vk.query[{}]{}",idx+2,if pi != "1"{format!(".scalar_mul({pi})")}else{String::new()}))).collect::<Vec<_>>().concat()).mul(r#"
