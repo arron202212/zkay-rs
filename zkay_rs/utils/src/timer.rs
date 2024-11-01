@@ -10,8 +10,7 @@
 // import time
 use my_logging::logger;
 use std::time::{Duration, Instant};
-use zkay_config::config::CFG;
-use zkay_config::zk_print;
+use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
 
 pub struct WithTimeMeasure {
     key: String,

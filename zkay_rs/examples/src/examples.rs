@@ -4,7 +4,7 @@ use std::{
     io::Read,
     path::{Path, PathBuf},
 };
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig, config_version::Versions};
 use zkay_utils::helpers::get_contract_names;
 lazy_static! {
     pub static ref EXAMPLES_DIR: PathBuf = PathBuf::from(&env!("CARGO_MANIFEST_DIR"));//std::env::current_dir().unwrap();
@@ -117,7 +117,7 @@ impl Example {
         let mut file = File::open(&self.file_location).expect("");
         let mut s = String::new();
         file.read_to_string(&mut s).unwrap();
-        let s = s.replace('\t', &CFG.lock().unwrap().user_config.indentation());
+        let s = s.replace('\t', &CFG.lock().unwrap().indentation());
         s
     }
 

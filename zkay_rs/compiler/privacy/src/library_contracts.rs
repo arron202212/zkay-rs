@@ -13,7 +13,7 @@
 // from textwrap import dedent
 use lazy_static::lazy_static;
 use textwrap::dedent;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_version::Versions};
 use zkay_crypto::params::CryptoParams;
 use zkay_utils::helpers::read_file;
 // """Return all verification contract libraries combined into single string"""

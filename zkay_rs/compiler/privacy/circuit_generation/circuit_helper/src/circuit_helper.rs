@@ -45,7 +45,7 @@ use zkay_ast::global_defs::{
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::deep_copy::deep_copy;
 use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
-use zkay_config::{config::CFG, with_context_block};
+use zkay_config::{config::CFG, config_user::UserConfig, with_context_block};
 use zkay_crypto::params::CryptoParams;
 
 pub struct WithCircIndentBlock {
@@ -1421,7 +1421,7 @@ where
 
         if !is_public {
             //Check if the secret plain input corresponds to the decrypted cipher value
-            let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(
+            let crypto_params = CFG.lock().unwrap().get_crypto_params(
                 &expr
                     .ast_base_ref()
                     .unwrap()
@@ -1471,7 +1471,7 @@ where
         }
 
         //Cache circuit input for later reuse if possible
-        if CFG.lock().unwrap().user_config.opt_cache_circuit_inputs()
+        if CFG.lock().unwrap().opt_cache_circuit_inputs()
             && is_instance(expr, ASTType::IdentifierExpr)
         {
             //TODO: What if a homomorphic variable gets used as both a plain variable and as a ciphertext?
@@ -2650,11 +2650,7 @@ where
                 &cipher_t,
                 Some(&RcCell::new(enc_expr).into()),
             );
-            let crypto_params = CFG
-                .lock()
-                .unwrap()
-                .user_config
-                .get_crypto_params(homomorphism);
+            let crypto_params = CFG.lock().unwrap().get_crypto_params(homomorphism);
             self._ensure_encryption(
                 &expr
                     .to_ast()

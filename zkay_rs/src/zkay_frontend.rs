@@ -34,7 +34,7 @@ use proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use solidity::compiler::check_compilation;
 use transformation::zkay_contract_transformer::transform_ast;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig, config_version::Versions};
 use zkay_utils::helpers::{lines_of_code, read_file}; //, without_extension};
 use zkay_utils::progress_printer::print_step;
 // use zkay_utils::timer::time_measure
@@ -205,8 +205,8 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
     //     //     ProvingSchemeGm17
     //     // },
     // );
-    let snark_backend = CFG.lock().unwrap().user_config.snark_backend();
-    let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme();
+    let snark_backend = CFG.lock().unwrap().snark_backend();
+    let proving_scheme = CFG.lock().unwrap().proving_scheme();
     let cg = generator_classes(&snark_backend)(circuits, proving_scheme, output_dir.to_string());
     // println!("==============={}==", line!());
     let mut kwargs = std::collections::HashMap::new();
@@ -247,10 +247,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
                 .unwrap()
                 .contains(&hom)
             {
-                CFG.lock()
-                    .unwrap()
-                    .user_config
-                    .set_crypto_backend(&hom, String::new());
+                CFG.lock().unwrap().set_crypto_backend(&hom, String::new());
             }
         }
 

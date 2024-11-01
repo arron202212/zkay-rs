@@ -39,6 +39,7 @@ use std::{
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
     config::{ConstructorOrFunctionDefinitionAttr, CFG},
+    config_user::UserConfig,
     zk_print,
 };
 use zkay_crypto::params::CryptoParams;
@@ -9241,7 +9242,7 @@ impl TypeName {
     }
 
     pub fn cipher_type(plain_type: RcCell<AnnotatedTypeName>, hom: String) -> Self {
-        let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(&hom);
+        let crypto_params = CFG.lock().unwrap().get_crypto_params(&hom);
         let mut plain_type = plain_type.borrow().clone();
         plain_type.homomorphism = hom; // Just for display purposes
         TypeName::Array(Array::CipherText(CipherText::new(
@@ -14349,7 +14350,7 @@ pub fn indent(s: String) -> String {
             if v.trim().is_empty() {
                 String::new()
             } else {
-                format!("{}{}", CFG.lock().unwrap().user_config.indentation(), v)
+                format!("{}{}", CFG.lock().unwrap().indentation(), v)
             }
         })
         .collect::<Vec<_>>()

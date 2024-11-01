@@ -9,7 +9,7 @@
 // import os
 // import subprocess
 use std::process::{Command, Stdio};
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig};
 // from typing import List, Optional, Tuple
 use std::path::PathBuf;
 pub fn run_command(
@@ -47,7 +47,7 @@ pub fn run_commands(
     };
 
     let (output, error, process) = if allow_verbose
-        && CFG.lock().unwrap().user_config.verbosity() >= 2
+        && CFG.lock().unwrap().verbosity() >= 2
         && !CFG.lock().unwrap().is_unit_test()
     {
         let process = Command::new(cmd.join(" "))
@@ -88,7 +88,7 @@ pub fn run_commands(
             String::from_utf8(output),
             String::from_utf8(error)
         );
-    } else if CFG.lock().unwrap().user_config.verbosity() >= 2 {
+    } else if CFG.lock().unwrap().verbosity() >= 2 {
         print!("Ran command {}:\n\n{output:?}\n{error:?}", get_command(cmd));
     }
 

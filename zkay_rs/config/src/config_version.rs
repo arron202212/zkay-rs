@@ -10,22 +10,59 @@ use semver_rs::Version;
 //     pub static ref zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
 //     pub static ref ZKAY_VERSION:&'static str=include_str!("./VERSION");
 // }
-pub struct Versions {
+pub struct VersionsBase {
     pub solc_version: Option<String>,
     pub zkay_solc_version_compatibility: Version,
 }
-impl Default for Versions {
+impl Default for VersionsBase {
     fn default() -> Self {
         Self::new()
     }
 }
-impl Versions {
+
+pub trait Versions {
     // pub const zkay_solc_version_compatibility:Version=Version::new("^0.6.0").parse().expect("zkay_solc_version_compatibility");
-    pub const ZKAY_SOLC_VERSION_COMPATIBILITY: &'static str = "^0.6.0";
-    pub const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "v0.6.12";
-    pub const ZKAY_VERSION: &'static str = include_str!("./VERSION");
-    pub const SOLC_VERSION: &'static str = "v0.6.12";
-    // pub const solc_version:Option<&'static str>=Some("0.6.12");
+    const ZKAY_SOLC_VERSION_COMPATIBILITY: &'static str = "^0.6.0";
+    const ZKAY_LIBRARY_SOLC_VERSION: &'static str = "v0.6.12";
+    const ZKAY_VERSION: &'static str = include_str!("./VERSION");
+    const SOLC_VERSION: &'static str = "v0.6.12";
+    fn versions_base_ref(&self) -> &VersionsBase;
+    fn versions_base_mut(&mut self) -> &mut VersionsBase;
+    // Note: Changing this version breaks compatibility with already deployed library contracts
+    fn library_solc_version(&self) -> String {
+        Self::ZKAY_LIBRARY_SOLC_VERSION.to_string()
+    }
+
+    fn zkay_version(&self) -> String {
+        // zkay version number
+        Self::ZKAY_VERSION.to_string()
+    }
+
+    fn zkay_solc_version_compatibility(&self) -> String {
+        // Target solidity language level for the current zkay version
+        Self::ZKAY_SOLC_VERSION_COMPATIBILITY.to_string()
+    }
+
+    fn solc_version(&self) -> String {
+        let version = self.versions_base_ref().solc_version.clone();
+        println!("==version====={version:?}");
+        assert!(version.is_some() && version != Some(String::from("latest")));
+        version.unwrap().to_string()
+    }
+
+    //     @staticmethod
+    fn override_solc(&mut self, new_version: String) {
+        self.set_solc_version(new_version);
+    }
+    fn set_solc_version(&mut self, version: String) {
+        self.versions_base_mut().solc_version = Some(version);
+        // .strip_prefix('v')
+        // .map(|version| version.to_string())
+        // .or(Some(version));
+    }
+}
+
+impl VersionsBase {
     pub fn new() -> Self {
         Self {
             solc_version: Some(String::from("0.6.12")),
@@ -33,12 +70,6 @@ impl Versions {
                 .parse()
                 .expect("zkay_solc_version_compatibility"),
         }
-    }
-    pub fn set_solc_version(&mut self, version: String) {
-        self.solc_version = Some(version);
-        // .strip_prefix('v')
-        // .map(|version| version.to_string())
-        // .or(Some(version));
     }
 }
 // class Versions:

@@ -48,7 +48,7 @@ use zkay_ast::visitors::{
     visitor::AstVisitor,
 };
 
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::AstTransformerVisitorBaseRefImpl;
 // """
@@ -1339,7 +1339,7 @@ impl ZkayTransformer {
                 &crypto_params,
             );
         }
-        let all_crypto_params = CFG.lock().unwrap().user_config.all_crypto_params();
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             if crypto_params.is_symmetric_cipher()
                 && (ext_circuit.borrow().requested_global_keys().contains(&(
@@ -1604,7 +1604,6 @@ impl ZkayTransformer {
                     let cipher_payload_len = CFG
                         .lock()
                         .unwrap()
-                        .user_config
                         .get_crypto_params(
                             &p.borrow()
                                 .annotated_type()
@@ -1815,7 +1814,7 @@ impl ZkayTransformer {
         stmts.push(RcCell::new(CommentBase::new(String::new())).into());
 
         // Call verifier
-        let disable_verification = CFG.lock().unwrap().user_config.disable_verification();
+        let disable_verification = CFG.lock().unwrap().disable_verification();
         if requires_proof && !disable_verification {
             // println!("==========requires_proof && !disable_verification====***************===================");
             let verifier = IdentifierExpr::new(

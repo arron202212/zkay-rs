@@ -19,7 +19,7 @@ use rccell::RcCell;
 use std::path::{Path, PathBuf};
 use zkay_ast::ast::ConstructorOrFunctionDefinition;
 use zkay_ast::ast::IntoAST;
-use zkay_config::{config::CFG, zk_print};
+use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
 use zkay_utils::progress_printer::print_step;
 use zkay_utils::timer::time_measure;
 extern crate num_cpus;

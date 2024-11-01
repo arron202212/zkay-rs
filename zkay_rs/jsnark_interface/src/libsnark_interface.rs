@@ -8,7 +8,7 @@
 
 // import os
 
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_utils::run_command::run_commands;
 
 const libsnark_runner: &str = "run_snark";
@@ -159,7 +159,6 @@ fn generate_proof_docker_command(
         proving_scheme_map.get(&proving_scheme).unwrap(),
         CFG.lock()
             .unwrap()
-            .user_config
             .libsnark_check_verify_locally_during_proof_generation()
     ));
     volumes

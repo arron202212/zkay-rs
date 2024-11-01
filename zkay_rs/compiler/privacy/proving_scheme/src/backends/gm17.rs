@@ -9,11 +9,11 @@
 
 use crate::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK};
 use circuit_helper::circuit_helper::CircuitHelper;
-use privacy::library_contracts::{BN128_SCALAR_FIELD, BN128_SCALAR_FIELD_BITS};
+use privacy::library_contracts::BN128_SCALAR_FIELD_BITS;
 use rccell::RcCell;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_version::Versions};
 use zkay_utils::multiline_formatter::MultiLineFormatter;
-use zkp_u256::{Zero, U256};
+// use zkp_u256::{Zero, U256};
 pub struct VerifyingKey<G1: Default, G2: Default> {
     h: G2,
     g_alpha: G1,

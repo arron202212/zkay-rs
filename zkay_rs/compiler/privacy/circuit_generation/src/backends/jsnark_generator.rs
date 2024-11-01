@@ -35,7 +35,7 @@ use zkay_ast::ast::{
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
-use zkay_config::{config::CFG, zk_print};
+use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
 use zkay_derive::ASTVisitorBaseRefImpl;
 use zkay_utils::helpers::{hash_file, hash_string};
 use zkay_utils::helpers::{read_file, save_to_file};
@@ -1029,7 +1029,6 @@ impl JsnarkVisitor {
                     let crypto_backend = CFG
                         .lock()
                         .unwrap()
-                        .user_config
                         .get_crypto_params(&homomorphism)
                         .crypto_name; // String::from("elgamal");
                     let public_key_name = ast
@@ -1309,7 +1308,7 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
         .iter()
         .map(|sec_input| sec_input.identifier_base.name.clone())
         .collect();
-    let all_crypto_params = CFG.lock().unwrap().user_config.all_crypto_params();
+    let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
     for crypto_params in &all_crypto_params {
         let pk_name =
             CircuitHelper::get_glob_key_name(&RcCell::new(MeExpr::new()).into(), crypto_params);
@@ -1434,8 +1433,8 @@ impl CircuitGenerator for JsnarkGenerator {
             CFG.lock().unwrap().jsnark_circuit_classname()
         ));
         // println!("========");
-        let proving_scheme = CFG.lock().unwrap().user_config.proving_scheme(); //String::from("groth16");//
-                                                                               // println!("====1====");
+        let proving_scheme = CFG.lock().unwrap().proving_scheme(); //String::from("groth16");//
+                                                                   // println!("====1====");
         let jar_hash_string =
             jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string() + &code + &proving_scheme;
         // println!("====1==0==");

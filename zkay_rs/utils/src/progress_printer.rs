@@ -2,7 +2,7 @@
 // from enum import Enum
 // from typing import ContextManager
 
-use zkay_config::{config::CFG, zk_print};
+use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
 
 pub struct WithPrintStep;
 impl WithPrintStep {

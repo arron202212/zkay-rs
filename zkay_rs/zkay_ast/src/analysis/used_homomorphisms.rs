@@ -14,7 +14,7 @@ use crate::homomorphism::Homomorphism;
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use std::collections::{BTreeMap, BTreeSet};
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::ASTVisitorBaseRefImpl;
 // class UsedHomomorphismsVisitor(AstVisitor)
@@ -288,13 +288,13 @@ impl UsedHomomorphismsVisitor {
     }
     // Guarantee consistent order
     pub fn used_crypto_backends(used_homs: BTreeSet<String>) -> Vec<CryptoParams> {
-        let user_config = CFG.lock().unwrap().user_config.clone();
+        let _user_config = CFG.lock().unwrap().user_config_base_ref().clone(); //TODO LOCK
         Homomorphism::fields()
             .iter()
             .filter_map(|hom| {
                 used_homs
                     .contains(hom)
-                    .then(|| user_config.get_crypto_params(&hom))
+                    .then(|| CFG.lock().unwrap().get_crypto_params(&hom))
             })
             .collect::<BTreeSet<_>>()
             .into_iter()

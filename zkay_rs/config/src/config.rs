@@ -14,11 +14,11 @@
 
 use crate::meta::PROVINGSCHEMEPARAMS;
 // use  crate::config_user::UserConfig;
-use crate::config_version::Versions;
+use crate::config_version::{Versions, VersionsBase};
 // use zkay_transaction::crypto::params::CryptoParams;
 // use zkay_ast::homomorphism::String;
 // use circuit_generation::circuit_helper::CircuitHelper;
-use crate::config_user::UserConfig;
+use crate::config_user::{UserConfig, UserConfigBase};
 use crate::lc_vec_s;
 use app_dirs2::*;
 use lazy_static::lazy_static;
@@ -36,22 +36,22 @@ macro_rules! with_context_block {
 
 lazy_static! {
     pub static ref CFG: Mutex<Config> = Mutex::new(Config::new());
-    pub static ref VERSIONS: Mutex<Versions> = Mutex::new({
-        let mut versions_internal = Versions::new();
-        versions_internal.set_solc_version(String::from("0.6.12"));
-        versions_internal
-    });
+    // pub static ref VERSIONS: Mutex<Versions> = Mutex::new({
+    //     let mut versions_internal = Versions::new();
+    //     versions_internal.set_solc_version(String::from("0.6.12"));
+    //     versions_internal
+    // });
 }
 #[macro_export]
 macro_rules! zk_print {
     (verbosity_level: $verbosity_level:expr, $fmt:expr $(, $($arg:tt)*)?) => {
-        if ($verbosity_level) <= CFG.lock().unwrap().user_config.verbosity() && !CFG.lock().unwrap().is_unit_test(){
+        if ($verbosity_level) <= CFG.lock().unwrap().verbosity() && !CFG.lock().unwrap().is_unit_test(){
             println!(concat!("zk: ", $fmt),$($($arg)*)?);
         }
 
     };
     ($fmt:expr $(, $($arg:tt)*)?) => {
-    if 1 <= CFG.lock().unwrap().user_config.verbosity() && !CFG.lock().unwrap().is_unit_test(){
+    if 1 <= CFG.lock().unwrap().verbosity() && !CFG.lock().unwrap().is_unit_test(){
         println!($fmt, $($($arg)*)?);
     }
     };
@@ -71,7 +71,8 @@ pub trait ConstructorOrFunctionDefinitionAttr {
 }
 // Versions::set_solc_version("latest")
 pub struct Config {
-    pub user_config: UserConfig,
+    pub user_config_base: UserConfigBase,
+    pub versions_base: VersionsBase,
     _options_with_effect_on_circuit_output: Vec<String>,
     _is_unit_test: bool,
     _concrete_solc_version: Option<String>,
@@ -90,7 +91,8 @@ impl Config {
     pub fn new() -> Self {
         // Internal values
         Self {
-            user_config: UserConfig::new(),
+            user_config_base: UserConfigBase::new(),
+            versions_base: VersionsBase::new(),
             _options_with_effect_on_circuit_output: lc_vec_s![
                 "proving_scheme",
                 "snark_backend",
@@ -123,15 +125,14 @@ impl Config {
 
     pub fn load_configuration_from_disk(&mut self, local_cfg_file: String) {
         // Load global configuration file
-        let global_config_dir =
-            get_app_dir(AppDataType::SharedConfig, &self.user_config._appdirs, "");
+        let global_config_dir = get_app_dir(AppDataType::SharedConfig, &self.appdirs(), "");
         let global_cfg_file =
             std::path::PathBuf::from(global_config_dir.expect("").to_str().expect(""))
                 .join("config.json");
         self._load_cfg_file_if_exists(global_cfg_file.to_str().expect("").to_string());
 
         // Load user configuration file
-        let user_config_dir = get_app_dir(AppDataType::UserConfig, &self.user_config._appdirs, "");
+        let user_config_dir = get_app_dir(AppDataType::UserConfig, self.appdirs(), "");
         let user_cfg_file =
             std::path::PathBuf::from(&user_config_dir.expect("").to_str().expect(""))
                 .join("config.json");
@@ -172,15 +173,15 @@ impl Config {
         //     .collect()
         let data = json!(
         {
-                "proving_scheme":self.user_config.proving_scheme(),
-                "snark_backend": self.user_config.snark_backend(),
-                "main_crypto_backend": self.user_config.main_crypto_backend(),
-                "addhom_crypto_backend": self.user_config.addhom_crypto_backend(),
-                "opt_solc_optimizer_runs": self.user_config.opt_solc_optimizer_runs(),
-                "opt_hash_threshold": self.user_config.opt_hash_threshold(),
-                "opt_eval_constexpr_in_circuit": self.user_config.opt_eval_constexpr_in_circuit(),
-                "opt_cache_circuit_inputs": self.user_config.opt_cache_circuit_inputs(),
-                "opt_cache_circuit_outputs":self.user_config.opt_cache_circuit_outputs(),
+                "proving_scheme":self.proving_scheme(),
+                "snark_backend": self.snark_backend(),
+                "main_crypto_backend": self.main_crypto_backend(),
+                "addhom_crypto_backend": self.addhom_crypto_backend(),
+                "opt_solc_optimizer_runs": self.opt_solc_optimizer_runs(),
+                "opt_hash_threshold": self.opt_hash_threshold(),
+                "opt_eval_constexpr_in_circuit": self.opt_eval_constexpr_in_circuit(),
+                "opt_cache_circuit_inputs": self.opt_cache_circuit_inputs(),
+                "opt_cache_circuit_outputs":self.opt_cache_circuit_outputs(),
         });
         data
     }
@@ -208,47 +209,18 @@ impl Config {
         WithLibraryCompilationEnvironment::new(self)
     }
 
-    // Note: Changing this version breaks compatibility with already deployed library contracts
-    pub fn library_solc_version(&self) -> String {
-        Versions::ZKAY_LIBRARY_SOLC_VERSION.to_string()
-    }
-
-    pub fn zkay_version(&self) -> String {
-        // zkay version number
-        Versions::ZKAY_VERSION.to_string()
-    }
-
-    pub fn zkay_solc_version_compatibility(&self) -> String {
-        // Target solidity language level for the current zkay version
-        Versions::ZKAY_SOLC_VERSION_COMPATIBILITY.to_string()
-    }
-
-    pub fn solc_version(&self) -> String {
-        let version = VERSIONS.lock().unwrap().solc_version.clone();
-        println!("==version====={version:?}");
-        assert!(version.is_some() && version != Some(String::from("latest")));
-        version.unwrap().to_string()
-    }
-
-    //     @staticmethod
-    pub fn override_solc(&self, new_version: String) {
-        VERSIONS.lock().unwrap().set_solc_version(new_version);
-    }
-
     pub fn is_symmetric_cipher(&self, hom: String) -> bool {
-        self.user_config
-            .get_crypto_params(&hom)
-            .is_symmetric_cipher()
+        self.get_crypto_params(&hom).is_symmetric_cipher()
     }
 
     pub fn proof_len(&self) -> i32 {
         // println!("=====proving_scheme============={:?}",(&String::from("proving_scheme")));
-        PROVINGSCHEMEPARAMS[&self.user_config._proving_scheme].proof_len
+        PROVINGSCHEMEPARAMS[&self.proving_scheme()].proof_len
     }
 
     // Names of all solidity libraries in verify_libs.sol, which need to be linked against.
     pub fn external_crypto_lib_names(&self) -> Vec<String> {
-        PROVINGSCHEMEPARAMS[&self.user_config._proving_scheme]
+        PROVINGSCHEMEPARAMS[&self.proving_scheme()]
             .external_sol_libs
             .clone()
     }
@@ -259,7 +231,7 @@ impl Config {
     //          but increases offchain resource usage during key and proof generation.
     pub fn should_use_hash(&self, pub_arg_size: i32) -> bool {
         // let pub_arg_size = circuit.trans_in_size + circuit.trans_out_size;
-        pub_arg_size > self.user_config.opt_hash_threshold()
+        pub_arg_size > self.opt_hash_threshold()
     }
 
     // Identifiers in user code must not start with this prefix.
@@ -350,6 +322,22 @@ impl Config {
     }
 }
 
+impl UserConfig for Config {
+    fn user_config_base_ref(&self) -> &UserConfigBase {
+        &self.user_config_base
+    }
+    fn user_config_base_mut(&mut self) -> &mut UserConfigBase {
+        &mut self.user_config_base
+    }
+}
+impl Versions for Config {
+    fn versions_base_ref(&self) -> &VersionsBase {
+        &self.versions_base
+    }
+    fn versions_base_mut(&mut self) -> &mut VersionsBase {
+        &mut self.versions_base
+    }
+}
 pub struct WithLibraryCompilationEnvironment<'a> {
     old_solc: Option<String>,
     old_opt_runs: i32,
@@ -359,10 +347,10 @@ impl<'a> WithLibraryCompilationEnvironment<'a> {
     pub fn new(config: &'a mut Config) -> Self {
         let (old_solc, old_opt_runs) = (
             Some(config.solc_version()),
-            config.user_config.opt_solc_optimizer_runs(),
+            config.opt_solc_optimizer_runs(),
         );
         config.override_solc(config.library_solc_version());
-        config.user_config.set_opt_solc_optimizer_runs(1000);
+        config.set_opt_solc_optimizer_runs(1000);
         Self {
             old_solc,
             old_opt_runs,
@@ -372,9 +360,7 @@ impl<'a> WithLibraryCompilationEnvironment<'a> {
 }
 impl<'a> Drop for WithLibraryCompilationEnvironment<'a> {
     fn drop(&mut self) {
-        self.config
-            .user_config
-            .set_opt_solc_optimizer_runs(self.old_opt_runs);
+        self.config.set_opt_solc_optimizer_runs(self.old_opt_runs);
         self.config.override_solc(self.old_solc.clone().unwrap());
     }
 }

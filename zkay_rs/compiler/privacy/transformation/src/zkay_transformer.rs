@@ -43,7 +43,7 @@ use zkay_ast::visitors::transformer_visitor::{
     AstTransformerVisitor, AstTransformerVisitorBase, AstTransformerVisitorBaseRef,
     TransformerVisitorEx,
 };
-use zkay_config::{config::CFG, with_context_block};
+use zkay_config::{config::CFG, config_user::UserConfig, with_context_block};
 
 use zkay_derive::AstTransformerVisitorBaseRefImpl;
 
@@ -660,7 +660,7 @@ impl ZkayStatementTransformer {
             .unwrap()
             .modified_values()
             .clone();
-        if CFG.lock().unwrap().user_config.opt_cache_circuit_outputs()
+        if CFG.lock().unwrap().opt_cache_circuit_outputs()
             && is_instance(
                 ast.to_ast()
                     .try_as_statement_ref()
@@ -2788,7 +2788,7 @@ impl ZkayCircuitTransformer {
             {
                 //To perform homomorphic operations, we require the recipient"s public key
 
-                let crypto_params = CFG.lock().unwrap().user_config.get_crypto_params(
+                let crypto_params = CFG.lock().unwrap().get_crypto_params(
                     &ast.to_ast()
                         .try_as_expression_ref()
                         .unwrap()

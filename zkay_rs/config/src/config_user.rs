@@ -67,7 +67,7 @@ pub fn _check_is_one_of(val: &String, legal_vals: &Vec<String>) {
 //     if not isinstance(val, t){
 //         raise ValueError(f"Value {val} has wrong type (expected {t})")
 #[derive(Clone)]
-pub struct UserConfig {
+pub struct UserConfigBase {
     pub _appdirs: AppInfo,
     pub _proving_scheme: String,
     pub _proving_scheme_values: Vec<String>,
@@ -108,12 +108,12 @@ pub struct UserConfig {
 
     pub _disable_verification: bool,
 }
-impl Default for UserConfig {
+impl Default for UserConfigBase {
     fn default() -> Self {
         Self::new()
     }
 }
-impl UserConfig {
+impl UserConfigBase {
     pub fn new() -> Self {
         // self._appdirs = AppDirs("zkay", appauthor=False, version=None, roaming=True)
         let _appdirs: AppInfo = AppInfo {
@@ -209,35 +209,41 @@ impl UserConfig {
             _appdirs,
         }
     }
+}
 
-    pub fn proving_scheme(&self) -> String {
+pub trait UserConfig {
+    fn user_config_base_ref(&self) -> &UserConfigBase;
+    fn user_config_base_mut(&mut self) -> &mut UserConfigBase;
+    fn appdirs(&self) -> &AppInfo {
+        &self.user_config_base_ref()._appdirs
+    }
+    fn proving_scheme(&self) -> String {
         // NIZK proving scheme to use.
         // Available Options: [gm17]
 
-        self._proving_scheme.clone()
+        self.user_config_base_ref()._proving_scheme.clone()
     }
-
     // @proving_scheme.setter
-    pub fn set_proving_scheme(&mut self, val: String) {
-        _check_is_one_of(&val, &self._proving_scheme_values);
-        self._proving_scheme = val;
+    fn set_proving_scheme(&mut self, val: String) {
+        _check_is_one_of(&val, &self.user_config_base_ref()._proving_scheme_values);
+        self.user_config_base_mut()._proving_scheme = val;
     }
 
-    pub fn snark_backend(&self) -> String {
+    fn snark_backend(&self) -> String {
         // Snark backend to use.
 
         // Available Options: [jsnark]
 
-        self._snark_backend.clone()
+        self.user_config_base_ref()._snark_backend.clone()
     }
 
     // @snark_backend.setter
-    pub fn set_snark_backend(&mut self, val: String) {
-        _check_is_one_of(&val, &self._snark_backend_values);
-        self._snark_backend = val;
+    fn set_snark_backend(&mut self, val: String) {
+        _check_is_one_of(&val, &self.user_config_base_ref()._snark_backend_values);
+        self.user_config_base_mut()._snark_backend = val;
     }
 
-    pub fn main_crypto_backend(&self) -> String {
+    fn main_crypto_backend(&self) -> String {
         // Main encryption backend to use.
         // Available Options: [dummy, dummy-hom, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
 
@@ -246,38 +252,43 @@ impl UserConfig {
     }
 
     // @main_crypto_backend.setter
-    pub fn set_main_crypto_backend(&mut self, val: String) {
+    fn set_main_crypto_backend(&mut self, val: String) {
         self.set_crypto_backend(&String::from("NON_HOMOMORPHIC"), val);
     }
 
-    pub fn addhom_crypto_backend(&self) -> String {
+    fn addhom_crypto_backend(&self) -> String {
         // Additively homomorphic encryption backend to use.
         // Available Options: [dummy-hom, paillier, elgamal]
 
-        self._crypto_backends[&String::from("ADDITIVE")].clone()
+        self.user_config_base_ref()._crypto_backends[&String::from("ADDITIVE")].clone()
     }
 
     // @addhom_crypto_backend.setter
-    pub fn set_addhom_crypto_backend(&mut self, val: String) {
+    fn set_addhom_crypto_backend(&mut self, val: String) {
         self.set_crypto_backend(&String::from("ADDITIVE"), val);
     }
 
-    pub fn _get_crypto_backend(&self, hom: &String) -> Option<String> {
-        self._crypto_backends.get(hom).cloned()
+    fn _get_crypto_backend(&self, hom: &String) -> Option<String> {
+        self.user_config_base_ref()
+            ._crypto_backends
+            .get(hom)
+            .cloned()
     }
 
-    pub fn set_crypto_backend(&mut self, hom: &String, val: String) {
+    fn set_crypto_backend(&mut self, hom: &String, val: String) {
         _check_is_one_of(
             &val,
-            &self._crypto_backend_values[hom]
+            &self.user_config_base_ref()._crypto_backend_values[hom]
                 .iter()
                 .filter_map(|s| if s.is_some() { s.clone() } else { None })
                 .collect(),
         );
-        self._crypto_backends.insert(hom.clone(), val);
+        self.user_config_base_mut()
+            ._crypto_backends
+            .insert(hom.clone(), val);
     }
 
-    pub fn get_crypto_params(&self, hom: &String) -> CryptoParams {
+    fn get_crypto_params(&self, hom: &String) -> CryptoParams {
         let backend_name = self._get_crypto_backend(hom);
         assert!(
             backend_name.is_some(),
@@ -288,7 +299,7 @@ impl UserConfig {
         CryptoParams::new(backend_name.unwrap())
     }
 
-    pub fn all_crypto_params(&self) -> Vec<CryptoParams> {
+    fn all_crypto_params(&self) -> Vec<CryptoParams> {
         let crypto_backends: Vec<_> = [String::from("NON_HOMOMORPHIC"), String::from("ADDITIVE")]
             .iter()
             .map(|hom| self._get_crypto_backend(hom))
@@ -303,22 +314,25 @@ impl UserConfig {
             .collect()
     }
 
-    pub fn blockchain_backend(&self) -> String {
+    fn blockchain_backend(&self) -> String {
         // Backend to use when interacting with the blockchain.
         // Running unit tests is only supported with w3-eth-tester and w3-ganache at the moment (because they need pre-funded dummy accounts).
         // See https://web3py.readthedocs.io/en/stable/providers.html for more information.
         // Available Options: [w3-eth-tester, w3-ganache, w3-ipc, w3-websocket, w3-http, w3-custom]
 
-        self._blockchain_backend.clone()
+        self.user_config_base_ref()._blockchain_backend.clone()
     }
 
     // @blockchain_backend.setter
-    pub fn set_blockchain_backend(&mut self, val: String) {
-        _check_is_one_of(&val, &self._blockchain_backend_values);
-        self._blockchain_backend = val;
+    fn set_blockchain_backend(&mut self, val: String) {
+        _check_is_one_of(
+            &val,
+            &self.user_config_base_ref()._blockchain_backend_values,
+        );
+        self.user_config_base_mut()._blockchain_backend = val;
     }
 
-    pub fn blockchain_node_uri(&self) -> Option<String> {
+    fn blockchain_node_uri(&self) -> Option<String> {
         //Union[Any, String, None]
 
         // Backend specific location of the ethereum node
@@ -329,30 +343,30 @@ impl UserConfig {
         // w3-http       : url
         // w3-custom     : web3 instance, must not be None
 
-        self._blockchain_node_uri.clone()
+        self.user_config_base_ref()._blockchain_node_uri.clone()
     }
 
     // @blockchain_node_uri.setter
-    pub fn set_blockchain_node_uri(&mut self, val: Option<String>) {
+    fn set_blockchain_node_uri(&mut self, val: Option<String>) {
         //Union[Any, String, None]
-        self._blockchain_node_uri = val;
+        self.user_config_base_mut()._blockchain_node_uri = val;
     }
 
-    pub fn blockchain_pki_address(&self) -> String {
+    fn blockchain_pki_address(&self) -> String {
         // Address of the deployed pki contract.
         // Must be specified for backends other than w3-eth-tester.
         // This library can be deployed using ``zkay deploy-pki``.
 
-        self._blockchain_pki_address.clone()
+        self.user_config_base_ref()._blockchain_pki_address.clone()
     }
 
     // @blockchain_pki_address.setter
-    pub fn set_blockchain_pki_address(&mut self, val: String) {
+    fn set_blockchain_pki_address(&mut self, val: String) {
         //_type_check(val, String);
-        self._blockchain_pki_address = val;
+        self.user_config_base_mut()._blockchain_pki_address = val;
     }
 
-    pub fn blockchain_crypto_lib_addresses(&self) -> String {
+    fn blockchain_crypto_lib_addresses(&self) -> String {
         // Comma separated list of the addresses of the deployed crypto library contracts required for the current proving_scheme.
         // e.g. "0xAb31...,0xec32C..."
 
@@ -361,16 +375,18 @@ impl UserConfig {
         // The addresses in the list must appear in the same order as the corresponding
         // libraries were deployed by that command.
 
-        self._blockchain_crypto_lib_addresses.clone()
+        self.user_config_base_ref()
+            ._blockchain_crypto_lib_addresses
+            .clone()
     }
 
     // @blockchain_crypto_lib_addresses.setter
-    pub fn set_blockchain_crypto_lib_addresses(&mut self, val: String) {
+    fn set_blockchain_crypto_lib_addresses(&mut self, val: String) {
         //_type_check(val, String);
-        self._blockchain_crypto_lib_addresses = val;
+        self.user_config_base_mut()._blockchain_crypto_lib_addresses = val;
     }
 
-    pub fn blockchain_default_account(&self) -> Option<String> {
+    fn blockchain_default_account(&self) -> Option<String> {
         //Union[i32, String, None]
 
         // Address of the wallet which should be made available under the name "me" in contract.py.
@@ -379,49 +395,53 @@ impl UserConfig {
         // If i32 -> use eth.accounts[i32]
         // If String -> use address String
 
-        self._blockchain_default_account.clone()
+        self.user_config_base_ref()
+            ._blockchain_default_account
+            .clone()
     }
 
     // @blockchain_default_account.setter
-    pub fn set_blockchain_default_account(&mut self, val: String) {
+    fn set_blockchain_default_account(&mut self, val: String) {
         // //_type_check(val, (i32, String, None))
-        self._blockchain_default_account = Some(val);
+        self.user_config_base_mut()._blockchain_default_account = Some(val);
     }
 
-    pub fn indentation(&self) -> String {
+    fn indentation(&self) -> String {
         // Specifies the identation which should be used for the generated code output.
-        self._indentation.clone()
+        self.user_config_base_ref()._indentation.clone()
     }
 
     // @indentation.setter
-    pub fn set_indentation(&mut self, val: String) {
+    fn set_indentation(&mut self, val: String) {
         // //_type_check(val, String)
-        self._indentation = val;
+        self.user_config_base_mut()._indentation = val;
     }
 
     // If true, the libsnark interface verifies locally whether the proof can be verified during proof generation.
-    pub fn libsnark_check_verify_locally_during_proof_generation(&self) -> bool {
-        self._libsnark_check_verify_locally_during_proof_generation
+    fn libsnark_check_verify_locally_during_proof_generation(&self) -> bool {
+        self.user_config_base_ref()
+            ._libsnark_check_verify_locally_during_proof_generation
     }
 
     // @libsnark_check_verify_locally_during_proof_generation.setter
-    pub fn set_libsnark_check_verify_locally_during_proof_generation(&mut self, val: bool) {
+    fn set_libsnark_check_verify_locally_during_proof_generation(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._libsnark_check_verify_locally_during_proof_generation = val;
+        self.user_config_base_mut()
+            ._libsnark_check_verify_locally_during_proof_generation = val;
     }
 
-    pub fn opt_solc_optimizer_runs(&self) -> i32 {
+    fn opt_solc_optimizer_runs(&self) -> i32 {
         // SOLC: optimize for how many times to run the code
-        self._opt_solc_optimizer_runs
+        self.user_config_base_ref()._opt_solc_optimizer_runs
     }
 
     // @opt_solc_optimizer_runs.setter
-    pub fn set_opt_solc_optimizer_runs(&mut self, val: i32) {
+    fn set_opt_solc_optimizer_runs(&mut self, val: i32) {
         //_type_check(val, i32)
-        self._opt_solc_optimizer_runs = val
+        self.user_config_base_mut()._opt_solc_optimizer_runs = val
     }
 
-    pub fn opt_hash_threshold(&self) -> i32 {
+    fn opt_hash_threshold(&self) -> i32 {
         // If there are more than this many public circuit inputs (in uints), the hashing optimization will be enabled.
 
         // This means that only the hash of all public inputs will be passed as public input,
@@ -431,45 +451,45 @@ impl UserConfig {
         // When hashing is enabled -> cheaper on-chain costs for verification (O(1) in #public args instead of O(n)),
         // but much higher off-chain costs (key and proof generation time, memory consumption).
 
-        self._opt_hash_threshold
+        self.user_config_base_ref()._opt_hash_threshold
     }
 
     // @opt_hash_threshold.setter
-    pub fn set_opt_hash_threshold(&mut self, val: i32) {
+    fn set_opt_hash_threshold(&mut self, val: i32) {
         //_type_check(val, i32)
-        self._opt_hash_threshold = val;
+        self.user_config_base_mut()._opt_hash_threshold = val;
     }
 
-    pub fn opt_eval_constexpr_in_circuit(&self) -> bool {
+    fn opt_eval_constexpr_in_circuit(&self) -> bool {
         // If true, literal expressions are folded and the result is baked into the circuit as a constant
         // (as opposed to being evaluated outside the circuit and the result being moved in as an additional circuit input)
 
-        self._opt_eval_constexpr_in_circuit
+        self.user_config_base_ref()._opt_eval_constexpr_in_circuit
     }
 
     // @opt_eval_constexpr_in_circuit.setter
-    pub fn set_opt_eval_constexpr_in_circuit(&mut self, val: bool) {
+    fn set_opt_eval_constexpr_in_circuit(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._opt_eval_constexpr_in_circuit = val;
+        self.user_config_base_mut()._opt_eval_constexpr_in_circuit = val;
     }
 
-    pub fn opt_cache_circuit_inputs(&self) -> bool {
+    fn opt_cache_circuit_inputs(&self) -> bool {
         // If true, identifier circuit inputs will be cached
         // (i.e. if an identifier is referenced multiple times within a private expression,
         // or multiple times in different private expressions without being publicly written to in between,
         // then the identifier will only be added to the circuit inputs once and all private
         // uses will share the same input variable.
 
-        self._opt_cache_circuit_inputs
+        self.user_config_base_ref()._opt_cache_circuit_inputs
     }
 
     // @opt_cache_circuit_inputs.setter
-    pub fn set_opt_cache_circuit_inputs(&mut self, val: bool) {
+    fn set_opt_cache_circuit_inputs(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._opt_cache_circuit_inputs = val;
+        self.user_config_base_mut()._opt_cache_circuit_inputs = val;
     }
 
-    pub fn opt_cache_circuit_outputs(&self) -> bool {
+    fn opt_cache_circuit_outputs(&self) -> bool {
         // Normally, the value cached in the circuit for a particular identifier must be invalidated whenever the
         // identifier is assigned to in public code.
 
@@ -478,59 +498,61 @@ impl UserConfig {
         // (since updated value == private expression result, the corresponding plaintext value is already
         // available in the circuit)
 
-        self._opt_cache_circuit_outputs
+        self.user_config_base_ref()._opt_cache_circuit_outputs
     }
 
     // @opt_cache_circuit_outputs.setter
-    pub fn set_opt_cache_circuit_outputs(&mut self, val: bool) {
+    fn set_opt_cache_circuit_outputs(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._opt_cache_circuit_outputs = val;
+        self.user_config_base_mut()._opt_cache_circuit_outputs = val;
     }
 
-    pub fn data_dir(&self) -> String {
+    fn data_dir(&self) -> String {
         // Path to directory where to store user data (e.g. generated encryption keys).
-        self._data_dir.clone()
+        self.user_config_base_ref()._data_dir.clone()
     }
 
     // @data_dir.setter
-    pub fn set_data_dir(&mut self, val: String) {
+    fn set_data_dir(&mut self, val: String) {
         //_type_check(val, String)
         use std::path::Path;
         if !Path::new(&val).exists() {
             let _ = std::fs::create_dir_all(val.clone());
         }
-        self._data_dir = val;
+        self.user_config_base_mut()._data_dir = val;
     }
 
-    pub fn log_dir(&self) -> String {
+    fn log_dir(&self) -> String {
         // Path to default log directory.
-        self._log_dir.clone()
+        self.user_config_base_ref()._log_dir.clone()
     }
 
     // @log_dir.setter
-    pub fn set_log_dir(&mut self, val: String) {
+    fn set_log_dir(&mut self, val: String) {
         //_type_check(val, String)
         use std::path::Path;
         if !Path::new(&val).exists() {
             let _ = std::fs::create_dir_all(val.clone());
         }
-        self._log_dir = val;
+        self.user_config_base_mut()._log_dir = val;
     }
 
-    pub fn use_circuit_cache_during_testing_with_encryption(&self) -> bool {
+    fn use_circuit_cache_during_testing_with_encryption(&self) -> bool {
         // If true, snark keys for the test cases are cached
         // (i.e. they are not regenerated on every run unless the circuit was modified)
 
-        self._use_circuit_cache_during_testing_with_encryption
+        self.user_config_base_ref()
+            ._use_circuit_cache_during_testing_with_encryption
     }
 
     // @use_circuit_cache_during_testing_with_encryption.setter
-    pub fn set_use_circuit_cache_during_testing_with_encryption(&mut self, val: bool) {
+    fn set_use_circuit_cache_during_testing_with_encryption(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._use_circuit_cache_during_testing_with_encryption = val;
+        self.user_config_base_mut()
+            ._use_circuit_cache_during_testing_with_encryption = val;
     }
 
-    pub fn verbosity(&self) -> i32 {
+    fn verbosity(&self) -> i32 {
         // If 0, no output
         // If 1, normal output
         // If 2, verbose output
@@ -538,23 +560,23 @@ impl UserConfig {
         // This includes for example snark key- and proof generation output and
         // information about intermediate transaction simulation steps.
 
-        self._verbosity
+        self.user_config_base_ref()._verbosity
     }
 
     // @verbosity.setter
-    pub fn set_verbosity(&mut self, val: i32) {
+    fn set_verbosity(&mut self, val: i32) {
         //_type_check(val, i32)
-        self._verbosity = val;
+        self.user_config_base_mut()._verbosity = val;
     }
 
-    pub fn disable_verification(&self) -> bool {
+    fn disable_verification(&self) -> bool {
         // If true, proof verification in output contract is disabled (only for benchmarks)
-        self._disable_verification
+        self.user_config_base_ref()._disable_verification
     }
 
     // @disable_verification.setter
-    pub fn set_disable_verification(&mut self, val: bool) {
+    fn set_disable_verification(&mut self, val: bool) {
         //_type_check(val, bool)
-        self._disable_verification = val;
+        self.user_config_base_mut()._disable_verification = val;
     }
 }

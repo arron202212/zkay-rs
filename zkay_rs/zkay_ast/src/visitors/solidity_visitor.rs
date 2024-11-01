@@ -20,7 +20,7 @@ use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use eyre::{eyre, Result};
 use rccell::RcCell;
 use std::cmp::Ordering;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_version::Versions};
 pub fn to_solidity(ast: &ASTFlatten) -> String {
     SolidityVisitor::new().visit(ast).unwrap()
 }

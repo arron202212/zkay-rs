@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use rccell::RcCell;
 use std::collections::BTreeSet;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, config_user::UserConfig};
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
@@ -514,12 +514,7 @@ impl CircuitComplianceChecker {
             .borrow()
             .annotated_type()
             .is_some());
-        if CFG
-            .lock()
-            .unwrap()
-            .user_config
-            .opt_eval_constexpr_in_circuit()
-        {
+        if CFG.lock().unwrap().opt_eval_constexpr_in_circuit() {
             if is_instances(
                 expr.ast_base_ref()
                     .unwrap()
