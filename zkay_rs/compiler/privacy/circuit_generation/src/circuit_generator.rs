@@ -19,7 +19,7 @@ use rccell::RcCell;
 use std::path::{Path, PathBuf};
 use zkay_ast::ast::ConstructorOrFunctionDefinition;
 use zkay_ast::ast::IntoAST;
-use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
+use zkay_config::{config::CFG, config_user::UserConfig, with_context_block, zk_print};
 use zkay_utils::progress_printer::print_step;
 use zkay_utils::timer::time_measure;
 extern crate num_cpus;
@@ -59,10 +59,11 @@ pub trait CircuitGenerator {
         let gen_circs = |circuit: &RcCell<CircuitHelper>| -> bool {
             self._generate_zkcircuit(import_keys, circuit)
         };
-        // with
-        time_measure("circuit_compilation", true, false);
         let is_unit_test = CFG.lock().unwrap().is_unit_test();
-        let modified: Vec<_> = if is_unit_test {
+        let modified: Vec<_>;
+        // with
+        with_context_block!(var _tm=time_measure("circuit_compilation", true, false)=>{
+         modified= if is_unit_test {
             self.base()
                 .circuits_to_prove
                 .iter()
@@ -74,7 +75,7 @@ pub trait CircuitGenerator {
                 // .into_par_iter()
                 .map(|i| gen_circs(&self.base().circuits_to_prove[i]))
                 .collect()
-        };
+        };});
         if import_keys {
             for path in self.get_all_key_paths() {
                 if !Path::new(&path).try_exists().map_or(false, |v| v) {
@@ -95,7 +96,7 @@ pub trait CircuitGenerator {
                 .collect();
             //Generate keys in parallel
             zk_print!("Generating keys for {_c_count} circuits...",);
-            time_measure("key_generation", true, false);
+            with_context_block!(var _tm=time_measure("key_generation", true, false)=>
             {
                 if self.base().parallel_keygen && !is_unit_test {
                     let _counter = 0; // Value("i", 0);
@@ -112,10 +113,10 @@ pub trait CircuitGenerator {
                         self._generate_keys(circ);
                     }
                 }
-            }
+            });
         }
 
-        print_step("Write verification contracts");
+        with_context_block!(var _ps=print_step("Write verification contracts")=>
         {
             for circuit in &self.base().circuits_to_prove {
                 let vk = self._parse_verification_key(circuit);
@@ -192,7 +193,7 @@ pub trait CircuitGenerator {
                 //     );
                 // }
             }
-        }
+        });
     }
     fn _generate_keys_par(&self, circuit: &RcCell<CircuitHelper>) {
         self._generate_keys(circuit);

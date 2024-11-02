@@ -72,13 +72,13 @@ zkay-derive-core={path="zkay-derive-core"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
 
-clap = { version = "4.4.10", features = ["derive", "string"] }
+clap = { version = "4.4.10", features = ["derive",  "env", "unicode", "wrap_help","string"] }
 lazy_static = "1.4.0"
 antlr-rust = { version = "0.3.0-beta" }
 anyhow = "1.0.75"
 path-absolutize = "3.1.1"
 serde = { version = "1.0.160", features = ["derive"] }
-serde_json = "1.0.96"
+serde_json = {version ="1.0.96",features = ["arbitrary_precision"]}
 serde_repr = "0.1.12"
 regex = "1.10.2"
 semver_rs = "0.2"
@@ -86,6 +86,8 @@ app_dirs2 = "2.5.5"
 # solc={git="https://github.com/g-r-a-n-t/solc-rust",branch="master"}
 # solc={git="https://github.com/Zokrates/solc-rust.git",branch="master"}
 zkp-u256 = { git = "https://github.com/patractlabs/OpenZKP", branch = "master" }
+# forge = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="forge" }
+
 ethnum="1"
 textwrap="0.16.0"
 eyre = "0.6.8"
@@ -112,6 +114,167 @@ fancy-regex="0.13.0"
 bevy_reflect = "0.14.1"
 num_enum="0.7.3"
 backtrace-on-stack-overflow="0.3.0"
+
+
+
+
+
+# anvil = { path = "crates/anvil" }
+# cast = { path = "crates/cast" }
+# chisel = { path = "crates/chisel" }
+# forge = { path = "crates/forge" }
+
+# forge-doc = { path = "crates/doc" }
+# forge-fmt = { path = "crates/fmt" }
+forge-verify = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="forge-verify" }
+# forge-script = { path = "crates/script" }
+# forge-sol-macro-gen = { path = "crates/sol-macro-gen" }
+# forge-script-sequence = { path = "crates/script-sequence" }
+# foundry-cheatcodes = { path = "crates/cheatcodes" }
+# foundry-cheatcodes-spec = { path = "crates/cheatcodes/spec" }
+foundry-cli = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-cli" }
+foundry-common = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-common" }
+# foundry-common-fmt = { path = "crates/common/fmt" }
+foundry-config = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-config"  }
+# foundry-debugger = { path = "crates/debugger" }
+# foundry-evm = { path = "crates/evm/evm" }
+# foundry-evm-abi = { path = "crates/evm/abi" }
+# foundry-evm-core = { path = "crates/evm/core" }
+# foundry-evm-coverage = { path = "crates/evm/coverage" }
+# foundry-evm-fuzz = { path = "crates/evm/fuzz" }
+# foundry-evm-traces = { path = "crates/evm/traces" }
+# foundry-macros = { path = "crates/macros" }
+# foundry-test-utils = { path = "crates/test-utils" }
+# foundry-wallets = { path = "crates/wallets" }
+# foundry-linking = { path = "crates/linking" }
+
+# # solc & compilation utilities
+# foundry-block-explorers = { version = "0.7.3", default-features = false }
+foundry-compilers = { version = "0.11.6", default-features = false }
+# foundry-fork-db = "0.6.0"
+# solang-parser = "=0.3.3"
+
+# ## revm
+# revm = { version = "17.1.0", default-features = false }
+# revm-primitives = { version = "13.0.0", default-features = false }
+# revm-inspectors = { version = "0.10.0", features = ["serde"] }
+
+# ## ethers
+# ethers-contract-abigen = { version = "2.0.14", default-features = false }
+
+# ## alloy
+# alloy-consensus = { version = "0.5.4", default-features = false }
+# alloy-contract = { version = "0.5.4", default-features = false }
+# alloy-eips = { version = "0.5.4", default-features = false }
+# alloy-genesis = { version = "0.5.4", default-features = false }
+# alloy-json-rpc = { version = "0.5.4", default-features = false }
+alloy-network = { version = "0.5.4", default-features = false }
+alloy-provider = { version = "0.5.4", default-features = false }
+# alloy-pubsub = { version = "0.5.4", default-features = false }
+# alloy-rpc-client = { version = "0.5.4", default-features = false }
+alloy-rpc-types = { version = "0.5.4", default-features = true }
+alloy-serde = { version = "0.5.4", default-features = false }
+alloy-signer = { version = "0.5.4", default-features = false }
+# alloy-signer-aws = { version = "0.5.4", default-features = false }
+# alloy-signer-gcp = { version = "0.5.4", default-features = false }
+# alloy-signer-ledger = { version = "0.5.4", default-features = false }
+# alloy-signer-local = { version = "0.5.4", default-features = false }
+# alloy-signer-trezor = { version = "0.5.4", default-features = false }
+alloy-transport = { version = "0.5.4", default-features = false }
+# alloy-transport-http = { version = "0.5.4", default-features = false }
+# alloy-transport-ipc = { version = "0.5.4", default-features = false }
+# alloy-transport-ws = { version = "0.5.4", default-features = false }
+
+# ## alloy-core
+alloy-dyn-abi = "0.8.9"
+alloy-json-abi = "0.8.9"
+alloy-primitives = { version = "0.8.9", features = [
+    "getrandom",
+    "rand",
+    "map-foldhash",
+] }
+# alloy-sol-macro-expander = "0.8.9"
+# alloy-sol-macro-input = "0.8.9"
+# alloy-sol-types = "0.8.9"
+# syn-solidity = "0.8.9"
+
+alloy-chains = "0.1"
+# alloy-rlp = "0.3"
+# alloy-trie = "0.6.0"
+
+# ## op-alloy 
+# op-alloy-rpc-types = "0.5.0"
+# op-alloy-consensus = "0.5.0"
+
+# ## cli
+# anstream = "0.6.15"
+# anstyle = "1.0.8"
+# terminal_size = "0.4"
+
+# # macros
+# proc-macro2 = "1.0.82"
+# quote = "1.0"
+# syn = "2.0"
+# async-trait = "0.1"
+# derive_more = { version = "1.0", features = ["full"] }
+thiserror = "1"
+
+# # bench
+# divan = "0.1"
+
+# # misc
+# auto_impl = "1"
+# walkdir = "2"
+# prettyplease = "0.2.20"
+# ahash = "0.8"
+# base64 = "0.22"
+# chrono = { version = "0.4", default-features = false, features = [
+#     "clock",
+#     "std",
+# ] }
+# axum = "0.7"
+# color-eyre = "0.6"
+# comfy-table = "7"
+# dunce = "1"
+# evm-disassembler = "0.5"
+# evmole = "0.5"
+# eyre = "0.6"
+# figment = "0.10"
+# futures = "0.3"
+# hyper = "1.0"
+# indexmap = "2.2"
+# itertools = "0.13"
+# jsonpath_lib = "0.3"
+# k256 = "0.13"
+# mesc = "0.3"
+# num-format = "0.4.4"
+# parking_lot = "0.12"
+# proptest = "1"
+# rand = "0.8"
+# rayon = "1"
+# reqwest = { version = "0.12", default-features = false }
+# semver = "1"
+# serde = { version = "1.0", features = ["derive"] }
+# serde_json = { version = "1.0", features = ["arbitrary_precision"] }
+# similar-asserts = "1.5"
+# soldeer-commands = "=0.4.1"
+# strum = "0.26"
+# tempfile = "3.10"
+# tikv-jemallocator = "0.6"
+# tokio = "1"
+# toml = "0.8"
+# tower = "0.4"
+# tower-http = "0.5"
+# tracing = "0.1"
+# tracing-subscriber = "0.3"
+# url = "2"
+# vergen = { version = "8", default-features = false }
+# yansi = { version = "1.0", features = ["detect-tty", "detect-env"] }
+
+
+
+
+
 [workspace.dependencies.uuid]
 version = "1.6.1"
 features = [

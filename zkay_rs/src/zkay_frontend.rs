@@ -34,9 +34,15 @@ use proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use solidity::compiler::check_compilation;
 use transformation::zkay_contract_transformer::transform_ast;
-use zkay_config::{config::CFG, config_user::UserConfig, config_version::Versions};
+use zkay_config::{
+    config::{library_compilation_environment, CFG},
+    config_user::UserConfig,
+    config_version::Versions,
+    with_context_block,
+};
 use zkay_utils::helpers::{lines_of_code, read_file}; //, without_extension};
-use zkay_utils::progress_printer::print_step;
+use zkay_utils::progress_printer::{fail_print, print_step, success_print};
+use zkay_utils::timer::time_measure;
 // use zkay_utils::timer::time_measure
 use ast_builder::process_ast::{get_processed_ast, get_verification_contract_names};
 use lazy_static::lazy_static;
@@ -102,9 +108,9 @@ pub fn compile_zkay_file(
         .to_str();
 
     // compile
-    // with time_measure('compileFull'):
+    with_context_block!(var _tm= time_measure("compileFull",false,false)=>{
     // let (cg, _) =
-    compile_zkay(code.as_str(), output_dir, import_keys);
+    compile_zkay(code.as_str(), output_dir, import_keys);});
     Ok(())
 }
 
@@ -144,51 +150,52 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
     let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
     // Type checking
     let zkay_ast = get_processed_ast(code, None, global_vars.clone());
-
+    let (ast, circuits);
     // Contract transformation
-    print_step("Transforming zkay -> public contract");
-    let (ast, circuits) = transform_ast(Some(zkay_ast.clone_inner()), global_vars.clone());
+    with_context_block!(var _ps=print_step("Transforming zkay -> public contract")=>{
+     (ast, circuits) = transform_ast(Some(zkay_ast.clone_inner()), global_vars.clone());
+    });
 
     // Dump libraries
-    print_step("Write library contract files");
-    CFG.lock().unwrap().library_compilation_environment();
-    // println!("=========================={}",line!());
-    for crypto_params in ast
-        .try_as_source_unit_ref()
-        .unwrap()
-        .borrow()
-        .used_crypto_backends
-        .clone()
-        .unwrap()
-    {
+    with_context_block!(var _ps=print_step("Write library contract files")=>{
+        with_context_block!(var _lce=library_compilation_environment()=>{
         // println!("=========================={}",line!());
-        // Write pki contract
-        let pki_contract_code = library_contracts::get_pki_contract(&crypto_params);
+        for crypto_params in ast
+            .try_as_source_unit_ref()
+            .unwrap()
+            .borrow()
+            .used_crypto_backends
+            .clone()
+            .unwrap()
+        {
+            // println!("=========================={}",line!());
+            // Write pki contract
+            let pki_contract_code = library_contracts::get_pki_contract(&crypto_params);
+            // println!("=========================={}",line!());
+            let pki_contract_file = format!(
+                "{}.sol",
+                CFG.lock()
+                    .unwrap()
+                    .get_pki_contract_name(&crypto_params.identifier_name())
+            );
+            // println!("=========================={}",line!());
+            _dump_to_output(&pki_contract_code, output_dir, &pki_contract_file, true);
+        }
         // println!("=========================={}",line!());
-        let pki_contract_file = format!(
-            "{}.sol",
-            CFG.lock()
-                .unwrap()
-                .get_pki_contract_name(&crypto_params.identifier_name())
-        );
-        // println!("=========================={}",line!());
-        _dump_to_output(&pki_contract_code, output_dir, &pki_contract_file, true);
-    }
-    // println!("=========================={}",line!());
-    // Write library contract
-    _dump_to_output(
-        &library_contracts::get_verify_libs_code(),
-        output_dir,
-        &<ProvingSchemeGm17 as ProvingScheme>::verify_libs_contract_filename(),
-        true,
-    );
-
-    // Write public contract file
-    print_step("Write public solidity code");
+        // Write library contract
+        _dump_to_output(
+            &library_contracts::get_verify_libs_code(),
+            output_dir,
+            &<ProvingSchemeGm17 as ProvingScheme>::verify_libs_contract_filename(),
+            true,
+        );});
+    });
     let output_filename = "contract.sol";
-    let _solidity_code_output =
-        _dump_to_output(&to_solidity(&ast), output_dir, output_filename, false);
-
+    // Write public contract file
+    with_context_block!(var _ps= print_step("Write public solidity code")=>{
+        let _solidity_code_output =
+            _dump_to_output(&to_solidity(&ast), output_dir, output_filename, false);
+    });
     // Get all circuit helpers for the transformed contract
     let circuits: Vec<_> = circuits.values().cloned().collect();
     println!("==circuits===len={}=======================", circuits.len());
@@ -235,7 +242,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 
     // Generate manifest
     if !import_keys {
-        print_step("Writing manifest file");
+        with_context_block!(var _ps=print_step("Writing manifest file")=>{
         // Set crypto backends for unused homomorphisms to None
         for hom in Homomorphism::fields() {
             if !ast
@@ -256,7 +263,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
             Manifest::solc_version: CFG.lock().unwrap().solc_version(),
             Manifest::zkay_options: CFG.lock().unwrap().export_compiler_settings(),
         });
-        _dump_to_output(&format!("{manifest}"), output_dir, "manifest.json", false);
+        _dump_to_output(&format!("{manifest}"), output_dir, "manifest.json", false);});
     } else if !PathBuf::from(output_dir)
         .join("manifest.json")
         .try_exists()

@@ -51,13 +51,13 @@ impl TermColor {
 pub struct WithColoredPrint;
 impl WithColoredPrint {
     pub fn new(color: TermColor) -> Self {
-        print!("{},''", color.value());
+        print!("{}", color.value());
         Self
     }
 }
 impl Drop for WithColoredPrint {
     fn drop(&mut self) {
-        print!("{},''", TermColor::ENDC.value());
+        print!("{}", TermColor::ENDC.value());
     }
 }
 

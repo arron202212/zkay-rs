@@ -8,7 +8,7 @@
 use rccell::RcCell;
 use solidity::compiler::check_for_zkay_solc_errors;
 //, SolcException;
-use zkay_config::config::CFG;
+use zkay_config::{config::CFG, with_context_block};
 // use crate::errors::exceptions::ZkayCompilerError, PreprocessAstException, TypeCheckException, AnalysisException,ZkaySyntaxError;
 // use solidity_parser::parse::SyntaxException;
 use type_check::type_checker::type_check as t;
@@ -86,19 +86,22 @@ impl fmt::Display for ASTFlags {
     }
 }
 fn get_parsed_ast_and_fake_code(code: &str, solc_check: bool) -> (ASTFlatten, String) {
-    print_step("Parsing");
-    let _ast = build_ast(code);
+    let _ast;
+    with_context_block!(var _ps=print_step("Parsing")=>{
+     _ast= build_ast(code);
     // except SyntaxException as e:
     //     raise ZkaySyntaxError(f"\n\nSYNTAX ERROR: {e}")
+    });
 
     let fake_code = solidity::fake_solidity_generator::fake_solidity_code(code);
     if solc_check {
         // Solc type checking
-        print_step("Type checking with solc");
+        with_context_block!(var _ps=print_step("Type checking with solc")=>{
         // try:
         check_for_zkay_solc_errors(code, &fake_code);
         // except SolcException as e:
         //     raise ZkayCompilerError(f"{e}")
+        });
     }
     (_ast, fake_code)
 }
@@ -141,34 +144,36 @@ fn process_ast(
     type_check: bool,
     global_vars: RcCell<GlobalVars>,
 ) {
-    print_step("Preprocessing AST");
-    if parents {
-        set_parents(ast);
-    }
-    // println!("======set_parents===========================");
-    if link_identifiers {
+    with_context_block!(var _ps=print_step("Preprocessing AST")=>{
+        if parents {
+            set_parents(ast);
+        }
+        // println!("======set_parents===========================");
+        if link_identifiers {
+            // try:
+            link(ast, global_vars.clone());
+        }
+        // except UnknownIdentifierException as e:
+        //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")
         // try:
-        link(ast, global_vars.clone());
-    }
-    // except UnknownIdentifierException as e:
-    //     raise PreprocessAstException(f"\n\nSYMBOL ERROR: {e}")
-    // try:
-    if check_return {
-        r(ast);
-    }
-    if alias_analysis {
-        a(ast, global_vars.clone());
-    }
-    // println!("{:?}", global_vars.borrow().vars().len());
-    call_graph_analysis(ast);
-    compute_modified_sets(ast);
-    check_for_undefined_behavior_due_to_eval_order(ast);
-    // except AstException as e:
-    //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
-    // println!("======{type_check}=========process======before====");
+        if check_return {
+            r(ast);
+        }
+        if alias_analysis {
+            a(ast, global_vars.clone());
+        }
+        // println!("{:?}", global_vars.borrow().vars().len());
+        call_graph_analysis(ast);
+        compute_modified_sets(ast);
+        check_for_undefined_behavior_due_to_eval_order(ast);
+        // except AstException as e:
+        //     raise AnalysisException(f"\n\nANALYSIS ERROR: {e}")
+        // println!("======{type_check}=========process======before====");
+    });
+
     if type_check {
         // println!("======type_check=========process==========");
-        print_step("Zkay type checking");
+        with_context_block!(var _ps=print_step("Zkay type checking")=>{
         // try:
         t(ast, global_vars.clone());
         // println!("======check_circuit_compliance================*****************===========");
@@ -179,6 +184,7 @@ fn process_ast(
         //  println!("======check_circuit_compliance================*******3333**********===========");
         // except (TypeMismatchException, TypeException, RequireException, ReclassifyException) as e:
         //     raise TypeCheckException(f"\n\nCOMPILER ERROR: {e}")
+        });
     }
 }
 

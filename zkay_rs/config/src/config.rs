@@ -197,18 +197,6 @@ impl Config {
         }
     }
 
-    //     @contextmanager
-    //    Use this fixed configuration compiling libraries to get reproducible output.
-    pub fn library_compilation_environment(&mut self) -> WithLibraryCompilationEnvironment {
-        // old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
-        // self.override_solc(self.library_solc_version());
-        // self.opt_solc_optimizer_runs = 1000
-        // yield
-        // self.opt_solc_optimizer_runs = old_opt_runs
-        // self.override_solc(old_solc)
-        WithLibraryCompilationEnvironment::new(self)
-    }
-
     pub fn is_symmetric_cipher(&self, hom: String) -> bool {
         self.get_crypto_params(&hom).is_symmetric_cipher()
     }
@@ -338,29 +326,41 @@ impl Versions for Config {
         &mut self.versions_base
     }
 }
-pub struct WithLibraryCompilationEnvironment<'a> {
+//     @contextmanager
+//    Use this fixed configuration compiling libraries to get reproducible output.
+pub fn library_compilation_environment() -> WithLibraryCompilationEnvironment {
+    // old_solc, old_opt_runs = self.solc_version, self.opt_solc_optimizer_runs
+    // self.override_solc(self.library_solc_version());
+    // self.opt_solc_optimizer_runs = 1000
+    // yield
+    // self.opt_solc_optimizer_runs = old_opt_runs
+    // self.override_solc(old_solc)
+    WithLibraryCompilationEnvironment::new()
+}
+pub struct WithLibraryCompilationEnvironment {
     old_solc: Option<String>,
     old_opt_runs: i32,
-    config: &'a mut Config,
 }
-impl<'a> WithLibraryCompilationEnvironment<'a> {
-    pub fn new(config: &'a mut Config) -> Self {
-        let (old_solc, old_opt_runs) = (
-            Some(config.solc_version()),
-            config.opt_solc_optimizer_runs(),
-        );
-        config.override_solc(config.library_solc_version());
-        config.set_opt_solc_optimizer_runs(1000);
+impl WithLibraryCompilationEnvironment {
+    pub fn new() -> Self {
+        let old_solc = Some(CFG.lock().unwrap().solc_version());
+        let old_opt_runs = CFG.lock().unwrap().opt_solc_optimizer_runs();
+        let library_solc_version = CFG.lock().unwrap().library_solc_version();
+        CFG.lock().unwrap().override_solc(library_solc_version);
+        CFG.lock().unwrap().set_opt_solc_optimizer_runs(1000);
         Self {
             old_solc,
             old_opt_runs,
-            config,
         }
     }
 }
-impl<'a> Drop for WithLibraryCompilationEnvironment<'a> {
+impl Drop for WithLibraryCompilationEnvironment {
     fn drop(&mut self) {
-        self.config.set_opt_solc_optimizer_runs(self.old_opt_runs);
-        self.config.override_solc(self.old_solc.clone().unwrap());
+        CFG.lock()
+            .unwrap()
+            .override_solc(self.old_solc.clone().unwrap());
+        CFG.lock()
+            .unwrap()
+            .set_opt_solc_optimizer_runs(self.old_opt_runs);
     }
 }

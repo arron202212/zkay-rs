@@ -51,6 +51,7 @@ tiny-keccak = { workspace = true }
 hex={ workspace = true }
 rs_sha512={ workspace = true }
 log={ workspace = true }
+my_logging={workspace=true}
 env_logger={ workspace = true }
 chrono={ workspace = true }
 bitflags={ workspace = true }

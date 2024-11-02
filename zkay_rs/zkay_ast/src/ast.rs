@@ -40,7 +40,7 @@ use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
     config::{ConstructorOrFunctionDefinitionAttr, CFG},
     config_user::UserConfig,
-    zk_print,
+    with_context_block, zk_print,
 };
 use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
@@ -14506,11 +14506,11 @@ pub fn issue_compiler_warning(ast: AST, warning_type: String, msg: String) {
     if CFG.lock().unwrap().is_unit_test() {
         return;
     }
-    warn_print();
+    with_context_block!(var _wp=warn_print()=>{
     zk_print!(
         " \nWARNING: {warning_type}{}",
         get_ast_exception_msg(ast, msg)
-    );
+    );});
 }
 pub struct AstException(pub String);
 impl AstException {

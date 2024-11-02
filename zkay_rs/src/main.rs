@@ -2,7 +2,9 @@
 // // PYTHON_ARGCOMPLETE_OK
 // import argcomplete, argparse
 // import os
-
+use my_logging::log_context::log_context;
+use zkay_config::{config::library_compilation_environment, with_context_block};
+use zkay_utils::progress_printer::{fail_print, success_print};
 // from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 mod tests;
 // from zkay.config_user import UserConfig
@@ -10,6 +12,7 @@ pub mod zkay_frontend;
 #[macro_use]
 extern crate lazy_static;
 use clap::{value_parser, Arg, ArgAction, ArgGroup, ArgMatches, Command};
+
 use std::path::{Path, PathBuf};
 // def parse_config_doc():
 //     import textwrap
@@ -380,10 +383,6 @@ fn main() {
     //     from zkay.errors.exceptions import ZkayCompilerError
     //     from zkay.my_logging.log_context import log_context
     //     from zkay.utils.progress_printer import fail_print, success_print
-    #[warn(dead_code)]
-    fn fail_print() {}
-    #[warn(dead_code)]
-    fn success_print() {}
     //     from zkay.zkay_ast.process_ast import get_processed_ast, get_parsed_ast_and_fake_code
 
     //     // Load configuration files
@@ -413,10 +412,7 @@ fn main() {
         //         with tempfile.TemporaryDirectory() as tmpdir:
         //             try:
 
-        // if let Err(e) = cfg.library_compilation_environment() {
-        //     fail_print();
-        //     println!("ERROR: Deployment failed {e}\n");
-        // } else
+        with_context_block!(var _lce = library_compilation_environment() =>
         {
             if let Some(("deploy-pki", _)) = a.subcommand() {
                 //                         for crypto_params in cfg.all_crypto_params():
@@ -434,7 +430,10 @@ fn main() {
                 //                                 addr = Runtime.blockchain().deploy_solidity_contract(file, lib, a.account)
                 //                                 print(f'Deployed crypto library {lib} at: {addr}')
             }
-        }
+        });
+        //     fail_print();
+        //     println!("ERROR: Deployment failed {e}\n");
+        // } else
     } else {
         //         // Solc version override
         // if let Some(solc_version) = a.get_one::<String>("solc_version") {
@@ -478,8 +477,9 @@ fn main() {
                 let input_path =
                     if let Ok(Some(input_path)) = sub_compile.try_get_one::<PathBuf>("input") {
                         if let Err(_) | Ok(false) = Path::new(input_path).try_exists() {
-                            fail_print();
+                            with_context_block!(var _fp=fail_print()=>{
                             println!("Error: input file \'{input_path:?}\' does not exist");
+                            });
                             std::process::exit(10);
                         }
                         input_path.clone()
@@ -497,8 +497,8 @@ fn main() {
                 if let Err(_) | Ok(false) = output_dir.try_exists() {
                     let _ = std::fs::create_dir_all(output_dir.clone());
                 } else if !output_dir.is_dir() {
-                    fail_print();
-                    println!("Error: \'{output_dir:?}\' is not a directory");
+                    with_context_block!(var _fp=fail_print()=>{
+                    println!("Error: \'{output_dir:?}\' is not a directory");});
                     std::process::exit(2);
                 }
 
@@ -511,18 +511,18 @@ fn main() {
                 println!("Compiling file {:?}:", input_path);
 
                 // // compile
-                // log_context(os.path.basename(a.input));
-
-                if let Err(e) = frontend::compile_zkay_file(
+                let input_basename = input_path.file_name().unwrap().to_str().unwrap();
+                with_context_block!(var _lc=log_context(input_basename)=>
+                {if let Err(e) = frontend::compile_zkay_file(
                     &input_path.to_str().expect(""),
                     output_dir.to_str().expect(""),
                     false,
                 ) {
                     //ZkayCompilerError
-                    fail_print();
-                    println!("===compile_zkay_file===fail==={e}");
+                    with_context_block!(var _fp=fail_print()=>{
+                    println!("===compile_zkay_file===fail==={e}");});
                     std::process::exit(3);
-                }
+                }});
             }
             Some(("import", _)) => {
                 //             // create output directory
@@ -644,8 +644,8 @@ fn main() {
             }
             _ => println!("NotImplementedError(a.cmd)"),
         }
-        success_print();
-        println!("Finished successfully");
+        with_context_block!(var _sp=success_print()=>{
+        println!("Finished successfully");});
     }
 }
 

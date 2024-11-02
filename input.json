@@ -1,0 +1,7 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contract.sol": { "urls": ["/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/contract.sol"] }
+  },
+  "settings": { "outputSelection": { "*": { "*": [] } } }
+}

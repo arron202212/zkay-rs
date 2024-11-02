@@ -15,7 +15,7 @@ use serde_json::{Map, Result, Value};
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use zkay_config::{config::CFG, config_version::Versions};
+use zkay_config::{config::CFG, config_version::Versions, with_context_block};
 use zkay_utils::progress_printer::warn_print;
 pub struct Manifest;
 impl Manifest {
@@ -40,9 +40,10 @@ impl Manifest {
         if let Value::Object(manifest) = manifest {
             if let Some(v) = manifest.get(&Manifest::zkay_version.to_string()) {
                 if v != &Value::String(CFG.lock().unwrap().zkay_version()) {
-                    warn_print();
-                    print!(
+                    with_context_block!(var _wp=warn_print()=>
+                    {print!(
                     "Zkay version in manifest ({:?}) does not match current zkay version ({})\nCompilation or integrity check with deployed bytecode might fail due to version differences",v,CFG.lock().unwrap().zkay_version());
+                    });
                 }
             }
 

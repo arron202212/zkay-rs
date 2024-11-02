@@ -13,3 +13,191 @@ rust-version.workspace = true
 [lib]
 [dependencies]
 
+forge-verify = { workspace=true }
+# forge-script = { path = "crates/script" }
+# forge-sol-macro-gen = { path = "crates/sol-macro-gen" }
+# forge-script-sequence = { path = "crates/script-sequence" }
+# foundry-cheatcodes = { path = "crates/cheatcodes" }
+# foundry-cheatcodes-spec = { path = "crates/cheatcodes/spec" }
+foundry-cli = { workspace=true }
+foundry-common = { workspace=true }
+# foundry-common-fmt = { path = "crates/common/fmt" }
+foundry-config = { workspace=true }
+# foundry-debugger = { path = "crates/debugger" }
+# foundry-evm = { path = "crates/evm/evm" }
+# foundry-evm-abi = { path = "crates/evm/abi" }
+# foundry-evm-core = { path = "crates/evm/core" }
+# foundry-evm-coverage = { path = "crates/evm/coverage" }
+# foundry-evm-fuzz = { path = "crates/evm/fuzz" }
+# foundry-evm-traces = { path = "crates/evm/traces" }
+# foundry-macros = { path = "crates/macros" }
+# foundry-test-utils = { path = "crates/test-utils" }
+# foundry-wallets = { path = "crates/wallets" }
+# foundry-linking = { path = "crates/linking" }
+
+# # solc & compilation utilities
+# foundry-block-explorers = { version = "0.7.3", default-features = false }
+foundry-compilers = {  workspace = true }
+# foundry-fork-db = "0.6.0"
+# solang-parser = "=0.3.3"
+
+# ## revm
+# revm = { version = "17.1.0", default-features = false }
+# revm-primitives = { version = "13.0.0", default-features = false }
+# revm-inspectors = { version = "0.10.0", features = ["serde"] }
+
+# ## ethers
+# ethers-contract-abigen = { version = "2.0.14", default-features = false }
+
+# ## alloy
+# alloy-consensus = { version = "0.5.4", default-features = false }
+# alloy-contract = { version = "0.5.4", default-features = false }
+# alloy-eips = { version = "0.5.4", default-features = false }
+# alloy-genesis = { version = "0.5.4", default-features = false }
+# alloy-json-rpc = { version = "0.5.4", default-features = false }
+alloy-network = { workspace = true }
+alloy-provider = { workspace= true }
+# alloy-pubsub = { version = "0.5.4", default-features = false }
+# alloy-rpc-client = { version = "0.5.4", default-features = false }
+alloy-rpc-types = {workspace = true }
+alloy-serde = {workspace=true}
+alloy-signer = {workspace=true}
+# alloy-signer-aws = { version = "0.5.4", default-features = false }
+# alloy-signer-gcp = { version = "0.5.4", default-features = false }
+# alloy-signer-ledger = { version = "0.5.4", default-features = false }
+# alloy-signer-local = { version = "0.5.4", default-features = false }
+# alloy-signer-trezor = { version = "0.5.4", default-features = false }
+alloy-transport = {workspace=true}
+# alloy-transport-http = { version = "0.5.4", default-features = false }
+# alloy-transport-ipc = { version = "0.5.4", default-features = false }
+# alloy-transport-ws = { version = "0.5.4", default-features = false }
+
+# ## alloy-core
+alloy-dyn-abi = {workspace=true}
+alloy-json-abi = {workspace=true}
+alloy-primitives = {workspace=true}
+
+alloy-chains = {workspace=true}
+clap={workspace=true}
+eyre={workspace=true}
+serde_json={workspace=true}
+
+
+# # lib
+# foundry-block-explorers = { workspace = true, features = ["foundry-compilers"] }
+# foundry-common.workspace = true
+# foundry-compilers = { workspace = true, features = ["full"] }
+# foundry-config.workspace = true
+# foundry-evm.workspace = true
+# foundry-wallets.workspace = true
+# foundry-linking.workspace = true
+# forge-script-sequence.workspace = true
+
+# ethers-contract-abigen = { workspace = true, features = ["providers"] }
+
+# revm-inspectors.workspace = true
+
+# comfy-table.workspace = true
+# eyre.workspace = true
+# proptest.workspace = true
+# rayon.workspace = true
+# serde.workspace = true
+# tracing.workspace = true
+# yansi.workspace = true
+# humantime-serde = "1.1.1"
+# chrono.workspace = true
+
+# # bin
+# forge-doc.workspace = true
+# forge-fmt.workspace = true
+# forge-verify.workspace = true
+# forge-script.workspace = true
+# forge-sol-macro-gen.workspace = true
+# foundry-cli.workspace = true
+# foundry-debugger.workspace = true
+
+# alloy-chains.workspace = true
+# alloy-consensus.workspace = true
+# alloy-dyn-abi.workspace = true
+# alloy-json-abi.workspace = true
+# alloy-network.workspace = true
+# alloy-primitives = { workspace = true, features = ["serde"] }
+# alloy-provider = { workspace = true, features = ["reqwest", "ws", "ipc"] }
+# alloy-rpc-types.workspace = true
+# alloy-serde.workspace = true
+# alloy-signer.workspace = true
+# alloy-sol-macro-expander = { workspace = true, features = ["json"] }
+# alloy-sol-macro-input.workspace = true
+# alloy-transport.workspace = true
+
+# async-trait.workspace = true
+# clap = { version = "4", features = ["derive", "env", "unicode", "wrap_help"] }
+# clap_complete = "4"
+# clap_complete_fig = "4"
+# dialoguer = { version = "0.11", default-features = false }
+# dunce.workspace = true
+# futures.workspace = true
+# indicatif = "0.17"
+# inferno = { version = "0.11.19", default-features = false }
+# itertools.workspace = true
+# parking_lot.workspace = true
+# regex = { version = "1", default-features = false }
+# reqwest = { workspace = true, features = ["json"] }
+# semver.workspace = true
+# serde_json.workspace = true
+# similar = { version = "2", features = ["inline"] }
+# solang-parser.workspace = true
+# strum = { workspace = true, features = ["derive"] }
+thiserror.workspace = true
+# tokio = { workspace = true, features = ["time"] }
+# toml = { version = "0.8", features = ["preserve_order"] }
+# toml_edit = "0.22.4"
+# watchexec = "4.1"
+# watchexec-events = "3.0"
+# watchexec-signals = "3.0"
+# clearscreen = "3.0"
+# evm-disassembler.workspace = true
+
+# # doc server
+# axum = { workspace = true, features = ["ws"] }
+# hyper.workspace = true
+# tower-http = { workspace = true, features = ["fs"] }
+# opener = "0.7"
+
+# # soldeer
+# soldeer-commands.workspace = true
+# quick-junit = "0.5.0"
+
+# [target.'cfg(unix)'.dependencies]
+# tikv-jemallocator = { workspace = true, optional = true }
+
+# [dev-dependencies]
+# anvil.workspace = true
+# foundry-test-utils.workspace = true
+
+# mockall = "0.13"
+# globset = "0.4"
+# paste = "1.0"
+# path-slash = "0.2"
+# similar-asserts.workspace = true
+# svm = { package = "svm-rs", version = "0.5", default-features = false, features = [
+#     "rustls",
+# ] }
+# tempfile.workspace = true
+# tracing-subscriber = { workspace = true, features = ["env-filter"] }
+
+# alloy-signer-local.workspace = true
+
+# [features]
+# default = ["rustls", "jemalloc"]
+# rustls = [
+#     "foundry-cli/rustls",
+#     "foundry-wallets/rustls",
+#     "reqwest/rustls-tls",
+#     "reqwest/rustls-tls-native-roots",
+# ]
+# openssl = ["foundry-cli/openssl", "reqwest/default-tls"]
+# asm-keccak = ["alloy-primitives/asm-keccak"]
+# jemalloc = ["dep:tikv-jemallocator"]
+# aws-kms = ["foundry-wallets/aws-kms"]
+# isolate-by-default = ["foundry-config/isolate-by-default"]

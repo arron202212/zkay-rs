@@ -9,3 +9,4 @@
 
 // from .web3py import Web3TesterBlockchain, Web3HttpGanacheBlockchain
 // from .web3py import Web3IpcBlockchain, Web3WebsocketBlockchain, Web3HttpBlockchain, Web3CustomBlockchain
+mod web3rs;

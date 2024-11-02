@@ -1,0 +1,16 @@
+{
+        "language": "Solidity",
+        "sources": {
+            "/var/folders/t7/t3440fsn66z4r7l4tcph_mbm0000gn/T/6e6b448f-f35e-4fa1-bcfe-99a5f17a496d.sol": {
+                "urls": [
+                    "/private/var/folders/t7/t3440fsn66z4r7l4tcph_mbm0000gn/T/6e6b448f-f35e-4fa1-bcfe-99a5f17a496d.sol"
+                ]
+            }
+        },
+        "settings": {
+            "outputSelection": {
+                "*": {"*": []  }
+            },
+            
+          }
+   }
