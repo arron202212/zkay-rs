@@ -6,9 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, ArgType, Expression,
-    ExpressionBaseProperty, FullArgsSpec, FullArgsSpecInit, IntoAST, Statement, TypeName,
-    UserDefinedTypeName, AST,
+    annotated_type_name::AnnotatedTypeName,
+    expression::{Expression, ExpressionBaseProperty},
+    statement::Statement,
+    type_name::{TypeName, UserDefinedTypeName},
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArgType, FullArgsSpec, FullArgsSpecInit,
+    IntoAST, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::pointers::parent_setter::set_parents;

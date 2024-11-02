@@ -50,9 +50,9 @@ pub fn derive_get_ast_type(item: TokenStream) -> TokenStream {
     let struct_name = get_name("struct", item);
     format!(
         r#"
-impl ASTInstanceOf for {} {{
-    fn get_ast_type(&self) -> ASTType {{
-        ASTType::{}
+impl crate::ast::ASTInstanceOf for {} {{
+    fn get_ast_type(&self) -> crate::ast::ASTType {{
+        crate::ast::ASTType::{}
     }}
 }}
                     "#,
@@ -69,7 +69,7 @@ pub fn derive_ast_flatten_impl(item: TokenStream) -> TokenStream {
         r#"
 impl {struct_name} {{
  pub fn code(&self) -> String {{
-        let v = CodeVisitorBase::new(true);
+        let v = crate::visitors::code_visitor::CodeVisitorBase::new(true);
         v.visit(&RcCell::new(self.clone()).into()).unwrap_or(String::new())
     }}
 }}
@@ -274,6 +274,7 @@ impl Parse for Args {
         })
     }
 }
+
 #[proc_macro_attribute]
 pub fn impl_traits(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = attr.clone();
@@ -465,8 +466,8 @@ pub fn derive_enum_dispatch_with_fields(input: TokenStream) -> TokenStream {
     };
 
     let expanded = quote! {
-        impl FullArgsSpecInit for #name  {
-            fn from_fields(&self,fields: Vec<ArgType>) -> Self {
+        impl crate::ast::FullArgsSpecInit for #name  {
+            fn from_fields(&self,fields: Vec<crate::ast::ArgType>) -> Self {
             match self
             {
                 #variant_checker_functions

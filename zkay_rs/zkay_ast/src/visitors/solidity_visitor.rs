@@ -7,16 +7,31 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    indent, is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName,
-    ArrayBaseProperty, ArrayLiteralExprBaseProperty, AssignmentStatementBaseProperty, CodeVisitor,
-    CodeVisitorBase, CommentBaseProperty, DeepClone, ElementaryTypeNameBaseProperty, Expression,
-    FunctionCallExprBaseProperty, Identifier, IdentifierBaseProperty, IntoAST, IntoStatement,
-    ListUnion, LiteralExpr, MeExpr, Parameter, ParameterUnion, ReclassifyExprBaseProperty,
-    SimpleStatement, SingleOrListUnion, Statement, StatementList, StatementListBaseProperty,
-    TypeName, UserDefinedTypeNameBaseRef, AST, LINE_ENDING,
+    annotated_type_name::AnnotatedTypeName,
+    comment::CommentBaseProperty,
+    expression::{
+        ArrayLiteralExprBaseProperty, Expression, FunctionCallExprBaseProperty, LiteralExpr,
+        MeExpr, ReclassifyExprBaseProperty,
+    },
+    identifier::Identifier,
+    identifier::IdentifierBaseProperty,
+    identifier_declaration::{Parameter, ParameterUnion},
+    indent, is_instance,
+    statement::{
+        AssignmentStatementBaseProperty, SimpleStatement, Statement, StatementList,
+        StatementListBaseProperty,
+    },
+    type_name::{
+        ArrayBaseProperty, ElementaryTypeNameBaseProperty, TypeName, UserDefinedTypeNameBaseRef,
+    },
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoStatement,
+    ListUnion, SingleOrListUnion, AST, LINE_ENDING,
 };
 use crate::homomorphism::HOMOMORPHISM_STORE;
-use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
+use crate::visitors::{
+    code_visitor::{CodeVisitor, CodeVisitorBase},
+    visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
+};
 use eyre::{eyre, Result};
 use rccell::RcCell;
 use std::cmp::Ordering;

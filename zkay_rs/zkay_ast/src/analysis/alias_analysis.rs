@@ -8,14 +8,21 @@
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AssignmentStatement,
-    AssignmentStatementBaseProperty, Block, BreakStatement, BuiltinFunction,
-    ConstructorOrFunctionDefinition, ContinueStatement, DeepClone, DoWhileStatement, Expression,
-    ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBaseProperty,
-    IdentifierDeclarationBaseProperty, IfStatement, IntoAST, IntoExpression, LocationExpr, MeExpr,
-    RequireStatement, ReturnStatement, SimpleStatement, Statement, StatementBaseMutRef,
-    StatementBaseProperty, StatementBaseRef, StatementList, StatementListBaseProperty, TupleExpr,
-    VariableDeclarationStatement, WhileStatement, AST,
+    expression::{
+        AllExpr, BuiltinFunction, Expression, FunctionCallExpr, FunctionCallExprBaseProperty,
+        LocationExpr, MeExpr, TupleExpr,
+    },
+    identifier_declaration::IdentifierDeclarationBaseProperty,
+    is_instance,
+    namespace_definition::ConstructorOrFunctionDefinition,
+    statement::{
+        AssignmentStatement, AssignmentStatementBaseProperty, Block, BreakStatement,
+        ContinueStatement, DoWhileStatement, ExpressionStatement, ForStatement, IfStatement,
+        RequireStatement, ReturnStatement, SimpleStatement, Statement, StatementBaseMutRef,
+        StatementBaseProperty, StatementBaseRef, StatementList, StatementListBaseProperty,
+        VariableDeclarationStatement, WhileStatement,
+    },
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoExpression, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};

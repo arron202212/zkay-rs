@@ -8,16 +8,34 @@
 
 // from typing import Tuple, Dict, Union
 use crate::ast::{
-    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
-    ASTInstanceOf, ASTType, AnnotatedTypeName, Array, ArrayBaseProperty, Block, Comment,
-    ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, EnumValue, Expression,
-    ExpressionBaseProperty, ForStatement, Identifier, IdentifierBase, IdentifierBaseProperty,
-    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IndexExpr, IntoAST,
-    LocationExpr, LocationExprBaseMutRef, Mapping, MemberAccessExpr, NamespaceDefinition,
-    SimpleStatement, SourceUnit, StateVariableDeclaration, Statement, StatementList,
-    StatementListBase, StatementListBaseProperty, StructDefinition, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty,
-    UserDefinedTypeNameBaseRef, VariableDeclaration, VariableDeclarationStatement, AST,
+    annotated_type_name::AnnotatedTypeName,
+    comment::Comment,
+    enum_value::EnumValue,
+    expression::{
+        Expression, ExpressionBaseProperty, IdentifierExpr, IndexExpr, LocationExpr,
+        LocationExprBaseMutRef, MemberAccessExpr, TupleOrLocationExpr,
+    },
+    identifier::{Identifier, IdentifierBase, IdentifierBaseProperty},
+    identifier_declaration::StateVariableDeclaration,
+    identifier_declaration::{
+        IdentifierDeclaration, IdentifierDeclarationBaseProperty, VariableDeclaration,
+    },
+    is_instance, is_instances,
+    namespace_definition::{
+        ConstructorOrFunctionDefinition, ContractDefinition, EnumDefinition, NamespaceDefinition,
+        StructDefinition,
+    },
+    source_unit::SourceUnit,
+    statement::{
+        Block, ForStatement, SimpleStatement, Statement, StatementList, StatementListBase,
+        StatementListBaseProperty, VariableDeclarationStatement,
+    },
+    type_name::{
+        Array, ArrayBaseProperty, Mapping, TypeName, UserDefinedTypeName,
+        UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty, UserDefinedTypeNameBaseRef,
+    },
+    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
+    IntoAST, AST,
 };
 use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
 use rccell::{RcCell, WeakCell};

@@ -18,16 +18,16 @@ use std::{
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
-    get_privacy_expr_from_label, is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty,
-    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName, ArrayBaseProperty,
-    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
+    get_privacy_expr_from_label, identifier::Identifier, is_instance, is_instances, ASTBaseMutRef,
+    ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName,
+    ArrayBaseProperty, AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
     AssignmentStatementBaseProperty, AssignmentStatementBaseRef, Block, BooleanLiteralType,
     BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
     ConstructorOrFunctionDefinition, DeepClone, ElementaryTypeName, EncryptionExpression,
     EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
     ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
     FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty,
-    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBase,
+    FunctionCallExprBaseRef, HybridArgType, HybridArgumentIdf, IdentifierBase,
     IdentifierBaseProperty, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
     IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, KeyLiteralExpr, LocationExpr,
     MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,

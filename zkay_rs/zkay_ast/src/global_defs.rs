@@ -8,10 +8,13 @@
 
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
-    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, AnnotatedTypeName, Block,
-    ConstructorOrFunctionDefinition, DeepClone, FunctionTypeName, Identifier, IdentifierBase,
-    IntoAST, Parameter, StateVariableDeclaration, StructDefinition, StructTypeName, TypeName,
-    UserDefinedTypeName, VariableDeclaration,
+    annotated_type_name::AnnotatedTypeName,
+    identifier::{Identifier, IdentifierBase},
+    identifier_declaration::{Parameter, StateVariableDeclaration, VariableDeclaration},
+    namespace_definition::{ConstructorOrFunctionDefinition, StructDefinition},
+    statement::Block,
+    type_name::{FunctionTypeName, StructTypeName, TypeName, UserDefinedTypeName},
+    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, DeepClone, IntoAST,
 };
 use crate::homomorphism::Homomorphism;
 use crate::pointers::parent_setter::set_parents;

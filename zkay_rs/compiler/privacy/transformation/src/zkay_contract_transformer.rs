@@ -21,19 +21,20 @@ use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
-    is_instance, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType,
-    AnnotatedTypeName, Array, ArrayBase, ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase,
-    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
-    CipherText, Comment, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition,
-    ContractTypeName, DeepClone, ExprUnion, Expression, ExpressionASType, ExpressionStatement,
-    FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseRef,
-    HybridArgumentIdf, Identifier, IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef,
-    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IndexExpr, IntoAST, IntoExpression, IntoStatement, LocationExpr, MeExpr, NamespaceDefinition,
-    NewExpr, NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement,
-    SourceUnit, StateVariableDeclaration, Statement, StatementList, StatementListBase,
-    StructDefinition, StructTypeName, TupleExpr, TypeName, UserDefinedTypeName,
-    VariableDeclaration, VariableDeclarationStatement, AST,
+    comment::Comment, identifier::Identifier, is_instance, ASTBaseMutRef, ASTBaseProperty,
+    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, Array, ArrayBase,
+    ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase, AssignmentStatement,
+    AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block, CipherText,
+    CommentBase, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, DeepClone,
+    ExprUnion, Expression, ExpressionASType, ExpressionStatement, FunctionCallExpr,
+    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseRef, HybridArgumentIdf,
+    IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST,
+    IntoExpression, IntoStatement, LocationExpr, MeExpr, NamespaceDefinition, NewExpr,
+    NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit,
+    StateVariableDeclaration, Statement, StatementList, StatementListBase, StructDefinition,
+    StructTypeName, TupleExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
+    VariableDeclarationStatement, AST,
 };
 use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,

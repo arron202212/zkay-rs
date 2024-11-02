@@ -11,17 +11,17 @@ use std::any::Any;
 use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, Block, BuiltinFunction,
-    Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
-    FunctionCallExprBase, HybridArgType, HybridArgumentIdf, Identifier, IdentifierBaseProperty,
-    IdentifierExpr, IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
-    VariableDeclarationStatement, AST,
+    identifier::Identifier, is_instance, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, Block,
+    BuiltinFunction, Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty,
+    FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf,
+    IdentifierBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IntoAST,
+    IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")
 // HybridArgumentIdf = TypeVar("HybridArgumentIdf")
 // class Remapper(Generic[Identifier, HybridArgumentIdf]):
-type RemapMapType = BTreeMap<RcCell<Identifier>, HybridArgumentIdf>; //#[(bool, Identifier), HybridArgumentIdf]
+type RemapMapType = BTreeMap<RcCell<Identifier>, HybridArgumentIdf>; //#[(bool, identifier::Identifier), HybridArgumentIdf]
 pub struct WithRemapScope {
     prev: RemapMapType,
     rmap: RcCell<RemapMapType>,

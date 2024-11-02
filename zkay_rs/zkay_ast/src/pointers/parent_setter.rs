@@ -6,9 +6,14 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, is_instances, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten,
-    ASTInstanceOf, ASTType, ConstructorOrFunctionDefinition, Expression, ExpressionBaseMutRef,
-    Identifier, IntoAST, NamespaceDefinition, SourceUnit, Statement, StatementBaseMutRef, AST,
+    expression::{Expression, ExpressionBaseMutRef},
+    identifier::Identifier,
+    is_instance, is_instances,
+    namespace_definition::{ConstructorOrFunctionDefinition, NamespaceDefinition},
+    source_unit::SourceUnit,
+    statement::{Statement, StatementBaseMutRef},
+    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
+    IntoAST, AST,
 };
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};

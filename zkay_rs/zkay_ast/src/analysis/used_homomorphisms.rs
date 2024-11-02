@@ -6,9 +6,13 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
-    AnnotatedTypeName, ConstructorOrFunctionDefinition, EnumDefinition, Expression,
-    ExpressionBaseProperty, IdentifierDeclaration, IntoAST, SourceUnit, StructDefinition, AST,
+    annotated_type_name::AnnotatedTypeName,
+    expression::{Expression, ExpressionBaseProperty},
+    identifier_declaration::IdentifierDeclaration,
+    is_instance,
+    namespace_definition::{ConstructorOrFunctionDefinition, EnumDefinition, StructDefinition},
+    source_unit::SourceUnit,
+    ASTBaseProperty, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST,
 };
 use crate::homomorphism::Homomorphism;
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};

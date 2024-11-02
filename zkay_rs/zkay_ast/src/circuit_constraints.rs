@@ -28,11 +28,15 @@
 // """
 
 use crate::ast::{
-    ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, ArgType,
-    ChildListBuilder, CodeVisitor, CodeVisitorBase, ConstructorOrFunctionDefinition, DeepClone,
-    Expression, FullArgsSpec, FullArgsSpecInit, HybridArgumentIdf, IntoAST, Statement, AST,
+    expression::Expression, identifier::HybridArgumentIdf,
+    namespace_definition::ConstructorOrFunctionDefinition, statement::Statement, ASTChildren,
+    ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, DeepClone,
+    FullArgsSpec, FullArgsSpecInit, IntoAST, AST,
 };
-use crate::visitors::visitor::AstVisitor;
+use crate::visitors::{
+    code_visitor::{CodeVisitor, CodeVisitorBase},
+    visitor::AstVisitor,
+};
 use enum_dispatch::enum_dispatch;
 use rccell::RcCell;
 use serde::{Deserialize, Serialize};

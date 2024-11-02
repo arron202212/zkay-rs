@@ -6,11 +6,12 @@ mod tests {
     use rccell::RcCell;
     use std::collections::BTreeMap;
     use zkay_ast::ast::{
-        is_instance, ASTBaseProperty, ASTInstanceOf, ASTType, AssignmentStatement,
-        AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition,
-        ContractDefinition, IdentifierBaseProperty, IdentifierDeclarationBaseProperty,
-        IdentifierExpr, IntoAST, NamespaceDefinitionBaseProperty, SourceUnit,
-        StatementListBaseProperty, VariableDeclaration, VariableDeclarationStatement,
+        is_instance, source_unit::SourceUnit, ASTBaseProperty, ASTInstanceOf, ASTType,
+        AssignmentStatement, AssignmentStatementBaseProperty, Block,
+        ConstructorOrFunctionDefinition, ContractDefinition, IdentifierBaseProperty,
+        IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST,
+        NamespaceDefinitionBaseProperty, StatementListBaseProperty, VariableDeclaration,
+        VariableDeclarationStatement,
     };
     use zkay_ast::global_defs::{global_defs, global_vars};
     use zkay_ast::pointers::{

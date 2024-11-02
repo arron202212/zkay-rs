@@ -6,7 +6,7 @@
 //     ExpressionStatement, RequireStatement, AssignmentStatement, VariableDeclaration, VariableDeclarationStatement, \
 //     Array, Mapping, BooleanLiteralExpr, FunctionCallExpr, BuiltinFunction, \
 //     ElementaryTypeName, TypeName, UserDefinedTypeName, \
-//     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, Identifier, \
+//     ConstructorOrFunctionDefinition, Parameter, AllExpr, MeExpr, AnnotatedTypeName, ReclassifyExpr, identifier::Identifier, \
 //     SourceUnit, ContractDefinition, Randomness, Key, CipherText, SliceExpr, AddressTypeName, AddressPayableTypeName, \
 //     StatementList, IdentifierExpr, NewExpr, WhileStatement, ForStatement, BreakStatement, ContinueStatement, \
 //     DoWhileStatement, EnumDefinition, EnumTypeName, StructTypeName, get_privacy_expr_from_label

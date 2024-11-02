@@ -23,7 +23,9 @@ use zkay_ast::analysis::{
     return_checker::check_return as r,
     side_effects::{check_for_undefined_behavior_due_to_eval_order, compute_modified_sets},
 };
-use zkay_ast::ast::{ASTBaseProperty, ASTFlatten, IdentifierBaseProperty, SourceUnit, AST}; //, AstException;
+use zkay_ast::ast::{
+    source_unit::SourceUnit, ASTBaseProperty, ASTFlatten, IdentifierBaseProperty, AST,
+}; //, AstException;
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers as link};
 use zkay_utils::progress_printer::print_step;
 // use crate::pointers::pointer_exceptions::UnknownIdentifierException;

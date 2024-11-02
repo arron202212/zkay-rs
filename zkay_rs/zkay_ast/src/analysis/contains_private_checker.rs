@@ -6,8 +6,11 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
-    is_instance, ASTFlatten, ASTInstanceOf, ASTType, Expression, ExpressionBaseProperty,
-    FunctionCallExpr, FunctionCallExprBaseProperty, IntoAST, IntoExpression, LocationExpr, AST,
+    expression::{
+        Expression, ExpressionBaseProperty, FunctionCallExpr, FunctionCallExprBaseProperty,
+        LocationExpr,
+    },
+    is_instance, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, IntoExpression, AST,
 };
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;

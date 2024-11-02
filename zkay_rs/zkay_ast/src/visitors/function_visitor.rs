@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::ast::{ASTFlatten, IntoAST, Parameter, SourceUnit};
+use crate::ast::{identifier_declaration::Parameter, source_unit::SourceUnit, ASTFlatten, IntoAST};
 use crate::visitors::visitor::AstVisitor;
 use rccell::RcCell;
 // class FunctionVisitor(AstVisitor)

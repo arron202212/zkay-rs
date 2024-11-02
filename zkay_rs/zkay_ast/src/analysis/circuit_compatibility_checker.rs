@@ -11,13 +11,19 @@ use zkay_config::{config::CFG, config_user::UserConfig};
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
-    is_instance, is_instances, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType,
-    AssignmentStatement, BooleanLiteralType, BuiltinFunction, ConstructorOrFunctionDefinition,
-    Expression, ExpressionBaseMutRef, ExpressionBaseProperty, ExpressionBaseRef, FunctionCallExpr,
-    FunctionCallExprBaseProperty, FunctionTypeName, IfStatement, IndexExpr, IntoAST,
-    IntoExpression, LocationExpr, NumberLiteralType, PrimitiveCastExpr, ReclassifyExpr,
-    ReclassifyExprBaseProperty, ReturnStatement, SimpleStatement, Statement, StatementBaseProperty,
-    StatementList, TupleOrLocationExpr, VariableDeclarationStatement, AST,
+    expression::{
+        BuiltinFunction, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
+        ExpressionBaseRef, FunctionCallExpr, FunctionCallExprBaseProperty, IndexExpr, LocationExpr,
+        PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseProperty, TupleOrLocationExpr,
+    },
+    is_instance, is_instances,
+    namespace_definition::ConstructorOrFunctionDefinition,
+    statement::{
+        AssignmentStatement, IfStatement, ReturnStatement, SimpleStatement, Statement,
+        StatementBaseProperty, StatementList, VariableDeclarationStatement,
+    },
+    type_name::{BooleanLiteralType, FunctionTypeName, NumberLiteralType},
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, IntoExpression, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,

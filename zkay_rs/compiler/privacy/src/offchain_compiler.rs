@@ -8,7 +8,7 @@
 // use zkay_utils::multiline_formatter::MultiLineFormatter;
 // use zkay_ast::ast::{ContractDefinition, IntTypeName, SourceUnit, ConstructorOrFunctionDefinition,
 //     indent, FunctionCallExpr, IdentifierExpr, BuiltinFunction,
-//     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, Identifier,
+//     StateVariableDeclaration, MemberAccessExpr, IndexExpr, Parameter, TypeName, AnnotatedTypeName, identifier::Identifier,
 //     ReturnStatement, EncryptionExpression, MeExpr, Expression, CipherText, Array,
 //     AddressTypeName, StructTypeName, HybridArgType, CircuitInputStatement, AddressPayableTypeName,
 //     CircuitComputationStatement, VariableDeclaration, Block, KeyLiteralExpr, VariableDeclarationStatement, LocationExpr,

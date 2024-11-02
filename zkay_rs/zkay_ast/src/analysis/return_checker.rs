@@ -7,8 +7,10 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, Block,
-    ConstructorOrFunctionDefinition, IntoAST, ReturnStatement, StatementListBaseProperty, AST,
+    is_instance,
+    namespace_definition::ConstructorOrFunctionDefinition,
+    statement::{Block, ReturnStatement, StatementListBaseProperty},
+    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST,
 }; //, AstException
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
