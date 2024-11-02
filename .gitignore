@@ -16,3 +16,5 @@
 **/.vscode
 **/survey_compiled/
 **/survey.zkay/
+*.json
+solc-macos
