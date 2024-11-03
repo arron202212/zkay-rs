@@ -8,6 +8,8 @@ use zkay_utils::progress_printer::{fail_print, success_print};
 // from argcomplete.completers import FilesCompleter, DirectoriesCompleter
 mod tests;
 // from zkay.config_user import UserConfig
+// pub mod cmd;
+// pub mod zkay;
 pub mod zkay_frontend;
 #[macro_use]
 extern crate lazy_static;
@@ -332,32 +334,11 @@ WARNING: This account will be charged with the deployment costs.",
     main_parser.get_matches()
 }
 
-fn main() {
+fn main0() {
     unsafe { backtrace_on_stack_overflow::enable() };
     assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
-    //   println!("==main==begin===");
-    // use std::process::{Command, Stdio};
-    //     let cmd=["/Users/lisheng/mygit/arron/zkay-rs/zkay_rs/jsnark_interface/run_snark", "keygen", "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out", "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out", "1"];
-    //     let process = std::process::Command::new(cmd[0].clone())
-    //             .args(&cmd[1..])
-    //             .current_dir("/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/zk__Verify_Survey_publish_results_out")
-    //             .stderr(Stdio::piped())
-    //             .stdout(Stdio::piped())
-    //             .spawn()
-    //             .expect(&format!("{cmd:?}"))
-    //             .wait_with_output()
-    //             .expect("wait_with_output");
-    //         if !process.status.success() {
-    //         println!("===cmd======={cmd:?}");
-    //         // let cmd = get_command(cmd);
-    //         // raise subprocess.SubprocessError(msg)
-    //         panic!(
-    //             "Non-zero exit status {} for command:\n: $ {cmd:?}\n\n{:?}\n{:?}",
-    //             process.status,String::from_utf8(process.stdout.clone()),String::from_utf8(process.stderr.clone())
-    //         );
-    //     }
-    //     println!("==main=====");
-    //     // parse arguments
+    use crate::zkay_frontend as frontend;
+
     let a = parse_arguments();
     // println!("==main==1===");
     //     from zkay.config_version import Versions
@@ -376,7 +357,6 @@ fn main() {
 
     //     from pathlib import Path
 
-    use crate::zkay_frontend as frontend;
     //     from zkay import my_logging
     //     from zkay.config import cfg
     //     use zkay_utils::helpers::{read_file, save_to_file};
@@ -649,5 +629,157 @@ fn main() {
     }
 }
 
-// if __name__ == '__main__':
-//     main()
+use clap::{CommandFactory, Parser};
+use clap_complete::generate;
+use eyre::Result;
+use foundry_cli::{handler, utils};
+// use foundry_evm::inspectors::cheatcodes::{set_execution_context, ForgeContext};
+
+mod cmd;
+// use cmd::{cache::CacheSubcommands, generate::GenerateSubcommands, watch};
+
+mod zkay;
+use zkay::{Zkay, ZkaySubcommand};
+
+// #[macro_use]
+// extern crate foundry_common;
+
+// #[macro_use]
+// extern crate tracing;
+
+// #[cfg(all(feature = "jemalloc", unix))]
+// #[global_allocator]
+// static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
+fn main() {
+    if let Err(err) = run() {
+        // let _ = foundry_common::Shell::get().error(&err);
+        println!("=========={err:?}");
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<()> {
+    // handler::install();
+    // utils::load_dotenv();
+    // utils::subscriber();
+    // utils::enable_paint();
+
+    let args = Zkay::parse();
+    // args.shell.shell().set();
+    // init_execution_context(&args.cmd);
+
+    match args.cmd {
+        // ForgeSubcommand::Test(cmd) => {
+        //     if cmd.is_watch() {
+        //         utils::block_on(watch::watch_test(cmd))
+        //     } else {
+        //         let silent = cmd.junit || cmd.json;
+        //         let outcome = utils::block_on(cmd.run())?;
+        //         outcome.ensure_ok(silent)
+        //     }
+        // }
+        // ForgeSubcommand::Script(cmd) => utils::block_on(cmd.run_script()),
+        // ForgeSubcommand::Coverage(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::Bind(cmd) => cmd.run(),
+        ZkaySubcommand::Compile(cmd) => {
+            // if cmd.is_watch() {
+            //     utils::block_on(watch::watch_build(cmd))
+            // } else {
+            cmd.run().map(drop)
+            // }
+        }
+        // ForgeSubcommand::Debug(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::VerifyContract(args) => utils::block_on(args.run()),
+        // ForgeSubcommand::VerifyCheck(args) => utils::block_on(args.run()),
+        // ForgeSubcommand::VerifyBytecode(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::Clone(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::Cache(cmd) => match cmd.sub {
+        //     CacheSubcommands::Clean(cmd) => cmd.run(),
+        //     CacheSubcommands::Ls(cmd) => cmd.run(),
+        // },
+        ZkaySubcommand::Deploy(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::Update(cmd) => cmd.run(),
+        // ForgeSubcommand::Install(cmd) => cmd.run(),
+        // ForgeSubcommand::Remove(cmd) => cmd.run(),
+        // ForgeSubcommand::Remappings(cmd) => cmd.run(),
+        // ForgeSubcommand::Init(cmd) => cmd.run(),
+        // ForgeSubcommand::Completions { shell } => {
+        //     generate(shell, &mut Forge::command(), "forge", &mut std::io::stdout());
+        //     Ok(())
+        // }
+        // ForgeSubcommand::GenerateFigSpec => {
+        //     clap_complete::generate(
+        //         clap_complete_fig::Fig,
+        //         &mut Forge::command(),
+        //         "forge",
+        //         &mut std::io::stdout(),
+        //     );
+        //     Ok(())
+        // }
+        // ForgeSubcommand::Clean { root } => {
+        //     let config = utils::load_config_with_root(root.as_deref());
+        //     let project = config.project()?;
+        //     config.cleanup(&project)?;
+        //     Ok(())
+        // }
+        // ForgeSubcommand::Snapshot(cmd) => {
+        //     if cmd.is_watch() {
+        //         utils::block_on(watch::watch_gas_snapshot(cmd))
+        //     } else {
+        //         utils::block_on(cmd.run())
+        //     }
+        // }
+        // ForgeSubcommand::Fmt(cmd) => cmd.run(),
+        // ForgeSubcommand::Config(cmd) => cmd.run(),
+        // ForgeSubcommand::Flatten(cmd) => cmd.run(),
+        // ForgeSubcommand::Inspect(cmd) => cmd.run(),
+        // ForgeSubcommand::Tree(cmd) => cmd.run(),
+        // ForgeSubcommand::Geiger(cmd) => {
+        //     let check = cmd.check;
+        //     let n = cmd.run()?;
+        //     if check && n > 0 {
+        //         std::process::exit(n as i32);
+        //     }
+        //     Ok(())
+        // }
+        // ForgeSubcommand::Doc(cmd) => {
+        //     if cmd.is_watch() {
+        //         utils::block_on(watch::watch_doc(cmd))
+        //     } else {
+        //         utils::block_on(cmd.run())?;
+        //         Ok(())
+        //     }
+        // }
+        // ForgeSubcommand::Selectors { command } => utils::block_on(command.run()),
+        // ForgeSubcommand::Generate(cmd) => match cmd.sub {
+        //     GenerateSubcommands::Test(cmd) => cmd.run(),
+        // },
+        // ForgeSubcommand::Compiler(cmd) => cmd.run(),
+        // ForgeSubcommand::Soldeer(cmd) => utils::block_on(cmd.run()),
+        // ForgeSubcommand::Eip712(cmd) => cmd.run(),
+        // ForgeSubcommand::BindJson(cmd) => cmd.run(),
+    }
+}
+
+// /// Set the program execution context based on `forge` subcommand used.
+// /// The execution context can be set only once per program, and it can be checked by using
+// /// cheatcodes.
+// fn init_execution_context(subcommand: &ForgeSubcommand) {
+//     let context = match subcommand {
+//         ForgeSubcommand::Test(_) => ForgeContext::Test,
+//         ForgeSubcommand::Coverage(_) => ForgeContext::Coverage,
+//         ForgeSubcommand::Snapshot(_) => ForgeContext::Snapshot,
+//         ForgeSubcommand::Script(cmd) => {
+//             if cmd.broadcast {
+//                 ForgeContext::ScriptBroadcast
+//             } else if cmd.resume {
+//                 ForgeContext::ScriptResume
+//             } else {
+//                 ForgeContext::ScriptDryRun
+//             }
+//         }
+//         _ => ForgeContext::Unknown,
+//     };
+//     set_execution_context(context);
+// }
