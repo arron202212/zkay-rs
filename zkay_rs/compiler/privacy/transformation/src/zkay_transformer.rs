@@ -449,7 +449,12 @@ impl ZkayStatementTransformer {
             .enumerate()
         {
             let old_code = ASTFlatten::from(stmt.clone()).code();
-            //
+            // println!(
+            //     "==transformed_stmt==before=={:?}===={:?}======{old_code},===to====={}",
+            //     ast.get_ast_type(),
+            //     stmt.get_ast_type(),
+            //     stmt.code()
+            // );
             let transformed_stmt = self.visit(&stmt.clone().into()); //=priv_expr
 
             if transformed_stmt.is_none() {
@@ -551,11 +556,14 @@ impl ZkayStatementTransformer {
             } else {
                 panic!("==process_statement_child=====else==========={child:?},{res:?}");
             }
+            // println!("==process_statement_child====expr==res==={}=====",res.as_ref().unwrap().code());
             // println!("====child======{:?}======={:?}===={}===={}=====",child.get_ast_type(),res.as_ref().unwrap().get_ast_type(),child.is_expression(),res.as_ref().unwrap().is_expression());
             res
         } else {
             assert!(is_instance(child, ASTType::VariableDeclaration));
-            self.var_decl_trafo.visit(child)
+            let res = self.var_decl_trafo.visit(child);
+            // println!("===process_statement_child===var==res==={}=====",res.as_ref().unwrap().code());
+            res
         }
     }
     // """
@@ -576,6 +584,7 @@ impl ZkayStatementTransformer {
         cb.children.iter().for_each(|c| {
             self.process_statement_child(c);
         });
+        // println!("==visitStatement======================={ast}");
         Ok(ast.clone())
     }
     // """Rule (2)"""
@@ -627,7 +636,7 @@ impl ZkayStatementTransformer {
                 .as_ref()
                 .unwrap(),
         ); //=priv_expr
-           // println!("======rhs==============={}====",rhs.as_ref().unwrap());
+           //    println!("======rhs==============={}====",rhs.as_ref().unwrap());
         if ast.is_assignment_statement() {
             ast.try_as_assignment_statement_ref()
                 .unwrap()

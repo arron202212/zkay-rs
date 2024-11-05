@@ -1389,12 +1389,12 @@ where
             .upgrade()
             .unwrap();
         let pre_statement = RcCell::new(CircuitInputStatement::new(
-            input_idf.get_loc_expr(None),
-            input_expr.unwrap(),
+            input_idf.clone_inner().get_loc_expr(None).clone_inner(),
+            input_expr.unwrap().clone_inner(),
             None,
         ))
         .into();
-        // println!("====pre_statement===================={pre_statement}=====");
+        // println!("====pre_statement=====CircuitInputStatement==============={pre_statement}=====");
         if statement.is_ast() {
             statement
                 .try_as_ast_ref()
@@ -1741,11 +1741,11 @@ where
                    true,
                    self.global_vars.clone(),
                );
-               println!(
-                   "==_circ_trafo=============inlined_body=={:?}==={}",
-                   inlined_body.as_ref().unwrap().code(),
-                   line!()
-               );
+            //    println!(
+            //        "==_circ_trafo=============inlined_body=={:?}==={}",
+            //        inlined_body.as_ref().unwrap().code(),
+            //        line!()
+            //    );
                self._circ_trafo
                    .as_ref()
                    .unwrap()
@@ -3031,6 +3031,7 @@ where
         );
         let (idf, get_key_stmt) =
             self.request_public_key(&crypto_params, privacy.clone().into(), &name);
+        println!("===get_key_stmt========{}=========", get_key_stmt.code());
         stmt.as_ref()
             .unwrap()
             .try_as_statement_ref()
@@ -3092,11 +3093,12 @@ where
         // println!("=====get_loc_expr(Some(stmt))=====after=======");
         let key_expr = KeyLiteralExpr::new(cs, crypto_params).as_type(&key_t.clone().into());
         let pre_statement = RcCell::new(AssignmentStatementBase::new(
-            Some(key_idf.get_loc_expr(None)),
-            Some(key_expr),
+            Some(key_idf.clone_inner().get_loc_expr(None).clone_inner()),
+            Some(key_expr.clone_inner()),
             None,
         ))
         .into();
+        // println!("=======pre_statement=====AssignmentStatementBase=========={}",pre_statement);
         if stmt.is_statement() {
             stmt.try_as_statement_ref()
                 .unwrap()

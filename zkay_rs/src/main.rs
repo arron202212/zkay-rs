@@ -334,7 +334,7 @@ WARNING: This account will be charged with the deployment costs.",
     main_parser.get_matches()
 }
 
-fn main0() {
+fn main() {
     unsafe { backtrace_on_stack_overflow::enable() };
     assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
     use crate::zkay_frontend as frontend;
@@ -651,7 +651,7 @@ use zkay::{Zkay, ZkaySubcommand};
 // #[global_allocator]
 // static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-fn main() {
+fn main1() {
     if let Err(err) = run() {
         // let _ = foundry_common::Shell::get().error(&err);
         println!("=========={err:?}");

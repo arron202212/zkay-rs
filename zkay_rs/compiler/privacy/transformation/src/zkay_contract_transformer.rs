@@ -659,12 +659,14 @@ impl ZkayTransformer {
         for fct in &all_fcts {
             if let Some(circuit) = self.circuits.borrow().get(fct) {
                 let body = fct.borrow().body.clone();
+                // println!("==before===transform_contract==body=={}=", body.as_ref().unwrap().borrow());
                 let body = ZkayStatementTransformer::new(
                     Some(circuit.clone().downgrade()),
                     self.global_vars.clone(),
                 )
                 .visit(&body.clone().unwrap().into())
                 .and_then(|b| b.try_as_block()); //=priv_expr
+                                                 // println!("=====transform_contract==body=={}=", body.as_ref().unwrap().borrow());
                 fct.borrow_mut().body = body;
             }
         }
@@ -937,12 +939,14 @@ impl ZkayTransformer {
         let mut offset = 0;
         let zk_out_name = CFG.lock().unwrap().zk_out_name();
         for s in circuit.borrow().output_idfs().iter_mut() {
-            deserialize_stmts.push(s.deserialize(
+            let stmt = s.deserialize(
                 zk_out_name.clone(),
                 Some(RcCell::new(out_start_idx.clone()).into()),
                 offset,
-            ));
-            //println!("=====create_internal_verification_wrapper===={}=", line!());
+            );
+            // println!("=====create_internal_verification_wrapper===={}=", stmt.code());
+
+            deserialize_stmts.push(stmt);
             if is_instance(&s.t, ASTType::CipherText)
                 && s.t
                     .to_ast()
@@ -1001,25 +1005,26 @@ impl ZkayTransformer {
                         .as_ref()
                         .unwrap()
                         .cipher_payload_len();
-                deserialize_stmts.push(
-                    s.get_loc_expr(None)
-                        .to_ast()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .index(ExprUnion::I32(cipher_payload_len))
-                        .to_ast()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .try_as_tuple_or_location_expr_ref()
-                        .unwrap()
-                        .try_as_location_expr_ref()
-                        .unwrap()
-                        .assign(sender_key),
-                );
+                let stmt = s
+                    .get_loc_expr(None)
+                    .to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .index(ExprUnion::I32(cipher_payload_len))
+                    .to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .assign(sender_key);
+                // println!("=====create_internal_verification_wrapper==ct=={}=", stmt.code());
+                deserialize_stmts.push(stmt);
             }
             offset += s.t.to_ast().try_as_type_name().unwrap().size_in_uints();
         }
