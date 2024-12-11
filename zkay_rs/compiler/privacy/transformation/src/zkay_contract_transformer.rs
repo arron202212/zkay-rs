@@ -16,7 +16,8 @@ use crate::zkay_transformer::{
     ZkayVarDeclTransformer,
 };
 use circuit_helper::circuit_helper::CircuitHelper;
-use privacy::library_contracts::BN128_SCALAR_FIELD;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
+use privacy::library_contracts::BN128_SCALAR_FIELDS;
 use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
@@ -50,8 +51,8 @@ use zkay_ast::visitors::{
 };
 
 use zkay_config::{config::CFG, config_user::UserConfig};
-use zkay_crypto::params::CryptoParams;
 use zkay_derive::AstTransformerVisitorBaseRefImpl;
+use zkay_transaction_crypto_params::params::CryptoParams;
 // """
 // Convert zkay to solidity AST + proof circuits
 
@@ -553,7 +554,7 @@ impl ZkayTransformer {
             )))),
             Some(
                 RcCell::new(NumberLiteralExpr::new_string(
-                    BN128_SCALAR_FIELD.to_hex_string(),
+                    BN128_SCALAR_FIELDS.to_hex_string(),
                 ))
                 .into(),
             ),
@@ -1347,6 +1348,7 @@ impl ZkayTransformer {
         }
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
+            let crypto_params = CryptoParams::new(crypto_params);
             if crypto_params.is_symmetric_cipher()
                 && (ext_circuit.borrow().requested_global_keys().contains(&(
                     Some(RcCell::new(MeExpr::new()).into()),
@@ -1607,18 +1609,17 @@ impl ZkayTransformer {
                         None,
                     )
                     .as_type(&p.borrow().annotated_type().clone_inner().unwrap().into());
-                    let cipher_payload_len = CFG
-                        .lock()
-                        .unwrap()
-                        .get_crypto_params(
+                    let cipher_payload_len = CryptoParams::new(
+                        CFG.lock().unwrap().get_crypto_params(
                             &p.borrow()
                                 .annotated_type()
                                 .as_ref()
                                 .unwrap()
                                 .borrow()
                                 .homomorphism,
-                        )
-                        .cipher_payload_len();
+                        ),
+                    )
+                    .cipher_payload_len();
                     let lit = ArrayLiteralExpr::ArrayLiteralExpr(ArrayLiteralExprBase::new(
                         (0..cipher_payload_len)
                             .map(|i| {

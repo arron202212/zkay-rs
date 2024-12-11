@@ -17,5 +17,14 @@
 // * :py:mod:`.keystore`: Keystore backends
 // * :py:mod:`.prover`: Proof-generation backends
 // """
-// pub mod crypto;
-// pub mod offchain;
+
+pub mod blockchain;
+pub mod keystore;
+pub mod offchain;
+pub mod prover;
+pub mod runtime;
+pub mod crypto;
+pub mod int_casts;
+pub mod interface;
+pub mod solidity_math;
+pub mod types;

@@ -19,7 +19,7 @@ zkay-derive = { workspace = true }
  zkay-config={workspace = true }
  my_logging={workspace = true }
  solidity_parser={workspace = true }
- zkay-transaction={workspace = true }
+#  zkay-transaction={workspace = true }
  type_check={workspace = true }
  zkay-utils={workspace = true }
  zkay_ast={workspace = true }

@@ -19,8 +19,8 @@ use crate::pointers::symbol_table::link_identifiers;
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
-use zkay_crypto::params::CryptoParams;
 use zkay_derive::ASTVisitorBaseRefImpl;
+use zkay_transaction_crypto_params::params::CryptoParams;
 // T = TypeVar("T")
 // """
 

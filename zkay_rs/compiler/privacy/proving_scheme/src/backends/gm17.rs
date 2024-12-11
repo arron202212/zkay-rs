@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // """
 // This module defines the verification key, proof and verification contract format for the GM17 proving scheme
 
@@ -9,6 +16,7 @@
 
 use crate::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta as VK};
 use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use privacy::library_contracts::BN128_SCALAR_FIELD_BITS;
 use rccell::RcCell;
 use zkay_config::{config::CFG, config_version::Versions};
@@ -62,9 +70,9 @@ impl ProvingScheme for ProvingSchemeGm17 {
     const NAME: &'static str = "gm17";
     type VerifyingKeyX = VerifyingKey<G1Point, G2Point>;
 
-    fn generate_verification_contract(
+    fn generate_verification_contract<C: CircuitHelperConfig>(
         verification_key: <ProvingSchemeGm17 as ProvingScheme>::VerifyingKeyX,
-        circuit: &RcCell<CircuitHelper>,
+        circuit: &C,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String {
@@ -72,7 +80,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
         let should_hash = CFG
             .lock()
             .unwrap()
-            .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size);
+            .should_use_hash(circuit.trans_in_size() + circuit.trans_out_size());
 
         let query_length = vk.query.len();
         assert!(query_length == primary_inputs.len() + 1);
@@ -95,7 +103,7 @@ impl ProvingScheme for ProvingSchemeGm17 {
         let zkay_solc_version_compatibility = CFG.lock().unwrap().zkay_solc_version_compatibility();
         let verify_libs_contract_filename =
             <Self as ProvingScheme>::verify_libs_contract_filename();
-        let get_verification_contract_name = circuit.borrow().get_verification_contract_name();
+        let get_verification_contract_name = circuit.get_verification_contract_name();
         let prover_key_hash_name = CFG.lock().unwrap().prover_key_hash_name();
         let prover_key_hash = hex::encode(prover_key_hash);
         let snark_scalar_field_var_name = <Self as ProvingScheme>::snark_scalar_field_var_name();
@@ -109,8 +117,8 @@ impl ProvingScheme for ProvingSchemeGm17 {
         let verification_function_name = CFG.lock().unwrap().verification_function_name();
         let zk_in_name = CFG.lock().unwrap().zk_in_name();
         let zk_out_name = CFG.lock().unwrap().zk_out_name();
-        let in_size_trans = circuit.borrow().in_size_trans();
-        let out_size_trans = circuit.borrow().out_size_trans();
+        let in_size_trans = circuit.in_size_trans();
+        let out_size_trans = circuit.out_size_trans();
         let bn128_scalar_field_value: &str =
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"; //BN128_SCALAR_FIELD.clone();
         let x = MultiLineFormatter::new("").mul(format!(r#"

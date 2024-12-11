@@ -20,9 +20,9 @@ use std::io::{BufRead, BufReader, Error, Read, Write};
 use std::path::{Path, PathBuf};
 const WS_PATTERN: &str = r"[ \t\r\n\u000C]";
 const ID_PATTERN: &str = r"[a-zA-Z\$_][a-zA-Z0-9\$_]*";
-pub fn save_to_file(output_directory: Option<&str>, filename: &str, code: &str) -> String {
+pub fn save_to_file(output_directory: Option<PathBuf>, filename: &str, code: &str) -> String {
     let target = if let Some(output_directory) = output_directory {
-        Path::new(output_directory).join(filename)
+        output_directory.join(filename)
     } else {
         PathBuf::from(filename)
     };

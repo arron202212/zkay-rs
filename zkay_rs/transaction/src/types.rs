@@ -1,200 +1,300 @@
-// from typing import Optional, Collection, Any, Dict, Tuple, List, Union, Callable
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+// use typing::Optional, Collection, Any, Dict, Tuple, List, Union, Callable
 
-// from zkay.transaction.crypto.params import CryptoParams
-// from zkay.zkay_ast.homomorphism import Homomorphism
-
-
+use std::marker::PhantomData;
+use std::path::PathBuf;
+use zkay_ast::homomorphism::Homomorphism;
+use zkay_config::{
+    config::{zk_print_banner, CFG},
+    config_user::UserConfig,
+    zk_print,
+};
+use zkay_transaction_crypto_params::params::CryptoParams;
+#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+pub struct Value<T: Clone + Default, V: Clone + Default> {
+    pub contents: Vec<T>,
+    pub value: V,
+    pub params: Option<CryptoParams>,
+    pub crypto_backend: Option<String>,
+}
 // class Value(tuple):
-//     def __new__(cls, contents: Collection):
-//         return super(Value, cls).__new__(cls, contents)
+impl<T: Clone + Default, V: Clone + Default> Value<T, V> {
+    pub fn new(
+        contents: Vec<T>,
+        params: Option<CryptoParams>,
+        crypto_backend: Option<String>,
+    ) -> Self {
+        Self {
+            contents,
+            value: V::default(),
+            params,
+            crypto_backend,
+        }
+    }
+    //     fn __str__(self):
+    //         return f'{type(self).__name__}({super().__str__()})'
 
-//     def __str__(self):
-//         return f'{type(self).__name__}({super().__str__()})'
+    //     fn __eq__(self, other):
+    //         return isinstance(other, type(self)) and super().__eq__(other)
 
-//     def __eq__(self, other):
-//         return isinstance(other, type(self)) and super().__eq__(other)
+    //     fn __hash__(self):
+    //         return self[:].__hash__()
+    pub fn lens(&self) -> usize {
+        0
+    }
+    //     @staticmethod
+    pub fn unwrap_values(v: Self) -> Self {
+        //         if isinstance(v, List):
+        //             return list(map(Value.unwrap_values, v))
+        //         elif isinstance(v, AddressValue):
+        //             return v.val
+        //         elif isinstance(v, Dict):
+        //             return {key: Value.unwrap_values(vals) for key, vals in v.items()}
+        //         else:
+        //             return list(v[:]) if isinstance(v, Value) else v
+        v
+    }
+    //     @staticmethod
+    pub fn flatten(_v: Self) -> Vec<Self> {
+        //         out = []
+        //         for elem in v:
+        //             if isinstance(elem, Collection):
+        //                 out += Value.flatten(elem)
+        //             else:
+        //                 out.append(elem)
+        //         return out
+        vec![]
+    }
+    //     @staticmethod
+    pub fn collection_to_string(_v: Self) -> String {
+        //         if isinstance(v, List):
+        //             return f"[{', '.join(map(Value.collection_to_string, v))}]"
+        //         elif isinstance(v, Tuple):
+        //             return f"({', '.join(map(Value.collection_to_string, v))})"
+        //         elif isinstance(v, Dict):
+        //             return f"{{{', '.join([f'{key}: {Value.collection_to_string(val)}' for key, val in v.items()])}}}"
+        //         else:
+        //             return str(v)
+        String::new()
+    }
 
-//     def __hash__(self):
-//         return self[:].__hash__()
+    //     @staticmethod
+}
+pub trait ValueContent<T> {
+    fn get_params(params: Option<CryptoParams>, crypto_backend: Option<String>) -> CryptoParams {
+        // from zkay.config::cfg
+        if let Some(params) = params {
+            return params;
+        }
+        if let Some(crypto_backend) = crypto_backend {
+            return CryptoParams::new(crypto_backend);
+        }
 
-//     @staticmethod
-//     def unwrap_values(v: Union[int, bool, 'Value', List, Dict]) -> Union[int, List, Dict]:
-//         if isinstance(v, List):
-//             return list(map(Value.unwrap_values, v))
-//         elif isinstance(v, AddressValue):
-//             return v.val
-//         elif isinstance(v, Dict):
-//             return {key: Value.unwrap_values(vals) for key, vals in v.items()}
-//         else:
-//             return list(v[:]) if isinstance(v, Value) else v
+        CryptoParams::new(
+            CFG.lock()
+                .unwrap()
+                .get_crypto_params(&Homomorphism::non_homomorphic()),
+        )
+    }
+    fn create_content(
+        contents: Option<Vec<T>>,
+        params: Option<CryptoParams>,
+        crypto_backend: Option<String>,
+    ) -> Vec<T>;
+}
 
-//     @staticmethod
-//     def flatten(v: Collection) -> List:
-//         out = []
-//         for elem in v:
-//             if isinstance(elem, Collection):
-//                 out += Value.flatten(elem)
-//             else:
-//                 out.append(elem)
-//         return out
+pub trait ParamLength {
+    fn len(params: &CryptoParams) -> usize;
+}
 
-//     @staticmethod
-//     def collection_to_string(v: Union[int, bool, 'Value', Dict, List, Tuple]) -> str:
-//         if isinstance(v, List):
-//             return f"[{', '.join(map(Value.collection_to_string, v))}]"
-//         elif isinstance(v, Tuple):
-//             return f"({', '.join(map(Value.collection_to_string, v))})"
-//         elif isinstance(v, Dict):
-//             return f"{{{', '.join([f'{key}: {Value.collection_to_string(val)}' for key, val in v.items()])}}}"
-//         else:
-//             return str(v)
-
-//     @staticmethod
-//     def get_params(params: CryptoParams = None, crypto_backend: str = None) -> CryptoParams:
-//         from zkay.config import cfg
-//         if params is not None:
-//             return params
-//         elif crypto_backend is not None:
-//             return CryptoParams(crypto_backend)
-//         else:
-//             return cfg.get_crypto_params(Homomorphism.NonHomomorphic)
-
-
+#[derive(Default, Clone, PartialEq)]
+pub struct CipherValue;
+// <T>{
+// base_value:Value<T>,
+// params:Option<CryptoParams>,
+// value:Option<i32>,
+// }
 // class CipherValue(Value):
-//     def __new__(cls, contents: Optional[Collection] = None, *,
-//                 params: CryptoParams = None, crypto_backend: str = None):
-//         params = Value.get_params(params, crypto_backend)
-//         content = [0] * params.cipher_len
-//         if contents:
-//             content[:len(contents)] = contents[:]
-//         ret = super(CipherValue, cls).__new__(cls, content)
-//         ret.params = params
-//         return ret
+impl<T: Default + Clone + Copy, V: ParamLength + Clone + Default> ValueContent<T> for Value<T, V> {
+    fn create_content(
+        contents: Option<Vec<T>>,
+        params: Option<CryptoParams>,
+        crypto_backend: Option<String>,
+    ) -> Vec<T> {
+        let params = Self::get_params(params, crypto_backend);
+        let mut content = vec![T::default(); V::len(&params)];
+        if let Some(contents) = contents {
+            content[..contents.len()].copy_from_slice(&contents[..]);
+        }
 
-//     def __len__(self) -> int:
-//         return self.params.cipher_payload_len
+        content
+    }
+}
+impl ParamLength for CipherValue {
+    fn len(params: &CryptoParams) -> usize {
+        params.cipher_len() as _
+    }
+}
+#[derive(Clone, Default)]
+pub struct PrivateKeyValue;
+#[derive(Clone, Default)]
+pub struct PublicKeyValue;
 
+impl ParamLength for PublicKeyValue {
+    fn len(params: &CryptoParams) -> usize {
+        params.key_len() as _
+    }
+}
 
-// class PrivateKeyValue(Value):
-//     def __new__(cls, sk: Optional[Any] = None):
-//         return super(PrivateKeyValue, cls).__new__(cls, [sk])
+use std::clone::Clone;
+#[derive(Clone, Default)]
+pub struct RandomnessValue;
 
-//     @property
-//     def val(self):
-//         return self[0]
+impl ParamLength for RandomnessValue {
+    fn len(params: &CryptoParams) -> usize {
+        params.randomness_len().unwrap_or(0) as _
+    }
+}
+type Callable = fn(&AddressValue) -> i32;
 
+#[derive(Clone, Default, Ord, PartialEq, PartialOrd, Eq)]
+pub struct AddressValue {
+    get_balance: Option<Callable>,
+}
+impl AddressValue {
+    //     get_balance: Optional[Callable[['AddressValue'], int]] = None
 
-// class PublicKeyValue(Value):
-//     def __new__(cls, contents: Optional[Collection] = None, *,
-//                 params: CryptoParams = None, crypto_backend: str = None):
-//         params = Value.get_params(params, crypto_backend)
-//         if contents is None:
-//             return super(PublicKeyValue, cls).__new__(cls, [0] * params.key_len)
-//         else:
-//             assert len(contents) == params.key_len
-//             return super(PublicKeyValue, cls).__new__(cls, contents)
+    // fn new(val: T) -> Self {
+    // if isinstance(val, AddressValue):
+    //     val = val.val
+    // if not isinstance(val, bytes):
+    //     if isinstance(val, str):
+    //         val = int(val, 16)
+    //     val = val.to_bytes(20, byteorder='big')
+    // return super(AddressValue, cls).__new__(cls, [val])
 
+    //
+    // fn val(&self) -> T {
+    //     self.base_value.contents[0].clone()
+    // }
 
-// class RandomnessValue(Value):
-//     def __new__(cls, contents: Optional[Collection] = None, *,
-//                 params: CryptoParams = None, crypto_backend: str = None):
-//         params = Value.get_params(params, crypto_backend)
-//         if contents is None:
-//             return super(RandomnessValue, cls).__new__(cls, [0] * params.randomness_len)
-//         else:
-//             assert len(contents) == params.randomness_len
-//             return super(RandomnessValue, cls).__new__(cls, contents)
+    fn transfer(&self, _amount: i32) {}
 
+    fn send(&self, _amount: i32) -> bool {
+        true
+    }
 
-// class AddressValue(Value):
-//     get_balance: Optional[Callable[['AddressValue'], int]] = None
-
-//     def __new__(cls, val: Union[str, int, bytes]):
-//         if isinstance(val, AddressValue):
-//             val = val.val
-//         if not isinstance(val, bytes):
-//             if isinstance(val, str):
-//                 val = int(val, 16)
-//             val = val.to_bytes(20, byteorder='big')
-//         return super(AddressValue, cls).__new__(cls, [val])
-
-//     @property
-//     def val(self):
-//         return self[0]
-
-//     def transfer(self, amount):
-//         return
-
-//     def send(self, amount) -> bool:
-//         return True
-
-//     def __str__(self):
-//         return self.val.hex()
-
-//     @property
-//     def balance(self) -> int:
-//         return self.get_balance(self)
-
-
+    //
+    fn balance(&self) -> i32 {
+        self.get_balance.unwrap()(self)
+    }
+}
+use std::fmt;
+impl<T: Clone + Default, V: Clone + Default> std::fmt::Display for Value<T, V>
+where
+    Vec<T>: AsRef<[u8]>+std::fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.contents.clone())
+    }
+}
+#[derive(Clone, Default)]
+pub struct KeyPair {
+    pub pk: String,
+    pub sk: String,
+}
 // class KeyPair:
-//     def __init__(self, pk: PublicKeyValue, sk: PrivateKeyValue):
-//         self.pk = pk
-//         self.sk = sk
+impl KeyPair {
+    pub fn new(pk: String, sk: String) -> Self {
+        Self { pk, sk }
+    }
+}
+#[derive(Clone)]
+pub struct MsgStruct {
+    sender: String,
+    value: i32,
+}
+impl MsgStruct {
+   pub  fn new(sender: String, value: i32) -> Self {
+        Self { sender, value }
+    }
 
+    //
+    fn sender(&self) -> String {
+        self.sender.clone()
+    }
 
-// class MsgStruct:
-//     def __init__(self, sender: AddressValue, value: int = 0):
-//         super().__init__()
-//         self.__sender = sender
-//         self.__value = value
+    //
+    fn value(&self) -> i32 {
+        self.value
+    }
+}
+#[derive(Clone)]
+pub struct BlockStruct {
+    coinbase: String,
+    difficulty: i32,
+    gaslimit: i32,
+    number: i32,
+    timestamp: i32,
+}
+impl BlockStruct {
+   pub  fn new(
+        coinbase: String,
+        difficulty: i32,
+        gaslimit: i32,
+        number: i32,
+        timestamp: i32,
+    ) -> Self {
+        Self {
+            coinbase,
+            difficulty,
+            gaslimit,
+            number,
+            timestamp,
+        }
+    }
 
-//     @property
-//     def sender(self) -> AddressValue:
-//         return self.__sender
+    fn coinbase(&self) -> String {
+        self.coinbase.clone()
+    }
 
-//     @property
-//     def value(self) -> int:
-//         return self.__value
+    fn difficulty(self) -> i32 {
+        self.difficulty
+    }
 
+    fn gaslimit(self) -> i32 {
+        self.gaslimit
+    }
 
-// class BlockStruct:
-//     def __init__(self, coinbase: AddressValue, difficulty: int, gaslimit: int, number: int, timestamp: int):
-//         self.__coinbase = coinbase
-//         self.__difficulty = difficulty
-//         self.__gaslimit = gaslimit
-//         self.__number = number
-//         self.__timestamp = timestamp
+    fn number(&self) -> i32 {
+        self.number
+    }
 
-//     @property
-//     def coinbase(self) -> AddressValue:
-//         return self.__coinbase
+    fn timestamp(&self) -> i32 {
+        self.timestamp
+    }
+}
+#[derive(Clone)]
+pub struct TxStruct {
+    gasprice: i32,
+    origin: String,
+}
+impl TxStruct{
+    pub fn new(gasprice: i32, origin: String) -> Self {
+        Self { gasprice, origin }
+    }
 
-//     @property
-//     def difficulty(self) -> int:
-//         return self.__difficulty
+    pub fn gasprice(&self) -> i32 {
+        self.gasprice
+    }
 
-//     @property
-//     def gaslimit(self) -> int:
-//         return self.__gaslimit
-
-//     @property
-//     def number(self) -> int:
-//         return self.__number
-
-//     @property
-//     def timestamp(self) -> int:
-//         return self.__timestamp
-
-
-// class TxStruct:
-//     def __init__(self, gasprice: int, origin: AddressValue):
-//         self.__gasprice = gasprice
-//         self.__origin = origin
-
-//     @property
-//     def gasprice(self) -> int:
-//         return self.__gasprice
-
-//     @property
-//     def origin(self) -> AddressValue:
-//         return self.__origin
+    pub fn origin(&self) -> String {
+        self.origin.clone()
+    }
+}

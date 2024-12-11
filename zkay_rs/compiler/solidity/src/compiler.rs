@@ -24,7 +24,7 @@ use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
 // class SolcException(Exception):
 //     """ Solc reported error """
 //     pass
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env::{current_dir, set_current_dir};
 use std::fs::File;
 
@@ -36,13 +36,13 @@ use std::fs::File;
 // :param output_selection: determines which fields are included in the compiler output dict
 // :param cwd: working directory
 // :return: dictionary with the compilation results according to output_selection
-fn compile_solidity_json(
+pub fn compile_solidity_json(
     sol_filename: &str,
-    libs: Option<HashMap<String, String>>,
+    libs: Option<BTreeMap<String, String>>,
     optimizer_runs: i32,
     output_selection: Vec<String>,
     cwd: &str,
-) -> Option<Map<String, Value>> {
+) -> Option<Value> {
     // sol_filename: str, libs: Optional[Dict[str, str]] = None, optimizer_runs: int = -1,
     //                           output_selection: Tuple = ('metadata', 'evm.bytecode', 'evm.deployedBytecode'),
     //                           cwd: str = None) -> Dict
@@ -137,16 +137,11 @@ pub fn json_input(dir: &str, json_in: &str) -> String {
     input_json_file_path
 }
 //TODO
-fn compile(input: &str, solp: &str, input_json_file_path: &str) -> Option<Map<String, Value>> {
+fn compile(input: &str, solp: &str, input_json_file_path: &str) -> Option<Value> {
     // println!("====compile======TODO==={}======",input);
     let output = solc_compile(&input, solp, input_json_file_path); //String::from("{}"); //
     assert_ne!(output.len(), 0);
-    let v: Value = serde_json::from_str(&output).unwrap();
-    if let Value::Object(m) = v {
-        Some(m)
-    } else {
-        None
-    }
+    serde_json::from_str(&output).ok()
 }
 fn solc_compile(_input: &str, solp: &str, input_json_file_path: &str) -> String {
     use std::fs::File;

@@ -16,7 +16,7 @@ rccell = { workspace = true }
 zkay-derive = { workspace = true }
  zkay-config={workspace = true }
  my_logging={workspace = true }
- zkay-crypto={workspace = true }
+ zkay-transaction-crypto-params={workspace = true }
  zkay-utils={workspace = true }
 clap = { workspace = true }
 lazy_static = { workspace = true }

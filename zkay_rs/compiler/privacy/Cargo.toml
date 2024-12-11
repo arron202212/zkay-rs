@@ -13,10 +13,9 @@ rust-version.workspace = true
 [lib]
 [dependencies]
  zkay-config={workspace = true }
- zkay-crypto={workspace = true }
- zkay-transaction={workspace = true }
+ zkay-transaction-crypto-params={workspace = true }
  zkay-utils={workspace = true }
- zkay_ast={workspace = true }
+#  zkay_ast={workspace = true }
 lazy_static = { workspace = true }
 textwrap={ workspace = true }
 once_cell={ workspace = true }

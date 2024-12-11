@@ -1,11 +1,12 @@
-// def zk__div(a: int, b: int) -> int:
-//     if (a < 0) ^ (b < 0):
-//         return -(-a // b)
-//     else:
-//         return a // b
-
-
-// def zk__mod(a: int, b: int) -> int:
-//     sign = -1 if a < 0 else 1
-//     abs_res = abs(a) % abs(b)
-//     return sign * abs_res
+pub fn zk_div(a: i32, b: i32) -> i32 {
+    if (a < 0) ^ (b < 0) {
+        -(-a / b)
+    } else {
+        a / b
+    }
+}
+pub fn zk_mod(a: i32, b: i32) -> i32 {
+    let sign = if a < 0 { -1 } else { 1 };
+    let abs_res = a.abs() % b.abs();
+    sign * abs_res
+}

@@ -9,9 +9,10 @@
 // from appdirs import AppDirs
 use app_dirs2::*; // or app_dirs::* if you've used package alias in Cargo.toml
 
-use zkay_crypto::params::CryptoParams;
+// use zkay_transaction_crypto_params::params::CryptoParams;
 // use zkay_ast::homomorphism::String;
 use std::collections::BTreeMap;
+
 #[macro_export]
 macro_rules! lc_vec_s {
     () => { Vec::<String>::new() };
@@ -247,7 +248,7 @@ pub trait UserConfig {
         // Main encryption backend to use.
         // Available Options: [dummy, dummy-hom, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
 
-        self._get_crypto_backend(&String::from("NON_HOMOMORPHIC"))
+        self.get_crypto_backend(&String::from("NON_HOMOMORPHIC"))
             .unwrap()
     }
 
@@ -268,11 +269,15 @@ pub trait UserConfig {
         self.set_crypto_backend(&String::from("ADDITIVE"), val);
     }
 
-    fn _get_crypto_backend(&self, hom: &String) -> Option<String> {
+    fn get_crypto_backend(&self, hom: &String) -> Option<String> {
         self.user_config_base_ref()
             ._crypto_backends
             .get(hom)
             .cloned()
+    }
+
+    fn crypto_backend(&self) -> String {
+        "dummy".to_owned()
     }
 
     fn set_crypto_backend(&mut self, hom: &String, val: String) {
@@ -288,30 +293,31 @@ pub trait UserConfig {
             .insert(hom.clone(), val);
     }
 
-    fn get_crypto_params(&self, hom: &String) -> CryptoParams {
-        let backend_name = self._get_crypto_backend(hom);
+    fn get_crypto_params(&self, hom: &String) -> String {
+        let backend_name = self.get_crypto_backend(hom);
         assert!(
             backend_name.is_some(),
             "No crypto backend set for homomorphism {:?}",
             hom
         );
         // raise ValueError(f"No crypto backend set for homomorphism {hom.name}");
-        CryptoParams::new(backend_name.unwrap())
+        backend_name.unwrap()
     }
 
-    fn all_crypto_params(&self) -> Vec<CryptoParams> {
-        let crypto_backends: Vec<_> = [String::from("NON_HOMOMORPHIC"), String::from("ADDITIVE")]
+    fn all_crypto_params(&self) -> Vec<String> {
+        // let crypto_backends: Vec<_> =
+        [String::from("NON_HOMOMORPHIC"), String::from("ADDITIVE")]
             .iter()
-            .map(|hom| self._get_crypto_backend(hom))
-            .collect();
-        crypto_backends
-            .iter()
-            .filter_map(|backend| {
-                backend
-                    .as_ref()
-                    .map(|backend| CryptoParams::new(backend.clone()))
-            })
+            .filter_map(|hom| self.get_crypto_backend(hom))
             .collect()
+        // crypto_backends
+        // .iter()
+        // .filter_map(|backend| {
+        //     backend
+        //         .as_ref()
+        //         .map(|backend| CryptoParams::new(backend.clone()))
+        // })
+        // .collect()
     }
 
     fn blockchain_backend(&self) -> String {

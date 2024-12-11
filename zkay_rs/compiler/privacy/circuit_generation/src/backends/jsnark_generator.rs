@@ -12,6 +12,7 @@
 // from typing import List, Optional, Union, Tuple
 use crate::circuit_generator::{CircuitGenerator, CircuitGeneratorBase, VerifyingKeyType};
 use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
 use proving_scheme::proving_scheme::{G1Point, G2Point, ProvingScheme, VerifyingKeyMeta};
 use rccell::{RcCell, WeakCell};
@@ -27,7 +28,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
-    indent, is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArrayBaseProperty,
+    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArrayBaseProperty,
     BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression, ExpressionBaseProperty,
     FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierBaseProperty,
     IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,
@@ -35,12 +36,16 @@ use zkay_ast::ast::{
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
-use zkay_config::{config::CFG, config_user::UserConfig, zk_print};
+use zkay_config::{
+    config::{indent, CFG},
+    config_user::UserConfig,
+    zk_print,
+};
 use zkay_derive::ASTVisitorBaseRefImpl;
+use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::helpers::{hash_file, hash_string};
 use zkay_utils::helpers::{read_file, save_to_file};
 use zkp_u256::Binary;
-
 pub fn is_type_id_of<S: ?Sized + Any>(s: TypeId) -> bool {
     TypeId::of::<S>() == s
 }
@@ -1026,11 +1031,7 @@ impl JsnarkVisitor {
                 if homomorphism == Homomorphism::non_homomorphic() {
                     (String::from("o_("), String::new(), String::new())
                 } else {
-                    let crypto_backend = CFG
-                        .lock()
-                        .unwrap()
-                        .get_crypto_params(&homomorphism)
-                        .crypto_name; // String::from("elgamal");
+                    let crypto_backend = CFG.lock().unwrap().get_crypto_params(&homomorphism); // String::from("elgamal");
                     let public_key_name = ast
                         .try_as_expression_ref()
                         .unwrap()
@@ -1310,8 +1311,9 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
         .collect();
     let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
     for crypto_params in &all_crypto_params {
+        let crypto_params = CryptoParams::new(crypto_params.clone());
         let pk_name =
-            CircuitHelper::get_glob_key_name(&RcCell::new(MeExpr::new()).into(), crypto_params);
+            CircuitHelper::get_glob_key_name(&RcCell::new(MeExpr::new()).into(), &crypto_params);
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
             assert!(circuit
@@ -1416,7 +1418,7 @@ impl CircuitGenerator for JsnarkGenerator {
         let constraints = JsnarkVisitor::new(circuit.borrow().phi()).visitCircuit();
         //Inject the function definitions into the java template
         let code = jsnark::get_jsnark_circuit_class_str(
-            circuit,
+            &*circuit.borrow(),
             crypto_init_stmts,
             fdefs,
             input_init_stmts

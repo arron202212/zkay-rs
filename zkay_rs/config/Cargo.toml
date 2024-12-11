@@ -12,8 +12,6 @@ rust-version.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 [dependencies]
- zkay-crypto={workspace = true }
- zkay-transaction={workspace = true }
 lazy_static = { workspace = true }
 app_dirs2 = { workspace = true }
 semver_rs = { workspace = true }

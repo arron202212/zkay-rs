@@ -1,11 +1,17 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 //::os
 // from typing::List
-use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use lazy_static::lazy_static;
 use rccell::RcCell;
 use std::{fs::File, io::Write, path::Path};
-use zkay_ast::ast::indent;
-use zkay_config::config::CFG;
+use zkay_config::config::{indent, CFG};
 use zkay_utils::{
     helpers::hash_file,
     run_command::{run_command, run_commands},
@@ -26,7 +32,7 @@ pub fn pop_first_two_path_components(path: &str) -> std::path::PathBuf {
     components.as_path().to_path_buf()
 }
 //path to jsnark interface jar
-const CIRCUIT_BUILDER_JAR: &str = "JsnarkCircuitBuilder.jar";
+pub const CIRCUIT_BUILDER_JAR: &str = "JsnarkCircuitBuilder.jar";
 lazy_static! {
     pub static ref JARS_DIR: String = file_abs_workspace!()
         .parent()
@@ -147,8 +153,8 @@ pub fn prepare_proof(
 // :param circuit_statements: the java code corresponding to this circuit
 // :return: complete java file as string
 // """
-pub fn get_jsnark_circuit_class_str(
-    circuit: &RcCell<CircuitHelper>,
+pub fn get_jsnark_circuit_class_str<T: CircuitHelperConfig>(
+    circuit: &T,
     crypto_init_stmts: Vec<String>,
     fdefs: Vec<String>,
     circuit_statements: Vec<String>,
@@ -157,7 +163,7 @@ pub fn get_jsnark_circuit_class_str(
     let use_input_hashing = CFG
         .lock()
         .unwrap()
-        .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
+        .should_use_hash(circuit.trans_in_size() + circuit.trans_out_size())
         .to_string()
         .to_ascii_lowercase();
     let mut function_definitions = fdefs.join("\n\n");
@@ -191,11 +197,11 @@ public class {circuit_class_name} extends ZkayCircuitBase {{
     }}
 }}
 "#,
-        circuit_name = circuit.borrow().get_verification_contract_name(),
+        circuit_name = circuit.get_verification_contract_name(),
         crypto_init_stmts = indent(indent(crypto_init_stmts.join("\n"))),
-        pub_in_size = circuit.borrow().in_size_trans(),
-        pub_out_size = circuit.borrow().out_size_trans(),
-        priv_in_size = circuit.borrow().priv_in_size_trans(),
+        pub_in_size = circuit.in_size_trans(),
+        pub_out_size = circuit.out_size_trans(),
+        priv_in_size = circuit.priv_in_size_trans(),
         fdefs = indent(function_definitions),
         circuit_statements = indent(indent(circuit_statements.join("\n")))
     );

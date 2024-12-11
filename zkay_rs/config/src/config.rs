@@ -15,7 +15,7 @@
 use crate::meta::PROVINGSCHEMEPARAMS;
 // use  crate::config_user::UserConfig;
 use crate::config_version::{Versions, VersionsBase};
-// use zkay_transaction::crypto::params::CryptoParams;
+// use zkay_transaction_crypto_params::params::CryptoParams;
 // use zkay_ast::homomorphism::String;
 // use circuit_generation::circuit_helper::CircuitHelper;
 use crate::config_user::{UserConfig, UserConfigBase};
@@ -65,6 +65,20 @@ pub fn zk_print_banner(title: String) {
     let l = "#".repeat(title.len() + 4);
     zk_print!("{}\n// {title} #\n{}\n", l, l);
 }
+
+pub fn indent(s: String) -> String {
+    s.split("\n")
+        .map(|v| {
+            if v.trim().is_empty() {
+                String::new()
+            } else {
+                format!("{}{}", CFG.lock().unwrap().indentation(), v)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 pub trait ConstructorOrFunctionDefinitionAttr {
     fn get_requires_verification_when_external(&self) -> bool;
     fn get_name(&self) -> String;
@@ -197,9 +211,9 @@ impl Config {
         }
     }
 
-    pub fn is_symmetric_cipher(&self, hom: String) -> bool {
-        self.get_crypto_params(&hom).is_symmetric_cipher()
-    }
+    // pub fn is_symmetric_cipher(&self, hom: String) -> bool {
+    //     self.get_crypto_params(&hom).is_symmetric_cipher()
+    // }
 
     pub fn proof_len(&self) -> i32 {
         // println!("=====proving_scheme============={:?}",(&String::from("proving_scheme")));

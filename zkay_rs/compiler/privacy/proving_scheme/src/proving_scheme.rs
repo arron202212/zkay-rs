@@ -9,6 +9,7 @@
 // from abc import ABCMeta, abstractmethod
 // from typing import List
 use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use rccell::RcCell;
 use std::fs::File;
 use std::io::Lines;
@@ -202,14 +203,14 @@ pub trait ProvingScheme {
         String::from("snark_scalar_field")
     }
     // @abstractmethod
-    fn generate_verification_contract(
+    fn generate_verification_contract<C: CircuitHelperConfig>(
         verification_key: Self::VerifyingKeyX,
-        circuit: &RcCell<CircuitHelper>,
+        circuit: &C,
         primary_inputs: Vec<String>,
         prover_key_hash: Vec<u8>,
     ) -> String;
     // """
-    // Generate a verification contract for the zk-snark corresponding to circuit.borrow().
+    // Generate a verification contract for the zk-snark corresponding to circuit.
 
     // :param verification_key: parsed verification key which was previously generated for circuit
     // :param circuit: the circuit for which to generate the verification contract

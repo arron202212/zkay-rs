@@ -59,12 +59,12 @@ use zkay_config::{
     config_user::UserConfig,
     with_context_block, zk_print,
 };
-use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
     impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
     ASTVisitorBaseRefImpl, EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl,
     ImplBaseTrait,
 };
+use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
 use zkp_u256::{Zero, U256 as ZU256};
 // #[enum_dispatch(FullArgsSpec,IntoAST, ASTInstanceOf, TypeNameBaseRef, ASTBaseRef)]
@@ -271,7 +271,7 @@ impl TypeName {
     }
 
     pub fn cipher_type(plain_type: RcCell<AnnotatedTypeName>, hom: String) -> Self {
-        let crypto_params = CFG.lock().unwrap().get_crypto_params(&hom);
+        let crypto_params = CryptoParams::new(CFG.lock().unwrap().get_crypto_params(&hom));
         let mut plain_type = plain_type.borrow().clone();
         plain_type.homomorphism = hom; // Just for display purposes
         TypeName::Array(Array::CipherText(CipherText::new(

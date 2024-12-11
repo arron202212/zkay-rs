@@ -3,10 +3,13 @@ resolver = "2"
 
 members = [
     "rccell",
+"babyjubjub-rs",
+"babygiant-alt-bn128",
    "zkay_rs",
    "zkay-derive",
    "zkay-derive-core",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper",
+"zkay_rs/compiler/privacy/circuit_generation/circuit_helper_config",
 "zkay_rs/compiler/privacy/circuit_generation",
 # "zkay_rs/compiler/privacy/proving_scheme/backends",
 "zkay_rs/compiler/privacy/proving_scheme",
@@ -20,11 +23,10 @@ members = [
 "zkay_rs/jsnark_interface",
 "zkay_rs/my_logging",
 "zkay_rs/solidity_parser",
-"zkay_rs/transaction/blockchain",
-"zkay_rs/transaction/crypto",
-"zkay_rs/transaction/keystore",
-"zkay_rs/transaction/prover",
 "zkay_rs/transaction",
+# "zkay_rs/transaction/crypto",
+"zkay_rs/transaction/crypto/params",
+# "zkay_rs/transaction/types",
 "zkay_rs/type_check",
 "zkay_rs/utils",
 "zkay_rs/zkay_ast",
@@ -45,9 +47,12 @@ rust-version = "1.64"
 # proc-macro = true
 [workspace.dependencies]
 rccell={path="rccell"}
+babyjubjub-rs={path="babyjubjub-rs"}
+babygiant-alt-bn128={path="babygiant-alt-bn128"}
 zkay-derive={path="zkay-derive"}
 zkay-derive-core={path="zkay-derive-core"}
  circuit_helper={path="zkay_rs/compiler/privacy/circuit_generation/circuit_helper"}
+ circuit-helper-config={path="zkay_rs/compiler/privacy/circuit_generation/circuit_helper_config"}
  circuit_generation={path="zkay_rs/compiler/privacy/circuit_generation"}
 #  proving_scheme_backends={path="zkay_rs/compiler/privacy/proving_scheme/backends"}
  proving_scheme={path="zkay_rs/compiler/privacy/proving_scheme"}
@@ -61,16 +66,16 @@ zkay-derive-core={path="zkay-derive-core"}
  jsnark_interface={path="zkay_rs/jsnark_interface"}
  my_logging={path="zkay_rs/my_logging"}
  solidity_parser={path="zkay_rs/solidity_parser"}
- zkay-blockchain={path="zkay_rs/transaction/blockchain"}
- zkay-crypto={path="zkay_rs/transaction/crypto"}
- zkay-keystore={path="zkay_rs/transaction/keystore"}
- prover={path="zkay_rs/transaction/prover"}
  zkay-transaction={path="zkay_rs/transaction"}
+#  zkay-transaction-crypto={path="zkay_rs/transaction/crypto"}
+ zkay-transaction-crypto-params={path="zkay_rs/transaction/crypto/params"}
+#  zkay-transaction-types={path="zkay_rs/transaction/types"}
  type_check={path="zkay_rs/type_check"}
  zkay-utils={path="zkay_rs/utils"}
  zkay_ast={path="zkay_rs/zkay_ast"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
+
 
 clap = { version = "4.4.10", features = ["derive",  "env", "unicode", "wrap_help","string"] }
 lazy_static = "1.4.0"
@@ -83,6 +88,7 @@ serde_repr = "0.1.12"
 regex = "1.10.2"
 semver_rs = "0.2"
 app_dirs2 = "2.5.5"
+walkdir="2"
 # solc={git="https://github.com/g-r-a-n-t/solc-rust",branch="master"}
 # solc={git="https://github.com/Zokrates/solc-rust.git",branch="master"}
 zkp-u256 = { git = "https://github.com/patractlabs/OpenZKP", branch = "master" }
@@ -107,20 +113,24 @@ quote = "1.0.35"
 syn = "2.0.50"
 proc-macro2 = "1.0"
 convert_case="0.6.0"
-enum_dispatch="0.3.12"
+enum_dispatch="0.3.13"
 strum="0.26.1"
 strum_macros = "0.26.1"
 fancy-regex="0.13.0"
 bevy_reflect = "0.14.1"
 num_enum="0.7.3"
 backtrace-on-stack-overflow="0.3.0"
-
+ark-ff = "0.5.0"
+ark-ec = "0.5.0"
+ark-ed-on-bn254 = "0.5.0"
+ark-std = "0.5.0"
+rustc-serialize = "~0.3.19"
 
 
 
 
 # anvil = { path = "crates/anvil" }
-# cast = { path = "crates/cast" }
+cast = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="cast" }
 # chisel = { path = "crates/chisel" }
 # forge = { path = "crates/forge" }
 
@@ -150,7 +160,7 @@ foundry-config = { git = "https://github.com/foundry-rs/foundry.git", branch = "
 
 # # solc & compilation utilities
 # foundry-block-explorers = { version = "0.7.3", default-features = false }
-foundry-compilers = { version = "0.11.6", default-features = false }
+foundry-compilers = { version = "0.12.3", default-features = false }
 # foundry-fork-db = "0.6.0"
 # solang-parser = "=0.3.3"
 
@@ -168,19 +178,19 @@ foundry-compilers = { version = "0.11.6", default-features = false }
 # alloy-eips = { version = "0.5.4", default-features = false }
 # alloy-genesis = { version = "0.5.4", default-features = false }
 # alloy-json-rpc = { version = "0.5.4", default-features = false }
-alloy-network = { version = "0.5.4", default-features = false }
-alloy-provider = { version = "0.5.4", default-features = false }
+alloy-network = { version = "0.6.4", default-features = false }
+alloy-provider = { version = "0.6.4", default-features = false }
 # alloy-pubsub = { version = "0.5.4", default-features = false }
 # alloy-rpc-client = { version = "0.5.4", default-features = false }
-alloy-rpc-types = { version = "0.5.4", default-features = true }
-alloy-serde = { version = "0.5.4", default-features = false }
-alloy-signer = { version = "0.5.4", default-features = false }
+alloy-rpc-types = { version = "0.6.4", default-features = true }
+alloy-serde = { version = "0.6.4", default-features = false }
+alloy-signer = { version = "0.6.4", default-features = false }
 # alloy-signer-aws = { version = "0.5.4", default-features = false }
 # alloy-signer-gcp = { version = "0.5.4", default-features = false }
 # alloy-signer-ledger = { version = "0.5.4", default-features = false }
 # alloy-signer-local = { version = "0.5.4", default-features = false }
 # alloy-signer-trezor = { version = "0.5.4", default-features = false }
-alloy-transport = { version = "0.5.4", default-features = false }
+alloy-transport = { version = "0.6.4", default-features = false }
 # alloy-transport-http = { version = "0.5.4", default-features = false }
 # alloy-transport-ipc = { version = "0.5.4", default-features = false }
 # alloy-transport-ws = { version = "0.5.4", default-features = false }
@@ -195,7 +205,7 @@ alloy-primitives = { version = "0.8.9", features = [
 ] }
 # alloy-sol-macro-expander = "0.8.9"
 # alloy-sol-macro-input = "0.8.9"
-# alloy-sol-types = "0.8.9"
+alloy-sol-types = "0.8.12"
 # syn-solidity = "0.8.9"
 
 alloy-chains = "0.1"

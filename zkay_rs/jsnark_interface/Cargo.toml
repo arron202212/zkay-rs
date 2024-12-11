@@ -13,9 +13,9 @@ rust-version.workspace = true
 [lib]
 [dependencies]
 rccell = { workspace = true }
-circuit_helper={workspace=true}
+circuit-helper-config={workspace=true}
 zkay-config={workspace = true }
 zkay-utils={workspace = true }
-zkay_ast={workspace = true }
+# zkay_ast={workspace = true }
 lazy_static = { workspace = true }
 hex={ workspace = true }

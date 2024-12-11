@@ -1,6 +1,6 @@
-// // from contextlib import contextmanager
-// // from datetime import datetime
-// use  textwrap import dedent
+// // from contextlib::contextmanager
+// // from datetime::datetime
+// use  textwrap::dedent
 // // from typing::Dict, List, Optional, ContextManager, Set
 
 // use circuit_generation::circuit_helper::{CircuitHelper, HybridArgumentIdf};
@@ -129,18 +129,18 @@
 //         ## THIS CODE WAS GENERATED AUTOMATICALLY ##
 //         ## Creation Time: {datetime.now().strftime("%H:%M:%S %d-%b-%Y")}   ##
 //         ###########################################
-//         from __future__ import annotations
+//         from __future__::annotations
 
-//         import os
-//         from enum import IntEnum
-//         from typing import Dict, List, Tuple, Optional, Union, Any
+//        ::os
+//         from enum::IntEnum
+//         from typing::Dict, List, Tuple, Optional, Union, Any
 
-//         from zkay import my_logging
-//         from zkay.transaction.types import CipherValue, AddressValue, RandomnessValue, PublicKeyValue
-//         from zkay.transaction.offchain import {SCALAR_FIELD_NAME}, ContractSimulator, RequireException
-//         from zkay.transaction.int_casts import *
-//         from zkay.transaction.solidity_math import *
-//         from zkay.utils.timer import time_measure
+//         from zkay::my_logging
+//         from zkay.transaction.types::CipherValue, AddressValue, RandomnessValue, PublicKeyValue
+//         from zkay.transaction.offchain::{SCALAR_FIELD_NAME}, ContractSimulator, RequireException
+//         from zkay.transaction.int_casts::*
+//         from zkay.transaction.solidity_math::*
+//         from zkay.utils.timer::time_measure
 
 //         me = None
 
@@ -159,10 +159,10 @@
 
 //         pub fn help(val=None)
 //             if val is None
-//                 import sys
+//                ::sys
 //                 ContractSimulator.help(sys.modules[__name__], {c_name}, "{c_name}")
 //             else
-//                 import builtins
+//                ::builtins
 //                 builtins.help(val)
 
 //         """) if len(ast.contracts) == 1 else "") + dedent("""
@@ -171,7 +171,7 @@
 //             me = ContractSimulator.default_address()
 //             if me is not None
 //                 me = me.val
-//             import code
+//            ::code
 //             code.interact(local=globals())
 //         """)
 

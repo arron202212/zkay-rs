@@ -12,6 +12,7 @@
 // from multiprocessing import Pool, Value
 // from typing import List, Tuple
 use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use proving_scheme::backends::{gm17::ProvingSchemeGm17, groth16::ProvingSchemeGroth16};
 use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use rayon::prelude::*;
@@ -147,7 +148,7 @@ pub trait CircuitGenerator {
                             let _ = f.write_all(
                                 ProvingSchemeGroth16::generate_verification_contract(
                                     vk,
-                                    circuit,
+                                    &*circuit.borrow(),
                                     primary_inputs,
                                     pk_hash,
                                 )
@@ -165,7 +166,7 @@ pub trait CircuitGenerator {
                             let _ = f.write_all(
                                 ProvingSchemeGm17::generate_verification_contract(
                                     vk,
-                                    circuit,
+                                     &*circuit.borrow(),
                                     primary_inputs,
                                     pk_hash,
                                 )

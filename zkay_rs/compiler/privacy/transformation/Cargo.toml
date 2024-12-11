@@ -15,11 +15,11 @@ rust-version.workspace = true
 rccell = { workspace = true }
 zkay-derive = { workspace = true }
 circuit_helper={workspace=true}
+circuit-helper-config={workspace=true}
  privacy={workspace = true }
  solidity={workspace = true }
  zkay-config={workspace = true }
- zkay-crypto={workspace = true }
- zkay-transaction={workspace = true }
+ zkay-transaction-crypto-params={workspace = true }
  zkay_ast={workspace = true }
 regex ={ workspace = true }
 eyre ={ workspace = true }

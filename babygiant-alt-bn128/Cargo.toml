@@ -1,0 +1,16 @@
+[package]
+name = "babygiant-alt-bn128"
+version = "0.1.1"
+edition = "2021"
+authors = ["jat9292"]
+license = "MIT"
+description= "A Rust crate implementing a multi-threaded version of the baby-step giant-step algorithm on the Baby Jubjub curve (it is the curve whose base field is the scalar field of alt-bn-128 aka bn254) to decrypt u40 integers. This is an accompanying crate for the Noir package noir-elgamal."
+rust-version = "1.73.0"
+
+[dependencies]
+ark-ff = "0.5.0"
+ark-ec = "0.5.0"
+ark-ed-on-bn254 = "0.5.0"
+ark-std = "0.5.0"
+hex = "0.4.3"
+regex = "1.10.2"

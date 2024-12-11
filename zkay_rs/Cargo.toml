@@ -25,8 +25,8 @@ circuit_helper={workspace=true}
  privacy={workspace = true }
  solidity={workspace = true }
  zkay-config={workspace = true }
- zkay-transaction={workspace = true }
  zkay-utils={workspace = true }
+zkay-transaction-crypto-params={workspace=true}
  zkay_ast={workspace = true }
  zkay-examples={workspace = true }
  ast-builder={workspace = true }
@@ -58,7 +58,7 @@ bitflags={ workspace = true }
 dyn-clone ={ workspace = true }
 uuid={ workspace = true }
 backtrace-on-stack-overflow={workspace=true}
-
+walkdir={workspace=true}
 
 
 
@@ -89,7 +89,7 @@ foundry-config = { workspace=true }
 foundry-compilers = {  workspace = true }
 # foundry-fork-db = "0.6.0"
 # solang-parser = "=0.3.3"
-
+cast={workspace=true}
 # ## revm
 # revm = { version = "17.1.0", default-features = false }
 # revm-primitives = { version = "13.0.0", default-features = false }
@@ -121,6 +121,7 @@ alloy-transport = {workspace=true}
 # alloy-transport-ipc = { version = "0.5.4", default-features = false }
 # alloy-transport-ws = { version = "0.5.4", default-features = false }
 
+alloy-sol-types ={workspace=true}
 # ## alloy-core
 alloy-dyn-abi = {workspace=true}
 alloy-json-abi = {workspace=true}

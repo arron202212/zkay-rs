@@ -65,12 +65,12 @@ use zkay_config::{
     config_user::UserConfig,
     with_context_block, zk_print,
 };
-use zkay_crypto::params::CryptoParams;
 use zkay_derive::{
     impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
     ASTVisitorBaseRefImpl, EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl,
     ImplBaseTrait,
 };
+use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
 use zkp_u256::{Zero, U256 as ZU256};
 
@@ -13545,19 +13545,6 @@ impl InstanceTarget {
     }
 }
 // // UTIL FUNCTIONS
-
-pub fn indent(s: String) -> String {
-    s.split("\n")
-        .map(|v| {
-            if v.trim().is_empty() {
-                String::new()
-            } else {
-                format!("{}{}", CFG.lock().unwrap().indentation(), v)
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
 
 // // EXCEPTIONS
 

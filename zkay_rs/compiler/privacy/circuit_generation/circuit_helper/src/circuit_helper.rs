@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::name_factory::NameFactory;
 use crate::name_remapper::CircVarRemapper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use rccell::{RcCell, WeakCell};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -46,8 +47,7 @@ use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::deep_copy::deep_copy;
 use zkay_ast::visitors::transformer_visitor::{AstTransformerVisitor, TransformerVisitorEx};
 use zkay_config::{config::CFG, config_user::UserConfig, with_context_block};
-use zkay_crypto::params::CryptoParams;
-
+use zkay_transaction_crypto_params::params::CryptoParams;
 pub struct WithCircIndentBlock {
     _phi: RcCell<Vec<RcCell<CircuitStatement>>>,
     name: String,
@@ -136,7 +136,36 @@ where
     me: Option<WeakCell<CircuitHelper>>,
     global_vars: RcCell<GlobalVars>,
 }
-
+impl CircuitHelperConfig for CircuitHelper {
+    fn get_verification_contract_name(&self) -> String {
+        assert!(self.verifier_contract_type.borrow().is_some());
+        let code = self
+            .verifier_contract_type
+            .borrow()
+            .as_ref()
+            .unwrap()
+            .code();
+        code
+    }
+    fn trans_in_size(&self) -> i32 {
+        self.trans_in_size
+    }
+    fn trans_out_size(&self) -> i32 {
+        self.trans_out_size
+    }
+    // """Total size of all private inputs for this circuit (in //uints)"""
+    fn priv_in_size_trans(&self) -> i32 {
+        self.priv_in_size() + self.trans_priv_size
+    }
+    // """Total size of all public outputs for this circuit (in //uints)"""
+    fn out_size_trans(&self) -> i32 {
+        self.out_size() + self.trans_out_size
+    }
+    // """Total size of all public inputs for this circuit (in //uints)"""
+    fn in_size_trans(&self) -> i32 {
+        self.in_size() + self.trans_in_size
+    }
+}
 impl CircuitHelper
 where
     Self: Sized,
@@ -271,17 +300,6 @@ where
         *self.verifier_contract_filename.borrow_mut() = Some(import_filename.to_string());
     }
 
-    //Properties #
-    pub fn get_verification_contract_name(&self) -> String {
-        assert!(self.verifier_contract_type.borrow().is_some());
-        let code = self
-            .verifier_contract_type
-            .borrow()
-            .as_ref()
-            .unwrap()
-            .code();
-        code
-    }
     // """
     // Return true if a struct needs to be created in the solidity code to store public data (IO) associated with this circuit.
 
@@ -299,30 +317,21 @@ where
             self.fct.borrow().name()
         )
     }
-    // """Total size of all private inputs for this circuit (in //uints)"""
-    pub fn priv_in_size_trans(&self) -> i32 {
-        self.priv_in_size() + self.trans_priv_size
-    }
+
     // """Size of all private inputs required for self.fct only (without called functions, in #uints)"""
     pub fn priv_in_size(&self) -> i32 {
         let size = *self._secret_input_name_factory.size.borrow();
         // println!("=priv_in_size========={size}");
         size
     }
-    // """Total size of all public outputs for this circuit (in //uints)"""
-    pub fn out_size_trans(&self) -> i32 {
-        self.out_size() + self.trans_out_size
-    }
+
     // """Size of all public outputs required for self.fct only (without called functions, in #uints)"""
     pub fn out_size(&self) -> i32 {
         let size = *self._out_name_factory.size.borrow();
         // println!("=out_size========={size}");
         size
     }
-    // """Total size of all public inputs for this circuit (in //uints)"""
-    pub fn in_size_trans(&self) -> i32 {
-        self.in_size() + self.trans_in_size
-    }
+
     // """Size of all public inputs required for self.fct only (without called functions, in #uints)"""
     pub fn in_size(&self) -> i32 {
         let size = *self._in_name_factory.size.borrow();
@@ -1454,7 +1463,7 @@ where
                 &statement.clone().upgrade().unwrap(),
                 locally_decrypted_idf.clone().unwrap(),
                 &RcCell::new(Expression::me_expr(None)).into(),
-                crypto_params,
+                CryptoParams::new(crypto_params),
                 input_idf,
                 false,
                 true,
@@ -2664,7 +2673,7 @@ where
                     .unwrap(),
                 priv_result_idf,
                 &new_privacy,
-                crypto_params,
+                CryptoParams::new(crypto_params),
                 new_out_param.clone(),
                 false,
                 false,

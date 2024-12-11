@@ -15,7 +15,7 @@ use crate::ast::{
     },
     identifier::{Identifier, IdentifierBaseProperty},
     identifier_declaration::{Parameter, ParameterUnion},
-    indent, is_instance,
+    is_instance,
     statement::{
         AssignmentStatementBaseProperty, SimpleStatement, Statement, StatementList,
         StatementListBaseProperty,
@@ -30,7 +30,10 @@ use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use eyre::{eyre, Result};
 use rccell::RcCell;
 use std::cmp::Ordering;
-use zkay_config::{config::CFG, config_version::Versions};
+use zkay_config::{
+    config::{indent, CFG},
+    config_version::Versions,
+};
 use zkay_derive::ASTVisitorBaseRefImpl;
 #[derive(ASTVisitorBaseRefImpl)]
 pub struct CodeVisitorBase {

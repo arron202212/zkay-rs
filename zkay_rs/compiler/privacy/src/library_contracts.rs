@@ -14,7 +14,7 @@
 use lazy_static::lazy_static;
 use textwrap::dedent;
 use zkay_config::{config::CFG, config_version::Versions};
-use zkay_crypto::params::CryptoParams;
+use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::helpers::read_file;
 // """Return all verification contract libraries combined into single string"""
 pub fn get_verify_libs_code() -> String {
@@ -44,13 +44,14 @@ use std::convert::Infallible;
 use std::string::ParseError;
 use tiny_keccak::{Hasher, Keccak};
 use zkp_u256::{Zero, U256};
-pub static BN128_SCALAR_FIELD: Lazy<U256> = Lazy::new(|| {
+pub static BN128_SCALAR_FIELDS: Lazy<U256> = Lazy::new(|| {
     U256::from_decimal_str(
         "21888242871839275222246405745257275088548364400416034343698204186575808495617",
     )
     .unwrap()
 });
-// bn128_scalar_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+pub const BN128_SCALAR_FIELD: &str =
+    "21888242871839275222246405745257275088548364400416034343698204186575808495617";
 // """The field prime used by the zk-snark elliptic curve"""
 
 // """Integers of at most this many bits can be represented using field values"""
@@ -248,7 +249,7 @@ use zkp_u256::Binary;
 
 lazy_static! {
     pub static ref BN128_SCALAR_FIELD_BITS: usize =
-        BN128_SCALAR_FIELD.most_significant_bit().unwrap_or(1);
+        BN128_SCALAR_FIELDS.most_significant_bit().unwrap_or(1);
     pub static ref alt_bn128_pairing_lib: String = alt_bn128_pairing_lib_simple
         [..alt_bn128_pairing_lib_simple.rfind("}").unwrap_or(0)]
         .to_string()

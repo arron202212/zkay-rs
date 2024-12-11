@@ -14,8 +14,8 @@ rust-version.workspace = true
 [dependencies]
 rccell = { workspace = true }
 zkay-config={workspace = true }
-zkay-crypto={workspace = true }
-zkay-transaction={workspace = true }
+zkay-transaction-crypto-params={workspace = true }
+circuit-helper-config={workspace=true}
 type_check={workspace = true }
 zkay-utils={workspace = true }
 zkay_ast={workspace = true }

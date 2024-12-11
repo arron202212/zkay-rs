@@ -297,18 +297,19 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 //     Manifest.import_manifest_config(manifest)
 //     Runtime.reset()
 
-// def load_transaction_interface_from_directory(contract_dir: str) -> Any:
-//     """
-//     Load transaction interface module for contracts in contract_dir
+// """
+// Load transaction interface module for contracts in contract_dir
 
-//     :param contract_dir: directory with zkay contract compilation output
-//     :return: module object
-//     """
-//     sys.path.append(str(os.path.realpath(contract_dir)))
-//     contract_mod = importlib.import_module(f'contract')
-//     importlib.reload(contract_mod)
-//     sys.path.pop()
-//     return contract_mod
+// :param contract_dir: directory with zkay contract compilation output
+// :return: module object
+// """
+fn load_transaction_interface_from_directory(_contract_dir: &str) {
+    //     sys.path.append(str(os.path.realpath(contract_dir)))
+    // let contract_mod = importlib.import_module(f'contract')
+    // importlib.reload(contract_mod)
+    // sys.path.pop()
+    //  contract_mod
+}
 
 // @contextmanager
 // def transaction_benchmark_ctx(contract_dir: str, log_filename='log') -> ContextManager[Any]:
@@ -321,27 +322,27 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 //         yield load_transaction_interface_from_directory(contract_dir)
 //         pass
 
-// def load_contract_transaction_interface_from_module(contract_mod: Any,
-//                                                     contract_name: Optional[str] = None) -> Type:
-//     """
-//     Load contract class from transaction interface module
+// Load contract class from transaction interface module
 
-//     :param contract_mod: loaded transaction interface module
-//     :param contract_name: contract name, only required if file contains multiple contracts
-//     :return: Contract class
-//     """
+// :param contract_mod: loaded transaction interface module
+// :param contract_name: contract name, only required if file contains multiple contracts
+// :return: Contract class
+fn load_contract_transaction_interface_from_module(
+    _contract_mod: &str,
+    _contract_name: Option<&str>,
+) {
+    //    let  contracts = BTreeMap::new();
+    //     for (name, cls) in contract_mod
+    //         if isinstance(cls, type) and 'ContractSimulator' in [b.__name__ for b in cls.__bases__]:
+    //             contracts[cls.__name__] = cls
 
-//     contracts = {}
-//     for name, cls in contract_mod.__dict__.items():
-//         if isinstance(cls, type) and 'ContractSimulator' in [b.__name__ for b in cls.__bases__]:
-//             contracts[cls.__name__] = cls
-
-//     if contract_name is None:
-//         if len(contracts) != 1:
-//             raise ValueError('If file contains multiple contracts, contract name must be specified')
-//         return next(iter(contracts.values()))
-//     else:
-//         return contracts[contract_name]
+    //     if contract_name is None
+    //       {  if contracts.len() != 1
+    //             {eyre::bail!("If file contains multiple contracts, contract name must be specified")}
+    //         return next(iter(contracts.values()))}
+    //     else
+    //        { return contracts[contract_name]}
+}
 
 // def load_contract_transaction_interface_from_directory(contract_dir: str, contract_name: Optional[str] = None) -> Type:
 //     """

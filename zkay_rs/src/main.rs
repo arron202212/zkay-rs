@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 // #!/usr/bin/env python3
 // // PYTHON_ARGCOMPLETE_OK
 // import argcomplete, argparse
@@ -11,6 +18,7 @@ mod tests;
 // pub mod cmd;
 // pub mod zkay;
 pub mod zkay_frontend;
+
 #[macro_use]
 extern crate lazy_static;
 use clap::{value_parser, Arg, ArgAction, ArgGroup, ArgMatches, Command};
@@ -334,7 +342,7 @@ WARNING: This account will be charged with the deployment costs.",
     main_parser.get_matches()
 }
 
-fn main() {
+fn main0() {
     unsafe { backtrace_on_stack_overflow::enable() };
     assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
     use crate::zkay_frontend as frontend;
@@ -651,7 +659,7 @@ use zkay::{Zkay, ZkaySubcommand};
 // #[global_allocator]
 // static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
-fn main1() {
+fn main() {
     if let Err(err) = run() {
         // let _ = foundry_common::Shell::get().error(&err);
         println!("=========={err:?}");
@@ -698,7 +706,7 @@ fn run() -> Result<()> {
         //     CacheSubcommands::Clean(cmd) => cmd.run(),
         //     CacheSubcommands::Ls(cmd) => cmd.run(),
         // },
-        ZkaySubcommand::Deploy(cmd) => utils::block_on(cmd.run()),
+        ZkaySubcommand::Create(cmd) => utils::block_on(cmd.run()),
         // ForgeSubcommand::Update(cmd) => cmd.run(),
         // ForgeSubcommand::Install(cmd) => cmd.run(),
         // ForgeSubcommand::Remove(cmd) => cmd.run(),

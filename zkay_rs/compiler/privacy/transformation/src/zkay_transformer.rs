@@ -46,7 +46,7 @@ use zkay_ast::visitors::transformer_visitor::{
 use zkay_config::{config::CFG, config_user::UserConfig, with_context_block};
 
 use zkay_derive::AstTransformerVisitorBaseRefImpl;
-
+use zkay_transaction_crypto_params::params::CryptoParams;
 // class ZkayVarDeclTransformer(AstTransformerVisitor)
 // """
 // Transformer for types, which was left out in the paper.
@@ -2843,7 +2843,7 @@ impl ZkayCircuitTransformer {
                         ._require_public_key_for_label_at(
                             s.as_ref(),
                             &recipient.unwrap().into(),
-                            &crypto_params,
+                            &CryptoParams::new(crypto_params),
                         ),
                 ));
                 if ast.is_function_call_expr() {

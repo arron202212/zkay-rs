@@ -1,0 +1,65 @@
+[package]
+name = "zkay-transaction-crypto-params"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+[dependencies]
+rccell = { workspace = true }
+zkay-derive = { workspace = true }
+ zkay-config={workspace = true }
+ my_logging={workspace = true }
+#  zkay-compiler={workspace = true }
+ zkay-utils={workspace = true }
+# zkay-transaction-types={workspace=true}
+#  zkay_ast={workspace = true }
+#  privacy={workspace = true }
+# proving_scheme={workspace=true}
+# ast-builder={workspace=true}
+# clap = { workspace = true }
+lazy_static = { workspace = true }
+# antlr-rust = { workspace = true }
+anyhow = { workspace = true }
+path-absolutize = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+regex ={ workspace = true }
+# jsnark_interface={workspace=true}
+rustc-serialize={workspace=true}
+babyjubjub-rs={workspace=true}
+babygiant-alt-bn128={workspace=true}
+ark-std={workspace=true}
+ark-ec={workspace=true}
+ark-ff={workspace=true}
+ark-ed-on-bn254={workspace=true}
+# semver_rs = { workspace = true }
+# app_dirs2 = { workspace = true }
+# zkp-u256 = { workspace = true }
+# ethnum = { workspace = true }
+# textwrap={ workspace = true }
+eyre ={ workspace = true }
+# num_cpus={ workspace = true }
+# rayon={ workspace = true }
+# once_cell={ workspace = true }
+# tiny-keccak = { workspace = true }
+hex={ workspace = true }
+# rs_sha512={ workspace = true }
+log={ workspace = true }
+# env_logger={ workspace = true }
+# chrono={ workspace = true }
+# bitflags={ workspace = true }
+# dyn-clone ={ workspace = true }
+# uuid={ workspace = true }
+# enum_dispatch={ workspace = true }
+# strum={ workspace = true }
+# strum_macros = { workspace = true }
+# bevy_reflect = { workspace = true }
+# num_enum= { workspace = true }

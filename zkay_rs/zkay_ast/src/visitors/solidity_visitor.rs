@@ -16,7 +16,7 @@ use crate::ast::{
     identifier::Identifier,
     identifier::IdentifierBaseProperty,
     identifier_declaration::{Parameter, ParameterUnion},
-    indent, is_instance,
+    is_instance,
     statement::{
         AssignmentStatementBaseProperty, SimpleStatement, Statement, StatementList,
         StatementListBaseProperty,
@@ -35,7 +35,10 @@ use crate::visitors::{
 use eyre::{eyre, Result};
 use rccell::RcCell;
 use std::cmp::Ordering;
-use zkay_config::{config::CFG, config_version::Versions};
+use zkay_config::{
+    config::{indent, CFG},
+    config_version::Versions,
+};
 pub fn to_solidity(ast: &ASTFlatten) -> String {
     SolidityVisitor::new().visit(ast).unwrap()
 }

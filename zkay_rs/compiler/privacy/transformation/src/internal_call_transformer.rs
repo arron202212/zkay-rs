@@ -6,6 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use circuit_helper::circuit_helper::CircuitHelper;
+use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use rccell::RcCell;
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
@@ -14,7 +15,7 @@ use zkay_ast::ast::{
     IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,
 };
 use zkay_config::config::CFG;
-use zkay_crypto::params::CryptoParams;
+use zkay_transaction_crypto_params::params::CryptoParams;
 // """
 // Compute transitive circuit IO sizes (account for called circuits).
 

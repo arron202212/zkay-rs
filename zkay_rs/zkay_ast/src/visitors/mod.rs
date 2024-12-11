@@ -15,6 +15,7 @@
 pub mod code_visitor;
 pub mod deep_copy;
 pub mod function_visitor;
+pub mod rust_visitor;
 pub mod solidity_visitor;
 pub mod transformer_visitor;
 pub mod visitor;
