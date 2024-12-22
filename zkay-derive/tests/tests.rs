@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
+//!
 #![allow(nonstandard_style)]
 #![allow(unused_imports)]
 #![allow(unused_mut)]
@@ -91,8 +92,16 @@ fn basic_enum_predicates() {
 /// Different kinds of enum variants.
 #[derive(is_enum_variant)]
 pub enum VariantKinds {
-    Struct { x: usize, y: usize },
+    ///
+    Struct {
+        ///
+        x: usize,
+        ///
+        y: usize,
+    },
+    ///
     Tuple(usize, usize),
+    ///
     Unit,
 }
 
@@ -131,8 +140,10 @@ fn funky_variant_names() {
 /// Test providing custom predicate names.
 #[derive(is_enum_variant)]
 pub enum CustomNames {
+    ///
     #[is_enum_variant(name = "i_dont_know_why_you_say")]
     Goodbye,
+    ///
     #[is_enum_variant(name = "i_say")]
     Hello,
 }
@@ -146,8 +157,10 @@ fn custom_predicate_names() {
 /// This doesn't get a predicate for every variant
 #[derive(is_enum_variant)]
 pub enum Skip {
+    ///
     #[is_enum_variant(skip)]
     NoPredicate,
+    ///
     YesPredicate,
 }
 
@@ -161,5 +174,6 @@ fn skip_variants() {
 /// `deny(unreachable_patterns)`.
 #[derive(is_enum_variant)]
 pub enum GeneratedCodeHasNoWarnings {
+    ///
     OnlyOneVariant,
 }

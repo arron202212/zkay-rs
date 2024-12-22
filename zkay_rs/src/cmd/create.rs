@@ -294,8 +294,8 @@ impl CreateArgs {
         let alloy_provider = ProviderBuilder::<_, _, AnyNetwork>::default()
             .on_builtin("http://localhost:8545")
             .await?;
-        let to = Address::from_str("0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6")?;
-        let greeting = is_result_publishedCall {}.abi_encode();
+        let to = Address::from_str("0x5b98D45C450fff4998d9Eb408C460C8b8B344Afa")?;
+        let greeting = is_result_publishedCall {}.abi_encode(); //is_result_publishedCall
         let bytes = Bytes::from_iter(greeting.iter());
         let tx = TransactionRequest::default().to(to).input(bytes.into());
         let tx = WithOtherFields::new(tx);

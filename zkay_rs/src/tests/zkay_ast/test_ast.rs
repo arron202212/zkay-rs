@@ -50,6 +50,7 @@ mod tests {
                 RcCell::new(NumberLiteralExpr::new(0, false)).into(),
             ],
             None,
+            None,
         );
         assert_eq!(c.code(), "0 + 0");
     }

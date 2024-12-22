@@ -10,6 +10,11 @@
 
 // use Crypto.Random.random::randrange
 
+use crate::interface::{
+    ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
+    ZkayKeystoreInterface, ZkayProverInterface,
+};
+use crate::types::{AddressValue, CipherValue, KeyPair, PrivateKeyValue, PublicKeyValue, Value};
 use ark_ec::twisted_edwards::TECurveConfig;
 use ark_std::UniformRand;
 use babyjubjub_rs::{Point, PrivateKey};
@@ -21,12 +26,6 @@ use std::str::FromStr;
 use zkay_config::config_user::UserConfig;
 use zkay_config::{config::CFG, zk_print};
 use zkay_transaction_crypto_params::params::CryptoParams;
-use crate::interface::{ZkayBlockchainInterface,ZkayProverInterface,
-    ZkayCryptoInterface, ZkayHomomorphicCryptoInterface, ZkayKeystoreInterface,
-};
-use crate::types::{
-    AddressValue, CipherValue, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
-};
 // use babygiant::baby_giant;
 use ark_ec::AffineRepr;
 use ark_ed_on_bn254::{EdwardsAffine as BabyJubJub, EdwardsConfig, Fq, Fr};
@@ -60,23 +59,37 @@ fn get_dlog(x: Fq, y: Fq) -> u64 {
 }
 use std::marker::PhantomData;
 #[derive(Clone)]
-pub struct ElgamalCrypto<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> {
+pub struct ElgamalCrypto<
+    P: ZkayProverInterface + Clone,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> {
     pub key_store: K,
     pub params: CryptoParams,
-    _prover:PhantomData<P>,
-    _bc:PhantomData<B>,
+    _prover: PhantomData<P>,
+    _bc: PhantomData<B>,
 }
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ElgamalCrypto<P,B,K> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ElgamalCrypto<P, B, K>
+{
     pub fn new(key_store: K) -> Self {
         Self {
             params: CryptoParams::new("elgamal".to_owned()),
             key_store,
-            _prover:PhantomData,
-            _bc:PhantomData,
+            _prover: PhantomData,
+            _bc: PhantomData,
         }
     }
 }
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ZkayCryptoInterface<P,B,K> for ElgamalCrypto<P,B,K> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ZkayCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
+{
     // params = CryptoParams("elgamal")
     fn keystore(&self) -> &K {
         &self.key_store
@@ -106,25 +119,30 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
 
         KeyPair::new(
             String::from_utf8(pk).unwrap(),
-           String::from_utf8(sk).unwrap(),
+            String::from_utf8(sk).unwrap(),
         )
     }
-    fn _enc(
-        &self,
-        plain: Vec<u8>,
-        _my_sk: Vec<u8>,
-        target_pk: Vec<u8>,
-    ) -> (Vec<u8>, Vec<u8>) {
+    fn _enc(&self, plain: String, _my_sk: Vec<u8>, target_pk: String) -> (Vec<String>, Vec<u8>) {
         let pk = self.serialize_pk(target_pk, self.params.key_bytes());
         let mut rng = rand::thread_rng();
         let r = Fr::rand(&mut rng);
-        let cipher_chunks:Vec<u8> = self._enc_with_rand(plain, r, pk).into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
+        let cipher_chunks: Vec<_> = self
+            ._enc_with_rand(plain, r, pk)
+            .into_iter()
+            .map(|v| v.to_string())
+            .collect();
         (cipher_chunks, r.into_bigint().to_string().into_bytes())
     }
-    fn _dec(&self, cipher: Vec<u8>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
+    fn _dec(&self, cipher: Vec<String>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
         // with time_measure("elgamal_decrypt"):
-        let c1 = BabyJubJub::new(Fq::from(cipher[0]), Fq::from(cipher[1]));
-        let c2 = BabyJubJub::new(Fq::from(cipher[2]), Fq::from(cipher[3]));
+        let c1 = BabyJubJub::new(
+            Fq::from_str(&cipher[0]).unwrap(),
+            Fq::from_str(&cipher[1]).unwrap(),
+        );
+        let c2 = BabyJubJub::new(
+            Fq::from_str(&cipher[2]).unwrap(),
+            Fq::from_str(&cipher[3]).unwrap(),
+        );
         let shared_secret = c1 * Fr::from_str(&String::from_utf8(sk.clone()).unwrap()).unwrap();
         let plain_embedded = c2 + shared_secret.neg();
         let plain = self._de_embed(plain_embedded.into());
@@ -133,7 +151,12 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
         (plain, sk.clone())
     }
 }
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ElgamalCrypto<P,B,K> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ElgamalCrypto<P, B, K>
+{
     fn _write_key_pair(&self, key_file: &PathBuf, pk: Vec<u8>, sk: Vec<u8>) {
         // with open(key_file, "wb") as f:
         let mut f = File::create(key_file).unwrap();
@@ -181,49 +204,47 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
         }
         get_dlog(plain_embedded.x, plain_embedded.y)
     }
-    fn _enc_with_rand(
-        &self,
-        plain: Vec<u8>,
-        random: Fr,
-        pk: Vec<u8>,
-    ) -> Vec<u8> {
-        let plain_embedded =
-            EdwardsConfig::GENERATOR.mul(Fr::from_str(&String::from_utf8(plain).unwrap()).unwrap());
+    fn _enc_with_rand(&self, plain: String, random: Fr, pk: Vec<String>) -> Vec<String> {
+        let plain_embedded = EdwardsConfig::GENERATOR.mul(Fr::from_str(&plain).unwrap());
         // let random = Fr::from(random);
-        let shared_secret = BabyJubJub::new(Fq::from(pk[0]), Fq::from(pk[1])) * &random;
+        let shared_secret =
+            BabyJubJub::new(Fq::from_str(&pk[0]).unwrap(), Fq::from_str(&pk[1]).unwrap()) * &random;
         let c1 = EdwardsConfig::GENERATOR * &random;
         let c2 = plain_embedded + shared_secret;
 
-            c1.x.into_bigint().to_string().into_bytes().into_iter()
-            .chain(c1.y.into_bigint().to_string().into_bytes().into_iter())
-            .chain(c2.x.into_bigint().to_string().into_bytes().into_iter())
-            .chain(c2.y.into_bigint().to_string().into_bytes().into_iter()).collect()
-        
+        vec![
+            c1.x.into_bigint().to_string(),
+            c1.y.into_bigint().to_string(),
+            c2.x.into_bigint().to_string(),
+            c2.y.into_bigint().to_string(),
+        ]
     }
 }
 
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ZkayHomomorphicCryptoInterface<P,B,K> for ElgamalCrypto<P,B,K> {
-    fn do_op(
-        &self,
-        op: &str,
-        _public_key: Vec<u8>,
-        args: Vec<u8>,
-    ) -> Vec<u8> {
-        fn deserialize(operand: &[u8]) -> (BabyJubJub, BabyJubJub) {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ZkayHomomorphicCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
+{
+    fn do_op(&self, op: &str, _public_key: Vec<String>, args: Vec<String>) -> Vec<u8> {
+        fn deserialize(operand: &[String]) -> (BabyJubJub, BabyJubJub) {
             // # if ciphertext is 0, return (Point.ZERO, Point.ZERO) == Enc(0, 0)
-            if operand
-                == &[0; 4*4]
-            {
+            if operand == &vec![0.to_string(); 4] {
                 (BabyJubJub::zero(), BabyJubJub::zero())
             } else {
-                let c1 =
-                    BabyJubJub::new(Fq::from_str(&String::from_utf8(operand[..4].to_vec()).unwrap()).unwrap(), Fq::from_str(&String::from_utf8(operand[4..8].to_vec()).unwrap()).unwrap());
-                let c2 =
-                    BabyJubJub::new(Fq::from_str(&String::from_utf8(operand[8..16].to_vec()).unwrap()).unwrap(), Fq::from_str(&String::from_utf8(operand[16..].to_vec()).unwrap()).unwrap());
+                let c1 = BabyJubJub::new(
+                    Fq::from_str(&operand[..4].concat()).unwrap(),
+                    Fq::from_str(&operand[4..8].concat()).unwrap(),
+                );
+                let c2 = BabyJubJub::new(
+                    Fq::from_str(&operand[8..16].concat()).unwrap(),
+                    Fq::from_str(&operand[16..].concat()).unwrap(),
+                );
                 (c1, c2)
             }
         }
-        let args: Vec<_> = args.chunks(4*4).map(|arg| deserialize(arg)).collect();
+        let args: Vec<_> = args.chunks(4).map(|arg| deserialize(arg)).collect();
         let (e1, e2);
         if op == "+" {
             e1 = args[0].0 + args[1].0;
@@ -252,17 +273,12 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
             .chain(e2.y.into_bigint().to_string().into_bytes().into_iter())
             .collect()
     }
-    fn do_rerand(
-        &self,
-        arg: Vec<u8>,
-        public_key: Vec<u8>,
-    ) -> (Vec<u8>, Vec<u8>) {
+    fn do_rerand(&self, arg: Vec<String>, public_key: Vec<String>) -> (Vec<u8>, Vec<u8>) {
         // # homomorphically add encryption of zero to re-randomize
         // let r = randrange(babyjubjub.CURVE_ORDER);
         let mut rng = rand::thread_rng();
         let r = Fr::rand(&mut rng);
-        let enc_zero = 
-            self._enc_with_rand(vec![0], r, public_key.clone());
+        let _enc_zero = self._enc_with_rand(0.to_string(), r, public_key.clone());
         (
             self.do_op("+", public_key, arg),
             r.into_bigint().to_string().into_bytes(),

@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::cmd::{compile::CompileArgs, create::CreateArgs};
+use crate::cmd::{call::CallArgs, compile::CompileArgs, create::CreateArgs, send::SendTxArgs};
 use clap::{Parser, Subcommand, ValueHint};
 
 use std::path::PathBuf;
@@ -33,8 +33,16 @@ pub enum ZkaySubcommand {
     Compile(CompileArgs),
 
     /// Deploy a smart contract.
-    #[command(visible_alias = "c")]
+    #[command(visible_alias = "d")]
     Create(CreateArgs),
+
+    /// Sign and publish a transaction.
+    #[command(name = "send", visible_alias = "s")]
+    SendTx(SendTxArgs),
+
+    /// Perform a call on an account without publishing a transaction.
+    #[command(visible_alias = "c")]
+    Call(CallArgs),
 }
 
 #[cfg(test)]
@@ -44,6 +52,6 @@ mod tests {
 
     #[test]
     fn verify_cli() {
-        ZKay::command().debug_assert();
+        Zkay::command().debug_assert();
     }
 }

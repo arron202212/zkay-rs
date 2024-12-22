@@ -116,11 +116,11 @@ pub fn compile_and_run_with_circuit_builder(
 pub fn prepare_proof(
     circuit_dir: &str,
     output_dir: &str,
-    serialized_args: Vec<i32>,
+    serialized_args: Vec<String>,
 ) -> (Option<String>, Option<String>) {
     let serialized_arg_str: Vec<_> = serialized_args
         .iter()
-        .map(|arg| format!("{:x}", arg))
+        .map(|arg| format!("{}", arg))
         .collect();
 
     //Run jsnark to evaluate the circuit and compute prover inputs

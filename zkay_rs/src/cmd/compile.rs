@@ -179,8 +179,8 @@ impl CompileArgs {
 
         // // compile
         let input_basename = input_path.file_name().unwrap().to_str().unwrap();
-        with_context_block!(var _lc=log_context(input_basename)=>
-        {if let Err(e) = crate::zkay_frontend::compile_zkay_file(
+        with_context_block!(var _lc=log_context(input_basename)=>{
+        if let Err(e) = crate::zkay_frontend::compile_zkay_file(
             &input_path.to_str().expect(""),
             output_dir.to_str().expect(""),
             false,
@@ -189,7 +189,8 @@ impl CompileArgs {
             with_context_block!(var _fp=fail_print()=>{
             println!("===compile_zkay_file===fail==={e}");});
             std::process::exit(3);
-        }});
+        }
+        });
         Ok(())
     }
 

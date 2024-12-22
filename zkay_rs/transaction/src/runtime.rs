@@ -5,30 +5,45 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::blockchain::web3rs::{Web3BlockchainBase,Web3Blockchain,Web3TesterBlockchain,Web3HttpGanacheBlockchain};
+use crate::blockchain::web3rs::{
+    Web3Blockchain, Web3BlockchainBase, Web3HttpGanacheBlockchain, Web3TesterBlockchain,
+};
+use crate::types::{
+    AddressValue, BlockStruct, CipherValue, KeyPair, MsgStruct, PublicKeyValue, RandomnessValue,
+    TxStruct, Value,
+};
+use proving_scheme::proving_scheme::ProvingScheme;
+use rccell::RcCell;
+use serde_json::{json, Map, Result, Value as JsonValue};
+use std::path::PathBuf;
 // use crate::crypto::dummy::DummyCrypto;
 // use crate::crypto::dummy_hom::DummyHomCrypto;
 // use crate::crypto::ecdh_aes::EcdhAesCrypto;
-use zkay_config::config_user::UserConfig;
 use crate::crypto::ecdh_chaskey::EcdhChaskeyCrypto;
 use crate::crypto::elgamal::ElgamalCrypto;
+use zkay_config::config_user::UserConfig;
 // use crate::crypto::paillier::PaillierCrypto;
 // use crate::crypto::params::CryptoParams;
 // use crate::crypto::rsa_oaep::RSAOAEPCrypto;
 // use crate::crypto::rsa_pkcs15::RSAPKCS15Crypto;
+use crate::interface::{
+    ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
+    ZkayKeystoreInterface, ZkayProverInterface,
+};
 use crate::keystore::simple::SimpleKeystore;
 use crate::prover::jsnark::*;
+use enum_dispatch::enum_dispatch;
 use std::collections::BTreeMap;
+use std::marker::PhantomData;
 use zkay_config::config::CFG;
 use zkay_transaction_crypto_params::params::CryptoParams;
-use crate::interface::{ZkayHomomorphicCryptoInterface,
-    ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface,
-};
-use std::marker::PhantomData;
-use enum_dispatch::enum_dispatch;
 #[enum_dispatch(ZkayCryptoInterface<P,B,K>,ZkayHomomorphicCryptoInterface<P,B,K>)]
 #[derive(Clone)]
-pub enum CryptoClass<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone>{
+pub enum CryptoClass<
+    P: ZkayProverInterface + Clone,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> {
     EcdhChaskeyCrypto(EcdhChaskeyCrypto<P, B, K>),
     ElgamalCrypto(ElgamalCrypto<P, B, K>),
 }
@@ -41,14 +56,23 @@ pub enum CryptoClass<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Cl
 // }
 // }
 // }
-fn _crypto_classes<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone>(crypto_backend: &str,key_store:K) -> CryptoClass<P,B,K> {
+fn _crypto_classes<
+    P: ZkayProverInterface + Clone,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+>(
+    crypto_backend: &str,
+    key_store: K,
+) -> CryptoClass<P, B, K> {
     match crypto_backend {
         // "dummy" => DummyCrypto,
         // "dummy-hom" => DummyHomCrypto,
         // "rsa-pkcs1.5" => RSAPKCS15Crypto,
         // "rsa-oaep" => RSAOAEPCrypto,
         // "ecdh-aes" => EcdhAesCrypto,
-        "ecdh-chaskey" => CryptoClass::EcdhChaskeyCrypto(EcdhChaskeyCrypto::<P, B, K>::new(key_store)),
+        "ecdh-chaskey" => {
+            CryptoClass::EcdhChaskeyCrypto(EcdhChaskeyCrypto::<P, B, K>::new(key_store))
+        }
         // "paillier" => PaillierCrypto,
         "elgamal" => CryptoClass::ElgamalCrypto(ElgamalCrypto::<P, B, K>::new(key_store)),
         _ => panic!("unknown {crypto_backend}"),
@@ -64,9 +88,9 @@ fn _prover_classes(snark_backend: &str) -> JsnarkProver {
 
 #[enum_dispatch(ZkayBlockchainInterface<P>)]
 #[derive(Clone)]
-pub enum BlockchainClass<P:ZkayProverInterface+Clone>{
-    Web3TesterBlockchain(Web3BlockchainBase<P,Web3TesterBlockchain>),
-    Web3HttpGanacheBlockchain(Web3BlockchainBase<P,Web3HttpGanacheBlockchain>),
+pub enum BlockchainClass<P: ZkayProverInterface + Clone> {
+    Web3TesterBlockchain(Web3BlockchainBase<P, Web3TesterBlockchain>),
+    Web3HttpGanacheBlockchain(Web3BlockchainBase<P, Web3HttpGanacheBlockchain>),
 }
 // impl<P:ZkayProverInterface>  ZkayBlockchainInterface<P> for BlockchainClass<P>{
 // // pub fn new(blockchain_class:B)->Self{
@@ -76,10 +100,19 @@ pub enum BlockchainClass<P:ZkayProverInterface+Clone>{
 // // }
 // }
 
-fn _blockchain_classes<P:ZkayProverInterface+Clone>(blockchain_backend: &str,prover:P) -> BlockchainClass<P> {
+fn _blockchain_classes<P: ZkayProverInterface + Clone>(
+    blockchain_backend: &str,
+    prover: P,
+) -> BlockchainClass<P> {
     match blockchain_backend {
-        "w3-eth-tester" => BlockchainClass::Web3TesterBlockchain(Web3BlockchainBase::<P,Web3TesterBlockchain>::new(prover)),
-        "w3-ganache" => BlockchainClass::Web3HttpGanacheBlockchain(Web3BlockchainBase::<P,Web3HttpGanacheBlockchain>::new(prover)),
+        "w3-eth-tester" => BlockchainClass::Web3TesterBlockchain(Web3BlockchainBase::<
+            P,
+            Web3TesterBlockchain,
+        >::new(prover)),
+        "w3-ganache" => BlockchainClass::Web3HttpGanacheBlockchain(Web3BlockchainBase::<
+            P,
+            Web3HttpGanacheBlockchain,
+        >::new(prover)),
         // "w3-ipc" => Web3IpcBlockchain,
         // "w3-websocket" => Web3WebsocketBlockchain,
         // "w3-http" => Web3HttpBlockchain,
@@ -97,27 +130,27 @@ fn _blockchain_classes<P:ZkayProverInterface+Clone>(blockchain_backend: &str,pro
 //     """
 #[derive(Clone)]
 pub struct Runtime<
-    P: ZkayProverInterface+Clone,
-    B: Web3Blockchain+ZkayBlockchainInterface<P>+Clone,
-    K: ZkayKeystoreInterface<P,B>+Clone,
+    P: ZkayProverInterface + Clone,
+    B: Web3Blockchain + ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
 > {
     __blockchain: Option<BlockchainClass<P>>,
-    __crypto: BTreeMap<String, CryptoClass<P,B,K>>,
+    __crypto: BTreeMap<String, CryptoClass<P, B, K>>,
     __keystore: BTreeMap<String, K>,
     __prover: Option<JsnarkProver>,
 }
 impl<
-        P: ZkayProverInterface+Clone,
-        B: Web3Blockchain+ZkayBlockchainInterface<P>+Clone,
-        K: ZkayKeystoreInterface<P,B>+Clone,
-    > Runtime<P,B,  K> 
+        P: ZkayProverInterface + Clone,
+        B: Web3Blockchain + ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > Runtime<P, B, K>
 {
-    pub fn new()->Self{
-        Self{
-  __blockchain : None,
-        __crypto : BTreeMap::new(),
-        __keystore : BTreeMap::new(),
-        __prover : None,
+    pub fn new() -> Self {
+        Self {
+            __blockchain: None,
+            __crypto: BTreeMap::new(),
+            __keystore: BTreeMap::new(),
+            __prover: None,
         }
     }
     //     @staticmethod
@@ -146,37 +179,35 @@ impl<
 
     //     @staticmethod
     //         """Return object which implements ZkayKeystoreInterface for given homomorphism."""
-   pub fn keystore(&mut self, crypto_params: &CryptoParams,k:K) -> &K {
+    pub fn keystore(&mut self, crypto_params: &CryptoParams, k: K) -> &K {
         let crypto_backend = crypto_params.crypto_name.clone();
-        let blockchain:BlockchainClass<P> = self.blockchain().clone();
+        let _blockchain: BlockchainClass<P> = self.blockchain().clone();
         if !self.__keystore.contains_key(&crypto_backend) {
             // let k=SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone());
-             self.__keystore.insert(
-                crypto_backend.clone(),
-                k
-                ,
-            );
+            self.__keystore.insert(crypto_backend.clone(), k);
         }
         &self.__keystore[&crypto_backend]
     }
 
     //     @staticmethod
     //         """Return object which implements ZkayCryptoInterface for given homomorphism."""
-   pub fn crypto(&mut self, crypto_params: &CryptoParams,k:K) -> &CryptoClass<P,B,K> {
+    pub fn crypto(&mut self, crypto_params: &CryptoParams, k: K) -> &CryptoClass<P, B, K> {
         let crypto_backend = crypto_params.crypto_name.clone();
         if !self.__crypto.contains_key(&crypto_backend) {
-            let keystore = (*self.keystore(crypto_params,k)).clone();
-            self.__crypto
-                .insert(crypto_backend.clone(), _crypto_classes::<P,B,K>(&crypto_backend, keystore));
+            let keystore = (*self.keystore(crypto_params, k)).clone();
+            self.__crypto.insert(
+                crypto_backend.clone(),
+                _crypto_classes::<P, B, K>(&crypto_backend, keystore),
+            );
         }
         &self.__crypto[&crypto_backend]
     }
     //     @staticmethod
-            // """Return singleton object which implements ZkayProverInterface."""
-        pub fn prover(&mut self) -> &JsnarkProver
-         {   if self.__prover.is_none()
-               { self.__prover = Some(_prover_classes(&CFG.lock().unwrap().snark_backend()));}
-             self.__prover.as_ref().unwrap()
+    // """Return singleton object which implements ZkayProverInterface."""
+    pub fn prover(&mut self) -> &JsnarkProver {
+        if self.__prover.is_none() {
+            self.__prover = Some(_prover_classes(&CFG.lock().unwrap().snark_backend()));
         }
+        self.__prover.as_ref().unwrap()
+    }
 }
-

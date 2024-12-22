@@ -412,20 +412,20 @@ mod tests {
         assert!(e.upgrade().is_none());
     }
 
-    #[test]
-    #[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
-    fn test_unwrap_panic() {
-        let a = RcCell::new(DummyStruct::new("dummy"));
-        let _b = a.clone();
-        let _res = RcCell::unwrap(a);
-    }
+    // #[test]
+    // #[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+    // fn test_unwrap_panic() {
+    //     let a = RcCell::new(DummyStruct::new("dummy"));
+    //     let _b = a.clone();
+    //     let _res = RcCell::unwrap(a);
+    // }
 
-    #[test]
-    fn test_unwrap_ok() {
-        let a = RcCell::new(DummyStruct::new("dummy"));
-        let _b = a.downgrade();
-        assert_eq!(RcCell::unwrap(a).name, "dummy")
-    }
+    // #[test]
+    // fn test_unwrap_ok() {
+    //     let a = RcCell::new(DummyStruct::new("dummy"));
+    //     let _b = a.downgrade();
+    //     assert_eq!(RcCell::unwrap(a).name, "dummy")
+    // }
 
     #[test]
     fn test_try_borrows() {

@@ -19,12 +19,12 @@
 // """
 
 pub mod blockchain;
+pub mod crypto;
+pub mod int_casts;
+pub mod interface;
 pub mod keystore;
 pub mod offchain;
 pub mod prover;
 pub mod runtime;
-pub mod crypto;
-pub mod int_casts;
-pub mod interface;
 pub mod solidity_math;
 pub mod types;

@@ -17,6 +17,8 @@ mod tests;
 // from zkay.config_user import UserConfig
 // pub mod cmd;
 // pub mod zkay;
+pub mod contract;
+pub mod tx;
 pub mod zkay_frontend;
 
 #[macro_use]
@@ -767,6 +769,9 @@ fn run() -> Result<()> {
         // ForgeSubcommand::Soldeer(cmd) => utils::block_on(cmd.run()),
         // ForgeSubcommand::Eip712(cmd) => cmd.run(),
         // ForgeSubcommand::BindJson(cmd) => cmd.run(),
+        // Calls & transactions
+        ZkaySubcommand::Call(cmd) => utils::block_on(cmd.run()),
+        ZkaySubcommand::SendTx(cmd) => utils::block_on(cmd.run()),
     }
 }
 

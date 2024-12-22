@@ -5,6 +5,10 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::interface::{
+    ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface,
+};
+use crate::types::{KeyPair, PrivateKeyValue, PublicKeyValue, Value};
 use ark_std::rand;
 use ark_std::rand::Rng;
 use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
@@ -13,11 +17,14 @@ use std::fs;
 use std::path::PathBuf;
 use zkay_config::config_user::UserConfig;
 use zkay_config::{config::CFG, zk_print};
-use crate::interface::{ZkayProverInterface,ZkayBlockchainInterface,ZkayCryptoInterface, ZkayKeystoreInterface};
-use crate::types::{KeyPair, PrivateKeyValue, PublicKeyValue, Value};
 use zkay_utils::run_command::run_command;
 // class EcdhBase(ZkayCryptoInterface):
-pub trait EcdhBase<P:ZkayProverInterface,B:ZkayBlockchainInterface<P>, K: ZkayKeystoreInterface<P,B>>: ZkayCryptoInterface<P,B,K> {
+pub trait EcdhBase<
+    P: ZkayProverInterface,
+    B: ZkayBlockchainInterface<P>,
+    K: ZkayKeystoreInterface<P, B>,
+>: ZkayCryptoInterface<P, B, K>
+{
     // @staticmethod
     fn _gen_keypair(rnd: &[u8]) -> (i32, i32) {
         let (keys, _) = run_command(
@@ -40,7 +47,7 @@ pub trait EcdhBase<P:ZkayProverInterface,B:ZkayBlockchainInterface<P>, K: ZkayKe
     }
 
     // @staticmethod
-    fn _ecdh_sha256(other_pk: Vec<u8>, my_sk: Vec<u8>) -> Vec<u8> {
+    fn _ecdh_sha256(other_pk: String, my_sk: Vec<u8>) -> Vec<u8> {
         let (ret, _) = run_command(
             vec![
                 "java",
@@ -83,9 +90,6 @@ pub trait EcdhBase<P:ZkayProverInterface,B:ZkayBlockchainInterface<P>, K: ZkayKe
         // # Derive keys from randomness
         let (pk, sk) = Self::_gen_keypair(&rnd.into_bytes());
 
-        KeyPair::new(
-            pk.to_string(),
-            sk.to_string(),
-        )
+        KeyPair::new(pk.to_string(), sk.to_string())
     }
 }

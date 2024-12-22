@@ -207,8 +207,10 @@ impl std::fmt::Display for {} {{
     .parse()
     .unwrap()
 }
-
+///
+#[doc(hidden)]
 #[proc_macro_derive(ImplBaseTrait)]
+///
 pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
     let mut struct_name = get_name("struct", item);
 
@@ -216,6 +218,7 @@ pub fn derive_impl_base_trait(item: TokenStream) -> TokenStream {
     let mut impl_traits_str = format!(
         r#"
 impl {struct_name}Ref for {struct_name} {{
+        ///
         fn {fn_name}_ref(&self)->{}{{
         {} }}
     }}                    "#,
@@ -232,8 +235,10 @@ impl {struct_name}Ref for {struct_name} {{
     );
     impl_traits_str += &format!(
         r#"
+///
 #[enum_dispatch]
 pub trait {struct_name}MutRef {{
+///
         fn {fn_name}_mut_ref(&mut self)->{};
  }} 
                   "#,
@@ -246,6 +251,7 @@ pub trait {struct_name}MutRef {{
     impl_traits_str += &format!(
         r#"
 impl {struct_name}MutRef for {struct_name} {{
+///
         fn {fn_name}_mut_ref(&mut self)->{}{{
         {} }}
     }}                    "#,

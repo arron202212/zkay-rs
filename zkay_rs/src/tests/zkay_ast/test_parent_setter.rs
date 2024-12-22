@@ -30,7 +30,7 @@ mod tests {
         }
         type Return = ();
         fn temper_result(&self) -> Self::Return {}
-        fn has_attr(&self, name: &ASTType, _ast: &AST) -> bool {
+        fn has_attr(&self, _name: &ASTType, _ast: &AST) -> bool {
             false
         }
         fn get_attr(&self, _name: &ASTType, _ast: &ASTFlatten) -> eyre::Result<Self::Return> {
@@ -63,8 +63,7 @@ mod tests {
             let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
             let idf = contract.borrow().idf();
             assert_eq!(
-                idf.upgrade()
-                    .unwrap()
+                idf.unwrap()
                     .borrow()
                     .parent()
                     .as_ref()
@@ -81,7 +80,7 @@ mod tests {
             println!("================={_name}");
             // test
             let v = ParentChecker::new();
-            v.visit(&ast);
+            let _ = v.visit(&ast);
         }
     }
 }

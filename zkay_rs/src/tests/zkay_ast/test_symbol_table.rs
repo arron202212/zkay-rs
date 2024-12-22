@@ -9,9 +9,8 @@ mod tests {
         is_instance, source_unit::SourceUnit, ASTBaseProperty, ASTInstanceOf, ASTType,
         AssignmentStatement, AssignmentStatementBaseProperty, Block,
         ConstructorOrFunctionDefinition, ContractDefinition, IdentifierBaseProperty,
-        IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST,
-        NamespaceDefinitionBaseProperty, StatementListBaseProperty, VariableDeclaration,
-        VariableDeclarationStatement,
+        IdentifierDeclarationBaseProperty, IdentifierExpr, IntoAST, StatementListBaseProperty,
+        VariableDeclaration, VariableDeclarationStatement,
     };
     use zkay_ast::global_defs::{global_defs, global_vars};
     use zkay_ast::pointers::{
@@ -30,7 +29,7 @@ mod tests {
     }
     use super::*;
 
-    pub fn get_ast_elements(ast: &RcCell<SourceUnit>) -> ASTElements {
+    fn get_ast_elements(ast: &RcCell<SourceUnit>) -> ASTElements {
         let contract = ast.borrow().contracts[0].clone();
         let f = contract.borrow().function_definitions[0].clone();
         let body = f.borrow().body.as_ref().map(|b| b.borrow().clone());
@@ -132,7 +131,10 @@ mod tests {
         } = get_ast_elements(ast.try_as_source_unit_ref().unwrap());
 
         let mut s = get_builtin_globals(global_vars.clone());
-        s.insert(String::from("Simple"), contract.borrow().idf().clone());
+        s.insert(
+            String::from("Simple"),
+            contract.borrow().idf().unwrap().downgrade(),
+        );
 
         // assert_eq!(ast.ast_base_ref().unwrap().names(), &s);
         let ss = ast.ast_base_ref().unwrap().borrow().names();
@@ -160,11 +162,11 @@ mod tests {
         }
         assert_eq!(
             contract.borrow().names(),
-            BTreeMap::from([(String::from("f"), f.borrow().idf().clone())])
+            BTreeMap::from([(String::from("f"), f.borrow().idf().unwrap().downgrade())])
         );
         assert_eq!(
             body.unwrap().names(),
-            BTreeMap::from([(String::from("x"), decl.borrow().idf().clone())])
+            BTreeMap::from([(String::from("x"), decl.borrow().idf().unwrap().downgrade())])
         );
     }
     #[test]
@@ -214,7 +216,7 @@ mod tests {
         let mut s = get_builtin_globals(global_vars.clone());
         s.insert(
             String::from("SimpleStorage"),
-            contract.borrow().idf().clone(),
+            contract.borrow().idf().unwrap().downgrade(),
         );
         assert_eq!(ast.ast_base_ref().unwrap().borrow().names().len(), s.len());
     }
@@ -333,7 +335,6 @@ mod tests {
                 .try_as_identifier_declaration_ref()
                 .unwrap()
                 .idf()
-                .upgrade()
                 .unwrap()
                 .borrow()
                 .name(),
@@ -353,10 +354,7 @@ mod tests {
             fill_symbol_table(&ast, global_vars.clone());
             link_identifiers(&ast, global_vars);
             let contract = &ast.try_as_source_unit_ref().unwrap().borrow().contracts[0];
-            assert_eq!(
-                &contract.borrow().idf().upgrade().unwrap().borrow().name(),
-                name
-            );
+            assert_eq!(&contract.borrow().idf().unwrap().borrow().name(), name);
         }
     }
 }

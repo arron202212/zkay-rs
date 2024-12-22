@@ -9,14 +9,17 @@
 // use typing::Tuple, List, Any
 
 use crate::crypto::ecdh_base::EcdhBase;
+use crate::interface::{
+    ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
+    ZkayKeystoreInterface, ZkayProverInterface,
+};
+use crate::types::{AddressValue, KeyPair, PrivateKeyValue, Value};
 use ark_ff::BigInteger256;
 use ark_std::rand;
 use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
 use rand::RngCore;
 use rustc_serialize::hex::ToHex;
 use zkay_transaction_crypto_params::params::CryptoParams;
-use crate::interface::{ZkayProverInterface,ZkayBlockchainInterface,ZkayCryptoInterface, ZkayKeystoreInterface,ZkayHomomorphicCryptoInterface};
-use crate::types::{AddressValue, KeyPair, PrivateKeyValue, Value};
 use zkay_utils::run_command::run_command;
 fn main() {
     // compile-time length, use `vec![0;len]` for runtime
@@ -34,27 +37,47 @@ fn main1() {
 }
 use std::marker::PhantomData;
 #[derive(Clone)]
-pub struct EcdhChaskeyCrypto<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> {
+pub struct EcdhChaskeyCrypto<
+    P: ZkayProverInterface + Clone,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> {
     key_store: K,
     params: CryptoParams,
-    _prover:PhantomData<P>,
-    _bc:PhantomData<B>,
+    _prover: PhantomData<P>,
+    _bc: PhantomData<B>,
 }
 
 // class EcdhChaskeyCrypto(EcdhBase):
 // params = CryptoParams("ecdh-chaskey")
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> EcdhChaskeyCrypto<P,B,K> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > EcdhChaskeyCrypto<P, B, K>
+{
     pub fn new(key_store: K) -> Self {
         Self {
             key_store,
             params: CryptoParams::new("ecdh-chaskey".to_owned()),
-            _prover:PhantomData,
-            _bc:PhantomData,
+            _prover: PhantomData,
+            _bc: PhantomData,
         }
     }
 }
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> EcdhBase<P,B,K> for EcdhChaskeyCrypto<P,B,K> {}
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ZkayCryptoInterface<P,B,K> for EcdhChaskeyCrypto<P,B,K> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > EcdhBase<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+{
+}
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ZkayCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+{
     fn keystore(&self) -> &K {
         &self.key_store
     }
@@ -68,12 +91,7 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
         KeyPair::default()
     }
 
-    fn _enc(
-        &self,
-        plain: Vec<u8>,
-        my_sk: Vec<u8>,
-        target_pk: Vec<u8>,
-    ) -> (Vec<u8>, Vec<u8>) {
+    fn _enc(&self, plain: String, my_sk: Vec<u8>, target_pk: String) -> (Vec<String>, Vec<u8>) {
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
         let plain_bytes = plain;
@@ -101,23 +119,23 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
                 .unwrap()
                 .to_be_bytes(),
         );
-        let iv_cipher:Vec<u8> = iv.into_bytes();//.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
+        let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
 
         (
             self.pack_byte_array(iv_cipher, self.params().cipher_chunk_size() as usize),
             vec![],
         )
     }
-    fn _dec(&self, mut cipher: Vec<u8>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
+    fn _dec(&self, mut cipher: Vec<String>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
         // # Extract sender address from cipher metadata and request corresponding public key
-        let sender_pk = cipher.split_off(cipher.len() - 1);
+        let sender_pk = cipher.pop().unwrap();
         // assert!( cipher.len() == self.params.cipher_payload_len);
 
         // # Compute shared key
         let key = Self::_ecdh_sha256(sender_pk, sk.clone());
 
         // # Call java implementation
-        let iv_cipher = self. unpack_to_byte_array(
+        let iv_cipher = self.unpack_to_byte_array(
             cipher,
             self.params().cipher_chunk_size(),
             self.params().cipher_bytes_payload(),
@@ -145,22 +163,16 @@ impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeyst
     }
 }
 
-
-
-impl<P:ZkayProverInterface+Clone,B:ZkayBlockchainInterface<P>+Clone,K: ZkayKeystoreInterface<P,B>+Clone> ZkayHomomorphicCryptoInterface<P,B,K> for EcdhChaskeyCrypto<P,B,K> {
-    fn do_op(
-        &self,
-        op: &str,
-        _public_key: Vec<u8>,
-        args: Vec<u8>,
-    ) -> Vec<u8> {
+impl<
+        P: ZkayProverInterface + Clone,
+        B: ZkayBlockchainInterface<P> + Clone,
+        K: ZkayKeystoreInterface<P, B> + Clone,
+    > ZkayHomomorphicCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+{
+    fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<String>) -> Vec<u8> {
         vec![]
     }
-    fn do_rerand(
-        &self,
-        arg: Vec<u8>,
-        public_key: Vec<u8>,
-    ) -> (Vec<u8>, Vec<u8>) {
-       (vec![],vec![])
+    fn do_rerand(&self, _arg: Vec<String>, _public_key: Vec<String>) -> (Vec<u8>, Vec<u8>) {
+        (vec![], vec![])
     }
 }

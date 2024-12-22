@@ -27,6 +27,7 @@ circuit_helper={workspace=true}
  zkay-config={workspace = true }
  zkay-utils={workspace = true }
 zkay-transaction-crypto-params={workspace=true}
+zkay-transaction={workspace=true}
  zkay_ast={workspace = true }
  zkay-examples={workspace = true }
  ast-builder={workspace = true }
@@ -73,7 +74,7 @@ foundry-common = { workspace=true }
 # foundry-common-fmt = { path = "crates/common/fmt" }
 foundry-config = { workspace=true }
 # foundry-debugger = { path = "crates/debugger" }
-# foundry-evm = { path = "crates/evm/evm" }
+foundry-evm = { workspace=true }
 # foundry-evm-abi = { path = "crates/evm/abi" }
 # foundry-evm-core = { path = "crates/evm/core" }
 # foundry-evm-coverage = { path = "crates/evm/coverage" }
@@ -81,7 +82,7 @@ foundry-config = { workspace=true }
 # foundry-evm-traces = { path = "crates/evm/traces" }
 # foundry-macros = { path = "crates/macros" }
 # foundry-test-utils = { path = "crates/test-utils" }
-# foundry-wallets = { path = "crates/wallets" }
+foundry-wallets = { workspace = true }
 # foundry-linking = { path = "crates/linking" }
 
 # # solc & compilation utilities
@@ -99,7 +100,7 @@ cast={workspace=true}
 # ethers-contract-abigen = { version = "2.0.14", default-features = false }
 
 # ## alloy
-# alloy-consensus = { version = "0.5.4", default-features = false }
+alloy-consensus = { workspace = true }
 # alloy-contract = { version = "0.5.4", default-features = false }
 # alloy-eips = { version = "0.5.4", default-features = false }
 # alloy-genesis = { version = "0.5.4", default-features = false }

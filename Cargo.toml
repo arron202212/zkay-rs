@@ -147,7 +147,7 @@ foundry-common = { git = "https://github.com/foundry-rs/foundry.git", branch = "
 # foundry-common-fmt = { path = "crates/common/fmt" }
 foundry-config = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-config"  }
 # foundry-debugger = { path = "crates/debugger" }
-# foundry-evm = { path = "crates/evm/evm" }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-evm" }
 # foundry-evm-abi = { path = "crates/evm/abi" }
 # foundry-evm-core = { path = "crates/evm/core" }
 # foundry-evm-coverage = { path = "crates/evm/coverage" }
@@ -155,7 +155,7 @@ foundry-config = { git = "https://github.com/foundry-rs/foundry.git", branch = "
 # foundry-evm-traces = { path = "crates/evm/traces" }
 # foundry-macros = { path = "crates/macros" }
 # foundry-test-utils = { path = "crates/test-utils" }
-# foundry-wallets = { path = "crates/wallets" }
+foundry-wallets = {git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="foundry-wallets" }
 # foundry-linking = { path = "crates/linking" }
 
 # # solc & compilation utilities
@@ -173,7 +173,7 @@ foundry-compilers = { version = "0.12.3", default-features = false }
 # ethers-contract-abigen = { version = "2.0.14", default-features = false }
 
 # ## alloy
-# alloy-consensus = { version = "0.5.4", default-features = false }
+alloy-consensus = { version = "0.6.4", default-features = false }
 # alloy-contract = { version = "0.5.4", default-features = false }
 # alloy-eips = { version = "0.5.4", default-features = false }
 # alloy-genesis = { version = "0.5.4", default-features = false }
