@@ -7,13 +7,13 @@
 #![allow(unused_braces)]
 //::secrets
 // use typing::Tuple, List, Any
-
+use rccell::{RcCell, WeakCell};
 use crate::crypto::ecdh_base::EcdhBase;
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
     ZkayKeystoreInterface, ZkayProverInterface,
 };
-use crate::types::{AddressValue, KeyPair, PrivateKeyValue, Value};
+use crate::types::{AddressValue, KeyPair, PrivateKeyValue, CipherValue,Value,PublicKeyValue,DataType};
 use ark_ff::BigInteger256;
 use ark_std::rand;
 use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
@@ -42,7 +42,7 @@ pub struct EcdhChaskeyCrypto<
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    key_store: K,
+    key_store: RcCell<K>,
     params: CryptoParams,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
@@ -56,7 +56,7 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > EcdhChaskeyCrypto<P, B, K>
 {
-    pub fn new(key_store: K) -> Self {
+    pub fn new(key_store: RcCell<K>) -> Self {
         Self {
             key_store,
             params: CryptoParams::new("ecdh-chaskey".to_owned()),
@@ -78,12 +78,10 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ZkayCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
-    fn keystore(&self) -> &K {
-        &self.key_store
+    fn keystore(&self) -> RcCell<K> {
+        self.key_store.clone()
     }
-    fn keystore_mut(&mut self) -> &mut K {
-        &mut self.key_store
-    }
+
     fn params(&self) -> CryptoParams {
         CryptoParams::new("ecdh-chaskey".to_owned())
     }
@@ -91,7 +89,7 @@ impl<
         KeyPair::default()
     }
 
-    fn _enc(&self, plain: String, my_sk: Vec<u8>, target_pk: String) -> (Vec<String>, Vec<u8>) {
+    fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
         let plain_bytes = plain;
@@ -126,7 +124,7 @@ impl<
             vec![],
         )
     }
-    fn _dec(&self, mut cipher: Vec<String>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
+    fn _dec(&self, mut cipher: Vec<String>, sk: &String) -> (u64, Vec<String>) {
         // # Extract sender address from cipher metadata and request corresponding public key
         let sender_pk = cipher.pop().unwrap();
         // assert!( cipher.len() == self.params.cipher_payload_len);
@@ -169,10 +167,10 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ZkayHomomorphicCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
-    fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<String>) -> Vec<u8> {
+    fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<DataType>) -> Vec<String> {
         vec![]
     }
-    fn do_rerand(&self, _arg: Vec<String>, _public_key: Vec<String>) -> (Vec<u8>, Vec<u8>) {
+    fn do_rerand(&self, _arg: Value<String,CipherValue>, _public_key: Vec<String>) -> (Vec<String>, Vec<u8>) {
         (vec![], vec![])
     }
 }

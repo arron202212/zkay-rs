@@ -5,15 +5,16 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use rccell::{RcCell, WeakCell};
 use crate::blockchain::web3rs::{
     Web3Blockchain, Web3BlockchainBase, Web3HttpGanacheBlockchain, Web3TesterBlockchain,
 };
 use crate::types::{
     AddressValue, BlockStruct, CipherValue, KeyPair, MsgStruct, PublicKeyValue, RandomnessValue,
-    TxStruct, Value,
+    TxStruct, Value,DataType
 };
 use proving_scheme::proving_scheme::ProvingScheme;
-use rccell::RcCell;
+
 use serde_json::{json, Map, Result, Value as JsonValue};
 use std::path::PathBuf;
 // use crate::crypto::dummy::DummyCrypto;
@@ -62,7 +63,7 @@ fn _crypto_classes<
     K: ZkayKeystoreInterface<P, B> + Clone,
 >(
     crypto_backend: &str,
-    key_store: K,
+    key_store: RcCell<K>,
 ) -> CryptoClass<P, B, K> {
     match crypto_backend {
         // "dummy" => DummyCrypto,
@@ -134,10 +135,10 @@ pub struct Runtime<
     B: Web3Blockchain + ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    __blockchain: Option<BlockchainClass<P>>,
-    __crypto: BTreeMap<String, CryptoClass<P, B, K>>,
-    __keystore: BTreeMap<String, K>,
-    __prover: Option<JsnarkProver>,
+    __blockchain: RcCell<Option<BlockchainClass<P>>>,
+    __crypto: RcCell<BTreeMap<String,RcCell<CryptoClass<P, B, K>>>>,
+    __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
+    __prover:RcCell<Option<JsnarkProver>>,
 }
 impl<
         P: ZkayProverInterface + Clone,
@@ -147,10 +148,10 @@ impl<
 {
     pub fn new() -> Self {
         Self {
-            __blockchain: None,
-            __crypto: BTreeMap::new(),
-            __keystore: BTreeMap::new(),
-            __prover: None,
+            __blockchain: RcCell::new(None),
+            __crypto:  RcCell::new(BTreeMap::new()),
+            __keystore:  RcCell::new(BTreeMap::new()),
+            __prover:  RcCell::new(None),
         }
     }
     //     @staticmethod
@@ -159,55 +160,54 @@ impl<
 
     // When a new backend is selected in the configuration, it will only be loaded after a runtime reset.
     // """
-    pub fn reset(&mut self) {
-        self.__blockchain = None;
-        self.__crypto = BTreeMap::new();
-        self.__keystore = BTreeMap::new();
-        self.__prover = None;
+    pub fn reset(&self) {
+        *self.__blockchain.borrow_mut() = None;
+        *self.__crypto.borrow_mut() = BTreeMap::new();
+        *self.__keystore.borrow_mut() = BTreeMap::new();
+        *self.__prover.borrow_mut() = None;
     }
 
     //     @staticmethod
     // """Return singleton object which implements ZkayBlockchainInterface."""
-    pub fn blockchain(&mut self) -> &BlockchainClass<P> {
+    pub fn blockchain(&self) -> RcCell<Option<BlockchainClass<P>>> {
         // if self.__blockchain.is_none() {
         //     self.__blockchain = _blockchain_classes(CFG.lock().unwrap().blockchain_backend());
         //     // from zkay.transaction.types import AddressValue
         //     // AddressValue.get_balance = Runtime.__blockchain.get_balance
         // }
-        self.__blockchain.as_ref().unwrap()
+        self.__blockchain.clone()
     }
 
     //     @staticmethod
     //         """Return object which implements ZkayKeystoreInterface for given homomorphism."""
-    pub fn keystore(&mut self, crypto_params: &CryptoParams, k: K) -> &K {
+    pub fn keystore(&self, crypto_params: &CryptoParams, k: RcCell<K>) -> RcCell<K> {
         let crypto_backend = crypto_params.crypto_name.clone();
-        let _blockchain: BlockchainClass<P> = self.blockchain().clone();
-        if !self.__keystore.contains_key(&crypto_backend) {
+        if !self.__keystore.borrow().contains_key(&crypto_backend) {
             // let k=SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone());
-            self.__keystore.insert(crypto_backend.clone(), k);
+            self.__keystore.borrow_mut().insert(crypto_backend.clone(), k);
         }
-        &self.__keystore[&crypto_backend]
+        self.__keystore.borrow()[&crypto_backend].clone()
     }
 
     //     @staticmethod
     //         """Return object which implements ZkayCryptoInterface for given homomorphism."""
-    pub fn crypto(&mut self, crypto_params: &CryptoParams, k: K) -> &CryptoClass<P, B, K> {
+    pub fn crypto(&self, crypto_params: &CryptoParams, k: RcCell<K>) -> RcCell<CryptoClass<P, B, K>> {
         let crypto_backend = crypto_params.crypto_name.clone();
-        if !self.__crypto.contains_key(&crypto_backend) {
-            let keystore = (*self.keystore(crypto_params, k)).clone();
-            self.__crypto.insert(
+        if !self.__crypto.borrow().contains_key(&crypto_backend) {
+            let keystore = self.keystore(crypto_params, k).clone();
+            self.__crypto.borrow_mut().insert(
                 crypto_backend.clone(),
-                _crypto_classes::<P, B, K>(&crypto_backend, keystore),
+                RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
             );
         }
-        &self.__crypto[&crypto_backend]
+        self.__crypto.borrow()[&crypto_backend].clone()
     }
     //     @staticmethod
     // """Return singleton object which implements ZkayProverInterface."""
-    pub fn prover(&mut self) -> &JsnarkProver {
-        if self.__prover.is_none() {
-            self.__prover = Some(_prover_classes(&CFG.lock().unwrap().snark_backend()));
+    pub fn prover(&self) -> RcCell<Option<JsnarkProver>> {
+        if self.__prover.borrow().is_none() {
+            *self.__prover.borrow_mut() = Some(_prover_classes(&CFG.lock().unwrap().snark_backend()));
         }
-        self.__prover.as_ref().unwrap()
+        self.__prover.clone()
     }
 }

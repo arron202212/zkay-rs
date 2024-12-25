@@ -9,12 +9,12 @@
 // use typing::Tuple, List, Any, Union
 
 // use Crypto.Random.random::randrange
-
+use rccell::{RcCell, WeakCell};
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
     ZkayKeystoreInterface, ZkayProverInterface,
 };
-use crate::types::{AddressValue, CipherValue, KeyPair, PrivateKeyValue, PublicKeyValue, Value};
+use crate::types::{AddressValue, CipherValue, KeyPair, DataType,PrivateKeyValue, PublicKeyValue, Value};
 use ark_ec::twisted_edwards::TECurveConfig;
 use ark_std::UniformRand;
 use babyjubjub_rs::{Point, PrivateKey};
@@ -64,7 +64,7 @@ pub struct ElgamalCrypto<
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    pub key_store: K,
+    pub key_store: RcCell<K>,
     pub params: CryptoParams,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
@@ -75,7 +75,7 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ElgamalCrypto<P, B, K>
 {
-    pub fn new(key_store: K) -> Self {
+    pub fn new(key_store: RcCell<K>) -> Self {
         Self {
             params: CryptoParams::new("elgamal".to_owned()),
             key_store,
@@ -91,11 +91,8 @@ impl<
     > ZkayCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
 {
     // params = CryptoParams("elgamal")
-    fn keystore(&self) -> &K {
-        &self.key_store
-    }
-    fn keystore_mut(&mut self) -> &mut K {
-        &mut self.key_store
+    fn keystore(&self) -> RcCell<K> {
+        self.key_store.clone()
     }
     fn params(&self) -> CryptoParams {
         CryptoParams::new("elgamal".to_owned())
@@ -116,13 +113,9 @@ impl<
             zk_print!("ElGamal secret found, loading use file {key_file:?}");
             (pk, sk) = self._read_key_pair(&key_file);
         }
-
-        KeyPair::new(
-            String::from_utf8(pk).unwrap(),
-            String::from_utf8(sk).unwrap(),
-        )
+        KeyPair::new(Value::<String,PublicKeyValue>::new(vec![String::from_utf8_lossy(&pk).to_string()],Some(self.params()),None), Value::<String,PrivateKeyValue>::new(vec![String::from_utf8_lossy(&sk).to_string()],None,None))
     }
-    fn _enc(&self, plain: String, _my_sk: Vec<u8>, target_pk: String) -> (Vec<String>, Vec<u8>) {
+    fn _enc(&self, plain: String, _my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
         let pk = self.serialize_pk(target_pk, self.params.key_bytes());
         let mut rng = rand::thread_rng();
         let r = Fr::rand(&mut rng);
@@ -131,9 +124,9 @@ impl<
             .into_iter()
             .map(|v| v.to_string())
             .collect();
-        (cipher_chunks, r.into_bigint().to_string().into_bytes())
+        (cipher_chunks, vec![r.into_bigint().to_string()])
     }
-    fn _dec(&self, cipher: Vec<String>, sk: &Vec<u8>) -> (u64, Vec<u8>) {
+    fn _dec(&self, cipher: Vec<String>, sk: &String) -> (u64, Vec<String>) {
         // with time_measure("elgamal_decrypt"):
         let c1 = BabyJubJub::new(
             Fq::from_str(&cipher[0]).unwrap(),
@@ -143,12 +136,12 @@ impl<
             Fq::from_str(&cipher[2]).unwrap(),
             Fq::from_str(&cipher[3]).unwrap(),
         );
-        let shared_secret = c1 * Fr::from_str(&String::from_utf8(sk.clone()).unwrap()).unwrap();
+        let shared_secret = c1 * Fr::from_str(&sk).unwrap();
         let plain_embedded = c2 + shared_secret.neg();
         let plain = self._de_embed(plain_embedded.into());
 
         // # TODO randomness misused for the secret key, which is an extremely ugly hack...
-        (plain, sk.clone())
+        (plain, vec![sk.clone()])
     }
 }
 impl<
@@ -227,60 +220,61 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ZkayHomomorphicCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
 {
-    fn do_op(&self, op: &str, _public_key: Vec<String>, args: Vec<String>) -> Vec<u8> {
-        fn deserialize(operand: &[String]) -> (BabyJubJub, BabyJubJub) {
+    fn do_op(&self, op: &str, _public_key: Vec<String>, args: Vec<DataType>) -> Vec<String> {
+        fn deserialize(operand: &DataType) -> (Option<(BabyJubJub, BabyJubJub)>,Option<u128>) {
             // # if ciphertext is 0, return (Point.ZERO, Point.ZERO) == Enc(0, 0)
-            if operand == &vec![0.to_string(); 4] {
-                (BabyJubJub::zero(), BabyJubJub::zero())
+            if let DataType::CipherValue(operand)=operand{
+            if &operand.contents == &vec![0.to_string(); 4] {
+                (Some((BabyJubJub::zero(), BabyJubJub::zero())),None)
             } else {
                 let c1 = BabyJubJub::new(
-                    Fq::from_str(&operand[..4].concat()).unwrap(),
-                    Fq::from_str(&operand[4..8].concat()).unwrap(),
+                    Fq::from_str(&operand[0]).unwrap(),
+                    Fq::from_str(&operand[1]).unwrap(),
                 );
                 let c2 = BabyJubJub::new(
-                    Fq::from_str(&operand[8..16].concat()).unwrap(),
-                    Fq::from_str(&operand[16..].concat()).unwrap(),
+                    Fq::from_str(&operand[2]).unwrap(),
+                    Fq::from_str(&operand[3]).unwrap(),
                 );
-                (c1, c2)
-            }
+                (Some((c1, c2)),None)
+            }}else if let DataType::Int(operand)=operand{
+                (None,Some(*operand))
+            }else
+            {(None,None)}
         }
-        let args: Vec<_> = args.chunks(4).map(|arg| deserialize(arg)).collect();
+        let args: Vec<_> = args.iter().map(|arg| deserialize(arg)).collect();
         let (e1, e2);
-        if op == "+" {
-            e1 = args[0].0 + args[1].0;
-            e2 = args[0].1 + args[1].1;
-        } else if op == "-" {
-            e1 = args[0].0 + args[1].0.neg();
-            e2 = args[0].1 + args[1].1.neg();
-        // } else if op == "*" || args[1] != 0 {
-        //     // && isinstance(args[1], int)
-        //     e1 = args[0].0 * Fr::from(args[1]);
-        //     e2 = args[0].1 * Fr::from(args[1]);
-        // } else if op == "*" || args[0] != 0 {
-        //     //&& isinstance(args[0], int)
-        //     e1 = args[1].0 * Fr::from(args[0]);
-        //     e2 = args[1].1 * Fr::from(args[0]);
-        } else {
+        match (args[0],args[1]){
+            ((Some(arg0),None),(Some(arg1),None))  if op == "+"=>{
+            e1 = arg0.0 + arg1.0;
+            e2 = arg0.1 + arg1.1;
+        } ((Some(arg0),None),(Some(arg1),None))  if op == "-"=> {
+            e1 = arg0.0 + arg1.0.neg();
+            e2 = arg0.1 + arg1.1.neg();
+            }
+            ((Some(arg0),None),(None,Some(arg1))) if op == "*"=>{
+                e1 = arg0.0 * Fr::from(arg1);
+                e2 = arg0.1 * Fr::from(arg1);
+            }
+            ((None,Some(arg0)),(Some(arg1),None)) if op == "*"=>{
+                e1 = arg1.0 * Fr::from(arg0);
+                e2 = arg1.1 * Fr::from(arg0);
+            }
+            _=> {
             panic!("Unsupported operation {op}");
         }
-
-        e1.x.into_bigint()
-            .to_string()
-            .into_bytes()
-            .into_iter()
-            .chain(e1.y.into_bigint().to_string().into_bytes().into_iter())
-            .chain(e2.x.into_bigint().to_string().into_bytes().into_iter())
-            .chain(e2.y.into_bigint().to_string().into_bytes().into_iter())
-            .collect()
+        }
+        vec![e1.x.into_bigint()
+            .to_string(),e1.y.into_bigint().to_string(),
+e2.x.into_bigint().to_string(),e2.y.into_bigint().to_string()]
     }
-    fn do_rerand(&self, arg: Vec<String>, public_key: Vec<String>) -> (Vec<u8>, Vec<u8>) {
+    fn do_rerand(&self, arg: Value<String,CipherValue>, public_key: Vec<String>) -> (Vec<String>, Vec<u8>) {
         // # homomorphically add encryption of zero to re-randomize
         // let r = randrange(babyjubjub.CURVE_ORDER);
         let mut rng = rand::thread_rng();
         let r = Fr::rand(&mut rng);
         let _enc_zero = self._enc_with_rand(0.to_string(), r, public_key.clone());
         (
-            self.do_op("+", public_key, arg),
+            self.do_op("+", public_key, [DataType::CipherValue(arg)].into_iter().chain(_enc_zero.into_iter().map(|s|DataType::String(s))).collect()),
             r.into_bigint().to_string().into_bytes(),
         )
     }

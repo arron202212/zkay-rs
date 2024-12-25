@@ -47,7 +47,7 @@ use zkay_ast::homomorphism::Homomorphism;
 use zkay_utils::progress_printer::fail_print;
 // bn128_scalar_field = bn128_scalar_field
 const _BN128_COMP_SCALAR_FIELD: BigInteger256 = BigInteger256::one();
-type CallableType = fn(String) -> String; //: Clone + Default + std::iter::FromIterator<T>
+type CallableType = fn(String) -> DataType; //: Clone + Default + std::iter::FromIterator<T>
 
 use std::ops::{Index, IndexMut};
 
@@ -63,9 +63,9 @@ pub struct StateDict<
     K: ZkayKeystoreInterface<P, B> + Clone,
     C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
 > {
-    api: ApiWrapper<P, B, K>,
-    __state: BTreeMap<String, String>,
-    __constructors: BTreeMap<String, (bool, CryptoParams, CallableType)>,
+    api: RcCell<ApiWrapper<P, B, K>>,
+    __state: BTreeMap<String, DataType>,
+    __constructors: RcCell<BTreeMap<String, (bool, CryptoParams, CallableType)>>,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
     _crypto: PhantomData<C>,
@@ -77,11 +77,11 @@ impl<
         C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
     > StateDict<P, B, K, C>
 {
-    pub fn new(api: ApiWrapper<P, B, K>) -> Self {
+    pub fn new(api: RcCell<ApiWrapper<P, B, K>>) -> Self {
         Self {
             api,
             __state: BTreeMap::new(),
-            __constructors: BTreeMap::new(),
+            __constructors: RcCell::new(BTreeMap::new()),
             _prover: PhantomData,
             _bc: PhantomData,
             _crypto: PhantomData,
@@ -97,7 +97,7 @@ impl<
     }
     // """Define the wrapper constructor for a state variable."""= CFG.lock().unwrap().main_crypto_backend
     pub fn decl(
-        &mut self,
+        &self,
         name: &str,
         constructor: CallableType,
         cipher: bool,
@@ -109,7 +109,7 @@ impl<
             crypto_backend.to_owned()
         };
         // assert name not in self.__constructors
-        self.__constructors.insert(
+        self.__constructors.borrow_mut().insert(
             name.to_owned(),
             (cipher, CryptoParams::new(crypto_backend), constructor),
         );
@@ -117,11 +117,11 @@ impl<
 
     //     @property
     pub fn names(&self) -> Vec<String> {
-        self.__constructors.keys().cloned().collect()
+        self.__constructors.borrow().keys().cloned().collect()
     }
 
-    pub fn get_plain(&self, name: &str, _indices: Vec<String>) -> Option<String> {
-        let (_is_cipher, _crypto_params, _constr) = &self.__constructors[name];
+    pub fn get_plain(&self, name: &str, _indices: Vec<String>) -> Option<DataType> {
+        let (_is_cipher, _crypto_params, _constr) = self.__constructors.borrow()[name].clone();
         // let val = self.__get(vec![name.to_owned()].into_iter().chain(indices.into_iter()).collect(), false);
         // if is_cipher {
         //     let (ret, _) = self.api.dec(val, constr, &crypto_params.crypto_name);
@@ -131,7 +131,7 @@ impl<
         None
     }
 
-    pub fn get_raw(&self, name: &str, indices: Vec<String>) -> Option<&String> {
+    pub fn get_raw(&self, name: &str, indices: Vec<String>) -> Option<&DataType> {
         self.__get(
             vec![name.to_owned()]
                 .into_iter()
@@ -148,7 +148,7 @@ impl<
     // :raise KeyError: if location does not exist on the chain
     // :return: The requested value
     // """
-    pub fn __getitem__(&self, key: &str) -> &String {
+    pub fn __getitem__(&self, key: &str) -> &DataType {
         self.__get(vec![key.to_owned()], true).unwrap()
     }
 
@@ -158,7 +158,7 @@ impl<
     // :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
     // :param value: Correctly wrapped value which should be assigned to the specified state location
     // """
-    pub fn __setitem__(&mut self, mut key: Vec<String>, value: String) {
+    pub fn __setitem__(&mut self, mut key: Vec<String>, value: DataType) {
         // if not isinstance(key, Tuple)
         //     key = (key, )
         let var = key[0].clone();
@@ -172,7 +172,7 @@ impl<
         // # Write to state
         self.__state.insert(loc, value);
     }
-    pub fn __get(&self, key: Vec<String>, cache: bool) -> Option<&String> {
+    pub fn __get(&self, key: Vec<String>, cache: bool) -> Option<&DataType> {
         // if not isinstance(key, Tuple):
         //     key = (key, )
         let (var, _indices) = (&key[0], &key[1..]);
@@ -184,8 +184,11 @@ impl<
                 .concat();
 
         // # Retrieve from state scope
-        if cache && self.__state.contains_key(&loc) {
-            return self.__state.get(&loc);
+        
+        if cache  {
+            if let v@Some(_)=self.__state.get(&loc) {
+                return v;
+            }
         }
 
         // let (is_cipher, crypto_params, constr) = self.__constructors[var.as_str()];
@@ -216,7 +219,7 @@ impl<
         C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
     > Index<&[&str]> for StateDict<P, B, K, C>
 {
-    type Output = String;
+    type Output = DataType;
 
     fn index(&self, index: &[&str]) -> &Self::Output {
         let var = index[0].to_owned();
@@ -257,7 +260,7 @@ impl<
 //     Dictionary which supports multiple scopes with name shadowing.
 #[derive(Clone)]
 pub struct LocalsDict {
-    pub _scopes: Vec<BTreeMap<String, String>>,
+    pub _scopes: Vec<BTreeMap<String, DataType>>,
 }
 impl LocalsDict {
     //     This is needed since python does not natively support c-style nested local scopes.
@@ -275,7 +278,7 @@ impl LocalsDict {
     }
 
     // """Introduce a new local variable with the given name and value into the current scope."""
-    pub fn decl(&mut self, name: &str, val: String) {
+    pub fn decl(&mut self, name: &str, val: DataType) {
         assert!(
             !self._scopes.last().unwrap().contains_key(name),
             "Variable declared twice in same scope"
@@ -292,7 +295,7 @@ impl LocalsDict {
     // If there are multiple variables with the name key in different scopes,
     // the variable with the lowest declaration scope is used.
     // """
-    pub fn __getitem__(&self, key: &str) -> &String {
+    pub fn __getitem__(&self, key: &str) -> &DataType {
         for scope in self._scopes.iter().rev() {
             if let Some(v) = scope.get(key) {
                 return v;
@@ -306,7 +309,7 @@ impl LocalsDict {
 
     // If there are multiple variables with the name key in different scopes, the variable with the lowest declaration scope is used.
     // """
-    pub fn __setitem__(&mut self, key: &str, value: String) {
+    pub fn __setitem__(&mut self, key: &str, value: DataType) {
         for scope in self._scopes.iter_mut().rev() {
             if scope.contains_key(key) {
                 scope.insert(key.to_owned(), value);
@@ -318,7 +321,7 @@ impl LocalsDict {
 }
 
 impl Index<&str> for LocalsDict {
-    type Output = String;
+    type Output = DataType;
 
     fn index(&self, index: &str) -> &Self::Output {
         self.__getitem__(index)
@@ -342,8 +345,7 @@ pub trait ContractSimulatorRef<
     K: ZkayKeystoreInterface<P, B> + Clone,
 >
 {
-    fn contract_simulator_ref(&self) -> &ContractSimulator<C, P, B, K>;
-    fn contract_simulator_mut(&mut self) -> &mut ContractSimulator<C, P, B, K>;
+    fn contract_simulator_ref(&self) -> RcCell<ContractSimulator<C, P, B, K>>;
 }
 
 impl<
@@ -354,36 +356,28 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ContractSimulatorConfig<C, P, B, K> for CS
 {
-    fn api<'a>(&'a self) -> &'a ApiWrapper<P, B, K>
-    where
-        C: 'a,
+    fn api(& self) -> RcCell<ApiWrapper<P, B, K>>
     {
-        &self.contract_simulator_ref().api
-    }
-    fn api_mut<'a>(&'a mut self) -> &'a mut ApiWrapper<P, B, K>
-    where
-        C: 'a,
-    {
-        &mut self.contract_simulator_mut().api
+        self.contract_simulator_ref().borrow().api.clone()
     }
     fn locals(&self) -> RcCell<LocalsDict> {
-        self.contract_simulator_ref().locals.clone()
+        self.contract_simulator_ref().borrow().locals.clone()
     }
     fn state(&self) -> RcCell<StateDict<P, B, K, C>> {
-        self.contract_simulator_ref().state.clone()
+        self.contract_simulator_ref().borrow().state.clone()
     }
     // @contextmanager
     // """Return context manager which manages the lifetime of a local scope."""
-    fn _scope(&mut self) -> WithScope {
+    fn _scope(&self) -> WithScope {
         // self.locals.borrow_mut().push_scope();
         // // yield
         // self.locals.borrow_mut().pop_scope();
-        WithScope::new(self.contract_simulator_mut().locals.clone())
+        WithScope::new(self.contract_simulator_ref().borrow().locals.clone())
     }
 
     // @contextmanager   -1  = 0 = '?'
     fn _function_ctx(
-        &mut self,
+        &self,
         trans_sec_size: i32,
         wei_amount: i32,
         name: &str,
@@ -393,22 +387,22 @@ impl<
     ) {
         let fc;
         let is_external;
-        with_context_block!(var afc= self.contract_simulator_mut().api.api_function_ctx(trans_sec_size as usize, Some(wei_amount))=>{
+        with_context_block!(var afc= self.contract_simulator_ref().borrow().api.borrow().api_function_ctx(trans_sec_size as usize, Some(wei_amount))=>{
          is_external=afc.is_external.borrow().map_or(false,|x|x);
         let mut t_idx=0;
 
         if is_external {
             zk_print_banner(format!("Calling {name}"));
             // assert self.locals is None
-            self.contract_simulator_mut().state.borrow_mut().clear();
-            t_idx = *self.contract_simulator_mut().tidx.get(name).unwrap_or(&0);
-            *self.contract_simulator_mut().tidx.entry(name.to_owned()).or_insert(0) += 1;
+            self.contract_simulator_ref().borrow().state.borrow_mut().clear();
+            t_idx = *self.contract_simulator_ref().borrow().tidx.borrow().get(name).unwrap_or(&0);
+            *self.contract_simulator_ref().borrow().tidx.borrow_mut().entry(name.to_owned()).or_insert(0) += 1;
         }
         // with nullcontext() if not is_external else log_context(f'{name}_{t_idx}'):
         with_context_block!(var lc=is_external.then(||log_context(&format!("{name}_{t_idx}")))=>{
         // let prev_locals = self.locals.clone();
         // self.locals = LocalsDict { _scopes: vec![] };
-        fc=WithFunctionCtx::new(self.contract_simulator_mut().locals.clone(),self.contract_simulator_mut().state.clone(),Some(afc),lc);
+        fc=WithFunctionCtx::new(self.contract_simulator_ref().borrow().locals.clone(),self.contract_simulator_ref().borrow().state.clone(),Some(afc),lc);
         // try:
         // yield is_external
         // except (ValueError, BlockChainError, RequireException) as e:
@@ -436,21 +430,16 @@ pub trait ContractSimulatorConfig<
     K: ZkayKeystoreInterface<P, B> + Clone,
 >
 {
-    fn api<'a>(&'a self) -> &'a ApiWrapper<P, B, K>
-    where
-        C: 'a;
-    fn api_mut<'a>(&'a mut self) -> &'a mut ApiWrapper<P, B, K>
-    where
-        C: 'a;
+    fn api(&self) -> RcCell<ApiWrapper<P, B, K>>;
     fn locals(&self) -> RcCell<LocalsDict>;
     fn state(&self) -> RcCell<StateDict<P, B, K, C>>;
     // @contextmanager
     // """Return context manager which manages the lifetime of a local scope."""
-    fn _scope(&mut self) -> WithScope;
+    fn _scope(&self) -> WithScope;
 
     // @contextmanager   -1  = 0 = '?'
     fn _function_ctx(
-        &mut self,
+        &self,
         trans_sec_size: i32,
         wei_amount: i32,
         name: &str,
@@ -467,11 +456,11 @@ pub struct ContractSimulator<
     B: ZkayBlockchainInterface<P> + Web3Blockchain + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    pub tidx: BTreeMap<String, i32>,
-    pub api: ApiWrapper<P, B, K>,
+    pub tidx: RcCell<BTreeMap<String, i32>>,
+    pub api: RcCell<ApiWrapper<P, B, K>>,
     pub locals: RcCell<LocalsDict>,
     pub state: RcCell<StateDict<P, B, K, C>>,
-    pub runtime: Runtime<P, B, K>,
+    pub runtime: RcCell<Runtime<P, B, K>>,
 }
 impl<
         C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
@@ -489,13 +478,13 @@ impl<
         project_dir: &str,
         user_addr: &str,
         contract_name: &str,
-        mut runtime: Runtime<P, B, K>,
-        k: K,
+        runtime: RcCell<Runtime<P, B, K>>,
+        k: RcCell<K>,
     ) -> Self {
         // # Transaction instance values (reset between transactions)
         // let  mut runtime=Runtime::<P,B,SimpleKeystore<P, BlockchainClass<P>>>::new();
         let api =
-            ApiWrapper::<P, B, K>::new(project_dir, contract_name, user_addr, &mut runtime, k);
+            RcCell::new(ApiWrapper::<P, B, K>::new(project_dir, contract_name, user_addr, runtime.clone(), k));
 
         // """Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables"""
         let locals = RcCell::new(LocalsDict { _scopes: vec![] });
@@ -507,7 +496,7 @@ impl<
         // """
         let state = RcCell::new(StateDict::<P, B, K, C>::new(api.clone()));
         Self {
-            tidx: BTreeMap::new(),
+            tidx: RcCell::new(BTreeMap::new()),
             api,
             locals,
             state,
@@ -563,7 +552,7 @@ impl<
 
     // @staticmethod
     // """Generate/Load keys for the given address."""
-    pub fn initialize_keys_for(&mut self, address: &str) {
+    pub fn initialize_keys_for(&self, address: &str) {
         let _account = address.to_owned();
         for _crypto_params in CFG.lock().unwrap().all_crypto_params() {
             // if !self.runtime.keystore(&CryptoParams::new(crypto_params.clone())).has_initialized_keys_for(&address.to_owned()) {
@@ -573,11 +562,11 @@ impl<
     }
 
     // @staticmethod
-    pub fn use_config_from_manifest(&mut self, project_dir: &str) {
+    pub fn use_config_from_manifest(&self, project_dir: &str) {
         // """Override zkay configuration with values from the manifest file in project_dir."""
         let manifest = Manifest::load(project_dir);
         Manifest::import_manifest_config(manifest);
-        self.runtime.reset();
+        self.runtime.borrow_mut().reset();
     }
 
     // @staticmethod
@@ -587,7 +576,7 @@ impl<
     // :param count: # of accounts to create
     // :return: if count == 1 -> returns a address, otherwise returns a tuple of count addresses
     // """
-    pub fn create_dummy_accounts(&mut self, _count: i32) -> Vec<String> {
+    pub fn create_dummy_accounts(&self, _count: i32) -> Vec<String> {
         let accounts: Vec<String> = vec![]; //self.runtime.blockchain().create_test_accounts(count);
         for account in &accounts {
             self.initialize_keys_for(account);
@@ -606,14 +595,14 @@ pub struct ApiWrapper<
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    __conn: BlockchainClass<P>,
-    __keystore: BTreeMap<String, K>,
-    __crypto: BTreeMap<String, CryptoClass<P, B, K>>,
-    __prover: JsnarkProver,
-    __project_dir: String,
-    __contract_name: String,
-    __contract_handle: Option<JsonValue>,
-    __user_addr: String,
+    __conn:RcCell<Option<BlockchainClass<P>>>,
+    __keystore: RcCell<BTreeMap<String,RcCell<K>>>,
+    __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
+    __prover: RcCell<Option<JsnarkProver>>,
+    __project_dir: RcCell<String>,
+    __contract_name: RcCell<String>,
+    __contract_handle: RcCell<Option<JsonValue>>,
+    __user_addr:RcCell <String>,
     __current_msg: RcCell<Option<MsgStruct>>,
     __current_block: RcCell<Option<BlockStruct>>,
     __current_tx: RcCell<Option<TxStruct>>,
@@ -632,38 +621,38 @@ impl<
         project_dir: &str,
         contract_name: &str,
         user_addr: &str,
-        runtime: &mut Runtime<P, B, K>,
-        k: K,
+        runtime: RcCell<Runtime<P, B, K>>,
+        k: RcCell<K>,
     ) -> Self {
         // super().__init__()
-        let __conn: BlockchainClass<P> = runtime.blockchain().clone();
+        let __conn = runtime.borrow().blockchain().clone();
         let mut __keystore = BTreeMap::new();
         let mut __crypto = BTreeMap::new();
-        let __prover = runtime.prover().clone();
+        let __prover = runtime.borrow().prover().clone();
 
         for crypto_params in CFG.lock().unwrap().all_crypto_params() {
             __keystore.insert(
                 crypto_params.clone(),
-                runtime
+                runtime.borrow()
                     .keystore(&CryptoParams::new(crypto_params.clone()), k.clone())
                     .clone(),
             );
             __crypto.insert(
                 crypto_params.clone(),
-                runtime
+                runtime.borrow()
                     .crypto(&CryptoParams::new(crypto_params.clone()), k.clone())
                     .clone(),
             );
         }
 
-        let __project_dir = project_dir.to_owned();
-        let __contract_name = contract_name.to_owned();
+        let __project_dir = RcCell::new(project_dir.to_owned());
+        let __contract_name = RcCell::new(contract_name.to_owned());
 
         // """Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions."""
-        let __contract_handle = None;
+        let __contract_handle = RcCell::new(None);
 
         // """From address for all transactions which are issued by this ContractSimulator"""
-        let __user_addr = user_addr.to_owned();
+        let __user_addr = RcCell::new(user_addr.to_owned());
 
         // """
         // Builtin variable (msg, block, tx) values for the current transaction
@@ -693,8 +682,8 @@ impl<
         let is_external: RcCell<Option<bool>> = RcCell::new(None);
         Self {
             __conn,
-            __keystore,
-            __crypto,
+            __keystore:RcCell::new(__keystore),
+            __crypto:RcCell::new(__crypto),
             __prover,
             __project_dir,
             __contract_name,
@@ -711,35 +700,35 @@ impl<
     }
     // @property
     pub fn address(&self) -> String {
-        self.__contract_handle.as_ref().unwrap()["address"].to_string()
+        self.__contract_handle.borrow().as_ref().unwrap()["address"].to_string()
     }
 
     // @property
     pub fn user_address(&self) -> String {
-        self.__user_addr.clone()
+        self.__user_addr.borrow().clone()
     }
 
     // @property
-    pub fn keystore(&self) -> &K {
+    pub fn keystore(&self) -> RcCell<K>  {
         // # Method only exists for compatibility, new code generators only generate calls to get_keystore
         self.get_keystore(&CFG.lock().unwrap().main_crypto_backend())
     }
 
-    pub fn get_keystore(&self, crypto_backend: &str) -> &K {
-        &self.__keystore[crypto_backend]
+    pub fn get_keystore(&self, crypto_backend: &str) -> RcCell<K>  {
+        self.__keystore.borrow()[crypto_backend].clone()
     }
 
     pub fn get_my_sk(&self, _crypto_backend: &str) -> Value<String,PrivateKeyValue> {
         // = CFG.lock().unwrap().main_crypto_backend
         // self.__keystore[crypto_backend].sk(&self.user_address())
-        Value<String,PrivateKeyValue>::default()
+        Value::<String,PrivateKeyValue>::default()
     }
     // = CFG.lock().unwrap().main_crypto_backend
-    pub fn get_my_pk(&self, crypto_backend: &str) -> Vec<u8> {
-        self.__keystore[crypto_backend].pk(&self.user_address())
+    pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String,PublicKeyValue> {
+        self.__keystore.borrow()[crypto_backend].borrow().pk(&self.user_address())
     }
 
-    pub fn call_fct<F: Fn()>(&mut self, sec_offset: i32, fct: F) {
+    pub fn call_fct<F: Fn()>(&self, sec_offset: i32, fct: F) {
         with_context_block!(var _cc=self.__call_ctx(sec_offset)=>{
              fct();
         });
@@ -761,26 +750,26 @@ impl<
     }
 
     pub fn deploy(
-        &mut self,
+        &self,
         actual_args: Vec<String>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) -> Option<JsonValue> {
-        self.__contract_handle = self
-            .__conn
+        *self.__contract_handle.borrow_mut() = self
+            .__conn.borrow().as_ref().unwrap()
             .deploy(
-                &self.__project_dir,
-                &self.__user_addr,
-                &self.__contract_name,
+                &self.__project_dir.borrow(),
+                &self.__user_addr.borrow(),
+                &self.__contract_name.borrow(),
                 actual_args,
                 should_encrypt,
                 wei_amount,
             )
             .ok();
-        self.__contract_handle.clone()
+        self.__contract_handle.borrow().clone()
     }
     pub fn connect<PS: ProvingScheme>(
-        &mut self,
+        &self,
         address: JsonValue,
         compile_zkay_file: fn(
             input_file_path: &str,
@@ -789,11 +778,11 @@ impl<
         ) -> anyhow::Result<String>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
     ) {
-        self.__contract_handle = self
-            .__conn
+        *self.__contract_handle.borrow_mut() = self
+            .__conn.borrow().as_ref().unwrap()
             .connect::<PS>(
-                &self.__project_dir,
-                &self.__contract_name,
+                &self.__project_dir.borrow(),
+                &self.__contract_name.borrow(),
                 address,
                 self.user_address(),
                 compile_zkay_file,
@@ -805,13 +794,13 @@ impl<
     pub fn transact(
         &self,
         fname: &str,
-        args: Vec<String>,
+        args: Vec<DataType>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) {
-        self.__conn.transact(
-            self.__contract_handle.as_ref().unwrap(),
-            &self.__user_addr,
+        self.__conn.borrow().as_ref().unwrap().transact(
+            self.__contract_handle.borrow().as_ref().unwrap(),
+            &self.__user_addr.borrow(),
             fname,
             args,
             should_encrypt,
@@ -822,25 +811,25 @@ impl<
     pub fn call(
         &self,
         fname: &str,
-        args: Vec<String>,
+        args: Vec<DataType>,
         ret_val_constructors: Vec<(bool, String, CallableType)>,
-    ) -> Vec<String> {
-        let retvals = self.__conn.call(
-            self.__contract_handle.as_ref().unwrap().clone(),
-            &self.__user_addr,
+    ) -> DataType {
+        let retvals = self.__conn.borrow().as_ref().unwrap().call(
+            self.__contract_handle.borrow().as_ref().unwrap().clone(),
+            &self.__user_addr.borrow(),
             fname,
-            args.concat(),
+            args,
         );
         if ret_val_constructors.len() == 1 {
             let (is_cipher, crypto_params_name, callable) = ret_val_constructors[0].clone();
-            vec![self.__get_decrypted_retval(
+            self.__get_decrypted_retval(
                 BigInteger256::from_str(&retvals).unwrap(),
                 is_cipher,
                 crypto_params_name,
                 callable,
-            )]
+            )
         } else {
-            [retvals]
+            DataType::List([retvals]
                 .iter()
                 .zip(ret_val_constructors)
                 .map(|(retval, (is_cipher, homomorphism, constr))| {
@@ -851,7 +840,7 @@ impl<
                         constr,
                     )
                 })
-                .collect()
+                .collect())
         }
     }
     pub fn __get_decrypted_retval(
@@ -860,14 +849,14 @@ impl<
         is_cipher: bool,
         crypto_params_name: String,
         constructor: CallableType,
-    ) -> String {
+    ) -> DataType {
         if is_cipher {
             self.dec(
-                Value::<String, CipherValue>::new(
+                DataType::CipherValue(Value::<String, CipherValue>::new(
                     vec![raw_value.to_string()],
                     Some(CryptoParams::new(crypto_params_name.clone())),
                     None,
-                ),
+                )),
                 constructor,
                 &crypto_params_name,
             )
@@ -892,10 +881,10 @@ impl<
         )
     }
 
-    pub fn update_special_variables(&mut self, wei_amount: i32) {
+    pub fn update_special_variables(&self, wei_amount: i32) {
         let (__current_msg, __current_block, __current_tx) = self
-            .__conn
-            .get_special_variables(&self.__user_addr, wei_amount);
+            .__conn.borrow().as_ref().unwrap()
+            .get_special_variables(&self.__user_addr.borrow(), wei_amount);
         (
             *self.__current_msg.borrow_mut(),
             *self.__current_block.borrow_mut(),
@@ -916,18 +905,18 @@ impl<
     }
     //= CFG.lock().unwrap().main_crypto_backend
     pub fn enc(
-        &mut self,
+        &self,
         plain: i32,
         target_addr: Option<String>,
         crypto_backend: &str,
     ) -> (
         Value<String, CipherValue>,
-        Option<Value<u8, RandomnessValue>>,
+        Option<Value<String, RandomnessValue>>,
     ) {
-        let target_addr = target_addr.map_or(self.__user_addr.clone(), |ta| ta);
-        self.__crypto.get_mut(crypto_backend).unwrap().enc(
+        let target_addr = target_addr.map_or(self.__user_addr.borrow().clone(), |ta| ta);
+        self.__crypto.borrow().get(crypto_backend).unwrap().borrow().enc(
             plain.to_string(),
-            &self.__user_addr,
+            &self.__user_addr.borrow(),
             &target_addr,
         )
     }
@@ -937,23 +926,23 @@ impl<
         cipher: DataType,
         constr: CallableType,
         crypto_backend: &str,
-    ) -> (String, Option<Value<u8, RandomnessValue>>) {
-        let res = self.__crypto[crypto_backend].dec(cipher.try_as_crypto_value_ref().unwrap(), &self.__user_addr);
+    ) -> (DataType, Option<Value<String, RandomnessValue>>) {
+        let res = self.__crypto.borrow()[crypto_backend].borrow().dec(cipher.try_as_cipher_value_ref().unwrap(), &self.__user_addr.borrow());
         (constr(res.0.to_string()), res.1)
     }
 
     pub fn do_homomorphic_op(
-        &mut self,
+        &self,
         op: &str,
         crypto_backend: &str,
         target_addr: String,
         args: Vec<DataType>,
-    ) {
+    ) ->Value<String,CipherValue>{
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
-            .__keystore
-            .get_mut(&params.crypto_name)
-            .unwrap()
+            .__keystore.borrow()
+            .get(&params.crypto_name)
+            .unwrap().borrow()
             .getPk(&target_addr);
         // assert!(
         //     args.iter().all(|arg| !(isinstance(arg, CipherValue)
@@ -961,18 +950,18 @@ impl<
         //     "CipherValues from different crypto backends used in homomorphic operation"
         // );
 
-        let mut crypto_inst = self.__crypto[&params.crypto_name].clone();
+        let mut crypto_inst = self.__crypto.borrow()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
-        let _result = crypto_inst.do_op(op, pk, args);
-        // CipherValue(result, params)
+        let result = crypto_inst.borrow().do_op(op, pk[..].to_vec(), args);
+        Value::<String,CipherValue>::new(result, Some(params),None)
     }
 
     // """
     // Re-randomizes arg using fresh randomness, which is stored in data[rnd_key] (side-effect!)
     // """
     pub fn do_rerand(
-        &mut self,
-        arg: Vec<String>,
+        &self,
+        arg: Value<String,CipherValue>,
         crypto_backend: &str,
         target_addr: String,
         data: &mut BTreeMap<String, String>,
@@ -980,13 +969,13 @@ impl<
     ) {
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
-            .__keystore
-            .get_mut(&params.crypto_name)
-            .unwrap()
+            .__keystore.borrow()
+            .get(&params.crypto_name)
+            .unwrap().borrow()
             .getPk(&target_addr);
-        let mut crypto_inst = self.__crypto[&params.crypto_name].clone();
+        let mut crypto_inst = self.__crypto.borrow()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
-        let (_result, _rand) = crypto_inst.do_rerand(arg, pk);
+        let (_result, _rand) = crypto_inst.borrow().do_rerand(arg, pk[..].to_vec());
         data.insert(rnd_key.to_owned(), params.crypto_name.clone()); //# store randomness
                                                                      // CipherValue(result, params)
     }
@@ -995,18 +984,18 @@ impl<
         // if self.__contract_handle is None:
         // # TODO check this statically in the type checker
         assert!(
-            self.__contract_handle.is_some(),
+            self.__contract_handle.borrow().is_some(),
             "Cannot read state variable {name} within constructor before it is assigned a value."
         );
 
         if count == 0 {
-            self.__conn
-                .req_state_var(self.__contract_handle.as_ref().unwrap(), name, &indices)
+            self.__conn.borrow().as_ref().unwrap()
+                .req_state_var(self.__contract_handle.borrow().as_ref().unwrap(), name, &indices)
         } else {
             (0..count)
                 .map(|_i| {
-                    self.__conn.req_state_var(
-                        self.__contract_handle.as_ref().unwrap(),
+                    self.__conn.borrow().as_ref().unwrap().req_state_var(
+                        self.__contract_handle.borrow().as_ref().unwrap(),
                         &name,
                         &indices,
                     )
@@ -1033,7 +1022,7 @@ impl<
     // @staticmethod
     pub fn __serialize_circuit_array(
         data: BTreeMap<String, DataType>,
-        mut target_array: &mut Vec<String>,
+        target_array: &mut Vec<String>,
         target_out_start_idx: i32,
         elem_bitwidths: Vec<i32>,
     ) {
@@ -1102,9 +1091,9 @@ impl<
         in_vals: Vec<String>,
         out_vals: Vec<String>,
     ) -> Vec<String> {
-        self.__prover.generate_proof(
-            &self.__project_dir,
-            self.__contract_name.clone(),
+        self.__prover.borrow().as_ref().unwrap().generate_proof(
+            &self.__project_dir.borrow(),
+            self.__contract_name.borrow().clone(),
             fname.to_owned(),
             self.all_priv_values.borrow().clone().unwrap(),
             in_vals,
@@ -1114,7 +1103,7 @@ impl<
 
     // @contextmanager
     // """Return context manager which sets the correct current_all_index for the given sec_offset during its lifetime."""
-    pub fn __call_ctx(&mut self, sec_offset: i32) -> WithCalCtx {
+    pub fn __call_ctx(&self, sec_offset: i32) -> WithCalCtx {
         WithCalCtx::new(
             sec_offset,
             self.current_priv_values.clone(),
@@ -1123,7 +1112,7 @@ impl<
     }
     // @contextmanager
     pub fn api_function_ctx(
-        &mut self,
+        &self,
         trans_sec_size: usize,
         wei_amount: Option<i32>,
     ) -> WithApiFunctionCtx {

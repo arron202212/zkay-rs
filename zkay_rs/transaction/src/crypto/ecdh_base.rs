@@ -26,7 +26,7 @@ pub trait EcdhBase<
 >: ZkayCryptoInterface<P, B, K>
 {
     // @staticmethod
-    fn _gen_keypair(rnd: &[u8]) -> (i32, i32) {
+    fn _gen_keypair(rnd: &[u8]) -> (String, String) {
         let (keys, _) = run_command(
             vec![
                 "java",
@@ -41,13 +41,13 @@ pub trait EcdhBase<
             false,
         );
         let keys: Vec<_> = keys.unwrap().split("\n").map(|s| s.to_owned()).collect();
-        let _keys = &keys[keys.len() - 2..];
+        let keys = &keys[keys.len() - 2..];
         //  i32(keys[0], 16), int(keys[1], 16)
-        (0, 0)
+        (keys[0].clone(),keys[1].clone())
     }
 
     // @staticmethod
-    fn _ecdh_sha256(other_pk: String, my_sk: Vec<u8>) -> Vec<u8> {
+    fn _ecdh_sha256(other_pk: String, my_sk: String) -> Vec<u8> {
         let (ret, _) = run_command(
             vec![
                 "java",
@@ -90,6 +90,7 @@ pub trait EcdhBase<
         // # Derive keys from randomness
         let (pk, sk) = Self::_gen_keypair(&rnd.into_bytes());
 
-        KeyPair::new(pk.to_string(), sk.to_string())
+        KeyPair::new(Value::<String,PublicKeyValue>::new(vec![pk],Some(self.params()),None), Value::<String,PrivateKeyValue>::new(vec![sk],None,None))
     }
+    
 }

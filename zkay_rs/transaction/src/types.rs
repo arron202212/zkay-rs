@@ -17,7 +17,7 @@ use zkay_config::{
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
 use std::ops::{Index,IndexMut,Range,RangeTo,RangeFrom,RangeFull,RangeToInclusive,RangeInclusive};
-#[derive(EnumIs, EnumTryAs,Clone, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Debug,EnumIs, EnumTryAs,Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub enum DataType {
     CipherValue(Value<String, CipherValue>),
     PrivateKeyValue(Value<String, PrivateKeyValue>),
@@ -42,7 +42,7 @@ impl From<bool> for DataType {
     }
 }
 
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Value<T: Clone + Default, V: Clone + Default> {
     pub contents: Vec<T>,
     pub value: V,
@@ -71,8 +71,8 @@ impl<T: Clone + Default, V: Clone + Default> Value<T, V> {
 
     //     fn __hash__(self):
     //         return self[:].__hash__()
-    pub fn lens(&self) -> usize {
-        0
+    pub fn len(&self) -> usize {
+        self.contents.len()
     }
     //     @staticmethod
     pub fn unwrap_values(v: Self) -> Self {
@@ -129,10 +129,10 @@ impl<T: Clone + Default, V: Clone + Default> Index<Range<usize>> for Value<T, V>
         &self.contents[range]
     }
 }
-impl<T: Clone + Default, V: Clone + Default> Index<RangeFull<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeFull> for Value<T, V>  {
     type Output = [T];
 
-    fn index(&self, range: RangeFull<usize>) -> &Self::Output {
+    fn index(&self, range: RangeFull) -> &Self::Output {
         &self.contents[range]
     }
 }
@@ -180,6 +180,13 @@ impl<T: Clone + Default, V: Clone + Default> IndexMut<usize> for Value<T, V>
 impl<T: Clone + Default, V: Clone + Default> IndexMut<Range<usize>> for Value<T, V> 
 {
     fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
+       &mut  self.contents[index]
+    }
+}
+
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFull> for Value<T, V> 
+{
+    fn index_mut(&mut self, index: RangeFull) -> &mut Self::Output {
        &mut  self.contents[index]
     }
 }
@@ -244,7 +251,7 @@ pub trait ParamLength {
     fn len(params: &CryptoParams) -> usize;
 }
 
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct CipherValue;
 impl CipherValue {
   #[inline]
@@ -282,10 +289,10 @@ impl ParamLength for CipherValue {
         params.cipher_len() as _
     }
 }
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PrivateKeyValue;
 
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PublicKeyValue;
 impl PublicKeyValue {
   #[inline]
@@ -304,7 +311,7 @@ impl ParamLength for PublicKeyValue {
 }
 
 use std::clone::Clone;
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RandomnessValue;
 impl RandomnessValue {
   #[inline]
@@ -323,7 +330,7 @@ impl ParamLength for RandomnessValue {
 }
 type Callable = fn(&AddressValue) -> i32;
 
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct AddressValue {
     get_balance: Option<Callable>,
 }
@@ -364,18 +371,18 @@ where
         write!(f, "{}", self.contents.clone())
     }
 }
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct KeyPair {
-    pub pk: String,
-    pub sk: String,
+    pub pk: Value<String,PublicKeyValue>,
+    pub sk: Value<String,PrivateKeyValue>,
 }
 // class KeyPair:
 impl KeyPair {
-    pub fn new(pk: String, sk: String) -> Self {
+    pub fn new(pk: Value<String,PublicKeyValue>, sk: Value<String,PrivateKeyValue>) -> Self {
         Self { pk, sk }
     }
 }
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct MsgStruct {
     pub sender: String,
     pub value: i32,
@@ -395,7 +402,7 @@ impl MsgStruct {
         self.value
     }
 }
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct BlockStruct {
     pub coinbase: String,
     pub difficulty: i32,
@@ -440,7 +447,7 @@ impl BlockStruct {
         self.timestamp
     }
 }
-#[derive(Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct TxStruct {
     pub gasprice: i32,
     pub origin: String,
