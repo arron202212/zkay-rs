@@ -7,17 +7,19 @@
 #![allow(unused_braces)]
 //::secrets
 // use typing::Tuple, List, Any
-use rccell::{RcCell, WeakCell};
 use crate::crypto::ecdh_base::EcdhBase;
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
     ZkayKeystoreInterface, ZkayProverInterface,
 };
-use crate::types::{AddressValue, KeyPair, PrivateKeyValue, CipherValue,Value,PublicKeyValue,DataType};
+use crate::types::{
+    AddressValue, CipherValue, DataType, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
+};
 use ark_ff::BigInteger256;
 use ark_std::rand;
 use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
 use rand::RngCore;
+use rccell::{RcCell, WeakCell};
 use rustc_serialize::hex::ToHex;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::run_command::run_command;
@@ -170,7 +172,11 @@ impl<
     fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<DataType>) -> Vec<String> {
         vec![]
     }
-    fn do_rerand(&self, _arg: Value<String,CipherValue>, _public_key: Vec<String>) -> (Vec<String>, Vec<u8>) {
+    fn do_rerand(
+        &self,
+        _arg: Value<String, CipherValue>,
+        _public_key: Vec<String>,
+    ) -> (Vec<String>, Vec<u8>) {
         (vec![], vec![])
     }
 }

@@ -5,10 +5,10 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
- use rccell::RcCell;
 use crate::interface::{ZkayBlockchainInterface, ZkayKeystoreInterface, ZkayProverInterface};
 use crate::runtime::BlockchainClass;
 use crate::types::{AddressValue, KeyPair, PublicKeyValue, Value};
+use rccell::RcCell;
 use std::collections::BTreeMap;
 use zkay_transaction_crypto_params::params::CryptoParams;
 // class SimpleKeystore(ZkayKeystoreInterface):
@@ -37,7 +37,7 @@ impl<P: ZkayProverInterface + Clone> ZkayKeystoreInterface<P, BlockchainClass<P>
     for SimpleKeystore<P, BlockchainClass<P>>
 {
     fn conn(&self) -> RcCell<BlockchainClass<P>> {
-         self.conn.clone()
+        self.conn.clone()
     }
     fn local_key_pairs(&self) -> RcCell<BTreeMap<String, KeyPair>> {
         self.local_key_pairs.clone()

@@ -6,9 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 // use typing::Optional, Collection, Any, Dict, Tuple, List, Union, Callable
-use strum_macros::{EnumIs, EnumTryAs};
 use std::marker::PhantomData;
+use std::ops::{
+    Index, IndexMut, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
+};
 use std::path::PathBuf;
+use strum_macros::{EnumIs, EnumTryAs};
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_config::{
     config::{zk_print_banner, CFG},
@@ -16,8 +19,7 @@ use zkay_config::{
     zk_print,
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
-use std::ops::{Index,IndexMut,Range,RangeTo,RangeFrom,RangeFull,RangeToInclusive,RangeInclusive};
-#[derive(Debug,EnumIs, EnumTryAs,Clone, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Debug, EnumIs, EnumTryAs, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub enum DataType {
     CipherValue(Value<String, CipherValue>),
     PrivateKeyValue(Value<String, PrivateKeyValue>),
@@ -30,19 +32,19 @@ pub enum DataType {
 }
 
 impl From<u128> for DataType {
-  #[inline]
+    #[inline]
     fn from(item: u128) -> Self {
         DataType::Int(item)
     }
 }
 impl From<bool> for DataType {
-  #[inline]
+    #[inline]
     fn from(item: bool) -> Self {
         DataType::Bool(item)
     }
 }
 
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Value<T: Clone + Default, V: Clone + Default> {
     pub contents: Vec<T>,
     pub value: V,
@@ -113,8 +115,7 @@ impl<T: Clone + Default, V: Clone + Default> Value<T, V> {
     //     @staticmethod
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<usize> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> Index<usize> for Value<T, V> {
     type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -122,21 +123,21 @@ impl<T: Clone + Default, V: Clone + Default> Index<usize> for Value<T, V>
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<Range<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<Range<usize>> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: Range<usize>) -> &Self::Output {
         &self.contents[range]
     }
 }
-impl<T: Clone + Default, V: Clone + Default> Index<RangeFull> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeFull> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: RangeFull) -> &Self::Output {
         &self.contents[range]
     }
 }
-impl<T: Clone + Default, V: Clone + Default> Index<RangeTo<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeTo<usize>> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: RangeTo<usize>) -> &Self::Output {
@@ -144,7 +145,7 @@ impl<T: Clone + Default, V: Clone + Default> Index<RangeTo<usize>> for Value<T, 
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<RangeFrom<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeFrom<usize>> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
@@ -152,7 +153,7 @@ impl<T: Clone + Default, V: Clone + Default> Index<RangeFrom<usize>> for Value<T
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<RangeToInclusive<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeToInclusive<usize>> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: RangeToInclusive<usize>) -> &Self::Output {
@@ -160,9 +161,7 @@ impl<T: Clone + Default, V: Clone + Default> Index<RangeToInclusive<usize>> for 
     }
 }
 
-
-
-impl<T: Clone + Default, V: Clone + Default> Index<RangeInclusive<usize>> for Value<T, V>  {
+impl<T: Clone + Default, V: Clone + Default> Index<RangeInclusive<usize>> for Value<T, V> {
     type Output = [T];
 
     fn index(&self, range: RangeInclusive<usize>) -> &Self::Output {
@@ -170,59 +169,47 @@ impl<T: Clone + Default, V: Clone + Default> Index<RangeInclusive<usize>> for Va
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> IndexMut<usize> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<usize> for Value<T, V> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.contents.get_mut(index).unwrap()
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> IndexMut<Range<usize>> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<Range<usize>> for Value<T, V> {
     fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFull> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFull> for Value<T, V> {
     fn index_mut(&mut self, index: RangeFull) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
 
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFrom<usize>> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFrom<usize>> for Value<T, V> {
     fn index_mut(&mut self, index: RangeFrom<usize>) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
 
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeTo<usize>> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeTo<usize>> for Value<T, V> {
     fn index_mut(&mut self, index: RangeTo<usize>) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
 
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeToInclusive<usize>> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeToInclusive<usize>> for Value<T, V> {
     fn index_mut(&mut self, index: RangeToInclusive<usize>) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
 
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeInclusive<usize>> for Value<T, V> 
-{
+impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeInclusive<usize>> for Value<T, V> {
     fn index_mut(&mut self, index: RangeInclusive<usize>) -> &mut Self::Output {
-       &mut  self.contents[index]
+        &mut self.contents[index]
     }
 }
-
 
 pub trait ValueContent<T> {
     fn get_params(params: Option<CryptoParams>, crypto_backend: Option<String>) -> CryptoParams {
@@ -251,10 +238,10 @@ pub trait ParamLength {
     fn len(params: &CryptoParams) -> usize;
 }
 
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct CipherValue;
 impl CipherValue {
-  #[inline]
+    #[inline]
     pub fn data_type(crypto_backend: &str) -> DataType {
         DataType::CipherValue(Value::<String, CipherValue>::new(
             vec![],
@@ -289,13 +276,13 @@ impl ParamLength for CipherValue {
         params.cipher_len() as _
     }
 }
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PrivateKeyValue;
 
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct PublicKeyValue;
 impl PublicKeyValue {
-  #[inline]
+    #[inline]
     pub fn data_type(crypto_backend: &str) -> DataType {
         DataType::PublicKeyValue(Value::<String, PublicKeyValue>::new(
             vec![],
@@ -311,10 +298,10 @@ impl ParamLength for PublicKeyValue {
 }
 
 use std::clone::Clone;
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RandomnessValue;
 impl RandomnessValue {
-  #[inline]
+    #[inline]
     pub fn data_type(crypto_backend: &str) -> DataType {
         DataType::RandomnessValue(Value::<String, RandomnessValue>::new(
             vec![],
@@ -330,7 +317,7 @@ impl ParamLength for RandomnessValue {
 }
 type Callable = fn(&AddressValue) -> i32;
 
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct AddressValue {
     get_balance: Option<Callable>,
 }
@@ -371,18 +358,18 @@ where
         write!(f, "{}", self.contents.clone())
     }
 }
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct KeyPair {
-    pub pk: Value<String,PublicKeyValue>,
-    pub sk: Value<String,PrivateKeyValue>,
+    pub pk: Value<String, PublicKeyValue>,
+    pub sk: Value<String, PrivateKeyValue>,
 }
 // class KeyPair:
 impl KeyPair {
-    pub fn new(pk: Value<String,PublicKeyValue>, sk: Value<String,PrivateKeyValue>) -> Self {
+    pub fn new(pk: Value<String, PublicKeyValue>, sk: Value<String, PrivateKeyValue>) -> Self {
         Self { pk, sk }
     }
 }
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct MsgStruct {
     pub sender: String,
     pub value: i32,
@@ -402,7 +389,7 @@ impl MsgStruct {
         self.value
     }
 }
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct BlockStruct {
     pub coinbase: String,
     pub difficulty: i32,
@@ -447,7 +434,7 @@ impl BlockStruct {
         self.timestamp
     }
 }
-#[derive(Debug,Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct TxStruct {
     pub gasprice: i32,
     pub origin: String,

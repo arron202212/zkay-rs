@@ -43,7 +43,7 @@ pub trait EcdhBase<
         let keys: Vec<_> = keys.unwrap().split("\n").map(|s| s.to_owned()).collect();
         let keys = &keys[keys.len() - 2..];
         //  i32(keys[0], 16), int(keys[1], 16)
-        (keys[0].clone(),keys[1].clone())
+        (keys[0].clone(), keys[1].clone())
     }
 
     // @staticmethod
@@ -90,7 +90,9 @@ pub trait EcdhBase<
         // # Derive keys from randomness
         let (pk, sk) = Self::_gen_keypair(&rnd.into_bytes());
 
-        KeyPair::new(Value::<String,PublicKeyValue>::new(vec![pk],Some(self.params()),None), Value::<String,PrivateKeyValue>::new(vec![sk],None,None))
+        KeyPair::new(
+            Value::<String, PublicKeyValue>::new(vec![pk], Some(self.params()), None),
+            Value::<String, PrivateKeyValue>::new(vec![sk], None, None),
+        )
     }
-    
 }

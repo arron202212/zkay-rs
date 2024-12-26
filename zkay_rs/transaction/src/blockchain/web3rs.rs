@@ -32,7 +32,9 @@ use zkay_config::{
 use zkay_transaction_crypto_params::params::CryptoParams;
 // , IntegrityError, BlockChainError,
 //     TransactionFailedException
-use crate::types::{AddressValue, BlockStruct, MsgStruct, PublicKeyValue, TxStruct, Value,DataType};
+use crate::types::{
+    AddressValue, BlockStruct, DataType, MsgStruct, PublicKeyValue, TxStruct, Value,
+};
 use ast_builder::process_ast::get_verification_contract_names;
 use rccell::RcCell;
 use zkay_ast::global_defs::{
@@ -50,16 +52,16 @@ pub struct Web3BlockchainBase<P: ZkayProverInterface, W> {
     _lib_addresses: RcCell<Option<BTreeMap<String, JsonValue>>>,
     _pki_contract: RcCell<Option<BTreeMap<String, JsonValue>>>,
     prover: P,
-    next_acc_idx:RcCell<i32>,
+    next_acc_idx: RcCell<i32>,
     _web3: PhantomData<W>,
 }
 impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
     pub fn new(prover: P) -> Self {
         Self {
             prover,
-            _lib_addresses:RcCell::new(None),
+            _lib_addresses: RcCell::new(None),
             _pki_contract: RcCell::new(None),
-            next_acc_idx:RcCell::new(0),
+            next_acc_idx: RcCell::new(0),
             _web3: PhantomData,
         }
     }
@@ -68,8 +70,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
     fn prover(&self) -> &P {
         &self.prover
     }
-    fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, JsonValue>>>
-    {
+    fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, JsonValue>>> {
         self._pki_contract.clone()
     }
     fn default_address(&self) -> Option<AddressValue> {
@@ -170,7 +171,13 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
     ) {
         //         with log_context(f"announcePk"):
         let pki_contract = self.pki_contract(&crypto_params.crypto_name);
-        self._transact(&pki_contract, address, "announcePk", &vec![DataType::PublicKeyValue(pk.clone())], None)
+        self._transact(
+            &pki_contract,
+            address,
+            "announcePk",
+            &vec![DataType::PublicKeyValue(pk.clone())],
+            None,
+        )
     }
 
     fn _req_state_var<R: Clone + Default>(
@@ -275,7 +282,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
     ) -> BTreeMap<String, JsonValue> {
         // # Deploy verification contracts if not already done
         let mut vf = BTreeMap::new();
-        let lib_addresses=self.lib_addresses();
+        let lib_addresses = self.lib_addresses();
         for verifier_name in verifier_names {
             with_context_block!(var _a= log_context("constructor")=>{
                 with_context_block!(var _b=log_context(&format!("{verifier_name}"))=>{
@@ -369,7 +376,11 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
                 true,
                 None,
             );
-            self._lib_addresses.borrow_mut().as_mut().unwrap().insert(lib.clone(), out);
+            self._lib_addresses
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .insert(lib.clone(), out);
         }
         // self._lib_addresses = _lib_addresses;
         // });
@@ -539,7 +550,11 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         let solp = sol_filename; //std::path::PathBuf::from(sol_filename);
         let jout = compile_solidity_json(
             &sol_filename.to_string_lossy().to_string(),
-            libs.map(|s| s.into_iter().map(|(k, v)| (k.clone(), v.to_string())).collect()),
+            libs.map(|s| {
+                s.into_iter()
+                    .map(|(k, v)| (k.clone(), v.to_string()))
+                    .collect()
+            }),
             CFG.lock().unwrap().opt_solc_optimizer_runs(),
             vec![],
             cwd,
@@ -564,8 +579,16 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         //     bytecode=contract_interface["bin"]
         // );
 
-        let _tx_receipt =
-            self._transact(&"contract".into(), sender, "constructor", &args.into_iter().map(|s|DataType::String(s.clone())).collect(), wei_amount);
+        let _tx_receipt = self._transact(
+            &"contract".into(),
+            sender,
+            "constructor",
+            &args
+                .into_iter()
+                .map(|s| DataType::String(s.clone()))
+                .collect(),
+            wei_amount,
+        );
         // let contract = self.w3.eth.contract(
         //     tx_receipt.contractAddress, contract_interface["abi"]
         // );
@@ -627,7 +650,7 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
     fn is_debug_backend(&self) -> bool {
         true
     }
-    fn next_acc_idx(&self) -> RcCell<i32>{
+    fn next_acc_idx(&self) -> RcCell<i32> {
         self.next_acc_idx.clone()
     }
     fn _connect_libraries(&self) {
@@ -718,7 +741,7 @@ pub struct Web3HttpBlockchain;
 //          Web3(Web3.HTTPProvider(cfg.blockchain_node_uri))}
 // }
 #[derive(Clone)]
-pub struct Web3HttpGanacheBlockchain { 
+pub struct Web3HttpGanacheBlockchain {
     next_acc_idx: i32,
 }
 // class Web3HttpGanacheBlockchain(Web3HttpBlockchain):

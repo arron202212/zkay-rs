@@ -39,8 +39,8 @@ use crate::interface::{
 };
 use crate::runtime::Runtime;
 use crate::types::{
-    AddressValue, BlockStruct, CipherValue, MsgStruct, PrivateKeyValue, PublicKeyValue,
-    RandomnessValue, TxStruct, Value,DataType
+    AddressValue, BlockStruct, CipherValue, DataType, MsgStruct, PrivateKeyValue, PublicKeyValue,
+    RandomnessValue, TxStruct, Value,
 };
 use ark_ff::{BigInteger, BigInteger256, Field, MontFp, PrimeField};
 use zkay_ast::homomorphism::Homomorphism;
@@ -96,13 +96,7 @@ impl<
         self.__state.clear();
     }
     // """Define the wrapper constructor for a state variable."""= CFG.lock().unwrap().main_crypto_backend
-    pub fn decl(
-        &self,
-        name: &str,
-        constructor: CallableType,
-        cipher: bool,
-        crypto_backend: &str,
-    ) {
+    pub fn decl(&self, name: &str, constructor: CallableType, cipher: bool, crypto_backend: &str) {
         let crypto_backend = if crypto_backend.is_empty() {
             CFG.lock().unwrap().main_crypto_backend()
         } else {
@@ -184,9 +178,9 @@ impl<
                 .concat();
 
         // # Retrieve from state scope
-        
-        if cache  {
-            if let v@Some(_)=self.__state.get(&loc) {
+
+        if cache {
+            if let v @ Some(_) = self.__state.get(&loc) {
                 return v;
             }
         }
@@ -356,8 +350,7 @@ impl<
         K: ZkayKeystoreInterface<P, B> + Clone,
     > ContractSimulatorConfig<C, P, B, K> for CS
 {
-    fn api(& self) -> RcCell<ApiWrapper<P, B, K>>
-    {
+    fn api(&self) -> RcCell<ApiWrapper<P, B, K>> {
         self.contract_simulator_ref().borrow().api.clone()
     }
     fn locals(&self) -> RcCell<LocalsDict> {
@@ -483,8 +476,13 @@ impl<
     ) -> Self {
         // # Transaction instance values (reset between transactions)
         // let  mut runtime=Runtime::<P,B,SimpleKeystore<P, BlockchainClass<P>>>::new();
-        let api =
-            RcCell::new(ApiWrapper::<P, B, K>::new(project_dir, contract_name, user_addr, runtime.clone(), k));
+        let api = RcCell::new(ApiWrapper::<P, B, K>::new(
+            project_dir,
+            contract_name,
+            user_addr,
+            runtime.clone(),
+            k,
+        ));
 
         // """Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables"""
         let locals = RcCell::new(LocalsDict { _scopes: vec![] });
@@ -595,14 +593,14 @@ pub struct ApiWrapper<
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    __conn:RcCell<Option<BlockchainClass<P>>>,
-    __keystore: RcCell<BTreeMap<String,RcCell<K>>>,
+    __conn: RcCell<Option<BlockchainClass<P>>>,
+    __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
     __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
     __prover: RcCell<Option<JsnarkProver>>,
     __project_dir: RcCell<String>,
     __contract_name: RcCell<String>,
     __contract_handle: RcCell<Option<JsonValue>>,
-    __user_addr:RcCell <String>,
+    __user_addr: RcCell<String>,
     __current_msg: RcCell<Option<MsgStruct>>,
     __current_block: RcCell<Option<BlockStruct>>,
     __current_tx: RcCell<Option<TxStruct>>,
@@ -633,13 +631,15 @@ impl<
         for crypto_params in CFG.lock().unwrap().all_crypto_params() {
             __keystore.insert(
                 crypto_params.clone(),
-                runtime.borrow()
+                runtime
+                    .borrow()
                     .keystore(&CryptoParams::new(crypto_params.clone()), k.clone())
                     .clone(),
             );
             __crypto.insert(
                 crypto_params.clone(),
-                runtime.borrow()
+                runtime
+                    .borrow()
                     .crypto(&CryptoParams::new(crypto_params.clone()), k.clone())
                     .clone(),
             );
@@ -682,8 +682,8 @@ impl<
         let is_external: RcCell<Option<bool>> = RcCell::new(None);
         Self {
             __conn,
-            __keystore:RcCell::new(__keystore),
-            __crypto:RcCell::new(__crypto),
+            __keystore: RcCell::new(__keystore),
+            __crypto: RcCell::new(__crypto),
             __prover,
             __project_dir,
             __contract_name,
@@ -709,23 +709,25 @@ impl<
     }
 
     // @property
-    pub fn keystore(&self) -> RcCell<K>  {
+    pub fn keystore(&self) -> RcCell<K> {
         // # Method only exists for compatibility, new code generators only generate calls to get_keystore
         self.get_keystore(&CFG.lock().unwrap().main_crypto_backend())
     }
 
-    pub fn get_keystore(&self, crypto_backend: &str) -> RcCell<K>  {
+    pub fn get_keystore(&self, crypto_backend: &str) -> RcCell<K> {
         self.__keystore.borrow()[crypto_backend].clone()
     }
 
-    pub fn get_my_sk(&self, _crypto_backend: &str) -> Value<String,PrivateKeyValue> {
+    pub fn get_my_sk(&self, _crypto_backend: &str) -> Value<String, PrivateKeyValue> {
         // = CFG.lock().unwrap().main_crypto_backend
         // self.__keystore[crypto_backend].sk(&self.user_address())
-        Value::<String,PrivateKeyValue>::default()
+        Value::<String, PrivateKeyValue>::default()
     }
     // = CFG.lock().unwrap().main_crypto_backend
-    pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String,PublicKeyValue> {
-        self.__keystore.borrow()[crypto_backend].borrow().pk(&self.user_address())
+    pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String, PublicKeyValue> {
+        self.__keystore.borrow()[crypto_backend]
+            .borrow()
+            .pk(&self.user_address())
     }
 
     pub fn call_fct<F: Fn()>(&self, sec_offset: i32, fct: F) {
@@ -756,7 +758,10 @@ impl<
         wei_amount: Option<i32>,
     ) -> Option<JsonValue> {
         *self.__contract_handle.borrow_mut() = self
-            .__conn.borrow().as_ref().unwrap()
+            .__conn
+            .borrow()
+            .as_ref()
+            .unwrap()
             .deploy(
                 &self.__project_dir.borrow(),
                 &self.__user_addr.borrow(),
@@ -779,7 +784,10 @@ impl<
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
     ) {
         *self.__contract_handle.borrow_mut() = self
-            .__conn.borrow().as_ref().unwrap()
+            .__conn
+            .borrow()
+            .as_ref()
+            .unwrap()
             .connect::<PS>(
                 &self.__project_dir.borrow(),
                 &self.__contract_name.borrow(),
@@ -829,18 +837,20 @@ impl<
                 callable,
             )
         } else {
-            DataType::List([retvals]
-                .iter()
-                .zip(ret_val_constructors)
-                .map(|(retval, (is_cipher, homomorphism, constr))| {
-                    self.__get_decrypted_retval(
-                        BigInteger256::from_str(retval).unwrap(),
-                        is_cipher,
-                        homomorphism,
-                        constr,
-                    )
-                })
-                .collect())
+            DataType::List(
+                [retvals]
+                    .iter()
+                    .zip(ret_val_constructors)
+                    .map(|(retval, (is_cipher, homomorphism, constr))| {
+                        self.__get_decrypted_retval(
+                            BigInteger256::from_str(retval).unwrap(),
+                            is_cipher,
+                            homomorphism,
+                            constr,
+                        )
+                    })
+                    .collect(),
+            )
         }
     }
     pub fn __get_decrypted_retval(
@@ -883,7 +893,10 @@ impl<
 
     pub fn update_special_variables(&self, wei_amount: i32) {
         let (__current_msg, __current_block, __current_tx) = self
-            .__conn.borrow().as_ref().unwrap()
+            .__conn
+            .borrow()
+            .as_ref()
+            .unwrap()
             .get_special_variables(&self.__user_addr.borrow(), wei_amount);
         (
             *self.__current_msg.borrow_mut(),
@@ -914,11 +927,12 @@ impl<
         Option<Value<String, RandomnessValue>>,
     ) {
         let target_addr = target_addr.map_or(self.__user_addr.borrow().clone(), |ta| ta);
-        self.__crypto.borrow().get(crypto_backend).unwrap().borrow().enc(
-            plain.to_string(),
-            &self.__user_addr.borrow(),
-            &target_addr,
-        )
+        self.__crypto
+            .borrow()
+            .get(crypto_backend)
+            .unwrap()
+            .borrow()
+            .enc(plain.to_string(), &self.__user_addr.borrow(), &target_addr)
     }
     //= CFG.lock().unwrap().main_crypto_backend
     pub fn dec(
@@ -927,7 +941,10 @@ impl<
         constr: CallableType,
         crypto_backend: &str,
     ) -> (DataType, Option<Value<String, RandomnessValue>>) {
-        let res = self.__crypto.borrow()[crypto_backend].borrow().dec(cipher.try_as_cipher_value_ref().unwrap(), &self.__user_addr.borrow());
+        let res = self.__crypto.borrow()[crypto_backend].borrow().dec(
+            cipher.try_as_cipher_value_ref().unwrap(),
+            &self.__user_addr.borrow(),
+        );
         (constr(res.0.to_string()), res.1)
     }
 
@@ -937,12 +954,14 @@ impl<
         crypto_backend: &str,
         target_addr: String,
         args: Vec<DataType>,
-    ) ->Value<String,CipherValue>{
+    ) -> Value<String, CipherValue> {
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
-            .__keystore.borrow()
+            .__keystore
+            .borrow()
             .get(&params.crypto_name)
-            .unwrap().borrow()
+            .unwrap()
+            .borrow()
             .getPk(&target_addr);
         // assert!(
         //     args.iter().all(|arg| !(isinstance(arg, CipherValue)
@@ -953,7 +972,7 @@ impl<
         let mut crypto_inst = self.__crypto.borrow()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
         let result = crypto_inst.borrow().do_op(op, pk[..].to_vec(), args);
-        Value::<String,CipherValue>::new(result, Some(params),None)
+        Value::<String, CipherValue>::new(result, Some(params), None)
     }
 
     // """
@@ -961,7 +980,7 @@ impl<
     // """
     pub fn do_rerand(
         &self,
-        arg: Value<String,CipherValue>,
+        arg: Value<String, CipherValue>,
         crypto_backend: &str,
         target_addr: String,
         data: &mut BTreeMap<String, String>,
@@ -969,9 +988,11 @@ impl<
     ) {
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
-            .__keystore.borrow()
+            .__keystore
+            .borrow()
             .get(&params.crypto_name)
-            .unwrap().borrow()
+            .unwrap()
+            .borrow()
             .getPk(&target_addr);
         let mut crypto_inst = self.__crypto.borrow()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
@@ -989,8 +1010,11 @@ impl<
         );
 
         if count == 0 {
-            self.__conn.borrow().as_ref().unwrap()
-                .req_state_var(self.__contract_handle.borrow().as_ref().unwrap(), name, &indices)
+            self.__conn.borrow().as_ref().unwrap().req_state_var(
+                self.__contract_handle.borrow().as_ref().unwrap(),
+                name,
+                &indices,
+            )
         } else {
             (0..count)
                 .map(|_i| {
@@ -1067,22 +1091,22 @@ impl<
             })
             .sum::<i32>();
         let mut zk_out = vec![count.to_string()];
-        Self::__serialize_circuit_array(out_vals,&mut  zk_out, 0, out_elem_bitwidths);
+        Self::__serialize_circuit_array(out_vals, &mut zk_out, 0, out_elem_bitwidths);
         zk_out
     }
     pub fn serialize_private_inputs(
         &self,
-        zk_priv: BTreeMap<String, DataType>,            
+        zk_priv: BTreeMap<String, DataType>,
         priv_elem_bitwidths: Vec<i32>,
     ) {
-        let mut all_priv_values= self.all_priv_values.borrow().as_ref().unwrap().clone();
+        let mut all_priv_values = self.all_priv_values.borrow().as_ref().unwrap().clone();
         Self::__serialize_circuit_array(
             zk_priv,
             &mut all_priv_values,
             self.current_all_index.borrow().as_ref().unwrap().clone(),
             priv_elem_bitwidths,
         );
-        *self.all_priv_values.borrow_mut()=Some(all_priv_values);
+        *self.all_priv_values.borrow_mut() = Some(all_priv_values);
     }
 
     pub fn gen_proof(

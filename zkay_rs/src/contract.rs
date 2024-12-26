@@ -17,8 +17,8 @@
 // from enum import IntEnum
 // from typing import Dict, List, Tuple, Optional, Union, Any
 use my_logging;
-use rccell::RcCell;
 use proving_scheme::proving_scheme::ProvingScheme;
+use rccell::RcCell;
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 use zkay_config::{
@@ -35,7 +35,9 @@ use zkay_transaction::offchain::{
     ContractSimulator, ContractSimulatorConfig, ContractSimulatorRef, BN128_SCALAR_FIELDS,
 };
 use zkay_transaction::solidity_math::*;
-use zkay_transaction::types::{AddressValue,DataType,PublicKeyValue,Value,CipherValue,RandomnessValue,PrivateKeyValue};
+use zkay_transaction::types::{
+    AddressValue, CipherValue, DataType, PrivateKeyValue, PublicKeyValue, RandomnessValue, Value,
+};
 use zkay_utils::timer::time_measure;
 // me = None
 
@@ -87,40 +89,54 @@ impl<
         mut contract_simulator: RcCell<ContractSimulator<C, P, B, K>>,
     ) -> Self {
         // super().__init__(project_dir, user_addr, "Survey");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("organizer", convert_type, false, "");
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "organizer",
+            convert_type,
+            false,
+            "",
+        );
         contract_simulator.borrow_mut().state.borrow_mut().decl(
             "current_votes",
             convert_type,
             true,
             "ecdh-chaskey",
         );
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("a_count", convert_type, true, "elgamal");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("b_count", convert_type, true, "elgamal");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("c_count", convert_type, true, "elgamal");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("min_votes", convert_type, false, "");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("vote_count", convert_type, false, "");
-        contract_simulator.borrow_mut()
-            .state
-            .borrow_mut()
-            .decl("packed_results", convert_type, false, "");
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "a_count",
+            convert_type,
+            true,
+            "elgamal",
+        );
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "b_count",
+            convert_type,
+            true,
+            "elgamal",
+        );
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "c_count",
+            convert_type,
+            true,
+            "elgamal",
+        );
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "min_votes",
+            convert_type,
+            false,
+            "",
+        );
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "vote_count",
+            convert_type,
+            false,
+            "",
+        );
+        contract_simulator.borrow_mut().state.borrow_mut().decl(
+            "packed_results",
+            convert_type,
+            false,
+            "",
+        );
         Self { contract_simulator }
     }
 
@@ -216,7 +232,7 @@ impl<
                         }
                     });
                 });
-       DataType::String(String::new())
+        DataType::String(String::new())
     }
     // get_result_for._can_be_external = True
 
@@ -283,7 +299,7 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return self.api().borrow().call("min_votes_reached", actual_params,vec![(false, "None".to_string(), convert_type)]).try_as_bool().unwrap()
+                            return self.api().borrow().call("min_votes_reached() public view returns (bool)", actual_params,vec![(false, "None".to_string(), convert_type)]).try_as_bool().unwrap()
                         }
                     });
                 });
@@ -311,7 +327,7 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return *self.api().borrow().call("is_result_published", actual_params, vec![(false, "None".to_string(), convert_type)]).try_as_bool_ref().unwrap()
+                            return *self.api().borrow().call("is_result_published() public view returns (bool)", actual_params, vec![(false, "None".to_string(), convert_type)]).try_as_bool_ref().unwrap()
                         }
                     });
                 });
@@ -321,67 +337,67 @@ impl<
 
     fn vote(&self, votum: u8) {
         with_context_block!(var _fc=self._function_ctx(7,0,"vote") =>{
-        let (zk__is_ext,_fc)=_fc;
-                     with_context_block!(var _tm=time_measure("transaction_full", !zk__is_ext,false)=>{
-                        assert!( zk__is_ext);
-                        let (msg, block,_tx) = self.api().borrow().get_special_variables();
-                        let _now = block.borrow().as_ref().unwrap().timestamp;
+                let (zk__is_ext,_fc)=_fc;
+                             with_context_block!(var _tm=time_measure("transaction_full", !zk__is_ext,false)=>{
+                                assert!( zk__is_ext);
+                                let (msg, block,_tx) = self.api().borrow().get_special_variables();
+                                let _now = block.borrow().as_ref().unwrap().timestamp;
 
-                        let mut zk__priv =
-                            BTreeMap::from([("glob_sk_Ecdh_Chaskey__me", PublicKeyValue::data_type("ecdh-chaskey")), 
-("votum", DataType::Int(0))]);
+                                let mut zk__priv =
+                                    BTreeMap::from([("glob_sk_Ecdh_Chaskey__me", PublicKeyValue::data_type("ecdh-chaskey")),
+        ("votum", DataType::Int(0))]);
 
 
-                        // Encrypt parameters
-                        zk__priv.insert("votum",DataType::Int(votum as u128));
-                        let mut d=self.api().borrow().enc(*zk__priv["votum"].try_as_int_ref().unwrap() as i32,None, "ecdh-chaskey").0.contents.clone();
-                        d.pop();
-                        d.push(self.api().borrow().get_my_pk("ecdh-chaskey")[0].to_string());
-                        let votum=  DataType::CipherValue(Value::<String,CipherValue>::new(d,None,Some("ecdh-chaskey".to_owned())));
-                        let mut actual_params = vec![votum.clone()];
-                        let zk__out = vec![DataType::Int(0);25];
-                        actual_params.push(DataType::List(zk__out.clone()));
-                        let mut zk__in = vec![DataType::Int(0);28];
-                        // BEGIN Simulate body
-                         with_context_block!(var _sc=self._scope()=>{
-                            zk__priv.insert("glob_sk_Ecdh_Chaskey__me",DataType::PrivateKeyValue(self.api().borrow().get_my_sk("ecdh-chaskey")));
-                            assert!(zk__out.len() == 25,"require(zk__out.length == 25) failed");
+                                // Encrypt parameters
+                                zk__priv.insert("votum",DataType::Int(votum as u128));
+                                let mut d=self.api().borrow().enc(*zk__priv["votum"].try_as_int_ref().unwrap() as i32,None, "ecdh-chaskey").0.contents.clone();
+                                d.pop();
+                                d.push(self.api().borrow().get_my_pk("ecdh-chaskey")[0].to_string());
+                                let votum=  DataType::CipherValue(Value::<String,CipherValue>::new(d,None,Some("ecdh-chaskey".to_owned())));
+                                let mut actual_params = vec![votum.clone()];
+                                let zk__out = vec![DataType::Int(0);25];
+                                actual_params.push(DataType::List(zk__out.clone()));
+                                let mut zk__in = vec![DataType::Int(0);28];
+                                // BEGIN Simulate body
+                                 with_context_block!(var _sc=self._scope()=>{
+                                    zk__priv.insert("glob_sk_Ecdh_Chaskey__me",DataType::PrivateKeyValue(self.api().borrow().get_my_sk("ecdh-chaskey")));
+                                    assert!(zk__out.len() == 25,"require(zk__out.length == 25) failed");
 
-                            // Request static public keys
-                            // {
-                            let mut _tmp_key_Ecdh_Chaskey = PublicKeyValue::data_type("ecdh-chaskey");
-                            let mut _tmp_key_Elgamal  = PublicKeyValue::data_type("elgamal");
-                             _tmp_key_Ecdh_Chaskey = DataType::PublicKeyValue(self.api().borrow().get_keystore("ecdh-chaskey").borrow().getPk(&msg.borrow().as_ref().unwrap().sender));
-                            zk__in[0] = DataType::String(_tmp_key_Ecdh_Chaskey.try_as_public_key_value_ref().unwrap()[0].clone());
-                            let organizer=self.state().borrow()[&["organizer"]].try_as_string_ref().unwrap().clone();
-                            _tmp_key_Elgamal =  DataType::PublicKeyValue(self.api().borrow().get_keystore("elgamal").borrow().getPk(&organizer));
-                            zk__in[1..3].clone_from_slice(&_tmp_key_Elgamal.try_as_public_key_value_ref().unwrap()[..2].iter().map(|s|DataType::String(s.clone())).collect::<Vec<_>>()) ;
-                            // }
+                                    // Request static public keys
+                                    // {
+                                    let mut _tmp_key_Ecdh_Chaskey = PublicKeyValue::data_type("ecdh-chaskey");
+                                    let mut _tmp_key_Elgamal  = PublicKeyValue::data_type("elgamal");
+                                     _tmp_key_Ecdh_Chaskey = DataType::PublicKeyValue(self.api().borrow().get_keystore("ecdh-chaskey").borrow().getPk(&msg.borrow().as_ref().unwrap().sender));
+                                    zk__in[0] = DataType::String(_tmp_key_Ecdh_Chaskey.try_as_public_key_value_ref().unwrap()[0].clone());
+                                    let organizer=self.state().borrow()[&["organizer"]].try_as_string_ref().unwrap().clone();
+                                    _tmp_key_Elgamal =  DataType::PublicKeyValue(self.api().borrow().get_keystore("elgamal").borrow().getPk(&organizer));
+                                    zk__in[1..3].clone_from_slice(&_tmp_key_Elgamal.try_as_public_key_value_ref().unwrap()[..2].iter().map(|s|DataType::String(s.clone())).collect::<Vec<_>>()) ;
+                                    // }
 
-                            // Backup private arguments for verification
-                            // {
-                            zk__in[3..5].clone_from_slice( &votum.try_as_cipher_value_ref().unwrap()[..2].iter().map(|s|DataType::String(s.clone())).collect::<Vec<_>>());
+                                    // Backup private arguments for verification
+                                    // {
+                                    zk__in[3..5].clone_from_slice( &votum.try_as_cipher_value_ref().unwrap()[..2].iter().map(|s|DataType::String(s.clone())).collect::<Vec<_>>());
 
-                            // Copy from calldata to memory and set sender field
-                            self.locals().borrow_mut().decl("votum", DataType::CipherValue(Value::<String,CipherValue>::new(vec![votum.try_as_cipher_value_ref().unwrap()[0].clone(), votum.try_as_cipher_value_ref().unwrap()[1].clone(), zk__in[0].try_as_string_ref().unwrap().clone()],None,Some("ecdh-chaskey".to_owned()))));
-                            // }
+                                    // Copy from calldata to memory and set sender field
+                                    self.locals().borrow_mut().decl("votum", DataType::CipherValue(Value::<String,CipherValue>::new(vec![votum.try_as_cipher_value_ref().unwrap()[0].clone(), votum.try_as_cipher_value_ref().unwrap()[1].clone(), zk__in[0].try_as_string_ref().unwrap().clone()],None,Some("ecdh-chaskey".to_owned()))));
+                                    // }
 
-                            // Call internal function
-                            self.api().borrow().call_fct(2, ||{self._zk__vote(self.locals().borrow()["votum"].clone(), zk__in.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), 5, zk__out.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), 0);} );
+                                    // Call internal function
+                                    self.api().borrow().call_fct(2, ||{self._zk__vote(self.locals().borrow()["votum"].clone(), zk__in.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), 5, zk__out.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), 0);} );
+                                });
+                                // END Simulate body
+
+                                // Serialize circuit outputs and/or secret circuit inputs
+                                self.api().borrow().serialize_private_inputs(zk__priv.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![0, 256]);
+
+                                //Generate proof
+                                let proof = self.api().borrow().gen_proof("vote", zk__in.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), zk__out.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect());
+                                actual_params.push(DataType::List(proof.into_iter().map(|s|DataType::String(s)).collect()));
+                                // let actual_params:Vec<_>=actual_params.into_iter().flatten().collect();
+                                // Invoke public transaction
+                                return self.api().borrow().transact("vote", actual_params, vec![true, false, false],None)
+                            });
                         });
-                        // END Simulate body
-
-                        // Serialize circuit outputs and/or secret circuit inputs
-                        self.api().borrow().serialize_private_inputs(zk__priv.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![0, 256]);
-
-                        //Generate proof
-                        let proof = self.api().borrow().gen_proof("vote", zk__in.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect(), zk__out.iter().map(|s|s.try_as_string_ref().unwrap().clone()).collect());
-                        actual_params.push(DataType::List(proof.into_iter().map(|s|DataType::String(s)).collect()));
-                        // let actual_params:Vec<_>=actual_params.into_iter().flatten().collect();
-                        // Invoke public transaction
-                        return self.api().borrow().transact("vote", actual_params, vec![true, false, false],None)
-                    });
-                });
     }
     // vote._can_be_external = True
 
@@ -393,7 +409,8 @@ impl<
         mut zk__out: Vec<String>,
         zk__out_start_idx: i32,
     ) {
-        let (zk__in_start_idx,zk__out_start_idx)=(zk__in_start_idx as usize,zk__out_start_idx as usize);
+        let (zk__in_start_idx, zk__out_start_idx) =
+            (zk__in_start_idx as usize, zk__out_start_idx as usize);
         with_context_block!(var _fc=self._function_ctx(5,0,"?") =>{
         let (zk__is_ext,_fc)=_fc;
                     assert! (!zk__is_ext);
@@ -402,7 +419,7 @@ impl<
                     let _now = block.borrow().as_ref().unwrap().timestamp;
 
                     let mut zk__priv =
-                        BTreeMap::from([("secret0_plain_votum", DataType::Int(0)), ("secret1_plain", DataType::Int(0)), 
+                        BTreeMap::from([("secret0_plain_votum", DataType::Int(0)), ("secret1_plain", DataType::Int(0)),
                         ("zk__out1_cipher_R", RandomnessValue::data_type("elgamal")), ("zk__out3_cipher_R", RandomnessValue::data_type("elgamal")),
                         ("zk__out5_cipher_R", RandomnessValue::data_type("elgamal"))]);
                     let  mut zk__data;// = BTreeMap::new();
@@ -412,13 +429,13 @@ impl<
                         assert!((zk__out_start_idx + 25) <= zk__out.len() ,"require(zk__out_start_idx + 25 <= zk__out.length) failed");
                         assert!((zk__in_start_idx + 23) <= zk__in.len(),"require(zk__in_start_idx + 23 <= zk__in.length) failed");
                         zk__data = BTreeMap::from([
-                            ("zk__out0_plain", DataType::Bool(false)), ("zk__out1_cipher", CipherValue::data_type("elgamal")), 
+                            ("zk__out0_plain", DataType::Bool(false)), ("zk__out1_cipher", CipherValue::data_type("elgamal")),
                             ("zk__out2_cipher", CipherValue::data_type("elgamal")), ("zk__out3_cipher", CipherValue::data_type("elgamal")),
                             ("zk__out4_cipher", CipherValue::data_type("elgamal")), ("zk__out5_cipher",CipherValue::data_type("elgamal")),
                              ("zk__out6_cipher", CipherValue::data_type("elgamal")), ("zk__in0_cipher_votum", CipherValue::data_type("ecdh-chaskey")),
-                            ("zk__in1_key_sender", PublicKeyValue::data_type("ecdh-chaskey")), ("zk__in2_plain", DataType::Int(0)), 
+                            ("zk__in1_key_sender", PublicKeyValue::data_type("ecdh-chaskey")), ("zk__in2_plain", DataType::Int(0)),
                             ("zk__in3_cipher", CipherValue::data_type("ecdh-chaskey")), ("zk__in4_key_sender", PublicKeyValue::data_type("ecdh-chaskey")),
-                            ("zk__in5_plain", DataType::Int(0)), ("zk__in6_cipher_a_count", CipherValue::data_type("elgamal")), 
+                            ("zk__in5_plain", DataType::Int(0)), ("zk__in6_cipher_a_count", CipherValue::data_type("elgamal")),
                             ("zk__in7_plain", DataType::Int(0)), ("zk__in8_cipher_b_count", CipherValue::data_type("elgamal")),
                             ("zk__in9_plain", DataType::Int(0)), ("zk__in10_cipher_c_count", CipherValue::data_type("elgamal")),( "zk__in11_plain",DataType::Int(0)),
                         ]);
@@ -550,7 +567,8 @@ impl<
         mut zk__out: Vec<String>,
         zk__out_start_idx: i32,
     ) {
-        let (zk__in_start_idx,zk__out_start_idx)=(zk__in_start_idx as usize,zk__out_start_idx  as usize);
+        let (zk__in_start_idx, zk__out_start_idx) =
+            (zk__in_start_idx as usize, zk__out_start_idx as usize);
         with_context_block!(var _fc=self._function_ctx(6,0,"?") =>{
         let (zk__is_ext,_fc)=_fc;
                     assert! (!zk__is_ext);
@@ -559,12 +577,12 @@ impl<
                    let _now = block.borrow().as_ref().unwrap().timestamp;
 
                     let mut zk__priv =
-                       BTreeMap::from( [("secret0_plain_c_count",DataType::Int(0)), ("zk__in0_cipher_c_count_R", RandomnessValue::data_type("elgamal")), 
+                       BTreeMap::from( [("secret0_plain_c_count",DataType::Int(0)), ("zk__in0_cipher_c_count_R", RandomnessValue::data_type("elgamal")),
                         ("secret2_plain_b_count",DataType::Int(0)), ("zk__in1_cipher_b_count_R", RandomnessValue::data_type("elgamal")),
                         ("secret4_plain_a_count",DataType::Int(0)), ("zk__in2_cipher_a_count_R", RandomnessValue::data_type("elgamal")),
                     ]);
            let mut zk__data =
-                            BTreeMap::from([("zk__out0_plain",DataType::Int(0)), ("zk__in0_cipher_c_count", CipherValue::data_type("elgamal")), 
+                            BTreeMap::from([("zk__out0_plain",DataType::Int(0)), ("zk__in0_cipher_c_count", CipherValue::data_type("elgamal")),
                             ("zk__in1_cipher_b_count",CipherValue::data_type("elgamal")), ("zk__in2_cipher_a_count", CipherValue::data_type("elgamal"))]);
 
                     // BEGIN Simulate body
@@ -584,13 +602,13 @@ impl<
                         zk__priv.insert("zk__in0_cipher_c_count_R",DataType::RandomnessValue(zk__in0_cipher_c_count_r.unwrap()));
 
                         zk__data.insert("zk__in1_cipher_b_count", self.state().borrow()[&["b_count"]].clone());
-                  
+
                         let (secret2_plain_b_count, zk__in1_cipher_b_count_r) = self.api().borrow().dec(zk__data["zk__in1_cipher_b_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret2_plain_b_count",secret2_plain_b_count);
                         zk__priv.insert("zk__in1_cipher_b_count_R",DataType::RandomnessValue(zk__in1_cipher_b_count_r.unwrap()));
 
                         zk__data.insert("zk__in2_cipher_a_count", self.state().borrow()[&["a_count"]].clone());
-                       
+
                         let (secret4_plain_a_count, zk__in2_cipher_a_count_r) = self.api().borrow().dec(zk__data["zk__in2_cipher_a_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret4_plain_a_count",secret4_plain_a_count);
                         zk__priv.insert("zk__in2_cipher_a_count_R",DataType::RandomnessValue(zk__in2_cipher_a_count_r.unwrap()));
@@ -686,8 +704,8 @@ impl<
         // Declare return variables
                         let  zk__ret_0;//= CipherValue::data_type("ecdh-chaskey");
           let mut zk__data =
-                           BTreeMap::from ([("zk__out0_cipher", CipherValue::data_type("ecdh-chaskey")), 
-                        ("zk__in0_plain_c", DataType::Int(0)), ("zk__in1_cipher", CipherValue::data_type("ecdh-chaskey")), 
+                           BTreeMap::from ([("zk__out0_cipher", CipherValue::data_type("ecdh-chaskey")),
+                        ("zk__in0_plain_c", DataType::Int(0)), ("zk__in1_cipher", CipherValue::data_type("ecdh-chaskey")),
                     ("zk__in2_key_sender", PublicKeyValue::data_type("ecdh-chaskey"))]);
 
 
