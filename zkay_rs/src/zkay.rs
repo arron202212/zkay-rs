@@ -59,6 +59,32 @@ pub enum ZkaySubcommand {
     #[command(visible_alias = "c")]
     Call(CallArgs),
 
+    /// Get the balance of an account in wei.
+    #[command(visible_alias = "b")]
+    Balance {
+        /// The block height to query at.
+        ///
+        /// Can also be the tags earliest, finalized, safe, latest, or pending.
+        #[arg(long, short = 'B')]
+        block: Option<BlockId>,
+
+        /// The account to query.
+        #[arg(value_parser = NameOrAddress::from_str)]
+        who: NameOrAddress,
+
+        /// Format the balance in ether.
+        #[arg(long, short)]
+        ether: bool,
+
+        #[command(flatten)]
+        rpc: RpcOpts,
+
+        /// erc20 address to query, with the method `balanceOf(address) return (uint256)`, alias
+        /// with '--erc721'
+        #[arg(long, alias = "erc721")]
+        erc20: Option<Address>,
+    },
+
     /// Get information about a block.
     #[command(visible_alias = "bl")]
     Block {
@@ -88,33 +114,9 @@ pub enum ZkaySubcommand {
         #[command(flatten)]
         rpc: RpcOpts,
     },
-
-    /// Get the balance of an account in wei.
-    #[command(visible_alias = "b")]
-    Balance {
-        /// The block height to query at.
-        ///
-        /// Can also be the tags earliest, finalized, safe, latest, or pending.
-        #[arg(long, short = 'B')]
-        block: Option<BlockId>,
-
-        /// The account to query.
-        #[arg(value_parser = NameOrAddress::from_str)]
-        who: NameOrAddress,
-
-        /// Format the balance in ether.
-        #[arg(long, short)]
-        ether: bool,
-
-        #[command(flatten)]
-        rpc: RpcOpts,
-
-        /// erc20 address to query, with the method `balanceOf(address) return (uint256)`, alias
-        /// with '--erc721'
-        #[arg(long, alias = "erc721")]
-        erc20: Option<Address>,
-    },
-
+    /// Perform a raw JSON-RPC request.
+    #[command(visible_alias = "rp")]
+    Rpc(RpcArgs),
     /// Get the runtime bytecode of a contract.
     #[command(visible_alias = "co")]
     Code {
@@ -155,9 +157,7 @@ pub enum ZkaySubcommand {
         #[command(flatten)]
         rpc: RpcOpts,
     },
-    /// Perform a raw JSON-RPC request.
-    #[command(visible_alias = "rp")]
-    Rpc(RpcArgs),
+
     /// Convert an address to a checksummed format (EIP-55).
     #[command(
         visible_aliases = &["--to-checksum-address",

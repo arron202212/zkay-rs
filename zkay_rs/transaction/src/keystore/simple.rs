@@ -33,10 +33,10 @@ impl<P: ZkayProverInterface + Clone, B: ZkayBlockchainInterface<P> + Clone> Simp
         }
     }
 }
-impl<P: ZkayProverInterface + Clone> ZkayKeystoreInterface<P, BlockchainClass<P>>
-    for SimpleKeystore<P, BlockchainClass<P>>
+impl<P: ZkayProverInterface + Clone, B: ZkayBlockchainInterface<P> + Clone>
+    ZkayKeystoreInterface<P, B> for SimpleKeystore<P, B>
 {
-    fn conn(&self) -> RcCell<BlockchainClass<P>> {
+    fn conn(&self) -> RcCell<B> {
         self.conn.clone()
     }
     fn local_key_pairs(&self) -> RcCell<BTreeMap<String, KeyPair>> {

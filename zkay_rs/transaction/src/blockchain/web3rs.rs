@@ -36,6 +36,7 @@ use crate::types::{
     AddressValue, BlockStruct, DataType, MsgStruct, PublicKeyValue, TxStruct, Value,
 };
 use ast_builder::process_ast::get_verification_contract_names;
+use enum_dispatch::enum_dispatch;
 use rccell::RcCell;
 use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
@@ -43,6 +44,7 @@ use zkay_ast::global_defs::{
 use zkay_utils::helpers::{get_contract_names, save_to_file};
 use zkay_utils::timer::time_measure;
 // max_gas_limit = 10000000
+#[enum_dispatch]
 pub trait Web3Blockchain {
     fn _create_w3_instance(&self);
 }
@@ -51,12 +53,12 @@ use std::marker::PhantomData;
 pub struct Web3BlockchainBase<P: ZkayProverInterface, W> {
     _lib_addresses: RcCell<Option<BTreeMap<String, JsonValue>>>,
     _pki_contract: RcCell<Option<BTreeMap<String, JsonValue>>>,
-    prover: P,
+    prover: RcCell<P>,
     next_acc_idx: RcCell<i32>,
     _web3: PhantomData<W>,
 }
 impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
-    pub fn new(prover: P) -> Self {
+    pub fn new(prover: RcCell<P>) -> Self {
         Self {
             prover,
             _lib_addresses: RcCell::new(None),
@@ -67,8 +69,8 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
     }
 }
 impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBase<P, W> {
-    fn prover(&self) -> &P {
-        &self.prover
+    fn prover(&self) -> RcCell<P> {
+        self.prover.clone()
     }
     fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, JsonValue>>> {
         self._pki_contract.clone()
@@ -710,8 +712,9 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
     }
 }
 const MAX_GAS_LIMIT: i32 = 10000000;
-
-impl Web3Blockchain for Web3TesterBlockchain {
+impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3Blockchain
+    for Web3BlockchainBase<P, Web3TesterBlockchain>
+{
     fn _create_w3_instance(&self) {
         // let genesis_overrides = json!({"gas_limit": max_gas_limit * 1.2});
         // let custom_genesis_params = PyEVMBackend._generate_genesis_params(genesis_overrides);
@@ -720,7 +723,15 @@ impl Web3Blockchain for Web3TesterBlockchain {
         //  w3
     }
 }
-
+// impl<P: ZkayProverInterface, Web3HttpGanacheBlockchain> Web3Blockchain for Web3BlockchainBase<P, Web3HttpGanacheBlockchain> {
+//     fn _create_w3_instance(&self) {
+//         // let genesis_overrides = json!({"gas_limit": max_gas_limit * 1.2});
+//         // let custom_genesis_params = PyEVMBackend._generate_genesis_params(genesis_overrides);
+//         // self.eth_tester = EthereumTester(PyEVMBackend(genesis_parameters = custom_genesis_params));
+//         // let w3 = Web3(Web3.EthereumTesterProvider(self.eth_tester));
+//         //  w3
+//     }
+// }
 pub struct Web3IpcBlockchain;
 // class Web3IpcBlockchain(Web3Blockchain):
 //     fn _create_w3_instance(self) -> Web3:

@@ -474,7 +474,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
                     &String::default(),
                 );
                 // from zkay.transaction.runtime import Runtime
-                let actual_hash = self.prover().get_prover_key_hash(
+                let actual_hash = self.prover().borrow().get_prover_key_hash(
                     &PathBuf::from(project_dir)
                         .join(
                             CFG.lock()
@@ -503,7 +503,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
 
         contract_on_chain
     }
-    fn prover(&self) -> &P;
+    fn prover(&self) -> RcCell<P>;
     //     @abstractmethod
     //         """
     //         Compile and deploy the specified solidity contract.

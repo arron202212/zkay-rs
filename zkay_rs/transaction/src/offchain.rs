@@ -15,6 +15,7 @@ use crate::keystore::simple::SimpleKeystore;
 use crate::prover::jsnark::JsnarkProver;
 use crate::runtime::BlockchainClass;
 use crate::runtime::CryptoClass;
+use crate::runtime::{_blockchain_classes, _crypto_classes, _prover_classes};
 use my_logging::log_context::WithLogContext;
 use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::{RcCell, WeakCell};
@@ -467,22 +468,14 @@ impl<
     //     :param project_dir: Directory where the zkay contract, the manifest and the prover/verification key files are located
     //     :param user_addr: From address for all transactions which are issued by this ContractSimulator
     //     """
-    pub fn new(
-        project_dir: &str,
-        user_addr: &str,
-        contract_name: &str,
-        runtime: RcCell<Runtime<P, B, K>>,
-        k: RcCell<K>,
-    ) -> Self {
+    pub fn new(runtime: RcCell<Runtime<P, B, K>>, api: RcCell<ApiWrapper<P, B, K>>) -> Self {
         // # Transaction instance values (reset between transactions)
-        // let  mut runtime=Runtime::<P,B,SimpleKeystore<P, BlockchainClass<P>>>::new();
-        let api = RcCell::new(ApiWrapper::<P, B, K>::new(
-            project_dir,
-            contract_name,
-            user_addr,
-            runtime.clone(),
-            k,
-        ));
+        // let api = RcCell::new(ApiWrapper::<P, B, K>::new(
+        //     project_dir,
+        //     contract_name,
+        //     user_addr,
+        //     runtime.clone(),
+        // ));
 
         // """Hierarchical dictionary (scopes are managed internally) which holds the currently accessible local variables"""
         let locals = RcCell::new(LocalsDict { _scopes: vec![] });
@@ -564,7 +557,7 @@ impl<
         // """Override zkay configuration with values from the manifest file in project_dir."""
         let manifest = Manifest::load(project_dir);
         Manifest::import_manifest_config(manifest);
-        self.runtime.borrow_mut().reset();
+        // self.runtime.borrow_mut().reset();
     }
 
     // @staticmethod
@@ -593,10 +586,10 @@ pub struct ApiWrapper<
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    __conn: RcCell<Option<BlockchainClass<P>>>,
+    __conn: RcCell<B>,
     __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
     __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
-    __prover: RcCell<Option<JsnarkProver>>,
+    __prover: RcCell<P>,
     __project_dir: RcCell<String>,
     __contract_name: RcCell<String>,
     __contract_handle: RcCell<Option<JsonValue>>,
@@ -619,31 +612,33 @@ impl<
         project_dir: &str,
         contract_name: &str,
         user_addr: &str,
-        runtime: RcCell<Runtime<P, B, K>>,
-        k: RcCell<K>,
+        __conn: RcCell<B>,
+        __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
+        __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
+        __prover: RcCell<P>,
     ) -> Self {
         // super().__init__()
-        let __conn = runtime.borrow().blockchain().clone();
-        let mut __keystore = BTreeMap::new();
-        let mut __crypto = BTreeMap::new();
-        let __prover = runtime.borrow().prover().clone();
-
-        for crypto_params in CFG.lock().unwrap().all_crypto_params() {
-            __keystore.insert(
-                crypto_params.clone(),
-                runtime
-                    .borrow()
-                    .keystore(&CryptoParams::new(crypto_params.clone()), k.clone())
-                    .clone(),
-            );
-            __crypto.insert(
-                crypto_params.clone(),
-                runtime
-                    .borrow()
-                    .crypto(&CryptoParams::new(crypto_params.clone()), k.clone())
-                    .clone(),
-            );
-        }
+        // let __conn = runtime.borrow().blockchain().clone();
+        // let mut __keystore = BTreeMap::new();
+        // let mut __crypto = BTreeMap::new();
+        // let __prover = runtime.borrow().prover().clone();
+        // for crypto_params in CFG.lock().unwrap().all_crypto_params() {
+        //     let crypto_param=CryptoParams::new(crypto_params.clone());
+        //     __keystore.insert(
+        //         crypto_params.clone(),
+        //         runtime
+        //             .borrow()
+        //             .keystore(&crypto_param)
+        //             .clone(),
+        //     );
+        //     __crypto.insert(
+        //         crypto_params.clone(),
+        //         runtime
+        //             .borrow()
+        //             .crypto(&crypto_param)
+        //             .clone(),
+        //     );
+        // }
 
         let __project_dir = RcCell::new(project_dir.to_owned());
         let __contract_name = RcCell::new(contract_name.to_owned());
@@ -682,8 +677,8 @@ impl<
         let is_external: RcCell<Option<bool>> = RcCell::new(None);
         Self {
             __conn,
-            __keystore: RcCell::new(__keystore),
-            __crypto: RcCell::new(__crypto),
+            __keystore,
+            __crypto,
             __prover,
             __project_dir,
             __contract_name,
@@ -760,8 +755,6 @@ impl<
         *self.__contract_handle.borrow_mut() = self
             .__conn
             .borrow()
-            .as_ref()
-            .unwrap()
             .deploy(
                 &self.__project_dir.borrow(),
                 &self.__user_addr.borrow(),
@@ -786,8 +779,6 @@ impl<
         *self.__contract_handle.borrow_mut() = self
             .__conn
             .borrow()
-            .as_ref()
-            .unwrap()
             .connect::<PS>(
                 &self.__project_dir.borrow(),
                 &self.__contract_name.borrow(),
@@ -806,7 +797,7 @@ impl<
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) {
-        self.__conn.borrow().as_ref().unwrap().transact(
+        self.__conn.borrow().transact(
             self.__contract_handle.borrow().as_ref().unwrap(),
             &self.__user_addr.borrow(),
             fname,
@@ -822,7 +813,7 @@ impl<
         args: Vec<DataType>,
         ret_val_constructors: Vec<(bool, String, CallableType)>,
     ) -> DataType {
-        let retvals = self.__conn.borrow().as_ref().unwrap().call(
+        let retvals = self.__conn.borrow().call(
             self.__contract_handle.borrow().as_ref().unwrap().clone(),
             &self.__user_addr.borrow(),
             fname,
@@ -895,8 +886,6 @@ impl<
         let (__current_msg, __current_block, __current_tx) = self
             .__conn
             .borrow()
-            .as_ref()
-            .unwrap()
             .get_special_variables(&self.__user_addr.borrow(), wei_amount);
         (
             *self.__current_msg.borrow_mut(),
@@ -1010,7 +999,7 @@ impl<
         );
 
         if count == 0 {
-            self.__conn.borrow().as_ref().unwrap().req_state_var(
+            self.__conn.borrow().req_state_var(
                 self.__contract_handle.borrow().as_ref().unwrap(),
                 name,
                 &indices,
@@ -1018,7 +1007,7 @@ impl<
         } else {
             (0..count)
                 .map(|_i| {
-                    self.__conn.borrow().as_ref().unwrap().req_state_var(
+                    self.__conn.borrow().req_state_var(
                         self.__contract_handle.borrow().as_ref().unwrap(),
                         &name,
                         &indices,
@@ -1115,7 +1104,7 @@ impl<
         in_vals: Vec<String>,
         out_vals: Vec<String>,
     ) -> Vec<String> {
-        self.__prover.borrow().as_ref().unwrap().generate_proof(
+        self.__prover.borrow().generate_proof(
             &self.__project_dir.borrow(),
             self.__contract_name.borrow().clone(),
             fname.to_owned(),
@@ -1342,4 +1331,87 @@ impl Drop for WithCalCtx {
             *self.current_all_index.borrow_mut(),
         ) = (self.old_priv_values.clone(), self.old_all_index.clone());
     }
+}
+
+pub fn new_contract_simulator() -> ContractSimulator<
+    CryptoClass<
+        JsnarkProver,
+        BlockchainClass<JsnarkProver>,
+        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    >,
+    JsnarkProver,
+    BlockchainClass<JsnarkProver>,
+    SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+> {
+    // contract_simulator.use_config_from_manifest(file!());
+    // os.path.dirname(os.path.realpath(__file__);
+    // let me = contract_simulator.default_address();
+    // if me.is_some(){
+    //     me = me.val;
+    // }
+    // import code
+    // code.interact(local=globals())
+    let __prover = RcCell::new(_prover_classes(&CFG.lock().unwrap().snark_backend()));
+    let __blockchain = RcCell::new(_blockchain_classes(
+        &CFG.lock().unwrap().blockchain_backend(),
+        __prover.clone(),
+    ));
+    // let __keystore=BTreeMap::from([SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone())]);
+    let mut __keystore = BTreeMap::new();
+    let mut __crypto = BTreeMap::new();
+    for crypto_params in CFG.lock().unwrap().all_crypto_params() {
+        let crypto_param = CryptoParams::new(crypto_params.clone());
+        let crypto_backend = crypto_param.crypto_name.clone();
+        let keystore = RcCell::new(
+            SimpleKeystore::<JsnarkProver, BlockchainClass<JsnarkProver>>::new(
+                __blockchain.clone(),
+                crypto_param.clone(),
+            ),
+        );
+        __keystore.insert(crypto_params.clone(), keystore.clone());
+        let crypto = RcCell::new(_crypto_classes::<
+            JsnarkProver,
+            BlockchainClass<JsnarkProver>,
+            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+        >(&crypto_backend, keystore));
+        __crypto.insert(crypto_params.clone(), crypto);
+    }
+    let __crypto = RcCell::new(__crypto);
+    let __keystore = RcCell::new(__keystore);
+    let runtime = RcCell::new(Runtime::new(
+        __blockchain.clone(),
+        __crypto.clone(),
+        __keystore.clone(),
+        __prover.clone(),
+    ));
+    // let contract_simulator=ContractSimulator::new(".","","",runtime.clone());
+    // RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
+
+    // let runtime=RcCell::new(Runtime::<JsnarkProver,BlockchainClass::<JsnarkProver>,SimpleKeystore::<JsnarkProver,BlockchainClass::<JsnarkProver>>>::new());
+    // fn f(crypto_params:&CryptoParams)->RcCell<SimpleKeystore>{
+    //     RcCell::new(SimpleKeystore::new(runtime.borrow().blockchain(),crypto_params.clone()))
+    // }
+    let api = RcCell::new(ApiWrapper::<
+        JsnarkProver,
+        BlockchainClass<JsnarkProver>,
+        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    >::new(
+        "project_dir",
+        "contract_name",
+        "user_addr",
+        __blockchain.clone(),
+        __keystore.clone(),
+        __crypto.clone(),
+        __prover,
+    ));
+    ContractSimulator::<
+        CryptoClass<
+            JsnarkProver,
+            BlockchainClass<JsnarkProver>,
+            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+        >,
+        JsnarkProver,
+        BlockchainClass<JsnarkProver>,
+        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    >::new(runtime.clone(), api)
 }

@@ -21,26 +21,37 @@ use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
+use zkay_config::config_user::UserConfig;
 use zkay_config::{
     config::{zk_print_banner, CFG},
     with_context_block,
 };
+use zkay_transaction::offchain::ApiWrapper;
+use zkay_transaction::runtime::BlockchainClass;
+use zkay_transaction::runtime::Runtime;
+use zkay_transaction::runtime::{
+    CryptoClass, _blockchain_classes, _crypto_classes, _prover_classes,
+};
+use zkay_transaction_crypto_params::params::CryptoParams;
+// use yansi::paint::Paint;
 use zkay_transaction::blockchain::web3rs::Web3Blockchain;
 use zkay_transaction::int_casts::*;
 use zkay_transaction::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
     ZkayKeystoreInterface, ZkayProverInterface,
 };
+use zkay_transaction::keystore::simple::SimpleKeystore;
 use zkay_transaction::offchain::{
     ContractSimulator, ContractSimulatorConfig, ContractSimulatorRef, BN128_SCALAR_FIELDS,
 };
+use zkay_transaction::prover::jsnark::JsnarkProver;
 use zkay_transaction::solidity_math::*;
 use zkay_transaction::types::{
     AddressValue, CipherValue, DataType, PrivateKeyValue, PublicKeyValue, RandomnessValue, Value,
 };
 use zkay_utils::timer::time_measure;
 // me = None
-
+// use ark_ff::{BigInteger, BigInteger256, Field, MontFp, PrimeField};
 struct Survey<
     C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
     P: ZkayProverInterface + Clone,
@@ -228,7 +239,7 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return self.api().borrow().call("get_result_for", actual_params, vec![(false, "None".to_string(), convert_type)]);
+                            return self.api().borrow().call("get_result_for(Survey.Choice option) public view returns (uint64)", actual_params, vec![(false, "None".to_string(), convert_type)]);
                         }
                     });
                 });
@@ -272,7 +283,7 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return self.api().borrow().call("get_winning_choice", actual_params, vec![(false, "None".to_string(), convert_type)])
+                            return self.api().borrow().call("get_winning_choice() public view returns (Survey.Choice)", actual_params, vec![(false, "None".to_string(), convert_type)])
                         }
                     });
                 });
@@ -395,7 +406,7 @@ impl<
                                 actual_params.push(DataType::List(proof.into_iter().map(|s|DataType::String(s)).collect()));
                                 // let actual_params:Vec<_>=actual_params.into_iter().flatten().collect();
                                 // Invoke public transaction
-                                return self.api().borrow().transact("vote", actual_params, vec![true, false, false],None)
+                                return self.api().borrow().transact("vote(uint[3] calldata votum, uint[] calldata zk__out, uint[8] calldata zk__proof) external", actual_params, vec![true, false, false],None)
                             });
                         });
     }
@@ -554,7 +565,7 @@ impl<
                         actual_params.push(DataType::List(proof.into_iter().map(|s|DataType::String(s)).collect()));
 
                         // Invoke public transaction
-                        return self.api().borrow().transact("publish_results", actual_params, vec![false, false],None)
+                        return self.api().borrow().transact("publish_results(uint[] calldata zk__out, uint[8] calldata zk__proof) external", actual_params, vec![false, false],None)
                     });
                 });
     }
@@ -612,8 +623,9 @@ impl<
                         let (secret4_plain_a_count, zk__in2_cipher_a_count_r) = self.api().borrow().dec(zk__data["zk__in2_cipher_a_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret4_plain_a_count",secret4_plain_a_count);
                         zk__priv.insert("zk__in2_cipher_a_count_R",DataType::RandomnessValue(zk__in2_cipher_a_count_r.unwrap()));
-
-                        zk__data.insert("zk__out0_plain",DataType::Int( *zk__priv["secret0_plain_c_count"].try_as_int_ref().unwrap() << 128 | *zk__priv["secret2_plain_b_count"].try_as_int_ref().unwrap() << 64 | *zk__priv["secret4_plain_a_count"].try_as_int_ref().unwrap()));
+                           use alloy_primitives::{Address, Bytes, U256};
+                        let zk__out0_plain:U256=U256::from(*zk__priv["secret0_plain_c_count"].try_as_int_ref().unwrap()) << 128 | U256::from(*zk__priv["secret2_plain_b_count"].try_as_int_ref().unwrap()) << 64 | U256::from(*zk__priv["secret4_plain_a_count"].try_as_int_ref().unwrap());
+                        zk__data.insert("zk__out0_plain",DataType::String( zk__out0_plain.to_string()));
 
                         self.state().borrow_mut()[&["packed_results"]] = zk__data["zk__out0_plain"].clone();
                         // }
@@ -677,7 +689,7 @@ impl<
                         self.api().borrow().serialize_private_inputs(zk__priv.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![0]);
 
                         // Call pure/view function and return value
-                        return self.api().borrow().call("check_if_agree_with_majority", actual_params, vec![(true, "ecdh-chaskey".to_owned(), convert_type)])
+                        return self.api().borrow().call("check_if_agree_with_majority(uint[] calldata zk__out) external view returns (uint[3] memory)", actual_params, vec![(true, "ecdh-chaskey".to_owned(), convert_type)])
 
                     });
                 });
@@ -818,6 +830,7 @@ fn help(val: Option<String>) {
 fn convert_type(v: String) -> DataType {
     DataType::String(v)
 }
+
 fn main0() {
     // contract_simulator.use_config_from_manifest(file!());
     // os.path.dirname(os.path.realpath(__file__);
@@ -827,4 +840,67 @@ fn main0() {
     // }
     // import code
     // code.interact(local=globals())
+    let __prover = RcCell::new(_prover_classes(&CFG.lock().unwrap().snark_backend()));
+    let __blockchain = RcCell::new(_blockchain_classes(
+        &CFG.lock().unwrap().blockchain_backend(),
+        __prover.clone(),
+    ));
+    // let __keystore=BTreeMap::from([SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone())]);
+    let mut __keystore = BTreeMap::new();
+    let mut __crypto = BTreeMap::new();
+    for crypto_params in CFG.lock().unwrap().all_crypto_params() {
+        let crypto_param = CryptoParams::new(crypto_params.clone());
+        let crypto_backend = crypto_param.crypto_name.clone();
+        let keystore = RcCell::new(
+            SimpleKeystore::<JsnarkProver, BlockchainClass<JsnarkProver>>::new(
+                __blockchain.clone(),
+                crypto_param.clone(),
+            ),
+        );
+        __keystore.insert(crypto_params.clone(), keystore.clone());
+        let crypto = RcCell::new(_crypto_classes::<
+            JsnarkProver,
+            BlockchainClass<JsnarkProver>,
+            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+        >(&crypto_backend, keystore));
+        __crypto.insert(crypto_params.clone(), crypto);
+    }
+    let __crypto = RcCell::new(__crypto);
+    let __keystore = RcCell::new(__keystore);
+    let runtime = RcCell::new(Runtime::new(
+        __blockchain.clone(),
+        __crypto.clone(),
+        __keystore.clone(),
+        __prover.clone(),
+    ));
+    // let contract_simulator=ContractSimulator::new(".","","",runtime.clone());
+    // RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
+
+    // let runtime=RcCell::new(Runtime::<JsnarkProver,BlockchainClass::<JsnarkProver>,SimpleKeystore::<JsnarkProver,BlockchainClass::<JsnarkProver>>>::new());
+    // fn f(crypto_params:&CryptoParams)->RcCell<SimpleKeystore>{
+    //     RcCell::new(SimpleKeystore::new(runtime.borrow().blockchain(),crypto_params.clone()))
+    // }
+    let api = RcCell::new(ApiWrapper::<
+        JsnarkProver,
+        BlockchainClass<JsnarkProver>,
+        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    >::new(
+        "project_dir",
+        "contract_name",
+        "user_addr",
+        __blockchain.clone(),
+        __keystore.clone(),
+        __crypto.clone(),
+        __prover,
+    ));
+    let _contract_simulator = ContractSimulator::<
+        CryptoClass<
+            JsnarkProver,
+            BlockchainClass<JsnarkProver>,
+            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+        >,
+        JsnarkProver,
+        BlockchainClass<JsnarkProver>,
+        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    >::new(runtime.clone(), api);
 }
