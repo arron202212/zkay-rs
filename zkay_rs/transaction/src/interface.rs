@@ -370,7 +370,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             input_file_path: &str,
             output_dir: &str,
             import_keys: bool,
-        ) -> anyhow::Result<String>,
+        ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
     ) -> eyre::Result<JsonValue> {
         assert!( self.is_debug_backend() || CFG.lock().unwrap().crypto_backend() != "dummy","SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).");

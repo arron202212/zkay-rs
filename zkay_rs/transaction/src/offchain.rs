@@ -773,7 +773,7 @@ impl<
             input_file_path: &str,
             output_dir: &str,
             import_keys: bool,
-        ) -> anyhow::Result<String>,
+        ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
     ) {
         *self.__contract_handle.borrow_mut() = self
@@ -1332,17 +1332,25 @@ impl Drop for WithCalCtx {
         ) = (self.old_priv_values.clone(), self.old_all_index.clone());
     }
 }
+pub type BlockchainClassType = BlockchainClass<JsnarkProver>;
+pub type KeystoreType = SimpleKeystore<JsnarkProver, BlockchainClassType>;
+pub type CryptoClassType = CryptoClass<JsnarkProver, BlockchainClassType, KeystoreType>;
 
-pub fn new_contract_simulator() -> ContractSimulator<
-    CryptoClass<
-        JsnarkProver,
-        BlockchainClass<JsnarkProver>,
-        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-    >,
-    JsnarkProver,
-    BlockchainClass<JsnarkProver>,
-    SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-> {
+pub fn new_contract_simulator(
+    project_dir: &str,
+    contract_name: &str,
+    user_addr: &str,
+) -> ContractSimulator<CryptoClassType, JsnarkProver, BlockchainClassType, KeystoreType> {
+    // -> ContractSimulator<
+    //     CryptoClass<
+    //         JsnarkProver,
+    //         BlockchainClass<JsnarkProver>,
+    //         SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    //     >,
+    //     JsnarkProver,
+    //     BlockchainClass<JsnarkProver>,
+    //     SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
+    // >
     // contract_simulator.use_config_from_manifest(file!());
     // os.path.dirname(os.path.realpath(__file__);
     // let me = contract_simulator.default_address();
@@ -1396,22 +1404,16 @@ pub fn new_contract_simulator() -> ContractSimulator<
         BlockchainClass<JsnarkProver>,
         SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
     >::new(
-        "project_dir",
-        "contract_name",
-        "user_addr",
+        project_dir,
+        contract_name,
+        user_addr,
         __blockchain.clone(),
         __keystore.clone(),
         __crypto.clone(),
         __prover,
     ));
-    ContractSimulator::<
-        CryptoClass<
-            JsnarkProver,
-            BlockchainClass<JsnarkProver>,
-            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-        >,
-        JsnarkProver,
-        BlockchainClass<JsnarkProver>,
-        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-    >::new(runtime.clone(), api)
+    ContractSimulator::<CryptoClassType, JsnarkProver, BlockchainClassType, KeystoreType>::new(
+        runtime.clone(),
+        api,
+    )
 }

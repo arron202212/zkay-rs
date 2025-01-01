@@ -17,6 +17,7 @@
 // from enum import IntEnum
 // from typing import Dict, List, Tuple, Optional, Union, Any
 use my_logging;
+use proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use serde_json::Value as JsonValue;
@@ -42,7 +43,8 @@ use zkay_transaction::interface::{
 };
 use zkay_transaction::keystore::simple::SimpleKeystore;
 use zkay_transaction::offchain::{
-    ContractSimulator, ContractSimulatorConfig, ContractSimulatorRef, BN128_SCALAR_FIELDS,
+    new_contract_simulator, ContractSimulator, ContractSimulatorConfig, ContractSimulatorRef,
+    BN128_SCALAR_FIELDS,
 };
 use zkay_transaction::prover::jsnark::JsnarkProver;
 use zkay_transaction::solidity_math::*;
@@ -161,7 +163,7 @@ impl<
             input_file_path: &str,
             output_dir: &str,
             import_keys: bool,
-        ) -> anyhow::Result<String>,
+        ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
     ) -> Survey<C, P, B, K> {
         // = os.path.dirname(os.path.realpath(__file__))
@@ -794,7 +796,7 @@ fn connect<
         input_file_path: &str,
         output_dir: &str,
         import_keys: bool,
-    ) -> anyhow::Result<String>,
+    ) -> anyhow::Result<()>,
     get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
 ) -> Survey<C, P, B, K> {
     let user = if user.is_empty() {
@@ -830,8 +832,12 @@ fn help(val: Option<String>) {
 fn convert_type(v: String) -> DataType {
     DataType::String(v)
 }
-
-fn main0() {
+use crate::zkay_frontend::compile_zkay_file;
+use ast_builder::process_ast::{get_processed_ast, get_verification_contract_names};
+use zkay_ast::global_defs::{
+    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+};
+pub fn main0() {
     // contract_simulator.use_config_from_manifest(file!());
     // os.path.dirname(os.path.realpath(__file__);
     // let me = contract_simulator.default_address();
@@ -840,67 +846,23 @@ fn main0() {
     // }
     // import code
     // code.interact(local=globals())
-    let __prover = RcCell::new(_prover_classes(&CFG.lock().unwrap().snark_backend()));
-    let __blockchain = RcCell::new(_blockchain_classes(
-        &CFG.lock().unwrap().blockchain_backend(),
-        __prover.clone(),
-    ));
-    // let __keystore=BTreeMap::from([SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone())]);
-    let mut __keystore = BTreeMap::new();
-    let mut __crypto = BTreeMap::new();
-    for crypto_params in CFG.lock().unwrap().all_crypto_params() {
-        let crypto_param = CryptoParams::new(crypto_params.clone());
-        let crypto_backend = crypto_param.crypto_name.clone();
-        let keystore = RcCell::new(
-            SimpleKeystore::<JsnarkProver, BlockchainClass<JsnarkProver>>::new(
-                __blockchain.clone(),
-                crypto_param.clone(),
-            ),
-        );
-        __keystore.insert(crypto_params.clone(), keystore.clone());
-        let crypto = RcCell::new(_crypto_classes::<
-            JsnarkProver,
-            BlockchainClass<JsnarkProver>,
-            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-        >(&crypto_backend, keystore));
-        __crypto.insert(crypto_params.clone(), crypto);
-    }
-    let __crypto = RcCell::new(__crypto);
-    let __keystore = RcCell::new(__keystore);
-    let runtime = RcCell::new(Runtime::new(
-        __blockchain.clone(),
-        __crypto.clone(),
-        __keystore.clone(),
-        __prover.clone(),
-    ));
+
     // let contract_simulator=ContractSimulator::new(".","","",runtime.clone());
     // RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
 
-    // let runtime=RcCell::new(Runtime::<JsnarkProver,BlockchainClass::<JsnarkProver>,SimpleKeystore::<JsnarkProver,BlockchainClass::<JsnarkProver>>>::new());
-    // fn f(crypto_params:&CryptoParams)->RcCell<SimpleKeystore>{
-    //     RcCell::new(SimpleKeystore::new(runtime.borrow().blockchain(),crypto_params.clone()))
-    // }
-    let api = RcCell::new(ApiWrapper::<
-        JsnarkProver,
-        BlockchainClass<JsnarkProver>,
-        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-    >::new(
-        "project_dir",
-        "contract_name",
-        "user_addr",
-        __blockchain.clone(),
-        __keystore.clone(),
-        __crypto.clone(),
-        __prover,
-    ));
-    let _contract_simulator = ContractSimulator::<
-        CryptoClass<
-            JsnarkProver,
-            BlockchainClass<JsnarkProver>,
-            SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-        >,
-        JsnarkProver,
-        BlockchainClass<JsnarkProver>,
-        SimpleKeystore<JsnarkProver, BlockchainClass<JsnarkProver>>,
-    >::new(runtime.clone(), api);
+    let _contract_simulator = new_contract_simulator(".", "", "");
+    let survey = connect::<ProvingSchemeGroth16, _, _, _, _>(
+        ".",
+        "",
+        RcCell::new(_contract_simulator),
+        compile_zkay_file,
+        |s: String| {
+            let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
+            get_verification_contract_names((Some(s), None), global_vars)
+        },
+    );
+    let min_votes = survey.min_votes_reached();
+    println!("{min_votes:?}");
+    let is_result_published = survey.is_result_published();
+    println!("{is_result_published}");
 }

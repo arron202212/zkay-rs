@@ -70,11 +70,13 @@ use zkay::{Zkay, ZkaySubcommand};
 // static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 fn main() {
-    if let Err(err) = run() {
-        // let _ = foundry_common::Shell::get().error(&err);
-        println!("=========={err:?}");
-        std::process::exit(1);
-    }
+    crate::contract::main0()
+
+    // if let Err(err) = run() {
+    //     // let _ = foundry_common::Shell::get().error(&err);
+    //     println!("=========={err:?}");
+    //     std::process::exit(1);
+    // }
 }
 
 fn run() -> Result<()> {
