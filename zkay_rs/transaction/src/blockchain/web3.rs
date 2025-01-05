@@ -189,11 +189,11 @@ impl Web3 {
             rpc: RpcOpts::default(),
         })
     }
-    pub fn estimate_gas(&self, to: &str, sig: &str, args: Vec<String>) -> String {
+    pub fn estimate_gas(&self, to: &str, sig: &str, args: Vec<&str>) -> String {
         run(Web3Subcommand::Estimate(EstimateArgs::parse_from(
             vec!["foundry-cli", "--to", to, "--sig", sig, "--args"]
                 .into_iter()
-                .chain(args.iter().map(|s| s.as_str()))
+                .chain(args)
                 .collect::<Vec<_>>(),
         )))
     }
@@ -491,13 +491,13 @@ mod tests {
             .estimate_gas(
                 "0xa71526142e3105850b6b2a5dca6a110e135924e0",
                 "publish_results(uint[] calldata zk__out, uint[8] calldata zk__proof) external",
-                "1",
-                "12345678"
+                vec!["1",
+                "12345678"]
             )
             .is_empty());
         assert_eq!(
-            &web3.estimate_gas("0xa71526142e3105850b6b2a5dca6a110e135924e0"),
-            "0"
+            &web3.estimate_gas("0xa71526142e3105850b6b2a5dca6a110e135924e0","",vec![]),
+            "0" 
         );
     }
 }

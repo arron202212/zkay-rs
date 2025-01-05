@@ -21,6 +21,51 @@
 // from builtins import type
 // from typing import Tuple, List, Optional, Union, Any, Dict, Collection
 // use ast_builder::process_ast::get_verification_contract_names;
+// use foundry_cli::{handler, utils};
+use alloy_chains::Chain;
+use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
+use alloy_json_abi::{Constructor, JsonAbi};
+use alloy_network::{AnyNetwork, EthereumWallet, TransactionBuilder};
+use alloy_primitives::{hex, Address, Bytes};
+use alloy_provider::{PendingTransactionError, Provider, ProviderBuilder};
+use alloy_rpc_types::{AnyTransactionReceipt, TransactionRequest};
+use alloy_serde::WithOtherFields;
+use alloy_signer::Signer;
+use alloy_transport::{Transport, TransportError};
+use clap::{Parser, ValueHint};
+use eyre::{Context, Result};
+use forge_verify::RetryArgs;
+use forge_verify::VerifyArgs;
+use foundry_cli::{
+    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
+    utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
+};
+use foundry_common::{
+    compile::{self},
+    fmt::parse_tokens,
+};
+use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
+use foundry_compilers::{ArtifactId, Project};
+// use alloy_json_abi::JsonAbi;
+// use alloy_primitives::Address;
+// use eyre::{eyre::Result, WrapErr};
+use foundry_common::{fs, TestFunctionExt};
+use foundry_compilers::{
+    artifacts::{CompactBytecode, CompactDeployedBytecode, Settings},
+    cache::{CacheEntry, CompilerCache},
+    utils::read_json_file,
+    Artifact, ProjectCompileOutput,
+};
+use foundry_config::{
+    figment::{
+        self,
+        value::{Dict, Map},
+        Metadata, Profile,
+    },
+    merge_impl_figment_convert, Config,
+};
+use std::{borrow::Borrow, marker::PhantomData, path::PathBuf, sync::Arc};
+
 use crate::crypto::ecdh_chaskey::EcdhChaskeyCrypto;
 use crate::crypto::elgamal::ElgamalCrypto;
 use crate::runtime::CryptoClass;
@@ -32,7 +77,7 @@ use privacy::library_contracts::BN128_SCALAR_FIELDS;
 use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+// use std::path::PathBuf;
 use std::str::FromStr;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkp_u256::{Zero, U256};
@@ -46,7 +91,7 @@ use crate::types::{
     AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PrivateKeyValue,
     PublicKeyValue, RandomnessValue, TxStruct, Value,
 };
-use serde_json::{json, Map, Result, Value as JsonValue};
+use serde_json::{json, Map as JsonMap,  Value as JsonValue};
 use zkay_config::{
     config::{zk_print_banner, CFG},
     config_user::UserConfig,
@@ -74,6 +119,7 @@ use zkay_utils::timer::time_measure;
 
 // class ZkayBlockchainInterface(metaclass=ABCMeta){
 #[enum_dispatch]
+// #[async_trait::async_trait]
 pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     """
     //     API to interact with the blockchain.
@@ -94,10 +140,10 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     fn __init__(self){
     //         self._pki_contract = None
     //         self._lib_addresses = None
-    fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, JsonValue>>>;
-    fn pki_contract(&self, crypto_backend: &str) -> JsonValue {
+    fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, Address>>>;
+    fn pki_contract(&self, crypto_backend: &str) -> Address {
         if self._pki_contract().borrow().is_none() {
-            self._connect_libraries();
+            let _=self._connect_libraries();
         }
         self._pki_contract()
             .borrow()
@@ -109,13 +155,15 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     }
 
     //     @property
-    fn lib_addresses(&self) -> RcCell<Option<BTreeMap<String, JsonValue>>>;
+    fn lib_addresses(&self) -> RcCell<Option<BTreeMap<String, Address>>>;
     // if self._lib_addresses is None:
     //     self._connect_libraries()
     // return self._lib_addresses
 
     //     @abstractmethod
-    fn _connect_libraries(&self);
+    fn _connect_libraries(
+        &self,
+    ) -> eyre::Result<BTreeMap<String, Address>>;
     //         pass
 
     //     # PUBLIC API
@@ -215,7 +263,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //         :raise BlockChainError: if request fails
     //         :return: The value
     //         """
-    fn req_state_var(&self, contract_handle: &JsonValue, name: &str, indices: &String) -> String {
+    fn req_state_var(&self, contract_handle: &Address, name: &str, indices: &String) -> String {
         //bool, int, str, bytes
         //         assert contract_handle is not None
         zk_print!(r#"Requesting state variable "{name}""#);
@@ -235,7 +283,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //         """
     fn call(
         &self,
-        contract_handle: JsonValue,
+        contract_handle: Address,
         sender: &String,
         name: &str,
         args: Vec<DataType>,
@@ -266,7 +314,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //         """
     fn transact(
         &self,
-        contract_handle: &JsonValue,
+        contract_handle: &Address,
         sender: &str,
         function: &str,
         actual_args: Vec<DataType>,
@@ -297,13 +345,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     // :return: handle for the newly created contract
     fn deploy(
         &self,
-        project_dir: &str,
+        project_dir: &PathBuf,
         sender: &str,
         contract: &str,
         actual_args: Vec<String>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-    ) -> eyre::Result<JsonValue> {
+        project:&Project,
+    ) -> eyre::Result<Address> {
         if !self.is_debug_backend() && CFG.lock().unwrap().crypto_backend() == "dummy" {
             eyre::bail!("SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).")
         }
@@ -317,9 +366,10 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             should_encrypt,
         );
         zk_print!("Deploying contract {contract}{:?}", actual_args); //
-        let _ret = self._deploy(project_dir, sender, contract, actual_args, wei_amount);
+        let _ret = self._deploy(project_dir, sender, contract, actual_args, wei_amount,project);
         zk_print!("");
-        Ok(json!({}))
+        // Ok(json!({}))
+        _ret
     }
 
     //         """
@@ -362,9 +412,9 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //         """
     fn connect<PS: ProvingScheme>(
         &self,
-        project_dir: &str,
+        project_dir: &PathBuf,
         contract: &str,
-        contract_address: JsonValue,
+        contract_address: &Address,
         user_address: String,
         compile_zkay_file: fn(
             input_file_path: &str,
@@ -372,8 +422,9 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             import_keys: bool,
         ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
-    ) -> eyre::Result<JsonValue> {
-        assert!( self.is_debug_backend() || CFG.lock().unwrap().crypto_backend() != "dummy","SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).");
+        project:&Project,
+    ) -> eyre::Result<Address> {
+        assert!( self.is_debug_backend() || CFG.lock().unwrap().crypto_backend() != "dummy","SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).{},{}",self.is_debug_backend(),CFG.lock().unwrap().crypto_backend());
 
         zk_print_banner(format!("Connect to {contract}@{contract_address}"));
 
@@ -383,6 +434,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             zk_file.try_exists().is_ok(),
             "No zkay contract found in specified directory"
         );
+        println!("zk_file===={zk_file:?}");
         let mut verifier_names = vec![];
         if PathBuf::from(project_dir)
             .join("contract.sol")
@@ -392,20 +444,24 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             verifier_names =
                 get_verification_contract_names(std::fs::read_to_string(zk_file).unwrap());
         } else {
-            let _ = compile_zkay_file(&zk_file.to_string_lossy().to_string(), project_dir, true);
+            let _ = compile_zkay_file(&zk_file.to_string_lossy().to_string(), &project_dir.to_string_lossy().to_string(), true);
         }
 
         zk_print!("Connecting to contract {contract}@{contract_address}");
-        let contract_on_chain = self._connect(project_dir, contract, contract_address.clone());
-
+        let _contract_on_chain = self._connect(&project_dir.to_string_lossy().to_string(), contract, contract_address.clone(),project);
+        println!("==========");
         let mut pki_verifier_addresses = BTreeMap::new();
 
         // # Check integrity of all pki contracts
         let mut _pki_contract = BTreeMap::new();
-        for crypto_params in CFG.lock().unwrap().all_crypto_params() {
-            let contract_name = CFG.lock().unwrap().get_pki_contract_name(&crypto_params);
-            let mut pki_address = self._req_state_var::<JsonValue>(
-                contract_on_chain.as_ref().unwrap(),
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
+        for crypto_params in all_crypto_params {
+            let contract_name = CFG
+                .lock()
+                .unwrap()
+                .get_pki_contract_name(&CryptoParams::new(crypto_params.clone()).identifier_name());
+            let mut pki_address = self._req_state_var::<Address>(
+                &Address::from_str("contract_on_chain.as_ref().unwrap()").unwrap(),
                 &format!("{contract_name}_inst"),
                 &String::default(),
             );
@@ -418,8 +474,12 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
                 None,
                 false,
                 None,
+                project,
+            )?;
+            _pki_contract.insert(
+                CryptoParams::new(crypto_params.clone()).crypto_name,
+                contract,
             );
-            _pki_contract.insert(CryptoParams::new(crypto_params).crypto_name, contract);
             // }
         }
         *self._pki_contract().borrow_mut() = Some(_pki_contract);
@@ -440,7 +500,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
                 })
                 .collect();
             let some_vcontract = self._req_state_var(
-                contract_on_chain.as_ref().unwrap(),
+                &Address::from_str("contract_on_chain.as_ref().unwrap()").unwrap(),
                 &format!("{some_vname}_inst"),
                 &String::default(),
             );
@@ -448,12 +508,13 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
                 libraries,
                 &some_vcontract,
                 &PathBuf::from(project_dir).join(format!("{some_vname}.sol")),
-            );
+                project,
+            )?;
             *self.lib_addresses().borrow_mut() = Some(libs.clone());
 
             for verifier in verifier_names {
-                let v_address = self._req_state_var::<JsonValue>(
-                    contract_on_chain.as_ref().unwrap(),
+                let v_address = self._req_state_var::<Address>(
+                    &Address::from_str("contract_on_chain.as_ref().unwrap()").unwrap(),
                     &format!("{verifier}_inst"),
                     &String::default(),
                 );
@@ -465,7 +526,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
                     None,
                     false,
                     None,
-                );
+                    project,
+                )?;
 
                 // # Verify prover key
                 let expected_hash = self._req_state_var::<String>(
@@ -495,13 +557,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             &contract_address, //contract_on_chain["address"]
             project_dir,
             &pki_verifier_addresses,
+            project,
         );
 
         // with success_print(){
         zk_print!("OK: Bytecode on blockchain matches local zkay contract");
         zk_print!("Connection from account 0x{user_address} established\n");
 
-        contract_on_chain
+        Ok(contract_address.clone())
     }
     fn prover(&self) -> RcCell<P>;
     //     @abstractmethod
@@ -520,7 +583,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         sol_filename: &str,
         contract_name: Option<String>,
         sender: &str,
-    ) -> eyre::Result<JsonValue>;
+        project:&Project,
+    ) -> eyre::Result<Address> ;
     //         pass
 
     //     @classmethod
@@ -543,13 +607,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     @abstractmethod
     fn _verify_contract_integrity(
         &self,
-        address: &JsonValue,
+        address: &Address,
         sol_filename: &PathBuf,
-        libraries: Option<&BTreeMap<String, JsonValue>>,
+        libraries: Option<&BTreeMap<String, Address>>,
         contract_name: Option<String>,
         is_library: bool,
-        cwd: Option<String>,
-    ) -> JsonValue;
+        cwd: Option<PathBuf>,
+    project: &Project,
+    ) ->  eyre::Result<Address> ;
 
     //     @abstractmethod
     //         """
@@ -564,7 +629,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         libraries: BTreeMap<String, PathBuf>,
         contract_with_libs_addr: &String,
         sol_with_libs_filename: &PathBuf,
-    ) -> BTreeMap<String, JsonValue>;
+      project:&Project,
+    ) -> eyre::Result<BTreeMap<String, Address>> ;
     //         pass
 
     //     @abstractmethod
@@ -578,9 +644,10 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //         """
     fn _verify_zkay_contract_integrity(
         &self,
-        address: &JsonValue,
-        project_dir: &str,
-        pki_verifier_addresses: &BTreeMap<String, JsonValue>,
+        address: &Address,
+        project_dir: &PathBuf,
+        pki_verifier_addresses: &BTreeMap<String, Address>,
+        project:&Project,
     );
     //         pass
 
@@ -596,9 +663,10 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     fn _deploy_dependencies(
         &self,
         sender: &str,
-        project_dir: &str,
+        project_dir: &PathBuf,
         verifier_names: Vec<String>,
-    ) -> BTreeMap<String, JsonValue>;
+        project: &Project,
+    ) -> eyre::Result<BTreeMap<String, Address>>;
     // pass
 
     //     @abstractmethod
@@ -622,7 +690,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     @abstractmethod
     fn _call(
         &self,
-        contract_handle: JsonValue,
+        contract_handle: Address,
         sender: &String,
         name: &str,
         args: &Vec<DataType>,
@@ -632,7 +700,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     @abstractmethod
     fn _req_state_var<R: Clone + Default>(
         &self,
-        contract_handle: &JsonValue,
+        contract_handle: &Address,
         name: &str,
         indices: &String,
     ) -> R;
@@ -641,7 +709,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     @abstractmethod
     fn _transact(
         &self,
-        contract_handle: &JsonValue,
+        contract_handle: &Address,
         sender: &str,
         function: &str,
         actual_args: &Vec<DataType>,
@@ -652,12 +720,13 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     //     @abstractmethod
     fn _deploy(
         &self,
-        project_dir: &str,
+        project_dir: &PathBuf,
         sender: &str,
         contract: &str,
         actual_args: Vec<String>,
         wei_amount: Option<i32>,
-    ) -> eyre::Result<JsonValue>;
+        project: &Project,
+    ) -> eyre::Result<Address>;
     //         pass
 
     //     @abstractmethod
@@ -665,8 +734,9 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         &self,
         project_dir: &str,
         contract: &str,
-        address: JsonValue,
-    ) -> eyre::Result<JsonValue>;
+        address: Address,
+        project: &Project,
+    ) -> eyre::Result<(JsonAbi, CompactBytecode, ArtifactId)> ;
     //         pass
 
     //     @staticmethod
@@ -816,7 +886,7 @@ pub trait ZkayCryptoInterface<
     //         """
     fn generate_or_load_key_pair(&self, address: &str) {
         let v = self._generate_or_load_key_pair(&address.to_owned());
-        self.keystore().borrow_mut().add_keypair(address, v);
+        self.keystore().borrow_mut().add_keypair(address, v) ;
     }
 
     //         """

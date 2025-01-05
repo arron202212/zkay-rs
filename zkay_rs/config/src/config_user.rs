@@ -277,7 +277,7 @@ pub trait UserConfig {
     }
 
     fn crypto_backend(&self) -> String {
-        "dummy".to_owned()
+        "ecdh-chaskey".to_owned()
     }
 
     fn set_crypto_backend(&mut self, hom: &String, val: String) {

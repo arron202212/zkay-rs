@@ -11,6 +11,11 @@
 // from contextlib import contextmanager, nullcontext
 // from enum import IntEnum
 // from typing import Dict, Union, CallableType, Any, Optional, List, Tuple, ContextManager
+ use alloy_json_abi::JsonAbi;
+use alloy_primitives::Address;
+use std::path::PathBuf;
+use foundry_compilers::Project;
+use foundry_cli::opts::{RpcOpts,EthereumOpts};
 use crate::keystore::simple::SimpleKeystore;
 use crate::prover::jsnark::JsnarkProver;
 use crate::runtime::BlockchainClass;
@@ -592,7 +597,7 @@ pub struct ApiWrapper<
     __prover: RcCell<P>,
     __project_dir: RcCell<String>,
     __contract_name: RcCell<String>,
-    __contract_handle: RcCell<Option<JsonValue>>,
+    __contract_handle: RcCell<Option<Address>>,
     __user_addr: RcCell<String>,
     __current_msg: RcCell<Option<MsgStruct>>,
     __current_block: RcCell<Option<BlockStruct>>,
@@ -695,7 +700,8 @@ impl<
     }
     // @property
     pub fn address(&self) -> String {
-        self.__contract_handle.borrow().as_ref().unwrap()["address"].to_string()
+        // self.__contract_handle.borrow().as_ref().unwrap()["address"].to_string()
+        String::new()
     }
 
     // @property
@@ -751,41 +757,45 @@ impl<
         actual_args: Vec<String>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-    ) -> Option<JsonValue> {
+        project:&Project,
+    ) -> Option<Address> {
         *self.__contract_handle.borrow_mut() = self
             .__conn
             .borrow()
             .deploy(
-                &self.__project_dir.borrow(),
+                &PathBuf::from(self.__project_dir.borrow().clone()),
                 &self.__user_addr.borrow(),
                 &self.__contract_name.borrow(),
                 actual_args,
                 should_encrypt,
                 wei_amount,
+                project,
             )
             .ok();
         self.__contract_handle.borrow().clone()
     }
     pub fn connect<PS: ProvingScheme>(
         &self,
-        address: JsonValue,
+        address: &Address,
         compile_zkay_file: fn(
             input_file_path: &str,
             output_dir: &str,
             import_keys: bool,
         ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
+        project:&Project,
     ) {
         *self.__contract_handle.borrow_mut() = self
             .__conn
             .borrow()
             .connect::<PS>(
-                &self.__project_dir.borrow(),
+                &PathBuf::from(self.__project_dir.borrow().clone()),
                 &self.__contract_name.borrow(),
                 address,
                 self.user_address(),
                 compile_zkay_file,
                 get_verification_contract_names,
+                project,
             )
             .ok();
     }
@@ -937,7 +947,7 @@ impl<
         (constr(res.0.to_string()), res.1)
     }
 
-    pub fn do_homomorphic_op(
+    pub   fn do_homomorphic_op(
         &self,
         op: &str,
         crypto_backend: &str,
@@ -967,7 +977,7 @@ impl<
     // """
     // Re-randomizes arg using fresh randomness, which is stored in data[rnd_key] (side-effect!)
     // """
-    pub fn do_rerand(
+    pub   fn do_rerand(
         &self,
         arg: Value<String, CipherValue>,
         crypto_backend: &str,
@@ -1340,6 +1350,8 @@ pub fn new_contract_simulator(
     project_dir: &str,
     contract_name: &str,
     user_addr: &str,
+    eth: Option<EthereumOpts>,
+    rpc: Option<RpcOpts>,
 ) -> ContractSimulator<CryptoClassType, JsnarkProver, BlockchainClassType, KeystoreType> {
     // -> ContractSimulator<
     //     CryptoClass<
@@ -1362,7 +1374,7 @@ pub fn new_contract_simulator(
     let __prover = RcCell::new(_prover_classes(&CFG.lock().unwrap().snark_backend()));
     let __blockchain = RcCell::new(_blockchain_classes(
         &CFG.lock().unwrap().blockchain_backend(),
-        __prover.clone(),
+        __prover.clone(),eth,rpc,
     ));
     // let __keystore=BTreeMap::from([SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone())]);
     let mut __keystore = BTreeMap::new();

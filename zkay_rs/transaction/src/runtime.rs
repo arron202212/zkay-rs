@@ -5,6 +5,19 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use foundry_compilers::{
+    artifacts::{CompactBytecode, CompactDeployedBytecode, Settings},
+    cache::{CacheEntry, CompilerCache},
+    utils::read_json_file,
+    Artifact, ProjectCompileOutput,
+};
+use alloy_json_abi::JsonAbi;
+use foundry_compilers::ArtifactId;
+use foundry_cli::opts::{RpcOpts,EthereumOpts};
+use foundry_compilers::Project;
+ use alloy_primitives::Address;
+
+// use alloy_sol_types::sol_data::Address;
 use crate::blockchain::web3rs::{
     Web3Blockchain, Web3BlockchainBase, Web3HttpGanacheBlockchain, Web3TesterBlockchain,
 };
@@ -104,16 +117,18 @@ pub enum BlockchainClass<P: ZkayProverInterface + Clone> {
 pub fn _blockchain_classes<P: ZkayProverInterface + Clone>(
     blockchain_backend: &str,
     prover: RcCell<P>,
+    eth: Option<EthereumOpts>,
+    rpc: Option<RpcOpts>,
 ) -> BlockchainClass<P> {
     match blockchain_backend {
         "w3-eth-tester" => BlockchainClass::Web3TesterBlockchain(Web3BlockchainBase::<
             P,
             Web3TesterBlockchain,
-        >::new(prover)),
+        >::new(prover,eth,rpc)),
         "w3-ganache" => BlockchainClass::Web3HttpGanacheBlockchain(Web3BlockchainBase::<
             P,
             Web3HttpGanacheBlockchain,
-        >::new(prover)),
+        >::new(prover,eth,rpc)),
         // "w3-ipc" => Web3IpcBlockchain,
         // "w3-websocket" => Web3WebsocketBlockchain,
         // "w3-http" => Web3HttpBlockchain,

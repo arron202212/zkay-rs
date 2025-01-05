@@ -94,7 +94,7 @@ pub fn hash_file(filename: &str, mut chunk_size: i32) -> Vec<u8> {
 //     return filename[:ext_idx]
 
 pub fn get_contract_names(sol_filename: &str) -> Vec<String> {
-    let mut f = File::open(sol_filename).expect("");
+    let mut f = File::open(sol_filename).expect(sol_filename);
     // with open(sol_filename) as f
     // s = f.read()
     // return [m.group(1) for m in matches.ite

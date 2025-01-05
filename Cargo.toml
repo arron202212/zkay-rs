@@ -76,7 +76,7 @@ zkay-derive-core={path="zkay-derive-core"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
 
-
+async-trait = "0.1.68"
 clap = { version = "4.4.10", features = ["derive",  "env", "unicode", "wrap_help","string"] }
 lazy_static = "1.4.0"
 antlr-rust = { version = "0.3.0-beta" }
