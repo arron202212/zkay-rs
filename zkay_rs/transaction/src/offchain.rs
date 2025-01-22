@@ -11,20 +11,20 @@
 // from contextlib import contextmanager, nullcontext
 // from enum import IntEnum
 // from typing import Dict, Union, CallableType, Any, Optional, List, Tuple, ContextManager
- use alloy_json_abi::JsonAbi;
-use alloy_primitives::Address;
-use std::path::PathBuf;
-use foundry_compilers::Project;
-use foundry_cli::opts::{RpcOpts,EthereumOpts};
 use crate::keystore::simple::SimpleKeystore;
 use crate::prover::jsnark::JsnarkProver;
 use crate::runtime::BlockchainClass;
 use crate::runtime::CryptoClass;
 use crate::runtime::{_blockchain_classes, _crypto_classes, _prover_classes};
+use alloy_json_abi::JsonAbi;
+use alloy_primitives::Address;
+use foundry_cli::opts::{EthereumOpts, RpcOpts};
+use foundry_compilers::Project;
 use my_logging::log_context::WithLogContext;
 use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::{RcCell, WeakCell};
 use serde_json::{json, Map, Result, Value as JsonValue};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 use my_logging::log_context::log_context;
@@ -757,7 +757,7 @@ impl<
         actual_args: Vec<String>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-        project:&Project,
+        project: &Project,
     ) -> Option<Address> {
         *self.__contract_handle.borrow_mut() = self
             .__conn
@@ -783,7 +783,7 @@ impl<
             import_keys: bool,
         ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
-        project:&Project,
+        project: &Project,
     ) {
         *self.__contract_handle.borrow_mut() = self
             .__conn
@@ -947,7 +947,7 @@ impl<
         (constr(res.0.to_string()), res.1)
     }
 
-    pub   fn do_homomorphic_op(
+    pub fn do_homomorphic_op(
         &self,
         op: &str,
         crypto_backend: &str,
@@ -977,7 +977,7 @@ impl<
     // """
     // Re-randomizes arg using fresh randomness, which is stored in data[rnd_key] (side-effect!)
     // """
-    pub   fn do_rerand(
+    pub fn do_rerand(
         &self,
         arg: Value<String, CipherValue>,
         crypto_backend: &str,
@@ -1374,7 +1374,9 @@ pub fn new_contract_simulator(
     let __prover = RcCell::new(_prover_classes(&CFG.lock().unwrap().snark_backend()));
     let __blockchain = RcCell::new(_blockchain_classes(
         &CFG.lock().unwrap().blockchain_backend(),
-        __prover.clone(),eth,rpc,
+        __prover.clone(),
+        eth,
+        rpc,
     ));
     // let __keystore=BTreeMap::from([SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone())]);
     let mut __keystore = BTreeMap::new();

@@ -89,6 +89,9 @@ pub struct CallArgs {
 
     #[command(flatten)]
     eth: EthereumOpts,
+   
+    #[arg(id = "survey", long = "survey", alias = "is-survey")]
+    is_survey: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -117,6 +120,10 @@ pub enum CallSubcommands {
 
 impl CallArgs {
     pub async fn run(self) -> Result<()> {
+        if self.is_survey {
+            crate::contract::main0( None,Some(self.eth.clone()));
+            return Ok(());
+        }
         let figment = Into::<Figment>::into(&self.eth).merge(&self);
         let evm_opts = figment.extract::<EvmOpts>()?;
         let mut config = Config::try_from(figment)?.sanitized();

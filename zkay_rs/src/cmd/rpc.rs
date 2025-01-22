@@ -31,15 +31,22 @@ pub struct RpcArgs {
 
     #[command(flatten)]
     rpc: RpcOpts,
+
+    #[arg(id = "survey", long = "survey", alias = "is-survey")]
+    is_survey: bool,
 }
 
 impl RpcArgs {
     pub async fn run(self) -> Result<()> {
+        if self.is_survey {
+            crate::contract::main0(Some(self.rpc.clone()), None);
+            return Ok(());
+        }
         let Self {
             raw,
             method,
             params,
-            rpc,
+            rpc,..
         } = self;
 
         let config = Config::from(&rpc);

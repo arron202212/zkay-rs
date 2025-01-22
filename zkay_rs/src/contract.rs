@@ -16,10 +16,10 @@
 // import os
 // from enum import IntEnum
 // from typing import Dict, List, Tuple, Optional, Union, Any
-use foundry_cli::opts::{EthereumOpts,RpcOpts};
-use foundry_config::Config;
- use alloy_primitives::Address;
+use alloy_primitives::Address;
+use foundry_cli::opts::{EthereumOpts, RpcOpts};
 use foundry_compilers::Project;
+use foundry_config::Config;
 use my_logging;
 use proving_scheme::backends::groth16::ProvingSchemeGroth16;
 use proving_scheme::proving_scheme::ProvingScheme;
@@ -169,7 +169,7 @@ impl<
             import_keys: bool,
         ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
-        project:&Project,
+        project: &Project,
     ) -> Survey<C, P, B, K> {
         // = os.path.dirname(os.path.realpath(__file__))
         let mut c = Survey::new(project_dir, user, contract_simulator.clone());
@@ -189,15 +189,15 @@ impl<
         user: &str,
         project_dir: &str,
         mut contract_simulator: RcCell<ContractSimulator<C, P, B, K>>,
-        project:&Project,
+        project: &Project,
     ) -> Survey<C, P, B, K> {
         //= os.path.dirname(os.path.realpath(__file__))
         contract_simulator.borrow().initialize_keys_for(user);
         let mut c = Survey::new(project_dir, user, contract_simulator);
-        c.constructor(_min_votes,project);
+        c.constructor(_min_votes, project);
         c
     }
-    fn constructor(&self, _min_votes: i32,project:&Project,) {
+    fn constructor(&self, _min_votes: i32, project: &Project) {
         with_context_block!(var _fc= self._function_ctx(-1,0,"constructor")=> {
             let (zk__is_ext,_fc)=_fc;
              with_context_block!(var _tm=time_measure("transaction_full", !zk__is_ext,false)=>{
@@ -780,14 +780,14 @@ fn deploy<
     _min_votes: i32,
     user: &str,
     mut cs: RcCell<ContractSimulator<C, P, B, K>>,
-    project:&Project,
+    project: &Project,
 ) -> Survey<C, P, B, K> {
     let user = if user.is_empty() {
         "me".to_owned()
     } else {
         user.to_owned()
     };
-    Survey::deploy(_min_votes, &user, "", cs,project)
+    Survey::deploy(_min_votes, &user, "", cs, project)
 }
 
 fn connect<
@@ -806,7 +806,7 @@ fn connect<
         import_keys: bool,
     ) -> anyhow::Result<()>,
     get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
-    project:&Project,
+    project: &Project,
 ) -> Survey<C, P, B, K> {
     let user = if user.is_empty() {
         "me".to_owned()
@@ -847,9 +847,7 @@ use ast_builder::process_ast::{get_processed_ast, get_verification_contract_name
 use zkay_ast::global_defs::{
     array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
 };
-pub fn main0(    eth: Option<EthereumOpts>,
-    rpc: Option<RpcOpts>,
-) {
+pub fn main0(rpc: Option<RpcOpts>, eth: Option<EthereumOpts>) {
     // contract_simulator.use_config_from_manifest(file!());
     // os.path.dirname(os.path.realpath(__file__);
     // let me = contract_simulator.default_address();
@@ -861,9 +859,14 @@ pub fn main0(    eth: Option<EthereumOpts>,
 
     // let contract_simulator=ContractSimulator::new(".","","",runtime.clone());
     // RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
-    
-       let project= rpc.as_ref().and_then(|rpc|{let config = Config::from(rpc);
-        config.project().ok()}).unwrap();
+
+    let project = rpc
+        .as_ref()
+        .and_then(|rpc| {
+            let config = Config::from(rpc);
+            config.project().ok()
+        })
+        .unwrap();
     let _contract_simulator = new_contract_simulator(
         "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/",
         "",

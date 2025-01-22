@@ -491,13 +491,12 @@ mod tests {
             .estimate_gas(
                 "0xa71526142e3105850b6b2a5dca6a110e135924e0",
                 "publish_results(uint[] calldata zk__out, uint[8] calldata zk__proof) external",
-                vec!["1",
-                "12345678"]
+                vec!["1", "12345678"]
             )
             .is_empty());
         assert_eq!(
-            &web3.estimate_gas("0xa71526142e3105850b6b2a5dca6a110e135924e0","",vec![]),
-            "0" 
+            &web3.estimate_gas("0xa71526142e3105850b6b2a5dca6a110e135924e0", "", vec![]),
+            "0"
         );
     }
 }

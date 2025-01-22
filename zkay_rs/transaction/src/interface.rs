@@ -91,7 +91,7 @@ use crate::types::{
     AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PrivateKeyValue,
     PublicKeyValue, RandomnessValue, TxStruct, Value,
 };
-use serde_json::{json, Map as JsonMap,  Value as JsonValue};
+use serde_json::{json, Map as JsonMap, Value as JsonValue};
 use zkay_config::{
     config::{zk_print_banner, CFG},
     config_user::UserConfig,
@@ -143,7 +143,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     fn _pki_contract(&self) -> RcCell<Option<BTreeMap<String, Address>>>;
     fn pki_contract(&self, crypto_backend: &str) -> Address {
         if self._pki_contract().borrow().is_none() {
-            let _=self._connect_libraries();
+            let _ = self._connect_libraries();
         }
         self._pki_contract()
             .borrow()
@@ -161,9 +161,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
     // return self._lib_addresses
 
     //     @abstractmethod
-    fn _connect_libraries(
-        &self,
-    ) -> eyre::Result<BTreeMap<String, Address>>;
+    fn _connect_libraries(&self) -> eyre::Result<BTreeMap<String, Address>>;
     //         pass
 
     //     # PUBLIC API
@@ -351,7 +349,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         actual_args: Vec<String>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-        project:&Project,
+        project: &Project,
     ) -> eyre::Result<Address> {
         if !self.is_debug_backend() && CFG.lock().unwrap().crypto_backend() == "dummy" {
             eyre::bail!("SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).")
@@ -366,7 +364,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             should_encrypt,
         );
         zk_print!("Deploying contract {contract}{:?}", actual_args); //
-        let _ret = self._deploy(project_dir, sender, contract, actual_args, wei_amount,project);
+        let _ret = self._deploy(
+            project_dir,
+            sender,
+            contract,
+            actual_args,
+            wei_amount,
+            project,
+        );
         zk_print!("");
         // Ok(json!({}))
         _ret
@@ -422,7 +427,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             import_keys: bool,
         ) -> anyhow::Result<()>,
         get_verification_contract_names: fn(code_or_ast: String) -> Vec<String>,
-        project:&Project,
+        project: &Project,
     ) -> eyre::Result<Address> {
         assert!( self.is_debug_backend() || CFG.lock().unwrap().crypto_backend() != "dummy","SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache).{},{}",self.is_debug_backend(),CFG.lock().unwrap().crypto_backend());
 
@@ -444,11 +449,20 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
             verifier_names =
                 get_verification_contract_names(std::fs::read_to_string(zk_file).unwrap());
         } else {
-            let _ = compile_zkay_file(&zk_file.to_string_lossy().to_string(), &project_dir.to_string_lossy().to_string(), true);
+            let _ = compile_zkay_file(
+                &zk_file.to_string_lossy().to_string(),
+                &project_dir.to_string_lossy().to_string(),
+                true,
+            );
         }
 
         zk_print!("Connecting to contract {contract}@{contract_address}");
-        let _contract_on_chain = self._connect(&project_dir.to_string_lossy().to_string(), contract, contract_address.clone(),project);
+        let _contract_on_chain = self._connect(
+            &project_dir.to_string_lossy().to_string(),
+            contract,
+            contract_address.clone(),
+            project,
+        );
         println!("==========");
         let mut pki_verifier_addresses = BTreeMap::new();
 
@@ -583,8 +597,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         sol_filename: &str,
         contract_name: Option<String>,
         sender: &str,
-        project:&Project,
-    ) -> eyre::Result<Address> ;
+        project: &Project,
+    ) -> eyre::Result<Address>;
     //         pass
 
     //     @classmethod
@@ -613,8 +627,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         contract_name: Option<String>,
         is_library: bool,
         cwd: Option<PathBuf>,
-    project: &Project,
-    ) ->  eyre::Result<Address> ;
+        project: &Project,
+    ) -> eyre::Result<Address>;
 
     //     @abstractmethod
     //         """
@@ -629,8 +643,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         libraries: BTreeMap<String, PathBuf>,
         contract_with_libs_addr: &String,
         sol_with_libs_filename: &PathBuf,
-      project:&Project,
-    ) -> eyre::Result<BTreeMap<String, Address>> ;
+        project: &Project,
+    ) -> eyre::Result<BTreeMap<String, Address>>;
     //         pass
 
     //     @abstractmethod
@@ -647,7 +661,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         address: &Address,
         project_dir: &PathBuf,
         pki_verifier_addresses: &BTreeMap<String, Address>,
-        project:&Project,
+        project: &Project,
     );
     //         pass
 
@@ -736,7 +750,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface> {
         contract: &str,
         address: Address,
         project: &Project,
-    ) -> eyre::Result<(JsonAbi, CompactBytecode, ArtifactId)> ;
+    ) -> eyre::Result<(JsonAbi, CompactBytecode, ArtifactId)>;
     //         pass
 
     //     @staticmethod
@@ -886,7 +900,7 @@ pub trait ZkayCryptoInterface<
     //         """
     fn generate_or_load_key_pair(&self, address: &str) {
         let v = self._generate_or_load_key_pair(&address.to_owned());
-        self.keystore().borrow_mut().add_keypair(address, v) ;
+        self.keystore().borrow_mut().add_keypair(address, v);
     }
 
     //         """

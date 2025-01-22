@@ -18,7 +18,6 @@
 // use my_logging;
 // use foundry_cli::opts::{RpcOpts,EthereumOpts};
 // use foundry_cli::{handler, utils};
-use std::str::FromStr;
 use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
@@ -34,7 +33,7 @@ use eyre::{Context, Result};
 use forge_verify::RetryArgs;
 use forge_verify::VerifyArgs;
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts,RpcOpts, EtherscanOpts, TransactionOpts},
+    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, RpcOpts, TransactionOpts},
     utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
 };
 use foundry_common::{
@@ -43,6 +42,7 @@ use foundry_common::{
 };
 use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
 use foundry_compilers::{ArtifactId, Project};
+use std::str::FromStr;
 // use alloy_json_abi::JsonAbi;
 // use alloy_primitives::Address;
 // use eyre::{eyre::Result, WrapErr};
@@ -66,7 +66,7 @@ use std::{borrow::Borrow, marker::PhantomData, path::PathBuf, sync::Arc};
 use crate::interface::{ZkayBlockchainInterface, ZkayProverInterface};
 use my_logging::{log_context::log_context, logger::data};
 use privacy::library_contracts;
-use serde_json::{json, Map as JsonMap,  Value as JsonValue};
+use serde_json::{json, Map as JsonMap, Value as JsonValue};
 use solidity::compiler::compile_solidity_json;
 use std::borrow::BorrowMut;
 use std::collections::BTreeMap;
@@ -334,7 +334,6 @@ impl From<PendingTransactionError> for ContractDeploymentError {
     }
 }
 
-
 // max_gas_limit = 10000000
 #[enum_dispatch]
 pub trait Web3Blockchain {
@@ -349,16 +348,15 @@ pub struct Web3BlockchainBase<P: ZkayProverInterface, W> {
     next_acc_idx: RcCell<i32>,
     eth: Option<EthereumOpts>,
     rpc: Option<RpcOpts>,
-    project:Option<Project>,
+    project: Option<Project>,
     _web3: PhantomData<W>,
 }
 impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
-    pub fn new(prover: RcCell<P>,
-   eth: Option<EthereumOpts>,
-    rpc: Option<RpcOpts>,
-    ) -> Self {
-       let project= rpc.as_ref().and_then(|rpc|{let config = Config::from(rpc);
-        config.project().ok()});
+    pub fn new(prover: RcCell<P>, eth: Option<EthereumOpts>, rpc: Option<RpcOpts>) -> Self {
+        let project = rpc.as_ref().and_then(|rpc| {
+            let config = Config::from(rpc);
+            config.project().ok()
+        });
         Self {
             prover,
             _lib_addresses: RcCell::new(None),
@@ -402,20 +400,21 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         sol_filename: &str,
         contract_name: Option<String>,
         sender: &str,
-        project:&Project,
+        project: &Project,
     ) -> eyre::Result<Address> {
         let contract_name = if let Some(contract_name) = contract_name {
             contract_name
         } else {
             get_contract_names(sol_filename)[0].clone()
         };
-        let (abi, bin, id) =self.compile_contract(&PathBuf::from(sol_filename), &contract_name, None, &PathBuf::from("."),project)?;
-        let contract = self._deploy_contract(
-            sender,
-            abi.clone(),
-            &vec![],
-            None,abi, bin, id
-        );
+        let (abi, bin, id) = self.compile_contract(
+            &PathBuf::from(sol_filename),
+            &contract_name,
+            None,
+            &PathBuf::from("."),
+            project,
+        )?;
+        let contract = self._deploy_contract(sender, abi.clone(), &vec![], None, abi, bin, id);
         contract
     }
     // class Web3Blockchain(ZkayBlockchainInterface):
@@ -571,9 +570,8 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         );
 
         // Deploy verification contracts if not already done
-        let external_contract_addresses = self
-            ._deploy_dependencies(sender, &project_dir, verifier_names, project)
-            ?;
+        let external_contract_addresses =
+            self._deploy_dependencies(sender, &project_dir, verifier_names, project)?;
         let inst_target_path = std::env::temp_dir().join(
             project_dir
                 .iter()
@@ -626,7 +624,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
     fn _deploy_dependencies(
         &self,
         sender: &str,
-        project_dir:&PathBuf,
+        project_dir: &PathBuf,
         verifier_names: Vec<String>,
         project: &Project,
     ) -> eyre::Result<BTreeMap<String, Address>> {
@@ -655,9 +653,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         Ok(vf)
     }
 
-    fn _connect_libraries(
-        &self,
-    ) -> eyre::Result<BTreeMap<String, Address>> {
+    fn _connect_libraries(&self) -> eyre::Result<BTreeMap<String, Address>> {
         assert!(
             !CFG.lock().unwrap().blockchain_pki_address().is_empty(),
             "Must specify pki address in config."
@@ -690,11 +686,10 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         // with_context_block!(var _lce=library_compilation_environment()=>{
         let tmpdir = std::env::temp_dir();
         // let mut _pki_contract=BTreeMap::new();
-        let all_crypto_params=CFG.lock().unwrap().all_crypto_params();
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
-            let crypto_param=CryptoParams::new(crypto_params.clone());
-            let pki_contract_code =
-                library_contracts::get_pki_contract(&crypto_param);
+            let crypto_param = CryptoParams::new(crypto_params.clone());
+            let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
                 .lock()
                 .unwrap()
@@ -704,19 +699,20 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
                 &format!("{pki_contract_name}.sol"),
                 &pki_contract_code,
             );
-            let _=self._verify_contract_integrity(
-                    &Address::from_str(&CFG.lock().unwrap().blockchain_pki_address()).unwrap(),
-                    &PathBuf::from(pki_sol),
-                    None,
-                    Some(pki_contract_name),
-                    false,
-                    None,
-                    self.project.as_ref().unwrap(),
-                )?;
-            self._pki_contract.borrow_mut().as_mut().unwrap().insert(
-                crypto_params,
-                Address::default(),
-            );
+            let _ = self._verify_contract_integrity(
+                &Address::from_str(&CFG.lock().unwrap().blockchain_pki_address()).unwrap(),
+                &PathBuf::from(pki_sol),
+                None,
+                Some(pki_contract_name),
+                false,
+                None,
+                self.project.as_ref().unwrap(),
+            )?;
+            self._pki_contract
+                .borrow_mut()
+                .as_mut()
+                .unwrap()
+                .insert(crypto_params, Address::default());
         }
         //  *self._pki_contract.borrow_mut()=_pki_contract;
         let verify_sol = save_to_file(
@@ -757,10 +753,11 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         project_dir: &str,
         contract: &str,
         _address: Address,
-         project: &Project,
+        project: &Project,
     ) -> eyre::Result<(JsonAbi, CompactBytecode, ArtifactId)> {
         let filename = PathBuf::from(project_dir).join("contract.sol");
-        let (abi, bin, id) = self.compile_contract(&filename, contract, None, &PathBuf::from("."),project)?;
+        let (abi, bin, id) =
+            self.compile_contract(&filename, contract, None, &PathBuf::from("."), project)?;
         //  self.w3.eth.contract(
         //     address=address, abi=cout["abi"]
         // )
@@ -775,8 +772,8 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         mut contract_name: Option<String>,
         is_library: bool,
         cwd: Option<PathBuf>,
- project: &Project,
-    ) ->  eyre::Result<Address> {
+        project: &Project,
+    ) -> eyre::Result<Address> {
         // if is_instance(address, bytes)
         //     {address = self.w3.toChecksumAddress(address);}
 
@@ -799,8 +796,8 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
             cwd.as_ref().unwrap_or(&PathBuf::from(".")),
             project,
         )?;
-        let mut expected_byte_code =
-            self.__normalized_hex(String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap());
+        let mut expected_byte_code = self
+            .__normalized_hex(String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap());
 
         if is_library {
             // # https://github.com/ethereum/solidity/issues/7101
@@ -828,7 +825,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         libraries: BTreeMap<String, PathBuf>,
         contract_with_libs_addr: &String,
         sol_with_libs_filename: &PathBuf,
-        project:&Project,
+        project: &Project,
     ) -> eyre::Result<BTreeMap<String, Address>> {
         let cname =
             get_contract_names(&sol_with_libs_filename.to_string_lossy().to_string())[0].clone();
@@ -838,10 +835,15 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
             !actual_code.is_empty(),
             "Expected contract {cname} is not deployed at address {contract_with_libs_addr}"
         );
-    let (_abi, bin, _id)=self.compile_contract(sol_with_libs_filename, &cname, None, &PathBuf::from("."),project)?;
-        let code_with_placeholders = self.__normalized_hex(
-            String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap()
-        );
+        let (_abi, bin, _id) = self.compile_contract(
+            sol_with_libs_filename,
+            &cname,
+            None,
+            &PathBuf::from("."),
+            project,
+        )?;
+        let code_with_placeholders = self
+            .__normalized_hex(String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap());
 
         assert!(
             actual_code.len() == code_with_placeholders.len(),
@@ -866,10 +868,10 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
             let lib_address_offset = code_with_placeholders.find(&placeholder);
             if let Some(_lib_address_offset) = lib_address_offset {
                 let lib_address: Address = Address::default(); // self
-                                                        // .w3
-                                                        // .toChecksumAddress(actual_code[lib_address_offset..lib_address_offset + 40]);
-                                                        // with cfg.library_compilation_environment():
-                let _=self._verify_contract_integrity(
+                                                               // .w3
+                                                               // .toChecksumAddress(actual_code[lib_address_offset..lib_address_offset + 40]);
+                                                               // with cfg.library_compilation_environment():
+                let _ = self._verify_contract_integrity(
                     &lib_address,
                     &lib_sol,
                     None,
@@ -888,11 +890,14 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
         address: &Address,
         project_dir: &PathBuf,
         pki_verifier_addresses: &BTreeMap<String, Address>,
-        project:&Project,
+        project: &Project,
     ) {
-        let sol_file =
-            self.__hardcoded_external_contracts_ctx(project_dir,project_dir, &pki_verifier_addresses);
-        let _=self._verify_contract_integrity(
+        let sol_file = self.__hardcoded_external_contracts_ctx(
+            project_dir,
+            project_dir,
+            &pki_verifier_addresses,
+        );
+        let _ = self._verify_contract_integrity(
             address,
             &PathBuf::from(sol_file),
             None,
@@ -906,7 +911,7 @@ impl<P: ZkayProverInterface, W> ZkayBlockchainInterface<P> for Web3BlockchainBas
     //     @contextmanager
     fn lib_addresses(&self) -> RcCell<Option<BTreeMap<String, Address>>> {
         if self._lib_addresses.borrow().is_none() {
-            let _=self._connect_libraries();
+            let _ = self._connect_libraries();
         }
         self._lib_addresses.clone()
     }
@@ -1010,27 +1015,26 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         let provider = utils::get_provider(&config)?;
 
         // respect chain, if set explicitly via cmd args
-        let chain_id =utils::block_on(provider.get_chain_id())?;
+        let chain_id = utils::block_on(provider.get_chain_id())?;
         //  if let Some(chain_id) = self.chain_id() {
         //     chain_id
         // } else {
         //     provider.get_chain_id().await?
         // };
         // if self.unlocked {
-            // Deploy with unlocked account
-            let sender = self.eth.as_ref().unwrap().wallet.from.expect("required");
-           utils::block_on( self
-                .deploys(
-                    abi,
-                    bin,
-                    params,
-                    provider,
-                    chain_id,
-                    sender,
-                    config.transaction_timeout,
-                    id,
-                ))
-                
+        // Deploy with unlocked account
+        let sender = self.eth.as_ref().unwrap().wallet.from.expect("required");
+        utils::block_on(self.deploys(
+            abi,
+            bin,
+            params,
+            provider,
+            chain_id,
+            sender,
+            config.transaction_timeout,
+            id,
+        ))
+
         // } else {
         //     // Deploy with signer
         //     let signer = self.eth.wallet.signer().await?;
@@ -1111,7 +1115,10 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         _id: ArtifactId,
     ) -> eyre::Result<Address> {
         let bin = bin.into_bytes().unwrap_or_else(|| {
-            panic!("no bytecode found in bin object for {}", "self.contract.name")
+            panic!(
+                "no bytecode found in bin object for {}",
+                "self.contract.name"
+            )
         });
         let provider = Arc::new(provider);
         let factory = ContractFactory::new(abi.clone(), bin.clone(), provider.clone(), timeout);
@@ -1125,7 +1132,7 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
                     e
                 }
             })?;
-        let is_legacy =  Chain::from(chain).is_legacy();//self.tx.legacy ||
+        let is_legacy = Chain::from(chain).is_legacy(); //self.tx.legacy ||
 
         deployer.tx.set_from(deployer_address);
         deployer.tx.set_chain_id(chain);
@@ -1138,7 +1145,9 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         // } else {
         //     provider.get_transaction_count(deployer_address).await
         // }?);
-        deployer.tx.set_nonce(provider.get_transaction_count(deployer_address).await?);
+        deployer
+            .tx
+            .set_nonce(provider.get_transaction_count(deployer_address).await?);
         // set tx value if specified
         // if let Some(value) = self.tx.value {
         //     deployer.tx.set_value(value);
@@ -1153,7 +1162,7 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         //     }?);
         deployer
             .tx
-            .set_gas_limit( provider.estimate_gas(&deployer.tx).await?);
+            .set_gas_limit(provider.estimate_gas(&deployer.tx).await?);
         if is_legacy {
             let gas_price = provider.get_gas_price().await?;
             //  if let Some(gas_price) = self.tx.gas_price {
@@ -1164,13 +1173,13 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
             deployer.tx.set_gas_price(gas_price);
         } else {
             let estimate = provider.estimate_eip1559_fees(None).await.wrap_err("Failed to estimate EIP1559 fees. This chain might not support EIP1559, try adding --legacy to your command.")?;
-            let priority_fee =estimate.max_priority_fee_per_gas;
+            let priority_fee = estimate.max_priority_fee_per_gas;
             //  if let Some(priority_fee) = self.tx.priority_gas_price {
             //     priority_fee.to()
             // } else {
             //     estimate.max_priority_fee_per_gas
             // };
-            let max_fee =  estimate.max_fee_per_gas;
+            let max_fee = estimate.max_fee_per_gas;
             // if let Some(max_fee) = self.tx.gas_price {
             //     max_fee.to()
             // } else {
@@ -1258,7 +1267,7 @@ impl<P: ZkayProverInterface, W> Web3BlockchainBase<P, W> {
         // verify.run().await?;
         Ok(deployed_contract)
     }
- /// Parses the given constructor arguments into a vector of `DynSolValue`s, by matching them
+    /// Parses the given constructor arguments into a vector of `DynSolValue`s, by matching them
     /// against the constructor's input params.
     ///
     /// Returns a list of parsed values that match the constructor's input params.
@@ -1295,9 +1304,7 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
     fn next_acc_idx(&self) -> RcCell<i32> {
         self.next_acc_idx.clone()
     }
-    fn _connect_libraries(
-        &self,
-    ) -> eyre::Result<BTreeMap<String, Address>> {
+    fn _connect_libraries(&self) -> eyre::Result<BTreeMap<String, Address>> {
         zk_print_banner("Deploying Libraries".to_owned());
 
         let sender = "self.w3.eth.accounts[0]";
@@ -1307,12 +1314,11 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
         let tmpdir = std::env::temp_dir();
         // with log_context("deploy_pki"):
         let mut _pki_contract = BTreeMap::new();
-        let all_crypto_params=CFG.lock().unwrap().all_crypto_params();
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             // with log_context(crypto_params.crypto_name):
-            let crypto_param=CryptoParams::new(crypto_params.clone());
-            let pki_contract_code =
-                library_contracts::get_pki_contract(&crypto_param);
+            let crypto_param = CryptoParams::new(crypto_params.clone());
+            let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
                 .lock()
                 .unwrap()
@@ -1322,14 +1328,15 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
                 &format!("{pki_contract_name}.sol"),
                 &pki_contract_code,
             );
-            let (abi, bin, id) =self.compile_contract(&PathBuf::from(pki_sol), &pki_contract_name, None, &PathBuf::from("."),self.project.as_ref().unwrap())?;
-            let contract = self._deploy_contract(
-                sender,
-                abi.clone(),
-                &vec![],
+            let (abi, bin, id) = self.compile_contract(
+                &PathBuf::from(pki_sol),
+                &pki_contract_name,
                 None,
-                abi, bin, id
+                &PathBuf::from("."),
+                self.project.as_ref().unwrap(),
             )?;
+            let contract =
+                self._deploy_contract(sender, abi.clone(), &vec![], None, abi, bin, id)?;
             let backend_name = crypto_params.clone();
             _pki_contract.insert(backend_name.clone(), contract.clone());
             zk_print!(
@@ -1337,7 +1344,7 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
                 contract
             );
         }
-        *self._pki_contract.borrow_mut()=Some(_pki_contract);
+        *self._pki_contract.borrow_mut() = Some(_pki_contract);
         // with log_context("deploy_verify_libs"):
         let verify_sol = save_to_file(
             Some(tmpdir.clone()),
@@ -1346,13 +1353,14 @@ impl<P: ZkayProverInterface, Web3TesterBlockchain> Web3BlockchainBase<P, Web3Tes
         );
         let mut _lib_addresses = BTreeMap::new();
         for lib in CFG.lock().unwrap().external_crypto_lib_names() {
-            let (abi, bin, id) =self.compile_contract(&PathBuf::from(verify_sol.clone()), &lib, None,&PathBuf::from("."),self.project.as_ref().unwrap())?;
-            let out = self._deploy_contract(
-                sender,
-                abi.clone(),
-                &vec![],
-                None,abi, bin, id
+            let (abi, bin, id) = self.compile_contract(
+                &PathBuf::from(verify_sol.clone()),
+                &lib,
+                None,
+                &PathBuf::from("."),
+                self.project.as_ref().unwrap(),
             )?;
+            let out = self._deploy_contract(sender, abi.clone(), &vec![], None, abi, bin, id)?;
             _lib_addresses.insert(lib.clone(), out.clone());
             zk_print!(r#"Deployed crypto lib {lib} at address "{out:?}""#);
         }

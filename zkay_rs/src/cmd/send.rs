@@ -72,6 +72,9 @@ pub struct SendTxArgs {
         help_heading = "Transaction options"
     )]
     path: Option<PathBuf>,
+
+    #[arg(id = "survey", long = "survey", alias = "is-survey")]
+    is_survey: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -93,6 +96,11 @@ pub enum SendTxSubcommands {
 impl SendTxArgs {
     #[allow(unknown_lints, dependency_on_unit_never_type_fallback)]
     pub async fn run(self) -> Result<(), eyre::Report> {
+        if self.is_survey {
+            crate::contract::main0(None, Some(self.eth.clone()));
+            return Ok(());
+        }
+
         let Self {
             eth,
             to,
@@ -104,7 +112,7 @@ impl SendTxArgs {
             command,
             unlocked,
             path,
-            timeout,
+            timeout,..
         } = self;
 
         let blob_data = if let Some(path) = path {
