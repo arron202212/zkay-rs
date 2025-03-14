@@ -11,11 +11,11 @@ use std::any::Any;
 use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
 use zkay_ast::ast::{
-    identifier::Identifier, is_instance, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, Block,
-    BuiltinFunction, Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty,
-    FunctionCallExpr, FunctionCallExprBase, HybridArgType, HybridArgumentIdf,
-    IdentifierBaseProperty, IdentifierExpr, IdentifierExprUnion, IfStatement, IntoAST,
-    IntoExpression, IntoStatement, VariableDeclarationStatement, AST,
+    AST, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTType, Block, BuiltinFunction, Expression,
+    ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, FunctionCallExpr,
+    FunctionCallExprBase, HybridArgType, HybridArgumentIdf, IdentifierBaseProperty, IdentifierExpr,
+    IdentifierExprUnion, IfStatement, IntoAST, IntoExpression, IntoStatement,
+    VariableDeclarationStatement, identifier::Identifier, is_instance,
 };
 use zkay_ast::pointers::symbol_table::SymbolTableLinker;
 // Identifier = TypeVar("Identifier")
@@ -268,16 +268,18 @@ impl Remapper {
                     // key was only modified in true branch
                     // remap key -> new temporary with value cond ? new_value : old_value
                     let key_decl = key.borrow().parent();
-                    assert!(key_decl
-                        .clone()
-                        .unwrap()
-                        .upgrade()
-                        .unwrap()
-                        .try_as_expression_ref()
-                        .unwrap()
-                        .borrow()
-                        .annotated_type()
-                        .is_some());
+                    assert!(
+                        key_decl
+                            .clone()
+                            .unwrap()
+                            .upgrade()
+                            .unwrap()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .borrow()
+                            .annotated_type()
+                            .is_some()
+                    );
                     let mut prev_val =
                         IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                             .as_type(
@@ -361,16 +363,18 @@ impl Remapper {
                 // key was only modified in false branch
                 // remap key -> new temporary with value cond ? old_value : new_value
                 let key_decl = key.borrow().parent();
-                assert!(key_decl
-                    .clone()
-                    .unwrap()
-                    .upgrade()
-                    .unwrap()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type()
-                    .is_some());
+                assert!(
+                    key_decl
+                        .clone()
+                        .unwrap()
+                        .upgrade()
+                        .unwrap()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type()
+                        .is_some()
+                );
                 let mut prev_val =
                     IdentifierExpr::new(IdentifierExprUnion::Identifier(key.clone()), None)
                         .as_type(

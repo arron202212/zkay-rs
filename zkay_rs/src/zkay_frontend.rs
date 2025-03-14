@@ -35,7 +35,7 @@ use proving_scheme::proving_scheme::{ProvingScheme, VerifyingKeyMeta};
 use solidity::compiler::check_compilation;
 use transformation::zkay_contract_transformer::transform_ast;
 use zkay_config::{
-    config::{library_compilation_environment, CFG},
+    config::{CFG, library_compilation_environment},
     config_user::UserConfig,
     config_version::Versions,
     with_context_block,
@@ -51,7 +51,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use zkay_ast::ast::{DeepClone, IntoAST};
 use zkay_ast::global_defs::{
-    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+    GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::solidity_visitor::to_solidity;

@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 use rccell::RcCell;
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty,
-    AST,
+    AST, ASTBaseProperty, ASTFlatten, ASTType, AnnotatedTypeName, ExpressionBaseProperty,
+    is_instance,
 };
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;

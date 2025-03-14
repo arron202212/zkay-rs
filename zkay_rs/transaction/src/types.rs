@@ -6,18 +6,26 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 // use typing::Optional, Collection, Any, Dict, Tuple, List, Union, Callable
+use parking_lot::Mutex;
+use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{
     Index, IndexMut, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive,
 };
 use std::path::PathBuf;
+use std::sync::Arc;
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_config::{
-    config::{zk_print_banner, CFG},
+    config::{CFG, zk_print_banner},
     config_user::UserConfig,
     zk_print,
 };
+pub type ARcCell<typ> = Arc<Mutex<typ>>;
+#[macro_export]
+macro_rules! arc_cell_new {
+    ($exp:expr) => {{ std::sync::Arc::new(parking_lot::Mutex::new($exp)) }};
+}
 use zkay_transaction_crypto_params::params::CryptoParams;
 #[derive(Debug, EnumIs, EnumTryAs, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub enum DataType {
@@ -30,7 +38,11 @@ pub enum DataType {
     String(String),
     List(Vec<DataType>),
 }
-
+impl Default for DataType {
+    fn default() -> Self {
+        Self::Bool(false)
+    }
+}
 impl From<u128> for DataType {
     #[inline]
     fn from(item: u128) -> Self {
@@ -41,6 +53,25 @@ impl From<bool> for DataType {
     #[inline]
     fn from(item: bool) -> Self {
         DataType::Bool(item)
+    }
+}
+
+impl std::fmt::Display for DataType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::CipherValue(v) => format!("{:?}", v),
+                Self::PrivateKeyValue(v) => format!("{:?}", v),
+                Self::PublicKeyValue(v) => format!("{:?}", v),
+                Self::RandomnessValue(v) => format!("{:?}", v),
+                Self::Bool(v) => v.to_string(),
+                Self::Int(v) => v.to_string(),
+                Self::String(v) => v.to_string(),
+                Self::List(v) => v.iter().map(|x| x.to_string()).collect::<Vec<_>>().concat(),
+            }
+        )
     }
 }
 
@@ -349,13 +380,21 @@ impl AddressValue {
         self.get_balance.unwrap()(self)
     }
 }
-use std::fmt;
-impl<T: Clone + Default, V: Clone + Default> std::fmt::Display for Value<T, V>
+
+impl<T: Clone + Default + std::fmt::Display, V: Clone + Default> std::fmt::Display for Value<T, V>
 where
     Vec<T>: AsRef<[u8]> + std::fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.contents.clone())
+        write!(
+            f,
+            "{}",
+            self.contents
+                .iter()
+                .map(|x| format!("{x}"))
+                .collect::<Vec<_>>()
+                .concat()
+        )
     }
 }
 #[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]

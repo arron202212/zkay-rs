@@ -5,30 +5,31 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::blockchain::web3::Web3Tx;
 use alloy_json_abi::JsonAbi;
 use alloy_primitives::Address;
 use foundry_cli::opts::{EthereumOpts, RpcOpts};
 use foundry_compilers::ArtifactId;
 use foundry_compilers::Project;
 use foundry_compilers::{
+    Artifact, ProjectCompileOutput,
     artifacts::{CompactBytecode, CompactDeployedBytecode, Settings},
     cache::{CacheEntry, CompilerCache},
     utils::read_json_file,
-    Artifact, ProjectCompileOutput,
 };
 
 // use alloy_sol_types::sol_data::Address;
 use crate::blockchain::web3rs::{
-    Web3Blockchain, Web3BlockchainBase, Web3HttpGanacheBlockchain, Web3TesterBlockchain,
+    Web3BlockchainBase, Web3HttpGanacheBlockchain, Web3TesterBlockchain,
 };
 use crate::types::{
-    AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PublicKeyValue,
+    ARcCell, AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PublicKeyValue,
     RandomnessValue, TxStruct, Value,
 };
 use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::{RcCell, WeakCell};
 
-use serde_json::{json, Map, Result, Value as JsonValue};
+use serde_json::{Map, Result, Value as JsonValue, json};
 use std::path::PathBuf;
 // use crate::crypto::dummy::DummyCrypto;
 // use crate::crypto::dummy_hom::DummyHomCrypto;
@@ -54,7 +55,7 @@ use zkay_transaction_crypto_params::params::CryptoParams;
 #[enum_dispatch(ZkayCryptoInterface<P,B,K>,ZkayHomomorphicCryptoInterface<P,B,K>)]
 #[derive(Clone)]
 pub enum CryptoClass<
-    P: ZkayProverInterface + Clone,
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
@@ -71,12 +72,12 @@ pub enum CryptoClass<
 // }
 // }
 pub fn _crypto_classes<
-    P: ZkayProverInterface + Clone,
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 >(
     crypto_backend: &str,
-    key_store: RcCell<K>,
+    key_store: ARcCell<K>,
 ) -> CryptoClass<P, B, K> {
     match crypto_backend {
         // "dummy" => DummyCrypto,
@@ -100,35 +101,101 @@ pub fn _prover_classes(snark_backend: &str) -> JsnarkProver {
     }
 }
 
-#[enum_dispatch(ZkayBlockchainInterface<P>,Web3Blockchain)]
+#[enum_dispatch(ZkayBlockchainInterface<P>)]
 #[derive(Clone)]
-pub enum BlockchainClass<P: ZkayProverInterface + Clone> {
+pub enum BlockchainClass<P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync> {
     Web3TesterBlockchain(Web3BlockchainBase<P, Web3TesterBlockchain>),
     Web3HttpGanacheBlockchain(Web3BlockchainBase<P, Web3HttpGanacheBlockchain>),
 }
-// impl<P:ZkayProverInterface>  ZkayBlockchainInterface<P> for BlockchainClass<P>{
-// // pub fn new(blockchain_class:B)->Self{
-// //     Self{blockchain_class,
-// // _prover:PhantomData,
-// // }
-// // }
+
+#[macro_export]
+macro_rules! blockchain_class_dispatch {
+    ($exp: expr,$self: expr) => {{
+        match $self {
+            Web3TesterBlockchain(tester) => tester.$exp,
+            Web3HttpGanacheBlockchain(ganache) => ganache.$exp,
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! class_fn {
+    ($vis:vis fn $name:ident(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+        $vis fn $name(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+             match self{
+                Self::Web3TesterBlockchain(tester)=>tester.$name($($arg_name),*),
+                Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name($($arg_name),*),
+            }
+        }
+    };
+    ($vis:vis fn $name:ident< $( $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+  >(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+        $vis fn $name<$( $lt $(: $clt$(+$dlt)*)? ),+>(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+             match self{
+                Self::Web3TesterBlockchain(tester)=>tester.$name::<$( $lt),+ >($($arg_name),*),
+                Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name::<$( $lt),+ >($($arg_name),*),
+            }
+        }
+    };
+    ($vis:vis async fn $name:ident(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+        $vis async fn $name(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+             match self{
+                Self::Web3TesterBlockchain(tester)=>tester.$name($($arg_name),*).await,
+                Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name($($arg_name),*).await,
+            }
+        }
+    };
+    ($vis:vis async fn $name:ident<$( $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+>(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+        $vis async fn $name<$( $lt $(: $clt$(+$dlt)*)? ),+>(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+             match self{
+                Self::Web3TesterBlockchain(tester)=>tester.$name::<$( $lt),+ >($($arg_name),*).await,
+                Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name::<$( $lt),+ >($($arg_name),*).await,
+            }
+        }
+    };
+}
+
+// // #[samotop_async_trait::async_trait]
+// impl<P: ZkayProverInterface+ std::clone::Clone+ std::marker::Send+ std::marker::Sync> ZkayBlockchainInterface<P> for BlockchainClass<P> {
+//         class_fn!(fn _pki_contract(&self) -> ARcCell<Option<BTreeMap<String, Address>>>);
+//         class_fn!(fn lib_addresses(&self) -> ARcCell<Option<BTreeMap<String, Address>>>);
+//     class_fn!(fn _connect_libraries(&self) -> eyre::Result<BTreeMap<String, Address>>);
+//     class_fn!(async fn default_address(&self) -> Option<Value<String,AddressValue>>);
+//     class_fn!(fn create_test_accounts(&self, _count: i32) -> Vec<String>);
+//     class_fn!(async fn get_special_variables(&self,sender: &String,wei_amount: i32) -> (MsgStruct, BlockStruct, TxStruct));
+//      class_fn!(fn prover(&self) -> ARcCell<P>);
+//    class_fn!(fn deploy_solidity_contract<T: Clone + Default, V: Clone + Default>(&self,sol_filename: &str,contract_name: Option<String>,sender: &str) -> eyre::Result<Address>);
+//     class_fn!(fn _verify_contract_integrity(&self,address: &Address,sol_filename: &PathBuf,libraries: Option<&BTreeMap<String, Address>>,contract_name: Option<String>,is_library: bool,cwd: Option<PathBuf>) -> eyre::Result<Address>);
+//  class_fn!(fn _verify_library_integrity(&self,libraries: BTreeMap<String, PathBuf>,contract_with_libs_addr: &String,sol_with_libs_filename: &PathBuf) -> eyre::Result<BTreeMap<String, Address>>);
+//       class_fn!(fn _verify_zkay_contract_integrity(&self,address: &Address,project_dir: &PathBuf,pki_verifier_addresses: &BTreeMap<String, Address>));
+//   class_fn!(async fn _default_address(&self) -> Option<String>);
+//      class_fn!(async fn _get_balance(&self, address: &str) -> String);
+//      class_fn!(fn _deploy_dependencies(&self,sender: &str,project_dir: &PathBuf,verifier_names: Vec<String>) -> eyre::Result<BTreeMap<String, Address>>);
+//      class_fn!(fn _req_public_key(&self,address: &String,crypto_params: &CryptoParams) -> eyre::Result<Value<String, PublicKeyValue>>);
+//      class_fn!(fn _announce_public_key(&self,address: &str,pk: &Value<String, PublicKeyValue>,crypto_params: &CryptoParams) ->eyre::Result<String>);
+//      class_fn!(fn _call(&self,contract_handle: &Address,sender: &String,name: &str,args: &Vec<DataType>) -> eyre::Result<String>);
+//      class_fn!(fn  _req_state_var(&self,contract_handle: &Address,name: &str,indices: Vec<String>) -> eyre::Result<String>);
+//      class_fn!(fn _transact(&self,contract_handle: &Address,sender: &str,function: &str,actual_args: &Vec<DataType>,wei_amount: Option<i32>)-> eyre::Result<String>);
+//      class_fn!(fn _deploy(&self,project_dir: &PathBuf,sender: &str,contract: &str,actual_args: Vec<String>,wei_amount: Option<i32>) -> eyre::Result<Address>);
+//      class_fn!(fn _connect(&self,project_dir: &str,contract: &str,address: Address) -> eyre::Result<Address>) ;
+
 // }
 
-pub fn _blockchain_classes<P: ZkayProverInterface + Clone>(
+pub fn _blockchain_classes<
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+>(
     blockchain_backend: &str,
-    prover: RcCell<P>,
-    eth: Option<EthereumOpts>,
-    rpc: Option<RpcOpts>,
+    prover: ARcCell<P>,
+    web3tx: Web3Tx,
 ) -> BlockchainClass<P> {
     match blockchain_backend {
         "w3-eth-tester" => BlockchainClass::Web3TesterBlockchain(Web3BlockchainBase::<
             P,
             Web3TesterBlockchain,
-        >::new(prover, eth, rpc)),
+        >::new(prover, web3tx)),
         "w3-ganache" => BlockchainClass::Web3HttpGanacheBlockchain(Web3BlockchainBase::<
             P,
             Web3HttpGanacheBlockchain,
-        >::new(prover, eth, rpc)),
+        >::new(prover, web3tx)),
         // "w3-ipc" => Web3IpcBlockchain,
         // "w3-websocket" => Web3WebsocketBlockchain,
         // "w3-http" => Web3HttpBlockchain,
@@ -146,26 +213,26 @@ pub fn _blockchain_classes<P: ZkayProverInterface + Clone>(
 //     """
 #[derive(Clone)]
 pub struct Runtime<
-    P: ZkayProverInterface + Clone,
-    B: Web3Blockchain + ZkayBlockchainInterface<P> + Clone,
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    __blockchain: RcCell<B>,
-    __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
-    __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
-    __prover: RcCell<P>,
+    __blockchain: ARcCell<B>,
+    __crypto: ARcCell<BTreeMap<String, ARcCell<CryptoClass<P, B, K>>>>,
+    __keystore: ARcCell<BTreeMap<String, ARcCell<K>>>,
+    __prover: ARcCell<P>,
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: Web3Blockchain + ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > Runtime<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> Runtime<P, B, K>
 {
     pub fn new(
-        __blockchain: RcCell<B>,
-        __crypto: RcCell<BTreeMap<String, RcCell<CryptoClass<P, B, K>>>>,
-        __keystore: RcCell<BTreeMap<String, RcCell<K>>>,
-        __prover: RcCell<P>,
+        __blockchain: ARcCell<B>,
+        __crypto: ARcCell<BTreeMap<String, ARcCell<CryptoClass<P, B, K>>>>,
+        __keystore: ARcCell<BTreeMap<String, ARcCell<K>>>,
+        __prover: ARcCell<P>,
     ) -> Self {
         Self {
             __blockchain,
@@ -189,8 +256,8 @@ impl<
 
     //     @staticmethod
     // """Return singleton object which implements ZkayBlockchainInterface."""
-    pub fn blockchain(&self) -> RcCell<B> {
-        // if self.__blockchain.borrow().is_none() {
+    pub fn blockchain(&self) -> ARcCell<B> {
+        // if self.__blockchain.lock().is_none() {
         //     // *self.__blockchain.borrow_mut() = Some(_blockchain_classes(&CFG.lock().unwrap().blockchain_backend(),self.prover().clone()));
         //     // from zkay.transaction.types import AddressValue
         //     // AddressValue.get_balance = Runtime.__blockchain.get_balance
@@ -200,34 +267,34 @@ impl<
 
     //     @staticmethod
     //         """Return object which implements ZkayKeystoreInterface for given homomorphism."""
-    pub fn keystore(&self, crypto_params: &CryptoParams) -> RcCell<K> {
+    pub fn keystore(&self, crypto_params: &CryptoParams) -> ARcCell<K> {
         let crypto_backend = crypto_params.crypto_name.clone();
-        // if !self.__keystore.borrow().contains_key(&crypto_backend) {
+        // if !self.__keystore.lock().contains_key(&crypto_backend) {
         //     // let k=SimpleKeystore::<P,BlockchainClass<P>>::new(blockchain.clone(), crypto_params.clone());
         //     self.__keystore
         //         .borrow_mut()
         //         .insert(crypto_backend.clone(), f(crypto_params));
         // }
-        self.__keystore.borrow()[&crypto_backend].clone()
+        self.__keystore.lock()[&crypto_backend].clone()
     }
 
     //     @staticmethod
     //         """Return object which implements ZkayCryptoInterface for given homomorphism."""
-    pub fn crypto(&self, crypto_params: &CryptoParams) -> RcCell<CryptoClass<P, B, K>> {
+    pub fn crypto(&self, crypto_params: &CryptoParams) -> ARcCell<CryptoClass<P, B, K>> {
         let crypto_backend = crypto_params.crypto_name.clone();
-        // if !self.__crypto.borrow().contains_key(&crypto_backend) {
+        // if !self.__crypto.lock().contains_key(&crypto_backend) {
         //     let keystore = self.keystore(crypto_params, f).clone();
         //     self.__crypto.borrow_mut().insert(
         //         crypto_backend.clone(),
-        //         RcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
+        //         ARcCell::new(_crypto_classes::<P, B, K>(&crypto_backend, keystore)),
         //     );
         // }
-        self.__crypto.borrow()[&crypto_backend].clone()
+        self.__crypto.lock()[&crypto_backend].clone()
     }
     //     @staticmethod
     // """Return singleton object which implements ZkayProverInterface."""
-    pub fn prover(&self) -> RcCell<P> {
-        // if self.__prover.borrow().is_none() {
+    pub fn prover(&self) -> ARcCell<P> {
+        // if self.__prover.lock().is_none() {
         //     *self.__prover.borrow_mut() =
         //         Some(_prover_classes(&CFG.lock().unwrap().snark_backend()));
         // }

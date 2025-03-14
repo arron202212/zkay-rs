@@ -13,6 +13,9 @@ pub const LINE_ENDING: &str = "\n";
 // use  typing import List, Dict, Union, Optional, Callable, Set, TypeVar;
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
+    AST, ASTBase, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTChildrenCallBack,
+    ASTFlatten, ASTFlattenWeak, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, DeepClone,
+    FullArgsSpec, FullArgsSpecInit, Immutable, IntoAST,
     annotated_type_name::AnnotatedTypeName,
     expression::{
         Expression, ExpressionASType, ExpressionBase, ExpressionBaseMutRef, ExpressionBaseRef,
@@ -24,20 +27,17 @@ use crate::ast::{
     is_instance, is_instances,
     statement::IndentBlock,
     statement::{AssignmentStatement, AssignmentStatementBase},
-    ASTBase, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTChildrenCallBack,
-    ASTFlatten, ASTFlattenWeak, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, DeepClone,
-    FullArgsSpec, FullArgsSpecInit, Immutable, IntoAST, AST,
 };
 use crate::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
-use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
+use crate::homomorphism::{HOMOMORPHISM_STORE, Homomorphism, REHOM_EXPRESSIONS};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
-use ethnum::{i256, int, u256, uint, AsI256, AsU256, I256, U256};
-use eyre::{eyre, Result};
+use ethnum::{AsI256, AsU256, I256, U256, i256, int, u256, uint};
+use eyre::{Result, eyre};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -55,18 +55,18 @@ use std::{
 };
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
-    config::{ConstructorOrFunctionDefinitionAttr, CFG},
+    config::{CFG, ConstructorOrFunctionDefinitionAttr},
     config_user::UserConfig,
     with_context_block, zk_print,
 };
 use zkay_derive::{
-    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
-    ASTVisitorBaseRefImpl, EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl,
-    ImplBaseTrait,
+    ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind, ASTVisitorBaseRefImpl,
+    EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl, ImplBaseTrait,
+    impl_trait, impl_traits,
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
-use zkp_u256::{Zero, U256 as ZU256};
+use zkp_u256::{U256 as ZU256, Zero};
 // #[enum_dispatch(FullArgsSpec,IntoAST, ASTInstanceOf, TypeNameBaseRef, ASTBaseRef)]
 #[derive(ASTFlattenImpl, EnumIs, EnumTryAs, Clone, Debug, PartialOrd, Eq, Ord, Hash)]
 pub enum TypeName {
@@ -2416,15 +2416,16 @@ impl FullArgsSpecInit for CipherText {
 }
 impl CipherText {
     pub fn new(plain_type: Option<RcCell<AnnotatedTypeName>>, crypto_params: CryptoParams) -> Self {
-        assert!(!plain_type.as_ref().map_or(false, |pt| pt
-            .borrow()
-            .type_name
-            .as_ref()
-            .unwrap()
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_cipher()));
+        assert!(!plain_type.as_ref().map_or(false, |pt| {
+            pt.borrow()
+                .type_name
+                .as_ref()
+                .unwrap()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_cipher()
+        }));
         Self {
             array_base: ArrayBase::new(
                 AnnotatedTypeName::uint_all(),

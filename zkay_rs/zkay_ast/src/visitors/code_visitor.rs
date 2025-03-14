@@ -7,6 +7,8 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
+    AST, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoStatement,
+    LINE_ENDING, ListUnion, SingleOrListUnion,
     annotated_type_name::AnnotatedTypeName,
     comment::CommentBaseProperty,
     expression::{
@@ -22,16 +24,14 @@ use crate::ast::{
     },
     type_name::{ArrayBaseProperty, ElementaryTypeNameBaseProperty},
     type_name::{TypeName, UserDefinedTypeNameBaseRef},
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoStatement,
-    ListUnion, SingleOrListUnion, AST, LINE_ENDING,
 };
 use crate::homomorphism::HOMOMORPHISM_STORE;
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use rccell::RcCell;
 use std::cmp::Ordering;
 use zkay_config::{
-    config::{indent, CFG},
+    config::{CFG, indent},
     config_version::Versions,
 };
 use zkay_derive::ASTVisitorBaseRefImpl;

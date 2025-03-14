@@ -21,9 +21,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use ark_ec::{
+    CurveGroup,
     models::CurveConfig,
     twisted_edwards::{Affine, MontCurveConfig, Projective, TECurveConfig},
-    CurveGroup,
 };
 use ark_ed_on_bn254::{EdwardsAffine as BabyJubJub, EdwardsConfig, Fq, Fr};
 use ark_ff::{BigInteger, BigInteger256, PrimeField};
@@ -232,7 +232,10 @@ Also please keep in mind that the embedded plaintext corresponding to the (x,y) 
         BabyJubJub::is_on_curve(&a),
         "(x,y) is not a valid point on Baby Jubjub curve in Twisted Edwards form"
     );
-    assert!(BabyJubJub::is_in_correct_subgroup_assuming_on_curve(&a), "(x,y) is not a valid point in the prime subgroup of Baby Jubjub curve in Twisted Edwards form");
+    assert!(
+        BabyJubJub::is_in_correct_subgroup_assuming_on_curve(&a),
+        "(x,y) is not a valid point in the prime subgroup of Baby Jubjub curve in Twisted Edwards form"
+    );
     let bx = Fq::from(parse_be_bytes_str(&padded_x)) * coeff_twisted;
     let by = Fq::from(parse_be_bytes_str(&padded_y));
     let b = BabyJubJub::new(bx, by);
@@ -240,7 +243,10 @@ Also please keep in mind that the embedded plaintext corresponding to the (x,y) 
         BabyJubJub::is_on_curve(&b),
         "(x,y) is not a valid point on Baby Jubjub curve in Twisted Edwards form"
     );
-    assert!(BabyJubJub::is_in_correct_subgroup_assuming_on_curve(&b), "(x,y) is not a valid point in the prime subgroup of Baby Jubjub curve in Twisted Edwards form");
+    assert!(
+        BabyJubJub::is_in_correct_subgroup_assuming_on_curve(&b),
+        "(x,y) is not a valid point in the prime subgroup of Baby Jubjub curve in Twisted Edwards form"
+    );
     let b = b.mul(Fr::new(BigInteger256::from(1u32)));
 
     baby_giant(40, &a, &b, num_threads).expect("The Baby-step Giant-step algorithm was unable to solve the Discrete Logarithm. Make sure that the embedded plaintext is an unsigned integer between 0 and 1099511627775.")

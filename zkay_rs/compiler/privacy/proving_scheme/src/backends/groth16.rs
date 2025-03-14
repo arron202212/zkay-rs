@@ -108,7 +108,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
         let verification_function_name = CFG.lock().unwrap().verification_function_name();
         let bn128_scalar_field_value: &str =
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"; //BN128_SCALAR_FIELD.clone();
-                                                                                             // println!("===ddddd====={}",line!());
+        // println!("===ddddd====={}",line!());
         let x = MultiLineFormatter::new("").mul(format!(r#"
         pragma solidity {zkay_solc_version_compatibility};
 

@@ -9,13 +9,12 @@ use crate::contains_private::contains_private;
 use crate::final_checker::check_final;
 use rccell::{RcCell, WeakCell};
 // use crate::type_exceptions::{TypeMismatchException, TypeException};
-use zkay_ast::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use zkay_ast::homomorphism::{HOMOMORPHISM_STORE, Homomorphism, REHOM_EXPRESSIONS};
 
 use std::ops::DerefMut;
 use zkay_ast::ast::{
-    enum_value::EnumValue, get_privacy_expr_from_label, is_instance, is_instances,
-    issue_compiler_warning, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf,
-    ASTType, AllExpr, AnnotatedTypeName, Array, ArrayBaseProperty, AssignmentStatement,
+    AST, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr,
+    AnnotatedTypeName, Array, ArrayBaseProperty, AssignmentStatement,
     AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BooleanLiteralType,
     BuiltinFunction, CombinedPrivacyUnion, ConstructorOrFunctionDefinition, ContractDefinition,
     ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValueTypeName, Expression,
@@ -29,7 +28,9 @@ use zkay_ast::ast::{
     ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, RehomExpr, RequireStatement,
     ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, TupleExpr, TupleType, TypeName, UserDefinedTypeName,
-    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement, AST,
+    UserDefinedTypeNameBaseProperty, VariableDeclarationStatement, WhileStatement,
+    enum_value::EnumValue, get_privacy_expr_from_label, is_instance, is_instances,
+    issue_compiler_warning,
 };
 use zkay_ast::global_defs::GlobalVars;
 use zkay_ast::visitors::deep_copy::replace_expr;
@@ -1257,10 +1258,13 @@ impl TypeCheckVisitor {
                         .type_name
                         .as_ref()
                         .unwrap()
-                        .to_ast().try_as_type_name().unwrap()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
                         .is_literals(),
                     "Private shift expressions must use a constant (literal) shift amount {:?} =={:?}",
-                    args[1],args[1]
+                    args[1],
+                    args[1]
                         .try_as_expression_ref()
                         .unwrap()
                         .borrow()
@@ -1309,15 +1313,26 @@ impl TypeCheckVisitor {
                     .unwrap()
                     .is_shiftop()
             {
-                assert!(args.iter().all(|arg|arg.ast_base_ref().unwrap().borrow()
-                            .annotated_type()
-                            .as_ref()
-                            .unwrap().borrow()
-                            .type_name
-                            .as_ref()
-                            .unwrap().to_ast().try_as_type_name().unwrap()
-                            .elem_bitwidth()
-                            != 256),"Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type {:?}", args);
+                assert!(
+                    args.iter().all(|arg| arg
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .elem_bitwidth()
+                        != 256),
+                    "Private bitwise and shift operations are only supported for integer types < 256 bit, please use a smaller type {:?}",
+                    args
+                );
             }
 
             if func
@@ -1941,28 +1956,33 @@ impl TypeCheckVisitor {
         mut expr: &ASTFlatten,
         expected_type: &RcCell<AnnotatedTypeName>,
     ) -> ASTFlatten {
-        assert!(expected_type
-            .borrow()
-            .privacy_annotation
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .privacy_annotation_label()
-            .is_some());
-        assert!(expr
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .annotated_type()
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .is_private_at_me(&expr.try_as_expression_ref().unwrap().borrow().analysis()));
-        assert!(expected_type
-            .borrow()
-            .is_private_at_me(&expr.try_as_expression_ref().unwrap().borrow().analysis()));
+        assert!(
+            expected_type
+                .borrow()
+                .privacy_annotation
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .privacy_annotation_label()
+                .is_some()
+        );
+        assert!(
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_private_at_me(&expr.try_as_expression_ref().unwrap().borrow().analysis())
+        );
+        assert!(
+            expected_type
+                .borrow()
+                .is_private_at_me(&expr.try_as_expression_ref().unwrap().borrow().analysis())
+        );
 
         let mut r = RcCell::new(RehomExpr::new(
             expr.clone(),
@@ -2011,14 +2031,16 @@ impl TypeCheckVisitor {
         privacy: &Option<ASTFlatten>,
         homomorphism: &String,
     ) -> ASTFlatten {
-        assert!(privacy
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .privacy_annotation_label()
-            .is_some());
+        assert!(
+            privacy
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .privacy_annotation_label()
+                .is_some()
+        );
 
         let pl = get_privacy_expr_from_label(
             privacy
@@ -2233,21 +2255,22 @@ impl TypeCheckVisitor {
             return expr.clone();
         }
 
-        assert!(expr
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .annotated_type()
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .type_name
-            .as_ref()
-            .unwrap()
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_primitive_type());
+        assert!(
+            expr.try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .type_name
+                .as_ref()
+                .unwrap()
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_primitive_type()
+        );
         let mut cast = RcCell::new(PrimitiveCastExpr::new(t.clone(), expr.clone(), true));
         let cast_weak = ASTFlatten::from(cast.clone()).downgrade();
         cast.borrow_mut().ast_base_mut_ref().borrow_mut().parent = expr
@@ -3189,21 +3212,22 @@ impl TypeCheckVisitor {
         &self,
         mut ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        assert!(ast
-            .to_ast()
-            .try_as_statement_ref()
-            .unwrap()
-            .try_as_return_statement_ref()
-            .unwrap()
-            .function()
-            .clone()
-            .unwrap()
-            .upgrade()
-            .unwrap()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .borrow()
-            .is_function());
+        assert!(
+            ast.to_ast()
+                .try_as_statement_ref()
+                .unwrap()
+                .try_as_return_statement_ref()
+                .unwrap()
+                .function()
+                .clone()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .is_function()
+        );
         let rt = RcCell::new(AnnotatedTypeName::new(
             Some(
                 RcCell::new(TypeName::TupleType(
@@ -3250,16 +3274,17 @@ impl TypeCheckVisitor {
             ASTType::TupleExpr,
         ) {
             expr = self.get_rhs(
-                &RcCell::new(TupleExpr::new(vec![ast
-                    .to_ast()
-                    .try_as_statement_ref()
-                    .unwrap()
-                    .try_as_return_statement_ref()
-                    .unwrap()
-                    .expr
-                    .clone()
-                    .unwrap()
-                    .into()]))
+                &RcCell::new(TupleExpr::new(vec![
+                    ast.to_ast()
+                        .try_as_statement_ref()
+                        .unwrap()
+                        .try_as_return_statement_ref()
+                        .unwrap()
+                        .expr
+                        .clone()
+                        .unwrap()
+                        .into(),
+                ]))
                 .into(),
                 &rt,
             );
@@ -3465,15 +3490,17 @@ impl TypeCheckVisitor {
             .unwrap()
             .clone();
         //should have already been checked
-        assert!(map_t
-            .borrow()
-            .privacy_annotation
-            .as_ref()
-            .unwrap()
-            .try_as_expression_ref()
-            .unwrap()
-            .borrow()
-            .is_all_expr());
+        assert!(
+            map_t
+                .borrow()
+                .privacy_annotation
+                .as_ref()
+                .unwrap()
+                .try_as_expression_ref()
+                .unwrap()
+                .borrow()
+                .is_all_expr()
+        );
         let mut tn = map_t.borrow().type_name.clone().unwrap();
         //do actual type checking
         if is_instance(&tn, ASTType::Mapping) {
@@ -3697,7 +3724,11 @@ impl TypeCheckVisitor {
                     .clone(),
             );
 
-            assert!(Self::is_accessible_by_invoker(&ast.to_ast().try_as_expression_ref().unwrap()) ,"Tried to read value which cannot be proven to be owned by the transaction invoker{:?}", ast);
+            assert!(
+                Self::is_accessible_by_invoker(&ast.to_ast().try_as_expression_ref().unwrap()),
+                "Tried to read value which cannot be proven to be owned by the transaction invoker{:?}",
+                ast
+            );
         } else if let Some(TypeName::Array(type_name)) = map_t
             .borrow()
             .type_name
@@ -3789,10 +3820,14 @@ impl TypeCheckVisitor {
                 .return_type()
                 .types
             {
-                assert!(is_instances(
-                    t.borrow().privacy_annotation.as_ref().unwrap(),
-                    vec![ASTType::MeExpr, ASTType::AllExpr],
-                ),"Only me/all accepted as privacy type of return values for public functions{:?}", ast);
+                assert!(
+                    is_instances(
+                        t.borrow().privacy_annotation.as_ref().unwrap(),
+                        vec![ASTType::MeExpr, ASTType::AllExpr],
+                    ),
+                    "Only me/all accepted as privacy type of return values for public functions{:?}",
+                    ast
+                );
             }
         }
         Ok(())
@@ -4151,7 +4186,25 @@ impl TypeCheckVisitor {
                         .type_name,
                     ast
                 );
-                assert!(ast.try_as_annotated_type_name_ref().unwrap().borrow().type_name.as_ref().unwrap().to_ast().try_as_type_name().unwrap().elem_bitwidth() <= 32,"Homomorphic type not supported for {:?}: Only up to 32-bit numeric types supported{:?}", ast.try_as_annotated_type_name_ref().unwrap().borrow().type_name,ast);
+                assert!(
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .elem_bitwidth()
+                        <= 32,
+                    "Homomorphic type not supported for {:?}: Only up to 32-bit numeric types supported{:?}",
+                    ast.try_as_annotated_type_name_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name,
+                    ast
+                );
             }
         }
         let p = ast

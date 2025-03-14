@@ -26,8 +26,8 @@ use crate::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
-use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
+use crate::homomorphism::{HOMOMORPHISM_STORE, Homomorphism, REHOM_EXPRESSIONS};
 use crate::visitors::{
     code_visitor::{CodeVisitor, CodeVisitorBase},
     visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef},
@@ -36,9 +36,9 @@ pub use annotated_type_name::*;
 pub use comment::*;
 use enum_dispatch::enum_dispatch;
 pub use enum_value::*;
-use ethnum::{i256, int, u256, uint, AsI256, AsU256, I256, U256};
+use ethnum::{AsI256, AsU256, I256, U256, i256, int, u256, uint};
 pub use expression::*;
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 pub use identifier::*;
 pub use identifier_declaration::*;
 use lazy_static::lazy_static;
@@ -61,18 +61,18 @@ use std::{
 use strum_macros::{EnumIs, EnumTryAs};
 pub use type_name::*;
 use zkay_config::{
-    config::{ConstructorOrFunctionDefinitionAttr, CFG},
+    config::{CFG, ConstructorOrFunctionDefinitionAttr},
     config_user::UserConfig,
     with_context_block, zk_print,
 };
 use zkay_derive::{
-    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
-    ASTVisitorBaseRefImpl, EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl,
-    ImplBaseTrait,
+    ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind, ASTVisitorBaseRefImpl,
+    EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl, ImplBaseTrait,
+    impl_trait, impl_traits,
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
-use zkp_u256::{Zero, U256 as ZU256};
+use zkp_u256::{U256 as ZU256, Zero};
 
 #[macro_export]
 macro_rules! a_e {
@@ -1248,7 +1248,9 @@ impl ASTFlatten {
                 *astf.borrow_mut() = astfs.borrow().to_ast()
             }
             _ => {
-                panic!("===same type=========={self},==={src}========================={self:?}=============================\n======={src:?}")
+                panic!(
+                    "===same type=========={self},==={src}========================={self:?}=============================\n======={src:?}"
+                )
             }
         }
     }

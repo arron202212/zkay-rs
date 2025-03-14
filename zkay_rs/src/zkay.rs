@@ -36,6 +36,10 @@ const VERSION_MESSAGE: &str = env!("ZKAY_VERSION");
     next_display_order = None,
 )]
 pub struct Zkay {
+    /// Include the global options.
+    #[command(flatten)]
+    pub global: GlobalOpts,
+
     #[command(subcommand)]
     pub cmd: ZkaySubcommand,
 }

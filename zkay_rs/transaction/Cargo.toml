@@ -13,6 +13,7 @@ rust-version.workspace = true
 [lib]
 [dependencies]
 async-trait={workspace =true}
+samotop-async-trait={workspace =true}
 rccell = { workspace = true }
 zkay-derive = { workspace = true }
  zkay-config={workspace = true }
@@ -66,8 +67,8 @@ strum={ workspace = true }
 strum_macros = { workspace = true }
 # bevy_reflect = { workspace = true }
 # num_enum= { workspace = true }
-
-
+futures={workspace  =true}
+trait-variant={workspace  =true}
 
 forge-verify = { workspace=true }
 # forge-script = { path = "crates/script" }
@@ -197,7 +198,7 @@ clap_complete_fig = "4"
 # indicatif = "0.17"
 # inferno = { version = "0.11.19", default-features = false }
 itertools.workspace = true
-# parking_lot.workspace = true
+parking_lot.workspace = true
 # regex = { version = "1", default-features = false }
 # reqwest = { workspace = true, features = ["json"] }
 # semver.workspace = true

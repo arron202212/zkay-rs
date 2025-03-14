@@ -15,7 +15,7 @@ extern crate syn;
 use heck::ToSnakeCase;
 use proc_macro::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
-use syn::{punctuated::Punctuated, Expr, Fields, Ident, Lit, Meta, Token};
+use syn::{Expr, Fields, Ident, Lit, Meta, Token, punctuated::Punctuated};
 
 // #[proc_macro_derive(is_enum_variant, attributes(is_enum_variant))]
 // pub fn derive_is_enum_variant(tokens: TokenStream) -> TokenStream {
@@ -39,7 +39,7 @@ enum PredicateConfig {
 impl PredicateConfig {
     fn join(self, meta: &syn::Meta) -> Self {
         match meta {
-            syn::Meta::Path(ref ident) if ident.is_ident("skip") => match self {
+            syn::Meta::Path(ident) if ident.is_ident("skip") => match self {
                 PredicateConfig::None | PredicateConfig::Skip => PredicateConfig::Skip,
                 PredicateConfig::Name(_) => panic!(
                     "Cannot both `#[is_enum_variant(skip)]` and \

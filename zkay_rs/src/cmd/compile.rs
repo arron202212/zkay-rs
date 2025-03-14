@@ -12,18 +12,17 @@ use eyre::Result;
 use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
 use foundry_common::{compile::ProjectCompiler, sh_println};
 use foundry_compilers::{
-    compilers::{multi::MultiCompilerLanguage, Language},
-    utils::source_files_iter,
     Project, ProjectCompileOutput,
+    compilers::{Language, multi::MultiCompilerLanguage},
+    utils::source_files_iter,
 };
 use foundry_config::{
+    Config,
     figment::{
-        self,
+        self, Metadata, Profile, Provider,
         error::Kind::InvalidType,
         value::{Dict, Map, Value},
-        Metadata, Profile, Provider,
     },
-    Config,
 };
 use serde::Serialize;
 use std::path::{Path, PathBuf};

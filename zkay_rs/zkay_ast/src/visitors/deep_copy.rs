@@ -6,14 +6,14 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
+    AST, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArgType, FullArgsSpec,
+    FullArgsSpecInit, IntoAST,
     annotated_type_name::AnnotatedTypeName,
     expression::{Expression, ExpressionBaseProperty},
     statement::Statement,
     type_name::{TypeName, UserDefinedTypeName},
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArgType, FullArgsSpec, FullArgsSpecInit,
-    IntoAST, AST,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
 use crate::pointers::parent_setter::set_parents;
 use crate::pointers::symbol_table::link_identifiers;
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};

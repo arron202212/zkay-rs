@@ -22,12 +22,11 @@ use rccell::{RcCell, WeakCell};
 use std::collections::BTreeMap;
 use zkay_ast::analysis::used_homomorphisms::UsedHomomorphismsVisitor;
 use zkay_ast::ast::{
-    comment::Comment, identifier::Identifier, is_instance, ASTBaseMutRef, ASTBaseProperty,
-    ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName, Array, ArrayBase,
-    ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase, AssignmentStatement,
-    AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block, CipherText,
-    CommentBase, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName, DeepClone,
-    ExprUnion, Expression, ExpressionASType, ExpressionStatement, FunctionCallExpr,
+    AST, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType,
+    AnnotatedTypeName, Array, ArrayBase, ArrayBaseProperty, ArrayLiteralExpr, ArrayLiteralExprBase,
+    AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef, BlankLine, Block,
+    CipherText, CommentBase, ConstructorOrFunctionDefinition, ContractDefinition, ContractTypeName,
+    DeepClone, ExprUnion, Expression, ExpressionASType, ExpressionStatement, FunctionCallExpr,
     FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseRef, HybridArgumentIdf,
     IdentifierBase, IdentifierBaseProperty, IdentifierBaseRef, IdentifierDeclaration,
     IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IndexExpr, IntoAST,
@@ -35,10 +34,10 @@ use zkay_ast::ast::{
     NumberLiteralExpr, Parameter, PrimitiveCastExpr, RequireStatement, ReturnStatement, SourceUnit,
     StateVariableDeclaration, Statement, StatementList, StatementListBase, StructDefinition,
     StructTypeName, TupleExpr, TypeName, UserDefinedTypeName, VariableDeclaration,
-    VariableDeclarationStatement, AST,
+    VariableDeclarationStatement, comment::Comment, identifier::Identifier, is_instance,
 };
 use zkay_ast::global_defs::{
-    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+    GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars,
 };
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers};
 use zkay_ast::visitors::{
@@ -70,8 +69,8 @@ pub fn transform_ast(
     let zt = ZkayTransformer::new(global_vars.clone());
     // println!("===transform_ast==========1===={}==",ast.as_ref().unwrap());
     let mut new_ast = zt.visit(ast.as_ref().unwrap()); //=priv_expr
-                                                       // println!("===transform_ast===2=======1=={}===",new_ast.as_ref().unwrap());
-                                                       // restore all parent pointers and identifier targets
+    // println!("===transform_ast===2=======1=={}===",new_ast.as_ref().unwrap());
+    // restore all parent pointers and identifier targets
     set_parents(new_ast.as_ref().unwrap());
     //// println!("======2===2====1======");
     link_identifiers(new_ast.as_ref().unwrap(), global_vars.clone());
@@ -667,7 +666,7 @@ impl ZkayTransformer {
                 )
                 .visit(&body.clone().unwrap().into())
                 .and_then(|b| b.try_as_block()); //=priv_expr
-                                                 // println!("=====transform_contract==body=={}=", body.as_ref().unwrap().borrow());
+                // println!("=====transform_contract==body=={}=", body.as_ref().unwrap().borrow());
                 fct.borrow_mut().body = body;
             }
         }
@@ -1333,12 +1332,14 @@ impl ZkayTransformer {
         let mut stmts = vec![];
 
         for crypto_params in &args_backends {
-            assert!(int_fct
-                .borrow()
-                .used_crypto_backends
-                .as_ref()
-                .unwrap()
-                .contains(&crypto_params));
+            assert!(
+                int_fct
+                    .borrow()
+                    .used_crypto_backends
+                    .as_ref()
+                    .unwrap()
+                    .contains(&crypto_params)
+            );
             // If there are any private arguments with homomorphism "hom", we need the public key for that crypto backend
             ext_circuit.borrow_mut()._require_public_key_for_label_at(
                 None,
@@ -1677,11 +1678,13 @@ impl ZkayTransformer {
                 None,
                 zkay_ast::homomorphism::Homomorphism::non_homomorphic(),
             ))),
-            vec![RcCell::new(NumberLiteralExpr::new(
-                ext_circuit.borrow().in_size_trans(),
-                false,
-            ))
-            .into()],
+            vec![
+                RcCell::new(NumberLiteralExpr::new(
+                    ext_circuit.borrow().in_size_trans(),
+                    false,
+                ))
+                .into(),
+            ],
         );
         let in_var_decl = in_arr_var
             .ast_base_ref()

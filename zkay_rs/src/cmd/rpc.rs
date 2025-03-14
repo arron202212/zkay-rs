@@ -5,6 +5,7 @@ use foundry_cli::{opts::RpcOpts, utils};
 use foundry_common::sh_println;
 use foundry_config::Config;
 use itertools::Itertools;
+use zkay_transaction::blockchain::web3::Web3Tx;
 /// CLI arguments for `cast rpc`.
 #[derive(Clone, Debug, Parser)]
 pub struct RpcArgs {
@@ -38,20 +39,21 @@ pub struct RpcArgs {
 
 impl RpcArgs {
     pub async fn run(self) -> Result<()> {
-        if self.is_survey {
-            crate::contract::main0(Some(self.rpc.clone()), None);
-            return Ok(());
-        }
         let Self {
             raw,
             method,
             params,
-            rpc,..
+            rpc,
+            ..
         } = self;
 
         let config = Config::from(&rpc);
         let provider = utils::get_provider(&config)?;
-
+        // let web3tx=Web3Tx::new(eth.clone(),config.clone(),tx.clone());
+        // if self.is_survey {
+        //     crate::contract::main0(web3tx);
+        //     return Ok(());
+        // }
         let params = if raw {
             if params.is_empty() {
                 serde_json::Deserializer::from_reader(std::io::stdin())

@@ -10,8 +10,8 @@
 use crate::analysis::contains_private_checker::contains_private_expr;
 
 use crate::ast::{
+    AST, ASTFlatten, ASTInstanceOf, ASTType, IntoAST,
     statement::{DoWhileStatement, ForStatement, WhileStatement},
-    ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST,
 };
 
 use crate::visitors::{

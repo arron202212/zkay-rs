@@ -22,7 +22,7 @@ use crate::config_user::{UserConfig, UserConfigBase};
 use crate::lc_vec_s;
 use app_dirs2::*;
 use lazy_static::lazy_static;
-use serde_json::{json, Map, Result, Value};
+use serde_json::{Map, Result, Value, json};
 use std::collections::HashMap;
 use std::sync::Mutex;
 

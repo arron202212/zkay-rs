@@ -10,24 +10,24 @@
 // import argcomplete, argparse
 // import os
 use alloy_dyn_abi::{DynSolValue, ErrorExt, EventExt};
-use alloy_primitives::{eip191_hash_message, hex, keccak256, Address, B256};
+use alloy_primitives::{Address, B256, eip191_hash_message, hex, keccak256};
 use alloy_provider::Provider;
 use alloy_rpc_types::{BlockId, BlockNumberOrTag::Latest};
 use cast::{Cast, SimpleCast};
-use clap::{value_parser, Arg, ArgAction, ArgGroup, ArgMatches, Command};
+use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, value_parser};
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use eyre::Result;
 use foundry_cli::{handler, utils};
 use foundry_common::{
     abi::get_event,
-    ens::{namehash, ProviderEnsExt},
+    ens::{ProviderEnsExt, namehash},
     fmt::{format_tokens, format_tokens_raw, format_uint_exp},
     fs,
     selectors::{
-        decode_calldata, decode_event_topic, decode_function_selector, decode_selectors,
-        import_selectors, parse_signatures, pretty_calldata, ParsedSignatures, SelectorImportData,
-        SelectorType,
+        ParsedSignatures, SelectorImportData, SelectorType, decode_calldata, decode_event_topic,
+        decode_function_selector, decode_selectors, import_selectors, parse_signatures,
+        pretty_calldata,
     },
     sh_println, shell, stdin,
 };
@@ -70,6 +70,8 @@ use zkay::{Zkay, ZkaySubcommand};
 // static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 fn main() {
+    unsafe { backtrace_on_stack_overflow::enable() };
+    assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
     if let Err(err) = run() {
         // let _ = foundry_common::Shell::get().error(&err);
         println!("=========={err:?}");
@@ -79,7 +81,7 @@ fn main() {
 
 fn run() -> Result<()> {
     let args = Zkay::parse();
-
+    args.global.init()?;
     match args.cmd {
         ZkaySubcommand::Compile(cmd) => cmd.run().map(drop),
         ZkaySubcommand::Create(cmd) => utils::block_on(cmd.run()),

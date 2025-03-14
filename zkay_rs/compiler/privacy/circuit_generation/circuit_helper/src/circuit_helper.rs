@@ -19,11 +19,10 @@ use std::{
 use type_check::type_checker::TypeCheckVisitor;
 use zkay_ast::analysis::partition_state::PartitionState;
 use zkay_ast::ast::{
-    get_privacy_expr_from_label, identifier::Identifier, is_instance, is_instances, ASTBaseMutRef,
-    ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr, AnnotatedTypeName,
-    ArrayBaseProperty, AssignmentStatement, AssignmentStatementBase, AssignmentStatementBaseMutRef,
-    AssignmentStatementBaseProperty, AssignmentStatementBaseRef, Block, BooleanLiteralType,
-    BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
+    AST, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, ASTInstanceOf, ASTType, AllExpr,
+    AnnotatedTypeName, ArrayBaseProperty, AssignmentStatement, AssignmentStatementBase,
+    AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, AssignmentStatementBaseRef,
+    Block, BooleanLiteralType, BuiltinFunction, CircuitComputationStatement, CircuitInputStatement,
     ConstructorOrFunctionDefinition, DeepClone, ElementaryTypeName, EncryptionExpression,
     EnterPrivateKeyStatement, ExprUnion, Expression, ExpressionASType, ExpressionBaseMutRef,
     ExpressionBaseProperty, ExpressionBaseRef, ExpressionStatement, FunctionCallExpr,
@@ -34,14 +33,15 @@ use zkay_ast::ast::{
     MeExpr, MemberAccessExpr, NumberLiteralExpr, NumberLiteralType, NumberTypeName, Parameter,
     ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
     StatementBaseProperty, StatementBaseRef, TupleExpr, TupleOrLocationExpr, TypeName,
-    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement, AST,
+    UserDefinedTypeName, VariableDeclaration, VariableDeclarationStatement,
+    get_privacy_expr_from_label, identifier::Identifier, is_instance, is_instances,
 };
 use zkay_ast::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
 use zkay_ast::global_defs::{
-    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+    GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::deep_copy::deep_copy;
@@ -237,10 +237,12 @@ where
                     .clone();
                 transitively_called_functions.insert(internal_circuit.borrow().fct.clone());
             } else {
-                assert!(internal_circuit
-                    .borrow()
-                    .transitively_called_functions
-                    .is_empty());
+                assert!(
+                    internal_circuit
+                        .borrow()
+                        .transitively_called_functions
+                        .is_empty()
+                );
                 transitively_called_functions = BTreeSet::new();
             }
         }
@@ -483,13 +485,15 @@ where
         insert_loc_stmt: &ASTFlatten,
         param: &RcCell<Parameter>,
     ) {
-        assert!(param
-            .borrow()
-            .annotated_type()
-            .as_ref()
-            .unwrap()
-            .borrow()
-            .is_cipher());
+        assert!(
+            param
+                .borrow()
+                .annotated_type()
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .is_cipher()
+        );
         // println!(
         //     "==_secret_input_name_factory=====ensure_parameter_encryption======{}====",
         //     line!()
@@ -695,19 +699,20 @@ where
         {
             if var.in_scope_at(ast) {
                 //side effect affects location outside statement and has privacy @me
-                assert!(ast
-                    .try_as_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .statement_base_ref()
-                    .unwrap()
-                    .before_analysis
-                    .as_ref()
-                    .unwrap()
-                    .same_partition(
-                        &var.privacy().unwrap().to_ast(),
-                        &Expression::me_expr(None).to_ast()
-                    ));
+                assert!(
+                    ast.try_as_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .statement_base_ref()
+                        .unwrap()
+                        .before_analysis
+                        .as_ref()
+                        .unwrap()
+                        .same_partition(
+                            &var.privacy().unwrap().to_ast(),
+                            &Expression::me_expr(None).to_ast()
+                        )
+                );
                 assert!(is_instances(
                     &var.target().unwrap(),
                     vec![
@@ -1909,13 +1914,14 @@ where
                 .borrow()
                 .type_name
                 .clone();
-            assert!(t
-                .as_ref()
-                .unwrap()
-                .to_ast()
-                .try_as_type_name()
-                .unwrap()
-                .can_be_private());
+            assert!(
+                t.as_ref()
+                    .unwrap()
+                    .to_ast()
+                    .try_as_type_name()
+                    .unwrap()
+                    .can_be_private()
+            );
             let mut nle = NumberLiteralExpr::new(0, false);
             nle.ast_base_mut_ref().borrow_mut().parent = Some(ast.clone().downgrade());
             nle.literal_expr_base.expression_base.statement = Some(ast.clone().downgrade());
@@ -1952,12 +1958,13 @@ where
             .push(RcCell::new(CircuitStatement::CircComment(
                 CircComment::new(ast.code()),
             )));
-        assert!(ast
-            .try_as_return_statement_ref()
-            .unwrap()
-            .borrow()
-            .expr
-            .is_some());
+        assert!(
+            ast.try_as_return_statement_ref()
+                .unwrap()
+                .borrow()
+                .expr
+                .is_some()
+        );
         if !is_instance(
             ast.try_as_return_statement_ref()
                 .unwrap()
@@ -1968,13 +1975,14 @@ where
             ASTType::TupleExpr,
         ) {
             ast.try_as_return_statement_ref().unwrap().borrow_mut().expr = Some(
-                RcCell::new(TupleExpr::new(vec![ast
-                    .try_as_return_statement_ref()
-                    .unwrap()
-                    .borrow()
-                    .expr
-                    .clone()
-                    .unwrap()]))
+                RcCell::new(TupleExpr::new(vec![
+                    ast.try_as_return_statement_ref()
+                        .unwrap()
+                        .borrow()
+                        .expr
+                        .clone()
+                        .unwrap(),
+                ]))
                 .into(),
             );
         }
@@ -2184,16 +2192,17 @@ where
         guard_cond: Option<HybridArgumentIdf>,
         guard_val: Option<bool>,
     ) -> Option<ASTFlatten> {
-        assert!(ast
-            .try_as_block_ref()
-            .unwrap()
-            .borrow()
-            .statement_list_base
-            .statement_base
-            .ast_base
-            .borrow()
-            .parent
-            .is_some());
+        assert!(
+            ast.try_as_block_ref()
+                .unwrap()
+                .borrow()
+                .statement_list_base
+                .statement_base
+                .ast_base
+                .borrow()
+                .parent
+                .is_some()
+        );
         let is_already_scoped = is_instances(
             &ast.try_as_block_ref()
                 .unwrap()

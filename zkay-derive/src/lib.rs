@@ -11,10 +11,10 @@ use proc_macro::{TokenStream, TokenTree};
 use proc_macro2::TokenStream as TokenStream2;
 use std::collections::HashSet as Set;
 use syn::{
+    Data, DeriveInput, Error, Fields, Ident, Token,
     parse::{Parse, ParseStream, Result},
     parse_macro_input,
     punctuated::Punctuated,
-    Data, DeriveInput, Error, Fields, Ident, Token,
 };
 use zkay_derive_core::{get_name, get_names};
 #[proc_macro_derive(ExpressionASTypeImpl)]

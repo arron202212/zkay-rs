@@ -28,10 +28,10 @@
 // """
 
 use crate::ast::{
-    expression::Expression, identifier::HybridArgumentIdf,
-    namespace_definition::ConstructorOrFunctionDefinition, statement::Statement, ASTChildren,
-    ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, ArgType, ChildListBuilder, DeepClone,
-    FullArgsSpec, FullArgsSpecInit, IntoAST, AST,
+    AST, ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, ArgType,
+    ChildListBuilder, DeepClone, FullArgsSpec, FullArgsSpecInit, IntoAST, expression::Expression,
+    identifier::HybridArgumentIdf, namespace_definition::ConstructorOrFunctionDefinition,
+    statement::Statement,
 };
 use crate::visitors::{
     code_visitor::{CodeVisitor, CodeVisitorBase},
@@ -42,7 +42,7 @@ use rccell::RcCell;
 use serde::{Deserialize, Serialize};
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_derive::{
-    impl_trait, impl_traits, ASTFlattenImpl, ASTKind, EnumDispatchWithFields, ImplBaseTrait,
+    ASTFlattenImpl, ASTKind, EnumDispatchWithFields, ImplBaseTrait, impl_trait, impl_traits,
 };
 // class CircuitStatement(metaclass=ABCMeta)
 // pass

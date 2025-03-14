@@ -8,13 +8,13 @@
 
 // # BUILTIN SPECIAL TYPE DEFINITIONS
 use crate::ast::{
+    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, DeepClone, IntoAST,
     annotated_type_name::AnnotatedTypeName,
     identifier::{Identifier, IdentifierBase},
     identifier_declaration::{Parameter, StateVariableDeclaration, VariableDeclaration},
     namespace_definition::{ConstructorOrFunctionDefinition, StructDefinition},
     statement::Block,
     type_name::{FunctionTypeName, StructTypeName, TypeName, UserDefinedTypeName},
-    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTFlatten, DeepClone, IntoAST,
 };
 use crate::homomorphism::Homomorphism;
 use crate::pointers::parent_setter::set_parents;
@@ -70,13 +70,15 @@ impl GlobalDefs {
     pub fn new() -> Self {
         let address_struct = RcCell::new(StructDefinition::new(
             Identifier::identifier("<address>"),
-            vec![RcCell::new(VariableDeclaration::new(
-                vec![],
-                Some(AnnotatedTypeName::uint_all()),
-                Identifier::identifier("balance"),
-                None,
-            ))
-            .into()],
+            vec![
+                RcCell::new(VariableDeclaration::new(
+                    vec![],
+                    Some(AnnotatedTypeName::uint_all()),
+                    Identifier::identifier("balance"),
+                    None,
+                ))
+                .into(),
+            ],
         ));
         set_parents(&address_struct.clone().into());
 

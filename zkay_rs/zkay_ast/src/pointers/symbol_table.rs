@@ -8,6 +8,8 @@
 
 // from typing import Tuple, Dict, Union
 use crate::ast::{
+    AST, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf,
+    ASTType, IntoAST,
     annotated_type_name::AnnotatedTypeName,
     comment::Comment,
     enum_value::EnumValue,
@@ -34,10 +36,8 @@ use crate::ast::{
         Array, ArrayBaseProperty, Mapping, TypeName, UserDefinedTypeName,
         UserDefinedTypeNameBaseMutRef, UserDefinedTypeNameBaseProperty, UserDefinedTypeNameBaseRef,
     },
-    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
-    IntoAST, AST,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
 use rccell::{RcCell, WeakCell};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -716,80 +716,81 @@ impl SymbolTableLinker {
                         .parent()
                         .is_some()
                     {
-                        println!("====name======ide=={}======={}======={}======{}=nameidf  type====={:?}====decl= type===== {:?}===decl=parent=={}====={:?}=={}==={}", name,nameo.upgrade().unwrap().ptr_string(),decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap().ptr_string(),decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap()
-                            .ast_base_ref()
-                            .unwrap()
-                            .borrow()
-                            .parent()
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap().ptr_string(), nameo.upgrade().unwrap().get_ast_type(),decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap().get_ast_type(), decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap()
-                            .ast_base_ref()
-                            .unwrap()
-                            .borrow()
-                            .parent()
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap(), decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap()
-                            .ast_base_ref()
-                            .unwrap()
-                            .borrow()
-                            .parent()
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap().get_ast_type(),is_instance(
-                        &decl
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap()
-                            .ast_base_ref()
-                            .unwrap()
-                            .borrow()
-                            .parent()
-                            .clone()
-                            .unwrap()
-                            .upgrade()
-                            .unwrap(),
-                        ASTType::VariableDeclarationStatement,
-                    )
-                    , decl
-                        .clone()
-                        .unwrap()
-                        .upgrade()
-                        .unwrap()
-                        .ast_base_ref()
-                        .unwrap()
-                        .borrow()
-                        .parent()
-                        .clone()
-                        .unwrap()
-                        .upgrade()
-                        .unwrap()
-                        .is_parent_of(ast));
+                        println!(
+                            "====name======ide=={}======={}======={}======{}=nameidf  type====={:?}====decl= type===== {:?}===decl=parent=={}====={:?}=={}==={}",
+                            name,
+                            nameo.upgrade().unwrap().ptr_string(),
+                            decl.clone().unwrap().upgrade().unwrap().ptr_string(),
+                            decl.clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .parent()
+                                .clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .ptr_string(),
+                            nameo.upgrade().unwrap().get_ast_type(),
+                            decl.clone().unwrap().upgrade().unwrap().get_ast_type(),
+                            decl.clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .parent()
+                                .clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap(),
+                            decl.clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .parent()
+                                .clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .get_ast_type(),
+                            is_instance(
+                                &decl
+                                    .clone()
+                                    .unwrap()
+                                    .upgrade()
+                                    .unwrap()
+                                    .ast_base_ref()
+                                    .unwrap()
+                                    .borrow()
+                                    .parent()
+                                    .clone()
+                                    .unwrap()
+                                    .upgrade()
+                                    .unwrap(),
+                                ASTType::VariableDeclarationStatement,
+                            ),
+                            decl.clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .ast_base_ref()
+                                .unwrap()
+                                .borrow()
+                                .parent()
+                                .clone()
+                                .unwrap()
+                                .upgrade()
+                                .unwrap()
+                                .is_parent_of(ast)
+                        );
                     }
                 }
                 if decl
@@ -1129,13 +1130,14 @@ impl SymbolTableLinker {
         ast.ast_base_ref().unwrap().borrow_mut().target = ta;
         // println!("====visitIdentifierExpr======end====={:?}====={:?}", ast.get_ast_type(),ast.to_string());
 
-        assert!(ast
-            .ast_base_ref()
-            .unwrap()
-            .borrow()
-            .target
-            .as_ref()
-            .map_or(false, |t| t.clone().upgrade().is_some()));
+        assert!(
+            ast.ast_base_ref()
+                .unwrap()
+                .borrow()
+                .target
+                .as_ref()
+                .map_or(false, |t| t.clone().upgrade().is_some())
+        );
         Ok(())
     }
 

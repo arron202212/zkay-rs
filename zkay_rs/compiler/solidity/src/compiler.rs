@@ -232,7 +232,7 @@ pub fn check_compilation(filename: &str, show_errors: bool, display_code: &str) 
                     continue;
                 }
                 let error = error.as_object().unwrap();
-                use zkay_utils::progress_printer::{colored_print, TermColor};
+                use zkay_utils::progress_printer::{TermColor, colored_print};
                 let is_error = error.get(&String::from("severity"))
                     == Some(&Value::String(String::from("error")));
 

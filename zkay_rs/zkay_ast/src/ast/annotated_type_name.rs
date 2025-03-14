@@ -16,12 +16,12 @@ use crate::circuit_constraints::{
     CircCall, CircComment, CircEncConstraint, CircEqConstraint, CircGuardModification,
     CircIndentBlock, CircSymmEncConstraint, CircVarDecl, CircuitStatement,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
-use crate::homomorphism::{Homomorphism, HOMOMORPHISM_STORE, REHOM_EXPRESSIONS};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
+use crate::homomorphism::{HOMOMORPHISM_STORE, Homomorphism, REHOM_EXPRESSIONS};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use enum_dispatch::enum_dispatch;
-use ethnum::{i256, int, u256, uint, AsI256, AsU256, I256, U256};
-use eyre::{eyre, Result};
+use ethnum::{AsI256, AsU256, I256, U256, i256, int, u256, uint};
+use eyre::{Result, eyre};
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -38,25 +38,25 @@ use std::{
 };
 use strum_macros::{EnumIs, EnumTryAs};
 use zkay_config::{
-    config::{ConstructorOrFunctionDefinitionAttr, CFG},
+    config::{CFG, ConstructorOrFunctionDefinitionAttr},
     config_user::UserConfig,
     with_context_block, zk_print,
 };
 use zkay_derive::{
-    impl_trait, impl_traits, ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind,
-    ASTVisitorBaseRefImpl, EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl,
-    ImplBaseTrait,
+    ASTChildrenImpl, ASTDebug, ASTFlattenImpl, ASTKind, ASTVisitorBaseRefImpl,
+    EnumDispatchWithDeepClone, EnumDispatchWithFields, ExpressionASTypeImpl, ImplBaseTrait,
+    impl_trait, impl_traits,
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::progress_printer::warn_print;
-use zkp_u256::{Zero, U256 as ZU256};
+use zkp_u256::{U256 as ZU256, Zero};
 
 use crate::ast::{
+    AST, ASTBase, ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTType, ArgType, ChildListBuilder,
+    DeepClone, FullArgsSpec, FullArgsSpecInit, IntoAST,
     expression::{AllExpr, Expression, MeExpr},
     is_instance, is_instances,
     type_name::{Array, ArrayBase, CombinedPrivacyUnion, ExprUnion, TypeName},
-    ASTBase, ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTType, ArgType, ChildListBuilder,
-    DeepClone, FullArgsSpec, FullArgsSpecInit, IntoAST, AST,
 };
 
 #[derive(ASTDebug, ASTFlattenImpl, ASTKind, Clone, Debug, PartialOrd, Eq, Ord, Hash)]

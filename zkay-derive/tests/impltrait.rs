@@ -9,7 +9,7 @@
 extern crate zkay_derive;
 // extern crate diff;
 use enum_dispatch::enum_dispatch;
-use zkay_derive::{impl_trait, impl_traits, ImplBaseTrait};
+use zkay_derive::{ImplBaseTrait, impl_trait, impl_traits};
 
 ///
 #[allow(missing_docs)]

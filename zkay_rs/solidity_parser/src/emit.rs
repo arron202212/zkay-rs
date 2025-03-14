@@ -7,13 +7,13 @@
 #![allow(unused_braces)]
 
 use antlr_rust::{
+    InputStream,
     char_stream::InputData,
     common_token_stream::CommonTokenStream,
     parser::ParserNodeType,
-    token::{Token, TOKEN_EOF, TOKEN_HIDDEN_CHANNEL},
+    token::{TOKEN_EOF, TOKEN_HIDDEN_CHANNEL, Token},
     token_stream::TokenStream,
     tree::{ParseTree, ParseTreeVisitorCompat, TerminalNode, Visitable},
-    InputStream,
 };
 // use crate::tree::{ErrorNode, Listenable, ParseTreeListener, TerminalNode};
 // use antlr_rust::TokenSource;

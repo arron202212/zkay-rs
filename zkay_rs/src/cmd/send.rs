@@ -23,6 +23,7 @@ use foundry_common::ens::NameOrAddress;
 use foundry_common::{sh_println, sh_warn};
 use foundry_config::Config;
 use std::{path::PathBuf, str::FromStr};
+use zkay_transaction::blockchain::web3::Web3Tx;
 /// CLI arguments for `cast send`.
 #[derive(Debug, Parser)]
 pub struct SendTxArgs {
@@ -96,11 +97,6 @@ pub enum SendTxSubcommands {
 impl SendTxArgs {
     #[allow(unknown_lints, dependency_on_unit_never_type_fallback)]
     pub async fn run(self) -> Result<(), eyre::Report> {
-        if self.is_survey {
-            crate::contract::main0(None, Some(self.eth.clone()));
-            return Ok(());
-        }
-
         let Self {
             eth,
             to,
@@ -112,7 +108,8 @@ impl SendTxArgs {
             command,
             unlocked,
             path,
-            timeout,..
+            timeout,
+            ..
         } = self;
 
         let blob_data = if let Some(path) = path {
@@ -136,6 +133,11 @@ impl SendTxArgs {
 
         let config = Config::from(&eth);
         let provider = utils::get_provider(&config)?;
+        let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
+        if self.is_survey {
+            crate::contract::main0(web3tx).await;
+            return Ok(());
+        }
 
         let builder = CastTxBuilder::new(&provider, tx, &config)
             .await?
@@ -160,14 +162,14 @@ impl SendTxArgs {
                 // config
                 if config_chain_id != current_chain_id {
                     sh_warn!("Switching to chain {}", config_chain)?;
-                    provider
-                        .raw_request(
-                            "wallet_switchEthereumChain".into(),
-                            [serde_json::json!({
-                                "chainId": format!("0x{:x}", config_chain_id),
-                            })],
-                        )
-                        .await?;
+                    // provider
+                    //     .raw_request(
+                    //         "wallet_switchEthereumChain".into(),
+                    //         [serde_json::json!({
+                    //             "chainId": format!("0x{:x}", config_chain_id),
+                    //         })],
+                    //     )
+                    //     .await?;
                 }
             }
 

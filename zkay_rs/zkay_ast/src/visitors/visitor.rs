@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 
 use crate::ast::{
-    statement::StatementBaseProperty, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST,
+    AST, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, statement::StatementBaseProperty,
 };
 
 pub struct AstVisitorBase {

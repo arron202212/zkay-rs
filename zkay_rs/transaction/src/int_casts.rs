@@ -10,7 +10,7 @@
 
 use crate::types::AddressValue;
 use privacy::library_contracts::BN128_SCALAR_FIELDS;
-use zkp_u256::{Zero, U256};
+use zkp_u256::{U256, Zero};
 fn __convert(val: i32, nbits: Option<i32>, signed: bool) -> U256 {
     // if isinstance(val, IntEnum)
     //     val = val.value

@@ -13,7 +13,7 @@ use crate::interface::{
     ZkayKeystoreInterface, ZkayProverInterface,
 };
 use crate::types::{
-    AddressValue, CipherValue, DataType, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
+    ARcCell, AddressValue, CipherValue, DataType, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
 };
 use ark_ff::BigInteger256;
 use ark_std::rand;
@@ -35,16 +35,16 @@ fn main() {
 use rand::Rng;
 
 fn main1() {
-    println!("{}", hex::encode(&rand::thread_rng().gen::<[u8; 16]>()));
+    println!("{}", hex::encode(&rand::thread_rng().r#gen::<[u8; 16]>()));
 }
 use std::marker::PhantomData;
 #[derive(Clone)]
 pub struct EcdhChaskeyCrypto<
-    P: ZkayProverInterface + Clone,
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    key_store: RcCell<K>,
+    key_store: ARcCell<K>,
     params: CryptoParams,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
@@ -53,12 +53,12 @@ pub struct EcdhChaskeyCrypto<
 // class EcdhChaskeyCrypto(EcdhBase):
 // params = CryptoParams("ecdh-chaskey")
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > EcdhChaskeyCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> EcdhChaskeyCrypto<P, B, K>
 {
-    pub fn new(key_store: RcCell<K>) -> Self {
+    pub fn new(key_store: ARcCell<K>) -> Self {
         Self {
             key_store,
             params: CryptoParams::new("ecdh-chaskey".to_owned()),
@@ -68,26 +68,26 @@ impl<
     }
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > EcdhBase<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> EcdhBase<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ZkayCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ZkayCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
-    fn keystore(&self) -> RcCell<K> {
+    fn keystore(&self) -> ARcCell<K> {
         self.key_store.clone()
     }
 
     fn params(&self) -> CryptoParams {
         CryptoParams::new("ecdh-chaskey".to_owned())
     }
-    fn _generate_or_load_key_pair(&self, _: &String) -> KeyPair {
+    fn _generate_or_load_key_pair(&self, _: &str) -> KeyPair {
         KeyPair::default()
     }
 
@@ -97,7 +97,7 @@ impl<
         let plain_bytes = plain;
 
         // # Call java implementation
-        let mut iv = hex::encode(&ark_std::rand::thread_rng().gen::<[u8; 16]>());
+        let mut iv = hex::encode(&ark_std::rand::thread_rng().r#gen::<[u8; 16]>());
         let (iv_cipher, _) = run_command(
             vec![
                 "java",
@@ -164,10 +164,10 @@ impl<
 }
 
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ZkayHomomorphicCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ZkayHomomorphicCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
     fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<DataType>) -> Vec<String> {
         vec![]

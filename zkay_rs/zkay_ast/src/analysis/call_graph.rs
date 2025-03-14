@@ -6,6 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
+    AST, ASTFlatten, ASTInstanceOf, ASTType, IntoAST,
     expression::{
         BuiltinFunction, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
         ExpressionBaseRef, FunctionCallExpr, FunctionCallExprBaseProperty, FunctionCallExprBaseRef,
@@ -14,7 +15,6 @@ use crate::ast::{
     is_instance,
     namespace_definition::{ConstructorOrFunctionDefinition, NamespaceDefinition},
     statement::{ForStatement, WhileStatement},
-    ASTFlatten, ASTInstanceOf, ASTType, IntoAST, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -125,14 +125,15 @@ impl DirectCalledFunctionDetector {
                 .as_ref()
                 .unwrap()
                 .clone();
-            assert!(fdef
-                .clone()
-                .upgrade()
-                .unwrap()
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .is_function());
+            assert!(
+                fdef.clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .is_function()
+            );
             if let Some(cofd) = fdef
                 .clone()
                 .upgrade()

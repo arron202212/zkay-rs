@@ -8,6 +8,8 @@
 use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use crate::ast::{
+    AST, ASTBaseMutRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, InstanceTarget, IntoAST,
+    IntoExpression, IntoStatement,
     expression::{
         BuiltinFunction, Expression, FunctionCallExpr, FunctionCallExprBaseProperty, LocationExpr,
         TupleExpr, TupleOrLocationExpr,
@@ -17,8 +19,6 @@ use crate::ast::{
     },
     is_instance, is_instances,
     statement::{AssignmentStatement, AssignmentStatementBaseProperty, SimpleStatement, Statement},
-    ASTBaseMutRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType, InstanceTarget, IntoAST,
-    IntoExpression, IntoStatement, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -259,11 +259,16 @@ impl DirectModificationDetector {
             }
         } else {
             let mod_value = InstanceTarget::new(vec![Some(expr.clone())]);
-            assert!(!target
-                .ast_base_ref()
-                .unwrap().borrow()
-                .modified_values
-                .contains(&mod_value),"Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}", expr);
+            assert!(
+                !target
+                    .ast_base_ref()
+                    .unwrap()
+                    .borrow()
+                    .modified_values
+                    .contains(&mod_value),
+                "Undefined behavior due multiple different assignments to the same target in tuple assignment ,{:?}",
+                expr
+            );
 
             target
                 .ast_base_ref()

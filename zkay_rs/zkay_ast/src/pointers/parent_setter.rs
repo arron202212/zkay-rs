@@ -6,14 +6,14 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::ast::{
+    AST, ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf,
+    ASTType, IntoAST,
     expression::{Expression, ExpressionBaseMutRef},
     identifier::Identifier,
     is_instance, is_instances,
     namespace_definition::{ConstructorOrFunctionDefinition, NamespaceDefinition},
     source_unit::SourceUnit,
     statement::{Statement, StatementBaseMutRef},
-    ASTBaseMutRef, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTFlatten, ASTInstanceOf, ASTType,
-    IntoAST, AST,
 };
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::{RcCell, WeakCell};
@@ -134,13 +134,14 @@ impl ParentSetterVisitor {
                 );
                 p
             })
-            .or(Some(vec![ast
-                .try_as_namespace_definition_ref()
-                .unwrap()
-                .idf()
-                .as_ref()
-                .unwrap()
-                .downgrade()]));
+            .or(Some(vec![
+                ast.try_as_namespace_definition_ref()
+                    .unwrap()
+                    .idf()
+                    .as_ref()
+                    .unwrap()
+                    .downgrade(),
+            ]));
 
         ast.try_as_namespace_definition_ref()
             .unwrap()
@@ -181,14 +182,15 @@ impl ParentSetterVisitor {
                 );
                 p
             })
-            .or(Some(vec![ast
-                .try_as_constructor_or_function_definition_ref()
-                .unwrap()
-                .borrow()
-                .idf()
-                .clone()
-                .unwrap()
-                .downgrade()]));
+            .or(Some(vec![
+                ast.try_as_constructor_or_function_definition_ref()
+                    .unwrap()
+                    .borrow()
+                    .idf()
+                    .clone()
+                    .unwrap()
+                    .downgrade(),
+            ]));
         // println!("=======ddddd========1====");
         ast.try_as_constructor_or_function_definition_ref()
             .unwrap()

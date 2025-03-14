@@ -9,7 +9,7 @@ use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
 use alloy_network::{AnyNetwork, EthereumWallet, TransactionBuilder};
-use alloy_primitives::{hex, Address, Bytes};
+use alloy_primitives::{Address, Bytes, hex};
 use alloy_provider::{PendingTransactionError, Provider, ProviderBuilder};
 use alloy_rpc_types::{AnyTransactionReceipt, TransactionRequest};
 use alloy_serde::WithOtherFields;
@@ -21,44 +21,45 @@ use forge_verify::RetryArgs;
 use forge_verify::VerifyArgs;
 use foundry_cli::{
     opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
-    utils::{self, read_constructor_args_file, remove_contract, LoadConfig},
+    utils::{self, LoadConfig, read_constructor_args_file, remove_contract},
 };
 use foundry_common::{
     compile::{self},
     fmt::parse_tokens,
 };
-use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
 use foundry_compilers::{ArtifactId, Project};
+use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
 // use alloy_json_abi::JsonAbi;
 // use alloy_primitives::Address;
 // use eyre::{Result, WrapErr};
-use foundry_common::{fs, TestFunctionExt};
+use foundry_common::{TestFunctionExt, fs};
 use foundry_compilers::{
+    Artifact, ProjectCompileOutput,
     artifacts::{CompactBytecode, CompactDeployedBytecode, Settings},
     cache::{CacheEntry, CompilerCache},
     utils::read_json_file,
-    Artifact, ProjectCompileOutput,
 };
 use foundry_config::{
+    Config,
     figment::{
-        self,
+        self, Metadata, Profile,
         value::{Dict, Map},
-        Metadata, Profile,
     },
-    merge_impl_figment_convert, Config,
+    merge_impl_figment_convert,
 };
 use std::{borrow::Borrow, marker::PhantomData, path::PathBuf, sync::Arc};
 
 use my_logging::{log_context::log_context, logger::data};
 use privacy::library_contracts;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use solidity::compiler::compile_solidity_json;
 use std::collections::BTreeMap;
 use zkay_config::{
-    config::{library_compilation_environment, zk_print_banner, CFG},
+    config::{CFG, library_compilation_environment, zk_print_banner},
     config_user::UserConfig,
     with_context_block, zk_print,
 };
+use zkay_transaction::{blockchain::web3::Web3Tx, offchain::new_contract_simulator,interface::ZkayBlockchainInterface};
 use zkay_transaction_crypto_params::params::CryptoParams;
 // use  zkay_transaction:: crypto:: params ::  CryptoParams;
 // use zkay_transaction::interface::ZkayBlockchainInterface;
@@ -69,7 +70,7 @@ use ast_builder::process_ast::get_verification_contract_names;
 use rccell::RcCell;
 use std::str::FromStr;
 use zkay_ast::global_defs::{
-    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+    GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars,
 };
 use zkay_utils::helpers::{get_contract_names, save_to_file};
 use zkay_utils::timer::time_measure;
@@ -113,15 +114,23 @@ pub struct CreateArgs {
     #[arg(long, allow_hyphen_values = true)]
     blockchain_crypto_lib_addresses: Vec<String>,
 
-    /// Verify contract after creation.
+    /// Deploy pki lib.
+    #[arg(long)]
+    deploy_pki: bool,
+
+    /// Deploy external lib.
+    #[arg(long)]
+    deploy_external: bool,
+
+    /// Deploy lib.
     #[arg(long)]
     is_lib: bool,
 
-    /// Verify contract after creation.
+    /// Call contract function.
     #[arg(long)]
     is_call: bool,
 
-    /// Verify contract after creation.
+    /// Send contract function.
     #[arg(long)]
     is_send: bool,
 
@@ -167,6 +176,9 @@ pub struct CreateArgs {
 impl CreateArgs {
     /// Executes the command to create a contract
     pub async fn run(mut self) -> Result<()> {
+        if self.deploy_pki {
+            return self.deploy_pki().await;
+        }
         if self.is_lib {
             return self.deploy_lib().await;
         }
@@ -281,10 +293,10 @@ impl CreateArgs {
 
     async fn call(&self) -> eyre::Result<()> {
         use alloy_primitives::{Address, Bytes, U256};
-        use alloy_provider::{network::AnyNetwork, ProviderBuilder, RootProvider};
+        use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
         use alloy_rpc_types::TransactionRequest;
         use alloy_serde::WithOtherFields;
-        use alloy_sol_types::{sol, SolCall};
+        use alloy_sol_types::{SolCall, sol};
         use cast::Cast;
         use std::str::FromStr;
 
@@ -307,10 +319,10 @@ impl CreateArgs {
 
     async fn send(&self) -> eyre::Result<()> {
         use alloy_primitives::{Address, Bytes, U256};
-        use alloy_provider::{network::AnyNetwork, ProviderBuilder, RootProvider};
+        use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
         use alloy_rpc_types::TransactionRequest;
         use alloy_serde::WithOtherFields;
-        use alloy_sol_types::{sol, SolCall};
+        use alloy_sol_types::{SolCall, sol};
         use cast::Cast;
         use std::str::FromStr;
 
@@ -335,6 +347,72 @@ impl CreateArgs {
         let cast = Cast::new(provider);
         let data = cast.send(tx).await?;
         println!("{:#?}", data);
+        Ok(())
+    }
+    pub async fn deploy_pki(mut self) -> Result<()> {
+        let config = self.try_load_config_emit_warnings()?;
+        let Self { mut tx, eth, .. } = self;
+        let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
+        let sender = eth.wallet.from.expect("required");
+        let contract_simulator = new_contract_simulator(
+            "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/",
+            "",
+            sender,
+            web3tx,
+        );
+        let tmpdir = std::env::temp_dir();
+        // with log_context("deploy_pki"):
+        // let mut _pki_contract = BTreeMap::new();
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
+        for crypto_params in all_crypto_params {
+            // with log_context(crypto_params.crypto_name):
+            let crypto_param = CryptoParams::new(crypto_params.clone());
+            let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
+            let pki_contract_name = CFG
+                .lock()
+                .unwrap()
+                .get_pki_contract_name(&crypto_param.identifier_name());
+            let file = save_to_file(
+                Some(tmpdir.clone()),
+                &format!("{pki_contract_name}.sol"),
+                &pki_contract_code,
+            );
+            let _=contract_simulator
+                .runtime.lock()
+                .blockchain().lock()
+                .deploy_solidity_contract(&file, Some(pki_contract_name), &sender)
+                .await;
+        }
+        Ok(())
+    }
+    pub async fn deploy_external(mut self) -> Result<()> {
+        let config = self.try_load_config_emit_warnings()?;
+        let Self { mut tx, eth, .. } = self;
+        let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
+        let sender = eth.wallet.from.expect("required");
+        let contract_simulator = new_contract_simulator(
+            "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/",
+            "",
+            sender,
+            web3tx,
+        );
+        let tmpdir = std::env::temp_dir();
+        let external_crypto_lib_names = CFG.lock().unwrap().external_crypto_lib_names();
+        if !external_crypto_lib_names.is_empty() {
+            let file = save_to_file(
+                Some(tmpdir),
+                "verify_libs.sol",
+                &library_contracts::get_verify_libs_code(),
+            );
+            for lib in external_crypto_lib_names {
+                let _=contract_simulator
+                    .runtime.lock()
+                    .blockchain().lock()
+                    .deploy_solidity_contract(&file, Some(lib), &sender)
+                    .await;
+            }
+        }
+
         Ok(())
     }
     /// Executes the command to create a contract
@@ -374,7 +452,10 @@ impl CreateArgs {
                     })
                     .collect::<Vec<String>>()
                     .join("\n");
-                eyre::bail!("Dynamic linking not supported in `create` command - deploy the following library contracts first, then provide the address to link at compile time\n{}", link_refs)
+                eyre::bail!(
+                    "Dynamic linking not supported in `create` command - deploy the following library contracts first, then provide the address to link at compile time\n{}",
+                    link_refs
+                )
             }
         };
 
@@ -762,7 +843,10 @@ impl CreateArgs {
                     })
                     .collect::<Vec<String>>()
                     .join("\n");
-                eyre::bail!("Dynamic linking not supported in `create` command - deploy the following library contracts first, then provide the address to link at compile time\n{}", link_refs)
+                eyre::bail!(
+                    "Dynamic linking not supported in `create` command - deploy the following library contracts first, then provide the address to link at compile time\n{}",
+                    link_refs
+                )
             }
         };
 

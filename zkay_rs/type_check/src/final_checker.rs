@@ -9,10 +9,10 @@ use rccell::RcCell;
 // use type_check::type_exceptions::TypeException
 use std::collections::BTreeMap;
 use zkay_ast::ast::{
-    is_instance, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement,
-    AssignmentStatementBaseProperty, Block, ConstructorOrFunctionDefinition, ContractDefinition,
-    Expression, IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
-    SimpleStatement, StateVariableDeclaration, Statement, TupleOrLocationExpr, AST,
+    AST, ASTFlatten, ASTInstanceOf, ASTType, AssignmentStatement, AssignmentStatementBaseProperty,
+    Block, ConstructorOrFunctionDefinition, ContractDefinition, Expression,
+    IdentifierDeclarationBaseRef, IdentifierExpr, IfStatement, IntoAST, LocationExpr,
+    SimpleStatement, StateVariableDeclaration, Statement, TupleOrLocationExpr, is_instance,
 };
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_derive::ASTVisitorBaseRefImpl;
@@ -145,11 +145,12 @@ impl FinalVisitor {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        assert!(ast
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .borrow()
-            .is_function());
+        assert!(
+            ast.try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .borrow()
+                .is_function()
+        );
         Ok(())
     }
 

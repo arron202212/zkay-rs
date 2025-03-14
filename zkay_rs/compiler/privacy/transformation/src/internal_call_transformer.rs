@@ -10,9 +10,9 @@ use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use rccell::RcCell;
 use std::collections::{BTreeMap, BTreeSet};
 use zkay_ast::ast::{
-    identifier::Identifier, ASTFlatten, ConstructorOrFunctionDefinition, FunctionCallExpr,
-    FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IntoAST, IntoExpression, IntoStatement, MeExpr, NamespaceDefinition, NumberLiteralExpr, AST,
+    AST, ASTFlatten, ConstructorOrFunctionDefinition, FunctionCallExpr, FunctionCallExprBaseMutRef,
+    FunctionCallExprBaseProperty, IdentifierExpr, IdentifierExprUnion, IntoAST, IntoExpression,
+    IntoStatement, MeExpr, NamespaceDefinition, NumberLiteralExpr, identifier::Identifier,
 };
 use zkay_config::config::CFG;
 use zkay_transaction_crypto_params::params::CryptoParams;

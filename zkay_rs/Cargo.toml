@@ -191,7 +191,7 @@ clap_complete_fig = "4"
 # indicatif = "0.17"
 # inferno = { version = "0.11.19", default-features = false }
 itertools.workspace = true
-# parking_lot.workspace = true
+parking_lot.workspace = true
 # regex = { version = "1", default-features = false }
 # reqwest = { workspace = true, features = ["json"] }
 # semver.workspace = true

@@ -11,7 +11,7 @@ use circuit_helper_config::circuit_helper_config::CircuitHelperConfig;
 use lazy_static::lazy_static;
 use rccell::RcCell;
 use std::{fs::File, io::Write, path::Path};
-use zkay_config::config::{indent, CFG};
+use zkay_config::config::{CFG, indent};
 use zkay_utils::{
     helpers::hash_file,
     run_command::{run_command, run_commands},

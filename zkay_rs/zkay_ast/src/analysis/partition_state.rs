@@ -18,14 +18,14 @@ pub struct PartitionState<T: Ord> {
 // * ...
 // """
 impl<
-        T: std::fmt::Display
-            + std::clone::Clone
-            + std::hash::Hash
-            + std::cmp::Eq
-            + std::cmp::Ord
-            + crate::ast::Immutable
-            + std::fmt::Debug,
-    > PartitionState<T>
+    T: std::fmt::Display
+        + std::clone::Clone
+        + std::hash::Hash
+        + std::cmp::Eq
+        + std::cmp::Ord
+        + crate::ast::Immutable
+        + std::fmt::Debug,
+> PartitionState<T>
 {
     pub fn new() -> Self {
         Self {

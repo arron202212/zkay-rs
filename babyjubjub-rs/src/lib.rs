@@ -640,7 +640,7 @@ mod tests {
     #[test]
     fn test_point_decompress_loop() {
         for _ in 0..5 {
-            let random_bytes = rand::thread_rng().gen::<[u8; 32]>();
+            let random_bytes = rand::thread_rng().r#gen::<[u8; 32]>();
             let sk_raw: BigInt = BigInt::from_bytes_le(Sign::Plus, &random_bytes[..]);
             let (_, sk_raw_bytes) = sk_raw.to_bytes_be();
             let mut h: Vec<u8> = blh(&sk_raw_bytes);
@@ -699,7 +699,10 @@ mod tests {
 
         // test blake compatible with circomlib implementation
         let h: Vec<u8> = blh(&sk_raw_bytes);
-        assert_eq!(hex::encode(h), "c992db23d6290c70ffcc02f7abeb00b9d00fa8b43e55d7949c28ba6be7545d3253882a61bd004a236ef1cdba01b27ba0aedfb08eefdbfb7c19657c880b43ddf1");
+        assert_eq!(
+            hex::encode(h),
+            "c992db23d6290c70ffcc02f7abeb00b9d00fa8b43e55d7949c28ba6be7545d3253882a61bd004a236ef1cdba01b27ba0aedfb08eefdbfb7c19657c880b43ddf1"
+        );
 
         // test private key
         let sk = PrivateKey::import(

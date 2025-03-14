@@ -2,7 +2,7 @@
 name = "babyjubjub-rs"
 version = "0.0.11"
 authors = ["arnaucube <root@arnaucube.com>"]
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0"
 description = "BabyJubJub elliptic curve implementation"
 repository = "https://github.com/arnaucube/babyjubjub-rs"

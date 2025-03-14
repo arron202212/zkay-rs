@@ -18,23 +18,24 @@ use regex::RegexSetBuilder;
 use solidity::fake_solidity_generator::{ID_PATTERN, WS_PATTERN};
 use zkay_ast::analysis::contains_private_checker::contains_private_expr;
 use zkay_ast::ast::{
-    comment::Comment, identifier::Identifier, is_instance, ASTBaseProperty, ASTBaseRef,
-    ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf, ASTType, AnnotatedTypeName,
-    AssignmentStatement, AssignmentStatementBaseMutRef, AssignmentStatementBaseProperty, BlankLine,
-    Block, BooleanLiteralExpr, BooleanLiteralType, BreakStatement, BuiltinFunction,
-    ChildListBuilder, CommentBase, ContinueStatement, DeepClone, DoWhileStatement,
-    ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion, Expression,
-    ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement, FunctionCallExpr,
-    FunctionCallExprBase, FunctionCallExprBaseMutRef, FunctionCallExprBaseProperty, HybridArgType,
-    HybridArgumentIdf, IdentifierBase, IdentifierBaseMutRef, IdentifierBaseProperty,
-    IdentifierDeclaration, IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion,
-    IdentifierUnion, IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr,
-    LocationExpr, Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr,
-    NumberLiteralType, NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr,
-    ReclassifyExprBaseMutRef, ReclassifyExprBaseProperty, ReclassifyExprBaseRef, ReturnStatement,
-    SimpleStatement, StateVariableDeclaration, Statement, StatementBaseMutRef,
-    StatementBaseProperty, StatementList, StatementListBaseMutRef, StatementListBaseProperty,
-    TupleExpr, TypeName, VariableDeclaration, VariableDeclarationStatement, WhileStatement, AST,
+    AST, ASTBaseProperty, ASTBaseRef, ASTChildren, ASTChildrenCallBack, ASTFlatten, ASTInstanceOf,
+    ASTType, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBaseMutRef,
+    AssignmentStatementBaseProperty, BlankLine, Block, BooleanLiteralExpr, BooleanLiteralType,
+    BreakStatement, BuiltinFunction, ChildListBuilder, CommentBase, ContinueStatement, DeepClone,
+    DoWhileStatement, ElementaryTypeName, EncryptionExpression, EnumDefinition, ExprUnion,
+    Expression, ExpressionASType, ExpressionBaseMutRef, ExpressionBaseProperty, ForStatement,
+    FunctionCallExpr, FunctionCallExprBase, FunctionCallExprBaseMutRef,
+    FunctionCallExprBaseProperty, HybridArgType, HybridArgumentIdf, IdentifierBase,
+    IdentifierBaseMutRef, IdentifierBaseProperty, IdentifierDeclaration,
+    IdentifierDeclarationBaseProperty, IdentifierExpr, IdentifierExprUnion, IdentifierUnion,
+    IfStatement, IndexExpr, IntoAST, IntoExpression, IntoStatement, LiteralExpr, LocationExpr,
+    Mapping, MeExpr, MemberAccessExpr, NamespaceDefinition, NumberLiteralExpr, NumberLiteralType,
+    NumberTypeName, Parameter, PrimitiveCastExpr, ReclassifyExpr, ReclassifyExprBaseMutRef,
+    ReclassifyExprBaseProperty, ReclassifyExprBaseRef, ReturnStatement, SimpleStatement,
+    StateVariableDeclaration, Statement, StatementBaseMutRef, StatementBaseProperty, StatementList,
+    StatementListBaseMutRef, StatementListBaseProperty, TupleExpr, TypeName, VariableDeclaration,
+    VariableDeclarationStatement, WhileStatement, comment::Comment, identifier::Identifier,
+    is_instance,
 };
 use zkay_ast::global_defs::GlobalVars;
 use zkay_ast::homomorphism::Homomorphism;
@@ -636,7 +637,7 @@ impl ZkayStatementTransformer {
                 .as_ref()
                 .unwrap(),
         ); //=priv_expr
-           //    println!("======rhs==============={}====",rhs.as_ref().unwrap());
+        //    println!("======rhs==============={}====",rhs.as_ref().unwrap());
         if ast.is_assignment_statement() {
             ast.try_as_assignment_statement_ref()
                 .unwrap()
@@ -1757,10 +1758,14 @@ impl ZkayExpressionTransformer {
                         // let r=ret.as_ref().unwrap().try_as_expression_ref().unwrap().borrow().clone_inner();
                         //     *ast.try_as_expression_ref().unwrap().borrow_mut()=r;
                     } else {
-                        panic!("==visitFunctionCallExpr===else===expr======{ast:?}=====***********************************************************==={ret:?}=======");
+                        panic!(
+                            "==visitFunctionCallExpr===else===expr======{ast:?}=====***********************************************************==={ret:?}======="
+                        );
                     }
                 } else {
-                    panic!("==visitFunctionCallExpr===else========={ast:?}=====***********************************************************==={ret:?}=======");
+                    panic!(
+                        "==visitFunctionCallExpr===else========={ast:?}=====***********************************************************==={ret:?}======="
+                    );
                 }
                 ret
             } else {
@@ -2624,21 +2629,22 @@ impl ZkayCircuitTransformer {
             // );
             r
         } else {
-            assert!(ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_reclassify_expr_ref()
-                .unwrap()
-                .expr()
-                .ast_base_ref()
-                .unwrap()
-                .borrow()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .is_public());
+            assert!(
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .expr()
+                    .ast_base_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .is_public()
+            );
             // println!(
             //     "===visitReclassifyExpr===add_to_circuit_inputs=====ast=={}====={}=",
             //     ast,
@@ -3085,21 +3091,24 @@ impl ZkayCircuitTransformer {
             .unwrap()
             .upgrade()
             .unwrap();
-        assert!(fdef
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .is_function());
-        assert!(!fdef
-            .try_as_namespace_definition_ref()
-            .unwrap()
-            .borrow()
-            .try_as_constructor_or_function_definition_ref()
-            .unwrap()
-            .return_parameters
-            .is_empty());
+        assert!(
+            fdef.try_as_namespace_definition_ref()
+                .unwrap()
+                .borrow()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .is_function()
+        );
+        assert!(
+            !fdef
+                .try_as_namespace_definition_ref()
+                .unwrap()
+                .borrow()
+                .try_as_constructor_or_function_definition_ref()
+                .unwrap()
+                .return_parameters
+                .is_empty()
+        );
         assert!(
             fdef.try_as_namespace_definition_ref()
                 .unwrap()

@@ -28,16 +28,16 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::path::Path;
 use zkay_ast::ast::{
-    is_instance, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArrayBaseProperty,
+    AST, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, ArrayBaseProperty,
     BooleanLiteralExpr, BuiltinFunction, EnumDefinition, Expression, ExpressionBaseProperty,
     FunctionCallExpr, FunctionCallExprBaseProperty, HybridArgumentIdf, IdentifierBaseProperty,
     IdentifierExpr, IndexExpr, IntoAST, MeExpr, MemberAccessExpr, NumberLiteralExpr,
-    PrimitiveCastExpr, TypeName, AST,
+    PrimitiveCastExpr, TypeName, is_instance,
 };
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_ast::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use zkay_config::{
-    config::{indent, CFG},
+    config::{CFG, indent},
     config_user::UserConfig,
     zk_print,
 };
@@ -335,42 +335,45 @@ impl JsnarkVisitor {
         &self,
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        assert!(stmt
-            .try_as_circuit_statement_ref()
-            .unwrap()
-            .borrow()
-            .try_as_circ_enc_constraint_ref()
-            .unwrap()
-            .cipher
-            .t
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_cipher());
-        assert!(stmt
-            .try_as_circuit_statement_ref()
-            .unwrap()
-            .borrow()
-            .try_as_circ_enc_constraint_ref()
-            .unwrap()
-            .pk
-            .t
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_key());
-        assert!(stmt
-            .try_as_circuit_statement_ref()
-            .unwrap()
-            .borrow()
-            .try_as_circ_enc_constraint_ref()
-            .unwrap()
-            .rnd
-            .t
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_randomness());
+        assert!(
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
+                .cipher
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_cipher()
+        );
+        assert!(
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
+                .pk
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_key()
+        );
+        assert!(
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_enc_constraint_ref()
+                .unwrap()
+                .rnd
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_randomness()
+        );
         assert!(
             stmt.try_as_circuit_statement_ref()
                 .unwrap()
@@ -508,30 +511,32 @@ impl JsnarkVisitor {
         stmt: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
         // println!("==visitCircSymmEncConstraint============{stmt:?}");
-        assert!(stmt
-            .try_as_circuit_statement_ref()
-            .unwrap()
-            .borrow()
-            .try_as_circ_symm_enc_constraint_ref()
-            .unwrap()
-            .iv_cipher
-            .t
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_cipher());
-        assert!(stmt
-            .try_as_circuit_statement_ref()
-            .unwrap()
-            .borrow()
-            .try_as_circ_symm_enc_constraint_ref()
-            .unwrap()
-            .other_pk
-            .t
-            .to_ast()
-            .try_as_type_name()
-            .unwrap()
-            .is_key());
+        assert!(
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
+                .unwrap()
+                .iv_cipher
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_cipher()
+        );
+        assert!(
+            stmt.try_as_circuit_statement_ref()
+                .unwrap()
+                .borrow()
+                .try_as_circ_symm_enc_constraint_ref()
+                .unwrap()
+                .other_pk
+                .t
+                .to_ast()
+                .try_as_type_name()
+                .unwrap()
+                .is_key()
+        );
         assert!(
             stmt.try_as_circuit_statement_ref()
                 .unwrap()
@@ -906,19 +911,20 @@ impl JsnarkVisitor {
                 .func(),
             ASTType::BuiltinFunction,
         ) {
-            assert!(ast
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .try_as_function_call_expr_ref()
-                .unwrap()
-                .func()
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .try_as_builtin_function_ref()
-                .unwrap()
-                .can_be_private());
+            assert!(
+                ast.try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_function_call_expr_ref()
+                    .unwrap()
+                    .func()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .try_as_builtin_function_ref()
+                    .unwrap()
+                    .can_be_private()
+            );
             let mut args: Vec<_> = ast
                 .try_as_expression_ref()
                 .unwrap()
@@ -943,27 +949,28 @@ impl JsnarkVisitor {
                 .unwrap()
                 .is_shiftop()
             {
-                assert!(ast
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .args()[1]
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .borrow()
-                    .annotated_type()
-                    .as_ref()
-                    .unwrap()
-                    .borrow()
-                    .type_name
-                    .as_ref()
-                    .unwrap()
-                    .to_ast()
-                    .try_as_type_name()
-                    .unwrap()
-                    .is_literals());
+                assert!(
+                    ast.try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .args()[1]
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .borrow()
+                        .annotated_type()
+                        .as_ref()
+                        .unwrap()
+                        .borrow()
+                        .type_name
+                        .as_ref()
+                        .unwrap()
+                        .to_ast()
+                        .try_as_type_name()
+                        .unwrap()
+                        .is_literals()
+                );
                 args[1] = ast
                     .try_as_expression_ref()
                     .unwrap()
@@ -1316,13 +1323,15 @@ pub fn add_function_circuit_arguments(circuit: &RcCell<CircuitHelper>) -> Vec<St
             CircuitHelper::get_glob_key_name(&RcCell::new(MeExpr::new()).into(), &crypto_params);
         let sk_name = CircuitHelper::get_own_secret_key_name(&crypto_params);
         if crypto_params.is_symmetric_cipher() && sec_input_names.contains(&sk_name) {
-            assert!(circuit
-                .borrow()
-                .input_idfs()
-                .iter()
-                .map(|pub_input| pub_input.identifier_base.name.clone())
-                .collect::<Vec<_>>()
-                .contains(&pk_name));
+            assert!(
+                circuit
+                    .borrow()
+                    .input_idfs()
+                    .iter()
+                    .map(|pub_input| pub_input.identifier_base.name.clone())
+                    .collect::<Vec<_>>()
+                    .contains(&pk_name)
+            );
             input_init_stmts.push(format!(
                 r#"setKeyPair("{}", "{pk_name}", "{sk_name}");"#,
                 crypto_params.crypto_name
@@ -1436,7 +1445,7 @@ impl CircuitGenerator for JsnarkGenerator {
         ));
         // println!("========");
         let proving_scheme = CFG.lock().unwrap().proving_scheme(); //String::from("groth16");//
-                                                                   // println!("====1====");
+        // println!("====1====");
         let jar_hash_string =
             jsnark::CIRCUIT_BUILDER_JAR_HASH.to_string() + &code + &proving_scheme;
         // println!("====1==0==");

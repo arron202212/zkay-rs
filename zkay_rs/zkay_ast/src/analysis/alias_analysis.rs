@@ -8,6 +8,7 @@
 use crate::analysis::partition_state::PartitionState;
 use crate::analysis::side_effects::has_side_effects;
 use crate::ast::{
+    AST, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoExpression,
     expression::{
         AllExpr, BuiltinFunction, Expression, FunctionCallExpr, FunctionCallExprBaseProperty,
         LocationExpr, MeExpr, TupleExpr,
@@ -22,9 +23,8 @@ use crate::ast::{
         StatementBaseProperty, StatementBaseRef, StatementList, StatementListBaseProperty,
         VariableDeclarationStatement, WhileStatement,
     },
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, DeepClone, IntoAST, IntoExpression, AST,
 };
-use crate::global_defs::{array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars};
+use crate::global_defs::{GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars};
 use crate::visitors::visitor::{AstVisitor, AstVisitorBase, AstVisitorBaseRef};
 use rccell::RcCell;
 use zkay_config::with_context_block;
@@ -1120,10 +1120,12 @@ impl AliasAnalysisVisitor {
             .idf()
             .clone_inner();
         //   println!("{:?},=============={:?}",after,name);
-        assert!(after
-            .as_ref()
-            .unwrap()
-            .has(&name.as_ref().unwrap().to_ast()));
+        assert!(
+            after
+                .as_ref()
+                .unwrap()
+                .has(&name.as_ref().unwrap().to_ast())
+        );
 
         // make state more precise
         if let Some(e) = e {

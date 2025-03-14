@@ -8,26 +8,26 @@
 use crate::tx::{CastTxBuilder, SenderKind};
 use alloy_primitives::{TxKind, U256};
 use alloy_rpc_types::{BlockId, BlockNumberOrTag};
-use cast::{traces::TraceKind, Cast};
+use cast::{Cast, traces::TraceKind};
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::{
     opts::{EthereumOpts, TransactionOpts},
-    utils::{self, handle_traces, parse_ether_value, TraceResult},
+    utils::{self, TraceResult, handle_traces, parse_ether_value},
 };
 use foundry_common::ens::NameOrAddress;
-use foundry_common::sh_println;
+use foundry_common::{sh_println, shell};
 use foundry_compilers::artifacts::EvmVersion;
 use foundry_config::{
-    figment::{
-        self,
-        value::{Dict, Map},
-        Figment, Metadata, Profile,
-    },
     Config,
+    figment::{
+        self, Figment, Metadata, Profile,
+        value::{Dict, Map},
+    },
 };
 use foundry_evm::{executors::TracingExecutor, opts::EvmOpts};
 use std::str::FromStr;
+use zkay_transaction::blockchain::web3::{Web3, Web3Tx};
 
 /// CLI arguments for `cast call`.
 #[derive(Debug, Parser)]
@@ -89,7 +89,7 @@ pub struct CallArgs {
 
     #[command(flatten)]
     eth: EthereumOpts,
-   
+
     #[arg(id = "survey", long = "survey", alias = "is-survey")]
     is_survey: bool,
 }
@@ -120,10 +120,6 @@ pub enum CallSubcommands {
 
 impl CallArgs {
     pub async fn run(self) -> Result<()> {
-        if self.is_survey {
-            crate::contract::main0( None,Some(self.eth.clone()));
-            return Ok(());
-        }
         let figment = Into::<Figment>::into(&self.eth).merge(&self);
         let evm_opts = figment.extract::<EvmOpts>()?;
         let mut config = Config::try_from(figment)?.sanitized();
@@ -144,15 +140,23 @@ impl CallArgs {
             data,
             ..
         } = self;
-
+        println!(
+            "=====is_json==={}========{}",
+            Web3::default().get_block("pending", "").await,
+            shell::is_json()
+        );
         if let Some(data) = data {
             sig = Some(data);
         }
 
         let provider = utils::get_provider(&config)?;
-        let sender = SenderKind::from_wallet_opts(eth.wallet).await?;
+        let sender = SenderKind::from_wallet_opts(eth.wallet.clone()).await?;
         let from = sender.address();
-
+        let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
+        if self.is_survey {
+            crate::contract::main0(web3tx).await;
+            return Ok(());
+        }
         let code = if let Some(CallSubcommands::Create {
             code,
             sig: create_sig,
@@ -250,7 +254,7 @@ impl figment::Provider for CallArgs {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::{hex, Address};
+    use alloy_primitives::{Address, hex};
 
     #[test]
     fn can_parse_call_data() {

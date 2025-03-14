@@ -43,7 +43,7 @@ use once_cell::sync::Lazy;
 use std::convert::Infallible;
 use std::string::ParseError;
 use tiny_keccak::{Hasher, Keccak};
-use zkp_u256::{Zero, U256};
+use zkp_u256::{U256, Zero};
 pub static BN128_SCALAR_FIELDS: Lazy<U256> = Lazy::new(|| {
     U256::from_decimal_str(
         "21888242871839275222246405745257275088548364400416034343698204186575808495617",

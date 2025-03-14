@@ -20,7 +20,7 @@ use zkay_config::{config::CFG, zk_print};
 use zkay_utils::run_command::run_command;
 // class EcdhBase(ZkayCryptoInterface):
 pub trait EcdhBase<
-    P: ZkayProverInterface,
+    P: ZkayProverInterface + std::marker::Send + std::marker::Sync,
     B: ZkayBlockchainInterface<P>,
     K: ZkayKeystoreInterface<P, B>,
 >: ZkayCryptoInterface<P, B, K>
@@ -75,7 +75,7 @@ pub trait EcdhBase<
         if key_file.try_exists().map_or(true, |x| !x) {
             // # Generate fresh randomness for ec private key
             zk_print!("Key pair not found, generating new EC secret...");
-            rnd = hex::encode(&rand::thread_rng().gen::<[u8; 32]>()); //secrets.token_bytes(32);
+            rnd = hex::encode(&rand::thread_rng().r#gen::<[u8; 32]>()); //secrets.token_bytes(32);
 
             // # Store randomness so that address will have the same key every time
             // with open(key_file, "wb") as f:

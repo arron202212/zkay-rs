@@ -11,6 +11,7 @@ use zkay_config::{config::CFG, config_user::UserConfig};
 // use type_check::type_exceptions::TypeException
 use crate::analysis::partition_state::PartitionState;
 use crate::ast::{
+    AST, ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, IntoExpression,
     expression::{
         BuiltinFunction, Expression, ExpressionBaseMutRef, ExpressionBaseProperty,
         ExpressionBaseRef, FunctionCallExpr, FunctionCallExprBaseProperty, IndexExpr, LocationExpr,
@@ -23,7 +24,6 @@ use crate::ast::{
         StatementBaseProperty, StatementList, VariableDeclarationStatement,
     },
     type_name::{BooleanLiteralType, FunctionTypeName, NumberLiteralType},
-    ASTBaseProperty, ASTFlatten, ASTInstanceOf, ASTType, IntoAST, IntoExpression, AST,
 };
 use crate::visitors::{
     function_visitor::FunctionVisitor,
@@ -514,12 +514,13 @@ impl CircuitComplianceChecker {
     }
     // @staticmethod
     pub fn should_evaluate_public_expr_in_circuit(expr: &ASTFlatten) -> bool {
-        assert!(expr
-            .ast_base_ref()
-            .unwrap()
-            .borrow()
-            .annotated_type()
-            .is_some());
+        assert!(
+            expr.ast_base_ref()
+                .unwrap()
+                .borrow()
+                .annotated_type()
+                .is_some()
+        );
         if CFG.lock().unwrap().opt_eval_constexpr_in_circuit() {
             if is_instances(
                 expr.ast_base_ref()
@@ -582,25 +583,26 @@ impl CircuitComplianceChecker {
             .unwrap()
             .evaluate_privately()
         {
-            assert!(ast
-                .to_ast()
-                .try_as_expression_ref()
-                .unwrap()
-                .try_as_tuple_or_location_expr_ref()
-                .unwrap()
-                .try_as_location_expr_ref()
-                .unwrap()
-                .try_as_index_expr_ref()
-                .unwrap()
-                .key
-                .try_as_expression_ref()
-                .unwrap()
-                .borrow()
-                .annotated_type()
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .is_public());
+            assert!(
+                ast.to_ast()
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .try_as_tuple_or_location_expr_ref()
+                    .unwrap()
+                    .try_as_location_expr_ref()
+                    .unwrap()
+                    .try_as_index_expr_ref()
+                    .unwrap()
+                    .key
+                    .try_as_expression_ref()
+                    .unwrap()
+                    .borrow()
+                    .annotated_type()
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .is_public()
+            );
             self.priv_setter.borrow_mut().set_evaluation(
                 &ast.to_ast()
                     .try_as_expression_ref()
@@ -622,11 +624,42 @@ impl CircuitComplianceChecker {
         &self,
         ast: &ASTFlatten,
     ) -> eyre::Result<<Self as AstVisitor>::Return> {
-        assert!(!*self.inside_privif_stmt.borrow()
-            || ast.try_as_reclassify_expr_ref().unwrap().borrow().statement().as_ref().unwrap().clone().upgrade().unwrap().try_as_statement_ref().unwrap().borrow().statement_base_ref().unwrap().before_analysis.as_ref().unwrap().same_partition(
-                &ast.try_as_reclassify_expr_ref().unwrap().borrow().privacy().try_as_expression_ref().unwrap().borrow().privacy_annotation_label().unwrap().to_ast(),
-                &Expression::me_expr(None).to_ast(),
-            ),"Revealing information to other parties is not allowed inside private if statements {:?}", ast);
+        assert!(
+            !*self.inside_privif_stmt.borrow()
+                || ast
+                    .try_as_reclassify_expr_ref()
+                    .unwrap()
+                    .borrow()
+                    .statement()
+                    .as_ref()
+                    .unwrap()
+                    .clone()
+                    .upgrade()
+                    .unwrap()
+                    .try_as_statement_ref()
+                    .unwrap()
+                    .borrow()
+                    .statement_base_ref()
+                    .unwrap()
+                    .before_analysis
+                    .as_ref()
+                    .unwrap()
+                    .same_partition(
+                        &ast.try_as_reclassify_expr_ref()
+                            .unwrap()
+                            .borrow()
+                            .privacy()
+                            .try_as_expression_ref()
+                            .unwrap()
+                            .borrow()
+                            .privacy_annotation_label()
+                            .unwrap()
+                            .to_ast(),
+                        &Expression::me_expr(None).to_ast(),
+                    ),
+            "Revealing information to other parties is not allowed inside private if statements {:?}",
+            ast
+        );
         if ast
             .to_ast()
             .try_as_expression_ref()
@@ -849,7 +882,10 @@ impl CircuitComplianceChecker {
                     .unwrap()
                     .is_primitive_type()
                 {
-                    panic!("Writes to non-primitive type variables are not allowed inside private if statements {:?}", ast)
+                    panic!(
+                        "Writes to non-primitive type variables are not allowed inside private if statements {:?}",
+                        ast
+                    )
                 }
                 if val.in_scope_at(ast)
                     && !ast
@@ -867,7 +903,10 @@ impl CircuitComplianceChecker {
                             &Expression::me_expr(None).to_ast(),
                         )
                 {
-                    panic!("If statement with private condition must not contain side effects to variables with owner != me ,{:?}", ast)
+                    panic!(
+                        "If statement with private condition must not contain side effects to variables with owner != me ,{:?}",
+                        ast
+                    )
                 }
             }
             *self.inside_privif_stmt.borrow_mut() = true;
@@ -1107,18 +1146,19 @@ impl NonstaticOrIncompatibilityDetector {
                     .func(),
                 ASTType::LocationExprBase,
             ) {
-                assert!(ast
-                    .to_ast()
-                    .try_as_expression_ref()
-                    .unwrap()
-                    .try_as_function_call_expr_ref()
-                    .unwrap()
-                    .func()
-                    .ast_base_ref()
-                    .unwrap()
-                    .borrow()
-                    .target
-                    .is_some());
+                assert!(
+                    ast.to_ast()
+                        .try_as_expression_ref()
+                        .unwrap()
+                        .try_as_function_call_expr_ref()
+                        .unwrap()
+                        .func()
+                        .ast_base_ref()
+                        .unwrap()
+                        .borrow()
+                        .target
+                        .is_some()
+                );
                 assert!(is_instance(
                     ast.to_ast()
                         .try_as_expression_ref()
@@ -1280,12 +1320,15 @@ impl NonstaticOrIncompatibilityDetector {
             }
         }
         assert!(
-                !has_nonstatic_call,
-                "Function calls to non static functions are not allowed inside private expressions ,{:?}",
-                ast
-            );
-        assert!(can_be_private,
-                "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions {:?}", ast);
+            !has_nonstatic_call,
+            "Function calls to non static functions are not allowed inside private expressions ,{:?}",
+            ast
+        );
+        assert!(
+            can_be_private,
+            "Calls to functions with operations which cannot be expressed as a circuit are not allowed inside private expressions {:?}",
+            ast
+        );
         self.visit_children(ast)
     }
 }

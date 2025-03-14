@@ -50,10 +50,9 @@ use solidity_parser::{
 };
 use zkay_ast::{
     ast::{
-        self, enum_value::EnumValue, identifier::Identifier, is_instance, is_instances,
-        source_unit::SourceUnit, ASTBaseProperty, ASTFlatten, ASTType, AddressPayableTypeName,
-        AddressTypeName, AllExpr, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase,
-        Block, BoolTypeName, BooleanLiteralExpr, BreakStatement, BuiltinFunction,
+        self, AST, ASTBaseProperty, ASTFlatten, ASTType, AddressPayableTypeName, AddressTypeName,
+        AllExpr, AnnotatedTypeName, AssignmentStatement, AssignmentStatementBase, Block,
+        BoolTypeName, BooleanLiteralExpr, BreakStatement, BuiltinFunction,
         ConstructorOrFunctionDefinition, ContinueStatement, ContractDefinition, ContractTypeName,
         DoWhileStatement, ElementaryTypeName, EnumDefinition, EnumTypeName, EnumValueTypeName,
         Expression, ExpressionStatement, ForStatement, FunctionCallExpr, FunctionCallExprBase,
@@ -65,7 +64,8 @@ use zkay_ast::{
         RequireStatement, ReturnStatement, SimpleStatement, StateVariableDeclaration, Statement,
         StatementList, StringLiteralExpr, StructTypeName, TupleExpr, TupleOrLocationExpr, TypeName,
         UintTypeName, UserDefinedTypeName, UserDefinedTypeNameBase, VariableDeclaration,
-        VariableDeclarationStatement, WhileStatement, AST,
+        VariableDeclarationStatement, WhileStatement, enum_value::EnumValue,
+        identifier::Identifier, is_instance, is_instances, source_unit::SourceUnit,
     },
     homomorphism::{HOMOMORPHISM_STORE, REHOM_EXPRESSIONS},
 };
@@ -1842,11 +1842,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             })
             .collect();
-        if rp.is_empty() {
-            None
-        } else {
-            rp[0].clone()
-        }
+        if rp.is_empty() { None } else { rp[0].clone() }
     }
 
     fn visit_modifierList(&mut self, ctx: &ModifierListContext<'input>) -> Self::Return {
@@ -1859,11 +1855,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             })
             .collect();
-        if rp.is_empty() {
-            None
-        } else {
-            rp[0].clone()
-        }
+        if rp.is_empty() { None } else { rp[0].clone() }
     }
 
     fn visit_parameter(&mut self, ctx: &ParameterContext<'input>) -> Self::Return {
@@ -2245,11 +2237,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             })
             .collect();
-        if rp.is_empty() {
-            None
-        } else {
-            rp[0].clone()
-        }
+        if rp.is_empty() { None } else { rp[0].clone() }
     }
 
     fn visit_tupleExpression(&mut self, ctx: &TupleExpressionContext<'input>) -> Self::Return {
@@ -2262,11 +2250,7 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                 self.temp_result().clone()
             })
             .collect();
-        if rp.is_empty() {
-            None
-        } else {
-            rp[0].clone()
-        }
+        if rp.is_empty() { None } else { rp[0].clone() }
     }
 
     fn visit_elementaryTypeNameExpression(

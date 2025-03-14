@@ -14,7 +14,7 @@ use crate::interface::{
     ZkayKeystoreInterface, ZkayProverInterface,
 };
 use crate::types::{
-    AddressValue, CipherValue, DataType, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
+    ARcCell, AddressValue, CipherValue, DataType, KeyPair, PrivateKeyValue, PublicKeyValue, Value,
 };
 use ark_ec::twisted_edwards::TECurveConfig;
 use ark_std::UniformRand;
@@ -62,22 +62,22 @@ fn get_dlog(x: Fq, y: Fq) -> u64 {
 use std::marker::PhantomData;
 #[derive(Clone)]
 pub struct ElgamalCrypto<
-    P: ZkayProverInterface + Clone,
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
     B: ZkayBlockchainInterface<P> + Clone,
     K: ZkayKeystoreInterface<P, B> + Clone,
 > {
-    pub key_store: RcCell<K>,
+    pub key_store: ARcCell<K>,
     pub params: CryptoParams,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ElgamalCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ElgamalCrypto<P, B, K>
 {
-    pub fn new(key_store: RcCell<K>) -> Self {
+    pub fn new(key_store: ARcCell<K>) -> Self {
         Self {
             params: CryptoParams::new("elgamal".to_owned()),
             key_store,
@@ -87,19 +87,19 @@ impl<
     }
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ZkayCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ZkayCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
 {
     // params = CryptoParams("elgamal")
-    fn keystore(&self) -> RcCell<K> {
+    fn keystore(&self) -> ARcCell<K> {
         self.key_store.clone()
     }
     fn params(&self) -> CryptoParams {
         CryptoParams::new("elgamal".to_owned())
     }
-    fn _generate_or_load_key_pair(&self, address: &String) -> KeyPair {
+    fn _generate_or_load_key_pair(&self, address: &str) -> KeyPair {
         let key_file = PathBuf::from(CFG.lock().unwrap().data_dir())
             .join("keys")
             .join(format!("elgamal_{}_{address}.bin", self.params.key_bits()));
@@ -158,10 +158,10 @@ impl<
     }
 }
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ElgamalCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ElgamalCrypto<P, B, K>
 {
     fn _write_key_pair(&self, key_file: &PathBuf, pk: Vec<u8>, sk: Vec<u8>) {
         // with open(key_file, "wb") as f:
@@ -228,10 +228,10 @@ impl<
 }
 
 impl<
-        P: ZkayProverInterface + Clone,
-        B: ZkayBlockchainInterface<P> + Clone,
-        K: ZkayKeystoreInterface<P, B> + Clone,
-    > ZkayHomomorphicCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
+    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+    B: ZkayBlockchainInterface<P> + Clone,
+    K: ZkayKeystoreInterface<P, B> + Clone,
+> ZkayHomomorphicCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
 {
     fn do_op(&self, op: &str, _public_key: Vec<String>, args: Vec<DataType>) -> Vec<String> {
         fn deserialize(operand: &DataType) -> (Option<(BabyJubJub, BabyJubJub)>, Option<u128>) {

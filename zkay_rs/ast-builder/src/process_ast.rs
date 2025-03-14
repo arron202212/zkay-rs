@@ -24,7 +24,7 @@ use zkay_ast::analysis::{
     side_effects::{check_for_undefined_behavior_due_to_eval_order, compute_modified_sets},
 };
 use zkay_ast::ast::{
-    source_unit::SourceUnit, ASTBaseProperty, ASTFlatten, IdentifierBaseProperty, AST,
+    AST, ASTBaseProperty, ASTFlatten, IdentifierBaseProperty, source_unit::SourceUnit,
 }; //, AstException;
 use zkay_ast::pointers::{parent_setter::set_parents, symbol_table::link_identifiers as link};
 use zkay_utils::progress_printer::print_step;
@@ -32,7 +32,7 @@ use zkay_utils::progress_printer::print_step;
 use bitflags::bitflags;
 use std::fmt;
 use zkay_ast::global_defs::{
-    array_length_member, global_defs, global_vars, GlobalDefs, GlobalVars,
+    GlobalDefs, GlobalVars, array_length_member, global_defs, global_vars,
 };
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -194,7 +194,9 @@ pub fn get_verification_contract_names(
     code_or_ast: (Option<String>, Option<ASTFlatten>),
     global_vars: RcCell<GlobalVars>,
 ) -> Vec<String> {
+    println!("===code===aas===={code_or_ast:?}");
     let ast = if let (Some(code), None) = code_or_ast {
+        println!("===code======={code}");
         Some(get_processed_ast(&code, None, global_vars))
     } else {
         code_or_ast.1.clone()
