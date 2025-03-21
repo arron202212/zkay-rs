@@ -89,7 +89,7 @@ pub struct UserConfigBase {
     pub _blockchain_backend: String,
     pub _blockchain_backend_values: Vec<String>,
     pub _blockchain_node_uri: Option<String>,
-    pub _blockchain_pki_address: String,
+    pub _blockchain_pki_address: Vec<String>,
     pub _blockchain_crypto_lib_addresses: String,
     pub _blockchain_default_account: Option<String>,
 
@@ -184,7 +184,7 @@ impl UserConfigBase {
                 "w3-custom"
             ],
             _blockchain_node_uri: Some(String::from("http://localhost:7545")),
-            _blockchain_pki_address: String::new(),
+            _blockchain_pki_address: Vec::new(),
             _blockchain_crypto_lib_addresses: String::new(),
             _blockchain_default_account: Some(String::from("0")),
             _indentation: " ".repeat(4),
@@ -247,7 +247,6 @@ pub trait UserConfig {
     fn main_crypto_backend(&self) -> String {
         // Main encryption backend to use.
         // Available Options: [dummy, dummy-hom, rsa-pkcs1.5, rsa-oaep, ecdh-aes, ecdh-chaskey, paillier]
-
         self.get_crypto_backend(&String::from("NON_HOMOMORPHIC"))
             .unwrap()
     }
@@ -358,7 +357,7 @@ pub trait UserConfig {
         self.user_config_base_mut()._blockchain_node_uri = val;
     }
 
-    fn blockchain_pki_address(&self) -> String {
+    fn blockchain_pki_address(&self) -> Vec<String> {
         // Address of the deployed pki contract.
         // Must be specified for backends other than w3-eth-tester.
         // This library can be deployed using ``zkay deploy-pki``.
@@ -367,7 +366,7 @@ pub trait UserConfig {
     }
 
     // @blockchain_pki_address.setter
-    fn set_blockchain_pki_address(&mut self, val: String) {
+    fn set_blockchain_pki_address(&mut self, val: Vec<String>) {
         //_type_check(val, String);
         self.user_config_base_mut()._blockchain_pki_address = val;
     }

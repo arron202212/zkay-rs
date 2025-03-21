@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use zkay_config::{config_user::UserConfig,config::CFG};
 use crate::tx::{self, CastTxBuilder};
 use alloy_network::{AnyNetwork, EthereumWallet};
 use alloy_provider::{Provider, ProviderBuilder};
@@ -38,6 +39,9 @@ pub struct SendTxArgs {
 
     /// The arguments of the function to call.
     args: Vec<String>,
+
+    #[arg(long, allow_hyphen_values = true, value_delimiter = ',')]
+    blockchain_pki_addresses: Vec<String>,
 
     /// Only print the transaction hash and exit immediately.
     #[arg(id = "async", long = "async", alias = "cast-async", env = "CAST_ASYNC")]
@@ -109,6 +113,7 @@ impl SendTxArgs {
             unlocked,
             path,
             timeout,
+            blockchain_pki_addresses,
             ..
         } = self;
 
@@ -135,8 +140,8 @@ impl SendTxArgs {
         let provider = utils::get_provider(&config)?;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         if self.is_survey {
-            crate::contract::main0(web3tx).await;
-            return Ok(());
+            CFG.lock().unwrap().set_blockchain_pki_address(blockchain_pki_addresses);
+            return crate::contract::main0(web3tx).await;
         }
 
         let builder = CastTxBuilder::new(&provider, tx, &config)

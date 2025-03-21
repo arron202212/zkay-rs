@@ -324,7 +324,7 @@ async fn run(cmd: Web3Subcommand) -> String {
                     .unwrap()
             )
         }
-        Web3Subcommand::Estimate(cmd) => utils::block_on(cmd.run()).unwrap(),
+        Web3Subcommand::Estimate(cmd) => cmd.run().await.unwrap(),
         Web3Subcommand::GasPrice { rpc } => {
             let config = Config::from(&rpc);
             let provider = utils::get_provider(&config).unwrap();

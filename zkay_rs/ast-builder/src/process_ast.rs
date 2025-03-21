@@ -194,9 +194,9 @@ pub fn get_verification_contract_names(
     code_or_ast: (Option<String>, Option<ASTFlatten>),
     global_vars: RcCell<GlobalVars>,
 ) -> Vec<String> {
-    println!("===code===aas===={code_or_ast:?}");
+    // println!("===code===aas===={code_or_ast:?}");
     let ast = if let (Some(code), None) = code_or_ast {
-        println!("===code======={code}");
+        // println!("===code======={code}");
         Some(get_processed_ast(&code, None, global_vars))
     } else {
         code_or_ast.1.clone()

@@ -72,21 +72,21 @@ use zkay::{Zkay, ZkaySubcommand};
 fn main() {
     unsafe { backtrace_on_stack_overflow::enable() };
     assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
-    if let Err(err) = run() {
+    if let Err(err) = utils::block_on(run()) {
         // let _ = foundry_common::Shell::get().error(&err);
         println!("=========={err:?}");
         std::process::exit(1);
     }
 }
 
-fn run() -> Result<()> {
+async fn run() -> Result<()> {
     let args = Zkay::parse();
     args.global.init()?;
     match args.cmd {
         ZkaySubcommand::Compile(cmd) => cmd.run().map(drop),
-        ZkaySubcommand::Create(cmd) => utils::block_on(cmd.run()),
-        ZkaySubcommand::SendTx(cmd) => utils::block_on(cmd.run()),
-        ZkaySubcommand::Call(cmd) => utils::block_on(cmd.run()),
+        ZkaySubcommand::Create(cmd) => cmd.run().await,
+        ZkaySubcommand::SendTx(cmd) => cmd.run().await,
+        ZkaySubcommand::Call(cmd) => cmd.run().await,
         ZkaySubcommand::Balance {
             block,
             who,
@@ -96,19 +96,19 @@ fn run() -> Result<()> {
         } => {
             let config = Config::from(&rpc);
             let provider = utils::get_provider(&config)?;
-            let account_addr = utils::block_on(who.resolve(&provider))?;
+            let account_addr = who.resolve(&provider).await?;
 
             match erc20 {
                 Some(token) => {
-                    let balance = utils::block_on(Cast::new(&provider).erc20_balance(
+                    let balance = Cast::new(&provider).erc20_balance(
                         token,
                         account_addr,
                         block,
-                    ))?;
+                    ).await?;
                     sh_println!("{}", format_uint_exp(balance))
                 }
                 None => {
-                    let value = utils::block_on(Cast::new(&provider).balance(account_addr, block))?;
+                    let value = Cast::new(&provider).balance(account_addr, block).await?;
                     if ether {
                         sh_println!("{}", SimpleCast::from_wei(&value.to_string(), "eth")?)
                     } else {
@@ -127,22 +127,22 @@ fn run() -> Result<()> {
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
-                utils::block_on(Cast::new(provider).block(
+               Cast::new(provider).block(
                     block.unwrap_or(BlockId::Number(Latest)),
                     full,
                     field
-                ))?
+                ).await?
             )
         }
 
-        ZkaySubcommand::Estimate(cmd) => utils::block_on(cmd.run()),
+        ZkaySubcommand::Estimate(cmd) => cmd.run().await,
         ZkaySubcommand::GasPrice { rpc } => {
             let config = Config::from(&rpc);
             let provider = utils::get_provider(&config)?;
-            sh_println!("{}", utils::block_on(Cast::new(provider).gas_price())?)
+            sh_println!("{}", Cast::new(provider).gas_price().await?)
         }
 
-        ZkaySubcommand::Rpc(cmd) => utils::block_on(cmd.run()),
+        ZkaySubcommand::Rpc(cmd) => cmd.run().await,
         ZkaySubcommand::Code {
             block,
             who,
@@ -151,10 +151,10 @@ fn run() -> Result<()> {
         } => {
             let config = Config::from(&rpc);
             let provider = utils::get_provider(&config)?;
-            let who = utils::block_on(who.resolve(&provider))?;
+            let who = who.resolve(&provider).await?;
             sh_println!(
                 "{}",
-                utils::block_on(Cast::new(provider).code(who, block, disassemble))?
+                Cast::new(provider).code(who, block, disassemble).await?
             )
         }
         ZkaySubcommand::Receipt {
@@ -168,13 +168,13 @@ fn run() -> Result<()> {
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
-                utils::block_on(Cast::new(provider).receipt(
+                Cast::new(provider).receipt(
                     tx_hash,
                     field,
                     confirmations,
                     None,
                     cast_async
-                ))?
+                ).await?
             )
         }
         ZkaySubcommand::ToCheckSumAddress { address } => {

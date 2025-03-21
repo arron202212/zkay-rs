@@ -144,21 +144,20 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         self._pki_contract = None
     //         self._lib_addresses = None
     fn _pki_contract(&self) -> ARcCell<Option<BTreeMap<String, Address>>>;
-    fn pki_contract(&self, crypto_backend: &str) -> Address {
+    async fn pki_contract(&self, crypto_backend: &str) -> eyre::Result<Address> {
+
         if self._pki_contract().lock().is_none() {
-            let _ = self._connect_libraries();
+            let _ = self._connect_libraries().await?;
         }
         self._pki_contract()
             .lock()
             .as_ref()
             .unwrap()
-            .get(crypto_backend)
-            .unwrap()
-            .clone()
+            .get(crypto_backend).cloned().ok_or(eyre::eyre!("pki_contract"))
     }
 
     //     @property
-    fn lib_addresses(&self) -> ARcCell<Option<BTreeMap<String, Address>>>;
+    async fn lib_addresses(&self) -> eyre::Result<ARcCell<Option<BTreeMap<String, Address>>>>;
     // if self._lib_addresses is None:
     //     self._connect_libraries()
     // return self._lib_addresses
@@ -218,14 +217,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise BlockChainError: if request fails
     //         :return: the public key
     //         """
-    fn req_public_key(
+    async fn req_public_key(
         &self,
         address: &str,
         crypto_params: &CryptoParams,
     ) -> eyre::Result<Value<String, PublicKeyValue>> {
         //         assert isinstance(address, AddressValue)
         zk_print!(r#"Requesting public key for address "{address}""#);
-        self._req_public_key(&address, crypto_params)
+        self._req_public_key(&address, crypto_params).await
     }
 
     //         """
@@ -239,7 +238,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise TransactionFailedException: if the announcement transaction failed
     //         :return: backend-specific transaction receipt
     //         """
-    fn announce_public_key(
+    async fn announce_public_key(
         &self,
         sender: &str,
         pk: &Value<String, PublicKeyValue>,
@@ -248,7 +247,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         //         assert isinstance(sender, AddressValue)
         //         assert isinstance(pk, PublicKeyValue)
         zk_print!(r#"Announcing public key "{pk:?}" for address "{sender}""#);
-        self._announce_public_key(sender, pk, crypto_params)
+        self._announce_public_key(sender, pk, crypto_params).await
     }
 
     //         """
@@ -260,12 +259,12 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise BlockChainError: if request fails
     //         :return: The value
     //         """
-    fn req_state_var(&self, contract_handle: &Address, name: &str, indices: Vec<String>) -> String {
+    async fn req_state_var(&self, contract_handle: &Address, name: &str, indices: Vec<String>) -> String {
         //bool, int, str, bytes
         //         assert contract_handle is not None
         zk_print!(r#"Requesting state variable "{name}""#);
         let val = self
-            ._req_state_var(contract_handle, name, indices)
+            ._req_state_var(contract_handle, name, indices).await
             .expect("req_state_var");
         zk_print!(r#"Got value {val} for state variable "{name}""#);
         val
@@ -280,7 +279,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise BlockChainError: if request fails
     //         :return: function return value (single value if one return value, list if multiple return values)
     //         """
-    fn call(
+    async fn call(
         &self,
         contract_handle: &Address,
         sender: &Address,
@@ -290,7 +289,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         //-> Union[bool, int, str, bytes, List]:
         //         assert contract_handle is not None
         zk_print!("Calling contract function {name}{:?}", args);
-        let val = self._call(contract_handle, sender, name, &args);
+        let val = self._call(contract_handle, sender, name, &args).await;
         zk_print!("Got return value {val:?}");
         val
     }
@@ -311,7 +310,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise TransactionFailedException: if the transaction failed
     //         :return: backend-specific transaction receipt
     //         """
-    fn transact(
+    async fn transact(
         &self,
         contract_handle: &Address,
         sender: &Address,
@@ -324,7 +323,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         self.__check_args(actual_args.clone(), should_encrypt);
         zk_print!(r#"Issuing transaction for function "{function}" from account "{sender}""#);
         zk_print!("{actual_args:?}");
-        let ret = self._transact(&contract_handle, sender, function, &actual_args, wei_amount);
+        let ret = self._transact(&contract_handle, sender, function, &actual_args, wei_amount).await;
         zk_print!("");
         ret
     }
@@ -351,6 +350,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) -> eyre::Result<Address> {
+        println!("===interface=========deploy=========");
         if !self.is_debug_backend() && CFG.lock().unwrap().crypto_backend() == "dummy" {
             eyre::bail!(
                 "SECURITY ERROR: Dummy encryption can only be used with debug blockchain backends (w3-eth-tester or w3-ganache)."
@@ -370,10 +370,11 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
             actual_args,
             project_dir
         ); //
+        zk_print!("=======_deploy=======before=========================");
         let _ret = self
             ._deploy(project_dir, sender, contract, actual_args, wei_amount)
             .await;
-        zk_print!("");
+        zk_print!("====_deploy==after=================================");
         // Ok(json!({}))
         _ret
     }
@@ -483,7 +484,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                     _contract_on_chain.as_ref().unwrap(),
                     &format!("{contract_name}_inst()"),
                     vec![],
-                )
+                ).await
                 .expect("call fail");
             println!("========={s}=======");
             let mut pki_address: Address = Address::from_str(&s).expect("into address fail");
@@ -523,7 +524,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                 })
                 .collect();
             let some_vcontract = self
-                ._req_state_var(&contract_address, &format!("{some_vname}_inst()"), vec![])
+                ._req_state_var(&contract_address, &format!("{some_vname}_inst()"), vec![]).await
                 .expect("_req_state_var");
             let mut libs = self
                 ._verify_library_integrity(
@@ -532,7 +533,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                     &PathBuf::from(project_dir).join(format!("{some_vname}.sol")),
                 )
                 .await?;
-            *self.lib_addresses().lock() = Some(libs.clone());
+            *self.lib_addresses().await?.lock() = Some(libs.clone());
 
             for verifier in verifier_names {
                 let v_address: Address = Address::from_str(
@@ -540,7 +541,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                         &Address::from_str("contract_on_chain.as_ref().unwrap()").unwrap(),
                         &format!("{verifier}_inst()"),
                         vec![],
-                    )
+                    ).await
                     .as_ref()
                     .unwrap(),
                 )
@@ -550,7 +551,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                     ._verify_contract_integrity(
                         &v_address,
                         &PathBuf::from(project_dir).join(format!("{verifier}.sol")),
-                        self.lib_addresses().lock().as_ref(),
+                        self.lib_addresses().await?.lock().as_ref(),
                         None,
                         false,
                         None,
@@ -563,7 +564,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                         &vcontract,
                         &CFG.lock().unwrap().prover_key_hash_name(),
                         vec![],
-                    )
+                    ).await
                     .unwrap();
                 // from zkay.transaction.runtime import Runtime
                 let actual_hash = self.prover().lock().get_prover_key_hash(
@@ -683,20 +684,20 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     ) -> eyre::Result<BTreeMap<String, Address>>;
     // pass
 
-    fn _req_public_key(
+    async fn _req_public_key(
         &self,
         address: &str,
         crypto_params: &CryptoParams,
     ) -> eyre::Result<Value<String, PublicKeyValue>>;
 
-    fn _announce_public_key(
+    async fn _announce_public_key(
         &self,
         address: &str,
         pk: &Value<String, PublicKeyValue>,
         crypto_params: &CryptoParams,
     ) -> eyre::Result<String>;
 
-    fn _call(
+    async fn _call(
         &self,
         contract_handle: &Address,
         sender: &Address,
@@ -704,14 +705,14 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         args: &Vec<DataType>,
     ) -> eyre::Result<String>;
 
-    fn _req_state_var(
+    async fn _req_state_var(
         &self,
         contract_handle: &Address,
         name: &str,
         indices: Vec<String>,
     ) -> eyre::Result<String>;
 
-    fn _transact(
+    async fn _transact(
         &self,
         contract_handle: &Address,
         sender: &Address,
@@ -770,7 +771,7 @@ pub trait ZkayKeystoreInterface<
     //         :param key_pair: cryptographic keys
     //         :raise TransactionFailedException: if announcement transaction fails
     //         """
-    fn add_keypair(&mut self, address: &str, key_pair: KeyPair) {
+    async fn add_keypair(&mut self, address: &str, key_pair: KeyPair)->eyre::Result<()> {
         self.local_key_pairs()
             .lock()
             .insert(address.to_owned(), key_pair.clone());
@@ -780,15 +781,16 @@ pub trait ZkayKeystoreInterface<
         if self
             .conn()
             .lock()
-            .req_public_key(address, &crypto_params)
+            .req_public_key(address, &crypto_params).await
             .is_err()
         {
             //         except BlockChainError:
             let _ = self
                 .conn()
                 .lock()
-                .announce_public_key(address, &key_pair.pk, &crypto_params);
+                .announce_public_key(address, &key_pair.pk, &crypto_params).await?;
         }
+        Ok(())
     }
     //         """Return true if keys for address are already in the store."""
     fn has_initialized_keys_for(&self, address: &String) -> bool {
@@ -806,7 +808,7 @@ pub trait ZkayKeystoreInterface<
     //         :raise BlockChainError: if key request fails
     //         :return: the public key
     //         """
-    fn getPk(&self, address: &String) -> Value<String, PublicKeyValue> {
+    async fn getPk(&self, address: &String) -> Value<String, PublicKeyValue> {
         // assert isinstance(address, AddressValue)
         zk_print!("Requesting public key for address {address}"); //, verbosity_level=2
         if let Some(pk) = self.local_pk_store().lock().get(address) {
@@ -816,7 +818,7 @@ pub trait ZkayKeystoreInterface<
             let pk = self
                 .conn()
                 .lock()
-                .req_public_key(address, &crypto_params)
+                .req_public_key(address, &crypto_params).await
                 .unwrap();
             self.local_pk_store()
                 .lock()
@@ -884,9 +886,9 @@ pub trait ZkayCryptoInterface<
 
     //         :param address: the address for which to generate keys
     //         """
-    fn generate_or_load_key_pair(&self, address: &str) {
+    async fn generate_or_load_key_pair(&self, address: &str)->eyre::Result<()> {
         let v = self._generate_or_load_key_pair(&address);
-        self.keystore().lock().add_keypair(address, v);
+        self.keystore().lock().add_keypair(address, v).await
     }
 
     //         """
@@ -897,7 +899,7 @@ pub trait ZkayCryptoInterface<
     //         :param target_addr: address of the receiver for whom to encrypt
     //         :return: if symmetric -> (iv_cipher, None), if asymmetric (cipher, randomness which was used to encrypt plain)
     //         """
-    fn enc(
+    async fn enc(
         &self,
         mut plain: String,
         my_addr: &String,
@@ -914,7 +916,7 @@ pub trait ZkayCryptoInterface<
         zk_print!(r#"Encrypting value {plain:?} for destination "{target_addr}""#); //, verbosity_level=2
 
         let sk = self.keystore().lock().sk(my_addr);
-        let raw_pk = self.keystore().lock().getPk(target_addr);
+        let raw_pk = self.keystore().lock().getPk(target_addr).await;
         let pk = if self.params().is_symmetric_cipher() {
             assert!(raw_pk.len() == 1);
             raw_pk[0].clone()

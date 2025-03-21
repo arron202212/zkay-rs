@@ -106,9 +106,9 @@ pub struct CreateArgs {
     )]
     constructor_args_path: Option<PathBuf>,
 
-    /// The constructor arguments.
-    #[arg(long, allow_hyphen_values = true)]
-    blockchain_pki_addresses: Vec<String>,
+    // /// The constructor arguments.
+    // #[arg(long, allow_hyphen_values = true)]
+    // blockchain_pki_addresses: Vec<String>,
 
     /// The constructor arguments.
     #[arg(long, allow_hyphen_values = true)]
@@ -171,6 +171,12 @@ pub struct CreateArgs {
 
     #[command(flatten)]
     retry: RetryArgs,
+
+    #[arg(long, allow_hyphen_values = true, value_delimiter = ',')]
+    blockchain_pki_addresses: Vec<String>,
+
+    #[arg(id = "survey", long = "survey", alias = "is-survey")]
+    is_survey: bool,
 }
 
 impl CreateArgs {
@@ -178,6 +184,9 @@ impl CreateArgs {
     pub async fn run(mut self) -> Result<()> {
         if self.deploy_pki {
             return self.deploy_pki().await;
+        }
+        if self.deploy_external {
+            return self.deploy_external().await;
         }
         if self.is_lib {
             return self.deploy_lib().await;
@@ -189,6 +198,30 @@ impl CreateArgs {
             return self.send().await;
         }
         let config = self.try_load_config_emit_warnings()?;
+
+        let Self {
+            // to,
+            // mut sig,
+            // mut args,
+            mut tx,
+            eth,
+            // command,
+            // block,
+            // trace,
+            // evm_version,
+            // debug,
+            // decode_internal,
+            // labels,
+            // data,
+            blockchain_pki_addresses,
+            ..
+        } = self;
+     
+        let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
+        if self.is_survey {
+            CFG.lock().unwrap().set_blockchain_pki_address(blockchain_pki_addresses);
+            return crate::contract::main0(web3tx).await
+        }
         // Find Project & Compile
         let project = config.project()?;
 
@@ -207,8 +240,8 @@ impl CreateArgs {
         //             s.to_string_lossy().to_string() + "_inst"
         //         }),
         // );
-        self._deploy(&target_path, &project, &self.contract.name)
-            .await?;
+        // self._deploy(&target_path, &project, &self.contract.name)
+        //     .await?;
         // // let inst_target_path=PathBuf::from(inst_target_path_str.clone());
         // // let inst_config = Config::load_with_root(inst_target_path_str).sanitized();
         // // let inst_project = inst_config.project()?;
@@ -353,7 +386,9 @@ impl CreateArgs {
         let config = self.try_load_config_emit_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
-        let sender = eth.wallet.from.expect("required");
+        let sender = if let Some(address)=eth.wallet.from{address}else{ let signer = eth.wallet.signer().await?;
+            signer.address()
+        };
         let contract_simulator = new_contract_simulator(
             "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/",
             "",
@@ -366,6 +401,7 @@ impl CreateArgs {
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             // with log_context(crypto_params.crypto_name):
+            println!("=====crypto_params========{crypto_params}");
             let crypto_param = CryptoParams::new(crypto_params.clone());
             let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
@@ -389,7 +425,9 @@ impl CreateArgs {
         let config = self.try_load_config_emit_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
-        let sender = eth.wallet.from.expect("required");
+        let sender = if let Some(address)=eth.wallet.from{address}else{ let signer = eth.wallet.signer().await?;
+            signer.address()
+        };
         let contract_simulator = new_contract_simulator(
             "/Users/lisheng/mygit/arron/zkay-rs/survey_compiled/",
             "",

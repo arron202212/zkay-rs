@@ -408,7 +408,7 @@ impl<
                 // self.locals = LocalsDict { _scopes: vec![] };
                 let locals=self.contract_simulator_ref().lock().locals.clone();
                 fc=WithFunctionCtx::new(locals,self.contract_simulator_ref().lock().state.clone(),Some(afc),lc);
-        println!("====2====1====");
+        // println!("====2====1====");
                 // try:
                 // yield is_external
                 // except (ValueError, BlockChainError, RequireException) as e:
@@ -658,7 +658,7 @@ impl<
         let __contract_name = arc_cell_new!(contract_name.to_owned());
 
         // """Handle which refers to the deployed contract, this is passed to the blockchain interface when e.g. issuing transactions."""
-        let __contract_handle = arc_cell_new!(None);
+        let __contract_handle = arc_cell_new!(Some(user_addr.clone()));
 
         // """From address for all transactions which are issued by this ContractSimulator"""
         let __user_addr = arc_cell_new!(user_addr);
@@ -710,7 +710,7 @@ impl<
     // @property
     pub fn address(&self) -> String {
         // self.__contract_handle.lock().as_ref().unwrap()["address"].to_string()
-        String::new()
+         self.__user_addr.lock().to_string()
     }
 
     // @property
@@ -728,14 +728,16 @@ impl<
         self.__keystore.lock()[crypto_backend].clone()
     }
 
-    pub fn get_my_sk(&self, _crypto_backend: &str) -> Value<String, PrivateKeyValue> {
-        // = CFG.lock().unwrap().main_crypto_backend
-        // self.__keystore[crypto_backend].sk(&self.user_address())
-        Value::<String, PrivateKeyValue>::default()
+    pub fn get_my_sk(&self, crypto_backend: &str) -> Value<String, PrivateKeyValue> {
+        let crypto_backend =if crypto_backend.is_empty(){CFG.lock().unwrap().main_crypto_backend()}else{crypto_backend.to_owned()};
+        self.__keystore.lock()[&crypto_backend]
+            .lock()
+            .sk(&self.user_address().to_string())
     }
     // = CFG.lock().unwrap().main_crypto_backend
     pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String, PublicKeyValue> {
-        self.__keystore.lock()[crypto_backend]
+        let crypto_backend =if crypto_backend.is_empty(){CFG.lock().unwrap().main_crypto_backend()}else{crypto_backend.to_owned()};
+        self.__keystore.lock()[&crypto_backend]
             .lock()
             .pk(&self.user_address().to_string())
     }
@@ -767,6 +769,7 @@ impl<
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) -> Option<Address> {
+        println!("==__contract_handle==begin====={:?}",self.__contract_handle.lock().clone());
         *self.__contract_handle.lock() = self
             .__conn
             .lock()
@@ -780,6 +783,7 @@ impl<
             )
             .await
             .ok();
+        println!("==__contract_handle======={:?}",self.__contract_handle.lock().clone());
         self.__contract_handle.lock().clone()
     }
     pub async fn connect<PS: ProvingScheme>(
@@ -807,7 +811,7 @@ impl<
             .ok();
     }
 
-    pub fn transact(
+    pub async fn transact(
         &self,
         fname: &str,
         args: Vec<DataType>,
@@ -821,10 +825,10 @@ impl<
             args,
             should_encrypt,
             wei_amount,
-        )
+        ).await
     }
 
-    pub fn call(
+    pub async fn call(
         &self,
         fname: &str,
         args: Vec<DataType>,
@@ -835,7 +839,7 @@ impl<
             &self.__user_addr.lock(),
             fname,
             args,
-        );
+        ).await;
         if ret_val_constructors.len() == 1 {
             let (is_cipher, crypto_params_name, callable) = ret_val_constructors[0].clone();
             self.__get_decrypted_retval(
@@ -924,7 +928,7 @@ impl<
         ) = (None, None, None);
     }
     //= CFG.lock().unwrap().main_crypto_backend
-    pub fn enc(
+    pub async fn enc(
         &self,
         plain: i32,
         target_addr: Option<String>,
@@ -943,7 +947,7 @@ impl<
                 plain.to_string(),
                 &self.__user_addr.lock().to_string(),
                 &target_addr,
-            )
+            ).await
     }
     //= CFG.lock().unwrap().main_crypto_backend
     pub fn dec(
@@ -959,7 +963,7 @@ impl<
         (constr(res.0.to_string()), res.1)
     }
 
-    pub fn do_homomorphic_op(
+    pub async fn do_homomorphic_op(
         &self,
         op: &str,
         crypto_backend: &str,
@@ -973,7 +977,7 @@ impl<
             .get(&params.crypto_name)
             .unwrap()
             .lock()
-            .getPk(&target_addr);
+            .getPk(&target_addr).await;
         // assert!(
         //     args.iter().all(|arg| !(isinstance(arg, CipherValue)
         //         && params.crypto_name != arg.params.crypto_name)),
@@ -989,7 +993,7 @@ impl<
     // """
     // Re-randomizes arg using fresh randomness, which is stored in data[rnd_key] (side-effect!)
     // """
-    pub fn do_rerand(
+    pub async fn do_rerand(
         &self,
         arg: Value<String, CipherValue>,
         crypto_backend: &str,
@@ -1004,7 +1008,7 @@ impl<
             .get(&params.crypto_name)
             .unwrap()
             .lock()
-            .getPk(&target_addr);
+            .getPk(&target_addr).await;
         let mut crypto_inst = self.__crypto.lock()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
         let (_result, _rand) = crypto_inst.lock().do_rerand(arg, pk[..].to_vec());
@@ -1012,7 +1016,7 @@ impl<
         // CipherValue(result, params)
     }
 
-    pub fn _req_state_var(&self, name: &str, indices: Vec<String>, count: i32) -> String {
+    pub async fn _req_state_var(&self, name: &str, indices: Vec<String>, count: i32) -> String {
         // if self.__contract_handle is None:
         // # TODO check this statically in the type checker
         assert!(
@@ -1025,17 +1029,17 @@ impl<
                 self.__contract_handle.lock().as_ref().unwrap(),
                 name,
                 indices,
-            )
+            ).await
         } else {
             (0..count)
-                .map(|_i| {
-                    self.__conn.lock().req_state_var(
+                .map( |_i| {
+                    futures::executor::block_on(self.__conn.lock().req_state_var(
                         self.__contract_handle.lock().as_ref().unwrap(),
                         &name,
                         indices.clone(),
-                    )
+                    ))
                 })
-                .collect()
+                .collect::<Vec<String>>().join(",")
         }
     }
     // @staticmethod

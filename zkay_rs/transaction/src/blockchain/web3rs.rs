@@ -18,6 +18,8 @@
 // use my_logging;
 // use foundry_cli::opts::{RpcOpts,EthereumOpts};
 // use foundry_cli::{handler, utils};
+use foundry_cli::utils::did_you_mean;
+use std::path::Path;
 use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
@@ -419,9 +421,11 @@ impl<
             None,
             &PathBuf::from("."),
         )?;
+ println!("========_deploy_contract=====1======");
         let contract = self
             ._deploy_contract(sender, abi.clone(), &vec![], None, abi, bin, id)
             .await;
+        println!("========_deploy_contract===========");
         contract
     }
     // class Web3Blockchain(ZkayBlockchainInterface):
@@ -490,12 +494,12 @@ impl<
         Web3::default().get_balance(address).await
     }
 
-    fn _req_public_key(
+    async fn _req_public_key(
         &self,
         address: &str,
         crypto_params: &CryptoParams,
     ) -> eyre::Result<Value<String, PublicKeyValue>> {
-        let pki_contract = self.pki_contract(&crypto_params.crypto_name);
+        let pki_contract = self.pki_contract(&crypto_params.crypto_name).await?;
         let len = if "elgamal" == &crypto_params.crypto_name {
             2
         } else {
@@ -506,20 +510,20 @@ impl<
                 &pki_contract,
                 &format!("getPk(address a) public view returns(uint[{len}] memory)"),
                 vec![address.to_owned()],
-            )?],
+            ).await?],
             Some(crypto_params.clone()),
             None,
         ))
     }
 
-    fn _announce_public_key(
+    async fn _announce_public_key(
         &self,
         address: &str,
         pk: &Value<String, PublicKeyValue>,
         crypto_params: &CryptoParams,
     ) -> eyre::Result<String> {
         //         with log_context(f"announcePk"):
-        let pki_contract = self.pki_contract(&crypto_params.crypto_name);
+        let pki_contract = self.pki_contract(&crypto_params.crypto_name).await?;
         let len = if "elgamal" == &crypto_params.crypto_name {
             2
         } else {
@@ -531,10 +535,10 @@ impl<
             &format!("announcePk(uint[{len}] calldata pk)"),
             &vec![DataType::PublicKeyValue(pk.clone())],
             None,
-        )
+        ).await
     }
 
-    fn _req_state_var(
+    async fn _req_state_var(
         &self,
         contract_handle: &Address,
         name: &str,
@@ -544,13 +548,14 @@ impl<
         // contract_handle.functions[name](indices).call()
         //         except Exception as e:
         //             raise BlockChainError(e.args)
-        futures::executor::block_on(self.web3tx.call(
+        // futures::executor::block_on()
+            self.web3tx.call(
             Some(contract_handle.clone().into()),
             Some(name.to_owned()),
             indices,
-        ))
+        ).await
     }
-    fn _call(
+    async fn _call(
         &self,
         contract_handle: &Address,
         _sender: &Address,
@@ -564,13 +569,13 @@ impl<
         // fct(args).call(tx)
         //         except Exception as e:
         //             raise BlockChainError(e.args)
-        utils::block_on(self.web3tx.call(
+        self.web3tx.call(
             Some(contract_handle.clone().into()),
             Some(name.to_owned()),
             args.iter().map(|x| x.to_string()).collect(),
-        ))
+        ).await
     }
-    fn _transact(
+    async fn _transact(
         &self,
         contract_handle: &Address,
         _sender: &Address,
@@ -578,11 +583,11 @@ impl<
         actual_args: &Vec<DataType>,
         _wei_amount: Option<i32>,
     ) -> Result<String> {
-        utils::block_on(self.web3tx.send(
+        self.web3tx.send(
             Some(contract_handle.clone().into()),
             Some(function.to_owned()),
             actual_args.iter().map(|x| x.to_string()).collect(),
-        ))
+        ).await
         // let fct = if function == "constructor" {
         //     contract_handle.constructor
         // } else {
@@ -615,8 +620,10 @@ impl<
         actual_args: Vec<String>,
         wei_amount: Option<i32>,
     ) -> eyre::Result<Address> {
+        println!("======_deploy=========begin============");
         let mut project_dir = project_dir.clone();
-        // project_dir.pop();
+        let mut project_dir_parent = project_dir.clone();
+        project_dir_parent.pop();
         let global_vars = RcCell::new(global_vars(RcCell::new(global_defs())));
         // with open(os.path.join(project_dir, "contract.zkay")) as f:
         let f = project_dir.join("contract.zkay");
@@ -627,7 +634,7 @@ impl<
         // Deploy verification contracts if not already done
         let external_contract_addresses = self
             ._deploy_dependencies(sender, &project_dir, verifier_names)
-            .await?;
+            .await.expect("===_deploy_dependencies===");
         let inst_target_path = std::env::temp_dir().join(
             project_dir
                 .iter()
@@ -636,7 +643,7 @@ impl<
                     s.to_string_lossy().to_string() + "_inst"
                 }),
         );
-        std::fs::create_dir_all(inst_target_path.clone())?;
+        std::fs::create_dir_all(inst_target_path.clone()).expect("===create_dir_all===");
         // let project_dir_parent=project_dir.parent().unwrap();
         // println!(
         //     "==project_dir========{}========={}",
@@ -661,15 +668,17 @@ impl<
                 let _ = std::fs::copy(x.path(), inst_target_path.join(x.file_name()));
             });
         let inst_config = Config::load_with_root(inst_target_path).sanitized();
-        let _inst_project = inst_config.project()?;
+        let _inst_project = inst_config.project().expect("===project===");
         // let cout;
         let (abi, bin, id);
         with_context_block!(var filename= self.__hardcoded_external_contracts_ctx(&project_dir,&project_dir, &external_contract_addresses) =>{
-            (abi, bin, id) = self.compile_contract(&PathBuf::from(filename), contract, None,&PathBuf::from("."))?;
+            println!("==={filename:?}======project_dir====={project_dir:?}=============");
+            (abi, bin, id) = self.compile_contract(&PathBuf::from(filename), contract, None,&project_dir).expect("===compile_contract===");
         });
         let handle;
         with_context_block!(var _a= log_context("constructor")=>{
             with_context_block!(var _b= log_context(&format!("{contract}"))=>{
+ println!("========_deploy_contract====3=======");
                 handle = self._deploy_contract(sender, abi.clone(), &actual_args, wei_amount,abi, bin, id).await;
             });
         });
@@ -683,32 +692,38 @@ impl<
         project_dir: &PathBuf,
         verifier_names: Vec<String>,
     ) -> eyre::Result<BTreeMap<String, Address>> {
+println!("========_deploy_dependencies======before=====");
         // # Deploy verification contracts if not already done
         let mut vf = BTreeMap::new();
-        let lib_addresses = self.lib_addresses();
-        for verifier_name in verifier_names {
+        let lib_addresses = self.lib_addresses().await;
+        if let Ok(lib_addresses)=lib_addresses
+       { for verifier_name in verifier_names {
             with_context_block!(var _a= log_context("constructor")=>{
                 with_context_block!(var _b=log_context(&format!("{verifier_name}"))=>{
                     let filename = project_dir.join( &format!("{verifier_name}.sol"));
-                    let (abi, bin, id) = self.compile_contract(&filename, &verifier_name, lib_addresses.lock().as_ref(),&PathBuf::from("."))?;
+                    let (abi, bin, id) = self.compile_contract(&filename, &verifier_name, lib_addresses.lock().as_ref(),&PathBuf::from(".")).expect("=======compile_contract======_deploy_dependencies=====");
                     with_context_block!(var _tm= time_measure("transaction_full",false,false)=>{
+println!("========_deploy_contract======2=====");
                         vf.insert(verifier_name.clone(),self._deploy_contract(sender, abi.clone(),&vec![],None,abi, bin, id).await.unwrap());
                     });
             });
             });
-        }
-        for crypto_params in CFG.lock().unwrap().all_crypto_params() {
+        }}
+println!("========_deploy_contract=====7=====");
+        let all_crypto_params=CFG.lock().unwrap().all_crypto_params() ;
+        for crypto_params in all_crypto_params {
             let pki_contract_name = CFG
                 .lock()
                 .unwrap()
                 .get_pki_contract_name(&CryptoParams::new(crypto_params.clone()).identifier_name());
-            let pki_contract_address = self.pki_contract(&crypto_params);
+            let pki_contract_address = self.pki_contract(&crypto_params).await.expect("========pki_contract=============");
             vf.insert(pki_contract_name, pki_contract_address.into());
         }
         Ok(vf)
     }
 
     async fn _connect_libraries(&self) -> eyre::Result<BTreeMap<String, Address>> {
+        // println!("======_connect_libraries==============");
         assert!(
             !CFG.lock().unwrap().blockchain_pki_address().is_empty(),
             "Must specify pki address in config."
@@ -740,9 +755,17 @@ impl<
         }
         // with_context_block!(var _lce=library_compilation_environment()=>{
         let tmpdir = std::env::temp_dir();
-        // let mut _pki_contract=BTreeMap::new();
+        let mut _pki_contract=BTreeMap::new();
+        let blockchain_pki_address=CFG.lock().unwrap().blockchain_pki_address();
+
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
-        for crypto_params in all_crypto_params {
+        assert!(
+                blockchain_pki_address.len() == all_crypto_params.len(),
+                "Must specify all pki addresses in config\nExpected {} was {}",
+                all_crypto_params.len(),
+                blockchain_pki_address.len()
+            );
+        for (crypto_params,pki_address) in all_crypto_params.iter().zip(&blockchain_pki_address) {
             let crypto_param = CryptoParams::new(crypto_params.clone());
             let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
@@ -754,23 +777,21 @@ impl<
                 &format!("{pki_contract_name}.sol"),
                 &pki_contract_code,
             );
+            let address=Address::from_str(pki_address).unwrap();
             let _ = self
                 ._verify_contract_integrity(
-                    &Address::from_str(&CFG.lock().unwrap().blockchain_pki_address()).unwrap(),
+                    &address,
                     &PathBuf::from(pki_sol),
                     None,
                     Some(pki_contract_name),
                     false,
                     None,
                 )
-                .await?;
-            self._pki_contract
-                .lock()
-                .as_mut()
-                .unwrap()
-                .insert(crypto_params, Address::default());
+                .await.expect("_verify_contract_integrity failed");
+            _pki_contract
+                .insert(crypto_params.clone(), address);
         }
-        //  *self._pki_contract.borrow_mut()=_pki_contract;
+         *self._pki_contract.lock()=Some(_pki_contract);
         let verify_sol = save_to_file(
             Some(tmpdir),
             "verify_libs.sol",
@@ -839,32 +860,35 @@ impl<
         } else {
             get_contract_names(&sol_filename.to_string_lossy().to_string())[0].clone()
         };
-        let actual_byte_code = self.__normalized_hex(Web3::default().get_code(address).await); //self.w3.eth.get_code(address) MYTODO
+        
+        let actual_byte_code = self.__normalized_hex_str(Web3::default().get_code(address).await);
         assert!(
             !actual_byte_code.is_empty(),
             "Expected contract {} is not deployed at address {address}",
             contract_name
         );
 
-        let (_abi, bin, _id) = self.compile_contract(
+        let (_abi, _bin,deployed_bin, _id) = self.compile_contract_ex(
             sol_filename,
             &contract_name,
             libraries,
             cwd.as_ref().unwrap_or(&PathBuf::from(".")),
         )?;
+        let bytes=deployed_bin.bytecode.unwrap().object.into_bytes();
+        let bytes:Vec<u8>=bytes.unwrap().into();
         let mut expected_byte_code = self
-            .__normalized_hex(String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap());
+            .__normalized_hex(bytes);
 
         if is_library {
             // # https://github.com/ethereum/solidity/issues/7101
             expected_byte_code = expected_byte_code[..2].to_owned()
-                + &self.__normalized_hex("address.clone()".to_owned())
+                + &self.__normalized_hex_str(address.to_string())
                 + &expected_byte_code[42..]
-        };
+        }
 
         assert!(
             actual_byte_code == expected_byte_code,
-            "Deployed contract at address {address} does not match local contract {sol_filename:?}"
+            "Deployed contract at address {address} does not match local contract {sol_filename:?}==={actual_byte_code} == {expected_byte_code}"
         );
         zk_print!(
             "Contract@{address} matches {}:{contract_name}",
@@ -887,7 +911,7 @@ impl<
         let actual_code = self.__normalized_hex(
             Web3::default()
                 .get_code(&Address::from_str(contract_with_libs_addr).unwrap())
-                .await,
+                .await.into(),
         );
         assert!(
             !actual_code.is_empty(),
@@ -895,8 +919,10 @@ impl<
         );
         let (_abi, bin, _id) =
             self.compile_contract(sol_with_libs_filename, &cname, None, &PathBuf::from("."))?;
+        let bytes=bin.object.into_bytes();
+        let bytes:Vec<u8>=bytes.unwrap().into();
         let code_with_placeholders = self
-            .__normalized_hex(String::from_utf8(bin.object.into_bytes().unwrap().into()).unwrap());
+            .__normalized_hex(bytes);
 
         assert!(
             actual_code.len() == code_with_placeholders.len(),
@@ -917,7 +943,7 @@ impl<
                 )
                 .await;
 
-            let placeholder = format!("__${}$__", &self.__normalized_hex(hash)[..34]);
+            let placeholder = format!("__${}$__", &self.__normalized_hex(hash.into())[..34]);
 
             // # Retrieve concrete address in deployed code at placeholder offset in local code and verify library contract integrity
             let lib_address_offset = code_with_placeholders.find(&placeholder);
@@ -961,11 +987,11 @@ impl<
     }
 
     //     @contextmanager
-    fn lib_addresses(&self) -> ARcCell<Option<BTreeMap<String, Address>>> {
+    async fn lib_addresses(&self) -> eyre::Result<ARcCell<Option<BTreeMap<String, Address>>>> {
         if self._lib_addresses.lock().is_none() {
-            let _ = self._connect_libraries();
+            let _ = self._connect_libraries().await?;//.expect("==_connect_libraries=====in========lib_addresses=========");
         }
-        self._lib_addresses.clone()
+        Ok(self._lib_addresses.clone())
     }
 }
 
@@ -1002,11 +1028,41 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         let mut output = compile::compile_target(&sol_filename, &project, false)?;
         remove_contract(output, &sol_filename, contract_name)
     }
+    pub fn compile_contract_ex(
+        &self,
+        sol_filename: &PathBuf,
+        contract_name: &str,
+        _libs: Option<&BTreeMap<String, Address>>,
+        _cwd: &PathBuf,
+    ) -> eyre::Result<(JsonAbi, CompactBytecode,CompactDeployedBytecode, ArtifactId)> {
+        // let solp = sol_filename; //std::path::PathBuf::from(sol_filename);
+        // let jout = compile_solidity_json(
+        //     &sol_filename.to_string_lossy().to_string(),
+        //     libs.map(|s| {
+        //         s.into_iter()
+        //             .map(|(k, v)| (k.clone(), v.to_string()))
+        //             .collect()
+        //     }),
+        //     CFG.lock().unwrap().opt_solc_optimizer_runs(),
+        //     vec![],
+        //     cwd,
+        // )
+        // .unwrap();
+        // let jout = &jout["contracts"][solp.file_name().unwrap().to_str().unwrap()][&contract_name];
+        // json!({
+        //     "abi": jout["metadata"]["output"]["abi"],
+        //     "bin": jout["evm"]["bytecode"]["object"],
+        //     "deployed_bin": jout["evm"]["deployedBytecode"]["object"],
+        // })
+        let project = self.web3tx.config.project()?;
+        let mut output = compile::compile_target(&sol_filename, &project, false)?;
+        remove_contract_ex(output, &sol_filename, contract_name)
+    }
     async fn _deploy_contract(
         &self,
         _sender: &Address,
         _contract_interface: JsonAbi,
-        _args: &Vec<String>,
+        args: &Vec<String>,
         _wei_amount: Option<i32>,
         abi: JsonAbi,
         bin: CompactBytecode,
@@ -1051,28 +1107,26 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         };
 
         // Add arguments to constructor
-        let params = vec![];
-        //  if let Some(constructor) = &abi.constructor {
-        //     let constructor_args = self
-        //         .constructor_args_path
-        //         .clone()
-        //         .map(read_constructor_args_file)
-        //         .transpose()?;
-        //     self.parse_constructor_args(
-        //         constructor,
-        //         constructor_args
-        //             .as_deref()
-        //             .unwrap_or(&self.constructor_args),
-        //     )?
-        // } else {
-        //     vec![]
-        // };
+        let params = 
+         if let Some(constructor) = &abi.constructor {
+            // let constructor_args = self
+            //     .constructor_args_path
+            //     .clone()
+            //     .map(read_constructor_args_file)
+            //     .transpose()?;
+            self.parse_constructor_args(
+                constructor,
+                args,
+            )?
+        } else {
+            vec![]
+        };
         let config = Config::from(&self.web3tx.eth);
 
         let provider = utils::get_provider(&config)?;
 
         // respect chain, if set explicitly via cmd args
-        let chain_id = utils::block_on(provider.get_chain_id())?;
+        let chain_id = provider.get_chain_id().await?;
         //  if let Some(chain_id) = self.chain_id() {
         //     chain_id
         // } else {
@@ -1080,7 +1134,9 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         // };
         // if self.unlocked {
         // Deploy with unlocked account
-        let sender = self.web3tx.eth.wallet.from.expect("required");
+        let signer = self.web3tx.eth.wallet.signer().await?;
+           let sender =  signer.address();
+        // self.web3tx.eth.wallet.from.expect("required");
         self.deploys(
             abi,
             bin,
@@ -1125,6 +1181,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         //     use std::fs::OpenOptions;
         // let f=OpenOptions::new().read(true).open(output_filename);
         // with open(os.path.join(contract_dir, "contract.sol")) as f:
+        // let _ = std::fs::copy(contract_dir.join("contract_original.sol"), contract_dir.join("contract.sol"));
         let mut c = std::fs::read_to_string(contract_dir.join("contract.sol")).unwrap();
         for (key, val) in pki_verifier_addresses {
             c = c.replace(
@@ -1142,12 +1199,18 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         // pass
         output_filename
     }
+    fn __normalized_hex_str(&self, mut val: String) -> String {
+        if let Some(v)=val.strip_prefix("0x"){
+            val=v.to_owned();
+        }
+        val.make_ascii_lowercase();
+        val
+    }
 
-    fn __normalized_hex(&self, mut val: String) -> String {
-        // if not isinstance(val, str):
-        // val = val.hex()
-        if val.starts_with("0x") {
-            val = val[2..].to_owned();
+    fn __normalized_hex(&self, val: Vec<u8>) -> String {
+        let mut val=hex::encode(val);
+        if let Some(v)=val.strip_prefix("0x"){
+            val=v.to_owned();
         }
         val.make_ascii_lowercase();
         val
@@ -1274,7 +1337,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         // Deploy the actual contract
         let (deployed_contract, _receipt) = deployer.send_with_receipt().await?;
 
-        let _address = deployed_contract.clone();
+        let address = deployed_contract.clone();
         // if self.json {
         //     let output = json!({
         //         "deployer": deployer_address.to_string(),
@@ -1292,7 +1355,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         //     return Ok(deployed_contract);
         // }
 
-        println!("Starting contract verification...");
+        println!("Deploying contract address:{address}...");
 
         // let num_of_optimizations = None;
         // if self.opts.compiler.optimize.unwrap_or_default() {
@@ -1354,6 +1417,53 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         parse_tokens(params).map_err(Into::into)
     }
 }
+/// Given a `Project`'s output, removes the matching ABI, Bytecode and
+/// Runtime Bytecode of the given contract.
+#[track_caller]
+pub fn remove_contract_ex(
+    output: ProjectCompileOutput,
+    path: &Path,
+    name: &str,
+) -> Result<(JsonAbi, CompactBytecode,CompactDeployedBytecode, ArtifactId)> {
+    let mut other = Vec::new();
+    let Some((id, contract)) = output.into_artifacts().find_map(|(id, artifact)| {
+        if id.name == name && id.source == path {
+            Some((id, artifact))
+        } else {
+            other.push(id.name);
+            None
+        }
+    }) else {
+        let mut err = format!("could not find artifact: `{name}`");
+        if let Some(suggestion) = did_you_mean(name, other).pop() {
+            if suggestion != name {
+                err = format!(
+                    r#"{err}
+
+        Did you mean `{suggestion}`?"#
+                );
+            }
+        }
+        eyre::bail!(err)
+    };
+
+    let abi = contract
+        .get_abi()
+        .ok_or_else(|| eyre::eyre!("contract {} does not contain abi", name))?
+        .into_owned();
+
+    let bin = contract
+        .get_bytecode()
+        .ok_or_else(|| eyre::eyre!("contract {} does not contain bytecode", name))?
+        .into_owned();
+
+    let deployed_bin = contract
+        .get_deployed_bytecode()
+        .ok_or_else(|| eyre::eyre!("contract {} does not contain bytecode", name))?
+        .into_owned();
+
+    Ok((abi, bin, deployed_bin,id))
+}
 
 #[derive(Clone)]
 pub struct Web3TesterBlockchain;
@@ -1400,6 +1510,7 @@ impl<P: ZkayProverInterface + std::marker::Send> Web3BlockchainBase<P, Web3Teste
                 None,
                 &PathBuf::from("."),
             )?;
+ println!("========_deploy_contract=====4======");
             let contract = self
                 ._deploy_contract(&sender, abi.clone(), &vec![], None, abi, bin, id)
                 .await?;
@@ -1425,6 +1536,7 @@ impl<P: ZkayProverInterface + std::marker::Send> Web3BlockchainBase<P, Web3Teste
                 None,
                 &PathBuf::from("."),
             )?;
+ println!("========_deploy_contract======5=====");
             let out = self
                 ._deploy_contract(&sender, abi.clone(), &vec![], None, abi, bin, id)
                 .await?;
