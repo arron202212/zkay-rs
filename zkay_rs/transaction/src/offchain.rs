@@ -843,7 +843,7 @@ impl<
         if ret_val_constructors.len() == 1 {
             let (is_cipher, crypto_params_name, callable) = ret_val_constructors[0].clone();
             self.__get_decrypted_retval(
-                BigInteger256::from_str(retvals.as_ref().unwrap()).unwrap(),
+                retvals.unwrap(),
                 is_cipher,
                 crypto_params_name,
                 callable,
@@ -855,7 +855,7 @@ impl<
                     .zip(ret_val_constructors)
                     .map(|(retval, (is_cipher, homomorphism, constr))| {
                         self.__get_decrypted_retval(
-                            BigInteger256::from_str(retval.as_ref().unwrap()).unwrap(),
+                            retval.as_ref().unwrap().clone(),
                             is_cipher,
                             homomorphism,
                             constr,
@@ -867,7 +867,7 @@ impl<
     }
     pub fn __get_decrypted_retval(
         &self,
-        raw_value: BigInteger256,
+        raw_value: String,
         is_cipher: bool,
         crypto_params_name: String,
         constructor: CallableType,
@@ -875,7 +875,7 @@ impl<
         if is_cipher {
             self.dec(
                 DataType::CipherValue(Value::<String, CipherValue>::new(
-                    vec![raw_value.to_string()],
+                    vec![raw_value],
                     Some(CryptoParams::new(crypto_params_name.clone())),
                     None,
                 )),
@@ -884,7 +884,7 @@ impl<
             )
             .0
         } else {
-            constructor(raw_value.to_string())
+            constructor(raw_value)
         }
     }
 

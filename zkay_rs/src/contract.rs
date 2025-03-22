@@ -317,7 +317,8 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return self.api().lock().call("min_votes_reached() public view returns (bool)", actual_params,vec![(false, "None".to_string(), convert_type)]).await.try_as_bool().unwrap()
+                            let ret= self.api().lock().call("min_votes_reached() public view returns (bool)", actual_params,vec![(false, "None".to_string(), convert_bool_type)]).await;
+                            return ret.clone().try_as_bool().expect(&format!("==ret===={ret:?}"))
                         }
                     });
                 });
@@ -345,7 +346,7 @@ impl<
 
                         if zk__is_ext{
                             // Call pure/view function and return value
-                            return *self.api().lock().call("is_result_published() public view returns (bool)", actual_params, vec![(false, "None".to_string(), convert_type)]).await.try_as_bool_ref().unwrap()
+                            return *self.api().lock().call("is_result_published() public view returns (bool)", actual_params, vec![(false, "None".to_string(), convert_bool_type)]).await.try_as_bool_ref().unwrap()
                         }
                     });
                 });
@@ -837,6 +838,9 @@ fn help(val: Option<String>) {
 }
 fn convert_type(v: String) -> DataType {
     DataType::String(v)
+}
+fn convert_bool_type(v: String) -> DataType {
+    DataType::Bool(serde_json::from_str::<Vec<JsonValue>>(&v).unwrap()[0].as_str().unwrap().parse::<bool>().unwrap())
 }
 use crate::zkay_frontend::compile_zkay_file;
 use ast_builder::process_ast::{get_processed_ast, get_verification_contract_names};
