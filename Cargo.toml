@@ -126,8 +126,8 @@ ark-ed-on-bn254 = "0.5.0"
 ark-std = "0.5.0"
 rustc-serialize = "~0.3.19"
 futures="0.3.12"
-
-
+num-bigint = {version = "0.4", features = ["rand"]}
+ff = {package="ff_ce" , version= "0.11", features = ["derive"]}
 
 # anvil = { path = "crates/anvil" }
 cast = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="cast" }

@@ -104,20 +104,23 @@ impl<
             .join("keys")
             .join(format!("elgamal_{}_{address}.bin", self.params.key_bits()));
         let _ = std::fs::create_dir_all(key_file.parent().unwrap());
-        let (pk, sk);
+        let (pkx, pky, sk);
         if key_file.try_exists().map_or(true, |x| !x) {
             zk_print!("Key pair not found, generating new ElGamal secret...");
-            (pk, sk) = self._generate_key_pair();
-            self._write_key_pair(&key_file, pk.clone(), sk.clone());
+            (pkx, pky, sk) = self._generate_key_pair();
+            self._write_key_pair(&key_file, pkx.clone(), pky.clone(), sk.clone());
             zk_print!("Done");
         } else {
             // # Restore saved key pair
             zk_print!("ElGamal secret found, loading use file {key_file:?}");
-            (pk, sk) = self._read_key_pair(&key_file);
+            (pkx, pky, sk) = self._read_key_pair(&key_file);
         }
         KeyPair::new(
             Value::<String, PublicKeyValue>::new(
-                vec![String::from_utf8_lossy(&pk).to_string()],
+                vec![
+                    String::from_utf8_lossy(&pkx).to_string(),
+                    String::from_utf8_lossy(&pky).to_string(),
+                ],
                 Some(self.params()),
                 None,
             ),
@@ -163,15 +166,15 @@ impl<
     K: ZkayKeystoreInterface<P, B> + Clone,
 > ElgamalCrypto<P, B, K>
 {
-    fn _write_key_pair(&self, key_file: &PathBuf, pk: Vec<u8>, sk: Vec<u8>) {
+    fn _write_key_pair(&self, key_file: &PathBuf, pkx: Vec<u8>, pky: Vec<u8>, sk: Vec<u8>) {
         // with open(key_file, "wb") as f:
         let mut f = File::create(key_file).unwrap();
-        for p in pk {
-            let _ = f.write(&p.to_be_bytes()); //self.params.cipher_chunk_size()
+        for p in [pkx, pky] {
+            let _ = f.write(&p); //self.params.cipher_chunk_size()
         }
         let _ = f.write(&sk); //self.params.cipher_chunk_size()
     }
-    fn _read_key_pair(&self, key_file: &PathBuf) -> (Vec<u8>, Vec<u8>) {
+    fn _read_key_pair(&self, key_file: &PathBuf) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
         // with open(key_file, "rb") as f:
         let mut f = std::fs::File::open(key_file).unwrap();
         let mut buff = vec![0; self.params().cipher_chunk_size() as usize];
@@ -183,20 +186,16 @@ impl<
         let mut buff = vec![0; self.params().cipher_chunk_size() as usize];
         let _ = f.read(&mut buff[..]);
         let sk = buff;
-        (pkx.into_iter().chain(pky).collect(), sk)
+        (pkx, pky, sk)
     }
 
-    fn _generate_key_pair(&self) -> (Vec<u8>, Vec<u8>) {
+    fn _generate_key_pair(&self) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
         let mut rng = rand::thread_rng();
         let sk = Fr::rand(&mut rng);
         let pk = EdwardsConfig::GENERATOR * sk;
         (
-            pk.x.into_bigint()
-                .to_string()
-                .into_bytes()
-                .into_iter()
-                .chain(pk.y.into_bigint().to_string().into_bytes().into_iter())
-                .collect(),
+            pk.x.into_bigint().to_string().into_bytes(),
+            pk.y.into_bigint().to_string().into_bytes(),
             sk.into_bigint().to_string().into_bytes(),
         )
     }

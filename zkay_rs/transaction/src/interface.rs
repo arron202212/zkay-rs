@@ -145,7 +145,6 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         self._lib_addresses = None
     fn _pki_contract(&self) -> ARcCell<Option<BTreeMap<String, Address>>>;
     async fn pki_contract(&self, crypto_backend: &str) -> eyre::Result<Address> {
-
         if self._pki_contract().lock().is_none() {
             let _ = self._connect_libraries().await?;
         }
@@ -153,7 +152,9 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
             .lock()
             .as_ref()
             .unwrap()
-            .get(crypto_backend).cloned().ok_or(eyre::eyre!("pki_contract"))
+            .get(crypto_backend)
+            .cloned()
+            .ok_or(eyre::eyre!("pki_contract"))
     }
 
     //     @property
@@ -259,12 +260,18 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
     //         :raise BlockChainError: if request fails
     //         :return: The value
     //         """
-    async fn req_state_var(&self, contract_handle: &Address, name: &str, indices: Vec<String>) -> String {
+    async fn req_state_var(
+        &self,
+        contract_handle: &Address,
+        name: &str,
+        indices: Vec<String>,
+    ) -> String {
         //bool, int, str, bytes
         //         assert contract_handle is not None
         zk_print!(r#"Requesting state variable "{name}""#);
         let val = self
-            ._req_state_var(contract_handle, name, indices).await
+            ._req_state_var(contract_handle, name, indices)
+            .await
             .expect("req_state_var");
         zk_print!(r#"Got value {val} for state variable "{name}""#);
         val
@@ -323,7 +330,9 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         self.__check_args(actual_args.clone(), should_encrypt);
         zk_print!(r#"Issuing transaction for function "{function}" from account "{sender}""#);
         zk_print!("{actual_args:?}");
-        let ret = self._transact(&contract_handle, sender, function, &actual_args, wei_amount).await;
+        let ret = self
+            ._transact(&contract_handle, sender, function, &actual_args, wei_amount)
+            .await;
         zk_print!("");
         ret
     }
@@ -484,7 +493,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                     _contract_on_chain.as_ref().unwrap(),
                     &format!("{contract_name}_inst()"),
                     vec![],
-                ).await
+                )
+                .await
                 .expect("call fail");
             println!("========={s}=======");
             let mut pki_address: Address = Address::from_str(&s).expect("into address fail");
@@ -524,7 +534,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                 })
                 .collect();
             let some_vcontract = self
-                ._req_state_var(&contract_address, &format!("{some_vname}_inst()"), vec![]).await
+                ._req_state_var(&contract_address, &format!("{some_vname}_inst()"), vec![])
+                .await
                 .expect("_req_state_var");
             let mut libs = self
                 ._verify_library_integrity(
@@ -541,7 +552,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                         &Address::from_str("contract_on_chain.as_ref().unwrap()").unwrap(),
                         &format!("{verifier}_inst()"),
                         vec![],
-                    ).await
+                    )
+                    .await
                     .as_ref()
                     .unwrap(),
                 )
@@ -564,7 +576,8 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
                         &vcontract,
                         &CFG.lock().unwrap().prover_key_hash_name(),
                         vec![],
-                    ).await
+                    )
+                    .await
                     .unwrap();
                 // from zkay.transaction.runtime import Runtime
                 let actual_hash = self.prover().lock().get_prover_key_hash(
@@ -771,29 +784,36 @@ pub trait ZkayKeystoreInterface<
     //         :param key_pair: cryptographic keys
     //         :raise TransactionFailedException: if announcement transaction fails
     //         """
-    async fn add_keypair(&mut self, address: &str, key_pair: KeyPair)->eyre::Result<()> {
+    async fn add_keypair(&mut self, address: &str, key_pair: KeyPair) -> eyre::Result<()> {
+        println!("=====add_keypair======");
         self.local_key_pairs()
             .lock()
             .insert(address.to_owned(), key_pair.clone());
         //         # Announce if not yet in pki
         //         try:
         let crypto_params = self.crypto_params().clone();
-        if self
+        let res = self
             .conn()
             .lock()
-            .req_public_key(address, &crypto_params).await
-            .is_err()
-        {
+            .req_public_key(address, &crypto_params)
+            .await;
+        println!("=====req_public_key======res==={key_pair:?}===={res:?}");
+        if res.is_err() {
             //         except BlockChainError:
             let _ = self
                 .conn()
                 .lock()
-                .announce_public_key(address, &key_pair.pk, &crypto_params).await?;
+                .announce_public_key(address, &key_pair.pk, &crypto_params)
+                .await?;
         }
         Ok(())
     }
     //         """Return true if keys for address are already in the store."""
-    fn has_initialized_keys_for(&self, address: &String) -> bool {
+    fn has_initialized_keys_for(&self, address: &str) -> bool {
+        println!(
+            "==has_initialized_keys_for====={:?}=========={address}======",
+            self.local_key_pairs()
+        );
         self.local_key_pairs().lock().contains_key(address)
     }
 
@@ -818,7 +838,8 @@ pub trait ZkayKeystoreInterface<
             let pk = self
                 .conn()
                 .lock()
-                .req_public_key(address, &crypto_params).await
+                .req_public_key(address, &crypto_params)
+                .await
                 .unwrap();
             self.local_pk_store()
                 .lock()
@@ -836,6 +857,10 @@ pub trait ZkayKeystoreInterface<
     //         :return: private key
     //         """
     fn sk(&self, address: &String) -> Value<String, PrivateKeyValue> {
+        println!(
+            "===local_key_pairs==================={:?}",
+            self.local_key_pairs().lock()
+        );
         self.local_key_pairs()
             .lock()
             .get(address)
@@ -886,8 +911,9 @@ pub trait ZkayCryptoInterface<
 
     //         :param address: the address for which to generate keys
     //         """
-    async fn generate_or_load_key_pair(&self, address: &str)->eyre::Result<()> {
+    async fn generate_or_load_key_pair(&self, address: &str) -> eyre::Result<()> {
         let v = self._generate_or_load_key_pair(&address);
+        println!("==generate_or_load_key_pair============={v:?}===========");
         self.keystore().lock().add_keypair(address, v).await
     }
 
@@ -916,14 +942,20 @@ pub trait ZkayCryptoInterface<
         zk_print!(r#"Encrypting value {plain:?} for destination "{target_addr}""#); //, verbosity_level=2
 
         let sk = self.keystore().lock().sk(my_addr);
+        println!("==target_addr=====enc before====={target_addr}===================");
         let raw_pk = self.keystore().lock().getPk(target_addr).await;
+        //         let raw_pk:Vec<JsonValue>=serde_json::from_str(&serde_json::from_str::<Vec<JsonValue>>(&raw_pk.to_string()).unwrap()[0].to_string()).unwrap();
+        //  println!("==raw_pk=========={raw_pk:?}===================");
+        //         let raw_pk:Vec<String>=raw_pk.into_iter().map(|x|x.to_string()).collect();
+        println!("==raw_pk=========={raw_pk:?}===================");
         let pk = if self.params().is_symmetric_cipher() {
             assert!(raw_pk.len() == 1);
+            println!("==raw_pk=====is_symmetric_cipher======================");
             raw_pk[0].clone()
         } else {
             self.deserialize_pk(raw_pk[..].to_vec())
         };
-
+        println!("==pk=========={pk}===================");
         for i in 0..=100 {
             // # Retry until cipher text is not 0
             let (cipher0, rnd0) = self._enc(plain.clone(), sk[0].clone(), pk.clone());
@@ -1019,16 +1051,24 @@ pub trait ZkayCryptoInterface<
         let mut arr = vec![];
         if first_chunk_size > 0 {
             arr.push(
-                BigInteger256::from_str(
-                    &String::from_utf8_lossy(&bin[..first_chunk_size].to_vec()).to_string(),
+                alloy_primitives::U256::from_str(
+                    &bin[..first_chunk_size]
+                        .iter()
+                        .map(|b| format!("{b:02x}"))
+                        .collect::<String>(),
                 )
                 .unwrap(),
             );
         };
         for i in (first_chunk_size..total_bytes - first_chunk_size).step_by(chunk_size) {
             arr.push(
-                BigInteger256::from_str(&String::from_utf8_lossy(&bin[i..i + chunk_size].to_vec()))
-                    .unwrap(),
+                alloy_primitives::U256::from_str(
+                    &bin[i..i + chunk_size]
+                        .iter()
+                        .map(|b| format!("{b:02x}"))
+                        .collect::<String>(),
+                )
+                .unwrap(),
             );
         }
         arr.into_iter().map(|v| v.to_string()).rev().collect()
@@ -1046,11 +1086,15 @@ pub trait ZkayCryptoInterface<
             .into_iter()
             .rev()
             .flat_map(|chunk| {
-                let c = chunk.into_bytes();
-                assert!(c.len() <= chunk_size);
-                let mut d = vec![0; chunk_size];
-                d[chunk_size - c.len()..].copy_from_slice(&c[..]);
-                d
+                // let c = chunk.into_bytes();
+                // assert!(c.len() <= chunk_size);
+                // let mut d = vec![0; chunk_size];
+                // d[chunk_size - c.len()..].copy_from_slice(&c[..]);
+                // d
+                vec![0; (chunk_size as usize).saturating_sub(chunk.len())]
+                    .into_iter()
+                    .chain(chunk.into_bytes())
+                    .collect::<Vec<u8>>()
             })
             .collect();
         let n = a.len();

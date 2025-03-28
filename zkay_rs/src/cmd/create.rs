@@ -59,7 +59,9 @@ use zkay_config::{
     config_user::UserConfig,
     with_context_block, zk_print,
 };
-use zkay_transaction::{blockchain::web3::Web3Tx, offchain::new_contract_simulator,interface::ZkayBlockchainInterface};
+use zkay_transaction::{
+    blockchain::web3::Web3Tx, interface::ZkayBlockchainInterface, offchain::new_contract_simulator,
+};
 use zkay_transaction_crypto_params::params::CryptoParams;
 // use  zkay_transaction:: crypto:: params ::  CryptoParams;
 // use zkay_transaction::interface::ZkayBlockchainInterface;
@@ -109,7 +111,6 @@ pub struct CreateArgs {
     // /// The constructor arguments.
     // #[arg(long, allow_hyphen_values = true)]
     // blockchain_pki_addresses: Vec<String>,
-
     /// The constructor arguments.
     #[arg(long, allow_hyphen_values = true)]
     blockchain_crypto_lib_addresses: Vec<String>,
@@ -216,11 +217,13 @@ impl CreateArgs {
             blockchain_pki_addresses,
             ..
         } = self;
-     
+
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         if self.is_survey {
-            CFG.lock().unwrap().set_blockchain_pki_address(blockchain_pki_addresses);
-            return crate::contract::main0(web3tx).await
+            CFG.lock()
+                .unwrap()
+                .set_blockchain_pki_address(blockchain_pki_addresses);
+            return crate::contract::main0(web3tx).await;
         }
         // Find Project & Compile
         let project = config.project()?;
@@ -386,7 +389,10 @@ impl CreateArgs {
         let config = self.try_load_config_emit_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
-        let sender = if let Some(address)=eth.wallet.from{address}else{ let signer = eth.wallet.signer().await?;
+        let sender = if let Some(address) = eth.wallet.from {
+            address
+        } else {
+            let signer = eth.wallet.signer().await?;
             signer.address()
         };
         let contract_simulator = new_contract_simulator(
@@ -413,9 +419,11 @@ impl CreateArgs {
                 &format!("{pki_contract_name}.sol"),
                 &pki_contract_code,
             );
-            let _=contract_simulator
-                .runtime.lock()
-                .blockchain().lock()
+            let _ = contract_simulator
+                .runtime
+                .lock()
+                .blockchain()
+                .lock()
                 .deploy_solidity_contract(&file, Some(pki_contract_name), &sender)
                 .await;
         }
@@ -425,7 +433,10 @@ impl CreateArgs {
         let config = self.try_load_config_emit_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
-        let sender = if let Some(address)=eth.wallet.from{address}else{ let signer = eth.wallet.signer().await?;
+        let sender = if let Some(address) = eth.wallet.from {
+            address
+        } else {
+            let signer = eth.wallet.signer().await?;
             signer.address()
         };
         let contract_simulator = new_contract_simulator(
@@ -443,9 +454,11 @@ impl CreateArgs {
                 &library_contracts::get_verify_libs_code(),
             );
             for lib in external_crypto_lib_names {
-                let _=contract_simulator
-                    .runtime.lock()
-                    .blockchain().lock()
+                let _ = contract_simulator
+                    .runtime
+                    .lock()
+                    .blockchain()
+                    .lock()
                     .deploy_solidity_contract(&file, Some(lib), &sender)
                     .await;
             }

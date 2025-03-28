@@ -62,10 +62,10 @@ impl std::fmt::Display for DataType {
             f,
             "{}",
             match self {
-                Self::CipherValue(v) => format!("{:?}", v),
-                Self::PrivateKeyValue(v) => format!("{:?}", v),
-                Self::PublicKeyValue(v) => format!("{:?}", v),
-                Self::RandomnessValue(v) => format!("{:?}", v),
+                Self::CipherValue(v) => format!("{}", v),
+                Self::PrivateKeyValue(v) => format!("{}", v),
+                Self::PublicKeyValue(v) => format!("{}", v),
+                Self::RandomnessValue(v) => format!("{}", v),
                 Self::Bool(v) => v.to_string(),
                 Self::Int(v) => v.to_string(),
                 Self::String(v) => v.to_string(),
@@ -154,93 +154,44 @@ impl<T: Clone + Default, V: Clone + Default> Index<usize> for Value<T, V> {
     }
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<Range<usize>> for Value<T, V> {
-    type Output = [T];
-
-    fn index(&self, range: Range<usize>) -> &Self::Output {
-        &self.contents[range]
-    }
-}
-impl<T: Clone + Default, V: Clone + Default> Index<RangeFull> for Value<T, V> {
-    type Output = [T];
-
-    fn index(&self, range: RangeFull) -> &Self::Output {
-        &self.contents[range]
-    }
-}
-impl<T: Clone + Default, V: Clone + Default> Index<RangeTo<usize>> for Value<T, V> {
-    type Output = [T];
-
-    fn index(&self, range: RangeTo<usize>) -> &Self::Output {
-        &self.contents[range]
-    }
+#[macro_export]
+macro_rules! value_index {
+    ($ty:ty) => {
+        impl<T: Clone + Default, V: Clone + Default> Index<$ty> for Value<T, V> {
+            type Output = [T];
+            fn index(&self, index: $ty) -> &Self::Output {
+                &self.contents[index]
+            }
+        }
+    };
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<RangeFrom<usize>> for Value<T, V> {
-    type Output = [T];
+// value_index!(usize);
+value_index!(Range<usize>);
+value_index!(RangeFull);
+value_index!(RangeFrom<usize>);
+value_index!(RangeTo<usize>);
+value_index!(RangeToInclusive<usize>);
+value_index!(RangeInclusive<usize>);
 
-    fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
-        &self.contents[range]
-    }
+#[macro_export]
+macro_rules! value_index_mut {
+    ($ty:ty) => {
+        impl<T: Clone + Default, V: Clone + Default> IndexMut<$ty> for Value<T, V> {
+            fn index_mut(&mut self, index: $ty) -> &mut Self::Output {
+                &mut self.contents[index]
+            }
+        }
+    };
 }
 
-impl<T: Clone + Default, V: Clone + Default> Index<RangeToInclusive<usize>> for Value<T, V> {
-    type Output = [T];
-
-    fn index(&self, range: RangeToInclusive<usize>) -> &Self::Output {
-        &self.contents[range]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> Index<RangeInclusive<usize>> for Value<T, V> {
-    type Output = [T];
-
-    fn index(&self, range: RangeInclusive<usize>) -> &Self::Output {
-        &self.contents[range]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<usize> for Value<T, V> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        self.contents.get_mut(index).unwrap()
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<Range<usize>> for Value<T, V> {
-    fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFull> for Value<T, V> {
-    fn index_mut(&mut self, index: RangeFull) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeFrom<usize>> for Value<T, V> {
-    fn index_mut(&mut self, index: RangeFrom<usize>) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeTo<usize>> for Value<T, V> {
-    fn index_mut(&mut self, index: RangeTo<usize>) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeToInclusive<usize>> for Value<T, V> {
-    fn index_mut(&mut self, index: RangeToInclusive<usize>) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
-
-impl<T: Clone + Default, V: Clone + Default> IndexMut<RangeInclusive<usize>> for Value<T, V> {
-    fn index_mut(&mut self, index: RangeInclusive<usize>) -> &mut Self::Output {
-        &mut self.contents[index]
-    }
-}
+value_index_mut!(usize);
+value_index_mut!(Range<usize>);
+value_index_mut!(RangeFull);
+value_index_mut!(RangeFrom<usize>);
+value_index_mut!(RangeTo<usize>);
+value_index_mut!(RangeToInclusive<usize>);
+value_index_mut!(RangeInclusive<usize>);
 
 pub trait ValueContent<T> {
     fn get_params(params: Option<CryptoParams>, crypto_backend: Option<String>) -> CryptoParams {
@@ -381,22 +332,102 @@ impl AddressValue {
     }
 }
 
-impl<T: Clone + Default + std::fmt::Display, V: Clone + Default> std::fmt::Display for Value<T, V>
-where
-    Vec<T>: AsRef<[u8]> + std::fmt::Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.contents
-                .iter()
-                .map(|x| format!("{x}"))
-                .collect::<Vec<_>>()
-                .concat()
-        )
-    }
+// impl<T: Clone + Default + std::fmt::Display, V: Clone + Default> std::fmt::Display for Value<T, V>
+// where
+//     Vec<T>: AsRef<[u8]> + std::fmt::Display,
+// {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             self.contents
+//                 .iter()
+//                 .map(|x| format!("{x}"))
+//                 .collect::<Vec<_>>()
+//                 .concat()
+//         )
+//     }
+// }
+
+#[macro_export]
+macro_rules! value_fmt_display {
+    ($value:ident) => {
+        impl std::fmt::Display for Value<String, $value> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(
+                    f,
+                    "{}",
+                    self.contents
+                        .iter()
+                        .map(|x| format!("{x}"))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )
+            }
+        }
+    };
 }
+
+value_fmt_display!(CipherValue);
+value_fmt_display!(PrivateKeyValue);
+value_fmt_display!(PublicKeyValue);
+value_fmt_display!(RandomnessValue);
+// impl std::fmt::Display for Value<String, CipherValue>{
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             self.contents
+//                 .iter()
+//                 .map(|x| format!("{x}"))
+//                 .collect::<Vec<_>>()
+//                 .join(",")
+//         )
+//     }
+// }
+
+// impl std::fmt::Display for Value<String, PrivateKeyValue>{
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             self.contents
+//                 .iter()
+//                 .map(|x| format!("{x}"))
+//                 .collect::<Vec<_>>()
+//                 .join(",")
+//         )
+//     }
+// }
+
+// impl std::fmt::Display for Value<String, PublicKeyValue>{
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             self.contents
+//                 .iter()
+//                 .map(|x| format!("{x}"))
+//                 .collect::<Vec<_>>()
+//                 .join(",")
+//         )
+//     }
+// }
+
+// impl std::fmt::Display for Value<String, RandomnessValue>{
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             self.contents
+//                 .iter()
+//                 .map(|x| format!("{x}"))
+//                 .collect::<Vec<_>>()
+//                 .join(",")
+//         )
+//     }
+// }
+
 #[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct KeyPair {
     pub pk: Value<String, PublicKeyValue>,

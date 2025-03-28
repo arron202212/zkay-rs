@@ -45,12 +45,12 @@ use foundry_common::{
 use foundry_config::Config;
 use itertools::Itertools;
 use my_logging::log_context::log_context;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::Instant;
 use zkay_config::{config::library_compilation_environment, with_context_block};
 use zkay_utils::progress_printer::{fail_print, success_print};
 
-use std::path::{Path, PathBuf};
 // use args::{Cast as CastArgs, CastSubcommand, ToBaseArgs};
 use cast::traces::identifier::SignaturesIdentifier;
 #[derive(Debug, Parser)]
@@ -421,7 +421,6 @@ impl Web3Tx {
             .await?
             .build_raw(sender)
             .await?;
-
         Ok(format!(
             "{}",
             Cast::new(provider).call(&tx, func.as_ref(), block).await?
@@ -434,6 +433,7 @@ impl Web3Tx {
         sig: Option<String>,
         args: Vec<String>,
     ) -> Result<String> {
+        println!("===send==tx========={to:?}====={sig:?}======{args:?}=========");
         let confirmations = 1;
         let unlocked = false;
         let cast_async = false;

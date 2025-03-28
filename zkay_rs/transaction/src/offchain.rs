@@ -73,7 +73,7 @@ pub struct StateDict<
     C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
 > {
     api: ARcCell<ApiWrapper<P, B, K>>,
-    __state: BTreeMap<String, DataType>,
+    __state: ARcCell<BTreeMap<String, DataType>>,
     __constructors: ARcCell<BTreeMap<String, (bool, CryptoParams, CallableType)>>,
     _prover: PhantomData<P>,
     _bc: PhantomData<B>,
@@ -89,7 +89,7 @@ impl<
     pub fn new(api: ARcCell<ApiWrapper<P, B, K>>) -> Self {
         Self {
             api,
-            __state: BTreeMap::new(),
+            __state: arc_cell_new!(BTreeMap::new()),
             __constructors: arc_cell_new!(BTreeMap::new()),
             _prover: PhantomData,
             _bc: PhantomData,
@@ -101,8 +101,8 @@ impl<
     //         self.__state: Dict[str, Any] = {}
     //         self.__constructors: Dict[str, (bool, CryptoParams, CallableType)] = {}
 
-    pub fn clear(&mut self) {
-        self.__state.clear();
+    pub fn clear(&self) {
+        self.__state.lock().clear();
     }
     // """Define the wrapper constructor for a state variable."""= CFG.lock().unwrap().main_crypto_backend
     pub fn decl(&self, name: &str, constructor: CallableType, cipher: bool, crypto_backend: &str) {
@@ -123,18 +123,28 @@ impl<
         self.__constructors.lock().keys().cloned().collect()
     }
 
-    pub fn get_plain(&self, name: &str, _indices: Vec<String>) -> Option<DataType> {
-        let (_is_cipher, _crypto_params, _constr) = self.__constructors.lock()[name].clone();
-        // let val = self.__get(vec![name.to_owned()].into_iter().chain(indices.into_iter()).collect(), false);
-        // if is_cipher {
-        //     let (ret, _) = self.api.dec(val, constr, &crypto_params.crypto_name);
-        //     return ret
-        // }
-        //   val
-        None
+    pub async fn get_plain(&self, name: &str, indices: Vec<String>) -> Option<DataType> {
+        let (is_cipher, crypto_params, constr) = self.__constructors.lock()[name].clone();
+        let val = self
+            .__get(
+                vec![name.to_owned()]
+                    .into_iter()
+                    .chain(indices.into_iter())
+                    .collect(),
+                false,
+            )
+            .await;
+        if is_cipher {
+            let (ret, _) = self
+                .api
+                .lock()
+                .dec(val.unwrap(), constr, &crypto_params.crypto_name);
+            return Some(ret);
+        }
+        val
     }
 
-    pub fn get_raw(&self, name: &str, indices: Vec<String>) -> Option<&DataType> {
+    pub async fn get_raw(&self, name: &str, indices: Vec<String>) -> Option<DataType> {
         self.__get(
             vec![name.to_owned()]
                 .into_iter()
@@ -142,6 +152,7 @@ impl<
                 .collect(),
             false,
         )
+        .await
     }
 
     // """
@@ -151,8 +162,8 @@ impl<
     // :raise KeyError: if location does not exist on the chain
     // :return: The requested value
     // """
-    pub fn __getitem__(&self, key: &str) -> &DataType {
-        self.__get(vec![key.to_owned()], true).unwrap()
+    pub async fn __getitem__(&self, key: &str) -> DataType {
+        self.__get(vec![key.to_owned()], true).await.unwrap()
     }
 
     // """
@@ -161,7 +172,7 @@ impl<
     // :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
     // :param value: Correctly wrapped value which should be assigned to the specified state location
     // """
-    pub fn __setitem__(&mut self, mut key: Vec<String>, value: DataType) {
+    pub fn __setitem__(&self, mut key: Vec<String>, value: DataType) {
         // if not isinstance(key, Tuple)
         //     key = (key, )
         let var = key[0].clone();
@@ -173,12 +184,12 @@ impl<
                 .concat();
 
         // # Write to state
-        self.__state.insert(loc, value);
+        self.__state.lock().insert(loc, value);
     }
-    pub fn __get(&self, key: Vec<String>, cache: bool) -> Option<&DataType> {
+    pub async fn __get(&self, key: Vec<String>, cache: bool) -> Option<DataType> {
         // if not isinstance(key, Tuple):
         //     key = (key, )
-        let (var, _indices) = (&key[0], &key[1..]);
+        let (var, indices) = (&key[0], key[1..].to_vec());
         let loc = var.to_owned()
             + &key[1..]
                 .iter()
@@ -187,44 +198,36 @@ impl<
                 .concat();
 
         // # Retrieve from state scope
-
-        if cache {
-            if let v @ Some(_) = self.__state.get(&loc) {
-                return v;
+        match self.__state.lock().get(&loc) {
+            v @ Some(_) if cache => {
+                return v.cloned();
             }
+            _ => {}
         }
 
-        // let (is_cipher, crypto_params, constr) = self.__constructors[var.as_str()];
-        // try:
-        // let val = if is_cipher {
-        //     let cipher_len = crypto_params.cipher_len();
-        //     CipherValue(
-        //         &self.api._req_state_var(&var, indices, cipher_len),
-        //         crypto_params,
-        //     )
-        // } else {
-        //     constr(&self.api._req_state_var(var, indices))
-        // };
-        // // except BlockChainError:
-        // //     raise KeyError(key)
-        // if cache {
-        //     self.__state.insert(loc, val.clone());
-        // }
-        // val
-        None
+        let (is_cipher, crypto_params, constr) = self.__constructors.lock()[var.as_str()].clone();
+        let val = if is_cipher {
+            let cipher_len = crypto_params.cipher_len();
+            DataType::CipherValue(Value::<String, CipherValue>::new(
+                vec![
+                    self.api
+                        .lock()
+                        ._req_state_var(&var, indices, cipher_len)
+                        .await,
+                ],
+                None,
+                Some(crypto_params.crypto_name.clone()),
+            ))
+        } else {
+            constr(self.api.lock()._req_state_var(var, indices, 0).await)
+        };
+
+        if cache {
+            self.__state.lock().insert(loc, val.clone());
+        }
+        Some(val)
     }
-}
-
-impl<
-    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
-    B: ZkayBlockchainInterface<P> + Clone,
-    K: ZkayKeystoreInterface<P, B> + Clone,
-    C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
-> Index<&[&str]> for StateDict<P, B, K, C>
-{
-    type Output = DataType;
-
-    fn index(&self, index: &[&str]) -> &Self::Output {
+    pub fn get(&self, index: &[&str]) -> DataType {
         let var = index[0].to_owned();
         let loc = var
             + &index[1..]
@@ -232,18 +235,9 @@ impl<
                 .map(|k| format!("[{k}]"))
                 .collect::<Vec<_>>()
                 .concat();
-        self.__getitem__(&loc)
+        futures::executor::block_on(self.__getitem__(&loc))
     }
-}
-
-impl<
-    P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
-    B: ZkayBlockchainInterface<P> + Clone,
-    K: ZkayKeystoreInterface<P, B> + Clone,
-    C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
-> IndexMut<&[&str]> for StateDict<P, B, K, C>
-{
-    fn index_mut(&mut self, index: &[&str]) -> &mut Self::Output {
+    pub fn set(&self, index: &[&str], data: DataType) {
         let var = index[0].to_owned();
         let loc = var
             + &index[1..]
@@ -251,12 +245,54 @@ impl<
                 .map(|k| format!("[{k}]"))
                 .collect::<Vec<_>>()
                 .concat();
-        self.__state.entry(loc.clone()).or_default();
         // # Write to state
-        self.__state.get_mut(&loc).unwrap()
+        self.__state.lock().insert(loc, data);
         // panic!("Variable not found");
     }
 }
+
+// impl<
+//     P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+//     B: ZkayBlockchainInterface<P> + Clone,
+//     K: ZkayKeystoreInterface<P, B> + Clone,
+//     C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
+// > Index<&[&str]> for StateDict<P, B, K, C>
+// {
+//     type Output = DataType;
+
+//     fn index(& self, index: &[&str]) -> &Self::Output {
+//         let var = index[0].to_owned();
+//         let loc = var
+//             + &index[1..]
+//                 .iter()
+//                 .map(|k| format!("[{k}]"))
+//                 .collect::<Vec<_>>()
+//                 .concat();
+//         &futures::executor::block_on(self.__getitem__(&loc))
+//     }
+// }
+
+// impl<
+//     P: ZkayProverInterface + Clone + std::marker::Send + std::marker::Sync,
+//     B: ZkayBlockchainInterface<P> + Clone,
+//     K: ZkayKeystoreInterface<P, B> + Clone,
+//     C: ZkayCryptoInterface<P, B, K> + ZkayHomomorphicCryptoInterface<P, B, K> + Clone,
+// > IndexMut<&[&str]> for StateDict<P, B, K, C>
+// {
+//     fn index_mut(&mut self, index: &[&str]) -> &mut Self::Output {
+//         let var = index[0].to_owned();
+//         let loc = var
+//             + &index[1..]
+//                 .iter()
+//                 .map(|k| format!("[{k}]"))
+//                 .collect::<Vec<_>>()
+//                 .concat();
+//         self.__state.lock().entry(loc.clone()).or_default();
+//         // # Write to state
+//         self.__state.lock().get_mut(&loc).unwrap()
+//         // panic!("Variable not found");
+//     }
+// }
 
 // class LocalsDict:
 //     """
@@ -556,12 +592,31 @@ impl<
 
     // @staticmethod
     // """Generate/Load keys for the given address."""
-    pub fn initialize_keys_for(&self, address: &str) {
-        let _account = address.to_owned();
-        for _crypto_params in CFG.lock().unwrap().all_crypto_params() {
-            // if !self.runtime.keystore(&CryptoParams::new(crypto_params.clone())).has_initialized_keys_for(&address.to_owned()) {
-            //     self.runtime.crypto(&CryptoParams::new(crypto_params.clone())).generate_or_load_key_pair(&account)
-            // };
+    pub async fn initialize_keys_for(&self, address: &str) {
+        let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
+        println!(
+            "====initialize_keys_for=={address}==all_crypto_params===={all_crypto_params:?}====="
+        );
+        for crypto_params in all_crypto_params {
+            println!("====initialize_keys_for====crypto_params===={crypto_params}=====");
+            if !self
+                .runtime
+                .lock()
+                .keystore(&CryptoParams::new(crypto_params.clone()))
+                .lock()
+                .has_initialized_keys_for(address)
+            {
+                println!(
+                    "====initialize_keys_for====has_initialized_keys_for===={crypto_params}====="
+                );
+                let _ = self
+                    .runtime
+                    .lock()
+                    .crypto(&CryptoParams::new(crypto_params.clone()))
+                    .lock()
+                    .generate_or_load_key_pair(address)
+                    .await;
+            }
         }
     }
 
@@ -580,10 +635,10 @@ impl<
     // :param count: # of accounts to create
     // :return: if count == 1 -> returns a address, otherwise returns a tuple of count addresses
     // """
-    pub fn create_dummy_accounts(&self, _count: i32) -> Vec<String> {
+    pub async fn create_dummy_accounts(&self, _count: i32) -> Vec<String> {
         let accounts: Vec<String> = vec![]; //self.runtime.blockchain().create_test_accounts(count);
         for account in &accounts {
-            self.initialize_keys_for(account);
+            self.initialize_keys_for(account).await;
         }
         if accounts.len() == 1 {
             accounts[..1].to_vec()
@@ -710,7 +765,7 @@ impl<
     // @property
     pub fn address(&self) -> String {
         // self.__contract_handle.lock().as_ref().unwrap()["address"].to_string()
-         self.__user_addr.lock().to_string()
+        self.__user_addr.lock().to_string()
     }
 
     // @property
@@ -729,14 +784,22 @@ impl<
     }
 
     pub fn get_my_sk(&self, crypto_backend: &str) -> Value<String, PrivateKeyValue> {
-        let crypto_backend =if crypto_backend.is_empty(){CFG.lock().unwrap().main_crypto_backend()}else{crypto_backend.to_owned()};
+        let crypto_backend = if crypto_backend.is_empty() {
+            CFG.lock().unwrap().main_crypto_backend()
+        } else {
+            crypto_backend.to_owned()
+        };
         self.__keystore.lock()[&crypto_backend]
             .lock()
             .sk(&self.user_address().to_string())
     }
     // = CFG.lock().unwrap().main_crypto_backend
     pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String, PublicKeyValue> {
-        let crypto_backend =if crypto_backend.is_empty(){CFG.lock().unwrap().main_crypto_backend()}else{crypto_backend.to_owned()};
+        let crypto_backend = if crypto_backend.is_empty() {
+            CFG.lock().unwrap().main_crypto_backend()
+        } else {
+            crypto_backend.to_owned()
+        };
         self.__keystore.lock()[&crypto_backend]
             .lock()
             .pk(&self.user_address().to_string())
@@ -769,7 +832,10 @@ impl<
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) -> Option<Address> {
-        println!("==__contract_handle==begin====={:?}",self.__contract_handle.lock().clone());
+        println!(
+            "==__contract_handle==begin====={:?}",
+            self.__contract_handle.lock().clone()
+        );
         *self.__contract_handle.lock() = self
             .__conn
             .lock()
@@ -783,7 +849,10 @@ impl<
             )
             .await
             .ok();
-        println!("==__contract_handle======={:?}",self.__contract_handle.lock().clone());
+        println!(
+            "==__contract_handle======={:?}",
+            self.__contract_handle.lock().clone()
+        );
         self.__contract_handle.lock().clone()
     }
     pub async fn connect<PS: ProvingScheme>(
@@ -818,14 +887,17 @@ impl<
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
     ) -> eyre::Result<String> {
-        self.__conn.lock().transact(
-            self.__contract_handle.lock().as_ref().unwrap(),
-            &self.__user_addr.lock(),
-            fname,
-            args,
-            should_encrypt,
-            wei_amount,
-        ).await
+        self.__conn
+            .lock()
+            .transact(
+                self.__contract_handle.lock().as_ref().unwrap(),
+                &self.__user_addr.lock(),
+                fname,
+                args,
+                should_encrypt,
+                wei_amount,
+            )
+            .await
     }
 
     pub async fn call(
@@ -834,20 +906,19 @@ impl<
         args: Vec<DataType>,
         ret_val_constructors: Vec<(bool, String, CallableType)>,
     ) -> DataType {
-        let retvals = self.__conn.lock().call(
-            self.__contract_handle.lock().as_ref().unwrap(),
-            &self.__user_addr.lock(),
-            fname,
-            args,
-        ).await;
+        let retvals = self
+            .__conn
+            .lock()
+            .call(
+                self.__contract_handle.lock().as_ref().unwrap(),
+                &self.__user_addr.lock(),
+                fname,
+                args,
+            )
+            .await;
         if ret_val_constructors.len() == 1 {
             let (is_cipher, crypto_params_name, callable) = ret_val_constructors[0].clone();
-            self.__get_decrypted_retval(
-                retvals.unwrap(),
-                is_cipher,
-                crypto_params_name,
-                callable,
-            )
+            self.__get_decrypted_retval(retvals.unwrap(), is_cipher, crypto_params_name, callable)
         } else {
             DataType::List(
                 [retvals]
@@ -937,7 +1008,9 @@ impl<
         Value<String, CipherValue>,
         Option<Value<String, RandomnessValue>>,
     ) {
+        println!("===target_addr===enc======={target_addr:?}=========");
         let target_addr = target_addr.map_or(self.__user_addr.lock().to_string(), |ta| ta);
+        println!("===target_addr=========={target_addr}=========");
         self.__crypto
             .lock()
             .get(crypto_backend)
@@ -947,7 +1020,8 @@ impl<
                 plain.to_string(),
                 &self.__user_addr.lock().to_string(),
                 &target_addr,
-            ).await
+            )
+            .await
     }
     //= CFG.lock().unwrap().main_crypto_backend
     pub fn dec(
@@ -977,7 +1051,8 @@ impl<
             .get(&params.crypto_name)
             .unwrap()
             .lock()
-            .getPk(&target_addr).await;
+            .getPk(&target_addr)
+            .await;
         // assert!(
         //     args.iter().all(|arg| !(isinstance(arg, CipherValue)
         //         && params.crypto_name != arg.params.crypto_name)),
@@ -1008,7 +1083,8 @@ impl<
             .get(&params.crypto_name)
             .unwrap()
             .lock()
-            .getPk(&target_addr).await;
+            .getPk(&target_addr)
+            .await;
         let mut crypto_inst = self.__crypto.lock()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
         let (_result, _rand) = crypto_inst.lock().do_rerand(arg, pk[..].to_vec());
@@ -1025,21 +1101,25 @@ impl<
         );
 
         if count == 0 {
-            self.__conn.lock().req_state_var(
-                self.__contract_handle.lock().as_ref().unwrap(),
-                name,
-                indices,
-            ).await
+            self.__conn
+                .lock()
+                .req_state_var(
+                    self.__contract_handle.lock().as_ref().unwrap(),
+                    name,
+                    indices,
+                )
+                .await
         } else {
             (0..count)
-                .map( |_i| {
+                .map(|_i| {
                     futures::executor::block_on(self.__conn.lock().req_state_var(
                         self.__contract_handle.lock().as_ref().unwrap(),
                         &name,
                         indices.clone(),
                     ))
                 })
-                .collect::<Vec<String>>().join(",")
+                .collect::<Vec<String>>()
+                .join(",")
         }
     }
     // @staticmethod

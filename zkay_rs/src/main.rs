@@ -100,11 +100,9 @@ async fn run() -> Result<()> {
 
             match erc20 {
                 Some(token) => {
-                    let balance = Cast::new(&provider).erc20_balance(
-                        token,
-                        account_addr,
-                        block,
-                    ).await?;
+                    let balance = Cast::new(&provider)
+                        .erc20_balance(token, account_addr, block)
+                        .await?;
                     sh_println!("{}", format_uint_exp(balance))
                 }
                 None => {
@@ -127,11 +125,9 @@ async fn run() -> Result<()> {
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
-               Cast::new(provider).block(
-                    block.unwrap_or(BlockId::Number(Latest)),
-                    full,
-                    field
-                ).await?
+                Cast::new(provider)
+                    .block(block.unwrap_or(BlockId::Number(Latest)), full, field)
+                    .await?
             )
         }
 
@@ -168,13 +164,9 @@ async fn run() -> Result<()> {
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
-                Cast::new(provider).receipt(
-                    tx_hash,
-                    field,
-                    confirmations,
-                    None,
-                    cast_async
-                ).await?
+                Cast::new(provider)
+                    .receipt(tx_hash, field, confirmations, None, cast_async)
+                    .await?
             )
         }
         ZkaySubcommand::ToCheckSumAddress { address } => {

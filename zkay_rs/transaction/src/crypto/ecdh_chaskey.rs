@@ -17,10 +17,11 @@ use crate::types::{
 };
 use ark_ff::BigInteger256;
 use ark_std::rand;
-use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
+use jsnark_interface::jsnark_interface::{CIRCUIT_BUILDER_JAR, JARS_DIR};
 use rand::RngCore;
 use rccell::{RcCell, WeakCell};
 use rustc_serialize::hex::ToHex;
+use std::str::FromStr;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkay_utils::run_command::run_command;
 fn main() {
@@ -87,37 +88,51 @@ impl<
     fn params(&self) -> CryptoParams {
         CryptoParams::new("ecdh-chaskey".to_owned())
     }
-    fn _generate_or_load_key_pair(&self, _: &str) -> KeyPair {
-        KeyPair::default()
+    fn _generate_or_load_key_pair(&self, address: &str) -> KeyPair {
+        self._generate_or_load_key_pairs(address)
     }
 
     fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
+        println!("===key======={key:?}");
+        let key = key
+            .into_iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        println!("===key=s======{key}");
         let plain_bytes = plain;
 
         // # Call java implementation
-        let mut iv = hex::encode(&ark_std::rand::thread_rng().r#gen::<[u8; 16]>());
+        let mut iv = ark_std::rand::thread_rng()
+            .r#gen::<[u8; 16]>()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        println!("=====iv==={key:?}===={plain_bytes}====={iv:?}");
         let (iv_cipher, _) = run_command(
             vec![
                 "java",
                 "-Xms4096m",
                 "-Xmx16384m",
                 "-cp",
-                &format!("{CIRCUIT_BUILDER_JAR}"),
+                &format!("{}", (JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR)),
                 "zkay.ChaskeyLtsCbc",
                 "enc",
-                &hex::encode(key),
-                &hex::encode(iv.clone()),
-                &hex::encode(plain_bytes),
+                &key,
+                &iv.clone(),
+                &plain_bytes,
             ],
             None,
             false,
         );
+        println!("==iv_cipher===={iv_cipher:?}============");
         iv.clone().into_bytes().extend(
-            i32::from_str_radix(iv_cipher.unwrap().split("\n").last().unwrap(), 16)
-                .unwrap()
-                .to_be_bytes(),
+            alloy_primitives::U256::from_str(
+                &("0x".to_owned() + &iv_cipher.unwrap().split("\n").last().unwrap()),
+            )
+            .unwrap()
+            .to_be_bytes::<32>(),
         );
         let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
 
@@ -147,7 +162,7 @@ impl<
                 "-Xms4096m",
                 "-Xmx16384m",
                 "-cp",
-                &format!("{CIRCUIT_BUILDER_JAR}"),
+                &format!("{}", (JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR)),
                 "zkay.ChaskeyLtsCbc",
                 "dec",
                 &key.to_hex(),

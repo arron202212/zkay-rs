@@ -5,7 +5,6 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use zkay_config::{config_user::UserConfig,config::CFG};
 use crate::tx::{self, CastTxBuilder};
 use alloy_network::{AnyNetwork, EthereumWallet};
 use alloy_provider::{Provider, ProviderBuilder};
@@ -24,6 +23,7 @@ use foundry_common::ens::NameOrAddress;
 use foundry_common::{sh_println, sh_warn};
 use foundry_config::Config;
 use std::{path::PathBuf, str::FromStr};
+use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_transaction::blockchain::web3::Web3Tx;
 /// CLI arguments for `cast send`.
 #[derive(Debug, Parser)]
@@ -140,7 +140,9 @@ impl SendTxArgs {
         let provider = utils::get_provider(&config)?;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         if self.is_survey {
-            CFG.lock().unwrap().set_blockchain_pki_address(blockchain_pki_addresses);
+            CFG.lock()
+                .unwrap()
+                .set_blockchain_pki_address(blockchain_pki_addresses);
             return crate::contract::main0(web3tx).await;
         }
 

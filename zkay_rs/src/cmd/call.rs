@@ -5,7 +5,6 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use zkay_config::{config_user::UserConfig,config::CFG};
 use crate::tx::{CastTxBuilder, SenderKind};
 use alloy_primitives::{TxKind, U256};
 use alloy_rpc_types::{BlockId, BlockNumberOrTag};
@@ -28,6 +27,7 @@ use foundry_config::{
 };
 use foundry_evm::{executors::TracingExecutor, opts::EvmOpts};
 use std::str::FromStr;
+use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_transaction::blockchain::web3::{Web3, Web3Tx};
 
 /// CLI arguments for `cast call`.
@@ -159,8 +159,10 @@ impl CallArgs {
         let from = sender.address();
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         if self.is_survey {
-            CFG.lock().unwrap().set_blockchain_pki_address(blockchain_pki_addresses);
-            return crate::contract::main0(web3tx).await
+            CFG.lock()
+                .unwrap()
+                .set_blockchain_pki_address(blockchain_pki_addresses);
+            return crate::contract::main0(web3tx).await;
         }
         let code = if let Some(CallSubcommands::Create {
             code,
