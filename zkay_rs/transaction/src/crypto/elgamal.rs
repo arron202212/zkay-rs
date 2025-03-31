@@ -142,7 +142,7 @@ impl<
             .collect();
         (cipher_chunks, vec![r.into_bigint().to_string()])
     }
-    fn _dec(&self, cipher: Vec<String>, sk: &String) -> (u64, Vec<String>) {
+    fn _dec(&self, cipher: Vec<String>, sk: &String) -> (String, Vec<String>) {
         // with time_measure("elgamal_decrypt"):
         let c1 = BabyJubJub::new(
             Fq::from_str(&cipher[0]).unwrap(),
@@ -157,7 +157,7 @@ impl<
         let plain = self._de_embed(plain_embedded.into());
 
         // # TODO randomness misused for the secret key, which is an extremely ugly hack...
-        (plain, vec![sk.clone()])
+        (plain.to_string(), vec![sk.clone()])
     }
 }
 impl<

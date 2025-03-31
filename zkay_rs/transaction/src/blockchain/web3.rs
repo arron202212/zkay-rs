@@ -401,7 +401,35 @@ impl Web3Tx {
     pub async fn new(eth: EthereumOpts, config: Config, tx: TransactionOpts) -> Result<Self> {
         Ok(Self { eth, config, tx })
     }
-
+    // pub async fn call_storage(
+    //     &self,
+    //     to: Option<NameOrAddress>,
+    //     sig: Option<String>,
+    //     args: Vec<String>,
+    // ) -> Result<String> {
+    //     let Some(sig)= sig else{ eyre::bail!("Sig is none")};
+    //     println!("==call_storage======{to:?}======{sig:?}========{args:?}==========");
+    //     if &sig[sig.len()-2..]=="])"{
+    //         let Some(i)=sig.rfind('[') else{ eyre::bail!("open bracket is not found")};
+    //             let n=sig[i+1..sig.len()-2].parse::<usize>().unwrap();
+    //             let j=sig.rfind(")(").unwrap();
+    //             let sig_storage=format!("{},uint)({})",&sig[..j],&sig[j+2..i]);
+    //             let mut res=vec![];
+    //             for i in 0..n{
+    //                 let mut args_with_index=args.clone();
+    //                 args_with_index.push(i.to_string());
+    //                 println!("==call_storage==index========{sig_storage:?}========{args_with_index:?}==========");
+    //                 let v=self.call(to.clone(),Some(sig_storage.clone()),args_with_index).await.unwrap();
+    //                 println!("==call_storage==index=====v==={v:?}==============");
+    //                 let single_res=serde_json::from_str::<Vec<String>>(&v).unwrap()[0].trim().to_owned();
+    //                 println!("==call_storage==index====s===={single_res:?}==============");
+    //                 res.push(single_res);
+    //             }
+    //            return Ok(format!("[{}]",res.join(",")))
+    //     }
+    //     let res=self.call(to,Some(sig),args).await;
+    //     serde_json::from_str::<Vec<String>>(res.as_ref().unwrap()).map(|r|r[0].clone()).map_err(|e|eyre::eyre!("{e:?}"))
+    // }
     pub async fn call(
         &self,
         to: Option<NameOrAddress>,

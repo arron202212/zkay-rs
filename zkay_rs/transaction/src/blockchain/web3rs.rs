@@ -513,12 +513,9 @@ impl<
                 vec![address.to_owned()],
             )
             .await?;
-        let v: Vec<JsonValue> = serde_json::from_str(
-            serde_json::from_str::<Vec<JsonValue>>(&v.to_string()).unwrap()[0]
-                .to_string()
-                .trim_matches('"'),
-        )
-        .unwrap();
+
+        println!("==v====before======{v:?}===================");
+        let v: Vec<JsonValue> = serde_json::from_str(v.trim_matches('"')).unwrap();
         println!("==v=========={v:?}===================");
         let v: Vec<String> = v.into_iter().map(|x| x.to_string()).collect();
         println!("==v====s======{v:?}===================");
@@ -568,13 +565,21 @@ impl<
         //         except Exception as e:
         //             raise BlockChainError(e.args)
         // futures::executor::block_on()
-        self.web3tx
+        println!(
+            "==_req_state_var==={contract_handle}========={name}==========={indices:?}============"
+        );
+        let res = self
+            .web3tx
             .call(
                 Some(contract_handle.clone().into()),
                 Some(name.to_owned()),
                 indices,
             )
-            .await
+            .await;
+        println!("==_req_state_var==res={res:?}=================");
+        serde_json::from_str::<Vec<String>>(res.as_ref().unwrap())
+            .map(|r| r[0].clone())
+            .map_err(|e| eyre::eyre!("{e:?}"))
     }
     async fn _call(
         &self,

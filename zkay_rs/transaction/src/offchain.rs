@@ -162,8 +162,10 @@ impl<
     // :raise KeyError: if location does not exist on the chain
     // :return: The requested value
     // """
-    pub async fn __getitem__(&self, key: &str) -> DataType {
-        self.__get(vec![key.to_owned()], true).await.unwrap()
+    pub async fn get_item(&self, key: &[&str]) -> DataType {
+        self.__get(key.into_iter().map(|v| v.to_string()).collect(), true)
+            .await
+            .unwrap()
     }
 
     // """
@@ -172,10 +174,10 @@ impl<
     // :param key: Either a string with the state variable name (primitive variables) or a Tuple with the name and all index key values
     // :param value: Correctly wrapped value which should be assigned to the specified state location
     // """
-    pub fn __setitem__(&self, mut key: Vec<String>, value: DataType) {
+    pub fn set_item(&self, key: &[&str], value: DataType) {
         // if not isinstance(key, Tuple)
         //     key = (key, )
-        let var = key[0].clone();
+        let var = key[0].to_owned();
         let loc = var
             + &key[1..]
                 .iter()
@@ -189,6 +191,7 @@ impl<
     pub async fn __get(&self, key: Vec<String>, cache: bool) -> Option<DataType> {
         // if not isinstance(key, Tuple):
         //     key = (key, )
+        println!("======__get==========================={key:?}");
         let (var, indices) = (&key[0], key[1..].to_vec());
         let loc = var.to_owned()
             + &key[1..]
@@ -204,17 +207,20 @@ impl<
             }
             _ => {}
         }
-
+        println!("=======var===================={var}");
         let (is_cipher, crypto_params, constr) = self.__constructors.lock()[var.as_str()].clone();
         let val = if is_cipher {
             let cipher_len = crypto_params.cipher_len();
+            let v = self
+                .api
+                .lock()
+                ._req_state_var(&var, indices, cipher_len)
+                .await;
+            println!("==__get=====_req_state_var=========={v}============");
+            let v: Vec<_> = v.split(",").map(|x| x.to_owned()).collect();
+            println!("==__get=====_req_state_var====vv======{v:?}============");
             DataType::CipherValue(Value::<String, CipherValue>::new(
-                vec![
-                    self.api
-                        .lock()
-                        ._req_state_var(&var, indices, cipher_len)
-                        .await,
-                ],
+                v,
                 None,
                 Some(crypto_params.crypto_name.clone()),
             ))
@@ -227,28 +233,28 @@ impl<
         }
         Some(val)
     }
-    pub fn get(&self, index: &[&str]) -> DataType {
-        let var = index[0].to_owned();
-        let loc = var
-            + &index[1..]
-                .iter()
-                .map(|k| format!("[{k}]"))
-                .collect::<Vec<_>>()
-                .concat();
-        futures::executor::block_on(self.__getitem__(&loc))
-    }
-    pub fn set(&self, index: &[&str], data: DataType) {
-        let var = index[0].to_owned();
-        let loc = var
-            + &index[1..]
-                .iter()
-                .map(|k| format!("[{k}]"))
-                .collect::<Vec<_>>()
-                .concat();
-        // # Write to state
-        self.__state.lock().insert(loc, data);
-        // panic!("Variable not found");
-    }
+    // pub fn get(&self, index: &[&str]) -> DataType {
+    //     let var = index[0].to_owned();
+    //     let loc = var
+    //         + &index[1..]
+    //             .iter()
+    //             .map(|k| format!("[{k}]"))
+    //             .collect::<Vec<_>>()
+    //             .concat();
+    //     futures::executor::block_on(self.__getitem__(&loc))
+    // }
+    // pub fn set(&self, index: &[&str], data: DataType) {
+    //     let var = index[0].to_owned();
+    //     let loc = var
+    //         + &index[1..]
+    //             .iter()
+    //             .map(|k| format!("[{k}]"))
+    //             .collect::<Vec<_>>()
+    //             .concat();
+    //     // # Write to state
+    //     self.__state.lock().insert(loc, data);
+    //     // panic!("Variable not found");
+    // }
 }
 
 // impl<
@@ -423,44 +429,50 @@ impl<
         bool,
         WithFunctionCtx<C, P, B, K, WithApiFunctionCtx, WithLogContext>,
     ) {
+        println!("===========_function_ctx=============beg==========");
         let fc;
         let is_external;
-        with_context_block!(var afc= self.contract_simulator_ref().lock().api.lock().api_function_ctx(trans_sec_size, Some(wei_amount)).await=>{
-                 is_external=afc.is_external.lock().map_or(false,|x|x);
-                let mut t_idx=0;
+        let cs = self.contract_simulator_ref().lock().clone();
+        println!("===========_function_ctx=============beg====2======");
+        let api = cs.api.lock().clone();
+        println!("===========_function_ctx=============beg=====3=====");
+        with_context_block!(var afc= api.api_function_ctx(trans_sec_size, Some(wei_amount)).await=>{
+        println!("===========_function_ctx==============sss======{}===",line!());
+                     is_external=afc.is_external.lock().map_or(false,|x|x);
+                        let mut t_idx=0;
 
-                if is_external {
-                    zk_print_banner(format!("Calling {name}"));
-                    // assert self.locals is None
-                    self.contract_simulator_ref().lock().state.lock().clear();
-                    t_idx = *self.contract_simulator_ref().lock().tidx.lock().get(name).unwrap_or(&0);
-                    *self.contract_simulator_ref().lock().tidx.lock().entry(name.to_owned()).or_insert(0) += 1;
-                }
+                        if is_external {
+                            zk_print_banner(format!("Calling {name}"));
+                            // assert self.locals is None
+                            self.contract_simulator_ref().lock().state.lock().clear();
+                            t_idx = *self.contract_simulator_ref().lock().tidx.lock().get(name).unwrap_or(&0);
+                            *self.contract_simulator_ref().lock().tidx.lock().entry(name.to_owned()).or_insert(0) += 1;
+                        }
 
-                // with nullcontext() if not is_external else log_context(f'{name}_{t_idx}'):
-                with_context_block!(var lc=is_external.then(||log_context(&format!("{name}_{t_idx}")))=>{
-        println!("========1====");
-                // let prev_locals = self.locals.clone();
-                // self.locals = LocalsDict { _scopes: vec![] };
-                let locals=self.contract_simulator_ref().lock().locals.clone();
-                fc=WithFunctionCtx::new(locals,self.contract_simulator_ref().lock().state.clone(),Some(afc),lc);
-        // println!("====2====1====");
-                // try:
-                // yield is_external
-                // except (ValueError, BlockChainError, RequireException) as e:
-                // if is_external and not CFG.lock().unwrap().is_unit_test:
-                //     // # uncomment to raise errors instead of just printing message (for debugging)
-                //     // # raise e
-                //     with fail_print():
-                //         print(f'ERROR: {e}')
-                // else:
-                //     raise e
-                // finally:
-                //     self.locals = prev_locals
-                //     if is_external:
-                //         self.state.clear()
-                });
-                });
+                        // with nullcontext() if not is_external else log_context(f'{name}_{t_idx}'):
+                        with_context_block!(var lc=is_external.then(||log_context(&format!("{name}_{t_idx}")))=>{
+                println!("========1====");
+                        // let prev_locals = self.locals.clone();
+                        // self.locals = LocalsDict { _scopes: vec![] };
+                        let locals=self.contract_simulator_ref().lock().locals.clone();
+                        fc=WithFunctionCtx::new(locals,self.contract_simulator_ref().lock().state.clone(),Some(afc),lc);
+                // println!("====2====1====");
+                        // try:
+                        // yield is_external
+                        // except (ValueError, BlockChainError, RequireException) as e:
+                        // if is_external and not CFG.lock().unwrap().is_unit_test:
+                        //     // # uncomment to raise errors instead of just printing message (for debugging)
+                        //     // # raise e
+                        //     with fail_print():
+                        //         print(f'ERROR: {e}')
+                        // else:
+                        //     raise e
+                        // finally:
+                        //     self.locals = prev_locals
+                        //     if is_external:
+                        //         self.state.clear()
+                        });
+                        });
         println!("============");
         (is_external, fc)
     }
@@ -1030,6 +1042,7 @@ impl<
         constr: CallableType,
         crypto_backend: &str,
     ) -> (DataType, Option<Value<String, RandomnessValue>>) {
+        println!("==offchain====dec=cipher============={cipher:?}======");
         let res = self.__crypto.lock()[crypto_backend].lock().dec(
             cipher.try_as_cipher_value_ref().unwrap(),
             &self.__user_addr.lock().to_string(),
@@ -1099,7 +1112,7 @@ impl<
             self.__contract_handle.lock().is_some(),
             "Cannot read state variable {name} within constructor before it is assigned a value."
         );
-
+        println!("==off===_req_state_var==================={name}===={indices:?}=={count}=");
         if count == 0 {
             self.__conn
                 .lock()
@@ -1111,11 +1124,11 @@ impl<
                 .await
         } else {
             (0..count)
-                .map(|_i| {
+                .map(|i| {
                     futures::executor::block_on(self.__conn.lock().req_state_var(
                         self.__contract_handle.lock().as_ref().unwrap(),
                         &name,
-                        indices.clone(),
+                        indices.iter().cloned().chain([i.to_string()]).collect(),
                     ))
                 })
                 .collect::<Vec<String>>()
@@ -1235,6 +1248,10 @@ impl<
         trans_sec_size: i32,
         wei_amount: Option<i32>,
     ) -> WithApiFunctionCtx {
+        println!(
+            "===========api_function_ctx==============aaa======{}===",
+            line!()
+        );
         let was_external = *self.is_external.lock();
         if was_external.is_none() {
             assert!(self.all_priv_values.lock().is_none());
@@ -1421,6 +1438,7 @@ impl WithCalCtx {
             current_priv_values.lock().clone(),
             current_all_index.lock().clone(),
         );
+
         *current_priv_values.lock() = BTreeMap::new();
         *current_all_index.lock().as_mut().unwrap() += sec_offset;
         Self {

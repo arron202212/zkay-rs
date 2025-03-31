@@ -835,12 +835,14 @@ pub trait ZkayKeystoreInterface<
             pk.clone()
         } else {
             let crypto_params = self.crypto_params().clone();
-            let pk = self
+            println!("===crypto_params===={address}========={crypto_params:?}=====");
+            let pks = self
                 .conn()
                 .lock()
                 .req_public_key(address, &crypto_params)
-                .await
-                .unwrap();
+                .await;
+            println!("===pks============={pks:?}=====");
+            let pk = pks.unwrap();
             self.local_pk_store()
                 .lock()
                 .insert(address.clone(), pk.clone());
@@ -996,7 +998,7 @@ pub trait ZkayCryptoInterface<
         &self,
         cipher: &Value<String, CipherValue>,
         my_addr: &String,
-    ) -> (u64, Option<Value<String, RandomnessValue>>) {
+    ) -> (String, Option<Value<String, RandomnessValue>>) {
         // assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         // assert isinstance(my_addr, AddressValue)
         zk_print!("Decrypting value {:?} for {my_addr}", cipher.contents); //, verbosity_level=2
@@ -1009,7 +1011,7 @@ pub trait ZkayCryptoInterface<
         if cipher == &default_cipher {
             // # Ciphertext is all zeros, i.e. uninitialized -> zero
             return (
-                0,
+                0.to_string(),
                 if self.params().is_symmetric_cipher() {
                     None
                 } else {
@@ -1023,6 +1025,7 @@ pub trait ZkayCryptoInterface<
             );
         }
         let sk = self.keystore().lock().sk(my_addr);
+        println!("===dec=========cipher========{cipher:?}=======");
         let (plain, rnd) = self._dec(cipher[..].to_vec(), &sk[0]);
         (
             plain,
@@ -1107,7 +1110,7 @@ pub trait ZkayCryptoInterface<
 
     fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>);
 
-    fn _dec(&self, cipher: Vec<String>, sk: &String) -> (u64, Vec<String>);
+    fn _dec(&self, cipher: Vec<String>, sk: &String) -> (String, Vec<String>);
 }
 // class ZkayHomomorphicCryptoInterface(ZkayCryptoInterface){
 #[enum_dispatch]

@@ -141,7 +141,7 @@ impl<
             vec![],
         )
     }
-    fn _dec(&self, mut cipher: Vec<String>, sk: &String) -> (u64, Vec<String>) {
+    fn _dec(&self, mut cipher: Vec<String>, sk: &String) -> (String, Vec<String>) {
         // # Extract sender address from cipher metadata and request corresponding public key
         let sender_pk = cipher.pop().unwrap();
         // assert!( cipher.len() == self.params.cipher_payload_len);
@@ -172,7 +172,15 @@ impl<
             None,
             false,
         );
-        let plain = u64::from_str_radix(plain.unwrap().split("\n").last().unwrap(), 16).unwrap();
+        println!(
+            "==========plain===================={}",
+            plain.as_ref().unwrap().trim().split("\n").last().unwrap()
+        );
+        let v = alloy_primitives::U256::from_str(
+            &("0x".to_owned() + &plain.unwrap().trim().split("\n").last().unwrap()),
+        )
+        .unwrap();
+        let plain = v.to_string();
 
         (plain, vec![])
     }
