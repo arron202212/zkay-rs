@@ -89,7 +89,7 @@ use crate::blockchain::web3rs::Web3TesterBlockchain;
 use crate::runtime::BlockchainClass;
 use crate::types::{
     ARcCell, AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PrivateKeyValue,
-    PublicKeyValue, RandomnessValue, TxStruct, Value,
+    PublicKeyValue, RandomnessValue, TxStruct, Value, new_cipher_value,
 };
 use serde_json::{Map as JsonMap, Value as JsonValue, json};
 use zkay_config::{
@@ -1002,12 +1002,10 @@ pub trait ZkayCryptoInterface<
         // assert isinstance(cipher, CipherValue), f"Tried to decrypt value of type {type(cipher).__name__}"
         // assert isinstance(my_addr, AddressValue)
         zk_print!("Decrypting value {:?} for {my_addr}", cipher.contents); //, verbosity_level=2
-        let default_cipher = Value::<String, CipherValue> {
-            value: CipherValue,
-            contents: vec![],
-            params: Some(self.params()),
-            crypto_backend: None,
-        };
+        let default_cipher = new_cipher_value(None, Some(self.params()), None);
+        println!(
+            "=dec======cipher===========default_cipher========={cipher:?}============={default_cipher:?}============="
+        );
         if cipher == &default_cipher {
             // # Ciphertext is all zeros, i.e. uninitialized -> zero
             return (

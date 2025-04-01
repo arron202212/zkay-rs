@@ -218,6 +218,9 @@ pub trait ValueContent<T> {
 
 pub trait ParamLength {
     fn len(params: &CryptoParams) -> usize;
+    fn default_value() -> String {
+        "0".to_owned()
+    }
 }
 
 #[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
@@ -253,6 +256,43 @@ impl<T: Default + Clone + Copy, V: ParamLength + Clone + Default> ValueContent<T
         content
     }
 }
+
+#[macro_export]
+macro_rules! new_value {
+    ($fname:ident,$ty:ty) => {
+        pub fn $fname(
+            contents: Option<Vec<String>>,
+            params: Option<CryptoParams>,
+            crypto_backend: Option<String>,
+        ) -> Value<String, $ty> {
+            let get_params = |params: &Option<CryptoParams>, crypto_backend: &Option<String>| {
+                if let Some(params) = params {
+                    return params.clone();
+                }
+                if let Some(crypto_backend) = crypto_backend {
+                    return CryptoParams::new(crypto_backend.clone());
+                }
+
+                CryptoParams::new(
+                    CFG.lock()
+                        .unwrap()
+                        .get_crypto_params(&Homomorphism::non_homomorphic()),
+                )
+            };
+            let params = get_params(&params, &crypto_backend);
+            let mut content = vec!["0".to_owned(); params.cipher_len() as usize];
+            if let Some(contents) = contents {
+                content[..contents.len()].clone_from_slice(&contents[..]);
+            }
+
+            Value::<String, $ty>::new(content, Some(params), crypto_backend)
+        }
+    };
+}
+new_value!(new_cipher_value, CipherValue);
+new_value!(new_publickey_value, PublicKeyValue);
+new_value!(new_randomness_value, RandomnessValue);
+
 impl ParamLength for CipherValue {
     fn len(params: &CryptoParams) -> usize {
         params.cipher_len() as _

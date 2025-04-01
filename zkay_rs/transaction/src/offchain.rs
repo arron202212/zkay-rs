@@ -221,8 +221,8 @@ impl<
             println!("==__get=====_req_state_var====vv======{v:?}============");
             DataType::CipherValue(Value::<String, CipherValue>::new(
                 v,
+                Some(crypto_params.clone()),
                 None,
-                Some(crypto_params.crypto_name.clone()),
             ))
         } else {
             constr(self.api.lock()._req_state_var(var, indices, 0).await)
