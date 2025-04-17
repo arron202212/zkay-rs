@@ -122,7 +122,8 @@ fn parse_le_bytes_str(s: &str) -> BigInteger256 {
     // let mut bi = BigInteger256::new([0; 4]);
     // bi.read_le(&mut buffer.as_ref()).unwrap();
     // return bi;
-    BigInteger256::from_bits_le(&buffer.iter().map(|&b| b != 0).collect::<Vec<_>>())
+    // BigInteger256::from_bits_le(&buffer.iter().flat_map(|b8| (0..8).rev().map(|i| (1<<i)&b8 != 0).collect::<Vec<_>>()).collect::<Vec<_>>())
+    BigInteger256::try_from(num_bigint::BigUint::from_bytes_le(&buffer)).unwrap()
 }
 
 fn pad_with_zeros(input: &str) -> String {
@@ -172,7 +173,7 @@ fn is_valid_format(input: &str) -> bool {
 /// }
 /// ```
 ///
-/// Indeed, running `nargo execute` should return the following point in a terminal:
+/// Indeed, running `cargo execute` should return the following point in a terminal:
 ///
 /// ```
 /// Point { x: 0x06184da392a17823e9c1d38cb50980b17150ffa411965b03f0b0200d9557daa9, y: 0x244a710118db92636e46e3f97bd80093ba7026ff97ca32d387145337e250549c }

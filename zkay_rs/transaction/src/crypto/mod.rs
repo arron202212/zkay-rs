@@ -8,8 +8,8 @@
 // * :py:mod:`.rsa_pkcs15`: Slow, secure rsa key generation and encryption using RSA PKCS1.5 padding
 // * :py:mod:`.rsa_oaep`: Very slow, secure rsa key generation and encryption using RSA OAEP padding
 // """
+pub mod babygiant;
+pub mod babyjubjub;
 pub mod ecdh_base;
 pub mod ecdh_chaskey;
 pub mod elgamal;
-// pub mod meta;
-// pub mod params;

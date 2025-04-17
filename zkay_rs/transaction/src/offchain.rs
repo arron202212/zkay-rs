@@ -1074,7 +1074,13 @@ impl<
 
         let mut crypto_inst = self.__crypto.lock()[&params.crypto_name].clone();
         // assert isinstance(crypto_inst, ZkayHomomorphicCryptoInterface);
-        let result = crypto_inst.lock().do_op(op, pk[..].to_vec(), args);
+        let result = crypto_inst.lock().do_op(
+            op,
+            pk[..].to_vec(),
+            args.iter()
+                .map(|arg| arg.to_string().split(",").map(String::from).collect())
+                .collect(),
+        );
         Value::<String, CipherValue>::new(result, Some(params), None)
     }
 
@@ -1458,6 +1464,7 @@ impl Drop for WithCalCtx {
         ) = (self.old_priv_values.clone(), self.old_all_index.clone());
     }
 }
+
 pub type BlockchainClassType = BlockchainClass<JsnarkProver>;
 pub type KeystoreType = SimpleKeystore<JsnarkProver, BlockchainClassType>;
 pub type CryptoClassType = CryptoClass<JsnarkProver, BlockchainClassType, KeystoreType>;

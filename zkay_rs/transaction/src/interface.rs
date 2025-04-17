@@ -798,14 +798,14 @@ pub trait ZkayKeystoreInterface<
             .req_public_key(address, &crypto_params)
             .await;
         println!("=====req_public_key======res==={key_pair:?}===={res:?}");
-        if res.is_err() {
-            //         except BlockChainError:
-            let _ = self
-                .conn()
-                .lock()
-                .announce_public_key(address, &key_pair.pk, &crypto_params)
-                .await?;
-        }
+        // if res.is_err() {
+        //         except BlockChainError:
+        let _ = self
+            .conn()
+            .lock()
+            .announce_public_key(address, &key_pair.pk, &crypto_params)
+            .await?;
+        // }
         Ok(())
     }
     //         """Return true if keys for address are already in the store."""
@@ -953,14 +953,14 @@ pub trait ZkayCryptoInterface<
         let pk = if self.params().is_symmetric_cipher() {
             assert!(raw_pk.len() == 1);
             println!("==raw_pk=====is_symmetric_cipher======================");
-            raw_pk[0].clone()
+            raw_pk[..].to_vec()
         } else {
-            self.deserialize_pk(raw_pk[..].to_vec())
+            raw_pk[..].to_vec() //self.deserialize_pk()
         };
-        println!("==pk=========={pk}===================");
+        println!("==pk====enc======{pk:?}===================");
         for i in 0..=100 {
             // # Retry until cipher text is not 0
-            let (cipher0, rnd0) = self._enc(plain.clone(), sk[0].clone(), pk.clone());
+            let (cipher0, rnd0) = self._enc(plain.clone(), sk[0].clone(), pk.join(","));
             let cipher = Value::<String, CipherValue> {
                 value: CipherValue,
                 contents: cipher0,
@@ -974,12 +974,7 @@ pub trait ZkayCryptoInterface<
                 params: Some(self.params()),
                 crypto_backend: None,
             };
-            let default_cipher = Value::<String, CipherValue> {
-                value: CipherValue,
-                contents: vec![],
-                params: Some(self.params()),
-                crypto_backend: None,
-            };
+            let default_cipher = new_cipher_value(None, Some(self.params()), None);
             if cipher != default_cipher {
                 return (cipher, Some(rnd));
             }
@@ -1035,14 +1030,29 @@ pub trait ZkayCryptoInterface<
         )
     }
     //         """Serialize a large integer into an array of {params.cipher_chunk_size}-byte ints."""
-    fn serialize_pk(&self, key: String, _total_bytes: i32) -> Vec<String> {
-        let data = key.into_bytes(); //total_bytes
-        self.pack_byte_array(data.into(), self.params().cipher_chunk_size() as usize)
+    fn serialize_pk(&self, key: String, total_bytes: i32) -> Vec<String> {
+        println!("======serialize_pk==========={key}========{total_bytes}=======");
+        let data = alloy_primitives::U512::from_str(&key)
+            .unwrap()
+            .to_be_bytes::<64>();
+        let data = data[..total_bytes as usize].to_vec(); //total_bytes
+        self.pack_byte_array(data, self.params().cipher_chunk_size() as usize)
     }
     // """Deserialize an array of {params.cipher_chunk_size}-byte ints into a single large int"""
     fn deserialize_pk(&self, arr: Vec<String>) -> String {
+        println!("======deserialize_pk=========arr======{arr:?}=========");
         let data = self.unpack_to_byte_array(arr, self.params().cipher_chunk_size(), 0);
-        String::from_utf8_lossy(&data).to_string()
+        println!("======deserialize_pk=========data======{data:?}=========");
+        let v = alloy_primitives::U512::from_str(
+            &("0x".to_owned() + &data.iter().map(|b| format!("{b:02x}")).collect::<String>()),
+        )
+        .unwrap();
+        println!(
+            "======deserialize_pk=========v====vstr=={}=={}=======",
+            v,
+            v.to_string()
+        );
+        v.to_string()
     }
 
     //         """Pack byte array into an array of {chunk_size}-byte ints"""
@@ -1064,10 +1074,11 @@ pub trait ZkayCryptoInterface<
         for i in (first_chunk_size..total_bytes - first_chunk_size).step_by(chunk_size) {
             arr.push(
                 alloy_primitives::U256::from_str(
-                    &bin[i..i + chunk_size]
-                        .iter()
-                        .map(|b| format!("{b:02x}"))
-                        .collect::<String>(),
+                    &("0x".to_owned()
+                        + &bin[i..i + chunk_size]
+                            .iter()
+                            .map(|b| format!("{b:02x}"))
+                            .collect::<String>()),
                 )
                 .unwrap(),
             );
@@ -1098,6 +1109,9 @@ pub trait ZkayCryptoInterface<
                     .collect::<Vec<u8>>()
             })
             .collect();
+        if desired_length == 0 {
+            return a;
+        }
         let n = a.len();
         a.split_off(n - desired_length as usize)
     }
@@ -1118,7 +1132,7 @@ pub trait ZkayHomomorphicCryptoInterface<
     K: ZkayKeystoreInterface<P, B>,
 >: ZkayCryptoInterface<P, B, K>
 {
-    fn do_op(&self, op: &str, public_key: Vec<String>, args: Vec<DataType>) -> Vec<String>;
+    fn do_op(&self, op: &str, public_key: Vec<String>, args: Vec<Vec<String>>) -> Vec<String>;
 
     //         """
     //         Re-randomizes the given argument.

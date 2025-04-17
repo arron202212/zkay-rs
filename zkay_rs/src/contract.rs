@@ -138,36 +138,40 @@ impl<
             true,
             "ecdh-chaskey",
         );
+        contract_simulator.lock().state.lock().decl(
+            "a_count(uint)(uint)",
+            convert_type,
+            true,
+            "elgamal",
+        );
+        contract_simulator.lock().state.lock().decl(
+            "b_count(uint)(uint)",
+            convert_type,
+            true,
+            "elgamal",
+        );
+        contract_simulator.lock().state.lock().decl(
+            "c_count(uint)(uint)",
+            convert_type,
+            true,
+            "elgamal",
+        );
         contract_simulator
             .lock()
             .state
             .lock()
-            .decl("a_count", convert_type, true, "elgamal");
+            .decl("min_votes()(uint)", convert_type, false, "");
         contract_simulator
             .lock()
             .state
             .lock()
-            .decl("b_count", convert_type, true, "elgamal");
-        contract_simulator
-            .lock()
-            .state
-            .lock()
-            .decl("c_count", convert_type, true, "elgamal");
-        contract_simulator
-            .lock()
-            .state
-            .lock()
-            .decl("min_votes", convert_type, false, "");
-        contract_simulator
-            .lock()
-            .state
-            .lock()
-            .decl("vote_count", convert_type, false, "");
-        contract_simulator
-            .lock()
-            .state
-            .lock()
-            .decl("packed_results", convert_type, false, "");
+            .decl("vote_count()(uint)", convert_type, false, "");
+        contract_simulator.lock().state.lock().decl(
+            "packed_results()(uint)",
+            convert_type,
+            false,
+            "",
+        );
         Self { contract_simulator }
     }
 
@@ -219,8 +223,8 @@ impl<
                 // BEGIN Simulate body
                  with_context_block!(var _sc= self._scope()=>{
                     assert!(_min_votes > 0,"require(_min_votes > 0) failed");
-                    state_set!(self.state().lock()[&["organizer"]] = DataType::String(msg.lock().as_ref().unwrap().sender.clone()));
-                    state_set!(self.state().lock()[&["min_votes"]] =  DataType::Int(_min_votes as u128));
+                    state_set!(self.state().lock()[&["organizer()(address)"]] = DataType::String(msg.lock().as_ref().unwrap().sender.clone()));
+                    state_set!(self.state().lock()[&["min_votes()(uint)"]] =  DataType::Int(_min_votes as u128));
                 });
                 // END Simulate body
                 println!("====zk__is_ext==before==deploy========");
@@ -250,7 +254,7 @@ impl<
                             self.locals().lock().decl("res", DataType::Int(0));
                             if option != &DataType::Int(Choice::none as u128){
                                  with_context_block!(var _sc=self._scope()=>{
-                                    self.locals().lock()["res"] = DataType::Int(state_get!(self.state().lock()[&["packed_results"]]).try_as_int_ref().unwrap() >> (64 * (*option.try_as_int_ref().unwrap() - 1)));
+                                    self.locals().lock()["res"] = DataType::Int(state_get!(self.state().lock()[&["packed_results()(uint)"]]).try_as_int_ref().unwrap() >> (64 * (*option.try_as_int_ref().unwrap() - 1)));
                                 });
                             }
                             if ! zk__is_ext{
@@ -325,7 +329,7 @@ impl<
                         // BEGIN Simulate body
                          with_context_block!(var _sc=self._scope()=>{
                             if ! zk__is_ext{
-                                return state_get!(self.state().lock()[&["vote_count"]]) >= state_get!(self.state().lock()[&["min_votes"]])
+                                return state_get!(self.state().lock()[&["vote_count()(uint)"]]) >= state_get!(self.state().lock()[&["min_votes()(uint)"]])
                             }
                         });
                         // END Simulate body
@@ -354,7 +358,9 @@ impl<
                         // BEGIN Simulate body
                          with_context_block!(var _sc=self._scope()=>{
                             if ! zk__is_ext{
-                                return state_get!(self.state().lock()[&["packed_results"]]) != DataType::Int(0)
+                                // let pr=state_get!(self.state().lock()[&["packed_results()(uint)"]]) ;
+                                // println!("=====packed_results=====is_result_published================={pr:?}");
+                                return state_get!(self.state().lock()[&["packed_results()(uint)"]]) != DataType::String("0".to_owned())
                             }
                         });
                         // END Simulate body
@@ -452,114 +458,126 @@ impl<
             (zk__in_start_idx as usize, zk__out_start_idx as usize);
         println!("====_zk__vote==========================");
         with_context_block!(var _fc=self._function_ctx(5,0,"?").await =>{
-                let (zk__is_ext,_fc)=_fc;
-                            assert! (!zk__is_ext);
-        println!("====_zk__vote==========================");
-                            let (msg, block,_tx) = self.api().lock().get_special_variables();
-                            let _now = block.lock().as_ref().unwrap().timestamp;
-        println!("====_zk__vote==========================");
-                            let mut zk__priv =
-                                BTreeMap::from([("secret0_plain_votum", DataType::Int(0)), ("secret1_plain", DataType::Int(0)),
-                                ("zk__out1_cipher_R", RandomnessValue::data_type("elgamal")), ("zk__out3_cipher_R", RandomnessValue::data_type("elgamal")),
-                                ("zk__out5_cipher_R", RandomnessValue::data_type("elgamal"))]);
-                            let  mut zk__data;// = BTreeMap::new();
-        println!("====_zk__vote==========================");
-                            // BEGIN Simulate body
-                             with_context_block!(var _sc=self._scope()=>{
-                                assert!((zk__out_start_idx + 25) <= zk__out.len() ,"require(zk__out_start_idx + 25 <= zk__out.length) failed");
-                                assert!((zk__in_start_idx + 23) <= zk__in.len(),"require(zk__in_start_idx + 23 <= zk__in.length) failed");
-        println!("====_zk__vote==========================");
-                                zk__data = BTreeMap::from([
-                                    ("zk__out0_plain", DataType::Bool(false)), ("zk__out1_cipher", CipherValue::data_type("elgamal")),
-                                    ("zk__out2_cipher", CipherValue::data_type("elgamal")), ("zk__out3_cipher", CipherValue::data_type("elgamal")),
-                                    ("zk__out4_cipher", CipherValue::data_type("elgamal")), ("zk__out5_cipher",CipherValue::data_type("elgamal")),
-                                     ("zk__out6_cipher", CipherValue::data_type("elgamal")), ("zk__in0_cipher_votum", CipherValue::data_type("ecdh-chaskey")),
-                                    ("zk__in1_key_sender", PublicKeyValue::data_type("ecdh-chaskey")), ("zk__in2_plain", DataType::Int(0)),
-                                    ("zk__in3_cipher", CipherValue::data_type("ecdh-chaskey")), ("zk__in4_key_sender", PublicKeyValue::data_type("ecdh-chaskey")),
-                                    ("zk__in5_plain", DataType::Int(0)), ("zk__in6_cipher_a_count", CipherValue::data_type("elgamal")),
-                                    ("zk__in7_plain", DataType::Int(0)), ("zk__in8_cipher_b_count", CipherValue::data_type("elgamal")),
-                                    ("zk__in9_plain", DataType::Int(0)), ("zk__in10_cipher_c_count", CipherValue::data_type("elgamal")),( "zk__in11_plain",DataType::Int(0)),
-                                ]);
-        println!("====_zk__vote==========================");
-                                // require(reveal(votum != reveal(Choice::None.to_string(), me) && current_votes[me] == reveal(Choice::None.to_string(), me), all));
-                                // {
-                                zk__data.insert("zk__in0_cipher_votum",votum.clone());
-                                zk__priv.insert("secret0_plain_votum", self.api().lock().dec(zk__data["zk__in0_cipher_votum"].clone(), convert_type, "ecdh-chaskey").0);
-                                zk__data.insert("zk__in1_key_sender", DataType::PublicKeyValue(Value::<String,PublicKeyValue>::new(vec![zk__data["zk__in0_cipher_votum"].try_as_cipher_value_ref().unwrap()[2].clone()],None, Some("ecdh-chaskey".to_owned()))));
-                                zk__data.insert("zk__in2_plain", DataType::Int(Choice::none as u128));
-                                let zk__in3_cipher=state_get!(self.state().lock()[&["current_votes(address,uint)(uint)", &msg.lock().as_ref().unwrap().sender]]).clone();
-                                println!("===zk__in3_cipher==========={zk__in3_cipher:?}============");
-                                zk__data.insert("zk__in3_cipher",zk__in3_cipher );
-                                zk__priv.insert("secret1_plain",self.api().lock().dec(zk__data["zk__in3_cipher"].clone(), convert_type, "ecdh-chaskey").0);
-                                zk__data.insert("zk__in4_key_sender",DataType::PublicKeyValue(Value::<String,PublicKeyValue>::new(vec![zk__data["zk__in3_cipher"].try_as_cipher_value_ref().unwrap()[2].clone()],None, Some("ecdh-chaskey".to_owned()))));
-                                zk__data.insert("zk__in5_plain", DataType::Int(Choice::none as u128));
-                                zk__data.insert("zk__out0_plain",DataType::Bool(zk__priv["secret0_plain_votum"] != zk__data["zk__in2_plain"]&&zk__priv["secret1_plain"] == zk__data["zk__in5_plain"]));
-        println!("====_zk__vote==========================");
-                                assert!(*zk__data["zk__out0_plain"].try_as_bool_ref().unwrap(),"require(reveal(votum != Choice::none && current_votes[me] == Choice::None.to_string(), all)) failed");
-                                // }
-        println!("====_zk__vote==========================");
-                                assert!(!self.is_result_published().await,"require(!is_result_published()) failed");
-                                state_set!(self.state().lock()[&["current_votes(address,uint)(uint)", &msg.lock().as_ref().unwrap().sender]] = votum);
-                                state_set!(self.state().lock()[&["vote_count"]] = DataType::Int(*state_get!(self.state().lock()[&["vote_count"]]).try_as_int_ref().unwrap()+1));
-                                // a_count = a_count + reveal<+>(votum == reveal(Choice::a.to_string(), me) ? reveal(1, me) : reveal(0, me), organizer);
-                                // {
-                                zk__data.insert("zk__in6_cipher_a_count",state_get!(self.state().lock()[&["a_count"]]).clone());
-                                zk__data.insert("zk__in7_plain",DataType::Int(Choice::a as u128));
-                                let (zk__out1_cipher, zk__out1_cipher_r) = self.api().lock().enc( if zk__priv["secret0_plain_votum"] == zk__data["zk__in7_plain"]{1} else{ 0}, Some(state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().unwrap().clone()), "elgamal").await;
-                                zk__data.insert("zk__out1_cipher",DataType::CipherValue(zk__out1_cipher));
-                                zk__priv.insert("zk__out1_cipher_R",DataType::RandomnessValue(zk__out1_cipher_r.unwrap()));
-        println!("====_zk__vote==========================");
-                                zk__data.insert("zk__out2_cipher", DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().unwrap().clone(), vec![zk__data["zk__in6_cipher_a_count"].clone(), zk__data["zk__out1_cipher"].clone()]).await));
+                        let (zk__is_ext,_fc)=_fc;
+                                    assert! (!zk__is_ext);
+                println!("====_zk__vote==========================");
+                                    let (msg, block,_tx) = self.api().lock().get_special_variables();
+                                    let _now = block.lock().as_ref().unwrap().timestamp;
+                println!("====_zk__vote==========================");
+                                    let mut zk__priv =
+                                        BTreeMap::from([("secret0_plain_votum", DataType::Int(0)), ("secret1_plain", DataType::Int(0)),
+                                        ("zk__out1_cipher_R", RandomnessValue::data_type("elgamal")), ("zk__out3_cipher_R", RandomnessValue::data_type("elgamal")),
+                                        ("zk__out5_cipher_R", RandomnessValue::data_type("elgamal"))]);
+                                    let  mut zk__data;// = BTreeMap::new();
+                println!("====_zk__vote==========================");
+                                    // BEGIN Simulate body
+                                     with_context_block!(var _sc=self._scope()=>{
+                                        assert!((zk__out_start_idx + 25) <= zk__out.len() ,"require(zk__out_start_idx + 25 <= zk__out.length) failed");
+                                        assert!((zk__in_start_idx + 23) <= zk__in.len(),"require(zk__in_start_idx + 23 <= zk__in.length) failed");
+                println!("====_zk__vote==========================");
+                                        zk__data = BTreeMap::from([
+                                            ("zk__out0_plain", DataType::Bool(false)), ("zk__out1_cipher", CipherValue::data_type("elgamal")),
+                                            ("zk__out2_cipher", CipherValue::data_type("elgamal")), ("zk__out3_cipher", CipherValue::data_type("elgamal")),
+                                            ("zk__out4_cipher", CipherValue::data_type("elgamal")), ("zk__out5_cipher",CipherValue::data_type("elgamal")),
+                                             ("zk__out6_cipher", CipherValue::data_type("elgamal")), ("zk__in0_cipher_votum", CipherValue::data_type("ecdh-chaskey")),
+                                            ("zk__in1_key_sender", PublicKeyValue::data_type("ecdh-chaskey")), ("zk__in2_plain", DataType::Int(0)),
+                                            ("zk__in3_cipher", CipherValue::data_type("ecdh-chaskey")), ("zk__in4_key_sender", PublicKeyValue::data_type("ecdh-chaskey")),
+                                            ("zk__in5_plain", DataType::Int(0)), ("zk__in6_cipher_a_count", CipherValue::data_type("elgamal")),
+                                            ("zk__in7_plain", DataType::Int(0)), ("zk__in8_cipher_b_count", CipherValue::data_type("elgamal")),
+                                            ("zk__in9_plain", DataType::Int(0)), ("zk__in10_cipher_c_count", CipherValue::data_type("elgamal")),( "zk__in11_plain",DataType::Int(0)),
+                                        ]);
+                println!("====_zk__vote==========================");
+                                        // require(reveal(votum != reveal(Choice::None.to_string(), me) && current_votes[me] == reveal(Choice::None.to_string(), me), all));
+                                        // {
+                                        zk__data.insert("zk__in0_cipher_votum",votum.clone());
+                                        zk__priv.insert("secret0_plain_votum", self.api().lock().dec(zk__data["zk__in0_cipher_votum"].clone(), convert_type, "ecdh-chaskey").0);
+                                        zk__data.insert("zk__in1_key_sender", DataType::PublicKeyValue(Value::<String,PublicKeyValue>::new(vec![zk__data["zk__in0_cipher_votum"].try_as_cipher_value_ref().unwrap()[2].clone()],None, Some("ecdh-chaskey".to_owned()))));
+                                        zk__data.insert("zk__in2_plain", DataType::String("0".to_owned()));//DataType::Int(Choice::none as u128));
+                                        let zk__in3_cipher=state_get!(self.state().lock()[&["current_votes(address,uint)(uint)", &msg.lock().as_ref().unwrap().sender]]).clone();
+                                        println!("===zk__in3_cipher==========={zk__in3_cipher:?}============");
+                                        zk__data.insert("zk__in3_cipher",zk__in3_cipher );
+                                        zk__priv.insert("secret1_plain",self.api().lock().dec(zk__data["zk__in3_cipher"].clone(), convert_type, "ecdh-chaskey").0);
+                                        zk__data.insert("zk__in4_key_sender",DataType::PublicKeyValue(Value::<String,PublicKeyValue>::new(vec![zk__data["zk__in3_cipher"].try_as_cipher_value_ref().unwrap()[2].clone()],None, Some("ecdh-chaskey".to_owned()))));
+                                        zk__data.insert("zk__in5_plain",DataType::String("0".to_owned()));// DataType::Int(Choice::none as u128));
+                                    println!("====_zk__vote====secret0_plain_votum=={:?}==={:?}====={:?}====={:?}======", zk__priv["secret0_plain_votum"] , zk__data["zk__in2_plain"],zk__priv["secret1_plain"], zk__data["zk__in5_plain"]);
+                                        zk__data.insert("zk__out0_plain",DataType::Bool(zk__priv["secret0_plain_votum"] != zk__data["zk__in2_plain"]&&zk__priv["secret1_plain"] == zk__data["zk__in5_plain"]));
+                                        assert!(*zk__data["zk__out0_plain"].try_as_bool_ref().unwrap(),"require(reveal(votum != Choice::none && current_votes[me] == Choice::None, all)) failed");
+                                        // }
+                println!("====_zk__vote==========================");
+                                        assert!(!self.is_result_published().await,"require(!is_result_published()) failed");
+        println!("====_zk__vote======================={}===",line!());
+                                        state_set!(self.state().lock()[&["current_votes(address,uint)(uint)", &msg.lock().as_ref().unwrap().sender]] = votum);
+        println!("====_zk__vote======================={}===",line!());
+                                        let vote_count=state_get!(self.state().lock()[&["vote_count()(uint)"]]);
+                                        println!("=====vote_count============={vote_count:?}============");
+                                        let vote_count=state_get!(self.state().lock()[&["vote_count()(uint)"]]).try_as_string_ref().unwrap().parse::<u128>().unwrap()+1;
+                                        state_set!(self.state().lock()[&["vote_count()(uint)"]] = DataType::Int(vote_count));
+                                        // a_count = a_count + reveal<+>(votum == reveal(Choice::a.to_string(), me) ? reveal(1, me) : reveal(0, me), organizer);
+                                        // {
+        println!("====_zk__vote======================={}===",line!());
+                                        zk__data.insert("zk__in6_cipher_a_count",state_get!(self.state().lock()[&["a_count(uint)(uint)"]]).clone());
+                                        zk__data.insert("zk__in7_plain",DataType::Int(Choice::a as u128));
+                                        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        let (zk__out1_cipher, zk__out1_cipher_r) = self.api().lock().enc( if zk__priv["secret0_plain_votum"] == zk__data["zk__in7_plain"]{1} else{ 0}, Some(organizer), "elgamal").await;
+                                        zk__data.insert("zk__out1_cipher",DataType::CipherValue(zk__out1_cipher));
+                                        zk__priv.insert("zk__out1_cipher_R",DataType::RandomnessValue(zk__out1_cipher_r.unwrap()));
+                println!("====_zk__vote==========================");
+                                        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        zk__data.insert("zk__out2_cipher", DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", organizer, vec![zk__data["zk__in6_cipher_a_count"].clone(), zk__data["zk__out1_cipher"].clone()]).await));
 
-                                state_set!(self.state().lock()[&["a_count"]] = zk__data["zk__out2_cipher"].clone());
-                                // }
-        println!("====_zk__vote==========================");
-                                // b_count = b_count + reveal<+>(votum == reveal(Choice::b, me) ? reveal(1, me) : reveal(0, me), organizer);
-                                // {
-                                zk__data.insert("zk__in8_cipher_b_count",state_get!(self.state().lock()[&["b_count"]]).clone());
-                                zk__data.insert("zk__in9_plain",DataType::Int(Choice::b as u128));
-                                let (zk__out3_cipher,zk__out3_cipher_r) = self.api().lock().enc( if zk__priv["secret0_plain_votum"] == zk__data["zk__in9_plain"]{1} else{ 0}, Some(state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().unwrap().clone()), "elgamal").await;
-                                zk__data.insert("zk__out3_cipher",DataType::CipherValue(zk__out3_cipher));
-                                zk__priv.insert("zk__out3_cipher_R",DataType::RandomnessValue(zk__out3_cipher_r.unwrap()));
-                                zk__data.insert("zk__out4_cipher",DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().unwrap().clone(), vec![zk__data["zk__in8_cipher_b_count"].clone(), zk__data["zk__out3_cipher"].clone()]).await));
-        println!("====_zk__vote==========================");
-                                state_set!(self.state().lock()[&["b_count"]] = zk__data["zk__out4_cipher"].clone());
-                                // }
-        println!("====_zk__vote==========================");
-                                // c_count = c_count + reveal<+>(votum == reveal(Choice::c, me) ? reveal(1, me) : reveal(0, me), organizer);
-                                // {
-                                zk__data.insert("zk__in10_cipher_c_count",state_get!(self.state().lock()[&["c_count"]]).clone());
-                                zk__data.insert("zk__in11_plain",DataType::Int(Choice::c as u128));
-                                let (zk__out5_cipher,zk__out5_cipher_r) = self.api().lock().enc(if zk__priv["secret0_plain_votum"] == zk__data["zk__in11_plain"]{1 } else {0}, state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().cloned(), "elgamal").await;
-                                zk__data.insert("zk__out5_cipher",DataType::CipherValue(zk__out5_cipher));
-                                zk__priv.insert("zk__out5_cipher_R",DataType::RandomnessValue(zk__out5_cipher_r.unwrap()));
-                                zk__data.insert("zk__out6_cipher",DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", state_get!(self.state().lock()[&["organizer"]]).try_as_string_ref().unwrap().clone(), vec![zk__data["zk__in10_cipher_c_count"].clone(), zk__data["zk__out5_cipher"].clone()]).await));
+                                        state_set!(self.state().lock()[&["a_count(uint)(uint)"]] = zk__data["zk__out2_cipher"].clone());
+                                        // }
+                println!("====_zk__vote==========================");
+                                        // b_count = b_count + reveal<+>(votum == reveal(Choice::b, me) ? reveal(1, me) : reveal(0, me), organizer);
+                                        // {
+                                        zk__data.insert("zk__in8_cipher_b_count",state_get!(self.state().lock()[&["b_count(uint)(uint)"]]).clone());
+                                        zk__data.insert("zk__in9_plain",DataType::Int(Choice::b as u128));
+                                        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        let (zk__out3_cipher,zk__out3_cipher_r) = self.api().lock().enc( if zk__priv["secret0_plain_votum"] == zk__data["zk__in9_plain"]{1} else{ 0}, Some(organizer), "elgamal").await;
+                                        zk__data.insert("zk__out3_cipher",DataType::CipherValue(zk__out3_cipher));
+                                        zk__priv.insert("zk__out3_cipher_R",DataType::RandomnessValue(zk__out3_cipher_r.unwrap()));
+                                        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        zk__data.insert("zk__out4_cipher",DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", organizer, vec![zk__data["zk__in8_cipher_b_count"].clone(), zk__data["zk__out3_cipher"].clone()]).await));
+                println!("====_zk__vote==========================");
+                                        state_set!(self.state().lock()[&["b_count(uint)(uint)"]] = zk__data["zk__out4_cipher"].clone());
+                                        // }
+                println!("====_zk__vote==========================");
+                                        // c_count = c_count + reveal<+>(votum == reveal(Choice::c, me) ? reveal(1, me) : reveal(0, me), organizer);
+                                        // {
+                                        zk__data.insert("zk__in10_cipher_c_count",state_get!(self.state().lock()[&["c_count(uint)(uint)"]]).clone());
+                                        zk__data.insert("zk__in11_plain",DataType::Int(Choice::c as u128));
+        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        let (zk__out5_cipher,zk__out5_cipher_r) = self.api().lock().enc(if zk__priv["secret0_plain_votum"] == zk__data["zk__in11_plain"]{1 } else {0}, Some(organizer), "elgamal").await;
+                                        zk__data.insert("zk__out5_cipher",DataType::CipherValue(zk__out5_cipher));
+                                        zk__priv.insert("zk__out5_cipher_R",DataType::RandomnessValue(zk__out5_cipher_r.unwrap()));
+        let organizer=state_get!(self.state().lock()[&["organizer()(address)"]]).try_as_string_ref().unwrap().clone();
+                                        zk__data.insert("zk__out6_cipher",DataType::CipherValue(self.api().lock().do_homomorphic_op("+", "elgamal", organizer, vec![zk__data["zk__in10_cipher_c_count"].clone(), zk__data["zk__out5_cipher"].clone()]).await));
 
-                                state_set!(self.state().lock()[&["c_count"]] = zk__data["zk__out6_cipher"].clone());
-                                // }
+                                        state_set!(self.state().lock()[&["c_count(uint)(uint)"]] = zk__data["zk__out6_cipher"].clone());
+                                        // }
 
-                                // Serialize input values
-                                // {
-                                zk__in[zk__in_start_idx ..zk__in_start_idx + 2].clone_from_slice(&zk__data["zk__in0_cipher_votum"].try_as_cipher_value_ref().unwrap()[..2]);
-                                zk__in[zk__in_start_idx + 2] = zk__data["zk__in1_key_sender"].try_as_public_key_value_ref().unwrap()[0].clone();
-                                zk__in[zk__in_start_idx + 3] = zk__data["zk__in2_plain"].try_as_string_ref().unwrap().clone();
-                                zk__in[zk__in_start_idx + 4..zk__in_start_idx + 6].clone_from_slice(&zk__data["zk__in3_cipher"].try_as_cipher_value_ref().unwrap()[..2]) ;
-                                zk__in[zk__in_start_idx + 6] = zk__data["zk__in4_key_sender"].try_as_public_key_value_ref().unwrap()[0].clone();
-                                zk__in[zk__in_start_idx + 7] = zk__data["zk__in5_plain"].try_as_string_ref().unwrap().clone();
-                                zk__in[zk__in_start_idx + 8..zk__in_start_idx + 12].clone_from_slice(&zk__data["zk__in6_cipher_a_count"].try_as_cipher_value_ref().unwrap()[..4]);
-                                zk__in[zk__in_start_idx + 12] = zk__data["zk__in7_plain"].try_as_string_ref().unwrap().clone();
-                                zk__in[zk__in_start_idx + 13..zk__in_start_idx + 17].clone_from_slice (&zk__data["zk__in8_cipher_b_count"].try_as_cipher_value_ref().unwrap()[..4]);
-                                zk__in[zk__in_start_idx + 17] = zk__data["zk__in9_plain"].try_as_string_ref().unwrap().clone();
-                                zk__in[zk__in_start_idx + 18..zk__in_start_idx + 22].clone_from_slice(&zk__data["zk__in10_cipher_c_count"].try_as_cipher_value_ref().unwrap()[..4]);
-                                zk__in[zk__in_start_idx + 22] = zk__data["zk__in11_plain"].try_as_string_ref().unwrap().clone();
-                                // }
-                            });
-                            // END Simulate body
+                                        // Serialize input values
+                                        // {
+                                        zk__in[zk__in_start_idx ..zk__in_start_idx + 2].clone_from_slice(&zk__data["zk__in0_cipher_votum"].try_as_cipher_value_ref().unwrap()[..2]);
+                                        zk__in[zk__in_start_idx + 2] = zk__data["zk__in1_key_sender"].try_as_public_key_value_ref().unwrap()[0].clone();
+                                        zk__in[zk__in_start_idx + 3] = zk__data["zk__in2_plain"].try_as_string_ref().unwrap().clone();
+                                        zk__in[zk__in_start_idx + 4..zk__in_start_idx + 6].clone_from_slice(&zk__data["zk__in3_cipher"].try_as_cipher_value_ref().unwrap()[..2]) ;
+                                        zk__in[zk__in_start_idx + 6] = zk__data["zk__in4_key_sender"].try_as_public_key_value_ref().unwrap()[0].clone();
+                                        zk__in[zk__in_start_idx + 7] = zk__data["zk__in5_plain"].try_as_string_ref().unwrap().clone();
+                                        zk__in[zk__in_start_idx + 8..zk__in_start_idx + 12].clone_from_slice(&zk__data["zk__in6_cipher_a_count"].try_as_cipher_value_ref().unwrap()[..4]);
+                                        zk__in[zk__in_start_idx + 12] = zk__data["zk__in7_plain"].try_as_string_ref().unwrap().clone();
+                                        zk__in[zk__in_start_idx + 13..zk__in_start_idx + 17].clone_from_slice (&zk__data["zk__in8_cipher_b_count"].try_as_cipher_value_ref().unwrap()[..4]);
+                                        zk__in[zk__in_start_idx + 17] = zk__data["zk__in9_plain"].try_as_string_ref().unwrap().clone();
+                                        zk__in[zk__in_start_idx + 18..zk__in_start_idx + 22].clone_from_slice(&zk__data["zk__in10_cipher_c_count"].try_as_cipher_value_ref().unwrap()[..4]);
+                                        zk__in[zk__in_start_idx + 22] = zk__data["zk__in11_plain"].try_as_string_ref().unwrap().clone();
+                                        // }
+                                    });
+                                    // END Simulate body
 
-                            // Serialize circuit outputs and/or secret circuit inputs
-                            zk__out[zk__out_start_idx..zk__out_start_idx + 25].clone_from_slice(&self.api().lock().serialize_circuit_outputs(zk__data.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![1, 0, 0, 0, 0, 0, 0])) ;
-                            self.api().lock().serialize_private_inputs(zk__priv.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![256, 256, 0, 0, 0])
-                        });
+                                    // Serialize circuit outputs and/or secret circuit inputs
+                                    zk__out[zk__out_start_idx..zk__out_start_idx + 25].clone_from_slice(&self.api().lock().serialize_circuit_outputs(zk__data.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![1, 0, 0, 0, 0, 0, 0])) ;
+                                    self.api().lock().serialize_private_inputs(zk__priv.into_iter().map(|(k,v)|(k.to_owned(),v)).collect(), vec![256, 256, 0, 0, 0])
+                                });
     }
     // _zk__vote._can_be_external =
 
@@ -634,23 +652,23 @@ impl<
                         assert!((zk__in_start_idx + 12) <= zk__in.len(),"require(zk__in_start_idx + 12 <= zk__in.length) failed");
 
 
-                         assert!(DataType::String(msg.lock().as_ref().unwrap().sender.clone() )== state_get!(self.state().lock()[&["organizer"]]),"require(me == organizer) failed");
+                         assert!(DataType::String(msg.lock().as_ref().unwrap().sender.clone() )== state_get!(self.state().lock()[&["organizer()(address)"]]),"require(me == organizer) failed");
                          assert!(self.min_votes_reached().await,"require(min_votes_reached()) failed");
                          assert!(!self.is_result_published().await,"require(!is_result_published()) failed");
                         // packed_results = reveal(((unhom(c_count)) << 128) | ((unhom(b_count)) << 64) | (unhom(a_count)), all);
                         // {
-                        zk__data.insert("zk__in0_cipher_c_count",state_get!(self.state().lock()[&["c_count"]]).clone());
+                        zk__data.insert("zk__in0_cipher_c_count",state_get!(self.state().lock()[&["c_count(uint)(uint)"]]).clone());
                         let (secret0_plain_c_count, zk__in0_cipher_c_count_r) = self.api().lock().dec(zk__data["zk__in0_cipher_c_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret0_plain_c_count",secret0_plain_c_count);
                         zk__priv.insert("zk__in0_cipher_c_count_R",DataType::RandomnessValue(zk__in0_cipher_c_count_r.unwrap()));
 
-                        zk__data.insert("zk__in1_cipher_b_count", state_get!(self.state().lock()[&["b_count"]]).clone());
+                        zk__data.insert("zk__in1_cipher_b_count", state_get!(self.state().lock()[&["b_count(uint)(uint)"]]).clone());
 
                         let (secret2_plain_b_count, zk__in1_cipher_b_count_r) = self.api().lock().dec(zk__data["zk__in1_cipher_b_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret2_plain_b_count",secret2_plain_b_count);
                         zk__priv.insert("zk__in1_cipher_b_count_R",DataType::RandomnessValue(zk__in1_cipher_b_count_r.unwrap()));
 
-                        zk__data.insert("zk__in2_cipher_a_count", state_get!(self.state().lock()[&["a_count"]]).clone());
+                        zk__data.insert("zk__in2_cipher_a_count", state_get!(self.state().lock()[&["a_count(uint)(uint)"]]).clone());
 
                         let (secret4_plain_a_count, zk__in2_cipher_a_count_r) = self.api().lock().dec(zk__data["zk__in2_cipher_a_count"].clone(), convert_type, "elgamal");
                         zk__priv.insert("secret4_plain_a_count",secret4_plain_a_count);
@@ -659,7 +677,7 @@ impl<
                         let zk__out0_plain:U256=U256::from(*zk__priv["secret0_plain_c_count"].try_as_int_ref().unwrap()) << 128 | U256::from(*zk__priv["secret2_plain_b_count"].try_as_int_ref().unwrap()) << 64 | U256::from(*zk__priv["secret4_plain_a_count"].try_as_int_ref().unwrap());
                         zk__data.insert("zk__out0_plain",DataType::String( zk__out0_plain.to_string()));
 
-                        state_set!(self.state().lock()[&["packed_results"]] = zk__data["zk__out0_plain"].clone());
+                        state_set!(self.state().lock()[&["packed_results()(uint)"]] = zk__data["zk__out0_plain"].clone());
                         // }
 
                         // Serialize input values

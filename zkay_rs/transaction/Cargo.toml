@@ -70,6 +70,7 @@ strum_macros = { workspace = true }
 futures={workspace  =true}
 trait-variant={workspace  =true}
 num-bigint={workspace =true}
+num-traits={workspace=true}
 ff={workspace = true}
 forge-verify = { workspace=true }
 # forge-script = { path = "crates/script" }
@@ -260,3 +261,4 @@ thiserror.workspace = true
 # jemalloc = ["dep:tikv-jemallocator"]
 # aws-kms = ["foundry-wallets/aws-kms"]
 # isolate-by-default = ["foundry-config/isolate-by-default"]
+tokio-test={workspace = true}

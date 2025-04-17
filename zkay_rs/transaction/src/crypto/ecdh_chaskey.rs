@@ -192,7 +192,7 @@ impl<
     K: ZkayKeystoreInterface<P, B> + Clone,
 > ZkayHomomorphicCryptoInterface<P, B, K> for EcdhChaskeyCrypto<P, B, K>
 {
-    fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<DataType>) -> Vec<String> {
+    fn do_op(&self, _op: &str, _public_key: Vec<String>, _args: Vec<Vec<String>>) -> Vec<String> {
         vec![]
     }
     fn do_rerand(
