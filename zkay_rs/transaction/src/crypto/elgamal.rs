@@ -20,7 +20,7 @@ use ark_ec::CurveGroup;
 use ark_ec::twisted_edwards::TECurveConfig;
 use ark_ff::BigInteger256;
 use ark_ff::{
-    AdditiveGroup, BigInt, MontFp, One, PrimeField, Zero,
+    AdditiveGroup, BigInt as BI, MontFp, One, PrimeField, Zero,
     biginteger::BigInteger256 as BigInteger,
     fields::{Field, LegendreSymbol::*},
 };
@@ -46,7 +46,7 @@ use hex;
 use std::fs::File;
 use zkay_utils::timer::time_measure;
 // use super::babyjubjub::{Fr,Fq,BabyJubJub,CURVE_ORDER};
-use num_bigint::{BigUint, RandBigInt, RandomBits};
+use num_bigint::{BigInt, BigUint, RandBigInt, RandomBits};
 
 fn to_le_32_hex_bytes(num: Fq) -> Vec<u8> {
     let hx = format!("{0:01$X}", num.into_bigint(), 32 * 2);
@@ -198,7 +198,7 @@ impl<
         let mut rng = rand::thread_rng();
 
         let sk = Fr::rand(&mut rng);
-        let pk = EdwardsConfig::GENERATOR * sk;
+        let pk = (EdwardsConfig::GENERATOR * sk).into_affine();
         println!(
             "==elgamal===_generate_key_pair====pkxy========={}==={}========",
             pk.x.into_bigint().to_string(),
@@ -255,7 +255,7 @@ impl<
 > ZkayHomomorphicCryptoInterface<P, B, K> for ElgamalCrypto<P, B, K>
 {
     fn do_op(&self, op: &str, _public_key: Vec<String>, args: Vec<Vec<String>>) -> Vec<String> {
-        fn deserialize(operand: &DataType) -> (Option<(BabyJubJub, BabyJubJub)>, Option<u128>) {
+        fn deserialize(operand: &DataType) -> (Option<(BabyJubJub, BabyJubJub)>, Option<BigInt>) {
             // # if ciphertext is 0, return (BabyJubJub.ZERO, BabyJubJub.ZERO) == Enc(0, 0)
             if let DataType::CipherValue(operand) = operand {
                 if &operand.contents == &vec![0.to_string(); 4] {
@@ -272,7 +272,7 @@ impl<
                     (Some((c1, c2)), None)
                 }
             } else if let DataType::Int(operand) = operand {
-                (None, Some(*operand))
+                (None, Some(operand.clone()))
             } else {
                 (None, None)
             }

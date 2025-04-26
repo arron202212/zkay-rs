@@ -28,6 +28,7 @@ pub trait EcdhBase<
 {
     // @staticmethod
     fn _gen_keypair(rnd: &str) -> (String, String) {
+        println!("==_gen_keypair=======rnd================{rnd}");
         let (keys, _) = run_command(
             vec![
                 "java",
@@ -65,8 +66,9 @@ pub trait EcdhBase<
             "==other_pk: , my_sk========={other_pk}========== {my_sk}======={:?}=====",
             alloy_primitives::U256::from_str(&other_pk.trim_matches(&['[', ']', '"', ' ', '\n']))
         );
+        let my_sk = format!("{:x}", alloy_primitives::U256::from_str(&my_sk).unwrap());
         let other_pk = format!("{:x}", alloy_primitives::U256::from_str(&other_pk).unwrap());
-        println!("==other_pk========={other_pk}============");
+        println!("==other_pk=====my_sk===={other_pk}======={my_sk}=====");
         let (ret, _) = run_command(
             vec![
                 "java",
@@ -92,6 +94,7 @@ pub trait EcdhBase<
         .unwrap();
         println!("===v========={}", v);
         let v: [u8; 32] = v.to_be_bytes::<32>();
+        println!("======_ecdh_sha256===v========={:?}", v);
         let ret = v[16..].to_vec();
         println!("===ret=====_ecdh_sha256===={:?}", ret);
         ret

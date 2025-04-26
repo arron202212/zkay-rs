@@ -95,21 +95,28 @@ impl<
     fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
-        println!("===key======={key:?}");
+        println!(
+            "=_enc==key======={key:?},===hex::encode(&key)=========={:?}",
+            hex::encode(&key)
+        );
         let key = key
             .into_iter()
             .map(|b| format!("{b:02x}"))
             .collect::<String>();
-        println!("===key=s======{key}");
-        let plain_bytes = plain;
-
+        println!("=_enc==key=s======{key}");
+        let plain = alloy_primitives::U256::from_str(&plain).unwrap();
+        println!("=_enc==plain========={}", plain);
+        let plain: [u8; 32] = plain.to_be_bytes::<32>();
+        let plain_bytes = hex::encode(&plain);
+        println!("=_enc==plain_bytes========={}", plain_bytes);
         // # Call java implementation
-        let mut iv = ark_std::rand::thread_rng()
-            .r#gen::<[u8; 16]>()
-            .iter()
-            .map(|b| format!("{b:02x}"))
-            .collect::<String>();
-        println!("=====iv==={key:?}===={plain_bytes}====={iv:?}");
+        let iv = ark_std::rand::thread_rng().r#gen::<[u8; 16]>();
+        println!(
+            "===_enc=====hex::encode(&iv)======={:?}=====",
+            hex::encode(&iv)
+        );
+        let mut iv = iv.iter().map(|b| format!("{b:02x}")).collect::<String>();
+        println!("==_enc===iv==={key:?}===={plain_bytes}====={iv:?}");
         let (iv_cipher, _) = run_command(
             vec![
                 "java",
@@ -126,7 +133,7 @@ impl<
             None,
             false,
         );
-        println!("==iv_cipher===={iv_cipher:?}============");
+        println!("==_enc=========iv_cipher===={iv_cipher:?}============");
         iv.clone().into_bytes().extend(
             alloy_primitives::U256::from_str(
                 &("0x".to_owned() + &iv_cipher.unwrap().split("\n").last().unwrap()),
@@ -135,11 +142,10 @@ impl<
             .to_be_bytes::<32>(),
         );
         let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
-
-        (
-            self.pack_byte_array(iv_cipher, self.params().cipher_chunk_size() as usize),
-            vec![],
-        )
+        println!("==_enc===iv+=iv_cipher===={iv_cipher:?}============");
+        let cipher = self.pack_byte_array(iv_cipher, self.params().cipher_chunk_size() as usize);
+        println!("==_enc===return =cipher===={cipher:?}============");
+        (cipher, vec![])
     }
     fn _dec(&self, mut cipher: Vec<String>, sk: &String) -> (String, Vec<String>) {
         // # Extract sender address from cipher metadata and request corresponding public key
@@ -147,15 +153,28 @@ impl<
         // assert!( cipher.len() == self.params.cipher_payload_len);
 
         // # Compute shared key
-        let key = Self::_ecdh_sha256(sender_pk, sk.clone());
-
+        let key = Self::_ecdh_sha256(sender_pk.clone(), sk.clone());
+        println!(
+            "===_dec=====key=====sender_pk=====sk======cipher=={}=={}=={:?}==== {}====={}======{:?}=",
+            key.to_hex(),
+            hex::encode(&key),
+            key,
+            sender_pk,
+            sk,
+            cipher
+        );
         // # Call java implementation
         let iv_cipher = self.unpack_to_byte_array(
             cipher,
             self.params().cipher_chunk_size(),
             self.params().cipher_bytes_payload(),
         );
+        println!(
+            "=_dec==========iv_cipher=============={:?}==========",
+            iv_cipher
+        );
         let (iv, cipher_bytes) = iv_cipher.split_at(16);
+        println!("=_dec====iv======iv_cipher========{iv:?}======{cipher_bytes:?}==========");
         let (plain, _) = run_command(
             vec![
                 "java",

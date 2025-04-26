@@ -30,8 +30,9 @@ use serde_json::{Map, Result, Value as JsonValue, json};
 use std::path::PathBuf;
 use std::str::FromStr;
 
+use super::int_casts::__convert as int_cast;
 use my_logging::log_context::log_context;
-pub use privacy::library_contracts::BN128_SCALAR_FIELDS;
+pub use privacy::library_contracts::BN128_SCALAR_FIELD;
 use privacy::manifest::Manifest;
 use std::collections::BTreeMap;
 use zkay_config::config_user::UserConfig;
@@ -40,7 +41,6 @@ use zkay_config::{
     with_context_block,
 };
 use zkay_transaction_crypto_params::params::CryptoParams;
-// use zkay::transaction::int_casts :: __convert as int_cast;
 // use crate::blockchain::web3rs::Web3Blockchain;
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayHomomorphicCryptoInterface,
@@ -55,6 +55,8 @@ use ark_ff::{BigInteger, BigInteger256, Field, MontFp, PrimeField};
 use zkay_ast::homomorphism::Homomorphism;
 use zkay_utils::progress_printer::fail_print;
 // bn128_scalar_field = bn128_scalar_field
+use num_bigint::BigInt;
+use num_traits::Zero;
 const _BN128_COMP_SCALAR_FIELD: BigInteger256 = BigInteger256::one();
 type CallableType = fn(String) -> DataType; //: Clone + Default + std::iter::FromIterator<T>
 
@@ -1013,7 +1015,7 @@ impl<
     //= CFG.lock().unwrap().main_crypto_backend
     pub async fn enc(
         &self,
-        plain: i32,
+        plain: String,
         target_addr: Option<String>,
         crypto_backend: &str,
     ) -> (
@@ -1028,11 +1030,7 @@ impl<
             .get(crypto_backend)
             .unwrap()
             .lock()
-            .enc(
-                plain.to_string(),
-                &self.__user_addr.lock().to_string(),
-                &target_addr,
-            )
+            .enc(plain, &self.__user_addr.lock().to_string(), &target_addr)
             .await
     }
     //= CFG.lock().unwrap().main_crypto_backend
@@ -1142,7 +1140,8 @@ impl<
         }
     }
     // @staticmethod
-    pub fn __serialize_val<T>(_val: T, _bitwidth: i32) -> String {
+    pub fn __serialize_val(val: DataType, bitwidth: i32) -> String {
+        println!("===__serialize_val==, val===============,{val}");
         // if isinstance(val, AddressValue):
         //     val = i32.from_be_bytes(val.val)
         // else if isinstance(val, IntEnum):
@@ -1155,7 +1154,36 @@ impl<
         //     elif bitwidth == 256:
         //         val %= bn128_scalar_field
         // val
-        String::new()
+        match &val {
+            DataType::AddressValue(v) => v.contents[0].clone(),
+            DataType::Bool(v) => (*v as u8).to_string(),
+            DataType::Int(v) => {
+                if *v < BigInt::zero() {
+                    int_cast(val, (bitwidth != 0).then(|| bitwidth), false)
+                } else if bitwidth == 256 {
+                    (v.clone() % BigInt::parse_bytes(BN128_SCALAR_FIELD.as_bytes(), 10).unwrap())
+                        .to_string()
+                } else {
+                    v.to_string()
+                }
+            }
+            DataType::String(v) => {
+                let Some(v) = BigInt::parse_bytes(v.as_bytes(), 10) else {
+                    return v.clone();
+                };
+                if v < BigInt::zero() {
+                    int_cast(val, (bitwidth != 0).then(|| bitwidth), false)
+                } else if bitwidth == 256 {
+                    (v % BigInt::parse_bytes(BN128_SCALAR_FIELD.as_bytes(), 10).unwrap())
+                        .to_string()
+                } else {
+                    v.to_string()
+                }
+            }
+            _ => {
+                panic!("unexpected val {val:?}");
+            }
+        }
     }
     // @staticmethod
     pub fn __serialize_circuit_array(
@@ -1164,8 +1192,9 @@ impl<
         target_out_start_idx: i32,
         elem_bitwidths: Vec<i32>,
     ) {
-        let mut idx = target_out_start_idx;
+        let mut idx = target_out_start_idx as usize;
         for ((_name, val), &bitwidth) in data.iter().zip(&elem_bitwidths) {
+            println!("=====_name, val==============={_name},{val}");
             // if isinstance(val, (list, Value)) && !isinstance(val, AddressValue) {
             //     target_array[idx..idx + vallen()] =
             //     // if isinstance(val, CipherValue) {
@@ -1177,9 +1206,38 @@ impl<
             //     ;
             //     idx += len(val);
             // } else {
-            target_array[idx as usize] = ApiWrapper::<P, B, K>::__serialize_val(val, bitwidth);
-            idx += 1;
+            // target_array[idx as usize] = ApiWrapper::<P, B, K>::__serialize_val(val, bitwidth);
+            // idx += 1;
             // }
+            match val {
+                DataType::CipherValue(v) => {
+                    target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
+                    idx += v.contents.len();
+                }
+                DataType::PrivateKeyValue(v) => {
+                    target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
+                    idx += v.contents.len();
+                }
+                DataType::PublicKeyValue(v) => {
+                    target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
+                    idx += v.contents.len();
+                }
+                DataType::RandomnessValue(v) => {
+                    target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
+                    idx += v.contents.len();
+                }
+                DataType::List(v) => {
+                    //TODO recursive list
+                    target_array[idx..idx + v.len()]
+                        .clone_from_slice(&v.iter().map(|x| x.to_string()).collect::<Vec<_>>());
+                    idx += v.len();
+                }
+                _ => {
+                    target_array[idx] =
+                        ApiWrapper::<P, B, K>::__serialize_val(val.clone(), bitwidth);
+                    idx += 1;
+                }
+            }
         }
     }
     pub fn serialize_circuit_outputs(
@@ -1194,17 +1252,8 @@ impl<
             .filter(|(name, _val)| name.starts_with(&CFG.lock().unwrap().zk_out_name()))
             .collect();
 
-        let count = out_vals
-            .values()
-            .map(|_val| {
-                // if isinstance(val, (Tuple, list)) {
-                // val.len()
-                // } else {
-                1
-                // }
-            })
-            .sum::<i32>();
-        let mut zk_out = vec![count.to_string()];
+        let count = out_vals.values().map(|val| val.len()).sum::<usize>();
+        let mut zk_out = vec![String::new(); count];
         Self::__serialize_circuit_array(out_vals, &mut zk_out, 0, out_elem_bitwidths);
         zk_out
     }

@@ -97,6 +97,7 @@ fn generate_keys_docker_command(
 // :raise KeyError: if proving scheme name is invalid
 // """
 pub fn generate_proof(key_dir: &str, input_dir: &str, output_path: &str, proving_scheme: &str) {
+    println!("====libsnark===========generate_proof========");
     run_commands(
         // vec![
         //     &LIBSNARK_RUNNER_DIRS,

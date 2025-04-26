@@ -118,10 +118,13 @@ pub fn prepare_proof(
     output_dir: &str,
     serialized_args: Vec<String>,
 ) -> (Option<String>, Option<String>) {
+    println!("=============prepare_proof===========");
     let serialized_arg_str: Vec<_> = serialized_args
         .iter()
         .map(|arg| format!("{}", arg))
         .collect();
+    println!("=============prepare_proof=====2======");
+    let jsnark_circuit_classname = CFG.lock().unwrap().jsnark_circuit_classname();
 
     //Run jsnark to evaluate the circuit and compute prover inputs
     run_commands(
@@ -130,8 +133,11 @@ pub fn prepare_proof(
             "-Xms4096m",
             "-Xmx16384m",
             "-cp",
-            &format!("{CIRCUIT_BUILDER_JAR}:{circuit_dir}"),
-            &CFG.lock().unwrap().jsnark_circuit_classname(),
+            &format!(
+                "{}:{circuit_dir}",
+                (JARS_DIR.clone() + "/" + CIRCUIT_BUILDER_JAR)
+            ),
+            &jsnark_circuit_classname,
             "prove",
         ]
         .into_iter()

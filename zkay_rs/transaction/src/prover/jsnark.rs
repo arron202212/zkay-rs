@@ -27,13 +27,20 @@ impl ZkayProverInterface for JsnarkProver {
         in_vals: Vec<String>,
         out_vals: Vec<String>,
     ) -> Vec<String> {
+        println!(
+            "====JsnarkProver===========_generate_proof======{}==",
+            line!()
+        );
         let args: Vec<_> = in_vals
             .iter()
             .chain(&out_vals)
             .chain(&priv_values)
             .cloned()
             .collect();
-
+        println!(
+            "====JsnarkProver===========_generate_proof======={}==",
+            line!()
+        );
         // # Generate proof in temporary directory
         // with TemporaryDirectory() as tempd:
         let proof_path = std::env::temp_dir().join("proof.out");
@@ -44,13 +51,20 @@ impl ZkayProverInterface for JsnarkProver {
             std::env::temp_dir().to_str().unwrap(),
             args,
         );
-
+        println!(
+            "====JsnarkProver===========_generate_proof======{}==",
+            line!()
+        );
         // with time_measure("libsnark_gen_proof"):
         libsnark::generate_proof(
             verifier_dir.to_str().unwrap(),
             std::env::temp_dir().to_str().unwrap(),
             proof_path.to_str().unwrap(),
             "self.proving_scheme()",
+        );
+        println!(
+            "====JsnarkProver===========_generate_proof======{}==",
+            line!()
         );
         // except SubprocessError as e:
         //     raise ProofGenerationError(e.args)

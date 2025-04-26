@@ -78,6 +78,7 @@ use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use std::collections::BTreeMap;
 // use std::path::PathBuf;
+use num_bigint::BigInt;
 use std::str::FromStr;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkp_u256::{U256, Zero};
@@ -798,8 +799,7 @@ pub trait ZkayKeystoreInterface<
             .req_public_key(address, &crypto_params)
             .await;
         println!("=====req_public_key======res==={key_pair:?}===={res:?}");
-        // if res.is_err() {
-        //         except BlockChainError:
+        // if res.is_err() {   ////TODO uncomment
         let _ = self
             .conn()
             .lock()
@@ -940,7 +940,13 @@ pub trait ZkayCryptoInterface<
         //     plain = int.from_bytes(plain.val, byteorder="big")
         // assert not isinstance(plain, JsonValue), f"Tried to encrypt value of type {type(plain).__name__}"
         // assert isinstance(my_addr, AddressValue) and isinstance(target_addr, AddressValue)
-        // assert int(plain) < bn128_scalar_field, f"Integer overflow, plaintext is >= field prime"
+        assert!(
+            BigInt::parse_bytes(plain.as_bytes(), 10)
+                .unwrap_or(BigInt::parse_bytes(plain.as_bytes(), 16).expect(&format!("=={plain}")),)
+                < BigInt::parse_bytes(BN128_SCALAR_FIELD.as_bytes(), 10).unwrap(),
+            "Integer overflow, plaintext is >= field prime"
+        );
+
         zk_print!(r#"Encrypting value {plain:?} for destination "{target_addr}""#); //, verbosity_level=2
 
         let sk = self.keystore().lock().sk(my_addr);
@@ -1061,27 +1067,10 @@ pub trait ZkayCryptoInterface<
         let first_chunk_size = total_bytes % chunk_size;
         let mut arr = vec![];
         if first_chunk_size > 0 {
-            arr.push(
-                alloy_primitives::U256::from_str(
-                    &bin[..first_chunk_size]
-                        .iter()
-                        .map(|b| format!("{b:02x}"))
-                        .collect::<String>(),
-                )
-                .unwrap(),
-            );
+            arr.push(BigInt::from_signed_bytes_be(&bin[..first_chunk_size]));
         };
         for i in (first_chunk_size..total_bytes - first_chunk_size).step_by(chunk_size) {
-            arr.push(
-                alloy_primitives::U256::from_str(
-                    &("0x".to_owned()
-                        + &bin[i..i + chunk_size]
-                            .iter()
-                            .map(|b| format!("{b:02x}"))
-                            .collect::<String>()),
-                )
-                .unwrap(),
-            );
+            arr.push(BigInt::from_signed_bytes_be(&bin[i..i + chunk_size]));
         }
         arr.into_iter().map(|v| v.to_string()).rev().collect()
     }
@@ -1105,7 +1094,12 @@ pub trait ZkayCryptoInterface<
                 // d
                 vec![0; (chunk_size as usize).saturating_sub(chunk.len())]
                     .into_iter()
-                    .chain(chunk.into_bytes())
+                    .chain(
+                        BigInt::parse_bytes(chunk.as_bytes(), 10)
+                            .unwrap()
+                            .to_bytes_be()
+                            .1,
+                    )
                     .collect::<Vec<u8>>()
             })
             .collect();
@@ -1170,14 +1164,55 @@ pub trait ZkayProverInterface {
         contract: String,
         function: String,
         mut priv_values: Vec<String>,
-        in_vals: Vec<String>,
-        out_vals: Vec<String>,
+        mut in_vals: Vec<String>,
+        mut out_vals: Vec<String>,
     ) -> Vec<String> {
         for i in 0..priv_values.len() {
             let arg = priv_values[i].clone();
             // assert not isinstance(arg, JsonValue) or isinstance(arg, (RandomnessValue, AddressValue))
             // if isinstance(arg, AddressValue) {
-            priv_values[i] = arg; //i32::from_be_bytes(arg);
+            if let Some(a) = BigInt::parse_bytes(arg.as_bytes(), 10) {
+                priv_values[i] = format!("{:x}", a);
+            } else {
+                println!(
+                    "====arg=====16======p===={}",
+                    BigInt::parse_bytes(arg.as_bytes(), 16).unwrap()
+                );
+
+                // priv_values[i] = BigInt::parse_bytes(arg.as_bytes(), 16).unwrap().to_string(); //i32::from_be_bytes(arg);
+            }
+            // }
+        }
+        for i in 0..in_vals.len() {
+            let arg = in_vals[i].clone();
+            // assert not isinstance(arg, JsonValue) or isinstance(arg, (RandomnessValue, AddressValue))
+            // if isinstance(arg, AddressValue) {
+            if let Some(a) = BigInt::parse_bytes(arg.as_bytes(), 10) {
+                in_vals[i] = format!("{:x}", a);
+            } else {
+                println!(
+                    "====arg=====16=====i====={}",
+                    BigInt::parse_bytes(arg.as_bytes(), 16).unwrap()
+                );
+
+                // in_vals[i] = BigInt::parse_bytes(arg.as_bytes(), 16).unwrap().to_string(); //i32::from_be_bytes(arg);
+            }
+            // }
+        }
+        for i in 0..out_vals.len() {
+            let arg = out_vals[i].clone();
+            // assert not isinstance(arg, JsonValue) or isinstance(arg, (RandomnessValue, AddressValue))
+            // if isinstance(arg, AddressValue) {
+            if let Some(a) = BigInt::parse_bytes(arg.as_bytes(), 10) {
+                out_vals[i] = format!("{:x}", a);
+            } else {
+                println!(
+                    "====arg=====16===o======={}",
+                    BigInt::parse_bytes(arg.as_bytes(), 16).unwrap()
+                );
+
+                // out_vals[i] = BigInt::parse_bytes(arg.as_bytes(), 16).unwrap().to_string(); //i32::from_be_bytes(arg);
+            }
             // }
         }
         zk_print!("Generating proof for {contract}.{function}");
@@ -1189,23 +1224,36 @@ pub trait ZkayProverInterface {
         );
 
         let (priv_values, in_vals, out_vals) = (priv_values, in_vals, out_vals);
-
+        let field_prime = BigInt::parse_bytes(BN128_SCALAR_FIELD.as_bytes(), 10).unwrap();
         // # Check for overflows
         assert!(
             priv_values
                 .iter()
                 .chain(&in_vals)
                 .chain(&out_vals)
-                .all(|arg| U256::from_decimal_str(arg).unwrap() < *BN128_SCALAR_FIELDS),
+                .all(|arg| {
+                    let a = BigInt::parse_bytes(arg.as_bytes(), 10).unwrap_or(
+                        BigInt::parse_bytes(arg.as_bytes(), 16).expect(&format!("=={arg}")),
+                    );
+                    let b = a >= BigInt::zero() && a < field_prime;
+                    if !b {
+                        println!("===arg===={arg:?}");
+                    }
+                    b
+                }),
             "argument overflow"
         );
 
         // with time_measure(f"generate_proof", True){
-        let verify_dir = CFG.lock().unwrap().get_circuit_output_dir_name(
-            CFG.lock()
-                .unwrap()
-                .get_verification_contract_name(contract, function),
-        );
+        let verification_contract_name = CFG
+            .lock()
+            .unwrap()
+            .get_verification_contract_name(contract, function);
+        let verify_dir = CFG
+            .lock()
+            .unwrap()
+            .get_circuit_output_dir_name(verification_contract_name);
+        println!("==================_generate_proof=========");
         let proof = self._generate_proof(
             &PathBuf::from(project_dir)
                 .join(verify_dir)

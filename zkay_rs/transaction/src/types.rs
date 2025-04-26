@@ -6,6 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 // use typing::Optional, Collection, Any, Dict, Tuple, List, Union, Callable
+use num_bigint::BigInt;
 use parking_lot::Mutex;
 use std::fmt;
 use std::marker::PhantomData;
@@ -33,19 +34,35 @@ pub enum DataType {
     PrivateKeyValue(Value<String, PrivateKeyValue>),
     PublicKeyValue(Value<String, PublicKeyValue>),
     RandomnessValue(Value<String, RandomnessValue>),
+    AddressValue(Value<String, AddressValue>),
     Bool(bool),
-    Int(u128),
+    Int(BigInt),
     String(String),
     List(Vec<DataType>),
+}
+impl DataType {
+    pub fn len(&self) -> usize {
+        match self {
+            Self::CipherValue(v) => v.len(),
+            Self::PrivateKeyValue(v) => v.len(),
+            Self::PublicKeyValue(v) => v.len(),
+            Self::RandomnessValue(v) => v.len(),
+            Self::AddressValue(v) => v.len(),
+            Self::Bool(_v) => 1,
+            Self::Int(_v) => 1,
+            Self::String(_v) => 1,
+            Self::List(v) => v.len(),
+        }
+    }
 }
 impl Default for DataType {
     fn default() -> Self {
         Self::Bool(false)
     }
 }
-impl From<u128> for DataType {
+impl From<BigInt> for DataType {
     #[inline]
-    fn from(item: u128) -> Self {
+    fn from(item: BigInt) -> Self {
         DataType::Int(item)
     }
 }
@@ -66,6 +83,7 @@ impl std::fmt::Display for DataType {
                 Self::PrivateKeyValue(v) => format!("{}", v),
                 Self::PublicKeyValue(v) => format!("{}", v),
                 Self::RandomnessValue(v) => format!("{}", v),
+                Self::AddressValue(v) => format!("{}", v),
                 Self::Bool(v) => v.to_string(),
                 Self::Int(v) => v.to_string(),
                 Self::String(v) => v.to_string(),
@@ -412,6 +430,7 @@ value_fmt_display!(CipherValue);
 value_fmt_display!(PrivateKeyValue);
 value_fmt_display!(PublicKeyValue);
 value_fmt_display!(RandomnessValue);
+value_fmt_display!(AddressValue);
 // impl std::fmt::Display for Value<String, CipherValue>{
 //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 //         write!(
