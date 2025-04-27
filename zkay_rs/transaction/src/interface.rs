@@ -78,7 +78,7 @@ use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use std::collections::BTreeMap;
 // use std::path::PathBuf;
-use num_bigint::BigInt;
+use num_bigint::{BigInt,BigUint};
 use std::str::FromStr;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkp_u256::{U256, Zero};
@@ -1067,10 +1067,10 @@ pub trait ZkayCryptoInterface<
         let first_chunk_size = total_bytes % chunk_size;
         let mut arr = vec![];
         if first_chunk_size > 0 {
-            arr.push(BigInt::from_signed_bytes_be(&bin[..first_chunk_size]));
+            arr.push(BigUint::from_bytes_be(&bin[..first_chunk_size]));
         };
         for i in (first_chunk_size..total_bytes - first_chunk_size).step_by(chunk_size) {
-            arr.push(BigInt::from_signed_bytes_be(&bin[i..i + chunk_size]));
+            arr.push(BigUint::from_bytes_be(&bin[i..i + chunk_size]));
         }
         arr.into_iter().map(|v| v.to_string()).rev().collect()
     }
@@ -1092,13 +1092,13 @@ pub trait ZkayCryptoInterface<
                 // let mut d = vec![0; chunk_size];
                 // d[chunk_size - c.len()..].copy_from_slice(&c[..]);
                 // d
+                //.unwrap_or(BigUint::parse_bytes(chunk.as_bytes(), 16).expect(&format!("unexpect {chunk}")))
                 vec![0; (chunk_size as usize).saturating_sub(chunk.len())]
                     .into_iter()
                     .chain(
-                        BigInt::parse_bytes(chunk.as_bytes(), 10)
-                            .unwrap()
+                        BigUint::parse_bytes(chunk.as_bytes(), 10).unwrap()
                             .to_bytes_be()
-                            .1,
+                            ,
                     )
                     .collect::<Vec<u8>>()
             })
@@ -1107,7 +1107,8 @@ pub trait ZkayCryptoInterface<
             return a;
         }
         let n = a.len();
-        a.split_off(n - desired_length as usize)
+    println!("===desired_length==========={n}====={desired_length}");
+        a.split_off(n.saturating_sub(desired_length))
     }
 
     //     # Interface implementation

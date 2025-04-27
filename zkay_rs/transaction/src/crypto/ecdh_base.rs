@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use num_bigint::{BigInt,BigUint};
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface,
 };
@@ -57,7 +58,7 @@ pub trait EcdhBase<
             "==keys[0], keys[1]=================={},{}",
             keys[0], keys[1]
         );
-        (keys[0].to_owned(), keys[1].to_owned())
+        (BigUint::parse_bytes(keys[0].as_bytes(),16).unwrap().to_string(),BigUint::parse_bytes(keys[1].as_bytes(),16).unwrap().to_string())
     }
 
     // @staticmethod
@@ -66,7 +67,7 @@ pub trait EcdhBase<
             "==other_pk: , my_sk========={other_pk}========== {my_sk}======={:?}=====",
             alloy_primitives::U256::from_str(&other_pk.trim_matches(&['[', ']', '"', ' ', '\n']))
         );
-        let my_sk = format!("{:x}", alloy_primitives::U256::from_str(&my_sk).unwrap());
+        let my_sk = BigUint::parse_bytes(my_sk.as_bytes(),10).unwrap().to_str_radix(16);
         let other_pk = format!("{:x}", alloy_primitives::U256::from_str(&other_pk).unwrap());
         println!("==other_pk=====my_sk===={other_pk}======={my_sk}=====");
         let (ret, _) = run_command(

@@ -93,6 +93,7 @@ impl<
     }
 
     fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
+        println!("=_enc======plain====my_sk===target_pk=={plain}=={my_sk}===={target_pk}");
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
         println!(
@@ -110,12 +111,12 @@ impl<
         let plain_bytes = hex::encode(&plain);
         println!("=_enc==plain_bytes========={}", plain_bytes);
         // # Call java implementation
-        let iv = ark_std::rand::thread_rng().r#gen::<[u8; 16]>();
+        let mut iv = ark_std::rand::thread_rng().r#gen::<[u8; 16]>();
         println!(
             "===_enc=====hex::encode(&iv)======={:?}=====",
             hex::encode(&iv)
         );
-        let mut iv = iv.iter().map(|b| format!("{b:02x}")).collect::<String>();
+        let mut ivhex = iv.iter().map(|b| format!("{b:02x}")).collect::<String>();
         println!("==_enc===iv==={key:?}===={plain_bytes}====={iv:?}");
         let (iv_cipher, _) = run_command(
             vec![
@@ -127,22 +128,24 @@ impl<
                 "zkay.ChaskeyLtsCbc",
                 "enc",
                 &key,
-                &iv.clone(),
+                &ivhex,
                 &plain_bytes,
             ],
             None,
             false,
         );
-        println!("==_enc=========iv_cipher===={iv_cipher:?}============");
-        iv.clone().into_bytes().extend(
-            alloy_primitives::U256::from_str(
-                &("0x".to_owned() + &iv_cipher.unwrap().split("\n").last().unwrap()),
+        println!("==_enc=========iv_cipher===={iv_cipher:?}========={}===", iv_cipher.as_ref().unwrap().trim().split("\n").last().unwrap());
+        let  iv_cipher32=alloy_primitives::U256::from_str(
+                &("0x".to_owned() + &iv_cipher.unwrap().trim().split("\n").last().unwrap()),
             )
             .unwrap()
-            .to_be_bytes::<32>(),
-        );
-        let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
-        println!("==_enc===iv+=iv_cipher===={iv_cipher:?}============");
+            .to_be_bytes::<32>();
+        println!("==_enc=========iv_cipher32===={iv_cipher32:?}====={}==={}====",iv.len(),iv_cipher32.len());
+       let iv_cipher:Vec<_>= iv.into_iter().chain(
+          iv_cipher32
+        ).collect();
+        // let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
+        println!("==_enc===iv+=iv_cipher===={iv_cipher:?}========{}====",iv_cipher.len());
         let cipher = self.pack_byte_array(iv_cipher, self.params().cipher_chunk_size() as usize);
         println!("==_enc===return =cipher===={cipher:?}============");
         (cipher, vec![])
@@ -163,6 +166,8 @@ impl<
             sk,
             cipher
         );
+        println!("===_dec========cipher_chunk_size=======cipher_bytes_payload===== {},{}", self.params().cipher_chunk_size(),
+            self.params().cipher_bytes_payload(),);
         // # Call java implementation
         let iv_cipher = self.unpack_to_byte_array(
             cipher,
