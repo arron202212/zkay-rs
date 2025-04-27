@@ -393,7 +393,7 @@ impl<
                                 // Encrypt parameters
                                 zk__priv.insert("votum",DataType::Int(BigInt::from(votum as u8)));
                                 let mut d=self.api().lock().enc(zk__priv["votum"].try_as_int_ref().unwrap().to_string(),None, "ecdh-chaskey").await.0.contents.clone();
-                                *d.last_mut().unwrap()=self.api().lock().get_my_pk("ecdh-chaskey")[0].to_string();
+                                d.push(self.api().lock().get_my_pk("ecdh-chaskey")[0].to_string());
                                 let votum=  DataType::CipherValue(Value::<String,CipherValue>::new(d,None,Some("ecdh-chaskey".to_owned())));
                                 let mut actual_params = vec![votum.clone()];
                                 let zk__out = vec![DataType::String("0".to_owned());25];
@@ -497,6 +497,7 @@ impl<
                                         // require(reveal(votum != reveal(Choice::None.to_string(), me) && current_votes[me] == reveal(Choice::None.to_string(), me), all));
                                         // {
                                         zk__data.insert("zk__in0_cipher_votum",votum.clone());
+                                        println!("====_zk__vote====************************************=====votum======{votum:?}===========");
                                         zk__priv.insert("secret0_plain_votum", self.api().lock().dec(zk__data["zk__in0_cipher_votum"].clone(), convert_type, "ecdh-chaskey").0);
                                         zk__data.insert("zk__in1_key_sender", DataType::PublicKeyValue(Value::<String,PublicKeyValue>::new(vec![zk__data["zk__in0_cipher_votum"].try_as_cipher_value_ref().unwrap()[2].clone()],None, Some("ecdh-chaskey".to_owned()))));
                                         zk__data.insert("zk__in2_plain", DataType::String("0".to_owned()));//DataType::Int(Choice::none as u128));

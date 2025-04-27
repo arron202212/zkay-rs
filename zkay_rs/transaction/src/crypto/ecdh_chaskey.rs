@@ -93,7 +93,7 @@ impl<
     }
 
     fn _enc(&self, plain: String, my_sk: String, target_pk: String) -> (Vec<String>, Vec<String>) {
-        println!("=_enc======plain====my_sk===target_pk=={plain}=={my_sk}===={target_pk}");
+        println!("=_enc==ecdh_chashkey=*****************************************===plain====my_sk===target_pk=={plain}=={my_sk}===={target_pk}");
         // # Compute shared key
         let key = Self::_ecdh_sha256(target_pk, my_sk);
         println!(
@@ -147,10 +147,11 @@ impl<
         // let iv_cipher: Vec<u8> = iv.into_bytes(); //.into_iter().flat_map(|v|v.to_string().into_bytes()).collect();
         println!("==_enc===iv+=iv_cipher===={iv_cipher:?}========{}====",iv_cipher.len());
         let cipher = self.pack_byte_array(iv_cipher, self.params().cipher_chunk_size() as usize);
-        println!("==_enc===return =cipher===={cipher:?}============");
+        println!("==_enc==ecdh_chaskey=========********************************************===*=return =cipher===={cipher:?}============");
         (cipher, vec![])
     }
     fn _dec(&self, mut cipher: Vec<String>, sk: &String) -> (String, Vec<String>) {
+        println!("===_dec==ecdh_chaskey==*****************************************************==cipher=====sk===={cipher:?}==========={sk}=====================================");
         // # Extract sender address from cipher metadata and request corresponding public key
         let sender_pk = cipher.pop().unwrap();
         // assert!( cipher.len() == self.params.cipher_payload_len);
@@ -197,7 +198,7 @@ impl<
             false,
         );
         println!(
-            "==========plain===================={}",
+            "==_dec===ecdh_chaskey==*****************************===plain=========={:?}=========={}",plain,
             plain.as_ref().unwrap().trim().split("\n").last().unwrap()
         );
         let v = alloy_primitives::U256::from_str(
@@ -205,7 +206,9 @@ impl<
         )
         .unwrap();
         let plain = v.to_string();
-
+        println!(
+            "==_dec===ecdh_chaskey==**************************=return==plain================={}",plain
+        );
         (plain, vec![])
     }
 }
