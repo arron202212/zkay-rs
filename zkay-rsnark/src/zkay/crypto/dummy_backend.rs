@@ -1,0 +1,25 @@
+
+use circuit::operations::gadget;
+use circuit::structure::wire;
+use zkay::typed_wire;
+use zkay::zkay_dummy_encryption_gadget;
+
+public class DummyBackend extends CryptoBackend.Asymmetric {
+
+	public static final int CIPHER_CHUNK_SIZE = 256;
+	public static final int KEY_CHUNK_SIZE = 256;
+
+	public DummyBackend(int keyBits) {
+		super(keyBits);
+	}
+
+	@Override
+	public int getKeyChunkSize() {
+		return KEY_CHUNK_SIZE;
+	}
+
+	@Override
+	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] random, String... desc) {
+		return new ZkayDummyEncryptionGadget(plain, getKey(key), random, keyBits, desc);
+	}
+}

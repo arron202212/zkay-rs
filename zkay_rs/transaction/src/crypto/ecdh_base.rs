@@ -64,12 +64,12 @@ pub trait EcdhBase<
     // @staticmethod
     fn _ecdh_sha256(other_pk: String, my_sk: String) -> Vec<u8> {
         println!(
-            "==other_pk: , my_sk========={other_pk}========== {my_sk}======={:?}=====",
+            "======_ecdh_sha256======**********===============other_pk: , my_sk========={other_pk}========== {my_sk}======={:?}=====",
             alloy_primitives::U256::from_str(&other_pk.trim_matches(&['[', ']', '"', ' ', '\n']))
         );
         let my_sk = BigUint::parse_bytes(my_sk.as_bytes(),10).unwrap().to_str_radix(16);
         let other_pk = format!("{:x}", alloy_primitives::U256::from_str(&other_pk).unwrap());
-        println!("==other_pk=====my_sk===={other_pk}======={my_sk}=====");
+        println!("=======_ecdh_sha256======**********=====other_pk=====my_sk===={other_pk}======={my_sk}=====");
         let (ret, _) = run_command(
             vec![
                 "java",
@@ -86,18 +86,18 @@ pub trait EcdhBase<
         );
         //  int(key, 16).to_bytes(16, byteorder="big")
         println!(
-            "===ret========={}",
+            "====_ecdh_sha256======**********=ret========={}",
             ret.as_ref().unwrap().trim().split("\n").last().unwrap()
         );
         let v = alloy_primitives::U256::from_str(
             &("0x".to_owned() + &ret.unwrap().trim().split("\n").last().unwrap()),
         )
         .unwrap();
-        println!("===v========={}", v);
+        println!("====_ecdh_sha256======**********=v========={}", v);
         let v: [u8; 32] = v.to_be_bytes::<32>();
-        println!("======_ecdh_sha256===v========={:?}", v);
+        println!("====_ecdh_sha256======**********====_ecdh_sha256===v========={:?}", v);
         let ret = v[16..].to_vec();
-        println!("===ret=====_ecdh_sha256===={:?}", ret);
+        println!("===_ecdh_sha256======**********==ret=====_ecdh_sha256===={:?}", ret);
         ret
     }
     fn _generate_or_load_key_pairs(&self, address: &str) -> KeyPair {

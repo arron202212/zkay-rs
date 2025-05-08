@@ -577,9 +577,9 @@ impl<
             )
             .await;
         println!("==_req_state_var==res={res:?}=================");
-        serde_json::from_str::<Vec<String>>(res.as_ref().unwrap())
+        res.as_ref().map(|re|serde_json::from_str::<Vec<String>>(re)
             .map(|r| r[0].clone())
-            .map_err(|e| eyre::eyre!("{e:?}"))
+            .map_err(|e| eyre::eyre!("{e:?}"))).map_err(|e| eyre::eyre!("{e:?}"))?
     }
     async fn _call(
         &self,

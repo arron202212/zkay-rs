@@ -8,6 +8,7 @@ members = [
    "zkay_rs",
    "zkay-derive",
    "zkay-derive-core",
+  "zkay-rsnark",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper_config",
 "zkay_rs/compiler/privacy/circuit_generation",
@@ -30,7 +31,7 @@ members = [
 "zkay_rs/type_check",
 "zkay_rs/utils",
 "zkay_rs/zkay_ast",
-"zkay_rs/ast-builder",
+"zkay_rs/ast-builder", "zkay-rsnark",
 ]
 
 exclude = []

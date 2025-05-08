@@ -1164,10 +1164,11 @@ pub trait ZkayProverInterface {
         project_dir: &str,
         contract: String,
         function: String,
-        mut priv_values: Vec<String>,
-        mut in_vals: Vec<String>,
-        mut out_vals: Vec<String>,
+        priv_valuess: Vec<String>,
+        in_valss: Vec<String>,
+        out_valss: Vec<String>,
     ) -> Vec<String> {
+        let (mut priv_values,mut in_vals,mut out_vals)=(priv_valuess.clone(),in_valss.clone(),out_valss.clone());
         for i in 0..priv_values.len() {
             let arg = priv_values[i].clone();
             // assert not isinstance(arg, JsonValue) or isinstance(arg, (RandomnessValue, AddressValue))
@@ -1219,9 +1220,9 @@ pub trait ZkayProverInterface {
         zk_print!("Generating proof for {contract}.{function}");
         zk_print!(
             "[priv: {:?}] [in: {:?}] [out: {:?}]",
-            priv_values,
-            in_vals,
-            out_vals
+            priv_valuess,
+            in_valss,
+            out_valss
         );
 
         let (priv_values, in_vals, out_vals) = (priv_values, in_vals, out_vals);
