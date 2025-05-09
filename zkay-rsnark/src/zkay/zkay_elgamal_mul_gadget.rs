@@ -6,9 +6,9 @@ use circuit::structure::wire;
  */
 public class ZkayElgamalMulGadget extends ZkayBabyJubJubGadget {
 
-    private final JubJubPoint c1;
+     JubJubPoint c1;
 
-    private final JubJubPoint c2;
+     JubJubPoint c2;
 
     private Wire[] scalarBits;
 
@@ -28,7 +28,7 @@ public class ZkayElgamalMulGadget extends ZkayBabyJubJubGadget {
         e2 = mulScalar(c2, scalarBits);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return new Wire[]{ e1.x, e1.y, e2.x, e2.y };
     }

@@ -54,7 +54,7 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 		this.secretExponentBits = secretExponentBits;
 		this.omega = omega;
 		mu = g.length;
-		if (h.length != g.length) {
+		if h.length != g.length {
 			throw new IllegalArgumentException(
 					"g and h must have the same dimension");
 		}
@@ -85,11 +85,11 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 		for (i = 0; i < mu; i += 1) {
 			for (j = 0; j < mu; j += 1) {
 				int k = i + j;
-				if (k < mu) {
+				if k < mu {
 					c[k] = c[k].add(a[i].mul(b[j]));
 				}
 				k = i + j - mu;
-				if (k >= 0) {
+				if k >= 0 {
 					c[k] = c[k].add(a[i].mul(b[j]).mul(omega));
 				}
 			}
@@ -111,9 +111,9 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 		Wire[] c = new Wire[mu];
 		Arrays.fill(c, generator.getZeroWire());
 		c[0] = generator.getOneWire();
-		for (int j = 0; j < expBits.length; j += 1) {
+		for j in 0..expBits.length {
 			Wire[] tmp = mul(c, powersTable[j]);
-			for (int i = 0; i < mu; i++) {
+			for i in 0..mu {
 				c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
 			}
 		}
@@ -133,7 +133,7 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 		Wire allZero1 = generator.getOneWire();
 		Wire allZero2 = generator.getOneWire();
 
-		for (int i = 1; i < mu; i++) {
+		for i in 1..mu {
 			allZero1 = allZero1.mul(g[i].checkNonZero().invAsBit());
 			allZero2 = allZero2.mul(h[i].checkNonZero().invAsBit());
 		}
@@ -146,8 +146,8 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 
 		int bitLength = subGroupOrder.bitLength();
 		Wire[] bits = new Wire[bitLength];
-		for (int i = 0; i < bitLength; i++) {
-			if (subGroupOrder.testBit(i))
+		for i in 0..bitLength {
+			if subGroupOrder.testBit(i)
 				bits[i] = generator.getOneWire();
 			else
 				bits[i] = generator.getZeroWire();
@@ -160,13 +160,13 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 
 		generator.addOneAssertion(result1[0]);
 		generator.addOneAssertion(result2[0]);
-		for (int i = 1; i < mu; i++) {
+		for i in 1..mu {
 			generator.addZeroAssertion(result1[i]);
 			generator.addZeroAssertion(result1[i]);
 		}
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return Util.concat(outputPublicValue, sharedSecret);
 	}

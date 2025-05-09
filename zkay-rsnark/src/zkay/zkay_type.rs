@@ -18,7 +18,7 @@ public class ZkayType {
     static {
         for (int i = 8; i <= 256; i += 8) {
             utypes.put(i, new ZkayType(i, false));
-            if (i < 256) {
+            if i < 256 {
                 // There can be no int256 inside the circuit, since the sign bit is outside field prime range -> unclear how to defined negative numbers
                 stypes.put(i, new ZkayType(i, true));
             }
@@ -26,13 +26,13 @@ public class ZkayType {
     }
 
     public static ZkayType ZkUint(int bitwidth) {
-        if (!utypes.containsKey(bitwidth)) {
+        if !utypes.containsKey(bitwidth) {
             throw new IllegalArgumentException("No uint type with bitwidth " + bitwidth + " exists.");
         }
         return utypes.get(bitwidth);
     }
     public static ZkayType ZkInt(int bitwidth) {
-        if (!stypes.containsKey(bitwidth)) {
+        if !stypes.containsKey(bitwidth) {
             throw new IllegalArgumentException("No int type with bitwidth " + bitwidth + " exists.");
         }
         return stypes.get(bitwidth);
@@ -47,17 +47,17 @@ public class ZkayType {
         return checkType(expected, actual, true);
     }
     public static ZkayType checkType(ZkayType expected, ZkayType actual, boolean allow_field_type) {
-        if (actual == null || expected == null) throw new IllegalArgumentException("Tried to use untyped wires");
-        if (expected.bitwidth == 256 && !allow_field_type) {
+        if actual == null || expected == null) throw new IllegalArgumentException("Tried to use untyped wires";
+        if expected.bitwidth == 256 && !allow_field_type {
             throw new IllegalArgumentException("256bit integers are not supported for this operation");
         }
-        if (actual != expected) throw new IllegalArgumentException("Type " + actual.toString() + " does not match expected type " + expected.toString());
+        if actual != expected) throw new IllegalArgumentException("Type " + actual.toString() + " does not match expected type " + expected.toString();
 
         return expected;
     }
 
-    @Override
+    
     public String toString() {
-        return (signed ? "s" : "u") + bitwidth;
+        return (if signed  { "s" }else { "u"}) + bitwidth;
     }
 }

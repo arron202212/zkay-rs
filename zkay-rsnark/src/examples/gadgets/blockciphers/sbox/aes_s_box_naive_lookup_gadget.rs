@@ -18,12 +18,12 @@ public class AESSBoxNaiveLookupGadget extends Gadget {
 
 	protected void buildCircuit() {
 		output = generator.getZeroWire();
-		for (int i = 0; i < 256; i++) {
+		for i in 0..256 {
 			output = output.add(input.isEqualTo(i).mul(SBox[i]));
 		}
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { output };
 	}

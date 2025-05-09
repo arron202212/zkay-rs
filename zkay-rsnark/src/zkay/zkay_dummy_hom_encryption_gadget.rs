@@ -16,9 +16,9 @@ use circuit::structure::wire;
  */
 public class ZkayDummyHomEncryptionGadget extends Gadget {
 
-	private final Wire pk;
-	private final Wire plain;
-	private final Wire[] cipher;
+	 Wire pk;
+	 Wire plain;
+	 Wire[] cipher;
 
 	public ZkayDummyHomEncryptionGadget(Wire plain, Wire pk, Wire[] rnd, int keyBits, String... desc) {
 		super(desc);
@@ -26,7 +26,7 @@ public class ZkayDummyHomEncryptionGadget extends Gadget {
 		Objects.requireNonNull(plain, "plain");
 		Objects.requireNonNull(pk, "pk");
 		Objects.requireNonNull(rnd, "rnd");
-		if (rnd.length > 1) throw new IllegalArgumentException("Randomness wire array too long");
+		if rnd.length > 1) throw new IllegalArgumentException("Randomness wire array too long";
 
 		this.plain = plain;
 		this.pk = pk;
@@ -38,7 +38,7 @@ public class ZkayDummyHomEncryptionGadget extends Gadget {
 		cipher[0] = plain.mul(pk, "plain * pk").add(1);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return cipher;
 	}

@@ -11,9 +11,9 @@ use static zkay::zkay_util::unsigned_bytes_to_bigint;
 
 public class ZkayECDHGenerator extends CircuitGenerator {
 
-	private final BigInteger secret;
-	private final BigInteger pk;
-	private final boolean late_eval;
+	 BigInteger secret;
+	 BigInteger pk;
+	 boolean late_eval;
 
 	private Wire secret_wire;
 	private Wire pk_wire;
@@ -25,35 +25,35 @@ public class ZkayECDHGenerator extends CircuitGenerator {
 		this.late_eval = late_eval;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
-		secret_wire = late_eval ? createProverWitnessWire() : createConstantWire(secret);
+		secret_wire = late_eval  { createProverWitnessWire() }else { createConstantWire(secret)};
 
-		if (pk == null) {
+		if pk == null {
 			// If no public key specified, compute own public key
 			makeOutput(new ZkayEcPkDerivationGadget(secret_wire, true).getOutputWires()[0]);
 		} else {
 			// Derive shared secret
-			pk_wire = late_eval ? createInputWire() : createConstantWire(pk);
+			pk_wire = late_eval  { createInputWire() }else { createConstantWire(pk)};
 			ZkayECDHGadget gadget = new ZkayECDHGadget(pk_wire, secret_wire, true);
 			gadget.validateInputs();
 			makeOutput(gadget.getOutputWires()[0]);
 		}
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
-		if (late_eval) {
+		if late_eval {
 			evaluator.setWireValue(secret_wire, this.secret);
-			if (this.pk != null) {
+			if this.pk != null {
 				evaluator.setWireValue(pk_wire, this.pk);
 			}
 		}
 	}
 
-	@Override
+	
 	public void runLibsnark() {
-		throw new RuntimeException("This circuit is only for evaluation");
+		panic!("This circuit is only for evaluation");
 	}
 
 	private static BigInteger computeECKey(BigInteger pk, BigInteger sk) {
@@ -81,16 +81,16 @@ public class ZkayECDHGenerator extends CircuitGenerator {
 	}
 
 	public static void main(String[] args) {
-		if (args.length == 1) {
+		if args.length == 1 {
 			BigInteger secret = rnd_to_secret(args[0]);
-			System.out.println("Deriving public key from secret key 0x" + secret.toString(16));
-			System.out.println(derivePk(secret));
-			System.out.println(secret.toString(16));
-		} else if (args.length == 2) {
+			println!("Deriving public key from secret key 0x" + secret.toString(16));
+			println!(derivePk(secret));
+			println!(secret.toString(16));
+		} else if args.length == 2 {
 			BigInteger secret = new BigInteger(args[0], 16);
 			BigInteger pk = new BigInteger(args[1], 16);
-			System.out.println("Deriving shared key from public key 0x" + pk.toString(16) + " and secret 0x" + secret.toString(16));
-			System.out.println(getSharedSecret(pk, secret));
+			println!("Deriving shared key from public key 0x" + pk.toString(16) + " and secret 0x" + secret.toString(16));
+			println!(getSharedSecret(pk, secret));
 		} else {
 			throw new IllegalArgumentException();
 		}

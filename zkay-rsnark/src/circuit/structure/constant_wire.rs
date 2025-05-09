@@ -23,7 +23,7 @@ public class ConstantWire extends Wire {
 	}
 
 	public Wire mul(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			return generator.createConstantWire(
 					constant.multiply(((ConstantWire) w).constant), desc);
 		} else {
@@ -37,12 +37,12 @@ public class ConstantWire extends Wire {
 		BigInteger newConstant = constant.multiply(b).mod(Config.FIELD_PRIME);
 		 	
 		out = generator.knownConstantWires.get(newConstant);
-		if (out == null) {
+		if out == null {
 			
 			if(!sign){
-				out = new ConstantWire(generator.currentWireId++, newConstant);
+				out = new ConstantWire(generator.currentWireId+=1, newConstant);
 			} else{
-				out = new ConstantWire(generator.currentWireId++, newConstant.subtract(Config.FIELD_PRIME));
+				out = new ConstantWire(generator.currentWireId+=1, newConstant.subtract(Config.FIELD_PRIME));
 			}			
 			Instruction op = new ConstMulBasicOp(this, out,
 					b, desc);
@@ -62,7 +62,7 @@ public class ConstantWire extends Wire {
 	}
 
 	public Wire checkNonZero(Wire w, String... desc) {
-		if (constant.equals(BigInteger.ZERO)) {
+		if constant.equals(BigInteger.ZERO) {
 			return generator.zeroWire;
 		} else {
 			return generator.oneWire;
@@ -70,11 +70,11 @@ public class ConstantWire extends Wire {
 	}
 
 	public Wire invAsBit(String... desc) {
-		if (!isBinary()) {
-			throw new RuntimeException(
+		if !isBinary() {
+			panic!(
 					"Trying to invert a non-binary constant!");
 		}
-		if (constant.equals(BigInteger.ZERO)) {
+		if constant.equals(BigInteger.ZERO) {
 			return generator.oneWire;
 		} else {
 			return generator.zeroWire;
@@ -82,21 +82,21 @@ public class ConstantWire extends Wire {
 	}
 
 	public Wire or(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			ConstantWire cw = (ConstantWire) w;
-			if (isBinary() && cw.isBinary()) {
-				if (constant.equals(BigInteger.ZERO)
+			if isBinary() && cw.isBinary() {
+				if constant.equals(BigInteger.ZERO
 						&& cw.getConstant().equals(BigInteger.ZERO)) {
 					return generator.zeroWire;
 				} else {
 					return generator.oneWire;
 				}
 			} else {
-				throw new RuntimeException(
+				panic!(
 						"Trying to OR two non-binary constants");
 			}
 		} else {
-			if (constant.equals(BigInteger.ONE)) {
+			if constant.equals(BigInteger.ONE) {
 				return generator.oneWire;
 			} else {
 				return w;
@@ -105,20 +105,20 @@ public class ConstantWire extends Wire {
 	}
 
 	public Wire xor(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			ConstantWire cw = (ConstantWire) w;
-			if (isBinary() && cw.isBinary()) {
-				if (constant.equals(cw.getConstant())) {
+			if isBinary() && cw.isBinary() {
+				if constant.equals(cw.getConstant()) {
 					return generator.zeroWire;
 				} else {
 					return generator.oneWire;
 				}
 			} else {
-				throw new RuntimeException(
+				panic!(
 						"Trying to XOR two non-binary constants");
 			}
 		} else {
-			if (constant.equals(BigInteger.ONE)) {
+			if constant.equals(BigInteger.ONE) {
 				return w.invAsBit(desc);
 			} else {
 				return w;
@@ -127,13 +127,13 @@ public class ConstantWire extends Wire {
 	}
 
 	public WireArray getBitWires(int bitwidth, String... desc) {
-		if (constant.bitLength() > bitwidth) {
-			throw new RuntimeException("Trying to split a constant of "
+		if constant.bitLength() > bitwidth {
+			panic!("Trying to split a constant of "
 					+ constant.bitLength() + " bits into " + bitwidth + "bits");
 		} else {
 			Wire[] bits = new ConstantWire[bitwidth];
-			for (int i = 0; i < bitwidth; i++) {
-				bits[i] = constant.testBit(i) ? generator.oneWire : generator.zeroWire;
+			for i in 0..bitwidth {
+				bits[i] = constant.testBit(i)  { generator.oneWire }else { generator.zeroWire};
 			}
 			return new WireArray(bits);
 		}

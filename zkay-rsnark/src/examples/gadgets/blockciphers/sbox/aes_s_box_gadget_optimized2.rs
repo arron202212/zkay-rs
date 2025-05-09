@@ -42,7 +42,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 	private static int bitCount = 15;
 
 	public static void setBitCount(int x) {
-		if (x < 0 || x > 16)
+		if x < 0 || x > 16
 			throw new IllegalArgumentException();
 		else
 			bitCount = x;
@@ -53,7 +53,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		solveLinearSystems();
 	}
 
-	private final Wire input;
+	 Wire input;
 	private Wire output;
 
 	public AESSBoxGadgetOptimized2(Wire input, String... desc) {
@@ -67,29 +67,29 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		long seed = 1;
 		ArrayList<BigInteger[]> allCoeffSet = new ArrayList<BigInteger[]>();
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		for (int i = 0; i <= 255; i++) {
+		for (int i = 0; i <= 255; i+=1) {
 			list.add(256 * i + SBox[i]);
 		}
 		boolean done = false;
 		int trialCounter = 0;
 		loop1: while (!done) {
-			trialCounter++;
-			if (trialCounter == 100) {
-				throw new RuntimeException(
+			trialCounter+=1;
+			if trialCounter == 100 {
+				panic!(
 						"Was not possible to find an adequate solution to the current setting of the AES gadget sbox");
 			}
 			System.out
 					.println("Attempting to solve linear systems for efficient S-Box Access: Attempt#"
 							+ trialCounter);
-			seed++;
+			seed+=1;
 			Collections.shuffle(list, new Random(seed));
 			allCoeffSet.clear();
 
-			for (int i = 0; i <= 15; i++) {
+			for (int i = 0; i <= 15; i+=1) {
 				BigInteger[][] mat = new BigInteger[16][17];
 				HashSet<Integer> memberValueSet = new HashSet<>();
 
-				for (int k = 0; k < mat.length; k++) {
+				for k in 0..mat.length {
 					int memberValue = list.get(k + i * 16);
 					memberValueSet.add(memberValue);
 					mat[k][16] = BigInteger.ONE;
@@ -98,17 +98,17 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 					// the method getVariableValues takes the bitCount settings
 					// into account
 					BigInteger[] variableValues = getVariableValues(memberValue);
-					for (int j = 0; j <= 15; j++) {
+					for (int j = 0; j <= 15; j+=1) {
 						mat[k][j] = variableValues[j];
 					}
 				}
 
 				new LinearSystemSolver(mat).solveInPlace();
 
-				if (checkIfProverCanCheat(mat, memberValueSet)) {
-					System.out.println("Invalid solution");
-					for (int ii = 0; ii < 16; ii++) {
-						if (mat[ii][16].equals(BigInteger.ZERO)) {
+				if checkIfProverCanCheat(mat, memberValueSet) {
+					println!("Invalid solution");
+					for (int ii = 0; ii < 16; ii+=1) {
+						if mat[ii][16].equals(BigInteger.ZERO) {
 							System.out
 									.println("Possibly invalid due to having zero coefficient(s)");
 							break;
@@ -119,7 +119,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 				}
 
 				BigInteger[] coeffs = new BigInteger[16];
-				for (int ii = 0; ii < 16; ii++) {
+				for (int ii = 0; ii < 16; ii+=1) {
 					coeffs[ii] = mat[ii][16];
 				}
 				allCoeffSet.add(coeffs);
@@ -127,7 +127,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 			}
 			done = true;
 			AESSBoxGadgetOptimized2.allCoeffSet = allCoeffSet;
-			System.out.println("Solution found!");
+			println!("Solution found!");
 		}
 	}
 
@@ -136,7 +136,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		output = generator.createProverWitnessWire();
 		generator.specifyProverWitnessComputation(new Instruction() {
 
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				// TODO Auto-generated method stub
 				BigInteger value = evaluator.getWireValue(input);
@@ -159,19 +159,19 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		Wire[] vars = new Wire[16];
 		Wire p = input.mul(256).add(output).add(1);
 		Wire currentProduct = p;
-		if (bitCount != 0 && bitCount != 16) {
+		if bitCount != 0 && bitCount != 16 {
 			currentProduct = currentProduct.mul(currentProduct);
 		}
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 
-			if (i < bitCount) {
-				if (i < 8)
+			if i < bitCount {
+				if i < 8
 					vars[i] = bitsOut[i];
 				else
 					vars[i] = bitsIn[i - 8];
 			} else {
 				vars[i] = currentProduct;
-				if (i != 15) {
+				if i != 15 {
 					currentProduct = currentProduct.mul(p);
 				}
 			}
@@ -180,7 +180,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		Wire product = generator.getOneWire();
 		for (BigInteger[] coeffs : allCoeffSet) {
 			Wire accum = generator.getZeroWire();
-			for (int j = 0; j < vars.length; j++) {
+			for j in 0..vars.length {
 				accum = accum.add(vars[j].mul(coeffs[j]));
 			}
 			accum = accum.sub(1);
@@ -189,7 +189,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		generator.addZeroAssertion(product);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { output };
 	}
@@ -199,13 +199,13 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		BigInteger[] vars = new BigInteger[16];
 		BigInteger v = BigInteger.valueOf(k).add(BigInteger.ONE);
 		BigInteger product = v;
-		if (bitCount != 0) {
+		if bitCount != 0 {
 			product = product.multiply(v).mod(Config.FIELD_PRIME);
 		}
-		for (int j = 0; j < 16; j++) {
-			if (j < bitCount) {
-				vars[j] = ((k >> j) & 0x01) == 1 ? BigInteger.ONE
-						: BigInteger.ZERO;
+		for j in 0..16 {
+			if j < bitCount {
+				vars[j] = if ((k >> j) & 0x01) == 1  {BigInteger.ONE}
+						else  {BigInteger.ZERO};
 			} else {
 				vars[j] = product;
 				product = product.multiply(v).mod(Config.FIELD_PRIME);
@@ -218,7 +218,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 			HashSet<Integer> valueSet) {
 
 		BigInteger[] coeffs = new BigInteger[16];
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 			coeffs[i] = mat[i][16];
 		}
 
@@ -228,26 +228,26 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		// loop over the whole permissible domain (recall that input & output
 		// are bounded)
 
-		for (int k = 0; k < 256 * 256; k++) {
+		for (int k = 0; k < 256 * 256; k+=1) {
 
 			BigInteger[] variableValues = getVariableValues(k);
 			BigInteger result = BigInteger.ZERO;
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				result = result.add(variableValues[i].multiply(coeffs[i]));
 			}
 			result = result.mod(Config.FIELD_PRIME);
-			if (result.equals(BigInteger.ONE)) {
-				validResults++;
-				if (!valueSet.contains(k)) {
-					outsidePermissibleSet++;
+			if result.equals(BigInteger.ONE) {
+				validResults+=1;
+				if !valueSet.contains(k) {
+					outsidePermissibleSet+=1;
 				}
 			}
 		}
-		if (validResults != 16 || outsidePermissibleSet != 0) {
-			System.out.println("Prover can cheat with linear system solution");
-			System.out.println("Num of valid values that the prover can use = "
+		if validResults != 16 || outsidePermissibleSet != 0 {
+			println!("Prover can cheat with linear system solution");
+			println!("Num of valid values that the prover can use = "
 					+ validResults);
-			System.out.println("Num of valid values outside permissible set = "
+			println!("Num of valid values outside permissible set = "
 					+ validResults);
 			return true;
 		} else {

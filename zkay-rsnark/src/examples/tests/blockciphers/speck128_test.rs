@@ -20,7 +20,7 @@ public class Speck128_Test extends TestCase {
 			Wire[] key; // 2 64-bit words
 			Wire[] ciphertext; // 2 64-bit words
 			
-			@Override
+			
 			protected void buildCircuit() {
 				plaintext = createInputWireArray(2);
 				key = createInputWireArray(2);
@@ -29,7 +29,7 @@ public class Speck128_Test extends TestCase {
 				makeOutputArray(ciphertext);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(key[0], new BigInteger("0706050403020100", 16));
 				evaluator.setWireValue(key[1], new BigInteger("0f0e0d0c0b0a0908", 16));

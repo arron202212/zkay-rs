@@ -13,7 +13,7 @@ public class ConstMulBasicOp extends BasicOp {
 			String...desc) {
 		super(new Wire[] { w }, new Wire[] { out }, desc);
 		inSign = constInteger.signum() == -1;
-		if (!inSign) {
+		if !inSign {
 			constInteger = Util.mod(constInteger, Config.FIELD_PRIME);
 			this.constInteger = constInteger;
 		} else {
@@ -24,27 +24,27 @@ public class ConstMulBasicOp extends BasicOp {
 	}
 
 	public String getOpcode(){
-		if (!inSign) {
+		if !inSign {
 			return "const-mul-" + constInteger.toString(16);
 		} else{
 			return "const-mul-neg-" + Config.FIELD_PRIME.subtract(constInteger).toString(16);
 		}
 	}
 	
-	@Override
+	
 	public void compute(BigInteger[] assignment) {
 		BigInteger result = assignment[inputs[0].getWireId()].multiply(constInteger);
-		if (result.bitLength() >= Config.LOG2_FIELD_PRIME) {
+		if result.bitLength() >= Config.LOG2_FIELD_PRIME {
 			result = result.mod(Config.FIELD_PRIME);
 		}
 		assignment[outputs[0].getWireId()] = result;
 	}
 	
-	@Override
+	
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof ConstMulBasicOp)) {
+		if !(obj instanceof ConstMulBasicOp) {
 			return false;
 		}
 		ConstMulBasicOp op = (ConstMulBasicOp) obj;
@@ -52,13 +52,13 @@ public class ConstMulBasicOp extends BasicOp {
 
 	}
 	
-	@Override
+	
 	public int getNumMulGates() {
 		return 0;
 	}
 
 
-	@Override
+	
 	public int hashCode() {
 		int h = constInteger.hashCode();
 		for(Wire in:inputs){

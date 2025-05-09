@@ -49,7 +49,7 @@ public class RSASigVerificationV1_5_Gadget extends Gadget {
 
 		LongElement s = signature;
 
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 			s = s.mul(s);
 			s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, false).getRemainder();
 		}
@@ -68,7 +68,7 @@ public class RSASigVerificationV1_5_Gadget extends Gadget {
 
 		// reverse the byte array representation of each word of the digest to
 		// be compatiable with the endianess
-		for (int i = 0; i < 8; i++) {
+		for i in 0..8 {
 			Wire tmp = msgHashBytes[4 * i];
 			msgHashBytes[4 * i] = msgHashBytes[(4 * i + 3)];
 			msgHashBytes[4 * i + 3] = tmp;
@@ -82,14 +82,14 @@ public class RSASigVerificationV1_5_Gadget extends Gadget {
 		sumChecks = sumChecks.add(sBytes[lengthInBytes - 1].isEqualTo(0));
 		sumChecks = sumChecks.add(sBytes[lengthInBytes - 2].isEqualTo(1));
 		for (int i = 3; i < lengthInBytes - SHA256_DIGEST_LENGTH
-				- SHA256_IDENTIFIER.length; i++) {
+				- SHA256_IDENTIFIER.length; i+=1) {
 			sumChecks = sumChecks
 					.add(sBytes[lengthInBytes - i].isEqualTo(0xff));
 		}
 		sumChecks = sumChecks.add(sBytes[SHA256_DIGEST_LENGTH
 				+ SHA256_IDENTIFIER.length].isEqualTo(0));
 
-		for (int i = 0; i < SHA256_IDENTIFIER.length; i++) {
+		for i in 0..SHA256_IDENTIFIER.length {
 			sumChecks = sumChecks.add(sBytes[SHA256_IDENTIFIER.length
 					+ SHA256_DIGEST_LENGTH - 1 - i]
 					.isEqualTo((int) (SHA256_IDENTIFIER[i] + 256) % 256));
@@ -103,7 +103,7 @@ public class RSASigVerificationV1_5_Gadget extends Gadget {
 
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { isValidSignature };
 	}

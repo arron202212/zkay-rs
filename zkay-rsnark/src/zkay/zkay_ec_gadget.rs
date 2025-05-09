@@ -72,7 +72,7 @@ public abstract class ZkayEcGadget extends Gadget {
         generator.addOneAssertion(secretBits[SECRET_BITWIDTH - 1],
                 "Asserting secret bit conditions");
 
-        for (int i = 3; i < SECRET_BITWIDTH - 1; i++) {
+        for (int i = 3; i < SECRET_BITWIDTH - 1; i+=1) {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
@@ -92,7 +92,7 @@ public abstract class ZkayEcGadget extends Gadget {
     protected AffinePoint[] preprocess(AffinePoint p) {
         AffinePoint[] precomputedTable = new AffinePoint[SECRET_BITWIDTH];
         precomputedTable[0] = p;
-        for (int j = 1; j < SECRET_BITWIDTH; j += 1) {
+        for j in 1..SECRET_BITWIDTH {
             precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
         }
         return precomputedTable;

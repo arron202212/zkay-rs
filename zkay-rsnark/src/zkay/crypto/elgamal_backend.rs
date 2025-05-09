@@ -16,41 +16,41 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
         super(keyBits);
 
         // public key must be a BabyJubJub point (two coordinates)
-        if (keyBits != 2*EC_COORD_BITS) {
+        if keyBits != 2*EC_COORD_BITS {
             throw new IllegalArgumentException("public key size mismatch");
         }
     }
 
-    @Override
+    
     public int getKeyChunkSize() {
         return KEY_CHUNK_SIZE;
     }
 
-    @Override
+    
     public boolean usesDecryptionGadget() {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
         return true;
     }
 
-    @Override
+    
     public void addKey(String keyName, Wire[] keyWires) {
         // elgamal does not require a bit-representation of the public key, so store it directly
         keys.put(keyName, new WireArray(keyWires));
     }
 
-    @Override
+    
     public Gadget createEncryptionGadget(TypedWire plain, String keyName, Wire[] random, String... desc) {
         WireArray pkArray = getKeyArray(keyName);
         ZkayBabyJubJubGadget.JubJubPoint pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
         Wire[] randomArray = new WireArray(random).getBits(RND_CHUNK_SIZE).asArray();
-        if (plain.type.bitwidth > 32) {
+        if plain.type.bitwidth > 32 {
             throw new IllegalArgumentException("plaintext must be at most 32 bits for elgamal backend");
         }
         return new ZkayElgamalEncGadget(plain.wire.getBitWires(plain.type.bitwidth).asArray(), pk, randomArray);
     }
 
-    @Override
+    
     public Gadget createDecryptionGadget(TypedWire plain, Wire[] cipher, String pkName, Wire[] sk, String... desc) {
         WireArray pkArray = getKeyArray(pkName);
         ZkayBabyJubJubGadget.JubJubPoint pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
@@ -63,7 +63,7 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
     private TypedWire[] toTypedWireArray(Wire[] wires, String name) {
         TypedWire[] typedWires = new TypedWire[wires.length];
         ZkayType uint256 = ZkayType.ZkUint(256);
-        for (int i = 0; i < wires.length; ++i) {
+        for i in 0..wires.length {
             typedWires[i] = new TypedWire(wires[i], uint256, name);
         }
         return typedWires;
@@ -72,7 +72,7 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
     private Wire[] fromTypedWireArray(TypedWire[] typedWires) {
         Wire[] wires = new Wire[typedWires.length];
         ZkayType uint256 = ZkayType.ZkUint(256);
-        for (int i = 0; i < typedWires.length; i++) {
+        for i in 0..typedWires.length {
             ZkayType.checkType(uint256, typedWires[i].type);
             wires[i] = typedWires[i].wire;
         }
@@ -91,7 +91,7 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
     }
 
     public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
-        if ((op == '+') || (op == '-')) {
+        if (op == '+') || (op == '-') {
             // for (c1, c2) = Enc(m1, r1)
             //     (d1, d2) = Enc(m2, r2)
             //     e1 = c1 + d1
@@ -118,22 +118,22 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
             d1 = uninitZeroToIdentity(d1);
             d2 = uninitZeroToIdentity(d2);
 
-            if (op == '-') {
+            if op == '-' {
                 d1.x = d1.x.negate();
                 d2.x = d2.x.negate();
             }
 
             ZkayElgamalAddGadget gadget = new ZkayElgamalAddGadget(c1, c2, d1, d2);
             return toTypedWireArray(gadget.getOutputWires(), outputName);
-        } else if (op == '*') {
+        } else if op == '*' {
             String outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
 
             TypedWire plain_wire;
             TypedWire[] cipher_twires;
-            if (lhs.isPlain() && rhs.isCipher()) {
+            if lhs.isPlain() && rhs.isCipher() {
                 plain_wire = lhs.getPlain();
                 cipher_twires = rhs.getCipher();
-            } else if (lhs.isCipher() && rhs.isPlain()) {
+            } else if lhs.isCipher() && rhs.isPlain() {
                 cipher_twires = lhs.getCipher();
                 plain_wire = rhs.getPlain();
             } else {
@@ -154,7 +154,7 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
         }
     }
 
-    @Override
+    
     public TypedWire[] doHomomorphicRerand(TypedWire[] arg, String keyName, TypedWire randomness) {
         String outputName = "rerand(" + arg[0].name + ")";
 

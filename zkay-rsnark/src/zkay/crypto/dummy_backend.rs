@@ -13,12 +13,12 @@ public class DummyBackend extends CryptoBackend.Asymmetric {
 		super(keyBits);
 	}
 
-	@Override
+	
 	public int getKeyChunkSize() {
 		return KEY_CHUNK_SIZE;
 	}
 
-	@Override
+	
 	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] random, String... desc) {
 		return new ZkayDummyEncryptionGadget(plain, getKey(key), random, keyBits, desc);
 	}

@@ -7,13 +7,13 @@ use circuit::structure::wire;
  */
 public class ZkayElgamalRerandGadget extends ZkayBabyJubJubGadget {
 
-    private final Wire[] randomnessBits;    // little-endian randomness bits
+     Wire[] randomnessBits;    // little-endian randomness bits
 
-    private final JubJubPoint pk;   // public key
+     JubJubPoint pk;   // public key
 
-    private final JubJubPoint c1;   // input ciphertext first point
+     JubJubPoint c1;   // input ciphertext first point
 
-    private final JubJubPoint c2;   // input ciphertext second point
+     JubJubPoint c2;   // input ciphertext second point
 
     private JubJubPoint o1;
 
@@ -38,7 +38,7 @@ public class ZkayElgamalRerandGadget extends ZkayBabyJubJubGadget {
         o2 = addPoints(c2, z2);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return new Wire[]{ o1.x, o1.y, o2.x, o2.y };
     }

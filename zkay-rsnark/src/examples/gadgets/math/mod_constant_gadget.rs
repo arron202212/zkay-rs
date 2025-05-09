@@ -13,8 +13,8 @@ use circuit::structure::wire;
 
 public class ModConstantGadget extends Gadget {
 
-	private final Wire a;
-	private final BigInteger b;
+	 Wire a;
+	 BigInteger b;
 	private Wire r;
 	private Wire q;
 
@@ -43,7 +43,7 @@ public class ModConstantGadget extends Gadget {
 
 		// notes about how to use this code block can be found in FieldDivisionGadget
 		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a);
 				BigInteger rValue = aValue.mod(b);
@@ -61,7 +61,7 @@ public class ModConstantGadget extends Gadget {
 		generator.addEqualityAssertion(q.mul(b).add(r), a);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { r };
 	}

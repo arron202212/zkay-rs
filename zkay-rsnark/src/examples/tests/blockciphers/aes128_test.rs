@@ -25,7 +25,7 @@ public class AES128_Test extends TestCase {
 				private Wire[] key; // 16 bytes
 				private Wire[] ciphertext; // 16 bytes
 	
-				@Override
+				
 				protected void buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
@@ -35,7 +35,7 @@ public class AES128_Test extends TestCase {
 					makeOutputArray(ciphertext);
 				}
 	
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = new BigInteger(
@@ -50,10 +50,10 @@ public class AES128_Test extends TestCase {
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 							keyArray.length);
 	
-					for (int i = 0; i < plaintext.length; i++) {
+					for i in 0..plaintext.length {
 						evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
 					}
-					for (int i = 0; i < key.length; i++) {
+					for i in 0..key.length {
 						evaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 					}
 				}
@@ -71,7 +71,7 @@ public class AES128_Test extends TestCase {
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
 						BigInteger.valueOf((resultArray[i] + 256) % 256));
 			}
@@ -96,7 +96,7 @@ public class AES128_Test extends TestCase {
 				private Wire[] key; // 16 bytes
 				private Wire[] ciphertext; // 16 bytes
 	
-				@Override
+				
 				protected void buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
@@ -106,7 +106,7 @@ public class AES128_Test extends TestCase {
 					makeOutputArray(ciphertext);
 				}
 	
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = new BigInteger(
@@ -121,10 +121,10 @@ public class AES128_Test extends TestCase {
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 							keyArray.length);
 	
-					for (int i = 0; i < plaintext.length; i++) {
+					for i in 0..plaintext.length {
 						evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
 					}
-					for (int i = 0; i < key.length; i++) {
+					for i in 0..key.length {
 						evaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 					}
 				}
@@ -144,7 +144,7 @@ public class AES128_Test extends TestCase {
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
 						BigInteger.valueOf((resultArray[i] + 256) % 256));
 			}
@@ -168,7 +168,7 @@ public class AES128_Test extends TestCase {
 				private Wire[] key; // 16 bytes
 				private Wire[] ciphertext; // 16 bytes
 	
-				@Override
+				
 				protected void buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
@@ -178,7 +178,7 @@ public class AES128_Test extends TestCase {
 					makeOutputArray(ciphertext);
 				}
 	
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = new BigInteger(
@@ -193,10 +193,10 @@ public class AES128_Test extends TestCase {
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 							keyArray.length);
 	
-					for (int i = 0; i < plaintext.length; i++) {
+					for i in 0..plaintext.length {
 						evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
 					}
-					for (int i = 0; i < key.length; i++) {
+					for i in 0..key.length {
 						evaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 					}
 				}
@@ -214,7 +214,7 @@ public class AES128_Test extends TestCase {
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
 						BigInteger.valueOf((resultArray[i] + 256) % 256));
 			}
@@ -239,7 +239,7 @@ public class AES128_Test extends TestCase {
 				private Wire[] key; // 16 bytes
 				private Wire[] ciphertext; // 16 bytes
 	
-				@Override
+				
 				protected void buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
@@ -249,7 +249,7 @@ public class AES128_Test extends TestCase {
 					makeOutputArray(ciphertext);
 				}
 	
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = new BigInteger(
@@ -264,10 +264,10 @@ public class AES128_Test extends TestCase {
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 							keyArray.length);
 	
-					for (int i = 0; i < plaintext.length; i++) {
+					for i in 0..plaintext.length {
 						evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
 					}
-					for (int i = 0; i < key.length; i++) {
+					for i in 0..key.length {
 						evaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 					}
 				}
@@ -286,7 +286,7 @@ public class AES128_Test extends TestCase {
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
 						BigInteger.valueOf((resultArray[i] + 256) % 256));
 			}
@@ -298,7 +298,7 @@ public class AES128_Test extends TestCase {
 		
 		
 		AES128CipherGadget.sBoxOption = AES128CipherGadget.SBoxOption.OPTIMIZED2;
-		for(int b = 0; b <= 15; b++){
+		for(int b = 0; b <= 15; b+=1){
 			
 			AESSBoxGadgetOptimized2.setBitCount(b);
 			AESSBoxGadgetOptimized2.solveLinearSystems();
@@ -308,7 +308,7 @@ public class AES128_Test extends TestCase {
 				private Wire[] key; // 16 bytes
 				private Wire[] ciphertext; // 16 bytes
 	
-				@Override
+				
 				protected void buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
@@ -318,7 +318,7 @@ public class AES128_Test extends TestCase {
 					makeOutputArray(ciphertext);
 				}
 	
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = new BigInteger(
@@ -333,10 +333,10 @@ public class AES128_Test extends TestCase {
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 							keyArray.length);
 	
-					for (int i = 0; i < plaintext.length; i++) {
+					for i in 0..plaintext.length {
 						evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
 					}
-					for (int i = 0; i < key.length; i++) {
+					for i in 0..key.length {
 						evaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 					}
 				}
@@ -355,7 +355,7 @@ public class AES128_Test extends TestCase {
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
-			for (int i = 0; i < 16; i++) {
+			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
 						BigInteger.valueOf((resultArray[i] + 256) % 256));
 			}

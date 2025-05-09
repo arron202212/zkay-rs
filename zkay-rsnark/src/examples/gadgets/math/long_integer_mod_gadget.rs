@@ -65,7 +65,7 @@ public class LongIntegerModGadget extends LongIntegerDivision {
 		super(a, b, bMinBitwidth, restrictRange, desc);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return getRemainder().getArray();
 	}

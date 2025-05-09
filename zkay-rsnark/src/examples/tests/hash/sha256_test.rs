@@ -24,14 +24,14 @@ public class SHA256_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
 				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
 				// no input needed
 			}
@@ -59,16 +59,16 @@ public class SHA256_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
 				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
-				for (int i = 0; i < inputStr.length(); i++) {
+				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
 			}
@@ -96,16 +96,16 @@ public class SHA256_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
 				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
-				for (int i = 0; i < inputStr.length(); i++) {
+				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
 			}
@@ -133,16 +133,16 @@ public class SHA256_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
 				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
-				for (int i = 0; i < inputStr.length(); i++) {
+				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
 			}
@@ -170,30 +170,30 @@ public class SHA256_Test extends TestCase {
 		// Testing different settings of the bitWidthPerInputElement parameter
 		// wordSize = # of bytes per input wire
 		
-		for (int wordSize = 1; wordSize <= Config.LOG2_FIELD_PRIME / 8 - 1; wordSize++) {
+		for (int wordSize = 1; wordSize <= Config.LOG2_FIELD_PRIME / 8 - 1; wordSize+=1) {
 			
 			final int numBytesPerInputWire = wordSize;
 			
 			CircuitGenerator generator = new CircuitGenerator("SHA2_Test5") {
 
 				Wire[] inputWires;
-				@Override
+				
 				protected void buildCircuit() {
 					inputWires = createInputWireArray(inputStr.length()
 							/ numBytesPerInputWire
-							+ (inputStr.length() % numBytesPerInputWire != 0 ? 1 : 0));
+							+ (if inputStr.length() % numBytesPerInputWire != 0  { 1 }else { 0}));
 					Wire[] digest = new SHA256Gadget(inputWires, 8 * numBytesPerInputWire,
 							inputStr.length(), false, true, "")
 							.getOutputWires();
 					makeOutputArray(digest);
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator e) {
-					for (int i = 0; i < inputWires.length; i++) {
+					for i in 0..inputWires.length {
 						BigInteger sum = BigInteger.ZERO;
 						for (int j = i * numBytesPerInputWire; j < (i + 1) * numBytesPerInputWire
-								&& j < inputStr.length(); j++) {
+								&& j < inputStr.length(); j+=1) {
 							BigInteger v = BigInteger.valueOf(inputStr
 									.charAt(j));
 							sum = sum.add(v.shiftLeft((j % numBytesPerInputWire) * 8));

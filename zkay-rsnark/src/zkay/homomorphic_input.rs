@@ -10,8 +10,8 @@
  */
 public class HomomorphicInput {
 
-	private final TypedWire[] array;
-	private final boolean isCipher;
+	 TypedWire[] array;
+	 boolean isCipher;
 
 	private HomomorphicInput(TypedWire[] array, boolean isCipher) {
 		this.array = array;
@@ -35,12 +35,12 @@ public class HomomorphicInput {
 	}
 
 	public TypedWire[] getCipher() {
-		if (!isCipher) throw new IllegalStateException("Homomorphic input was not a ciphertext");
+		if !isCipher) throw new IllegalStateException("Homomorphic input was not a ciphertext";
 		return array;
 	}
 
 	public TypedWire getPlain() {
-		if (isCipher) throw new IllegalStateException("Homomorphic input was not a plaintext");
+		if isCipher) throw new IllegalStateException("Homomorphic input was not a plaintext";
 		return array[0];
 	}
 

@@ -1,37 +1,48 @@
 
+use num_bigint::BigUint;
+pub struct Config{
+  field_prime:String;
+             log2_field_prime:u64;
+             libsnark_exec:String;
+ running_multi_generators:bool;
+	 hex_output_enabled:bool;
+	 output_verbose:bool;
+	 debug_verbose:bool;
+	 print_stack_trace_at_warnings:bool;
+}
 
-public class Config {
+impl Config {
 
-	static Properties properties = new Properties();
-
-	static {
-		try {
-			InputStream inStream = new FileInputStream("config.properties");
-			properties.load(inStream);
-		} catch (FileNotFoundException e) {
-			try {
-				// Load as resource if in jar
-				InputStream inStream = Config.class.getResourceAsStream("/config.properties");
-				properties.load(inStream);
-			} catch (Exception e2) {
-				System.err.println("config.properties file not found.");
-				e2.printStackTrace();
-				System.exit(0);
-			}
-		} catch (IOException e) {
-			System.err.println("config.properties not loaded properly.");
-			e.printStackTrace();
-		}
+	pub fn new()->Self {
+            let config_dir=".";
+            let mut c = std::fs::read_to_string(config_dir.join("config.properties")).unwrap();
+			let mut m=std::collections::HashMap::new();
+            for item in c.lines(){
+                let v:Vec<_>=item.split("=").collect();
+                m.insert(v[0].to_owned(),v[1].to_owned());
+            }
+            let field_prime=m.get("FIELD_PRIME").unwrap();
+            let log2_field_prime=BigUint::parse_bytes(field_prime.as_bytes(),10).unwrap().bits();
+            let libsnark_exec = m.get("PATH_TO_LIBSNARK_EXEC").unwrap();
+let running_multi_generators = m.get("RUNNING_GENERATORS_IN_PARALLEL").unwrap().equals("0");
+	let hex_output_enabled = m.get("PRINT_HEX").unwrap().equals("1");
+	let output_verbose = m.get("OUTPUT_VERBOSE").unwrap().equals("1");
+	let debug_verbose = m.get("DEBUG_VERBOSE").unwrap().equals("1");
+	let print_stack_trace_at_warnings = false;
+        Self{
+  field_prime,
+             log2_field_prime,
+             libsnark_exec,
+ running_multi_generators,
+	 hex_output_enabled,
+	 output_verbose,
+	 debug_verbose,
+	 print_stack_trace_at_warnings,
+    }
 	}
 
-	public static final BigInteger FIELD_PRIME = new BigInteger(properties.getProperty("FIELD_PRIME"));
-	public static final int LOG2_FIELD_PRIME = FIELD_PRIME.toString(2).length();
-	public static final String LIBSNARK_EXEC = properties.getProperty("PATH_TO_LIBSNARK_EXEC");
 
-	public static boolean runningMultiGenerators = properties.getProperty("RUNNING_GENERATORS_IN_PARALLEL").equals("0");
-	public static boolean hexOutputEnabled = properties.getProperty("PRINT_HEX").equals("1");
-	public static boolean outputVerbose = properties.getProperty("OUTPUT_VERBOSE").equals("1");
-	public static boolean debugVerbose = properties.getProperty("DEBUG_VERBOSE").equals("1");
+	
 
-	public static boolean printStackTraceAtWarnings = false;
+	
 }

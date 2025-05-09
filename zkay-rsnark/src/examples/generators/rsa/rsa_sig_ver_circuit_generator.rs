@@ -22,7 +22,7 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 		this.rsaKeyLength = rsaKeyLength;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		// a sample input message of 3 byte
@@ -71,10 +71,10 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
 		String inputStr = "abc";
-		for (int i = 0; i < inputMessage.length; i++) {
+		for i in 0..inputMessage.length {
 			evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
 		}
 
@@ -95,10 +95,10 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 			signaturePadded[0] = 0;
 			BigInteger modulus = ((RSAPublicKey) keyPair.getPublic())
 					.getModulus();
-//			System.out.println(modulus.toString(16));
+//			println!(modulus.toString(16));
 			BigInteger sig = new BigInteger(signaturePadded);
 
-			// if (!minimizeVerificationKey) {
+			// if !minimizeVerificationKey {
 			evaluator.setWireValue(this.rsaModulus, modulus,
 					LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(this.signature, sig,
@@ -110,14 +110,13 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 			// Util.split(sig, Config.LOG2_FIELD_PRIME - 1));
 			// }
 		} catch (Exception e) {
-			System.err
-					.println("Error while generating sample input for circuit");
+			println!("Error while generating sample input for circuit");
 			e.printStackTrace();
 		}
 
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		int keyLength = 2048;
 		RSASigVerCircuitGenerator generator = new RSASigVerCircuitGenerator(
 				"rsa" + keyLength + "_sha256_sig_verify", keyLength);

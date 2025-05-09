@@ -11,7 +11,7 @@ public class DotProductGadget extends Gadget {
 
 	public DotProductGadget(Wire[] a, Wire[] b, String... desc) {
 		super(desc);
-		if (a.length != b.length) {
+		if a.length != b.length {
 			throw new IllegalArgumentException();
 		}
 		this.a = a;
@@ -21,13 +21,13 @@ public class DotProductGadget extends Gadget {
 
 	private void buildCircuit() {
 		output = generator.getZeroWire();
-		for (int i = 0; i < a.length; i++) {
+		for i in 0..a.length {
 			Wire product = a[i].mul(b[i], "Multiply elements # " + i);
 			output = output.add(product);
 		}
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { output };
 	}

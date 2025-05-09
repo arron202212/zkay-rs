@@ -11,10 +11,10 @@ public class NonZeroCheckBasicOp extends BasicOp {
 	public String getOpcode(){
 		return "zerop";
 	}
-	@Override
+	
 	public void compute(BigInteger[] assignment) {
 
-		if (assignment[inputs[0].getWireId()].signum() == 0) {
+		if assignment[inputs[0].getWireId()].signum() == 0 {
 			assignment[outputs[1].getWireId()] = BigInteger.ZERO;
 		} else {
 			assignment[outputs[1].getWireId()] = BigInteger.ONE;
@@ -22,12 +22,12 @@ public class NonZeroCheckBasicOp extends BasicOp {
 		assignment[outputs[0].getWireId()] = BigInteger.ZERO; // a dummy value
 	}
 	
-	@Override
+	
 	public boolean equals(Object obj) {
 
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof NonZeroCheckBasicOp)) {
+		if !(obj instanceof NonZeroCheckBasicOp) {
 			return false;
 		}
 		NonZeroCheckBasicOp op = (NonZeroCheckBasicOp) obj;
@@ -35,7 +35,7 @@ public class NonZeroCheckBasicOp extends BasicOp {
 
 	}
 
-	@Override
+	
 	public int getNumMulGates() {
 		return 2;
 	}

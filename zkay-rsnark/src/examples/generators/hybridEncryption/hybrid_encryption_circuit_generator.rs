@@ -33,7 +33,7 @@ public class HybridEncryptionCircuitGenerator extends CircuitGenerator {
 		this.plaintextSize = plaintextSize;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		plaintext = createInputWireArray(plaintextSize, "plaint text");
@@ -43,7 +43,7 @@ public class HybridEncryptionCircuitGenerator extends CircuitGenerator {
 		
 		// The secret exponent is a private input by the prover
 		secExpBits = createProverWitnessWireArray(EXPONENT_BITWIDTH, "SecretExponent");
-		for(int i = 0; i < EXPONENT_BITWIDTH; i++){
+		for(int i = 0; i < EXPONENT_BITWIDTH; i+=1){
 			addBinaryAssertion(secExpBits[i]); // verify all bits are binary
 		}
 
@@ -96,19 +96,19 @@ public class HybridEncryptionCircuitGenerator extends CircuitGenerator {
 		makeOutputArray(ciphertext, "Cipher Text");
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
 		// TODO Auto-generated method stub
-		for(int i = 0; i < plaintextSize; i++){
+		for(int i = 0; i < plaintextSize; i+=1){
 			evaluator.setWireValue(plaintext[i], Util.nextRandomBigInteger(64));
 		}
-		for(int i = 0; i < EXPONENT_BITWIDTH; i++){
+		for(int i = 0; i < EXPONENT_BITWIDTH; i+=1){
 			evaluator.setWireValue(secExpBits[i], Util.nextRandomBigInteger(1));
 		}
 		
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		HybridEncryptionCircuitGenerator generator = new HybridEncryptionCircuitGenerator(
 				"enc_example", 16, "speck128");
 		generator.generateCircuit();

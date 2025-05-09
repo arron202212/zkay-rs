@@ -30,13 +30,13 @@ public class LinearSystemSolver {
 	}
 
 	private void guassJordan() {
-		for (int colIdx = 0, rowIdx = 0; colIdx < numCols; colIdx++, rowIdx++) {
+		for (int colIdx = 0, rowIdx = 0; colIdx < numCols; colIdx+=1, rowIdx+=1) {
 			int pivotRowIdx = rowIdx;
 			while (pivotRowIdx < numRows
 					&& mat[pivotRowIdx][colIdx].equals(BigInteger.ZERO)) {
-				pivotRowIdx++;
+				pivotRowIdx+=1;
 			}
-			if (pivotRowIdx == numRows)
+			if pivotRowIdx == numRows
 				continue;
 
 			// swap
@@ -48,14 +48,14 @@ public class LinearSystemSolver {
 
 			// dividing by pivot
 			BigInteger invF = inverse(mat[pivotRowIdx][colIdx]);
-			for (int j = 0; j < numCols; j++) {
+			for j in 0..numCols {
 				mat[pivotRowIdx][j] = mat[pivotRowIdx][j].multiply(invF).mod(
 						prime);
 			}
 
-			for (int k = pivotRowIdx + 1; k < numRows; k++) {
+			for (int k = pivotRowIdx + 1; k < numRows; k+=1) {
 				BigInteger f = negate(mat[k][colIdx]);
-				for (int j = 0; j < numCols; j++) {
+				for j in 0..numCols {
 					mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].multiply(f));
 					mat[k][j] = mat[k][j].mod(prime);
 				}
@@ -69,14 +69,14 @@ public class LinearSystemSolver {
 			int pivotColIdx = 0;
 			while (pivotColIdx < numCols
 					&& mat[rowIdx][pivotColIdx].equals(BigInteger.ZERO)) {
-				pivotColIdx++;
+				pivotColIdx+=1;
 			}
-			if (pivotColIdx == numCols)
+			if pivotColIdx == numCols
 				continue;
 
 			for (int k = rowIdx - 1; k >= 0; k--) {
 				BigInteger f = mat[k][pivotColIdx];
-				for (int j = 0; j < numCols; j++) {
+				for j in 0..numCols {
 					mat[k][j] = mat[k][j]
 							.add(negate(mat[rowIdx][j].multiply(f)));
 					mat[k][j] = mat[k][j].mod(prime);

@@ -1,13 +1,20 @@
 
-
-use util::Util;
-use circuit::config::Config;
-use circuit::eval::Circuit_evaluator;
-use circuit::eval::Instruction;
-use circuit::structure::Circuit_generator;
-use circuit::structure::Constant_wire;
-use circuit::structure::Wire;
-use circuit::structure::Wire_array;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use util::util;
+use circuit::config::config;
+use circuit::eval::circuit_evaluator;
+use circuit::eval::instruction;
+use circuit::structure::circuit_generator;
+use circuit::structure::constant_wire;
+use circuit::structure::wire;
+use circuit::structure::wire_array;
 
 /**
  * An auxiliary class that handles the operations of long integers, such as the
@@ -17,332 +24,194 @@ use circuit::structure::Wire_array;
  *
  * Usage examples exist in the RSA examples gadgets.
  */
-
-public class LongElement {
-
-	private final Wire[] array;
-	private final int[] currentBitwidth;
-	private final BigInteger[] currentMaxValues;
-	private final CircuitGenerator generator;
-	private WireArray bits = null;
-
-	// Should be declared as final, but left non-final for testing purposes.
+pub type BigInteger=String;
+struct  LongElement {
+	 array:Vec<Wire>;
+	 currentBitwidth:Vec<i32>;
+	 currentMaxValues:Vec<BigInteger> ;
+	 self.generator:CircuitGenerator;
+	bits:Option<WireArray> ;
+}
+impl LongElement{
+	// Should be declared as final, but left non-for testing purposes.
 	// Don't change in the middle of circuit generation.
 	// This represents the size of smaller chunks used to represent long
 	// elements
-	public static int CHUNK_BITWIDTH = 120;
+	pub const CHUNK_BITWIDTH:i32 = 120;
 
-	public LongElement(Wire w, int currentBitwidth) {
-		array = new Wire[] { w };
-		this.currentBitwidth = new int[] { currentBitwidth };
-		this.currentMaxValues = new BigInteger[] { Util
-				.computeMaxValue(currentBitwidth) };
-		generator = CircuitGenerator.getActiveCircuitGenerator();
+	pub fn new(w:Wire, currentBitwidth:i32) ->Self{
+        Self{array : vec![w],
+		 currentBitwidth : vec![ currentBitwidth] ,
+		 currentMaxValues: vec![Util::computeMaxValue(currentBitwidth)] ,
+		 self.generator : CircuitGenerator::getActiveCircuitGenerator(),
+            bits:None
+        }
 	}
 
-	public LongElement(WireArray bits) {
-		if (CHUNK_BITWIDTH >= bits.size()) {
-			array = new Wire[] { bits.packAsBits(bits.size()) };
-			this.currentMaxValues = new BigInteger[] { Util
-					.computeMaxValue(bits.size()) };
-			this.currentBitwidth = new int[] { bits.size() };
+	pub fn new_with_array( bits:WireArray)->Self {
 
+		let (array,currentMaxValues,currentBitwidth)=if CHUNK_BITWIDTH >= bits.size() {
+			(vec![bits.packAsBits(bits.size())] ,
+			 vec![ Util::computeMaxValue(bits.size())],
+			vec![ bits.size()])
 		} else {
-			BigInteger maxChunkVal = Util.computeMaxValue(CHUNK_BITWIDTH);
-			BigInteger maxLastChunkVal = maxChunkVal;
-			int size = bits.size();
-			if (size % CHUNK_BITWIDTH != 0) {
+			let  maxChunkVal = Util::computeMaxValue(CHUNK_BITWIDTH);
+			let  mut maxLastChunkVal = maxChunkVal;
+			let  size = bits.size();
+			if size % CHUNK_BITWIDTH != 0 {
 				bits = bits.adjustLength(size
 						+ (CHUNK_BITWIDTH - size % CHUNK_BITWIDTH));
-				maxLastChunkVal = Util.computeMaxValue(size % CHUNK_BITWIDTH);
+				maxLastChunkVal = Util::computeMaxValue(size % CHUNK_BITWIDTH);
 			}
-			this.array = new Wire[bits.size() / CHUNK_BITWIDTH];
-			this.currentMaxValues = new BigInteger[array.length];
-			this.currentBitwidth = new int[array.length];
+			let mut array = vec![Wire::default();bits.size() / CHUNK_BITWIDTH];
+			let mut currentMaxValues = vec![BigInteger::default();array.len()];
+			let mut currentBitwidth = vec![0;array.len()];
 
-			for (int i = 0; i < this.array.length; i++) {
-				this.array[i] = new WireArray(Arrays.copyOfRange(
-						bits.asArray(), i * CHUNK_BITWIDTH, (i + 1)
-								* CHUNK_BITWIDTH)).packAsBits();
-				if (i == array.length - 1) {
-					this.currentMaxValues[i] = maxLastChunkVal;
-					this.currentBitwidth[i] = maxLastChunkVal.bitLength();
+			for i in  0..array.len() {
+				array[i] = WireArray::new(
+						&bits[i * CHUNK_BITWIDTH.. (i + 1)
+								* CHUNK_BITWIDTH]).packAsBits();
+				if i == array.len() - 1 {
+					currentMaxValues[i] = maxLastChunkVal;
+					currentBitwidth[i] = maxLastChunkVal.bitLength();
 				} else {
-					this.currentMaxValues[i] = maxChunkVal;
-					this.currentBitwidth[i] = maxChunkVal.bitLength();
+					currentMaxValues[i] = maxChunkVal;
+					currentBitwidth[i] = maxChunkVal.bitLength();
 				}
 			}
+            (array,currentMaxValues,currentBitwidth)
+		};
+		Self{array,currentMaxValues,currentBitwidth,
+		self.generator : CircuitGenerator::getActiveCircuitGenerator(),
+ bits,
+        }
+	}
+
+	pub fn new(w:Wire,  currentMaxValue:BigInteger) ->Self{
+		Self{ array : vec![ w],
+		currentMaxValues : vec![ currentMaxValue ];
+		currentBitwidth : vec![ currentMaxValue.bitLength() ];
+		self.generator : CircuitGenerator::getActiveCircuitGenerator(),
+        bits:None}
+	}
+
+	pub fn new( w:Vec<Wire>, currentBitwidth:Vec<i32>)->Self {
+        let mut currentMaxValues = vec![0;w.len()];
+		for i in  0..w.len() {
+			currentMaxValues[i] = Util::computeMaxValue(currentBitwidth[i]);
 		}
-		this.bits = bits;
-		generator = CircuitGenerator.getActiveCircuitGenerator();
+		{array:w,
+		currentBitwidth,
+		currentMaxValues,
+		self.generator : CircuitGenerator::getActiveCircuitGenerator(),
+            bits:None,
+        }
 	}
 
-	public LongElement(Wire w, BigInteger currentMaxValue) {
-		array = new Wire[] { w };
-		this.currentMaxValues = new BigInteger[] { currentMaxValue };
-		this.currentBitwidth = new int[] { currentMaxValue.bitLength() };
-		generator = CircuitGenerator.getActiveCircuitGenerator();
-	}
-
-	public LongElement(Wire[] w, int[] currentBitwidth) {
-		array = w;
-		this.currentBitwidth = currentBitwidth;
-		this.currentMaxValues = new BigInteger[w.length];
-		for (int i = 0; i < w.length; i++) {
-			currentMaxValues[i] = Util.computeMaxValue(currentBitwidth[i]);
-		}
-		generator = CircuitGenerator.getActiveCircuitGenerator();
-	}
-
-	public void makeOutput(String... desc) {
-		for (Wire w : getArray()) {
-			generator.makeOutput(w, desc);
+	pub fn makeOutput(&mut self,desc:Vec<String>) {
+		for  w  in  getArray() {
+			self.generator.makeOutput(w, desc);
 		}
 	}
 
 	/**
 	 * A long element representing a constant.
 	 */
-	public LongElement(BigInteger[] chunks) {
-		this.currentMaxValues = chunks;
-		this.currentBitwidth = new int[chunks.length];
-		for (int i = 0; i < chunks.length; i++) {
+	pub fn new_with_int_array(chunks:Vec<BigInteger> )->Self {
+	    let mut currentBitwidth = vec![0;chunks.len()];
+		for  i in  0.. chunks.len() {
 			currentBitwidth[i] = currentMaxValues[i].bitLength();
 		}
-		generator = CircuitGenerator.getActiveCircuitGenerator();
-		array = generator.createConstantWireArray(chunks);
+        let self.generator = CircuitGenerator::getActiveCircuitGenerator();
+		Self{array : self.generator.createConstantWireArray(chunks) ,
+        currentMaxValues :chunks,
+	currentBitwidth,
+		self.generator,
+        bits:None}
 	}
 
-	public LongElement(Wire[] w, BigInteger[] currentMaxValues) {
-		array = w;
-		this.currentMaxValues = currentMaxValues;
-		this.currentBitwidth = new int[w.length];
-		for (int i = 0; i < w.length; i++) {
+	pub fn new_with_wire_array( w:Vec<Wire>, currentMaxValues:Vec<BigInteger>  ) ->Self{
+        let mut currentBitwidth = vec![0;w.len()];
+		for i in 0..w.len() {
 			currentBitwidth[i] = currentMaxValues[i].bitLength();
 		}
-		generator = CircuitGenerator.getActiveCircuitGenerator();
+        Self{
+		array : w,
+		 currentMaxValues,
+		currentBitwidth,
+		self.generator : CircuitGenerator::getActiveCircuitGenerator(),
+         bits:None,
+        }
 	}
 
-	public boolean addOverflowCheck(LongElement o) {
-		int length = Math.min(array.length, o.array.length);
-		boolean overflow = false;
-		for (int i = 0; i < length; i++) {
-			BigInteger max1 = i < array.length ? currentMaxValues[i]
-					: BigInteger.ZERO;
-			BigInteger max2 = i < o.array.length ? o.currentMaxValues[i]
-					: BigInteger.ZERO;
-			if (max1.add(max2).compareTo(Config.FIELD_PRIME) >= 0) {
+	pub fn addOverflowCheck( o:LongElement)->bool {
+		let  length = std::cmp::min(array.len(), o.array.len());
+		let mut  overflow = false;
+		for i in 0..length {
+			let  max1 = if i < array.len() { currentMaxValues[i]}else
+					 {BigInteger::ZERO};
+			let  max2 = if i < o.array.len()  {o.currentMaxValues[i]}else
+					 {BigInteger::ZERO};
+			if max1+max2>=Config.get().unwrap().field_prime{
 				overflow = true;
 				break;
 			}
 		}
-		return overflow;
+		 overflow
 	}
 
-	public boolean mulOverflowCheck(LongElement o) {
-		int length = array.length + o.array.length - 1;
-		boolean overflow = false;
-		BigInteger[] newMaxValues = new BigInteger[length];
-		Arrays.fill(newMaxValues, BigInteger.ZERO);
-		for (int i = 0; i < array.length; i++) {
-			for (int j = 0; j < o.array.length; j++) {
+	pub fn mulOverflowCheck(o:LongElement)->bool {
+		let  length = array.len() + o.array.len() - 1;
+		let mut  overflow = false;
+		let newMaxValues =vec![BigInteger::ZERO;length];
+		for i in 0.. array.len() {
+			for j in 0.. o.array.len() {
 				newMaxValues[i + j] = newMaxValues[i + j]
 						.add(currentMaxValues[i]
 								.multiply(o.currentMaxValues[j]));
 			}
 		}
-		for (int i = 0; i < length; i++) {
-			if (newMaxValues[i].compareTo(Config.FIELD_PRIME) >= 0) {
+		for i in 0..length {
+			if newMaxValues[i]>=Config.get().unwrap().field_prime {
 				overflow = true;
 				break;
 			}
 		}
-		return overflow;
+		overflow
 	}
 
-	public LongElement add(long value) {
-		return add(BigInteger.valueOf(value));
-	}
-
-	public LongElement add(BigInteger value) {
-		if (value.signum() == 0) return this;
-		if (value.signum() < 0) return subtract(value.negate());
-		return add(new LongElement(Util.split(value, CHUNK_BITWIDTH)));
-	}
-
-	public LongElement add(LongElement o) {
-		if (addOverflowCheck(o)) {
-			System.err.println("Warning: Addition overflow could happen");
-		}
-
-		int length = Math.max(array.length, o.array.length);
-		Wire[] w1 = new WireArray(array).adjustLength(length).asArray();
-		Wire[] w2 = new WireArray(o.array).adjustLength(length).asArray();
-		Wire[] result = new Wire[length];
-		BigInteger[] newMaxValues = new BigInteger[length];
-		for (int i = 0; i < length; i++) {
-			result[i] = w1[i].add(w2[i]);
-			BigInteger max1 = i < array.length ? currentMaxValues[i] : BigInteger.ZERO;
-			BigInteger max2 = i < o.array.length ? o.currentMaxValues[i] : BigInteger.ZERO;
-
-			newMaxValues[i] = max1.add(max2);
-		}
-		return new LongElement(result, newMaxValues);
-	}
-
-	public LongElement subtract(long value) {
-		return subtract(BigInteger.valueOf(value));
-	}
-
-	public LongElement subtract(BigInteger value) {
-		if (value.signum() == 0) return this;
-		if (value.signum() < 0) return add(value.negate());
-		return subtract(new LongElement(Util.split(value, CHUNK_BITWIDTH)));
-	}
-
-	public LongElement subtract(LongElement other) {
-		if (!isAligned() || !other.isAligned()) {
-			throw new IllegalArgumentException("Subtraction arguments must be properly aligned");
-		}
-
-		LongElement result = generator.createLongElementProverWitness(getMaxVal(CHUNK_BITWIDTH).bitLength());
-
-		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
-			public void evaluate(CircuitEvaluator evaluator) {
-				BigInteger myValue = evaluator.getWireValue(LongElement.this, CHUNK_BITWIDTH);
-				BigInteger otherValue = evaluator.getWireValue(other, CHUNK_BITWIDTH);
-				BigInteger resultValue = myValue.subtract(otherValue);
-				if (resultValue.signum() < 0) {
-					throw new IllegalArgumentException("Result of subtraction is negative!");
-				}
-				evaluator.setWireValue(result, resultValue, CHUNK_BITWIDTH);
-			}
-		});
-
-		result.restrictBitwidth();
-		assertEquality(result.add(other));
-		return result;
-	}
-
-	/**
-	 * Implements the improved long integer multiplication from xjsnark
-	 */
-
-	public LongElement mul(LongElement o) {
-
-		if (mulOverflowCheck(o)) {
-			System.err.println("Warning: Mul overflow could happen");
-
-		}
-		int length = array.length + o.array.length - 1;
-		Wire[] result;
-
-		// check if we can just apply the simple non-costly multiplication
-		if (o.array.length == 1 || array.length == 1 || isConstant()
-				|| o.isConstant()) {
-			result = new Wire[length];
-			Arrays.fill(result, generator.getZeroWire());
-
-			// O(n*m) multiplication. Fine to apply if any of the operands has
-			// dim 1
-			// or any of them is constant
-			for (int i = 0; i < array.length; i++) {
-				for (int j = 0; j < o.array.length; j++) {
-					result[i + j] = result[i + j].add(array[i].mul(o.array[j]));
-				}
-			}
-		} else {
-
-			// implement the optimization
-
-			result = generator.createProverWitnessWireArray(length);
-
-			// for safety
-			final Wire[] array1 = this.array;
-			final Wire[] array2 = o.array;
-			generator.specifyProverWitnessComputation(new Instruction() {
-				@Override
-				public void evaluate(CircuitEvaluator evaluator) {
-					BigInteger[] a = evaluator.getWiresValues(array1);
-					BigInteger[] b = evaluator.getWiresValues(array2);
-					BigInteger[] resultVals = multiplyPolys(a, b);
-					evaluator.setWireValue(result, resultVals);
-				}
-			});
-
-			for (int k = 0; k < length; k++) {
-				BigInteger constant = new BigInteger((k + 1) + "");
-				BigInteger coeff = BigInteger.ONE;
-
-				Wire[] vector1 = new Wire[array.length];
-				Wire[] vector2 = new Wire[o.array.length];
-				Wire[] vector3 = new Wire[length];
-				for (int i = 0; i < length; i++) {
-					if (i < array.length) {
-						vector1[i] = array[i].mul(coeff);
-					}
-					if (i < o.array.length) {
-						vector2[i] = o.array[i].mul(coeff);
-					}
-					vector3[i] = result[i].mul(coeff);
-					coeff = Util.mod(coeff.multiply(constant), Config.FIELD_PRIME);
-				}
-
-				Wire v1 = new WireArray(vector1).sumAllElements();
-				Wire v2 = new WireArray(vector2).sumAllElements();
-				Wire v3 = new WireArray(vector3).sumAllElements();
-				generator.addAssertion(v1, v2, v3);
+	fn isConstant()->bool {
+		let mut  isConstant = true;
+		if !array.is_empty() {
+			for i in 0.. array.len() {
+				isConstant &= matches!(array[i], ConstantWire);
 			}
 		}
-
-		BigInteger[] newMaxValues = new BigInteger[length];
-		Arrays.fill(newMaxValues, BigInteger.ZERO);
-		for (int i = 0; i < array.length; i++) {
-			for (int j = 0; j < o.array.length; j++) {
-				newMaxValues[i + j] = newMaxValues[i + j]
-						.add(currentMaxValues[i]
-								.multiply(o.currentMaxValues[j]));
-			}
-		}
-		return new LongElement(result, newMaxValues);
+		isConstant
 	}
 
-	private boolean isConstant() {
-		boolean isConstant = true;
-		if (array != null) {
-			for (int i = 0; i < array.length; i++) {
-				isConstant &= array[i] instanceof ConstantWire;
-			}
-		}
-		return isConstant;
+	pub fn getSize()->usize {
+		 array.len()
 	}
 
-	public int getSize() {
-		return array.length;
-	}
-
-	public LongElement align(int totalNumChunks) {
-		Wire[] newArray = Arrays.copyOfRange(array, 0, totalNumChunks);
-		for(int i = 0; i < newArray.length; i++){
-			if(newArray[i] == null){
-				newArray[i]= generator.getZeroWire();
+	pub fn align(totalNumChunks:usize)->Self {
+		let mut  newArray = array[..totalNumChunks].to_vec();
+		for  i in  0..newArray.len(){
+			if(newArray[i].is_empty()){
+				newArray[i]= self.generator.getZeroWire();
 			}
 		}
-		BigInteger[] newMaxValues = new BigInteger[totalNumChunks];
-		Arrays.fill(newMaxValues, BigInteger.ZERO);
-		System.arraycopy(currentMaxValues, 0, newMaxValues, 0, Math.min(totalNumChunks, currentMaxValues.length));
-		BigInteger maxAlignedChunkValue = Util.computeMaxValue(CHUNK_BITWIDTH);
+		let mut  newMaxValues = vec![BigInteger.ZERO;totalNumChunks];
+		currentMaxValues.copy_from_slice(&newMaxValues[..totalNumChunks.min(currentMaxValues.len())]);
+		let  maxAlignedChunkValue = Util::computeMaxValue(CHUNK_BITWIDTH);
 
-		for (int i = 0; i < totalNumChunks; i++) {
-			if (newMaxValues[i].bitLength() > CHUNK_BITWIDTH) {
-				Wire[] chunkBits = newArray[i].getBitWires(newMaxValues[i].bitLength())
+		for i in  0.. totalNumChunks {
+			if newMaxValues[i].bitLength() > CHUNK_BITWIDTH {
+				let mut  chunkBits = newArray[i].getBitWires(newMaxValues[i].bitLength())
 						.asArray();
-				newArray[i] = new WireArray(Arrays.copyOfRange(chunkBits, 0,
-						CHUNK_BITWIDTH)).packAsBits();
-				Wire rem = new WireArray(Arrays.copyOfRange(chunkBits,
-						CHUNK_BITWIDTH, newMaxValues[i].bitLength())).packAsBits();
-				if (i != totalNumChunks - 1) {
+				newArray[i] = WireArray::new(&chunkBits[..CHUNK_BITWIDTH]).packAsBits();
+				let mut  rem = WireArray::new(&chunkBits[CHUNK_BITWIDTH,newMaxValues[i].bitLength()] ).packAsBits();
+				if i != totalNumChunks - 1 {
 					newMaxValues[i + 1] = newMaxValues[i].shiftRight(
 							CHUNK_BITWIDTH).add(newMaxValues[i + 1]);
 					newArray[i + 1] = rem.add(newArray[i + 1]);
@@ -350,7 +219,7 @@ public class LongElement {
 				newMaxValues[i] = maxAlignedChunkValue;
 			}
 		}
-		return new LongElement(newArray, newMaxValues);
+		 LongElement::new(newArray, newMaxValues)
 	}
 
 
@@ -360,59 +229,54 @@ public class LongElement {
 	// See restrictBitwidth for restricting the bitwidth of all the long element
 	// chunks
 
-	public WireArray getBits(int totalBitwidth) {
+	pub fn   getBits(totalBitwidth:i32)->WireArray {
 
-		if (bits != null) {
-			return bits.adjustLength(totalBitwidth == -1? bits.size():totalBitwidth);
+		if bits.is_some() {
+			return bits.adjustLength( if totalBitwidth == -1 { bits.len()}else {totalBitwidth});
 		}
-		if (array.length == 1) {
+		if array.len() == 1 {
 			bits = array[0].getBitWires(currentMaxValues[0].bitLength());
-			return bits.adjustLength(totalBitwidth == -1? bits.size():totalBitwidth);
-		} else {
-			if (totalBitwidth <= CHUNK_BITWIDTH && totalBitwidth >= 0) {
-				WireArray out = array[0].getBitWires(currentMaxValues[0]
+			return bits.adjustLength( if totalBitwidth == -1 { bits.size()}else {totalBitwidth});
+		} 
+			if totalBitwidth <= CHUNK_BITWIDTH && totalBitwidth >= 0 {
+				let out = array[0].getBitWires(currentMaxValues[0]
 						.bitLength());
 				return out.adjustLength(totalBitwidth);
-			} else {
-				Wire[] bitWires;
-				int limit = totalBitwidth;
+			} 
+				
+				let limit = totalBitwidth;
 				BigInteger maxVal = getMaxVal(CHUNK_BITWIDTH);
 
-				if (totalBitwidth != -1) {
-					bitWires = new Wire[totalBitwidth];
+				let  bitWires=if totalBitwidth != -1 {
+					vec![self.generator.getZeroWire();totalBitwidth]
 				} else {
-					bitWires = new Wire[maxVal.bitLength()];
 					limit = maxVal.bitLength();
-				}
-				Arrays.fill(bitWires, generator.getZeroWire());
+                    vec![self.generator.getZeroWire();maxVal.bitLength()]
+				};
 
-				int newLength = (int) Math.ceil(getMaxVal(CHUNK_BITWIDTH)
-						.bitLength() * 1.0 / CHUNK_BITWIDTH);
-				Wire[] newArray = new Wire[newLength];
-				BigInteger[] newMaxValues = new BigInteger[newLength];
-				Arrays.fill(newMaxValues, BigInteger.ZERO);
-				Arrays.fill(newArray, generator.getZeroWire());
+				let newLength =  (getMaxVal(CHUNK_BITWIDTH)
+						.bitLength() * 1.0 / CHUNK_BITWIDTH).ceil();
+				let mut  newArray = vec![ self.generator.getZeroWire();newLength];
+				let newMaxValues = vec![BigInteger.ZERO;newLength];
 
-				System.arraycopy(currentMaxValues, 0, newMaxValues, 0,
-						currentMaxValues.length);
-				System.arraycopy(array, 0, newArray, 0, array.length);
-				int idx = 0;
-				int chunkIndex = 0;
+                newMaxValues[0..currentMaxValues.len()].copy_from_slice(&currentMaxValues);
+                newArray[0..array.len()].clone_from_slice(&array);
+				let idx = 0;
+				let chunkIndex = 0;
 				while (idx < limit && chunkIndex < newLength) {
-					Wire[] alignedChunkBits;
-					if (newMaxValues[chunkIndex].bitLength() > CHUNK_BITWIDTH) {
+					let mut  alignedChunkBits;
+					if newMaxValues[chunkIndex].bitLength() > CHUNK_BITWIDTH {
 
-						Wire[] chunkBits = newArray[chunkIndex].getBitWires(
+						Vec<Wire> chunkBits = newArray[chunkIndex].getBitWires(
 								newMaxValues[chunkIndex].bitLength()).asArray();
 
-						alignedChunkBits = Arrays.copyOfRange(chunkBits, 0,
-								CHUNK_BITWIDTH);
-						Wire rem = new WireArray(Arrays.copyOfRange(chunkBits,
-								CHUNK_BITWIDTH,
-								newMaxValues[chunkIndex].bitLength()))
+						alignedChunkBits = chunkBits[..CHUNK_BITWIDTH].to_vec();
+						let rem = WireArray::new(&chunkBits[
+								CHUNK_BITWIDTH..
+								newMaxValues[chunkIndex].bitLength()])
 								.packAsBits();
 
-						if (chunkIndex != newArray.length - 1) {
+						if chunkIndex != newArray.len() - 1 {
 							newMaxValues[chunkIndex + 1] = newMaxValues[chunkIndex]
 									.shiftRight(CHUNK_BITWIDTH).add(
 											newMaxValues[chunkIndex + 1]);
@@ -423,191 +287,185 @@ public class LongElement {
 						alignedChunkBits = newArray[chunkIndex].getBitWires(
 								CHUNK_BITWIDTH).asArray();
 					}
-					System.arraycopy(alignedChunkBits, 0, bitWires, idx,
-							Math.min(alignedChunkBits.length, limit - idx));
-					chunkIndex++;
-					idx += alignedChunkBits.length;
+                    bitWires[idx..std::cmp::min(alignedChunkBits.len(), limit - idx)].copy_from_slice(&alignedChunkBits);
+					chunkIndex+=1;
+					idx += alignedChunkBits.len();
 				}
-				WireArray out = new WireArray(bitWires);
+				let  out = WireArray::new(bitWires);
 				if(limit >= maxVal.bitLength()){
 					bits = out.adjustLength(maxVal.bitLength());
 				}
-				return out;
-			}
+				 out
+			
 
-		}
+		
 
 	}
 
-	public BigInteger getMaxVal(int bitwidth) {
-		return Util.group(currentMaxValues, bitwidth);
+	pub fn  getMaxVal(bitwidth:i32)->BigInteger {
+		 Util::group(currentMaxValues, bitwidth)
 	}
 
-	private BigInteger[] multiplyPolys(BigInteger[] aiVals, BigInteger[] biVals) {
+	fn  multiplyPolys(Vec<BigInteger>  aiVals, Vec<BigInteger>  biVals)->Vec<BigInteger>  {
 
-		BigInteger[] solution = new BigInteger[aiVals.length + biVals.length
+		let mut  solution = vec![BigInteger.ZERO;aiVals.len() + biVals.len()
 				- 1];
-		Arrays.fill(solution, BigInteger.ZERO);
-		for (int i = 0; i < aiVals.length; i++) {
-			for (int j = 0; j < biVals.length; j++) {
+		
+		for i in 0..aiVals.len() {
+			for j in 0..biVals.len() {
 				solution[i + j] = solution[i + j].add(
-						aiVals[i].multiply(biVals[j])).mod(Config.FIELD_PRIME);
+						aiVals[i].multiply(biVals[j])).mod(Config.get().unwrap().field_prime);
 			}
 		}
-		return solution;
+		 solution
 
 	}
 
-	public LongElement muxBit(LongElement other, Wire w) {
+	pub fn muxBit(LongElement other, w:Wire)->Self {
 
-		int length = Math.max(array.length, other.array.length);
-		Wire[] newArray = new Wire[length];
-		BigInteger[] newMaxValues = new BigInteger[length];
-		for (int i = 0; i < length; i++) {
+		let length = std::cmp::max(array.len(), other.array.len());
+		let mut  newArray = vec![self.generator.getZeroWire();length];
+		Vec<BigInteger> newMaxValues = vec![BigInteger.ZERO;length];
+		for i in 0..length {
 
-			BigInteger b1 = i < array.length ? currentMaxValues[i]
-					: BigInteger.ZERO;
-			BigInteger b2 = i < other.array.length ? other.currentMaxValues[i]
-					: BigInteger.ZERO;
-			newMaxValues[i] = b1.compareTo(b2) == 1 ? b1 : b2;
+			let  b1 = if i < array.len()  {currentMaxValues[i]}
+					else {BigInteger.ZERO};
+			let  b2 = if i < other.array.len()  {other.currentMaxValues[i]}
+					else {BigInteger.ZERO};
+			newMaxValues[i]=  if b1.compareTo(b2) == 1  { b1 }else { b2};
 
-			Wire w1 = i < array.length ? array[i] : generator.getZeroWire();
-			Wire w2 = i < other.array.length ? other.array[i] : generator
-					.getZeroWire();
+			let  w1=  if i < array.len()  { array[i] }else { self.generator.getZeroWire()};
+			let  w2 =  if i < other.array.len()  { other.array[i] }else { self.generator
+					.getZeroWire()};
 			newArray[i] = w1.add(w.mul(w2.sub(w1)));
-			if (newArray[i] instanceof ConstantWire) {
+			if matches!(newArray[i],  ConstantWire) {
 				newMaxValues[i] = ((ConstantWire) newArray[i]).getConstant();
 			}
 
 		}
-		return new LongElement(newArray, newMaxValues);
+		 LongElement::new(newArray, newMaxValues)
 	}
 
-	public Wire checkNonZero() {
-		Wire[] wireNonZero = new Wire[array.length];
-		for (int i = 0; i < array.length; ++i) {
+	pub fn checkNonZero()-> Wire{
+		let mut  wireNonZero = vec![self.generator.getZeroWire();array.len()];
+		for i in 0..array.len() {
 			wireNonZero[i] = array[i].checkNonZero();
 		}
-		return new WireArray(wireNonZero).sumAllElements().checkNonZero();
+		 WireArray::new(wireNonZero).sumAllElements().checkNonZero()
 	}
 
-	public Wire[] getArray() {
-		return array;
+	pub fn getArray()->Vec<Wire> {
+		 array.clone()
 	}
 
-	public int[] getCurrentBitwidth() {
-		return currentBitwidth;
+	pub fn getCurrentBitwidth()->Vec<i32> {
+		 currentBitwidth.clone()
 	}
 
-	public BigInteger[] getCurrentMaxValues() {
-		return currentMaxValues;
+	pub fn getCurrentMaxValues()->Vec<BigInteger>  {
+		 currentMaxValues.clone()
 	}
 
-	public WireArray getBits() {
-		return bits;
+	pub fn getBits()->WireArray {
+		 bits.clone()
 	}
 
-	public BigInteger getConstant(int bitwidth_per_chunk) {
-		BigInteger[] constants = new BigInteger[array.length];
-		for (int i = 0; i < array.length; i++) {
-			if (!(array[i] instanceof ConstantWire))
-				return null;
+	pub fn getConstant(bitwidth_per_chunk:i32)->Option<BigInteger> {
+		let mut  constants = vec![BigInteger.ZERO;array.len()];
+		for i in 0.. array.len() {
+			if !matches!(array[i], ConstantWire)
+				return None;
 			else {
 				constants[i] = ((ConstantWire) array[i]).getConstant();
 			}
 		}
-		return Util.group(constants, bitwidth_per_chunk);
+		Util::group(constants, bitwidth_per_chunk)
 	}
 
 	// the equals java method to compare objects (this is NOT for circuit
 	// equality check)
-	public boolean equals(Object o) {
-		if (o == null || !(o instanceof LongElement)) {
+	pub fn equals(&self,v: LongElement)->bool {
+		// if o == null || !(o instanceof LongElement) {
+		// 	return false;
+		// }
+		// LongElement v = (LongElement) o;
+		if v.array.len() != self.array.len() {
 			return false;
 		}
-		LongElement v = (LongElement) o;
-		if (v.array.length != array.length) {
-			return false;
-		}
-		boolean check = true;
-		for (int i = 0; i < array.length; i++) {
-			if (!v.array[i].equals(array[i])) {
-				check = false;
-				break;
-			}
-		}
-		return check;
+		// let mut  check = true;
+		// for i in 0.. self.array.len() {
+		// 	if !v.array[i].equals(array[i]) {
+		// 		check = false;
+		// 		break;
+		// 	}
+		// }
+		// return check;
+        self.array.iter().zip(&v.array).all(|(a,b)| a.equals(b))
 	}
 
 	// This asserts that the current bitwidth conditions are satisfied
-	public void restrictBitwidth() {
-		if (!isAligned()) {
-			System.err
-					.println("Warning [restrictBitwidth()]: Might want to align before checking bitwidth constraints");
-			if (Config.printStackTraceAtWarnings) {
-				Thread.dumpStack();
+	pub fn restrictBitwidth(&self) {
+		if !isAligned() {
+			println!("Warning [restrictBitwidth()]: Might want to align before checking bitwidth constraints");
+			if Config.get().unwrap().printStackTraceAtWarnings {
+				// Thread.dumpStack();
+               println!("Thread.dumpStack()");
 			}
 		}
-		for (int i = 0; i < array.length; i++) {
-			array[i].restrictBitLength(currentBitwidth[i]);
+		for i in 0.. self.array.len() {
+			self.array[i].restrictBitLength(currentBitwidth[i]);
 		}
 	}
 
-	public boolean isAligned() {
-		boolean check = true;
-		for (int i = 0; i < array.length; i++) {
-			check &= currentBitwidth[i] <= CHUNK_BITWIDTH;
+	pub fn isAligned(&self)->bool {
+		let mut  check = true;
+		for i in 0.. array.len() {
+			check &= self.currentBitwidth[i] <= CHUNK_BITWIDTH;
 		}
-		return check;
+		 check
 	}
 
-	public void assertEqualityNaive(LongElement a) {
+	pub fn assertEqualityNaive(a:LongElement) {
 
 		WireArray bits1 = a.getBits(a.getMaxVal(CHUNK_BITWIDTH).bitLength());
 		WireArray bits2 = getBits(getMaxVal(CHUNK_BITWIDTH).bitLength());
-		LongElement v1 = new LongElement(bits1);
-		LongElement v2 = new LongElement(bits2);
-		for (int i = 0; i < v1.array.length; i++) {
-			generator.addEqualityAssertion(v1.array[i], v2.array[i]);
+		LongElement v1 = LongElement::new(bits1);
+		LongElement v2 = LongElement::new(bits2);
+		for i in 0..v1.array.len() {
+			self.generator.addEqualityAssertion(v1.array[i], v2.array[i]);
 		}
 	}
 
 	// an improved equality assertion algorithm from xjsnark
-	public void assertEquality(LongElement e) {
+	pub fn assertEquality(&self.e:LongElement) {
 
-		Wire[] a1 = array;
-		Wire[] a2 = e.array;
-		BigInteger[] bounds1 = currentMaxValues;
-		BigInteger[] bounds2 = e.currentMaxValues;
+		let  (mut a1 ,mut a2)= (self.array.clone(),e.array.clone());
+		let  (mut bounds1,mut bounds2) = (self.currentMaxValues.clone(),e.currentMaxValues.clone());
 
-		int limit = Math.max(a1.length, a2.length);
+		let limit = std::cmp::max(a1.len(), a2.len());
 
 		// padding
-		if (e.array.length != limit) {
-			a2 = new WireArray(a2).adjustLength(limit).asArray();
-			bounds2 = new BigInteger[limit];
-			Arrays.fill(bounds2, BigInteger.ZERO);
-			System.arraycopy(e.currentMaxValues, 0, bounds2, 0,
-					e.currentMaxValues.length);
+		if e.array.len() != limit {
+			a2 = WireArray::new(a2).adjustLength(limit).asArray();
+			bounds2 = vec![BigInteger.ZERO;limit];
+			bounds2[..e.currentMaxValues.len()].copy_from_slice(&e.currentMaxValues);
 		}
-		if (array.length != limit) {
-			a1 = new WireArray(a1).adjustLength(limit).asArray();
-			bounds1 = new BigInteger[limit];
-			Arrays.fill(bounds1, BigInteger.ZERO);
-			System.arraycopy(currentMaxValues, 0, bounds1, 0,
-					currentMaxValues.length);
+		if self.array.len() != limit {
+			a1 = WireArray::new(a1).adjustLength(limit).asArray();
+			bounds1 = vec![BigInteger.ZERO;limit];
+			bounds1[..self.currentMaxValues.len()].copy_from_slice(&self.currentMaxValues);
 		}
 
 		// simple equality assertion cases
-		if (a1.length == a2.length && a1.length == 1) {
-			generator.addEqualityAssertion(a1[0], a2[0],
+		if a1.len() == a2.len() && a1.len() == 1 {
+			self.generator.addEqualityAssertion(a1[0], a2[0],
 					"Equality assertion of long elements | case 1");
 			return;
-		} else if (isAligned() && e.isAligned()) {
-			for (int i = 0; i < limit; i++) {
-				generator.addEqualityAssertion(a1[i], a2[i],
-						"Equality assertion of long elements | case 2 | index "
-								+ i);
+		} else if isAligned() && e.isAligned() {
+			for i in 0..limit {
+				self.generator.addEqualityAssertion(a1[i], a2[i],
+						"Equality assertion of long elements | case 2 | index ".to_string()
+								+ &i.to_string());
 			}
 			return;
 		}
@@ -615,35 +473,35 @@ public class LongElement {
 		// To make the equality check more efficient, group the chunks together
 		// while ensuring that there are no overflows.
 
-		ArrayList<Wire> group1 = new ArrayList<Wire>();
-		ArrayList<BigInteger> group1_bounds = new ArrayList<BigInteger>();
-		ArrayList<Wire> group2 = new ArrayList<Wire>();
-		ArrayList<BigInteger> group2_bounds = new ArrayList<BigInteger>();
+		let mut  group1 = vec![];
+		let mut  group1_bounds =vec![];
+		let mut  group2 = vec![];
+		let mut  group2_bounds = vec![];
 
 		// This array will store how many chunks were grouped together for every
 		// wire in group1 or group2
 		// The grouping needs to happen in the same way for the two operands, so
 		// it's one steps array
-		ArrayList<Integer> steps = new ArrayList<Integer>();
+		let mut  steps = vec![];
 
-		BigInteger shift = new BigInteger("2").pow(CHUNK_BITWIDTH);
-		int i = 0;
+		let  shift = BigInteger::from(2).pow(CHUNK_BITWIDTH);
+		let i = 0;
 		while (i < limit) {
-			int step = 1;
-			Wire w1 = a1[i];
-			Wire w2 = a2[i];
-			BigInteger b1 = bounds1[i];
-			BigInteger b2 = bounds2[i];
+			let step = 1;
+			let w1 = a1[i];
+			let w2 = a2[i];
+			let b1 = bounds1[i];
+			let b2 = bounds2[i];
 			while (i + step <= limit - 1) {
-				BigInteger delta = shift.pow(step);
-				if (b1.add(bounds1[i + step].multiply(delta)).bitLength() < Config.LOG2_FIELD_PRIME - 2
+				let delta = shift.pow(step);
+				if b1.add(bounds1[i + step].multiply(delta)).bitLength() < Config.get().unwrap(.LOG2_FIELD_PRIME - 2
 						&& b2.add(bounds2[i + step].multiply(delta))
-								.bitLength() < Config.LOG2_FIELD_PRIME - 2) {
+								.bitLength() < Config.get().unwrap().LOG2_FIELD_PRIME - 2) {
 					w1 = w1.add(a1[i + step].mul(delta));
 					w2 = w2.add(a2[i + step].mul(delta));
 					b1 = b1.add(bounds1[i + step].multiply(delta));
 					b2 = b2.add(bounds2[i + step].multiply(delta));
-					step++;
+					step+=1;
 				} else {
 					break;
 				}
@@ -656,7 +514,7 @@ public class LongElement {
 			i += step;
 		}
 
-		int numOfGroupedChunks = group1.size();
+		let numOfGroupedChunks = group1.size();
 
 		// After grouping, subtraction will be needed to compare the grouped
 		// chunks and propagate carries.
@@ -667,36 +525,36 @@ public class LongElement {
 		// of this auxConstant will be added to the chunks of the first operand
 		// before subtraction.
 
-		BigInteger auxConstant = BigInteger.ZERO;
-		BigInteger[] auxConstantChunks = new BigInteger[numOfGroupedChunks];
+		let auxConstant = BigInteger.ZERO;
+		let auxConstantChunks = vec![BigInteger.ZERO;numOfGroupedChunks];
 
-		Wire[] carries = generator
+		let mut carries = self.generator
 				.createProverWitnessWireArray(numOfGroupedChunks - 1);
-		int[] carriesBitwidthBounds = new int[carries.length];
+		let mut carriesBitwidthBounds = vec![0;carries.len()];
 
 		// computing the auxConstantChunks, and the total auxConstant
-		int accumStep = 0;
-		for (int j = 0; j < auxConstantChunks.length - 1; j++) {
+		let mut accumStep = 0;
+		for  j in  0.. auxConstantChunks.len() - 1 {
 			auxConstantChunks[j] = BigInteger.valueOf(2).pow(
 					group2_bounds.get(j).bitLength());
 			auxConstant = auxConstant.add(auxConstantChunks[j].multiply(shift
 					.pow(accumStep)));
 			accumStep += steps.get(j);
-			carriesBitwidthBounds[j] = Math.max(auxConstantChunks[j]
+			carriesBitwidthBounds[j] = std::cmp::max(auxConstantChunks[j]
 					.bitLength(), group1_bounds.get(j).bitLength())
 					- steps.get(j) * CHUNK_BITWIDTH + 1;
 		}
 
 		// since the two elements should be equal, we should not need any aux
 		// chunk in the last step
-		auxConstantChunks[auxConstantChunks.length - 1] = BigInteger.ZERO;
+		auxConstantChunks[auxConstantChunks.len() - 1] = BigInteger.ZERO;
 
 		// Note: the previous auxConstantChunks are not aligned. We compute an
 		// aligned version as follows.
 
 		// First split the aux constant into small chunks based on
 		// CHUNK_BITWIDTH
-		BigInteger[] alignedAuxConstantSmallChunks = Util.split(auxConstant,
+		let  alignedAuxConstantSmallChunks = Util::split(auxConstant,
 				CHUNK_BITWIDTH);
 
 		// second, group the small aux chunks based on the steps array computed
@@ -704,42 +562,41 @@ public class LongElement {
 		// alignedAuxConstantChunks is the grouped version of
 		// alignedAuxConstantSmallChunks
 
-		BigInteger[] alignedAuxConstantChunks = new BigInteger[numOfGroupedChunks];
-		Arrays.fill(alignedAuxConstantChunks, BigInteger.ZERO);
+		let mut alignedAuxConstantChunks = vec![BigInteger.ZERO;numOfGroupedChunks];
 
-		int idx = 0;
-		loop1: for (int j = 0; j < numOfGroupedChunks; j++) {
-			for (int k = 0; k < steps.get(j); k++) {
+		let idx = 0;
+		'loop1: for j in 0..numOfGroupedChunks {
+			for k in 0..steps.get(j) {
 				alignedAuxConstantChunks[j] = alignedAuxConstantChunks[j]
 						.add(alignedAuxConstantSmallChunks[idx].multiply(shift
 								.pow(k)));
-				idx++;
-				if (idx == alignedAuxConstantSmallChunks.length) {
-					break loop1;
+				idx+=1;
+				if idx == alignedAuxConstantSmallChunks.len() {
+					break 'loop1;
 				}
 			}
 		}
-		if (idx != alignedAuxConstantSmallChunks.length) {
-			if (idx == alignedAuxConstantSmallChunks.length - 1) {
+		if idx != alignedAuxConstantSmallChunks.len() {
+			if idx == alignedAuxConstantSmallChunks.len() - 1 {
 				alignedAuxConstantChunks[numOfGroupedChunks - 1] = alignedAuxConstantChunks[numOfGroupedChunks - 1]
 						.add(alignedAuxConstantSmallChunks[idx].multiply(shift
 								.pow(steps.get(numOfGroupedChunks - 1))));
 			} else {
-				throw new RuntimeException("Case not expected. Please report.");
+				panic!("Case not expected. Please report.");
 			}
 		}
 
 		// specify how the values of carries are obtained during runtime
-		generator.specifyProverWitnessComputation(new Instruction() {
-
-			@Override
-			public void evaluate(CircuitEvaluator evaluator) {
-
-				BigInteger prevCarry = BigInteger.ZERO;
-				for (int i = 0; i < carries.length; i++) {
-					BigInteger a = evaluator.getWireValue(group1.get(i));
-					BigInteger b = evaluator.getWireValue(group2.get(i));
-					BigInteger carryValue = auxConstantChunks[i].add(a)
+		self.generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
+			 fn evaluate(evaluator:CircuitEvaluator) {
+				let mut  prevCarry = BigInteger.ZERO;
+				for i in 0..carries.len() {
+					let  a = evaluator.getWireValue(group1.get(i));
+					let b = evaluator.getWireValue(group2.get(i));
+					let mut carryValue = auxConstantChunks[i].add(a)
 							.subtract(b).subtract(alignedAuxConstantChunks[i])
 							.add(prevCarry);
 					carryValue = carryValue.shiftRight(steps.get(i)
@@ -747,12 +604,13 @@ public class LongElement {
 					evaluator.setWireValue(carries[i], carryValue);
 					prevCarry = carryValue;
 				}
-			}
+			}}
+            Prover
 		});
 
 		// We must make sure that the carries values are bounded.
 
-		for (int j = 0; j < carries.length; j++) {
+		for j in 0..carries.len() {
 			// carries[j].getBitWires(carriesBitwidthBounds[j]);
 			carries[j].restrictBitLength(carriesBitwidthBounds[j]);
 
@@ -763,29 +621,29 @@ public class LongElement {
 
 		// Now apply the main constraints
 
-		Wire prevCarry = generator.getZeroWire();
-		BigInteger prevBound = BigInteger.ZERO;
+		let mut  prevCarry = self.generator.getZeroWire();
+		let mut  prevBound = BigInteger.ZERO;
 
-		// recall carries.length = numOfGroupedChunks - 1
-		for (int j = 0; j < carries.length + 1; j++) {
-			Wire auxConstantChunkWire = generator
+		// recall carries.len() = numOfGroupedChunks - 1
+		for  j in 0.. carries.len() + 1 {
+			let  auxConstantChunkWire = self.generator
 					.createConstantWire(auxConstantChunks[j]);
-			Wire alignedAuxConstantChunkWire = generator
+			let alignedAuxConstantChunkWire = self.generator
 					.createConstantWire(alignedAuxConstantChunks[j]);
 
 			// the last carry value must be zero
-			Wire currentCarry = j == carries.length ? generator.getZeroWire()
-					: carries[j];
+			let currentCarry = if j == carries.len()  {self.generator.getZeroWire()}
+					else {carries[j]};
 
 			// overflow check for safety
-			if (auxConstantChunks[j].add(group1_bounds.get(j)).add(prevBound)
-					.compareTo(Config.FIELD_PRIME) >= 0) {
-				System.err.println("Overflow possibility @ ForceEqual()");
+			if auxConstantChunks[j].add(group1_bounds.get(j)).add(prevBound
+					.compareTo(Config.get().unwrap().field_prime) >= 0) {
+				println!("Overflow possibility @ ForceEqual()");
 			}
 
-			Wire w1 = auxConstantChunkWire
+			let w1 = auxConstantChunkWire
 					.add(group1.get(j).sub(group2.get(j))).add(prevCarry);
-			Wire w2 = alignedAuxConstantChunkWire.add(currentCarry.mul(shift
+			let w2 = alignedAuxConstantChunkWire.add(currentCarry.mul(shift
 					.pow(steps.get(j))));
 
 			// enforce w1 = w2
@@ -793,34 +651,32 @@ public class LongElement {
 			// currentCarry will be zero,
 			// i.e., there will be no more values to be checked.
 
-			generator
+			self.generator
 					.addEqualityAssertion(w1, w2,
 							"Equality assertion of long elements | case 3 | index "
 									+ j);
 
 			prevCarry = currentCarry;
-			if (j != carries.length) {
-				prevBound = Util.computeMaxValue(carriesBitwidthBounds[j]);
+			if j != carries.len() {
+				prevBound = Util::computeMaxValue(carriesBitwidthBounds[j]);
 			}
 
 		}
 	}
 
 	// applies an improved technique to assert comparison
-	public void assertLessThan(LongElement other) {
+	pub fn assertLessThan(&self,other:LongElement) {
 
 		// first verify that both elements are aligned
-		if (!isAligned() || !other.isAligned()) {
-			throw new IllegalArgumentException("input chunks are not aligned");
-		}
+		assert!(self.isAligned() && other.isAligned(),"input chunks are not aligned");
 
-		Wire[] a1 = this.getArray();
-		Wire[] a2 = other.getArray();
-		final int length = Math.max(a1.length, a2.length);
-		final Wire[] paddedA1 = Util.padWireArray(a1, length,
-				generator.getZeroWire());
-		final Wire[] paddedA2 = Util.padWireArray(a2, length,
-				generator.getZeroWire());
+		let  a1 = this.getArray();
+		let  a2 = other.getArray();
+		let length = std::cmp::max(a1.len(), a2.len());
+		let  paddedA1 = Util::padWireArray(a1, length,
+				self.generator.getZeroWire());
+		let paddedA2 = Util::padWireArray(a2, length,
+				self.generator.getZeroWire());
 
 		/*
 		 * Instead of doing the comparison naively (which will involve all the
@@ -828,56 +684,240 @@ public class LongElement {
 		 * other element that is more than the corresponding chunk in this
 		 * element.
 		 */
-		Wire[] helperBits = generator.createProverWitnessWireArray(length);
+		let  helperBits = self.generator.createProverWitnessWireArray(length);
 		// set the value of the helperBits outside the circuits
 
-		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
-			public void evaluate(CircuitEvaluator evaluator) {
+		self.generator.specifyProverWitnessComputation(&{
+			 struct Prover;
+            impl Instruction  for Prover
+			{
+			pub fn evaluate( evaluator:CircuitEvaluator) {
+				let  mut found = false;
+				for  i in  (0..length ).rev() {
+					let  v1 = evaluator.getWireValue(paddedA1[i]);
+					let v2 = evaluator.getWireValue(paddedA2[i]);
 
-				boolean found = false;
-				for (int i = length - 1; i >= 0; i--) {
-					BigInteger v1 = evaluator.getWireValue(paddedA1[i]);
-					BigInteger v2 = evaluator.getWireValue(paddedA2[i]);
-
-					boolean check = v2.compareTo(v1) > 0 && !found;
+					let  check = v2.compareTo(v1) > 0 && !found;
 					evaluator.setWireValue(helperBits[i],
-							check ? BigInteger.ONE : BigInteger.ZERO);
-					if (check)
-						found = true;
+                            if check  { BigInteger.ONE }else { BigInteger.ZERO});
+					if check
+						{found = true;}
 				}
 			}
+            }
+        Prover
 		});
 
 		// verify constraints about helper bits.
-		for (Wire w : helperBits) {
-			generator.addBinaryAssertion(w);
+		for  w in  helperBits {
+			self.generator.addBinaryAssertion(w);
 		}
 		// Only one bit should be set.
-		generator.addOneAssertion(new WireArray(helperBits).sumAllElements());
+		self.generator.addOneAssertion(WireArray::new(helperBits).sumAllElements());
 
 		// verify "the greater than condition" for the specified chunk
-		Wire chunk1 = generator.getZeroWire();
-		Wire chunk2 = generator.getZeroWire();
+		let chunk1 = self.generator.getZeroWire();
+		let chunk2 = self.generator.getZeroWire();
 
-		for (int i = 0; i < helperBits.length; i++) {
+		for i in 0..helperBits.len() {
 			chunk1 = chunk1.add(paddedA1[i].mul(helperBits[i]));
 			chunk2 = chunk2.add(paddedA2[i].mul(helperBits[i]));
 		}
-		generator.addOneAssertion(chunk1.isLessThan(chunk2,
+		self.generator.addOneAssertion(chunk1.isLessThan(chunk2,
 				LongElement.CHUNK_BITWIDTH));
 
 		// check that the other more significant chunks are equal
-		Wire[] helperBits2 = new Wire[helperBits.length];
-		helperBits2[0] = generator.getZeroWire();
-		for (int i = 1; i < helperBits.length; i++) {
+		let mut  helperBits2 = vec![self.generator.getZeroWire();helperBits.len()];
+		for i in 1..helperBits.len() {
 			helperBits2[i] = helperBits2[i - 1].add(helperBits[i - 1]);
-//			generator.addZeroAssertion(helperBits2[i].mul(paddedA1[i]
+//			self.generator.addZeroAssertion(helperBits2[i].mul(paddedA1[i]
 //					.sub(paddedA2[i])));
-			generator.addAssertion(helperBits2[i], paddedA1[i].sub(paddedA2[i]), generator.getZeroWire());
+			self.generator.addAssertion(helperBits2[i], paddedA1[i].sub(paddedA2[i]), self.generator.getZeroWire());
 		}
 
 		// no checks needed for the less significant chunks
 	}
 
+}
+
+
+
+
+impl Add<u64> for LongElement {
+    type Output = Self;
+
+    fn add(self, rhs: u64) -> Self::Output {
+         self.add(BigInteger.valueOf(value))
+    }
+}
+
+impl Add<BigInteger> for LongElement {
+    type Output = Self;
+
+    fn add(self, rhs: BigInteger) -> Self::Output {
+       	if rhs.signum() == 0{ return self;}
+		if rhs.signum() < 0{ 
+            return self.sub(rhs.negate());
+        }
+		self.add(LongElement::new(Util::split(rhs, CHUNK_BITWIDTH)))
+    }
+}
+
+impl Add for LongElement {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        if addOverflowCheck(o) {
+			println!("Warning: Addition overflow could happen");
+		}
+
+		let length = std::cmp::max(self.array.len(), o.array.len());
+		let  w1 = WireArray::new(self.array).adjustLength(length).asArray();
+		let w2 = WireArray::new(o.array).adjustLength(length).asArray();
+		let result = vec![self.generator.getZeroWire();length];
+		let newMaxValues = vec![BigInteger.ZERO;length];
+		for i in 0..length {
+			result[i] = w1[i].add(w2[i]);
+			let max1=  if i < self.array.len()  { currentMaxValues[i] }else { BigInteger.ZERO};
+			let max2=  if i < o.array.len()  { o.currentMaxValues[i] }else { BigInteger.ZERO};
+
+			newMaxValues[i] = max1.add(max2);
+		}
+		LongElement::new(result, newMaxValues)
+    }
+}
+impl Sub<u64> for LongElement {
+    type Output = Self;
+
+    fn sub(self, rhs: u64) -> Self::Output {
+        Self::sub(self,BigInteger.valueOf(value))
+    }
+}
+impl Sub<BigInteger> for LongElement {
+    type Output = Self;
+
+    fn sub(self, rhs: BigInteger) -> Self::Output {
+        if rhs.signum() == 0 {return self;}
+		if rhs.signum() < 0) {return self.add(rhs.negate();}
+		self.sub(LongElement::new(Util::split(rhs, CHUNK_BITWIDTH)))
+    }
+}
+
+impl Sub for LongElement {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+			assert!(isAligned() && other.isAligned(),"Subtraction arguments must be properly aligned");
+
+		let  result = self.generator.createLongElementProverWitness(getMaxVal(CHUNK_BITWIDTH).bitLength());
+
+		self.generator.specifyProverWitnessComputation(& {
+			 struct Prover;
+            impl Instruction  for Prover
+			{
+			pub fn evaluate(evaluator:CircuitEvaluator) {
+				BigInteger myValue = evaluator.getWireValue(LongElement.this, CHUNK_BITWIDTH);
+				BigInteger otherValue = evaluator.getWireValue(other, CHUNK_BITWIDTH);
+				BigInteger resultValue = myValue.subtract(otherValue);
+				if resultValue.signum() < 0 {
+					throw new IllegalArgumentException("Result of subtraction is negative!");
+				}
+				evaluator.setWireValue(result, resultValue, CHUNK_BITWIDTH);
+			}
+            }
+            Prover
+		});
+
+		result.restrictBitwidth();
+		self.assertEquality(result.add(other));
+		result
+    }
+}
+
+impl Mul for LongElement {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+       /**
+	 * Implements the improved long integer multiplication from xjsnark
+	 */
+		if mulOverflowCheck(o) {
+			println!("Warning: Mul overflow could happen");
+
+		}
+		let length = self.array.len() + o.array.len() - 1;
+		let mut  result;
+
+		// check if we can just apply the simple non-costly multiplication
+		if o.array.len() == 1 || self.array.len() == 1 || self.isConstant(
+				|| o.isConstant()) {
+			result = vec![self.generator.getZeroWire();length];
+
+			// O(n*m) multiplication. Fine to apply if any of the operands has
+			// dim 1
+			// or any of them is constant
+			for i in 0.. self.array.len() {
+				for j in 0.. o.array.len() {
+					result[i + j] = result[i + j].add(self.array[i].mul(o.array[j]));
+				}
+			}
+		} else {
+
+			// implement the optimization
+
+			result = self.generator.createProverWitnessWireArray(length);
+
+			// for safety
+			let  array1 = self..array.clone();
+			let  array2 = o.array.clone();
+			self.generator.specifyProverWitnessComputation(& {
+				 struct Prover;
+            impl Instruction  for Prover
+			{
+				pub fn evaluate(evaluator:CircuitEvaluator) {
+					let  a = evaluator.getWiresValues(array1);
+					let  b = evaluator.getWiresValues(array2);
+					let  resultVals = multiplyPolys(a, b);
+					evaluator.setWireValue(result, resultVals);
+				}
+            }
+            Prover
+			});
+
+			for k in 0..length {
+				let  constant = new BigInteger((k + 1) + "");
+				let coeff = BigInteger.ONE;
+
+				let vector1 = vec![self.generator.getZeroWire();array.len()];
+				let vector2 = vec![self.generator.getZeroWire();o.array.len()];
+				let vector3 = vec![self.generator.getZeroWire();length];
+				for i in 0..length {
+					if i < array.len() {
+						vector1[i] = array[i].mul(coeff);
+					}
+					if i < o.array.len() {
+						vector2[i] = o.array[i].mul(coeff);
+					}
+					vector3[i] = result[i].mul(coeff);
+					coeff = Util::mod(coeff.multiply(constant), Config.get().unwrap().field_prime);
+				}
+
+				let v1 = WireArray::new(vector1).sumAllElements();
+				let v2 = WireArray::new(vector2).sumAllElements();
+				let v3 = WireArray::new(vector3).sumAllElements();
+				self.generator.addAssertion(v1, v2, v3);
+			}
+		}
+
+		let mut  newMaxValues = vec![BigInteger.ZERO;length];
+		for i in 0.. self.array.len() {
+			for j in 0.. o.array.len() {
+				newMaxValues[i + j] = newMaxValues[i + j]
+						.add(currentMaxValues[i]
+								.multiply(o.currentMaxValues[j]));
+			}
+		}
+		 LongElement::new(result, newMaxValues)
+	
+    }
 }

@@ -15,8 +15,8 @@ use util::util;
  */
 abstract class LongIntegerDivision extends Gadget {
 
-	private final LongElement a;
-	private final LongElement b;
+	 LongElement a;
+	 LongElement b;
 
 	private LongElement r;
 	private LongElement q;
@@ -90,7 +90,7 @@ abstract class LongIntegerDivision extends Gadget {
 		int rBitwidth = Math.min(aBitwidth, bBitwidth);
 		int qBitwidth = aBitwidth;
 
-		if (bMinBitwidth > 0) {
+		if bMinBitwidth > 0 {
 			qBitwidth = Math.max(1, qBitwidth - bMinBitwidth + 1);
 		}
 
@@ -107,10 +107,10 @@ abstract class LongIntegerDivision extends Gadget {
 		Arrays.fill(rChunkBitwidths, LongElement.CHUNK_BITWIDTH);
 		Arrays.fill(qChunkBitwidths, LongElement.CHUNK_BITWIDTH);
 
-		if (rBitwidth % LongElement.CHUNK_BITWIDTH != 0) {
+		if rBitwidth % LongElement.CHUNK_BITWIDTH != 0 {
 			rChunkBitwidths[rLength - 1] = rBitwidth % LongElement.CHUNK_BITWIDTH;
 		}
-		if (qBitwidth % LongElement.CHUNK_BITWIDTH != 0) {
+		if qBitwidth % LongElement.CHUNK_BITWIDTH != 0 {
 			qChunkBitwidths[qLength - 1] = qBitwidth % LongElement.CHUNK_BITWIDTH;
 		}
 
@@ -118,7 +118,7 @@ abstract class LongIntegerDivision extends Gadget {
 		q = new LongElement(qWires, qChunkBitwidths);
 
 		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
 				BigInteger bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
@@ -138,7 +138,7 @@ abstract class LongIntegerDivision extends Gadget {
 		// implements the improved long integer equality assertion from xjsnark
 		res.assertEquality(a);
 
-		if (restrictRange) {
+		if restrictRange {
 			r.assertLessThan(b);
 		}
 	}

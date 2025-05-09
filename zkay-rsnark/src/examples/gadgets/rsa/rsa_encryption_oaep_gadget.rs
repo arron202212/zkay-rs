@@ -47,20 +47,19 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 			Wire[] seed, int rsaKeyBitLength, String... desc) {
 		super(desc);
 
-		if (rsaKeyBitLength % 8 != 0) {
+		if rsaKeyBitLength % 8 != 0 {
 			throw new IllegalArgumentException(
 					"RSA Key bit length is assumed to be a multiple of 8");
 		}
 
-		if (plainText.length > rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2) {
-			System.err.println("Message too long");
+		if plainText.length > rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2 {
+			println!("Message too long");
 			throw new IllegalArgumentException(
 					"Invalid message length for RSA Encryption");
 		}
 
-		if (seed.length != SHA256_DIGEST_LENGTH) {
-			System.err
-					.println("Seed must have the same length as the hash function output ");
+		if seed.length != SHA256_DIGEST_LENGTH {
+			println!("Seed must have the same length as the hash function output ");
 			throw new IllegalArgumentException(
 					"Invalid seed dimension for RSA Encryption");
 		}
@@ -81,13 +80,13 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		Arrays.fill(paddingString, generator.getZeroWire());
 
 		Wire[] db = new Wire[keyLen - hLen - 1];
-		for (int i = 0; i < keyLen - hLen - 1; i++) {
-			if (i < hLen) {
+		for (int i = 0; i < keyLen - hLen - 1; i+=1) {
+			if i < hLen {
 				db[i] = generator
 						.createConstantWire((lSHA256_HASH[i] + 256) % 256);
-			} else if (i < hLen + paddingString.length) {
+			} else if i < hLen + paddingString.length {
 				db[i] = paddingString[i - hLen];
-			} else if (i < hLen + paddingString.length + 1) {
+			} else if i < hLen + paddingString.length + 1 {
 				db[i] = generator.getOneWire();
 			} else {
 				db[i] = plainText[i - (hLen + paddingString.length + 1)];
@@ -96,13 +95,13 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 
 		Wire[] dbMask = mgf1(seed, keyLen - hLen - 1);
 		Wire[] maskedDb = new Wire[keyLen - hLen - 1];
-		for (int i = 0; i < keyLen - hLen - 1; i++) {
+		for (int i = 0; i < keyLen - hLen - 1; i+=1) {
 			maskedDb[i] = dbMask[i].xorBitwise(db[i], 8);
 		}
 
 		Wire[] seededMask = mgf1(maskedDb, hLen);
 		Wire[] maskedSeed = new Wire[hLen];
-		for (int i = 0; i < hLen; i++) {
+		for i in 0..hLen {
 			maskedSeed[i] = seededMask[i].xorBitwise(seed[i], 8);
 		}
 		
@@ -112,7 +111,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		
 		LongElement paddedMsg = new LongElement(
 				new BigInteger[] { BigInteger.ZERO });
-		for (int i = 0; i < paddedByteArray.length; i++) {
+		for i in 0..paddedByteArray.length {
 			LongElement e = new LongElement(paddedByteArray[paddedByteArray.length-i-1], 8);
 			LongElement c = new LongElement(Util.split(
 					BigInteger.ONE.shiftLeft(8 * i),
@@ -122,7 +121,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		
 		// do modular exponentiation
 		LongElement s = paddedMsg;
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 			s = s.mul(s);
 			s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, false).getRemainder();
 		}
@@ -134,7 +133,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 	}
 
 	public void checkSeedCompliance() {
-		for (int i = 0; i < seed.length; i++) {
+		for i in 0..seed.length {
 			// Verify that the seed wires are bytes
 			// This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
 			seed[i].restrictBitLength(8);
@@ -145,7 +144,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 
 		ArrayList<Wire> mgfOutputList = new ArrayList<Wire>();
 		for (int i = 0; i <= ((int) Math.ceil(length * 1.0
-				/ SHA256_DIGEST_LENGTH)) - 1; i++) {
+				/ SHA256_DIGEST_LENGTH)) - 1; i+=1) {
 
 			// the standard follows a Big Endian format
 			Wire[] counter = generator.createConstantWireArray(new long[] {
@@ -162,7 +161,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 			// reverse the byte array representation of each word of the digest
 			// to
 			// be compatible with the endianess
-			for (int j = 0; j < 8; j++) {
+			for j in 0..8 {
 				Wire tmp = msgHashBytes[4 * j];
 				msgHashBytes[4 * j] = msgHashBytes[(4 * j + 3)];
 				msgHashBytes[4 * j + 3] = tmp;
@@ -170,7 +169,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 				msgHashBytes[4 * j + 1] = msgHashBytes[4 * j + 2];
 				msgHashBytes[4 * j + 2] = tmp;
 			}
-			for (int j = 0; j < msgHashBytes.length; j++) {
+			for j in 0..msgHashBytes.length {
 				mgfOutputList.add(msgHashBytes[j]);
 			}
 		}
@@ -178,7 +177,7 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		return Arrays.copyOf(out, length);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return ciphertext;
 	}

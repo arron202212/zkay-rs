@@ -14,7 +14,7 @@ public class Util {
 	public static BigInteger[] split(BigInteger x, int numChunks, int chunkSize) {
 		BigInteger[] chunks = new BigInteger[numChunks];
 		BigInteger mask = BigInteger.ONE.shiftLeft(chunkSize).subtract(BigInteger.ONE);
-		for (int i = 0; i < numChunks; i++) {
+		for i in 0..numChunks {
 			chunks[i] = x.shiftRight(chunkSize * i).and(mask);
 		}
 		return chunks;
@@ -22,8 +22,8 @@ public class Util {
 
 	public static BigInteger combine(BigInteger[] table, Wire[] blocks, int bitwidth) {
 		BigInteger sum = BigInteger.ZERO;
-		for (int i = 0; i < blocks.length; i++) {
-			if (table[blocks[i].getWireId()] == null) {
+		for i in 0..blocks.length {
+			if table[blocks[i].getWireId()] == null {
 				continue;
 			}
 			sum = sum.add(table[blocks[i].getWireId()].shiftLeft(bitwidth * i));
@@ -33,7 +33,7 @@ public class Util {
 
 	public static BigInteger group(BigInteger[] list, int width) {
 		BigInteger x = BigInteger.ZERO;
-		for (int i = 0; i < list.length; i++) {
+		for i in 0..list.length {
 			x = x.add(list[i].shiftLeft(width * i));
 		}
 		return x;
@@ -41,24 +41,24 @@ public class Util {
 
 	public static int[] concat(int[] a1, int[] a2) {
 		int[] all = new int[a1.length + a2.length];
-		for (int i = 0; i < all.length; i++) {
-			all[i] = i < a1.length ? a1[i] : a2[i - a1.length];
+		for i in 0..all.length {
+			all[i] = i < a1.length  { a1[i] }else { a2[i - a1.length]};
 		}
 		return all;
 	}
 
 	public static Wire[] concat(Wire[] a1, Wire[] a2) {
 		Wire[] all = new Wire[a1.length + a2.length];
-		for (int i = 0; i < all.length; i++) {
-			all[i] = i < a1.length ? a1[i] : a2[i - a1.length];
+		for i in 0..all.length {
+			all[i] = i < a1.length  { a1[i] }else { a2[i - a1.length]};
 		}
 		return all;
 	}
 
 	public static Wire[] concat(Wire w, Wire[] a) {
 		Wire[] all = new Wire[1 + a.length];
-		for (int i = 0; i < all.length; i++) {
-			all[i] = i < 1 ? w : a[i - 1];
+		for i in 0..all.length {
+			all[i] = i < 1  { w }else { a[i - 1]};
 		}
 		return all;
 	}
@@ -72,7 +72,7 @@ public class Util {
 		int idx = 0;
 		for (int[] array : arrays) {
 			for (int a : array) {
-				all[idx++] = a;
+				all[idx+=1] = a;
 			}
 		}
 		return all;
@@ -80,7 +80,7 @@ public class Util {
 
 	public static BigInteger[] randomBigIntegerArray(int num, BigInteger n) {
 		BigInteger[] result = new BigInteger[num];
-		for (int i = 0; i < num; i++) {
+		for i in 0..num {
 			result[i] = nextRandomBigInteger(n);
 		}
 		return result;
@@ -96,7 +96,7 @@ public class Util {
 
 	public static BigInteger[] randomBigIntegerArray(int num, int numBits) {
 		BigInteger[] result = new BigInteger[num];
-		for (int i = 0; i < num; i++) {
+		for i in 0..num {
 			result[i] = nextRandomBigInteger(numBits);
 		}
 		return result;
@@ -107,7 +107,7 @@ public class Util {
 	}
 
 	public static String getDesc(String... desc) {
-		if (desc.length == 0) {
+		if desc.length == 0 {
 			return "";
 		} else {
 			return desc[0];
@@ -118,11 +118,11 @@ public class Util {
 		List<Integer> list = new ArrayList<>();
 		String[] chunks = s.split(",");
 		for (String chunk : chunks) {
-			if (chunk.equals(""))
+			if chunk.equals("")
 				continue;
 			int lower = Integer.parseInt(chunk.split(":")[0]);
 			int upper = Integer.parseInt(chunk.split(":")[1]);
-			for (int i = lower; i <= upper; i++) {
+			for (int i = lower; i <= upper; i+=1) {
 				list.add(i);
 			}
 		}
@@ -132,9 +132,9 @@ public class Util {
 	public static Wire[] reverseBytes(Wire[] inBitWires) {
 		Wire[] outs = Arrays.copyOf(inBitWires, inBitWires.length);
 		int numBytes = inBitWires.length / 8;
-		for (int i = 0; i < numBytes / 2; i++) {
+		for (int i = 0; i < numBytes / 2; i+=1) {
 			int other = numBytes - i - 1;
-			for (int j = 0; j < 8; j++) {
+			for j in 0..8 {
 				Wire temp = outs[i * 8 + j];
 				outs[i * 8 + j] = outs[other * 8 + j];
 				outs[other * 8 + j] = temp;
@@ -145,7 +145,7 @@ public class Util {
 
 	public static String arrayToString(int[] a, String separator) {
 		StringBuilder s = new StringBuilder();
-		for (int i = 0; i < a.length - 1; i++) {
+		for (int i = 0; i < a.length - 1; i+=1) {
 			s.append(a[i]).append(separator);
 		}
 		s.append(a[a.length - 1]);
@@ -154,7 +154,7 @@ public class Util {
 
 	public static String arrayToString(Wire[] a, String separator) {
 		StringBuilder s = new StringBuilder();
-		for (int i = 0; i < a.length - 1; i++) {
+		for (int i = 0; i < a.length - 1; i+=1) {
 			s.append(a[i]).append(separator);
 		}
 		s.append(a[a.length - 1]);
@@ -166,7 +166,7 @@ public class Util {
 	}
 
 	public static String padZeros(String s, int l) {
-		return String.format("%" + l + "s",s).replace(' ', '0');
+		return format!("%" + l + "s",s).replace(' ', '0');
 	}
 
 	// Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
@@ -181,15 +181,15 @@ public class Util {
 	}
 
 	public static Wire[] padWireArray(Wire[] a, int length, Wire p) {
-		if (a.length == length) {
+		if a.length == length {
 			return a;
-		} else if (a.length > length) {
-			System.err.println("No padding needed!");
+		} else if a.length > length {
+			println!("No padding needed!");
 			return a;
 		} else {
 			Wire[] newArray = new Wire[length];
 			System.arraycopy(a, 0, newArray, 0, a.length);
-			for (int k = a.length; k < length; k++) {
+			for (int k = a.length; k < length; k+=1) {
 				newArray[k] = p;
 			}
 			return newArray;
@@ -197,7 +197,7 @@ public class Util {
 	}
 
 	public static BigInteger mod(BigInteger x, BigInteger m) {
-		if (x.signum() >= 0 && x.compareTo(m) < 0) {
+		if x.signum() >= 0 && x.compareTo(m) < 0 {
 			return x; // In range, 'mod' is no-op, but creates new BigInteger
 		} else {
 			return x.mod(m);

@@ -9,23 +9,23 @@ public class AssertBasicOp extends BasicOp {
 		super(new Wire[] { w1, w2 }, new Wire[] { output }, desc);
 	}
 	
-	@Override
+	
 	protected void compute(BigInteger[] assignment) {
 		BigInteger leftSide = assignment[inputs[0].getWireId()].multiply(
 				assignment[inputs[1].getWireId()]).mod(
 						Config.FIELD_PRIME);
 		BigInteger rightSide = assignment[outputs[0].getWireId()];
 		boolean check = leftSide.equals(rightSide);
-		if (!check) {
-			System.err.println("Error - Assertion Failed " + this);
-			System.out.println(assignment[inputs[0].getWireId()] + "*"
+		if !check {
+			println!("Error - Assertion Failed " + this);
+			println!(assignment[inputs[0].getWireId()] + "*"
 					+ assignment[inputs[1].getWireId()] + "!="
 					+ assignment[outputs[0].getWireId()]);
-			throw new RuntimeException("Error During Evaluation");
+			panic!("Error During Evaluation");
 		}
 	}
 
-	@Override
+	
 	protected void checkOutputs(BigInteger[] assignment) {
 		// do nothing
 	}
@@ -34,12 +34,12 @@ public class AssertBasicOp extends BasicOp {
 		return "assert";
 	}
 	
-	@Override
+	
 	public boolean equals(Object obj) {
 
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof AssertBasicOp)) {
+		if !(obj instanceof AssertBasicOp) {
 			return false;
 		}
 		AssertBasicOp op = (AssertBasicOp) obj;
@@ -52,7 +52,7 @@ public class AssertBasicOp extends BasicOp {
 
 	}
 	
-	@Override
+	
 	public int getNumMulGates() {
 		return 1;
 	}

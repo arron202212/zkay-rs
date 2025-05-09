@@ -27,9 +27,9 @@ public class PinocchioGadget extends Gadget {
 		Wire[] wireMapping;
 		Scanner scanner = new Scanner(new File(path));
 
-		if (!scanner.next().equals("total")) {
+		if !scanner.next().equals("total") {
 			scanner.close();
-			throw new RuntimeException("Expected total %d in the first line");
+			panic!("Expected total %d in the first line");
 		}
 		int numWires = scanner.nextInt();
 		scanner.nextLine();
@@ -39,32 +39,32 @@ public class PinocchioGadget extends Gadget {
 		while (scanner.hasNext()) {
 			String line = scanner.nextLine();
 			// remove comments
-			if (line.contains("#")) {
+			if line.contains("#") {
 				line = line.substring(0, line.indexOf("#"));
 			}
-			if (line.equals("")) {
+			if line.equals("") {
 				continue;
-			} else if (line.startsWith("input")) {
+			} else if line.startsWith("input") {
 				String[] tokens = line.split("\\s+");
 				int wireIndex = Integer.parseInt(tokens[1]);
-				if (wireMapping[wireIndex] != null) {
+				if wireMapping[wireIndex] != null {
 					throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
 				}
-				if (inputCount < inputWires.length) {
+				if inputCount < inputWires.length {
 					wireMapping[wireIndex] = inputWires[inputCount];
 				} else {
 					// the last input wire is assumed to be the one wire
 					wireMapping[wireIndex] = generator.getOneWire();
 				}
-				inputCount++;
-			} else if (line.startsWith("output")) {
+				inputCount+=1;
+			} else if line.startsWith("output") {
 				String[] tokens = line.split("\\s+");
 				int wireIndex = Integer.parseInt(tokens[1]);
 				outputWires.add(wireMapping[wireIndex]);
-			} else if (line.startsWith("nizk")) {
+			} else if line.startsWith("nizk") {
 				String[] tokens = line.split("\\s+");
 				int wireIndex = Integer.parseInt(tokens[1]);
-				if (wireMapping[wireIndex] != null) {
+				if wireMapping[wireIndex] != null {
 					throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
 				}
 				Wire w = generator.createProverWitnessWire();
@@ -73,31 +73,31 @@ public class PinocchioGadget extends Gadget {
 			} else {
 				ArrayList<Integer> ins = getInputs(line);
 				for (int in : ins) {
-					if (wireMapping[in] == null) {
+					if wireMapping[in] == null {
 						throwParsingError(scanner, "Undefined input wire " + in + " at line " + line);
 					}
 				}
 				ArrayList<Integer> outs = getOutputs(line);
-				if (line.startsWith("mul ")) {
+				if line.startsWith("mul ") {
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(wireMapping[ins.get(1)]);
-				} else if (line.startsWith("add ")) {
+				} else if line.startsWith("add ") {
 					Wire result = wireMapping[ins.get(0)];
-					for (int i = 1; i < ins.size(); i++) {
+					for i in 1..ins.size() {
 						result = result.add(wireMapping[ins.get(i)]);
 					}
 					wireMapping[outs.get(0)] = result;
-				} else if (line.startsWith("zerop ")) {
+				} else if line.startsWith("zerop ") {
 					wireMapping[outs.get(1)] = wireMapping[ins.get(0)].checkNonZero();
-				} else if (line.startsWith("split ")) {
+				} else if line.startsWith("split ") {
 					Wire[] bits = wireMapping[ins.get(0)].getBitWires(outs.size()).asArray();
-					for (int i = 0; i < outs.size(); i++) {
+					for i in 0..outs.size() {
 						wireMapping[outs.get(i)] = bits[i];
 					}
-				} else if (line.startsWith("const-mul-neg-")) {
+				} else if line.startsWith("const-mul-neg-") {
 					String constantStr = line.substring("const-mul-neg-".length(), line.indexOf(" "));
 					BigInteger constant = new BigInteger(constantStr, 16);
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant.negate());
-				} else if (line.startsWith("const-mul-")) {
+				} else if line.startsWith("const-mul-") {
 					String constantStr = line.substring("const-mul-".length(), line.indexOf(" "));
 					BigInteger constant = new BigInteger(constantStr, 16);
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant);
@@ -137,7 +137,7 @@ public class PinocchioGadget extends Gadget {
 		return ins;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return outputWires;
 	}
@@ -148,6 +148,6 @@ public class PinocchioGadget extends Gadget {
 
 	private void throwParsingError(Scanner s, String m) {
 		s.close();
-		throw new RuntimeException(m);
+		panic!(m);
 	}
 }

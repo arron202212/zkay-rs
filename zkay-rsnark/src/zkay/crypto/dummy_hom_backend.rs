@@ -17,22 +17,22 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 		super(keyBits);
 	}
 
-	@Override
+	
 	public int getKeyChunkSize() {
 		return KEY_CHUNK_SIZE;
 	}
 
-	@Override
+	
 	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] random, String... desc) {
 		Wire encodedPlain = encodePlaintextIfSigned(plain);
 		return new ZkayDummyHomEncryptionGadget(encodedPlain, getKeyWire(key), random, keyBits, desc);
 	}
 
-	@Override
+	
 	public TypedWire[] doHomomorphicOp(char op, HomomorphicInput arg, String keyName) {
 		Wire cipher = getCipherWire(arg, "arg");
 
-		if (op == '-') {
+		if op == '-' {
 			// -Enc(msg, p) = -(msg * p) = (-msg) * p = Enc(-msg, p)
 			Wire minus = cipher.negate();
 			return typedAsUint(minus, "-(" + arg.getName() + ")");
@@ -41,7 +41,7 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 		}
 	}
 
-	@Override
+	
 	public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
 		switch (op) {
 			case '+': {
@@ -62,12 +62,12 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 				// Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
 				Wire plain;
 				Wire cipher;
-				if (lhs == null) throw new IllegalArgumentException("lhs is null");
-				if (rhs == null) throw new IllegalArgumentException("rhs is null");
-				if (lhs.isPlain() && rhs.isCipher()) {
+				if lhs == null) throw new IllegalArgumentException("lhs is null";
+				if rhs == null) throw new IllegalArgumentException("rhs is null";
+				if lhs.isPlain() && rhs.isCipher() {
 					plain = encodePlaintextIfSigned(lhs.getPlain());
 					cipher = getCipherWire(rhs, "rhs");
-				} else if (lhs.isCipher() && rhs.isPlain()) {
+				} else if lhs.isCipher() && rhs.isPlain() {
 					cipher = getCipherWire(lhs, "lhs");
 					plain = encodePlaintextIfSigned(rhs.getPlain());
 				} else {
@@ -83,7 +83,7 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 		}
 	}
 
-	@Override
+	
 	public TypedWire[] doHomomorphicRerand(TypedWire[] arg, String keyName, TypedWire randomness) {
 		return arg;
 	}
@@ -93,16 +93,16 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 		CircuitGenerator generator = CircuitGenerator.getActiveCircuitGenerator();
 
 		Wire[] keyArr = key.getBits().packBitsIntoWords(256);
-		for (int i = 1; i < keyArr.length; ++i) {
+		for i in 1..keyArr.length {
 			generator.addZeroAssertion(keyArr[i], "Dummy-hom enc pk valid");
 		}
 		return keyArr[0];
 	}
 
 	private static Wire getCipherWire(HomomorphicInput input, String name) {
-		if (input == null) throw new IllegalArgumentException(name + " is null");
-		if (input.isPlain()) throw new IllegalArgumentException(name + " is not a ciphertext");
-		if (input.getLength() != 1) throw new IllegalArgumentException(name + " has invalid length");
+		if input == null) throw new IllegalArgumentException(name + " is null";
+		if input.isPlain()) throw new IllegalArgumentException(name + " is not a ciphertext";
+		if input.getLength() != 1) throw new IllegalArgumentException(name + " has invalid length";
 
 		// Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
 		Wire cipherWire = input.getCipher()[0].wire;
@@ -111,7 +111,7 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 	}
 
 	private static Wire encodePlaintextIfSigned(TypedWire plain) {
-		if (plain.type.signed) {
+		if plain.type.signed {
 			// Signed: wrap negative values around the field prime instead of around 2^n
 			int bits = plain.type.bitwidth;
 			Wire signBit = plain.wire.getBitWires(bits).get(bits - 1);

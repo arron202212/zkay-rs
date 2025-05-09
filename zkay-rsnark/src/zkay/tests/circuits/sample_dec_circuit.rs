@@ -25,7 +25,7 @@ public class SampleDecCircuit extends ZkayCircuitBase {
         stepOut();
     }
 
-    @Override
+    
     protected void buildCircuit() {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__me", 2);

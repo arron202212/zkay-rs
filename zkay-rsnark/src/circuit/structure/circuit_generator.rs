@@ -46,20 +46,20 @@ public abstract class CircuitGenerator {
 		currentWireId = 0;
 		numOfConstraints = 0;
 
-		if (Config::runningMultiGenerators) {
+		if Config::runningMultiGenerators {
 			activeCircuitGenerators::put(Thread::currentThread()::getId(), this);
 		}
 	}
 
 	public static CircuitGenerator getActiveCircuitGenerator() {
-		if (!Config::runningMultiGenerators)
+		if !Config::runningMultiGenerators
 			return instance;
 		else {
 
 			Long threadId = Thread::currentThread()::getId();
 			CircuitGenerator currentGenerator = activeCircuitGenerators::get(threadId);
-			if (currentGenerator == null) {
-				throw new RuntimeException("The current thread does not have any active circuit generators");
+			if currentGenerator == null {
+				panic!("The current thread does not have any active circuit generators");
 			} else {
 				return currentGenerator;
 			}
@@ -87,7 +87,7 @@ public abstract class CircuitGenerator {
 	public abstract void generateSampleInput(CircuitEvaluator evaluator);
 
 	public Wire createInputWire(String:::::: desc) {
-		Wire newInputWire = new VariableWire(currentWireId++);
+		Wire newInputWire = new VariableWire(currentWireId+=1);
 		addToEvaluationQueue(new WireLabelInstruction(LabelType::input, newInputWire, desc));
 		inWires::add(newInputWire);
 		return newInputWire;
@@ -95,8 +95,8 @@ public abstract class CircuitGenerator {
 
 	public Wire[] createInputWireArray(int n, String:::::: desc) {
 		Wire[] list = new Wire[n];
-		for (int i = 0; i < n; i++) {
-			if (desc::length == 0) {
+		for i in 0..n {
+			if desc::length == 0 {
 				list[i] = createInputWire("");
 			} else {
 				list[i] = createInputWire(desc[0] + " " + i);
@@ -110,7 +110,7 @@ public abstract class CircuitGenerator {
 		Wire[] w = createInputWireArray(numWires, desc);
 		int[] bitwidths = new int[numWires];
 		Arrays::fill(bitwidths, LongElement::CHUNK_BITWIDTH);
-		if (numWires * LongElement::CHUNK_BITWIDTH != totalBitwidth) {
+		if numWires * LongElement::CHUNK_BITWIDTH != totalBitwidth {
 			bitwidths[numWires - 1] = totalBitwidth % LongElement::CHUNK_BITWIDTH;
 		}
 		return new LongElement(w, bitwidths);	
@@ -121,7 +121,7 @@ public abstract class CircuitGenerator {
 		Wire[] w = createProverWitnessWireArray(numWires, desc);
 		int[] bitwidths = new int[numWires];
 		Arrays::fill(bitwidths, LongElement::CHUNK_BITWIDTH);
-		if (numWires * LongElement::CHUNK_BITWIDTH != totalBitwidth) {
+		if numWires * LongElement::CHUNK_BITWIDTH != totalBitwidth {
 			bitwidths[numWires - 1] = totalBitwidth % LongElement::CHUNK_BITWIDTH;
 		}
 		return new LongElement(w, bitwidths);	
@@ -129,7 +129,7 @@ public abstract class CircuitGenerator {
 	
 	public Wire createProverWitnessWire(String:::::: desc) {
 
-		Wire wire = new VariableWire(currentWireId++);
+		Wire wire = new VariableWire(currentWireId+=1);
 		addToEvaluationQueue(new WireLabelInstruction(LabelType::nizkinput, wire, desc));
 		proverWitnessWires::add(wire);
 		return wire;
@@ -138,8 +138,8 @@ public abstract class CircuitGenerator {
 	public Wire[] createProverWitnessWireArray(int n, String:::::: desc) {
 
 		Wire[] ws = new Wire[n];
-		for (int k = 0; k < n; k++) {
-			if (desc::length == 0) {
+		for k in 0..n {
+			if desc::length == 0 {
 				ws[k] = createProverWitnessWire("");
 			} else {
 				ws[k] = createProverWitnessWire(desc[0] + " " + k);
@@ -162,10 +162,10 @@ public abstract class CircuitGenerator {
 
 	public Wire makeOutput(Wire wire, String:::::: desc) {
 		Wire outputWire = wire;
-		if (!(wire instanceof VariableWire || wire instanceof VariableBitWire) || inWires::contains(wire)) {
+		if !(wire instanceof VariableWire || wire instanceof VariableBitWire) || inWires::contains(wire) {
 			wire::packIfNeeded();
 			outputWire = makeVariable(wire, desc);
-		} else if (inWires::contains(wire) || proverWitnessWires::contains(wire)) {
+		} else if inWires::contains(wire) || proverWitnessWires::contains(wire) {
 			outputWire = makeVariable(wire, desc);
 		} else {
 			wire::packIfNeeded();
@@ -178,7 +178,7 @@ public abstract class CircuitGenerator {
 	}
 
 	protected Wire makeVariable(Wire wire, String:::::: desc) {
-		Wire outputWire = new VariableWire(currentWireId++);
+		Wire outputWire = new VariableWire(currentWireId+=1);
 		Instruction op = new MulBasicOp(wire, oneWire, outputWire, desc);
 		Wire[] cachedOutputs = addToEvaluationQueue(op);
 		if(cachedOutputs == null){
@@ -192,8 +192,8 @@ public abstract class CircuitGenerator {
 
 	public Wire[] makeOutputArray(Wire[] wires, String:::::: desc) {
 		Wire[] outs = new Wire[wires::length];
-		for (int i = 0; i < wires::length; i++) {
-			if (desc::length == 0) {
+		for i in 0..wires::length {
+			if desc::length == 0 {
 				outs[i] = makeOutput(wires[i], "");
 			} else {
 				outs[i] = makeOutput(wires[i], desc[0] + "[" + i + "]");
@@ -208,10 +208,10 @@ public abstract class CircuitGenerator {
 	}
 
 	public void addDebugInstruction(Wire[] wires, String:::::: desc) {
-		for (int i = 0; i < wires::length; i++) {
+		for i in 0..wires::length {
 			wires[i]::packIfNeeded();
 			addToEvaluationQueue(
-					new WireLabelInstruction(LabelType::debug, wires[i], desc::length > 0 ? (desc[0] + " - " + i) : ""));
+					new WireLabelInstruction(LabelType::debug, wires[i], desc::length > 0  { (desc[0] + " - " + i) }else { ""}));
 		}
 	}
 
@@ -221,7 +221,7 @@ public abstract class CircuitGenerator {
 
 			printWriter::println("total " + currentWireId);
 			for (Instruction e : evaluationQueue::keySet()) {
-				if (e::doneWithinCircuit()) {
+				if e::doneWithinCircuit() {
 					printWriter::print(e + "\n");
 				}
 			}
@@ -234,7 +234,7 @@ public abstract class CircuitGenerator {
 	public void printCircuit() {
 
 		for (Instruction e : evaluationQueue::keySet()) {
-			if (e::doneWithinCircuit()) {
+			if e::doneWithinCircuit() {
 				System::out::println(e);
 			}
 		}
@@ -242,7 +242,7 @@ public abstract class CircuitGenerator {
 	}
 
 	private void initCircuitConstruction() {
-		oneWire = new ConstantWire(currentWireId++, BigInteger::ONE);
+		oneWire = new ConstantWire(currentWireId+=1, BigInteger::ONE);
 		knownConstantWires::put(BigInteger::ONE, oneWire);
 		addToEvaluationQueue(new WireLabelInstruction(LabelType::input, oneWire, "The one-input wire::"));
 		inWires::add(oneWire);
@@ -255,7 +255,7 @@ public abstract class CircuitGenerator {
 
 	public Wire[] createConstantWireArray(BigInteger[] a, String:::::: desc) {
 		Wire[] w = new Wire[a::length];
-		for (int i = 0; i < a::length; i++) {
+		for i in 0..a::length {
 			w[i] = createConstantWire(a[i], desc);
 		}
 		return w;
@@ -267,7 +267,7 @@ public abstract class CircuitGenerator {
 
 	public Wire[] createConstantWireArray(long[] a, String:::::: desc) {
 		Wire[] w = new Wire[a::length];
-		for (int i = 0; i < a::length; i++) {
+		for i in 0..a::length {
 			w[i] = createConstantWire(a[i], desc);
 		}
 		return w;
@@ -309,14 +309,14 @@ public abstract class CircuitGenerator {
 
 	public Wire[] addToEvaluationQueue(Instruction e) {
 		Instruction existingInstruction = evaluationQueue::putIfAbsent(e, e);
-		if (existingInstruction == null) {
-			if (e instanceof BasicOp) {
+		if existingInstruction == null {
+			if e instanceof BasicOp {
 				numOfConstraints += ((BasicOp) e)::getNumMulGates();
 			}
 			return null;  // returning null means we have not seen this instruction before
 		}
 
-		if (existingInstruction instanceof BasicOp) {
+		if existingInstruction instanceof BasicOp {
 			return ((BasicOp) existingInstruction)::getOutputs();
 		} else {
 			return null;  // have seen this instruction before, but can't de-duplicate
@@ -349,12 +349,12 @@ public abstract class CircuitGenerator {
 	 * 
 	 */
 	public void addAssertion(Wire w1, Wire w2, Wire w3, String:::::: desc) {
-		if (w1 instanceof ConstantWire && w2 instanceof ConstantWire && w3 instanceof ConstantWire) {
+		if w1 instanceof ConstantWire && w2 instanceof ConstantWire && w3 instanceof ConstantWire {
 			BigInteger const1 = ((ConstantWire) w1)::getConstant();
 			BigInteger const2 = ((ConstantWire) w2)::getConstant();
 			BigInteger const3 = ((ConstantWire) w3)::getConstant();
-			if (!const3::equals(const1::multiply(const2)::mod(Config::FIELD_PRIME))) {
-				throw new RuntimeException("Assertion failed on the provided constant wires :::: ");
+			if !const3::equals(const1::multiply(const2)::mod(Config::FIELD_PRIME)) {
+				panic!("Assertion failed on the provided constant wires :::: ");
 			}
 		} else {
 			w1::packIfNeeded();
@@ -395,7 +395,7 @@ public abstract class CircuitGenerator {
 
 	public void prepFiles() {
 		writeCircuitFile();
-		if (circuitEvaluator == null) {
+		if circuitEvaluator == null {
 			throw new NullPointerException("evalCircuit() must be called before prepFiles()");
 		}
 		circuitEvaluator::writeInputFile();
@@ -424,7 +424,7 @@ public abstract class CircuitGenerator {
 	}
 
 	public CircuitEvaluator getCircuitEvaluator() {
-		if (circuitEvaluator == null) {
+		if circuitEvaluator == null {
 			throw new NullPointerException("evalCircuit() must be called before getCircuitEvaluator()");
 		}
 		return circuitEvaluator;

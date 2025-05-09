@@ -15,7 +15,7 @@ public class DotProductCircuitGenerator extends CircuitGenerator {
 		this.dimension = dimension;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		a = createInputWireArray(dimension, "Input a");
@@ -26,16 +26,16 @@ public class DotProductCircuitGenerator extends CircuitGenerator {
 		makeOutput(result[0], "output of dot product a, b");
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
 
-		for (int i = 0; i < dimension; i++) {
+		for i in 0..dimension {
 			circuitEvaluator.setWireValue(a[i], 10 + i);
 			circuitEvaluator.setWireValue(b[i], 20 + i);
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 
 		DotProductCircuitGenerator generator = new DotProductCircuitGenerator("dot_product", 3);
 		generator.generateCircuit();

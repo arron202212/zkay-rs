@@ -17,26 +17,26 @@ public class ORBasicOp extends BasicOp {
 		super.checkInputs(assignment);
 		boolean check = Util.isBinary(assignment[inputs[0].getWireId()])
 				&& Util.isBinary(assignment[inputs[1].getWireId()]);
-		if (!check){			
-			System.err.println("Error - Input(s) to OR are not binary. "
+		if !check{			
+			println!("Error - Input(s) to OR are not binary. "
 					+ this);
-			throw new RuntimeException("Error During Evaluation");
+			panic!("Error During Evaluation");
 
 		}
 	}
 
-	@Override
+	
 	public void compute(BigInteger[] assignment) {
 		assignment[outputs[0].getWireId()] = assignment[inputs[0].getWireId()].or(
 				assignment[inputs[1].getWireId()]);
 	}
 
-	@Override
+	
 	public boolean equals(Object obj) {
 
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof ORBasicOp)) {
+		if !(obj instanceof ORBasicOp) {
 			return false;
 		}
 		ORBasicOp op = (ORBasicOp) obj;
@@ -49,7 +49,7 @@ public class ORBasicOp extends BasicOp {
 
 	}
 	
-	@Override
+	
 	public int getNumMulGates() {
 		return 1;
 	}

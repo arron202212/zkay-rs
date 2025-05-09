@@ -26,13 +26,13 @@ public class ChaskeyLtsCbc {
         cipher.init(encrypt, params);
 
         // Encrypt / Decrypt
-        if (cipher.getOutputSize(input.length) != input.length) {
-            throw new RuntimeException("Wrong size");
+        if cipher.getOutputSize(input.length) != input.length {
+            panic!("Wrong size");
         }
         byte[] outbuf = new byte[cipher.getOutputSize(input.length)];
         int out_size = cipher.processBytes(input, 0, input.length, outbuf, 0);
-        if (cipher.doFinal(outbuf, out_size) != 0) {
-            throw new RuntimeException("Input not aligned to block size");
+        if cipher.doFinal(outbuf, out_size) != 0 {
+            panic!("Input not aligned to block size");
         }
 
         return outbuf;
@@ -40,7 +40,7 @@ public class ChaskeyLtsCbc {
 
     public static void main(String[] args) throws InvalidCipherTextException {
         // Parse inputs
-        if (args.length != 4) {
+        if args.length != 4 {
             throw new IllegalArgumentException("expected 4 arguments [enc|dec, key, iv, plain|cipher]");
         }
         boolean enc;
@@ -62,6 +62,6 @@ public class ChaskeyLtsCbc {
         byte[] output = crypt(enc, key, iv, input);
 
         // Output result
-        System.out.println(unsignedBytesToBigInt(output).toString(16));
+        println!(unsignedBytesToBigInt(output).toString(16));
     }
 }

@@ -25,7 +25,7 @@ public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 		this.treeHeight = treeHeight;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 		
 		/** declare inputs **/
@@ -43,7 +43,7 @@ public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 		
 		/** Now compare the actual root with the public known root **/
 		Wire errorAccumulator = getZeroWire();
-		for(int i = 0; i < hashDigestDimension; i++){
+		for(int i = 0; i < hashDigestDimension; i+=1){
 			Wire diff = actualRoot[i].sub(publicRootWires[i]);
 			Wire check = diff.checkNonZero();
 			errorAccumulator = errorAccumulator.add(check);
@@ -56,26 +56,26 @@ public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 		
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
 		
-		for (int i = 0; i < hashDigestDimension; i++) {
+		for i in 0..hashDigestDimension {
 			circuitEvaluator.setWireValue(publicRootWires[i], Util.nextRandomBigInteger(Config.FIELD_PRIME));
 		}
 		
 		circuitEvaluator.setWireValue(directionSelector, Util.nextRandomBigInteger(treeHeight));
-		for (int i = 0; i < hashDigestDimension*treeHeight; i++) {
+		for i in 0..hashDigestDimension*treeHeight {
 			circuitEvaluator.setWireValue(intermediateHasheWires[i],  Util.nextRandomBigInteger(Config.FIELD_PRIME));
 		}
 		
-		for(int i = 0; i < leafNumOfWords; i++){
+		for(int i = 0; i < leafNumOfWords; i+=1){
 			circuitEvaluator.setWireValue(leafWires[i], Integer.MAX_VALUE);
 		}
 		
 	}
 	
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		
 		MerkleTreeMembershipCircuitGenerator generator = new MerkleTreeMembershipCircuitGenerator("tree_64", 64);
 		generator.generateCircuit();

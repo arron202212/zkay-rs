@@ -92,7 +92,7 @@ public abstract class ZkayBabyJubJubGadget extends Gadget {
         JubJubPoint result = getInfinity();
         JubJubPoint doubling = p;
 
-        for (int i = 0; i < scalarBits.length; i++) {
+        for i in 0..scalarBits.length {
             JubJubPoint q = addPoints(doubling, result);
             Wire new_x = scalarBits[i].mux(q.x, result.x);
             Wire new_y = scalarBits[i].mux(q.y, result.y);
@@ -109,7 +109,7 @@ public abstract class ZkayBabyJubJubGadget extends Gadget {
     protected Wire nativeInverse(Wire a) {
         Wire ainv = generator.createProverWitnessWire();
         generator.specifyProverWitnessComputation(new Instruction() {
-            @Override
+            
             public void evaluate(CircuitEvaluator evaluator) {
                 BigInteger aValue = evaluator.getWireValue(a);
                 BigInteger inverseValue = aValue.modInverse(BASE_ORDER);

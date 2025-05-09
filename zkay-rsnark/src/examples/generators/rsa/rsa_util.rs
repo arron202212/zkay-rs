@@ -26,26 +26,26 @@ public class RSAUtil {
 		for (int i = keySize - 1; i >= 0; i--) {
 			product = product.multiply(product).mod(modulus);
 			boolean bit = d.testBit(i);
-			if (bit)
+			if bit
 				product = product.multiply(c).mod(modulus);
 		}
 
-//		System.out.println("After decryption manually = "
+//		println!("After decryption manually = "
 //				+ product.toString(16));
 
 		byte[] paddedPlaintext = product.toByteArray();
-		if (paddedPlaintext.length != keySize / 8 - 1) {
-			System.out.println("Error");
+		if paddedPlaintext.length != keySize / 8 - 1 {
+			println!("Error");
 			return null;
 		}
 		byte[] plaintext = null;
 		byte[] randomness = null;
 
-		if (paddedPlaintext[0] != 2) {
-			System.out.println("Error");
+		if paddedPlaintext[0] != 2 {
+			println!("Error");
 		} else {
-			for (int i = 1; i < keySize / 8 - 2; i++) {
-				if (paddedPlaintext[i] != 0) {
+			for (int i = 1; i < keySize / 8 - 2; i+=1) {
+				if paddedPlaintext[i] != 0 {
 					continue;
 				} else {
 					plaintext = new byte[(keySize / 8 - 2) - i];
@@ -71,7 +71,7 @@ public class RSAUtil {
 	private static byte[] mgf(byte[] array, int maskLen, int hlen) {
 
 		byte[] v = new byte[0];
-		for (int i = 0; i <= ((int) Math.ceil(maskLen * 1.0 / hlen)) - 1; i++) {
+		for (int i = 0; i <= ((int) Math.ceil(maskLen * 1.0 / hlen)) - 1; i+=1) {
 			byte[] c = intToByteArray(i);
 			MessageDigest hash = null;
 			try {
@@ -90,10 +90,10 @@ public class RSAUtil {
 	private static byte[] concat(byte[] a1, byte[] a2) {
 		int l = a1.length + a2.length;
 		byte[] result = new byte[l];
-		for (int i = 0; i < a1.length; i++) {
+		for i in 0..a1.length {
 			result[i] = a1[i];
 		}
-		for (int i = 0; i < a2.length; i++) {
+		for i in 0..a2.length {
 			result[i + a1.length] = a2[i];
 		}
 		return result;
@@ -117,7 +117,7 @@ public class RSAUtil {
 		for (int i = keySize - 1; i >= 0; i--) {
 			product = product.multiply(product).mod(modulus);
 			boolean bit = d.testBit(i);
-			if (bit)
+			if bit
 				product = product.multiply(c).mod(modulus);
 		}
 
@@ -126,7 +126,7 @@ public class RSAUtil {
 
 		byte[] encodedMessageBytes = product.toByteArray();
 
-		if (encodedMessageBytes.length > keySize / 8) {
+		if encodedMessageBytes.length > keySize / 8 {
 			encodedMessageBytes = Arrays.copyOfRange(encodedMessageBytes, 1,
 					encodedMessageBytes.length);
 		} else {
@@ -143,7 +143,7 @@ public class RSAUtil {
 
 		byte[] seedMask = mgf(maskedDb, hlen, hlen);
 		byte[] seed = Arrays.copyOf(seedMask, hlen);
-		for (int i = 0; i < hlen; i++) {
+		for i in 0..hlen {
 			seed[i] ^= maskedSeed[i];
 		}
 
@@ -152,18 +152,18 @@ public class RSAUtil {
 
 		byte[] DB = new byte[dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
 		System.arraycopy(maskedDb, 0, DB, 1, maskedDBLength);
-		for (int i = 0; i < maskedDBLength; i++) {
+		for i in 0..maskedDBLength {
 			DB[i + 1] ^= dbMask[i];
 		}
 //		BigInteger dbInt = new BigInteger(DB);
 
 		int shift1 = 0;
 		while (DB[shift1] == 0) {
-			shift1++;
+			shift1+=1;
 		}
 		int idx = 32 + shift1;
 		while (DB[idx] == 0) {
-			idx++;
+			idx+=1;
 		}
 		byte[] plaintext = Arrays.copyOfRange(DB, idx + 1, DB.length);
 		byte[][] result = new byte[][] { plaintext, seed };

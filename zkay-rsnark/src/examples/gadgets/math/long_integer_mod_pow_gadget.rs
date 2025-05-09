@@ -10,11 +10,11 @@ use circuit::structure::wire;
  */
 public class LongIntegerModPowGadget extends Gadget {
 
-	private final LongElement b; // base
-	private final LongElement e; // exponent
-	private final int eMaxBits; // maximum bit length of e
-	private final LongElement m; // modulus
-	private final int mMinBits; // minimum bit length of m
+	 LongElement b; // base
+	 LongElement e; // exponent
+	 int eMaxBits; // maximum bit length of e
+	 LongElement m; // modulus
+	 int mMinBits; // minimum bit length of m
 
 	private LongElement c; // c = m^e mod m
 
@@ -40,7 +40,7 @@ public class LongIntegerModPowGadget extends Gadget {
 		LongElement product = one;
 		// From the most significant to the least significant bit of the exponent, proceed as follow:
 		// product = product^2 mod m
-		// if (eBit == 1) product = (product * base) mod m
+		// if eBit == 1) product = (product * base mod m
 		for (int i = eBits.length - 1; i >= 0; --i) {
 			LongElement square = product.mul(product);
 			LongElement squareModM = new LongIntegerModGadget(square, m, mMinBits, false, "modPow: prod^2 mod m").getRemainder();
@@ -55,7 +55,7 @@ public class LongIntegerModPowGadget extends Gadget {
 		return c;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return c.getArray();
 	}

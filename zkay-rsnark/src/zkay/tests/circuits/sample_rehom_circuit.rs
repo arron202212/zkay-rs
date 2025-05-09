@@ -29,7 +29,7 @@ public class SampleRehomCircuit extends ZkayCircuitBase {
         stepOut();
     }
 
-    @Override
+    
     protected void buildCircuit() {
         super.buildCircuit();
         addS("x1", 1, ZkUint(32));

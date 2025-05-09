@@ -18,7 +18,7 @@ public class LongIntegerFloorDivGadget extends LongIntegerDivision {
 		super(a, b, bMinBitwidth, true, desc);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return getQuotient().getArray();
 	}

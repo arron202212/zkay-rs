@@ -48,7 +48,7 @@ public class WireArray {
 		Wire[] ws1 = adjustLength( array, desiredLength);
 		Wire[] ws2 = adjustLength( v.array, desiredLength);
 		Wire[] out = new Wire[desiredLength];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].mul(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -60,17 +60,17 @@ public class WireArray {
 		Wire output;
 		BigInteger sum = BigInteger.ZERO;
 		for (Wire w : array) {
-			if (!(w instanceof ConstantWire)) {
+			if !(w instanceof ConstantWire) {
 				allConstant = false;
 				break;
 			} else {
 				sum = sum.add(((ConstantWire) w).getConstant());
 			}
 		}
-		if (allConstant) {
+		if allConstant {
 			output = generator.createConstantWire(sum, desc);
 		} else {
-			output = new LinearCombinationWire(generator.currentWireId++);
+			output = new LinearCombinationWire(generator.currentWireId+=1);
 			Instruction op = new AddBasicOp(array, output, desc);
 //			generator.addToEvaluationQueue(op);
 			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
@@ -90,7 +90,7 @@ public class WireArray {
 		Wire[] ws1 = adjustLength(array, desiredLength);
 		Wire[] ws2 = adjustLength( v.array, desiredLength);
 		Wire[] out = new Wire[desiredLength];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].add(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -100,7 +100,7 @@ public class WireArray {
 		Wire[] ws1 = adjustLength(array, desiredLength);
 		Wire[] ws2 = adjustLength(v.array, desiredLength);
 		Wire[] out = new Wire[desiredLength];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].xor(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -114,7 +114,7 @@ public class WireArray {
 		Wire[] ws2 = v.array;
 		
 		Wire[] out = new Wire[size()];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].xor(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -124,7 +124,7 @@ public class WireArray {
 		Wire[] ws1 = adjustLength( array, desiredLength);
 		Wire[] ws2 = adjustLength( v.array, desiredLength);
 		Wire[] out = new Wire[desiredLength];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].mul(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -134,7 +134,7 @@ public class WireArray {
 		Wire[] ws1 = adjustLength(array, desiredLength);
 		Wire[] ws2 = adjustLength(v.array, desiredLength);
 		Wire[] out = new Wire[desiredLength];
-		for (int i = 0; i < out.length; i++) {
+		for i in 0..out.length {
 			out[i] = ws1[i].or(ws2[i], desc);
 		}
 		return new WireArray(out);
@@ -144,7 +144,7 @@ public class WireArray {
 	
 	public WireArray invAsBits(int desiredBitWidth, String...desc) {
 		Wire[] out = new Wire[desiredBitWidth];
-		for(int i = 0; i < desiredBitWidth; i++){
+		for(int i = 0; i < desiredBitWidth; i+=1){
 			if(i < array.length){
 				out[i] = array[i].invAsBit(desc);
 			}
@@ -162,8 +162,8 @@ public class WireArray {
 		}
 		Wire[] newWs = new Wire[desiredLength];
 		System.arraycopy(ws, 0, newWs, 0, Math.min(ws.length, desiredLength));
-		if (ws.length < desiredLength) {
-			for (int i = ws.length; i < desiredLength; i++) {
+		if ws.length < desiredLength {
+			for (int i = ws.length; i < desiredLength; i+=1) {
 				newWs[i] = generator.zeroWire;
 			}
 		}
@@ -176,8 +176,8 @@ public class WireArray {
 		}
 		Wire[] newWs = new Wire[desiredLength];
 		System.arraycopy(array, 0, newWs, 0, Math.min(array.length, desiredLength));
-		if (array.length < desiredLength) {
-			for (int i = array.length; i < desiredLength; i++) {
+		if array.length < desiredLength {
+			for (int i = array.length; i < desiredLength; i+=1) {
 				newWs[i] = generator.zeroWire;
 			}
 		}
@@ -197,7 +197,7 @@ public class WireArray {
 	protected BigInteger checkIfConstantBits(String...desc){
 		boolean allConstant = true;
 		BigInteger sum = BigInteger.ZERO;
-		for(int i = 0; i < array.length; i++){
+		for(int i = 0; i < array.length; i+=1){
 			Wire w = array[i];
 			if(w instanceof ConstantWire){
 				ConstantWire cw = (ConstantWire)w;
@@ -205,8 +205,8 @@ public class WireArray {
 				if(v.equals(BigInteger.ONE)){
 					sum = sum.add(v.shiftLeft(i));
 				}
-				else if (!v.equals(BigInteger.ZERO)){
-					System.err.println("Warning, one of the bit wires is constant but not binary : " + Util.getDesc(desc));					
+				else if !v.equals(BigInteger.ZERO){
+					println!("Warning, one of the bit wires is constant but not binary : " + Util.getDesc(desc));					
 				}
 				
 			}
@@ -222,13 +222,13 @@ public class WireArray {
 
 	public Wire packAsBits(int from, int to, String...desc) {
 		
-		if (from > to || to > array.length)
+		if from > to || to > array.length
 			throw new IllegalArgumentException("Invalid bounds: from > to");
 		
 		Wire[] bits = Arrays.copyOfRange(array, from, to);
 		boolean allConstant = true;
 		BigInteger sum = BigInteger.ZERO;
-		for(int i = 0; i < bits.length; i++){
+		for(int i = 0; i < bits.length; i+=1){
 			Wire w = bits[i];
 			if(w instanceof ConstantWire){
 				ConstantWire cw = (ConstantWire)w;
@@ -236,8 +236,8 @@ public class WireArray {
 				if(v.equals(BigInteger.ONE)){
 					sum = sum.add(v.shiftLeft(i));
 				}
-				else if (!v.equals(BigInteger.ZERO)){
-					throw new RuntimeException("Trying to pack non-binary constant bits : " + Util.getDesc(desc));					
+				else if !v.equals(BigInteger.ZERO){
+					panic!("Trying to pack non-binary constant bits : " + Util.getDesc(desc));					
 				}
 				
 			}
@@ -246,7 +246,7 @@ public class WireArray {
 			}
 		}
 		if(!allConstant){
-			Wire out = new LinearCombinationWire(generator.currentWireId++);
+			Wire out = new LinearCombinationWire(generator.currentWireId+=1);
 			out.setBits(new WireArray(bits));
 			Instruction op = new PackBasicOp(bits, out, desc);
 			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
@@ -267,8 +267,8 @@ public class WireArray {
 	public WireArray rotateLeft(int numBits, int s, String...desc) {
 		Wire[] bits = adjustLength(array, numBits);
 		Wire[] rotatedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i < s)
+		for i in 0..numBits {
+			if i < s
 				rotatedBits[i] = bits[i + (numBits - s)];
 			else
 				rotatedBits[i] = bits[i - s];
@@ -279,8 +279,8 @@ public class WireArray {
 	public WireArray rotateRight(int numBits, int s, String...desc) {
 		Wire[] bits = adjustLength(array, numBits);
 		Wire[] rotatedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i >= numBits - s)
+		for i in 0..numBits {
+			if i >= numBits - s
 				rotatedBits[i] = bits[i - (numBits - s)];
 			else
 				rotatedBits[i] = bits[i + s];
@@ -293,8 +293,8 @@ public class WireArray {
 	public WireArray shiftLeft(int numBits, int s, String...desc) {
 		Wire[] bits = adjustLength( array, numBits);
 		Wire[] shiftedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i < s)
+		for i in 0..numBits {
+			if i < s
 				shiftedBits[i] = generator.zeroWire;
 			else
 				shiftedBits[i] = bits[i - s];
@@ -305,8 +305,8 @@ public class WireArray {
 	public WireArray shiftRight(int numBits, int s, String...desc) {
 		Wire[] bits = adjustLength(array, numBits);
 		Wire[] shiftedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i >= numBits - s)
+		for i in 0..numBits {
+			if i >= numBits - s
 				shiftedBits[i] = generator.zeroWire;
 			else
 				shiftedBits[i] = bits[i + s];
@@ -318,7 +318,7 @@ public class WireArray {
 		int numWords = (int)Math.ceil(array.length*1.0/wordBitwidth);
 		Wire[] padded = adjustLength( array, wordBitwidth*numWords);
 		Wire[] result = new Wire[numWords];
-		for(int i = 0; i < numWords; i++){
+		for(int i = 0; i < numWords; i+=1){
 			result[i] = new WireArray(Arrays.copyOfRange(padded, i*wordBitwidth, (i+1)*wordBitwidth)).packAsBits();
 		}
 		return result;
@@ -328,7 +328,7 @@ public class WireArray {
 		int numLargerWords = (int)Math.ceil(array.length*1.0/numWordsPerLargerWord);
 		Wire[] result = new Wire[numLargerWords];
 		Arrays.fill(result, generator.zeroWire);
-		for(int i = 0; i < array.length; i++){
+		for(int i = 0; i < array.length; i+=1){
 			int subIndex = i % numWordsPerLargerWord;
 			result[i/numWordsPerLargerWord] = result[i/numWordsPerLargerWord].add(array[i]
 					.mul(new BigInteger("2").pow(subIndex*wordBitwidth)));
@@ -340,10 +340,10 @@ public class WireArray {
 	public WireArray getBits(int bitwidth, String...desc) {
 		Wire[] bits = new Wire[bitwidth * array.length];
 		int idx = 0;
-		for (int i = 0; i < array.length; i++) {
+		for i in 0..array.length {
 			Wire[] tmp = array[i].getBitWires(bitwidth, desc).asArray();
-			for (int j = 0; j < bitwidth; j++) {
-				bits[idx++] = tmp[j];
+			for j in 0..bitwidth {
+				bits[idx+=1] = tmp[j];
 			}
 		}
 		return new WireArray(bits);

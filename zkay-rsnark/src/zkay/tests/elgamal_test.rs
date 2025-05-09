@@ -29,9 +29,9 @@ public class ElgamalTest {
     }
 
     private static class ElgamalEncCircuitGenerator extends CircuitGenerator {
-        private final BigInteger plain;
-        private final BigInteger random;
-        private final AffinePoint pk;
+         BigInteger plain;
+         BigInteger random;
+         AffinePoint pk;
 
         private ElgamalEncCircuitGenerator(String name, BigInteger plain, BigInteger random, AffinePoint pk) {
             super(name);
@@ -40,7 +40,7 @@ public class ElgamalTest {
             this.pk = pk;
         }
 
-        @Override
+        
         protected void buildCircuit() {
             Wire randomness = createConstantWire(random);
             WireArray randomnessBits = randomness.getBitWires(random.bitLength());
@@ -52,15 +52,15 @@ public class ElgamalTest {
             makeOutputArray(gadget.getOutputWires(), "cipher");
         }
 
-        @Override
+        
         public void generateSampleInput(CircuitEvaluator evaluator) { }
     }
 
     private static class ElgamalRerandCircuitGenerator extends CircuitGenerator {
-        private final AffinePoint c1;
-        private final AffinePoint c2;
-        private final BigInteger random;
-        private final AffinePoint pk;
+         AffinePoint c1;
+         AffinePoint c2;
+         BigInteger random;
+         AffinePoint pk;
 
         private ElgamalRerandCircuitGenerator(String name, AffinePoint c1, AffinePoint c2, AffinePoint pk, BigInteger random) {
             super(name);
@@ -70,7 +70,7 @@ public class ElgamalTest {
             this.pk = pk;
         }
 
-        @Override
+        
         protected void buildCircuit() {
             Wire randomness = createConstantWire(random);
             WireArray randomnessBits = randomness.getBitWires(random.bitLength());
@@ -83,16 +83,16 @@ public class ElgamalTest {
             makeOutputArray(gadget.getOutputWires(), "rerand_cipher");
         }
 
-        @Override
+        
         public void generateSampleInput(CircuitEvaluator evaluator) { }
     }
 
     private static class ElgamalDecCircuitGenerator extends CircuitGenerator {
-        private final BigInteger msg;
-        private final AffinePoint pk;
-        private final BigInteger sk;
-        private final AffinePoint c1;
-        private final AffinePoint c2;
+         BigInteger msg;
+         AffinePoint pk;
+         BigInteger sk;
+         AffinePoint c1;
+         AffinePoint c2;
 
         private ElgamalDecCircuitGenerator(String name, AffinePoint pk, BigInteger sk, AffinePoint c1, AffinePoint c2, BigInteger msg) {
             super(name);
@@ -103,7 +103,7 @@ public class ElgamalTest {
             this.c2 = c2;
         }
 
-        @Override
+        
         protected void buildCircuit() {
             Wire secretKey = createConstantWire(sk);
             WireArray skBits = secretKey.getBitWires(sk.bitLength());
@@ -114,7 +114,7 @@ public class ElgamalTest {
             makeOutputArray(gadget.getOutputWires(), "dummy output");
         }
 
-        @Override
+        
         public void generateSampleInput(CircuitEvaluator evaluator) { }
     }
 

@@ -52,7 +52,7 @@ public class BabyJubJubTest {
             generator.addEqualityAssertion(g5.y, g5_expected.y);
         }
 
-        @Override
+        
         public Wire[] getOutputWires() {
             Wire dummy = generator.getOneWire();
             return new Wire[]{ dummy };
@@ -62,13 +62,13 @@ public class BabyJubJubTest {
     @Test
     public void testBabyJubJubGadget() {
         CircuitGenerator cgen = new CircuitGenerator("test") {
-            @Override
+            
             protected void buildCircuit() {
                 TestGadget gadget = new TestGadget();
                 makeOutput(gadget.getOutputWires()[0]);
             }
 
-            @Override
+            
             public void generateSampleInput(CircuitEvaluator evaluator) {}
         };
 

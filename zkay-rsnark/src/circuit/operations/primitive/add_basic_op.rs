@@ -12,7 +12,7 @@ public class AddBasicOp extends BasicOp {
 		return "add";
 	}
 	
-	@Override
+	
 	public void compute(BigInteger[] assignment) {
 		BigInteger s = BigInteger.ZERO;
 		for (Wire w : inputs) {
@@ -21,12 +21,12 @@ public class AddBasicOp extends BasicOp {
 		assignment[outputs[0].getWireId()] = s.mod(Config.FIELD_PRIME);
 	}
 	
-	@Override
+	
 	public boolean equals(Object obj) {
 
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof AddBasicOp)) {
+		if !(obj instanceof AddBasicOp) {
 			return false;
 		}
 		AddBasicOp op = (AddBasicOp) obj;
@@ -42,14 +42,14 @@ public class AddBasicOp extends BasicOp {
 			return check1 || check2;
 		} else {
 			boolean check = true;
-			for(int i = 0; i < inputs.length; i++){
+			for(int i = 0; i < inputs.length; i+=1){
 				check = check && inputs[i].equals(op.inputs[i]);
 			}
 			return check;
 		}
 	}
 
-	@Override
+	
 	public int getNumMulGates() {
 		return 0;
 	}

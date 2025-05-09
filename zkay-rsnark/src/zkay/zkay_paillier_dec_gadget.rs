@@ -9,12 +9,12 @@ use examples::gadgets::math::long_integer_mod_pow_gadget;
 
 public class ZkayPaillierDecGadget extends Gadget {
 
-	private final LongElement n;
-	private final LongElement nSquare;
-	private final int nBits;
-	private final LongElement lambda;
-	private final LongElement mu;
-	private final LongElement cipher;
+	 LongElement n;
+	 LongElement nSquare;
+	 int nBits;
+	 LongElement lambda;
+	 LongElement mu;
+	 LongElement cipher;
 	private LongElement plain;
 
 	public ZkayPaillierDecGadget(LongElement n, int nBits, LongElement lambda, LongElement mu, LongElement cipher,
@@ -45,7 +45,7 @@ public class ZkayPaillierDecGadget extends Gadget {
 		return plain;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return plain.getArray();
 	}

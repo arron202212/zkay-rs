@@ -35,14 +35,14 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 			Wire[] randomness, int rsaKeyBitLength, String... desc) {
 		super(desc);
 
-		if (rsaKeyBitLength % 8 != 0) {
+		if rsaKeyBitLength % 8 != 0 {
 			throw new IllegalArgumentException(
 					"RSA Key bit length is assumed to be a multiple of 8");
 		}
 
 		if (plainText.length > rsaKeyBitLength / 8 - 11
 				|| plainText.length + randomness.length != rsaKeyBitLength / 8 - 3) {
-			System.err.println("Check Message & Padding length");
+			println!("Check Message & Padding length");
 			throw new IllegalArgumentException(
 					"Invalid Argument Dimensions for RSA Encryption");
 		}
@@ -56,7 +56,7 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 
 	public static int getExpectedRandomnessLength(int rsaKeyBitLength,
 			int plainTextLength) {
-		if (rsaKeyBitLength % 8 != 0) {
+		if rsaKeyBitLength % 8 != 0 {
 			throw new IllegalArgumentException(
 					"RSA Key bit length is assumed to be a multiple of 8");
 
@@ -68,11 +68,11 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 
 		int lengthInBytes = rsaKeyBitLength / 8;
 		Wire[] paddedPlainText = new Wire[lengthInBytes];
-		for (int i = 0; i < plainText.length; i++) {
+		for i in 0..plainText.length {
 			paddedPlainText[plainText.length - i - 1] = plainText[i];
 		}
 		paddedPlainText[plainText.length] = generator.getZeroWire();
-		for (int i = 0; i < randomness.length; i++) {
+		for i in 0..randomness.length {
 			paddedPlainText[plainText.length + 1 + (randomness.length - 1) - i] = randomness[i];
 		}
 		paddedPlainText[lengthInBytes - 2] = generator.createConstantWire(2);
@@ -91,7 +91,7 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 		// done carefully)
 		LongElement paddedMsg = new LongElement(
 				new BigInteger[] { BigInteger.ZERO });
-		for (int i = 0; i < paddedPlainText.length; i++) {
+		for i in 0..paddedPlainText.length {
 			LongElement e = new LongElement(paddedPlainText[i], 8);
 			LongElement c = new LongElement(Util.split(
 					BigInteger.ONE.shiftLeft(8 * i),
@@ -100,7 +100,7 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 		}
 		
 		LongElement s = paddedMsg;
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 			s = s.mul(s);
 			s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, false).getRemainder();
 		}
@@ -114,14 +114,14 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 	
 	public void checkRandomnessCompliance(){
 		// assert the randomness vector has non-zero bytes
-		for (int i = 0; i < randomness.length; i++) {
+		for i in 0..randomness.length {
 			randomness[i].restrictBitLength(8);
 			// verify that each element has a multiplicative inverse
 			new FieldDivisionGadget(generator.getOneWire(), randomness[i]);
 		}
 	}
 	
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return ciphertext;
 	}

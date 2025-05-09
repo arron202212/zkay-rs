@@ -63,17 +63,17 @@ public class SHA256Gadget extends Gadget {
 
 		Wire[] outDigest = new Wire[8];
 		Wire[] hWires = new Wire[H.length];
-		for (int i = 0; i < H.length; i++) {
+		for i in 0..H.length {
 			hWires[i] = generator.createConstantWire(H[i]);
 		}
 
-		for (int blockNum = 0; blockNum < numBlocks; blockNum++) {
+		for (int blockNum = 0; blockNum < numBlocks; blockNum+=1) {
 
 			Wire[][] wsSplitted = new Wire[64][];
 			Wire[] w = new Wire[64];
 
-			for (int i = 0; i < 64; i++) {
-				if (i < 16) {
+			for i in 0..64 {
+				if i < 16 {
 					wsSplitted[i] = Util.reverseBytes(Arrays.copyOfRange(preparedInputBits, blockNum * 512 + i * 32,
 							blockNum * 512 + (i + 1) * 32));
 
@@ -106,7 +106,7 @@ public class SHA256Gadget extends Gadget {
 			Wire g = hWires[6];
 			Wire h = hWires[7];
 
-			for (int i = 0; i < 64; i++) {
+			for i in 0..64 {
 
 				Wire t1 = e.rotateRight(32, 6);
 				Wire t2 = e.rotateRight(32, 11);
@@ -169,13 +169,13 @@ public class SHA256Gadget extends Gadget {
 		outDigest[6] = hWires[6];
 		outDigest[7] = hWires[7];
 
-		if (!binaryOutput) {
+		if !binaryOutput {
 			output = outDigest;
 		} else {
 			output = new Wire[8 * 32];
-			for (int i = 0; i < 8; i++) {
+			for i in 0..8 {
 				Wire[] bits = outDigest[i].getBitWires(32).asArray();
-				for (int j = 0; j < 32; j++) {
+				for j in 0..32 {
 					output[j + i * 32] = bits[j];
 				}
 			}
@@ -189,7 +189,7 @@ public class SHA256Gadget extends Gadget {
 		Wire[] bBits = b.getBitWires(numBits).asArray();
 		Wire[] cBits = c.getBitWires(numBits).asArray();
 
-		for (int i = 0; i < numBits; i++) {
+		for i in 0..numBits {
 			Wire t1 = aBits[i].mul(bBits[i]);
 			Wire t2 = aBits[i].add(bBits[i]).add(t1.mul(-2));
 			result[i] = t1.add(cBits[i].mul(t2));
@@ -204,7 +204,7 @@ public class SHA256Gadget extends Gadget {
 		Wire[] bBits = b.getBitWires(numBits).asArray();
 		Wire[] cBits = c.getBitWires(numBits).asArray();
 
-		for (int i = 0; i < numBits; i++) {
+		for i in 0..numBits {
 			Wire t1 = bBits[i].sub(cBits[i]);
 			Wire t2 = t1.mul(aBits[i]);
 			result[i] = t2.add(cBits[i]);
@@ -217,21 +217,21 @@ public class SHA256Gadget extends Gadget {
 		numBlocks = (int) Math.ceil(totalLengthInBytes * 1.0 / 64);
 		Wire[] bits = new WireArray(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
 		int tailLength = totalLengthInBytes % 64;
-		if (paddingRequired) {
+		if paddingRequired {
 			Wire[] pad;
-			if ((64 - tailLength >= 9)) {
+			if (64 - tailLength >= 9) {
 				pad = new Wire[64 - tailLength];
 			} else {
 				pad = new Wire[128 - tailLength];
 			}
 			numBlocks = (totalLengthInBytes + pad.length)/64;
 			pad[0] = generator.createConstantWire(0x80);
-			for (int i = 1; i < pad.length - 8; i++) {
+			for (int i = 1; i < pad.length - 8; i+=1) {
 				pad[i] = generator.getZeroWire();
 			}
 			long lengthInBits = totalLengthInBytes * 8;
 			Wire[] lengthBits = new Wire[64];
-			for (int i = 0; i < 8; i++) {
+			for i in 0..8 {
 				pad[pad.length - 1 - i] = generator.createConstantWire((lengthInBits >>> (8 * i)) & 0xFFL);
 				Wire[] tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
 				System.arraycopy(tmp, 0, lengthBits, (7 - i) * 8, 8);
@@ -250,7 +250,7 @@ public class SHA256Gadget extends Gadget {
 	/**
 	 * outputs digest as 32-bit words
 	 */
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return output;
 	}

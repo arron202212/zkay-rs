@@ -43,7 +43,7 @@ public class RSASignature_Test extends TestCase {
 				SHA256Gadget sha2Gadget;
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
-				@Override
+				
 				protected void buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
 					sha2Gadget = new SHA256Gadget(inputMessage, 8,
@@ -56,10 +56,10 @@ public class RSASignature_Test extends TestCase {
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 
-					for (int i = 0; i < inputMessage.length; i++) {
+					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}
@@ -133,7 +133,7 @@ public class RSASignature_Test extends TestCase {
 				SHA256Gadget sha2Gadget;
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
-				@Override
+				
 				protected void buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
 					sha2Gadget = new SHA256Gadget(inputMessage, 8,
@@ -146,10 +146,10 @@ public class RSASignature_Test extends TestCase {
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 
-					for (int i = 0; i < inputMessage.length; i++) {
+					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}
@@ -212,7 +212,7 @@ public class RSASignature_Test extends TestCase {
 		int defaultBitwidth = LongElement.CHUNK_BITWIDTH ;
 
 		int[] chunkBiwidthArray = new int[106];
-		for(int b = 16; b-16 < chunkBiwidthArray.length; b++){
+		for(int b = 16; b-16 < chunkBiwidthArray.length; b+=1){
 			
 			LongElement.CHUNK_BITWIDTH = b;
 			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
@@ -226,7 +226,7 @@ public class RSASignature_Test extends TestCase {
 				SHA256Gadget sha2Gadget;
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
-				@Override
+				
 				protected void buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
 					sha2Gadget = new SHA256Gadget(inputMessage, 8,
@@ -239,10 +239,10 @@ public class RSASignature_Test extends TestCase {
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 
-					for (int i = 0; i < inputMessage.length; i++) {
+					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}

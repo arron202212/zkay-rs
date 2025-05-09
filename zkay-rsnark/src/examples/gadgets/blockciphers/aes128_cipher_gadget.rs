@@ -72,7 +72,7 @@ public class AES128CipherGadget extends Gadget {
 	public AES128CipherGadget(Wire[] inputs, Wire[] expandedKey, String... desc) {
 
 		super(desc);
-		if (inputs.length != 4 * nb || expandedKey.length != 4 * nb * (nr + 1)) {
+		if inputs.length != 4 * nb || expandedKey.length != 4 * nb * (nr + 1) {
 			throw new IllegalArgumentException("Invalid Input");
 		}
 		this.plaintext = inputs;
@@ -85,15 +85,15 @@ public class AES128CipherGadget extends Gadget {
 		ciphertext = new Wire[4 * nb];
 		Wire[][] state = new Wire[4][nb];
 		int i = 0;
-		for (int j = 0; j < nb; j++) {
-			for (int k = 0; k < 4; k++) {
-				state[k][j] = plaintext[i++];
+		for j in 0..nb {
+			for k in 0..4 {
+				state[k][j] = plaintext[i+=1];
 			}
 		}
 
 		state = addRoundKey(state, 0, nb - 1);
 		int round = 0;
-		for (round = 1; round < nr; round++) {
+		for (round = 1; round < nr; round+=1) {
 			subBytes(state);
 			state = shiftRows(state);
 			state = mixColumns(state);
@@ -105,16 +105,16 @@ public class AES128CipherGadget extends Gadget {
 		state = addRoundKey(state, round * nb * 4, (round + 1) * nb * 4 - 1);
 
 		i = 0;
-		for (int j = 0; j < nb; j++) {
-			for (int k = 0; k < 4; k++) {
-				ciphertext[i++] = state[k][j];
+		for j in 0..nb {
+			for k in 0..4 {
+				ciphertext[i+=1] = state[k][j];
 			}
 		}
 	}
 
 	private void subBytes(Wire[][] state) {
-		for (int i = 0; i < state.length; i++) {
-			for (int j = 0; j < state[i].length; j++) {
+		for i in 0..state.length {
+			for j in 0..state[i].length {
 				state[i][j] = randomAccess(generator, state[i][j]);
 			}
 		}
@@ -125,8 +125,8 @@ public class AES128CipherGadget extends Gadget {
 		Wire a[] = new Wire[4];
 		int c;
 
-		for (c = 0; c < 4; c++) {
-			for (int i = 0; i < 4; i++) {
+		for (c = 0; c < 4; c+=1) {
+			for i in 0..4 {
 				a[i] = state[i][c];
 			}
 			state[0][c] = galoisMulConst(a[0], 2)
@@ -157,12 +157,12 @@ public class AES128CipherGadget extends Gadget {
 		int counter;
 		Wire hiBitSet;
 
-		for (counter = 0; counter < 8; counter++) {
-			if ((i & 1) != 0) {
+		for (counter = 0; counter < 8; counter+=1) {
+			if (i & 1) != 0 {
 				p = p.xorBitwise(wire, 8);
 			}
 			i >>= 1;
-			if (i == 0)
+			if i == 0
 				break;
 			hiBitSet = wire.getBitWires(8).get(7);
 			wire = wire.shiftLeft(8, 1);
@@ -175,7 +175,7 @@ public class AES128CipherGadget extends Gadget {
 	private Wire[][] shiftRows(Wire[][] state) {
 		Wire[][] newState = new Wire[4][nb];
 		newState[0] = Arrays.copyOf(state[0], nb);
-		for (int j = 0; j < nb; j++) {
+		for j in 0..nb {
 			newState[1][j] = state[1][(j + 1) % nb];
 			newState[2][j] = state[2][(j + 2) % nb];
 			newState[3][j] = state[3][(j + 3) % nb];
@@ -186,17 +186,17 @@ public class AES128CipherGadget extends Gadget {
 	private Wire[][] addRoundKey(Wire[][] state, int from, int to) {
 		Wire[][] newState = new Wire[4][nb];
 		int idx = 0;
-		for (int j = 0; j < nb; j++) {
-			for (int i = 0; i < 4; i++) {
+		for j in 0..nb {
+			for i in 0..4 {
 				newState[i][j] = state[i][j].xorBitwise(
 						expandedKey[from + idx], 8);
-				idx++;
+				idx+=1;
 			}
 		}
 		return newState;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return ciphertext;
 	}
@@ -210,7 +210,7 @@ public class AES128CipherGadget extends Gadget {
 		while (i < nk) {
 			w[i] = new Wire[] { key[4 * i], key[4 * i + 1], key[4 * i + 2],
 					key[4 * i + 3] };
-			i++;
+			i+=1;
 		}
 
 		CircuitGenerator generator = CircuitGenerator
@@ -218,27 +218,27 @@ public class AES128CipherGadget extends Gadget {
 		i = nk;
 		while (i < nb * (nr + 1)) {
 			temp = w[i - 1];
-			if (i % nk == 0) {
+			if i % nk == 0 {
 				temp = subWord(generator, rotateWord(generator, temp));
 				temp[0] = temp[0].xorBitwise(
 						generator.createConstantWire(RCon[i / nk]), 8);
-			} else if (nk > 6 && (i % nk) == 4) {
+			} else if nk > 6 && (i % nk) == 4 {
 				temp = subWord(generator, temp);
 			}
 
-			for (int v = 0; v < 4; v++) {
+			for v in 0..4 {
 				w[i][v] = w[i - nk][v].xorBitwise(temp[v], 8);
 
 			}
 
-			i++;
+			i+=1;
 
 		}
 		Wire[] expanded = new Wire[nb * (nr + 1) * 4];
 		int idx = 0;
-		for (int k = 0; k < nb * (nr + 1); k++) {
-			for (i = 0; i < 4; i++) {
-				expanded[idx++] = w[k][i];
+		for (int k = 0; k < nb * (nr + 1); k+=1) {
+			for (i = 0; i < 4; i+=1) {
+				expanded[idx+=1] = w[k][i];
 			}
 		}
 
@@ -246,7 +246,7 @@ public class AES128CipherGadget extends Gadget {
 	}
 
 	private static Wire[] subWord(CircuitGenerator generator, Wire[] w) {
-		for (int i = 0; i < w.length; i++) {
+		for i in 0..w.length {
 			w[i] = randomAccess(generator, w[i]);
 		}
 		return w;
@@ -254,7 +254,7 @@ public class AES128CipherGadget extends Gadget {
 
 	private static Wire[] rotateWord(CircuitGenerator generator, Wire[] w) {
 		Wire[] newW = new Wire[w.length];
-		for (int j = 0; j < w.length; j++) {
+		for j in 0..w.length {
 			newW[j] = w[(j + 1) % w.length];
 		}
 		return newW;

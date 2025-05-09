@@ -25,7 +25,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 			private Wire baseX;
 			private Wire hX;
 			
-			@Override
+			
 			protected void buildCircuit() {
 				
 				secretBits = createInputWireArray(exponentBitlength, "exponent");
@@ -43,15 +43,15 @@ public class ECDHKeyExchange_Test extends TestCase {
 				
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				
 				evaluator.setWireValue(baseX, new BigInteger("4"));
 				evaluator.setWireValue(hX, new BigInteger("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
 				BigInteger exponent = new BigInteger("13867691842196510828352345865165018381161315605899394650350519162543016860992");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(secretBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -77,7 +77,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 			private Wire baseX;
 			private Wire hX;
 			
-			@Override
+			
 			protected void buildCircuit() {
 				
 				secretBits = createInputWireArray(exponentBitlength, "exponent");
@@ -94,13 +94,13 @@ public class ECDHKeyExchange_Test extends TestCase {
 				
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				
 
 				BigInteger exponent = new BigInteger("13867691842196510828352345865165018381161315605899394650350519162543016860992");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(secretBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -126,7 +126,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 			private Wire baseX;
 			private Wire hX;
 			
-			@Override
+			
 			protected void buildCircuit() {
 				
 				secretBits = createInputWireArray(exponentBitlength, "exponent");
@@ -140,15 +140,15 @@ public class ECDHKeyExchange_Test extends TestCase {
 				keyExchangeGadget.validateInputs();
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				
 				evaluator.setWireValue(baseX, new BigInteger("4"));
 				evaluator.setWireValue(hX, new BigInteger("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
 				BigInteger exponent = new BigInteger("13867691842196510828352345865165018381161315605899394650350519162543016860992");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(secretBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -173,7 +173,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 			private Wire baseX;
 			private Wire hX;
 			
-			@Override
+			
 			protected void buildCircuit() {
 				
 				secretBits = createInputWireArray(exponentBitlength, "exponent");
@@ -187,7 +187,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 				keyExchangeGadget.validateInputs();
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				
 				// invalid
@@ -195,8 +195,8 @@ public class ECDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(hX, new BigInteger("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
 				BigInteger exponent = new BigInteger("13867691842196510828352345865165018381161315605899394650350519162543016860992");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(secretBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -208,7 +208,7 @@ public class ECDHKeyExchange_Test extends TestCase {
 			generator.evalCircuit();
 			assertTrue(false);		
 		} catch(Exception e){
-			System.out.println("Exception Expected!");
+			println!("Exception Expected!");
 			assertTrue(true);
 		}
 		

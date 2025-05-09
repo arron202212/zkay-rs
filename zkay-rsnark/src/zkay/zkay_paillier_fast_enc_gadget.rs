@@ -9,12 +9,12 @@ use examples::gadgets::math::long_integer_mod_pow_gadget;
 
 public class ZkayPaillierFastEncGadget extends Gadget {
 
-	private final LongElement n;
-	private final LongElement nSquare;
-	private final int nBits;
-	private final int nSquareMaxBits;
-	private final LongElement plain;
-	private final LongElement random;
+	 LongElement n;
+	 LongElement nSquare;
+	 int nBits;
+	 int nSquareMaxBits;
+	 LongElement plain;
+	 LongElement random;
 	private LongElement cipher;
 
 	public ZkayPaillierFastEncGadget(LongElement n, int nBits, LongElement plain, LongElement random, String... desc) {
@@ -45,7 +45,7 @@ public class ZkayPaillierFastEncGadget extends Gadget {
 		return cipher;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return cipher.getArray();
 	}

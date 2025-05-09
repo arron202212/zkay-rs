@@ -20,7 +20,7 @@ public class Mod_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				inputWires = createInputWireArray(2);
@@ -31,7 +31,7 @@ public class Mod_Test extends TestCase {
 				makeOutput(r);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
 				e.setWireValue(inputWires[0], a);
 				e.setWireValue(inputWires[1], b);
@@ -57,7 +57,7 @@ public class Mod_Test extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				inputWires = createInputWireArray(1);
@@ -65,7 +65,7 @@ public class Mod_Test extends TestCase {
 				makeOutput(r);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
 				e.setWireValue(inputWires[0], a);
 			}

@@ -13,22 +13,22 @@ public class MulBasicOp extends BasicOp {
 		return "mul";
 	}
 	
-	@Override
+	
 	public void compute(BigInteger[] assignment) {
 		BigInteger result = assignment[inputs[0].getWireId()]
 				.multiply(assignment[inputs[1].getWireId()]);
-		if (result.compareTo(Config.FIELD_PRIME) > 0) {
+		if result.compareTo(Config.FIELD_PRIME) > 0 {
 			result = result.mod(Config.FIELD_PRIME);
 		}
 		assignment[outputs[0].getWireId()] = result;
 	}
 
-	@Override
+	
 	public boolean equals(Object obj) {
 
-		if (this == obj)
+		if this == obj
 			return true;
-		if (!(obj instanceof MulBasicOp)) {
+		if !(obj instanceof MulBasicOp) {
 			return false;
 		}
 		MulBasicOp op = (MulBasicOp) obj;
@@ -41,7 +41,7 @@ public class MulBasicOp extends BasicOp {
 
 	}
 	
-	@Override
+	
 	public int getNumMulGates() {
 		return 1;
 	}

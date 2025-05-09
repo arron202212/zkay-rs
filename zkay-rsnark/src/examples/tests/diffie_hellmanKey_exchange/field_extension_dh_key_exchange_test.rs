@@ -28,7 +28,7 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 			
 			private Wire[] exponentBits;
 			
-			@Override
+			
 			protected void buildCircuit() {
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
@@ -56,11 +56,11 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				BigInteger exponent = new BigInteger("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(exponentBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -95,7 +95,7 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 			private Wire[] g;
 			private Wire[] h;
 
-			@Override
+			
 			protected void buildCircuit() {
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
@@ -112,7 +112,7 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(g[0],new BigInteger("16377448892084713529161739182205318095580119111576802375181616547062197291263"));
 				evaluator.setWireValue(g[1],new BigInteger("13687683608888423916085091250849188813359145430644908352977567823030408967189"));
@@ -125,8 +125,8 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(h[3],new BigInteger("1294177986177175279602421915789749270823809536595962994745244158374705688266"));
 
 				BigInteger exponent = new BigInteger("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(exponentBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};
@@ -164,7 +164,7 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 			private Wire[] g;
 			private Wire[] h;
 
-			@Override
+			
 			protected void buildCircuit() {
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
@@ -184,7 +184,7 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(g[0],new BigInteger("16377448892084713529161739182205318095580119111576802375181616547062197291263"));
 				evaluator.setWireValue(g[1],new BigInteger("13687683608888423916085091250849188813359145430644908352977567823030408967189"));
@@ -197,8 +197,8 @@ public class FieldExtensionDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(h[3],new BigInteger("1294177986177175279602421915789749270823809536595962994745244158374705688266"));
 
 				BigInteger exponent = new BigInteger("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
-				for(int i = 0; i < exponentBitlength; i++){
-					evaluator.setWireValue(exponentBits[i], exponent.testBit(i)?1:0);
+				for(int i = 0; i < exponentBitlength; i+=1){
+					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
 			}
 		};

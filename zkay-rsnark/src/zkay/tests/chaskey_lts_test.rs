@@ -72,7 +72,7 @@ public class ChaskeyLtsTest {
 
         // Compute encryption via jsnark gadget
         CircuitGenerator cgen = new CircuitGenerator("cbcchaskey") {
-            @Override
+            
             protected void buildCircuit() {
                 TypedWire plainwire = new TypedWire(createConstantWire(plain), ZkayType.ZkUint(256), "plaintext");
                 Wire ivwire = createConstantWire(iv);
@@ -82,7 +82,7 @@ public class ChaskeyLtsTest {
                         ZkayCBCSymmetricEncGadget.CipherType.CHASKEY).getOutputWires());
             }
 
-            @Override
+            
             public void generateSampleInput(CircuitEvaluator evaluator) {
 
             }
@@ -93,7 +93,7 @@ public class ChaskeyLtsTest {
         evaluator.evaluate();
         ArrayList<Wire> outwires = cgen.getOutWires();
         BigInteger[] outs = new BigInteger[outwires.size()];
-        for (int i = 0; i < outs.length; ++i) {
+        for i in 0..outs.length {
             outs[i] = evaluator.getWireValue(outwires.get(i));
         }
 
@@ -112,7 +112,7 @@ public class ChaskeyLtsTest {
         int chunk_size = CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE / 8;
         int first_chunk_size = iv_cipher.length % chunk_size;
         List<BigInteger> bigints = new ArrayList<>();
-        if (first_chunk_size != 0) {
+        if first_chunk_size != 0 {
             byte[] chunk = Arrays.copyOfRange(iv_cipher, 0, first_chunk_size);
             bigints.add(ZkayUtil.unsignedBytesToBigInt(chunk));
         }

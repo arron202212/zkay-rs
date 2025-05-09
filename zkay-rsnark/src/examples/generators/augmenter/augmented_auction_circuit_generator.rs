@@ -32,13 +32,13 @@ public class AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 		this.numParties = numParticipants + 1;
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		secretInputValues = createProverWitnessWireArray(numParties - 1); // the manager has a zero input (no need to commit to it)
 		secretInputRandomness = new Wire[numParties - 1][];
 		secretOutputRandomness = new Wire[numParties][];
-		for(int i = 0; i < numParties - 1; i++){
+		for(int i = 0; i < numParties - 1; i+=1){
 			secretInputRandomness[i] =   createProverWitnessWireArray(7);
 			secretOutputRandomness[i] =   createProverWitnessWireArray(7);
 		}
@@ -52,13 +52,13 @@ public class AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 		secretOutputValues = Arrays.copyOfRange(outputs, 0, outputs.length - 1);
 		
 		// augment the input side
-		for(int i = 0; i < numParties - 1; i++){
+		for(int i = 0; i < numParties - 1; i+=1){
 			SHA256Gadget g = new SHA256Gadget(Util.concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
 			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s input balance.");
 		}
 		
 		// augment the output side
-		for(int i = 0; i < numParties; i++){
+		for(int i = 0; i < numParties; i+=1){
 			// adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions) 
 			secretOutputValues[i] = secretOutputValues[i].getBitWires(64*2).packAsBits(64);
 			SHA256Gadget g = new SHA256Gadget(Util.concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
@@ -66,19 +66,19 @@ public class AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 		}
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
 		
-		for(int i = 0; i < numParties - 1; i++){
+		for(int i = 0; i < numParties - 1; i+=1){
 			evaluator.setWireValue(secretInputValues[i], Util.nextRandomBigInteger(63));
 		}		
 		
-		for(int i = 0; i < numParties - 1; i++){
+		for(int i = 0; i < numParties - 1; i+=1){
 			for(Wire w:secretInputRandomness[i]){
 				evaluator.setWireValue(w, Util.nextRandomBigInteger(64));
 			}
 		}
-		for(int i = 0; i < numParties; i++){
+		for(int i = 0; i < numParties; i+=1){
 			for(Wire w:secretOutputRandomness[i]){
 				evaluator.setWireValue(w, Util.nextRandomBigInteger(64));
 			}
@@ -86,7 +86,7 @@ public class AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 	}
 	
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		AugmentedAuctionCircuitGenerator generator = new AugmentedAuctionCircuitGenerator("augmented_auction_10", "auction_10.arith", 10);
 		generator.generateCircuit();
 		generator.evalCircuit();

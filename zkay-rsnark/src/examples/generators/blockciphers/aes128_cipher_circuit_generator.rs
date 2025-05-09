@@ -19,7 +19,7 @@ public class AES128CipherCircuitGenerator extends CircuitGenerator {
 		super(circuitName);
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 		inputs = createInputWireArray(16); // in bytes
 		key = createInputWireArray(16); // in bytes
@@ -33,7 +33,7 @@ public class AES128CipherCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
 
 		BigInteger keyV = new BigInteger("2b7e151628aed2a6abf7158809cf4f3c", 16);
@@ -48,16 +48,16 @@ public class AES128CipherCircuitGenerator extends CircuitGenerator {
 		keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
 				keyArray.length);
 
-		for (int i = 0; i < msgArray.length; i++) {
+		for i in 0..msgArray.length {
 			circuitEvaluator.setWireValue(inputs[i], (msgArray[i] & 0xff));
 		}
 
-		for (int i = 0; i < keyArray.length; i++) {
+		for i in 0..keyArray.length {
 			circuitEvaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 
 		Config.hexOutputEnabled = true;
 		AES128CipherCircuitGenerator generator = new AES128CipherCircuitGenerator(

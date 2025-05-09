@@ -18,7 +18,7 @@ public class ChaskeyLTS128CipherGadget extends Gadget {
 
 	public ChaskeyLTS128CipherGadget(Wire[] inputs, Wire[] key, String... desc) {
 		super(desc);
-		if (inputs.length != 4 || key.length != 4) {
+		if inputs.length != 4 || key.length != 4 {
 			throw new IllegalArgumentException("Invalid Input");
 		}
 		this.plaintext = inputs;
@@ -31,11 +31,11 @@ public class ChaskeyLTS128CipherGadget extends Gadget {
 	protected void buildCircuit() {
 
 		Wire[] v = new Wire[4];
-		for (int i = 0; i < 4; i++) {
+		for i in 0..4 {
 			v[i] = (plaintext[i].xorBitwise(key[i], 32));
 		}
 
-		for (int i = 0; i < 16; i++) {
+		for i in 0..16 {
 
 			v[0] = v[0].add(v[1]);
 			v[0] = v[0].trimBits(33, 32);
@@ -55,13 +55,13 @@ public class ChaskeyLTS128CipherGadget extends Gadget {
 
 		}
 
-		for (int i = 0; i < 4; i++) {
+		for i in 0..4 {
 			v[i] = v[i].xorBitwise(key[i], 32);
 		}
 		ciphertext = v;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return ciphertext;
 	}

@@ -14,7 +14,7 @@ public class RSAEncryption_Test extends TestCase {
 
 	
 	@Test
-	public void testEncryptionDifferentKeyLengths() throws Exception{
+	public void testEncryptionDifferentKeyLengths() {
 
 		
 		String plainText = "abc";
@@ -47,10 +47,10 @@ public class RSAEncryption_Test extends TestCase {
 
 				 RSAEncryptionV1_5_Gadget rsaEncryptionV1_5_Gadget;
 
-				@Override
+				
 				protected void buildCircuit() {
 					inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-					for(int i = 0; i < plainTextLength;i++){
+					for(int i = 0; i < plainTextLength;i+=1){
 						inputMessage[i].restrictBitLength(8);
 					}
 					
@@ -70,10 +70,10 @@ public class RSAEncryption_Test extends TestCase {
 							"Output cipher text");
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 
-					for (int i = 0; i < inputMessage.length; i++) {
+					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
 								plainText.charAt(i));
 					}
@@ -96,13 +96,13 @@ public class RSAEncryption_Test extends TestCase {
 								(RSAPrivateKey) privKey);
 
 						boolean check = Arrays.equals(result[0], plainText.getBytes());
-						if (!check) {
-							throw new RuntimeException(
+						if !check {
+							panic!(
 									"Randomness Extraction did not decrypt right");
 						}
 
 						byte[] sampleRandomness = result[1];
-						for (int i = 0; i < sampleRandomness.length; i++) {
+						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 						}
 
@@ -125,7 +125,7 @@ public class RSAEncryption_Test extends TestCase {
 			for(Wire w:cipherTextList){
 				BigInteger val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i*64));
-				i++;
+				i+=1;
 			}
 		
 			// extract the bytes
@@ -136,7 +136,7 @@ public class RSAEncryption_Test extends TestCase {
 				cipherTextBytesFromCircuit=Arrays.copyOfRange(cipherTextBytesFromCircuit, 1, cipherTextBytesFromCircuit.length);
 			}
 			
-			for(int k = 0; k < cipherTextBytesFromCircuit.length;k++){
+			for(int k = 0; k < cipherTextBytesFromCircuit.length;k+=1){
 				assertEquals(cipherTextBytes[k], cipherTextBytesFromCircuit[k]);
 
 			}

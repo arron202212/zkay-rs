@@ -17,7 +17,7 @@ public class Wire {
 
 	public Wire(int wireId) {
 		this.generator = CircuitGenerator.getActiveCircuitGenerator();
-		if (wireId < 0) {
+		if wireId < 0 {
 			throw new IllegalArgumentException("wire id cannot be negative");
 		}
 		this.wireId = wireId;
@@ -43,17 +43,17 @@ public class Wire {
 	void setBits(WireArray bits) {
 		// method overriden in subclasses
 		// default action:
-		System.err.println(
+		println!(
 				"Warning --  you are trying to set bits for either a constant or a bit wire." + " -- Action Ignored");
 	}
 
 	public Wire mul(BigInteger b, String... desc) {
 		packIfNeeded(desc);
-		if (b.equals(BigInteger.ONE))
+		if b.equals(BigInteger.ONE)
 			return this;
-		if (b.equals(BigInteger.ZERO))
+		if b.equals(BigInteger.ZERO)
 			return generator.zeroWire;
-		Wire out = new LinearCombinationWire(generator.currentWireId++);
+		Wire out = new LinearCombinationWire(generator.currentWireId+=1);
 		Instruction op = new ConstMulBasicOp(this, out, b, desc);
 //		generator.addToEvaluationQueue(op);
 		Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
@@ -77,12 +77,12 @@ public class Wire {
 	}
 
 	public Wire mul(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			return this.mul(((ConstantWire) w).getConstant(), desc);
 		} else {
 			packIfNeeded(desc);
 			w.packIfNeeded(desc);
-			Wire output = new VariableWire(generator.currentWireId++);
+			Wire output = new VariableWire(generator.currentWireId+=1);
 			Instruction op = new MulBasicOp(this, w, output, desc);
 			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
 			if(cachedOutputs == null){
@@ -140,8 +140,8 @@ public class Wire {
 		 * this wire is not currently used for anything - It's for compatibility
 		 * with earlier experimental versions when the target was Pinocchio
 		 **/
-		Wire out1 = new Wire(generator.currentWireId++);
-		Wire out2 = new VariableBitWire(generator.currentWireId++);
+		Wire out1 = new Wire(generator.currentWireId+=1);
+		Wire out2 = new VariableBitWire(generator.currentWireId+=1);
 		Instruction op = new NonZeroCheckBasicOp(this, out1, out2, desc);
 		Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
 		if(cachedOutputs == null){
@@ -161,12 +161,12 @@ public class Wire {
 	}
 
 	public Wire or(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			return w.or(this, desc);
 		} else {
 			packIfNeeded(desc); // just a precaution .. should not be really
 								// needed
-			Wire out = new VariableWire(generator.currentWireId++);
+			Wire out = new VariableWire(generator.currentWireId+=1);
 			Instruction op = new ORBasicOp(this, w, out, desc);
 			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
 			if(cachedOutputs == null){
@@ -181,12 +181,12 @@ public class Wire {
 
 
 	public Wire xor(Wire w, String... desc) {
-		if (w instanceof ConstantWire) {
+		if w instanceof ConstantWire {
 			return w.xor(this, desc);
 		} else {
 			packIfNeeded(desc); // just a precaution .. should not be really
 								// needed
-			Wire out = new VariableWire(generator.currentWireId++);
+			Wire out = new VariableWire(generator.currentWireId+=1);
 			Instruction op = new XorBasicOp(this, w, out, desc);
 			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
 			if(cachedOutputs == null){
@@ -205,19 +205,19 @@ public class Wire {
 
 	public WireArray getBitWires(int bitwidth, String... desc) {
 		WireArray bitWires = getBitWires();
-		if (bitWires == null) {
+		if bitWires == null {
 			bitWires = forceSplit(bitwidth, desc);
 			setBits(bitWires);
 			return bitWires;
 		} else {
 			if(bitwidth < bitWires.size() && !(this instanceof ConstantWire)){
-				System.err.println("Warning: getBitWires() was called with different arguments on the same wire more than once");
-				System.out.println("\t It was noted that the argument in the second call was less than the first.");
-				System.out.println("\t If this was called for enforcing a bitwidth constraint, you must use restrictBitLengh(), otherwise you can ignore this.");
+				println!("Warning: getBitWires() was called with different arguments on the same wire more than once");
+				println!("\t It was noted that the argument in the second call was less than the first.");
+				println!("\t If this was called for enforcing a bitwidth constraint, you must use restrictBitLengh(), otherwise you can ignore this.");
 				if(Config.printStackTraceAtWarnings){
 					Thread.dumpStack();
 				} else{
-					System.out.println("\t You can view the stack trace by setting Config.printStackTraceAtWarnings to true in the code.");
+					println!("\t You can view the stack trace by setting Config.printStackTraceAtWarnings to true in the code.");
 				}
 			}
 			return bitWires.adjustLength(bitwidth);
@@ -230,8 +230,8 @@ public class Wire {
 
 	protected WireArray forceSplit(int bitwidth, String... desc) {
 		Wire[] ws = new VariableBitWire[bitwidth];
-		for (int i = 0; i < bitwidth; i++) {
-			ws[i] = new VariableBitWire(generator.currentWireId++);
+		for i in 0..bitwidth {
+			ws[i] = new VariableBitWire(generator.currentWireId+=1);
 		}
 		Instruction op = new SplitBasicOp(this, ws, desc);
 		Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
@@ -250,10 +250,10 @@ public class Wire {
 
 	public void restrictBitLength(int bitWidth, String... desc) {
 		WireArray bitWires = getBitWires();
-		if (bitWires == null) {
+		if bitWires == null {
 			getBitWires(bitWidth, desc);
 		} else {
-			if (bitWires.size() > bitWidth) {
+			if bitWires.size() > bitWidth {
 				bitWires = forceSplit(bitWidth, desc);
 				setBits(bitWires);
 			} else {
@@ -267,7 +267,7 @@ public class Wire {
 		WireArray bits2 = w.getBitWires(numBits, desc);
 		WireArray result = bits1.xorWireArray(bits2, numBits, desc);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -287,7 +287,7 @@ public class Wire {
 		WireArray bits2 = w.getBitWires(numBits, desc);
 		WireArray result = bits1.andWireArray(bits2, numBits, desc);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -307,7 +307,7 @@ public class Wire {
 		WireArray bits2 = w.getBitWires(numBits, desc);
 		WireArray result = bits1.orWireArray(bits2, numBits, desc);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -413,15 +413,15 @@ public class Wire {
 	public Wire rotateLeft(int numBits, int s, String... desc) {
 		WireArray bits = getBitWires(numBits, desc);
 		Wire[] rotatedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i < s)
+		for i in 0..numBits {
+			if i < s
 				rotatedBits[i] = bits.get(i + (numBits - s));
 			else
 				rotatedBits[i] = bits.get(i - s);
 		}
 		WireArray result = new WireArray(rotatedBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -431,15 +431,15 @@ public class Wire {
 	public Wire rotateRight(int numBits, int s, String... desc) {
 		WireArray bits = getBitWires(numBits, desc);
 		Wire[] rotatedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i >= numBits - s)
+		for i in 0..numBits {
+			if i >= numBits - s
 				rotatedBits[i] = bits.get(i - (numBits - s));
 			else
 				rotatedBits[i] = bits.get(i + s);
 		}
 		WireArray result = new WireArray(rotatedBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -447,22 +447,22 @@ public class Wire {
 	}
 
 	public Wire shiftLeft(int numBits, int s, String... desc) {
-		if (s >= numBits) {
+		if s >= numBits {
 			// Will always be zero in that case
 			return generator.zeroWire;
 		}
 
 		WireArray bits = getBitWires(numBits, desc);
 		Wire[] shiftedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i < s)
+		for i in 0..numBits {
+			if i < s
 				shiftedBits[i] = generator.zeroWire;
 			else
 				shiftedBits[i] = bits.get(i - s);
 		}
 		WireArray result = new WireArray(shiftedBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -470,22 +470,22 @@ public class Wire {
 	}
 
 	public Wire shiftRight(int numBits, int s, String... desc) {
-		if (s >= numBits) {
+		if s >= numBits {
 			// Will always be zero in that case
 			return generator.zeroWire;
 		}
 
 		WireArray bits = getBitWires(numBits, desc);
 		Wire[] shiftedBits = new Wire[numBits];
-		for (int i = 0; i < numBits; i++) {
-			if (i >= numBits - s)
+		for i in 0..numBits {
+			if i >= numBits - s
 				shiftedBits[i] = generator.zeroWire;
 			else
 				shiftedBits[i] = bits.get(i + s);
 		}
 		WireArray result = new WireArray(shiftedBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -496,15 +496,15 @@ public class Wire {
 		WireArray bits = getBitWires(numBits, desc);
 		Wire[] shiftedBits = new Wire[numBits];
 		Wire sign = bits.get(numBits-1);
-		for (int i = 0; i < numBits; i++) {
-			if (i >= numBits - s)
+		for i in 0..numBits {
+			if i >= numBits - s
 				shiftedBits[i] = sign;
 			else
 				shiftedBits[i] = bits.get(i + s);
 		}
 		WireArray result = new WireArray(shiftedBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -514,7 +514,7 @@ public class Wire {
 	public Wire invBits(int bitwidth, String... desc) {
 		Wire[] bits = getBitWires(bitwidth, desc).asArray();
 		Wire[] resultBits = new Wire[bits.length];
-		for (int i = 0; i < resultBits.length; i++) {
+		for i in 0..resultBits.length {
 			resultBits[i] = bits[i].invAsBit(desc);
 		}
 		return new LinearCombinationWire(new WireArray(resultBits));
@@ -524,7 +524,7 @@ public class Wire {
 		WireArray bitWires = getBitWires(currentNumOfBits, desc);
 		WireArray result = bitWires.adjustLength(desiredNumofBits);
 		BigInteger v = result.checkIfConstantBits(desc);
-		if (v == null) {
+		if v == null {
 			return new LinearCombinationWire(result);
 		} else {
 			return generator.createConstantWire(v);
@@ -532,18 +532,18 @@ public class Wire {
 	}
 
 	protected void packIfNeeded(String... desc) {
-		if (wireId == -1) {
+		if wireId == -1 {
 			pack();
 		}
 	}
 
 	protected void pack(String... desc) {
-		if (wireId == -1) {
+		if wireId == -1 {
 			WireArray bits = getBitWires();
-			if (bits == null) {
-				throw new RuntimeException("A Pack operation is tried on a wire that has no bits.");
+			if bits == null {
+				panic!("A Pack operation is tried on a wire that has no bits.");
 			}
-			wireId = generator.currentWireId++;
+			wireId = generator.currentWireId+=1;
 //			Instruction op = new PackBasicOp(bits.array, this, desc);
 //			generator.addToEvaluationQueue(op);
 			
@@ -558,12 +558,12 @@ public class Wire {
 		}
 	}
 	
-	@Override
+	
 	public int hashCode() {
 		return wireId;
 	}
 
-	@Override
+	
 	public boolean equals(Object obj) {
 		if(this == obj){
 			return true;

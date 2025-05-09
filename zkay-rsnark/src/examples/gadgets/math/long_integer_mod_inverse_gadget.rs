@@ -19,9 +19,9 @@ use util::util;
  */
 public class LongIntegerModInverseGadget extends Gadget {
 
-	private final LongElement a; // the value to be inverted
-	private final LongElement m; // the modulus
-	private final boolean restrictRange; // whether to enforce that a^(-1) < m
+	 LongElement a; // the value to be inverted
+	 LongElement m; // the modulus
+	 boolean restrictRange; // whether to enforce that a^(-1) < m
 	private LongElement inverse;
 
 	public LongIntegerModInverseGadget(LongElement a, LongElement m, boolean restrictRange, String... desc) {
@@ -39,7 +39,7 @@ public class LongIntegerModInverseGadget extends Gadget {
 		LongElement quotient = new LongElement(quotientWires, m.getCurrentBitwidth());
 
 		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
 				BigInteger mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
@@ -60,7 +60,7 @@ public class LongIntegerModInverseGadget extends Gadget {
 		LongElement oneModM = quotient.mul(m).add(1);
 		product.assertEquality(oneModM);
 
-		if (restrictRange) {
+		if restrictRange {
 			inverse.assertLessThan(m);
 		}
 	}
@@ -69,7 +69,7 @@ public class LongIntegerModInverseGadget extends Gadget {
 		return inverse;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return inverse.getArray();
 	}

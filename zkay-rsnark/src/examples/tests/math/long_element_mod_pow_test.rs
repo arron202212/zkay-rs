@@ -88,9 +88,9 @@ public class LongElementModPow_Test {
 
 	private static class ModPowCircuitGenerator extends CircuitGenerator {
 
-		private final BigInteger b;
-		private final BigInteger e;
-		private final BigInteger m;
+		 BigInteger b;
+		 BigInteger e;
+		 BigInteger m;
 
 		private LongElement bWire;
 		private LongElement eWire;
@@ -103,7 +103,7 @@ public class LongElementModPow_Test {
 			this.m = m;
 		}
 
-		@Override
+		
 		protected void buildCircuit() {
 			bWire = createLongElementInput(max(b.bitLength(), 1), "b");
 			eWire = createLongElementInput(max(e.bitLength(), 1), "e");
@@ -112,7 +112,7 @@ public class LongElementModPow_Test {
 			makeOutputArray(modPow.getOutputWires(), "c");
 		}
 
-		@Override
+		
 		public void generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(bWire, b, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(eWire, e, LongElement.CHUNK_BITWIDTH);

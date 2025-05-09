@@ -83,10 +83,10 @@ public class PaillierTests {
 
 	private static class PaillierEncCircuitGenerator extends CircuitGenerator {
 
-		private final BigInteger plain;
-		private final BigInteger random;
-		private final BigInteger n;
-		private final BigInteger generator;
+		 BigInteger plain;
+		 BigInteger random;
+		 BigInteger n;
+		 BigInteger generator;
 
 		private LongElement plainWire;
 		private LongElement randomWire;
@@ -102,7 +102,7 @@ public class PaillierTests {
 			this.generator = generator;
 		}
 
-		@Override
+		
 		protected void buildCircuit() {
 			plainWire = createLongElementInput(max(plain.bitLength(), 1), "plain");
 			randomWire = createLongElementInput(max(random.bitLength(), 1), "random");
@@ -113,7 +113,7 @@ public class PaillierTests {
 			makeOutputArray(enc.getOutputWires(), "cipher");
 		}
 
-		@Override
+		
 		public void generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(randomWire, random, LongElement.CHUNK_BITWIDTH);
@@ -137,10 +137,10 @@ public class PaillierTests {
 
 	private static class PaillierDecCircuitGenerator extends CircuitGenerator {
 
-		private final BigInteger cipher;
-		private final BigInteger n;
-		private final BigInteger lambda;
-		private final BigInteger mu;
+		 BigInteger cipher;
+		 BigInteger n;
+		 BigInteger lambda;
+		 BigInteger mu;
 
 		private LongElement cipherWire;
 		private LongElement nWire;
@@ -156,7 +156,7 @@ public class PaillierTests {
 			this.mu = mu;
 		}
 
-		@Override
+		
 		protected void buildCircuit() {
 			cipherWire = createLongElementInput(max(cipher.bitLength(), 1), "cipher");
 			int nBits = max(n.bitLength(), 1);
@@ -167,7 +167,7 @@ public class PaillierTests {
 			makeOutputArray(dec.getOutputWires(), "plain");
 		}
 
-		@Override
+		
 		public void generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(cipherWire, cipher, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
@@ -191,9 +191,9 @@ public class PaillierTests {
 
 	private static class PaillierFastEncCircuitGenerator extends CircuitGenerator {
 
-		private final BigInteger n;
-		private final BigInteger plain;
-		private final BigInteger random;
+		 BigInteger n;
+		 BigInteger plain;
+		 BigInteger random;
 
 		private LongElement nWire;
 		private LongElement plainWire;
@@ -206,7 +206,7 @@ public class PaillierTests {
 			this.random = random;
 		}
 
-		@Override
+		
 		protected void buildCircuit() {
 			int nBits = max(n.bitLength(), 1);
 			nWire = createLongElementInput(nBits, "n");
@@ -216,7 +216,7 @@ public class PaillierTests {
 			makeOutputArray(enc.getOutputWires(), "cipher");
 		}
 
-		@Override
+		
 		public void generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
@@ -239,9 +239,9 @@ public class PaillierTests {
 
 	private static class PaillierFastDecCircuitGenerator extends CircuitGenerator {
 
-		private final BigInteger n;
-		private final BigInteger lambda;
-		private final BigInteger cipher;
+		 BigInteger n;
+		 BigInteger lambda;
+		 BigInteger cipher;
 
 		private LongElement nWire;
 		private LongElement lambdaWire;
@@ -254,7 +254,7 @@ public class PaillierTests {
 			this.cipher = cipher;
 		}
 
-		@Override
+		
 		protected void buildCircuit() {
 			int nBits = max(n.bitLength(), 1);
 			nWire = createLongElementInput(nBits, "n");
@@ -264,7 +264,7 @@ public class PaillierTests {
 			makeOutputArray(dec.getOutputWires(), "plain");
 		}
 
-		@Override
+		
 		public void generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(lambdaWire, lambda, LongElement.CHUNK_BITWIDTH);

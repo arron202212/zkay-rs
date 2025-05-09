@@ -28,11 +28,11 @@ public class RSAEncryptionCircuitGenerator extends CircuitGenerator {
 		// constraints on the plaintext length will be checked by the gadget
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-		for(int i = 0; i < plainTextLength;i++){
+		for(int i = 0; i < plainTextLength;i+=1){
 			inputMessage[i].restrictBitLength(8);
 		}
 		
@@ -81,16 +81,16 @@ public class RSAEncryptionCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
 
 		String msg = "";
-		for (int i = 0; i < inputMessage.length; i++) {
+		for i in 0..inputMessage.length {
 
 			evaluator.setWireValue(inputMessage[i], (int) ('a' + i));
 			msg = msg + (char) ('a' + i);
 		}
-		System.out.println("PlainText:" + msg);
+		println!("PlainText:" + msg);
 
 		try {
 
@@ -115,7 +115,7 @@ public class RSAEncryptionCircuitGenerator extends CircuitGenerator {
 
 			cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
 			byte[] cipherText = cipher.doFinal(msg.getBytes());
-//			System.out.println("ciphertext : " + new String(cipherText));
+//			println!("ciphertext : " + new String(cipherText));
 			byte[] cipherTextPadded = new byte[cipherText.length + 1];
 			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 			cipherTextPadded[0] = 0;
@@ -126,25 +126,24 @@ public class RSAEncryptionCircuitGenerator extends CircuitGenerator {
 			// result[1] contains the randomness
 
 			boolean check = Arrays.equals(result[0], msg.getBytes());
-			if (!check) {
-				throw new RuntimeException(
+			if !check {
+				panic!(
 						"Randomness Extraction did not decrypt right");
 			}
 
 			byte[] sampleRandomness = result[1];
-			for (int i = 0; i < sampleRandomness.length; i++) {
+			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 			}
 
 		} catch (Exception e) {
-			System.err
-					.println("Error while generating sample input for circuit");
+			println!("Error while generating sample input for circuit");
 			e.printStackTrace();
 		}
 
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		int keyLength = 2048;
 		int msgLength = 3;
 		RSAEncryptionCircuitGenerator generator = new RSAEncryptionCircuitGenerator(

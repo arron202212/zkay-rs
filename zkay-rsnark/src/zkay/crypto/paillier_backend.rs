@@ -19,18 +19,18 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 	public static final int CHUNK_SIZE = 120;
 
 	static {
-		if (CHUNK_SIZE != LongElement.CHUNK_BITWIDTH) {
+		if CHUNK_SIZE != LongElement.CHUNK_BITWIDTH {
 			throw new IllegalStateException("Paillier chunk size must match LongElement.CHUNK_BITWIDTH.\n" +
 					"If LongElement.CHUNK_BITWIDTH needs to be changed, change this _and_ meta.py in jsnark!");
 		}
 	}
 
-	private final int minNumCipherChunks;
-	private final int maxNumCipherChunks;
+	 int minNumCipherChunks;
+	 int maxNumCipherChunks;
 
 	public PaillierBackend(int keyBits) {
 		super(keyBits); // keyBits = bits of n
-		if (keyBits <= CHUNK_SIZE) {
+		if keyBits <= CHUNK_SIZE {
 			throw new IllegalArgumentException("Key size too small (" + keyBits + " < " + CHUNK_SIZE + " bits)");
 		}
 
@@ -42,12 +42,12 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 		this.maxNumCipherChunks = (minNSquareBits + CHUNK_SIZE) / CHUNK_SIZE;
 	}
 
-	@Override
+	
 	public int getKeyChunkSize() {
 		return CHUNK_SIZE;
 	}
 
-	@Override
+	
 	public Gadget createEncryptionGadget(TypedWire plain, String keyName, Wire[] randomWires, String... desc) {
 		LongElement key = getKey(keyName);
 		LongElement encodedPlain = encodeSignedToModN(plain, key);
@@ -56,14 +56,14 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 		return new ZkayPaillierFastEncGadget(key, keyBits, encodedPlain, random, desc);
 	}
 
-	@Override
+	
 	public TypedWire[] doHomomorphicOp(char op, HomomorphicInput arg, String keyName) {
-		if (arg == null || arg.isPlain()) throw new IllegalArgumentException("arg");
+		if arg == null || arg.isPlain()) throw new IllegalArgumentException("arg";
 
 		LongElement nSquare = getNSquare(keyName);
 		LongElement cipherVal = toLongElement(arg);
 
-		if (op == '-') {
+		if op == '-' {
 			// Enc(m, r)^(-1) = (g^m * r^n)^(-1) = (g^m)^(-1) * (r^n)^(-1) = g^(-m) * (r^(-1))^n = Enc(-m, r^(-1))
 			LongElement result = invert(cipherVal, nSquare);
 			return toWireArray(result, "-(" + arg.getName() + ")");
@@ -72,7 +72,7 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 		}
 	}
 
-	@Override
+	
 	public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
 		LongElement nSquare = getNSquare(keyName);
 
@@ -98,12 +98,12 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 				LongElement cipherVal;
 				TypedWire plainWire;
 
-				if (lhs == null) throw new IllegalArgumentException("lhs is null");
-				if (rhs == null) throw new IllegalArgumentException("rhs is null");
-				if (lhs.isPlain() && rhs.isCipher()) {
+				if lhs == null) throw new IllegalArgumentException("lhs is null";
+				if rhs == null) throw new IllegalArgumentException("rhs is null";
+				if lhs.isPlain() && rhs.isCipher() {
 					plainWire = lhs.getPlain();
 					cipherVal = toLongElement(rhs);
-				} else if (lhs.isCipher() && rhs.isPlain()) {
+				} else if lhs.isCipher() && rhs.isPlain() {
 					cipherVal = toLongElement(lhs);
 					plainWire = rhs.getPlain();
 				} else {
@@ -113,7 +113,7 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 				int plainBits = plainWire.type.bitwidth;
 				WireArray plainBitWires = plainWire.wire.getBitWires(plainBits);
 				LongElement absPlainVal;
-				if (!plainWire.type.signed) {
+				if !plainWire.type.signed {
 					// Unsigned, easy case, just do the multiplication.
 					absPlainVal = new LongElement(plainBitWires);
 				} else {
@@ -129,7 +129,7 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 				// Enc(m1, r1) ^ m2 = (g^m1 * r1^n) ^ m2 = (g^m1)^m2 * (r1^n)^m2 = g^(m1*m2) * (r1^m2)^n = Enc(m1 * m2, r1 ^ m2)
 				LongElement result = modPow(cipherVal, absPlainVal, plainBits, nSquare);
 
-				if (plainWire.type.signed) {
+				if plainWire.type.signed {
 					// Correct for sign
 					Wire signBit = plainBitWires.get(plainBits - 1);
 					LongElement negResult = invert(result, nSquare);
@@ -163,11 +163,11 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 	}
 
 	private LongElement toLongElement(HomomorphicInput input) {
-		if (input == null || input.isPlain()) {
+		if input == null || input.isPlain() {
 			throw new IllegalArgumentException("Input null or not ciphertext");
 		}
 		TypedWire[] cipher = input.getCipher();
-		if (cipher.length < minNumCipherChunks || cipher.length > maxNumCipherChunks) {
+		if cipher.length < minNumCipherChunks || cipher.length > maxNumCipherChunks {
 			throw new IllegalArgumentException("Ciphertext has invalid length " + cipher.length);
 		}
 
@@ -179,7 +179,7 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 
 		// Input is a Paillier ciphertext - front-end must already check that this is the case
 		Wire[] wires = new Wire[cipher.length];
-		for (int i = 0; i < cipher.length; ++i) {
+		for i in 0..cipher.length {
 			wires[i] = cipher[i].wire;
 		}
 		int[] bitWidths = new int[wires.length];
@@ -192,18 +192,18 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 
 	private TypedWire[] toWireArray(LongElement value, String name) {
 		// First, sanity check that the result has at most maxNumCipherChunks wires of at most CHUNK_SIZE bits each
-		if (value.getSize() > maxNumCipherChunks) {
+		if value.getSize() > maxNumCipherChunks {
 			throw new IllegalStateException("Paillier output contains too many wires");
 		}
 		for (int bitWidth : value.getCurrentBitwidth()) {
-			if (bitWidth > CHUNK_SIZE) throw new IllegalStateException("Paillier output cipher bit width too large");
+			if bitWidth > CHUNK_SIZE) throw new IllegalStateException("Paillier output cipher bit width too large";
 		}
 
 		// If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
 		Wire[] wires = value.getArray();
 		TypedWire[] typedWires = new TypedWire[wires.length];
 		ZkayType uint256 = ZkayType.ZkUint(256);
-		for (int i = 0; i < wires.length; ++i) {
+		for i in 0..wires.length {
 			typedWires[i] = new TypedWire(wires[i], uint256, name);
 		}
 		return typedWires;
@@ -218,7 +218,7 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 	}
 
 	private static LongElement encodeSignedToModN(TypedWire input, LongElement key) {
-		if (input.type.signed) {
+		if input.type.signed {
 			// Signed. Encode positive values as-is, negative values (-v) as (key - v)
 			int bits = input.type.bitwidth;
 			WireArray inputBits = input.wire.getBitWires(bits);

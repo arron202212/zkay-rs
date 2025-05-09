@@ -16,10 +16,10 @@ public class TypedWire {
     public final String name;
 
     public TypedWire(Wire wire, ZkayType type, String name, boolean ...restrict) {
-        if (wire == null || type == null) {
+        if wire == null || type == null {
             throw new IllegalArgumentException("Arguments cannot be null");
         }
-        if ((restrict.length > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING) {
+        if (restrict.length > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
             wire.restrictBitLength(type.bitwidth);
         }
         this.wire = wire;
@@ -45,11 +45,11 @@ public class TypedWire {
     public TypedWire times(TypedWire rhs) {
         ZkayType resultType = checkType(this.type, rhs.type);
         String op = this.name + " * " + rhs.name;
-        if (resultType.bitwidth == 256) {
+        if resultType.bitwidth == 256 {
             // Don't care about overflow with uint type
             return new TypedWire(this.wire.mul(rhs.wire, op), resultType, op);
         }
-        else if (resultType.bitwidth <= 120) {
+        else if resultType.bitwidth <= 120 {
             // Result always fits into 240 < 253 bits
             return handle_overflow(this.wire.mul(rhs.wire, op), resultType, true, op);
         }
@@ -66,8 +66,8 @@ public class TypedWire {
             ansLoHi[1] = handle_overflow(ansLoHi[1].add(hiLoPlusloHi, op + "[anshi + hi*lo + lo*hi]"), Zk124, false, op + "[anshi + hi*lo + lo*hi]").wire;
 
             Wire[] ans = new WireArray(ansLoHi).getBits(124).packBitsIntoWords(resultType.bitwidth, op + "[combine hi and lo]");
-            if (ans.length != 1) {
-                throw new RuntimeException("Multiplication ans array has wrong length");
+            if ans.length != 1 {
+                panic!("Multiplication ans array has wrong length");
             }
             return new TypedWire(ans[0], resultType, op);
         }
@@ -84,12 +84,12 @@ public class TypedWire {
         Wire lhsWire = this.wire;
         Wire rhsWire = rhs.wire;
 
-        if (this.type.signed) {
+        if this.type.signed {
             Wire lhsSign = lhsWire.getBitWires(this.type.bitwidth).get(this.type.bitwidth - 1);
             lhsWire = lhsSign.mux(negate(this).wire, lhsWire);
             resultSign = resultSign.xorBitwise(lhsSign, 1);
         }
-        if (rhs.type.signed) {
+        if rhs.type.signed {
             Wire rhsSign = rhsWire.getBitWires(rhs.type.bitwidth).get(rhs.type.bitwidth - 1);
             rhsWire = rhsSign.mux(negate(rhs).wire, rhsWire);
             resultSign = resultSign.xorBitwise(rhsSign, 1);
@@ -117,12 +117,12 @@ public class TypedWire {
         Wire lhsWire = this.wire;
         Wire rhsWire = rhs.wire;
 
-        if (this.type.signed) {
+        if this.type.signed {
             Wire lhsSign = lhsWire.getBitWires(this.type.bitwidth).get(this.type.bitwidth - 1);
             lhsWire = lhsSign.mux(negate(this).wire, lhsWire);
             resultSign = lhsSign;
         }
-        if (rhs.type.signed) {
+        if rhs.type.signed {
             Wire rhsSign = rhsWire.getBitWires(rhs.type.bitwidth).get(rhs.type.bitwidth - 1);
             rhsWire = rhsSign.mux(negate(rhs).wire, rhsWire);
         }
@@ -174,7 +174,7 @@ public class TypedWire {
         ZkayType resultType = checkType(this.type, this.type, false);
         Wire res;
         String op = this.name + " >> " + amount;
-        if (resultType.signed) {
+        if resultType.signed {
             res = this.wire.shiftArithRight(resultType.bitwidth, Math.min(amount, resultType.bitwidth), op);
         } else {
             res = this.wire.shiftRight(resultType.bitwidth, amount, op);
@@ -201,7 +201,7 @@ public class TypedWire {
     public TypedWire isLessThan(TypedWire rhs) {
         ZkayType commonType = checkType(this.type, rhs.type);
         String op = this.name + " < " + rhs.name;
-        if (commonType.signed) {
+        if commonType.signed {
             Wire lhsSign = this.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
             Wire rhsSign = rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
 
@@ -219,7 +219,7 @@ public class TypedWire {
     public TypedWire isLessThanOrEqual(TypedWire rhs) {
         ZkayType commonType = checkType(this.type, rhs.type);
         String op = this.name + " <= " + rhs.name;
-        if (commonType.signed) {
+        if commonType.signed {
             Wire lhsSign = this.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
             Wire rhsSign = rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
 
@@ -259,9 +259,9 @@ public class TypedWire {
     }
 
     private static TypedWire handle_overflow(Wire w, ZkayType targetType, boolean was_mul, String name) {
-        if (targetType.bitwidth < 256) {
+        if targetType.bitwidth < 256 {
             // Downcast or result with overflow modulo < field prime -> modulo/mask lower bits
-            int from_bits = Math.min(256, was_mul ? targetType.bitwidth * 2 : targetType.bitwidth + 1);
+            int from_bits = Math.min(256, was_mul  { targetType.bitwidth * 2 }else { targetType.bitwidth + 1});
             w = w.trimBits(from_bits, targetType.bitwidth, "% 2^" + targetType.bitwidth);
         }
         return new TypedWire(w, targetType, targetType.toString() + "(" + name + ")");

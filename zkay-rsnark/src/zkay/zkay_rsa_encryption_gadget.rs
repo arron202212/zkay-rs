@@ -19,11 +19,11 @@ public class ZkayRSAEncryptionGadget extends Gadget {
         OAEP
     }
 
-    private final PaddingType paddingType;
-    private final LongElement pk;
-    private final Wire plain;
-    private final Wire[] rnd;
-    private final int keyBits;
+     PaddingType paddingType;
+     LongElement pk;
+     Wire plain;
+     Wire[] rnd;
+     int keyBits;
 
     private Wire[] cipher = null;
 
@@ -69,7 +69,7 @@ public class ZkayRSAEncryptionGadget extends Gadget {
         cipher = new WireArray(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return cipher;
     }

@@ -22,10 +22,10 @@ public class ZkayCBCSymmetricEncGadget extends Gadget {
 		CHASKEY
 	}
 
-	private final CipherType cipherType;
-	private final Wire[] keyBits;
-	private final Wire[] plaintextBits;
-	private final Wire[] ivBits;
+	 CipherType cipherType;
+	 Wire[] keyBits;
+	 Wire[] plaintextBits;
+	 Wire[] ivBits;
 
 	private Wire[] cipherBits = null;
 
@@ -39,7 +39,7 @@ public class ZkayCBCSymmetricEncGadget extends Gadget {
 		this.ivBits = Util.reverseBytes(iv.getBitWires(BLOCK_SIZE).asArray());
 		this.cipherType = cipherType;
 
-		System.out.println("Plain length [bits]: " + this.plaintextBits.length);
+		println!("Plain length [bits]: " + this.plaintextBits.length);
 		buildCircuit();
 	}
 
@@ -52,7 +52,7 @@ public class ZkayCBCSymmetricEncGadget extends Gadget {
 		WireArray prevCipher = new WireArray(ivBits);
 
 		cipherBits = new Wire[0];
-		for (int i = 0; i < numBlocks; i++) {
+		for i in 0..numBlocks {
 			WireArray msgBlock = new WireArray(Arrays.copyOfRange(plaintextArray, i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE));
 			Wire[] xored = msgBlock.xorWireArray(prevCipher).asArray();
 			switch (cipherType) {
@@ -107,9 +107,9 @@ public class ZkayCBCSymmetricEncGadget extends Gadget {
 		return preparedKey;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
-		System.out.println("Cipher length [bits]: " + cipherBits.length);
+		println!("Cipher length [bits]: " + cipherBits.length);
 		return new WireArray(Util.reverseBytes(Util.concat(ivBits, cipherBits)))
 				.packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);
 	}

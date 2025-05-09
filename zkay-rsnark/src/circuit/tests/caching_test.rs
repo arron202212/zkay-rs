@@ -35,7 +35,7 @@ public class CachingTest extends TestCase {
 		BigInteger mask = new BigInteger("2").pow(Config.LOG2_FIELD_PRIME)
 				.subtract(BigInteger.ONE);
 
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).mod(
 					Config.FIELD_PRIME);
@@ -61,7 +61,7 @@ public class CachingTest extends TestCase {
 			Wire[] inputs2;
 			Wire[] inputs3; // 32-bit values
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				inputs1 = createInputWireArray(numIns);
@@ -80,7 +80,7 @@ public class CachingTest extends TestCase {
 				Wire[] multiplied = new Wire[numIns];
 				Wire[] added = new Wire[numIns];
 				
-				for (int i = 0; i < numIns; i++) {
+				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
 							Config.LOG2_FIELD_PRIME, i);
 					shiftedLeft[i] = inputs1[i].shiftLeft(
@@ -102,7 +102,7 @@ public class CachingTest extends TestCase {
 
 				// repeat everything again, and verify that the number of
 				// multiplication gates will not be affected
-				for (int i = 0; i < numIns; i++) {
+				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
 							Config.LOG2_FIELD_PRIME, i);
 					shiftedLeft[i] = inputs1[i].shiftLeft(
@@ -125,7 +125,7 @@ public class CachingTest extends TestCase {
 				// repeat binary operations again while changing the order of
 				// the operands, and verify that the number of multiplication
 				// gates will not be affected
-				for (int i = 0; i < numIns; i++) {
+				for i in 0..numIns {
 					xored[i] = inputs2[i].xorBitwise(inputs1[i],
 							Config.LOG2_FIELD_PRIME);
 					ored[i] = inputs2[i].orBitwise(inputs1[i],
@@ -167,7 +167,7 @@ public class CachingTest extends TestCase {
 				assertTrue(getNumOfConstraints() == currentCost);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
@@ -181,52 +181,52 @@ public class CachingTest extends TestCase {
 
 		ArrayList<Wire> outWires = generator.getOutWires();
 		int i, outputIndex = 0;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(shiftedRightVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(shiftedLeftVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(rotatedRightVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(rotatedLeftVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(xoredVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(oredVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(andedVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(invertedVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(multipliedVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(addedVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
 
@@ -244,7 +244,7 @@ public class CachingTest extends TestCase {
 			Wire witness1;
 			Wire witness2;
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				in1 = createInputWire();
@@ -282,7 +282,7 @@ public class CachingTest extends TestCase {
 				assertEquals(getNumOfConstraints(), 6);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(in1, BigInteger.valueOf(5));
 				evaluator.setWireValue(in2, BigInteger.valueOf(6));
@@ -309,7 +309,7 @@ public class CachingTest extends TestCase {
 
 			Wire[] inputWires;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
 				Wire[] digest = new SHA256Gadget(inputWires, 8,
@@ -339,9 +339,9 @@ public class CachingTest extends TestCase {
 				makeOutputArray(digest);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator e) {
-				for (int i = 0; i < inputStr.length(); i++) {
+				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
 			}

@@ -47,14 +47,14 @@ public class MerkleTreePathGadget extends Gadget {
 		Wire[] currentHash = subsetSumGadget.getOutputWires();
 
 		// Apply CRH across tree path guided by the direction bits
-		for (int i = 0; i < treeHeight; i++) {
+		for i in 0..treeHeight {
 			Wire[] inHash = new Wire[2 * digestWidth];
-			for (int j = 0; j < digestWidth; j++) {
+			for j in 0..digestWidth {
 				Wire temp = currentHash[j].sub(intermediateHashWires[i * digestWidth + j]);
 				Wire temp2 = directionSelectorBits[i].mul(temp);
 				inHash[j] = intermediateHashWires[i * digestWidth + j].add(temp2);
 			}
-			for (int j = digestWidth; j < 2 * digestWidth; j++) {
+			for (int j = digestWidth; j < 2 * digestWidth; j+=1) {
 				Wire temp = currentHash[j - digestWidth].add(intermediateHashWires[i * digestWidth + j - digestWidth]);
 				inHash[j] = temp.sub(inHash[j - digestWidth]);
 			}
@@ -66,7 +66,7 @@ public class MerkleTreePathGadget extends Gadget {
 		outRoot = currentHash;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return outRoot;
 	}

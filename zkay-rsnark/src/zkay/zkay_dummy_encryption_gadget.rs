@@ -9,18 +9,18 @@ use static zkay::crypto::DummyBackend::CIPHER_CHUNK_SIZE;
 
 public class ZkayDummyEncryptionGadget extends Gadget {
 
-    private final Wire pk;
-    private final Wire plain;
-    private final Wire[] cipher;
+     Wire pk;
+     Wire plain;
+     Wire[] cipher;
 
     public ZkayDummyEncryptionGadget(TypedWire plain, LongElement pk, Wire[] rnd, int keyBits, String... desc) {
         super(desc);
-        if (plain == null || pk == null || rnd == null) {
-            throw new RuntimeException();
+        if plain == null || pk == null || rnd == null {
+            panic!();
         }
         this.plain = plain.wire;
         Wire[] pkarr = pk.getBits().packBitsIntoWords(256);
-        for (int i = 1; i < pkarr.length; ++i) {
+        for i in 1..pkarr.length {
             generator.addZeroAssertion(pkarr[i], "Dummy enc pk valid");
         }
         this.pk = pkarr[0];
@@ -33,7 +33,7 @@ public class ZkayDummyEncryptionGadget extends Gadget {
         Arrays.fill(cipher, res);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return cipher;
     }

@@ -10,7 +10,7 @@ use examples::generators::rsa::rsa_util;
 public class RSAEncryptionOAEP_Test extends TestCase {
 
 	@Test
-	public void testEncryptionDifferentKeyLengths() throws Exception {
+	public void testEncryptionDifferentKeyLengths()  {
 
 		String plainText = "abc";
 
@@ -43,10 +43,10 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 
 				RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
 
-				@Override
+				
 				protected void buildCircuit() {
 					inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-					for(int i = 0; i < plainTextLength;i++){
+					for(int i = 0; i < plainTextLength;i+=1){
 						inputMessage[i].restrictBitLength(8);
 					}
 					
@@ -67,10 +67,10 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 					makeOutputArray(cipherText, "Output cipher text");
 				}
 
-				@Override
+				
 				public void generateSampleInput(CircuitEvaluator evaluator) {
 
-					for (int i = 0; i < inputMessage.length; i++) {
+					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
 								plainText.charAt(i));
 					}
@@ -101,13 +101,13 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 
 						boolean check = Arrays.equals(result[0],
 								plainText.getBytes());
-						if (!check) {
-							throw new RuntimeException(
+						if !check {
+							panic!(
 									"Randomness Extraction did not decrypt right");
 						}
 
 						byte[] sampleRandomness = result[1];
-						for (int i = 0; i < sampleRandomness.length; i++) {
+						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(seed[i],
 									(sampleRandomness[i] + 256) % 256);
 						}
@@ -133,21 +133,21 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 			for (Wire w : cipherTextList) {
 				BigInteger val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i * 64));
-				i++;
+				i+=1;
 			}
 
 			// extract the bytes
 			byte[] cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
-			if (t.bitLength() == keySize
+			if t.bitLength( == keySize
 					&& cipherTextBytesFromCircuit.length == keySize / 8 + 1) {
 				cipherTextBytesFromCircuit = Arrays.copyOfRange(
 						cipherTextBytesFromCircuit, 1,
 						cipherTextBytesFromCircuit.length);
 			}
 
-			for (int k = 0; k < cipherTextBytesFromCircuit.length; k++) {
+			for k in 0..cipherTextBytesFromCircuit.length {
 				assertEquals(cipherTextBytes[k], cipherTextBytesFromCircuit[k]);
 
 			}

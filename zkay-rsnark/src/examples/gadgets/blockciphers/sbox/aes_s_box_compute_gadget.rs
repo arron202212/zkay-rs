@@ -14,7 +14,7 @@ use circuit::structure::wire;
 
 public class AESSBoxComputeGadget extends Gadget {
 
-	private final Wire input;
+	 Wire input;
 	private Wire inverse;
 	private Wire output;
 
@@ -29,7 +29,7 @@ public class AESSBoxComputeGadget extends Gadget {
 
 		generator.addToEvaluationQueue(new Instruction() {
 
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				int p = evaluator.getWireValue(input).intValue(); 
 				int q = findInv(p);
@@ -50,7 +50,7 @@ public class AESSBoxComputeGadget extends Gadget {
 		output = output.xorBitwise(inverse.rotateLeft(8, 4), 8);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { output };
 	}
@@ -58,7 +58,7 @@ public class AESSBoxComputeGadget extends Gadget {
 	private Wire gmul(Wire a, Wire b) {
 		Wire p = generator.getZeroWire();
 		int counter;
-		for (counter = 0; counter < 8; counter++) {
+		for (counter = 0; counter < 8; counter+=1) {
 			Wire tmp = p.xorBitwise(a, 8);
 			Wire bit = b.getBitWires(8).get(0);
 			p = p.add(bit.mul(tmp.sub(p)));
@@ -76,11 +76,11 @@ public class AESSBoxComputeGadget extends Gadget {
 	private int gmul(int a, int b) {
 		int p = 0;
 		int j;
-		for (j = 0; j < 8; j++) {
-			if ((b & 1) != 0)
+		for (j = 0; j < 8; j+=1) {
+			if (b & 1) != 0
 				p ^= a;
 			a <<= 1;
-			if ((a & 0x100) != 0)
+			if (a & 0x100) != 0
 				a ^= 0x11b;
 			b >>= 1;
 		}
@@ -88,10 +88,10 @@ public class AESSBoxComputeGadget extends Gadget {
 	}
 
 	private int findInv(int a) {
-		if (a == 0)
+		if a == 0
 			return 0;
-		for (int i = 0; i < 256; i++) {
-			if (gmul(i, a) == 1) {
+		for i in 0..256 {
+			if gmul(i, a) == 1 {
 				return i;
 			}
 		}

@@ -9,11 +9,11 @@ use circuit::structure::wire;
  */
 public class ZkayElgamalEncGadget extends ZkayBabyJubJubGadget {
 
-    private final Wire[] randomnessBits;    // little-endian randomness bits
+     Wire[] randomnessBits;    // little-endian randomness bits
 
-    private final Wire[] msgBits;   // little-endian message bits
+     Wire[] msgBits;   // little-endian message bits
 
-    private final JubJubPoint pk;   // public key
+     JubJubPoint pk;   // public key
 
     private JubJubPoint c1;
 
@@ -33,7 +33,7 @@ public class ZkayElgamalEncGadget extends ZkayBabyJubJubGadget {
         c2 = addPoints(msgEmbedded, sharedSecret);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return new Wire[]{ c1.x, c1.y, c2.x, c2.y };
     }

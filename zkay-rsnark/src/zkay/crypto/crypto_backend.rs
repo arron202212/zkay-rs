@@ -20,8 +20,8 @@ public abstract class CryptoBackend {
 		RSA_OAEP("rsa-oaep", keyBits -> new RSABackend(keyBits, ZkayRSAEncryptionGadget.PaddingType.OAEP)),
 		RSA_PKCS15("rsa-pkcs1.5", keyBits -> new RSABackend(keyBits, ZkayRSAEncryptionGadget.PaddingType.PKCS_1_5));
 
-		private final String cryptoName;
-		private final IntFunction<CryptoBackend> backendConstructor;
+		 String cryptoName;
+		 IntFunction<CryptoBackend> backendConstructor;
 
 		Backend(String name, IntFunction<CryptoBackend> constructor) {
 			this.cryptoName = name;
@@ -31,7 +31,7 @@ public abstract class CryptoBackend {
 
 	public static CryptoBackend create(String name, int keyBits) {
 		for (Backend backend : Backend.values()) {
-			if (backend.cryptoName.equals(name)) {
+			if backend.cryptoName.equals(name) {
 				return backend.backendConstructor.apply(keyBits);
 			}
 		}
@@ -68,7 +68,7 @@ public abstract class CryptoBackend {
 		// (optimal: pick such that data has 1. least amount of chunks, 2. for that chunk amount least possible bit amount)
 		public static final int CIPHER_CHUNK_SIZE = 192;
 
-		private final Map<String, Wire> publicKeys;
+		 Map<String, Wire> publicKeys;
 		protected final Map<String, Wire> sharedKeys;
 		protected Wire myPk = null;
 		protected Wire mySk = null;
@@ -79,24 +79,24 @@ public abstract class CryptoBackend {
 			sharedKeys = new HashMap<>();
 		}
 
-		@Override
+		
 		public boolean isSymmetric() {
 			return true;
 		}
 
-		@Override
+		
 		public boolean usesDecryptionGadget() {
 			return false;
 		}
 
-		@Override
+		
 		public Gadget createDecryptionGadget(TypedWire plain, Wire[] cipher, String pkey, Wire[] skey, String... desc) {
 			throw new UnsupportedOperationException("No separate decryption gadget for backend");
 		}
 
-		@Override
+		
 		public void addKey(String keyName, Wire[] keyWires) {
-			if (keyWires.length != 1) {
+			if keyWires.length != 1 {
 				throw new IllegalArgumentException("Expected key size 1uint for symmetric keys");
 			}
 			publicKeys.put(keyName, keyWires[0]);
@@ -104,7 +104,7 @@ public abstract class CryptoBackend {
 
 		protected Wire getKey(String keyName) {
 			Wire key = sharedKeys.get(keyName);
-			if (key == null) {
+			if key == null {
 				key = computeKey(keyName);
 				sharedKeys.put(keyName, key);
 			}
@@ -112,7 +112,7 @@ public abstract class CryptoBackend {
 		}
 
 		private Wire computeKey(String keyName) {
-			if (myPk == null) {
+			if myPk == null {
 				throw new IllegalStateException("setKeyPair not called on symmetric crypto backend");
 			}
 
@@ -122,13 +122,13 @@ public abstract class CryptoBackend {
 			// from crashing (wrong output is not a problem since decryption enforces (pk_zero || cipher_zero) => all_zero
 			// and ignores the ecdh result in that case.
 			Wire actualOtherPk = publicKeys.get(keyName);
-			if (actualOtherPk == null) {
+			if actualOtherPk == null {
 				throw new IllegalStateException("Key variable " + keyName + " is absent");
 			}
 			actualOtherPk = actualOtherPk.checkNonZero(keyName + " != 0").mux(actualOtherPk, myPk);
 
 			// Compute shared key with me
-			String desc = String.format("sha256(ecdh(%s, %s))", keyName, mySk);
+			String desc = format!("sha256(ecdh(%s, %s))", keyName, mySk);
 			ZkayECDHGadget sharedKeyGadget = new ZkayECDHGadget(actualOtherPk, mySk, false, desc);
 			sharedKeyGadget.validateInputs();
 			return sharedKeyGadget.getOutputWires()[0];
@@ -137,7 +137,7 @@ public abstract class CryptoBackend {
 		public void setKeyPair(Wire myPk, Wire mySk) {
 			Objects.requireNonNull(myPk);
 			Objects.requireNonNull(mySk);
-			if (this.myPk != null) {
+			if this.myPk != null {
 				throw new IllegalStateException("Key pair already set");
 			}
 
@@ -151,13 +151,13 @@ public abstract class CryptoBackend {
 		}
 
 		protected static Wire extractIV(Wire[] ivCipher) {
-			if (ivCipher == null || ivCipher.length == 0) {
+			if ivCipher == null || ivCipher.length == 0 {
 				throw new IllegalArgumentException("IV cipher must not be empty");
 			}
 			// This assumes as cipher length of 256 bits
 			int lastBlockCipherLen = (256 - (((ivCipher.length - 1) * CIPHER_CHUNK_SIZE) % 256)) % 256;
 			Wire iv = ivCipher[ivCipher.length - 1];
-			if (lastBlockCipherLen > 0) {
+			if lastBlockCipherLen > 0 {
 				iv = iv.shiftRight(CIPHER_CHUNK_SIZE, lastBlockCipherLen);
 			}
 			return iv;
@@ -173,22 +173,22 @@ public abstract class CryptoBackend {
 			keys = new HashMap<>();
 		}
 
-		@Override
+		
 		public boolean isSymmetric() {
 			return false;
 		}
 
-		@Override
+		
 		public boolean usesDecryptionGadget() {
 			return false;
 		}
 
-		@Override
+		
 		public Gadget createDecryptionGadget(TypedWire plain, Wire[] cipher, String pkey, Wire[] skey, String... desc) {
 			throw new UnsupportedOperationException("No separate decryption gadget for backend");
 		}
 
-		@Override
+		
 		public void addKey(String keyName, Wire[] keyWires) {
 			int chunkBits = getKeyChunkSize();
 			WireArray keyArray = new WireArray(keyWires).getBits(chunkBits, keyName + "_bits").adjustLength(keyBits);
@@ -202,7 +202,7 @@ public abstract class CryptoBackend {
 
 		protected WireArray getKeyArray(String keyName) {
 			WireArray keyArr = keys.get(keyName);
-			if (keyArr == null) {
+			if keyArr == null {
 				throw new IllegalStateException("Key variable " + keyName + " is not associated with a WireArray");
 			}
 			return keyArr;

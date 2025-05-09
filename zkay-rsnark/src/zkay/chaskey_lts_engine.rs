@@ -4,9 +4,9 @@ public class ChaskeyLTSEngine implements BlockCipher {
     boolean enc;
     private int[] key;
 
-    @Override
+    
     public void init(boolean encrypt, CipherParameters cipherParameters) throws IllegalArgumentException {
-        if (! (cipherParameters instanceof KeyParameter) || ((KeyParameter) cipherParameters).getKey().length != 16) {
+        if ! (cipherParameters instanceof KeyParameter) || ((KeyParameter) cipherParameters).getKey().length != 16 {
             throw new IllegalArgumentException();
         }
         enc = encrypt;
@@ -14,17 +14,17 @@ public class ChaskeyLTSEngine implements BlockCipher {
         ByteBuffer.wrap(((KeyParameter) cipherParameters).getKey()).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(key);
     }
 
-    @Override
+    
     public String getAlgorithmName() {
         return "chaskey_lts_128";
     }
 
-    @Override
+    
     public int getBlockSize() {
         return 16;
     }
 
-    @Override
+    
     public int processBlock(byte[] in, int inOff, byte[] out, int outOff) throws DataLengthException, IllegalStateException {
         int[] v = new int[4];
         ByteBuffer.wrap(in, inOff, 16).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(v);
@@ -34,8 +34,8 @@ public class ChaskeyLTSEngine implements BlockCipher {
         v[2] ^= key[2];
         v[3] ^= key[3];
 
-        if (enc) {
-            for (int round = 0; round < 16; ++round)
+        if enc {
+            for (int round = 0; round < 16; +=1round)
             {
                 v[0] += v[1];
                 v[1] = Integer.rotateLeft(v[1], 5) ^ v[0];
@@ -55,7 +55,7 @@ public class ChaskeyLTSEngine implements BlockCipher {
             }
         }
         else {
-            for (int round = 0; round < 16; ++round)
+            for (int round = 0; round < 16; +=1round)
             {
                 v[2] = Integer.rotateRight(v[2], 16);
                 v[1] = Integer.rotateRight(v[1] ^ v[2], 7);
@@ -84,7 +84,7 @@ public class ChaskeyLTSEngine implements BlockCipher {
         return 16;
     }
 
-    @Override
+    
     public void reset() {
         // There are no state modifications -> nothing to do here
     }

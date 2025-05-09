@@ -7,15 +7,15 @@ use circuit::structure::wire;
  */
 public class ZkayElgamalDecGadget extends ZkayBabyJubJubGadget {
 
-    private final Wire[] skBits;    // little-endian randomness bits
+     Wire[] skBits;    // little-endian randomness bits
 
-    private final JubJubPoint pk;
+     JubJubPoint pk;
 
-    private final JubJubPoint c1;
+     JubJubPoint c1;
 
-    private final JubJubPoint c2;
+     JubJubPoint c2;
 
-    private final Wire expectedMsg;
+     Wire expectedMsg;
 
     private Wire msgOk;
 
@@ -45,7 +45,7 @@ public class ZkayElgamalDecGadget extends ZkayBabyJubJubGadget {
                 .and(keyOk);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return new Wire[] { this.msgOk };
     }

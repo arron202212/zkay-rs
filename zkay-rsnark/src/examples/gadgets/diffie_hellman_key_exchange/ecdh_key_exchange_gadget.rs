@@ -162,7 +162,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 		 * expected to follow a little endian order. The most significant bit
 		 * should be 1, and the three least significant bits should be zero.
 		 */
-		if (secretBits.length != SECRET_BITWIDTH) {
+		if secretBits.length != SECRET_BITWIDTH {
 			throw new IllegalArgumentException();
 		}
 		generator.addZeroAssertion(secretBits[0],
@@ -174,7 +174,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 		generator.addOneAssertion(secretBits[SECRET_BITWIDTH - 1],
 				"Asserting secret bit conditions");
 
-		for (int i = 3; i < SECRET_BITWIDTH - 1; i++) {
+		for (int i = 3; i < SECRET_BITWIDTH - 1; i+=1) {
 			// verifying all other bit wires are binary (as this is typically a
 			// secret
 			// witness by the prover)
@@ -187,7 +187,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 		// Easy to handle if baseX is constant, otherwise, let the prover input
 		// a witness and verify some properties
 
-		if (basePoint.x instanceof ConstantWire) {
+		if basePoint.x instanceof ConstantWire {
 
 			BigInteger x = ((ConstantWire) basePoint.x).getConstant();
 			basePoint.y = generator.createConstantWire(computeYCoordinate(x));
@@ -202,7 +202,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 			assertValidPointOnEC(basePoint.x, basePoint.y);
 		}
 
-		if (hPoint.x instanceof ConstantWire) {
+		if hPoint.x instanceof ConstantWire {
 			BigInteger x = ((ConstantWire) hPoint.x).getConstant();
 			hPoint.y = generator.createConstantWire(computeYCoordinate(x));
 		} else {
@@ -230,7 +230,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 	private AffinePoint[] preprocess(AffinePoint p) {
 		AffinePoint[] precomputedTable = new AffinePoint[secretBits.length];
 		precomputedTable[0] = p;
-		for (int j = 1; j < secretBits.length; j += 1) {
+		for j in 1..secretBits.length {
 			precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
 		}
 		return precomputedTable;
@@ -276,7 +276,7 @@ public class ECDHKeyExchangeGadget extends Gadget {
 		return new AffinePoint(newX, newY);
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { outputPublicValue, sharedSecret };
 	}

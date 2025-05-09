@@ -44,11 +44,11 @@ public class SymmetricEncryptionCBCGadget extends Gadget {
 		WireArray prevCipher = new WireArray(ivBits);
 
 		ciphertext = new Wire[0];
-		for (int i = 0; i < numBlocks; i++) {
+		for i in 0..numBlocks {
 			WireArray msgBlock = new WireArray(Arrays.copyOfRange(plaintextBits, i
 					* blocksize, (i + 1) * blocksize));
 			Wire[] xored = msgBlock.xorWireArray(prevCipher).asArray();
-			if (cipherName.equals("speck128")) {
+			if cipherName.equals("speck128") {
 				Wire[] tmp = new WireArray(xored).packBitsIntoWords(64);
 				Gadget gadget = new Speck128CipherGadget(tmp, preparedKey, "");
 				Wire[] outputs = gadget.getOutputWires();
@@ -64,7 +64,7 @@ public class SymmetricEncryptionCBCGadget extends Gadget {
 	private Wire[] prepareKey() {
 
 		Wire[] preparedKey;
-		if (cipherName.equals("speck128")) {
+		if cipherName.equals("speck128") {
 			Wire[] packedKey = new WireArray(keyBits).packBitsIntoWords(64);
 			preparedKey = Speck128CipherGadget.expandKey(packedKey);
 		} else {
@@ -73,7 +73,7 @@ public class SymmetricEncryptionCBCGadget extends Gadget {
 		return preparedKey;
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return ciphertext;
 	}

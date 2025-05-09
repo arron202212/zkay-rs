@@ -16,7 +16,7 @@ public class ZkayUtil {
     public static BigInteger unsignedBytesToBigInt(byte[] bytes) {
         int signum = 0;
         for (byte b : bytes) {
-            if (b != 0) {
+            if b != 0 {
                 signum = 1;
                 break;
             }
@@ -27,7 +27,7 @@ public class ZkayUtil {
     public static byte[] unsignedBigintToBytes(BigInteger val) {
         byte[] b = val.toByteArray();
         byte[] ret;
-        if (b[0] == 0 && b.length > 1) {
+        if b[0] == 0 && b.length > 1 {
             ret = new byte[b.length - 1];
             System.arraycopy(b, 1, ret, 0, b.length-1);
         } else {
@@ -38,7 +38,7 @@ public class ZkayUtil {
 
     public static byte[] unsignedBigintToBytes(BigInteger val, int byteCount) {
         byte[] t = unsignedBigintToBytes(val);
-        if (t.length > byteCount) {
+        if t.length > byteCount {
             throw new IllegalArgumentException("Value too large to fit into " + byteCount + " bytes");
         }
         byte[] ret = new byte[byteCount];
@@ -52,7 +52,7 @@ public class ZkayUtil {
             p = Runtime.getRuntime()
                     .exec(new String[] { "../libsnark/build/libsnark/zkay_interface/run_snark", "keygen",  ".", ".", "1"});
             p.waitFor();
-            System.out.println(
+            println!(
                     "\n-----------------------------------RUNNING LIBSNARK KEYGEN -----------------------------------------");
             String line;
             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -61,7 +61,7 @@ public class ZkayUtil {
                 buf.append(line).append("\n");
             }
             input.close();
-            System.out.println(buf.toString());
+            println!(buf.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,7 +71,7 @@ public class ZkayUtil {
             p = Runtime.getRuntime()
                     .exec(new String[] { "../libsnark/build/libsnark/zkay_interface/run_snark", "proofgen",  ".", "proof.out", ".", "1", "1"});
             p.waitFor();
-            System.out.println(
+            println!(
                     "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------");
             String line;
             BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -80,7 +80,7 @@ public class ZkayUtil {
                 buf.append(line).append("\n");
             }
             input.close();
-            System.out.println(buf.toString());
+            println!(buf.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

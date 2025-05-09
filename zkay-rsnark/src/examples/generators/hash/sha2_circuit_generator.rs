@@ -13,7 +13,7 @@ public class SHA2CircuitGenerator extends CircuitGenerator {
 		super(circuitName);
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 		
 		// assuming the circuit input will be 64 bytes
@@ -35,15 +35,15 @@ public class SHA2CircuitGenerator extends CircuitGenerator {
 		
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator evaluator) {
 		String inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
-		for (int i = 0; i < inputWires.length; i++) {
+		for i in 0..inputWires.length {
 			evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 		SHA2CircuitGenerator generator = new SHA2CircuitGenerator("sha_256");
 		generator.generateCircuit();
 		generator.evalCircuit();

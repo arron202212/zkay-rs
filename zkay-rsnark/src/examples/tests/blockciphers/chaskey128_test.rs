@@ -18,7 +18,7 @@ public class Chaskey128_Test extends TestCase {
 			private Wire[] key; // 4 32-bit words
 			private Wire[] ciphertext; // 4 32-bit words
 
-			@Override
+			
 			protected void buildCircuit() {
 				plaintext = createInputWireArray(4);
 				key = createInputWireArray(4);
@@ -27,7 +27,7 @@ public class Chaskey128_Test extends TestCase {
 				makeOutputArray(ciphertext);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 
 				BigInteger[] keyV = { BigInteger.valueOf(0x68e90956L),
@@ -40,10 +40,10 @@ public class Chaskey128_Test extends TestCase {
 						BigInteger.valueOf(0xa901a369L),
 						BigInteger.valueOf(0xd87aea78L) };
 
-				for (int i = 0; i < plaintext.length; i++) {
+				for i in 0..plaintext.length {
 					evaluator.setWireValue(plaintext[i], msgV[i]);
 				}
-				for (int i = 0; i < key.length; i++) {
+				for i in 0..key.length {
 					evaluator.setWireValue(key[i], keyV[i]);
 				}
 			}
@@ -59,7 +59,7 @@ public class Chaskey128_Test extends TestCase {
 				BigInteger.valueOf(0x2f77f8abL),
 				BigInteger.valueOf(0x07deeddfL) };
 
-		for (int i = 0; i < 4; i++) {
+		for i in 0..4 {
 			assertEquals(evaluator.getWireValue(cipherText.get(i)),
 					expeectedCiphertext[i]);
 		}

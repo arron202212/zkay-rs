@@ -12,8 +12,8 @@ use circuit::structure::wire;
 
 public class FieldDivisionGadget extends Gadget {
 
-	private final Wire a;
-	private final Wire b;
+	 Wire a;
+	 Wire b;
 	private Wire c;
 
 	public FieldDivisionGadget(Wire a, Wire b, String... desc) {
@@ -22,7 +22,7 @@ public class FieldDivisionGadget extends Gadget {
 		this.b = b;
 		// if the input values are constant (i.e. known at compilation time), we
 		// can save one constraint
-		if (a instanceof ConstantWire && b instanceof ConstantWire) {
+		if a instanceof ConstantWire && b instanceof ConstantWire {
 			BigInteger aConst = ((ConstantWire) a).getConstant();
 			BigInteger bInverseConst = ((ConstantWire) b).getConstant().modInverse(
 					Config.FIELD_PRIME);
@@ -40,7 +40,7 @@ public class FieldDivisionGadget extends Gadget {
 		// verifying constraints about it in the circuit. See notes below.
 
 		generator.specifyProverWitnessComputation(new Instruction() {
-			@Override
+			
 			public void evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a);
 				BigInteger bValue = evaluator.getWireValue(b);
@@ -79,7 +79,7 @@ public class FieldDivisionGadget extends Gadget {
 		 */
 	}
 
-	@Override
+	
 	public Wire[] getOutputWires() {
 		return new Wire[] { c };
 	}

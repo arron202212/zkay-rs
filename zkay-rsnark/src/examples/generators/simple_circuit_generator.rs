@@ -11,7 +11,7 @@ public class SimpleCircuitGenerator extends CircuitGenerator {
 		super(circuitName);
 	}
 
-	@Override
+	
 	protected void buildCircuit() {
 
 		// declare input array of length 4.
@@ -31,14 +31,14 @@ public class SimpleCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	@Override
+	
 	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
-		for (int i = 0; i < 4; i++) {
+		for i in 0..4 {
 			circuitEvaluator.setWireValue(inputs[i], i + 1);
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args)  {
 
 		SimpleCircuitGenerator generator = new SimpleCircuitGenerator("simple_example");
 		generator.generateCircuit();

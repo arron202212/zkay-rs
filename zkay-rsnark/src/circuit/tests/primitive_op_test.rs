@@ -21,11 +21,11 @@ public class PrimitiveOpTest extends TestCase {
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
 		result.add(inVals1[0].add(inVals1[1]).mod(Config.FIELD_PRIME));
 		BigInteger s = BigInteger.ZERO;
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			s = s.add(inVals1[i]);
 		}
 		result.add(s.mod(Config.FIELD_PRIME));
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			result.add(inVals1[i].add(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
@@ -33,7 +33,7 @@ public class PrimitiveOpTest extends TestCase {
 			WireArray inputs1;
 			WireArray inputs2;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputs1 = new WireArray(createInputWireArray(numIns));
 				inputs2 = new WireArray(createInputWireArray(numIns));
@@ -47,7 +47,7 @@ public class PrimitiveOpTest extends TestCase {
 				makeOutputArray(resultArray.asArray(), "");
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
@@ -62,7 +62,7 @@ public class PrimitiveOpTest extends TestCase {
 
 		int idx = 0;
 		for (Wire output : generator.getOutWires()) {
-			assertEquals(evaluator.getWireValue(output), result.get(idx++));
+			assertEquals(evaluator.getWireValue(output), result.get(idx+=1));
 		}
 		assertEquals(generator.getNumOfConstraints(), numIns + 2);
 
@@ -77,7 +77,7 @@ public class PrimitiveOpTest extends TestCase {
 
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
 		result.add(inVals1[0].multiply(inVals1[1]).mod(Config.FIELD_PRIME));
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
@@ -85,7 +85,7 @@ public class PrimitiveOpTest extends TestCase {
 			WireArray inputs1;
 			WireArray inputs2;
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputs1 = new WireArray(createInputWireArray(numIns));
 				inputs2 = new WireArray(createInputWireArray(numIns));
@@ -97,7 +97,7 @@ public class PrimitiveOpTest extends TestCase {
 				makeOutputArray(resultArray.asArray(), "");
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
@@ -110,7 +110,7 @@ public class PrimitiveOpTest extends TestCase {
 		evaluator.evaluate();
 		int idx = 0;
 		for (Wire output : generator.getOutWires()) {
-			assertEquals(evaluator.getWireValue(output), result.get(idx++));
+			assertEquals(evaluator.getWireValue(output), result.get(idx+=1));
 		}
 		assertEquals(generator.getNumOfConstraints(), numIns + 1);
 	}
@@ -124,7 +124,7 @@ public class PrimitiveOpTest extends TestCase {
 		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, numBits);
 
 		ArrayList<Integer> result = new ArrayList<Integer>();
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			result.add(inVals1[i].compareTo(inVals2[i]));
 		}
 
@@ -139,13 +139,13 @@ public class PrimitiveOpTest extends TestCase {
 			Wire[] inputs1;
 			Wire[] inputs2;
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				inputs1 = createInputWireArray(numIns);
 				inputs2 = createInputWireArray(numIns);
 
-				for (int i = 0; i < numIns; i++) {
+				for i in 0..numIns {
 					result1[i] = inputs1[i].isLessThan(inputs2[i], numBits);
 					result2[i] = inputs1[i].isLessThanOrEqual(inputs2[i], numBits);
 					result3[i] = inputs1[i].isGreaterThan(inputs2[i], numBits);
@@ -154,7 +154,7 @@ public class PrimitiveOpTest extends TestCase {
 				}
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
@@ -166,21 +166,21 @@ public class PrimitiveOpTest extends TestCase {
 		generator.generateSampleInput(evaluator);
 //		generator.printCircuit();
 		evaluator.evaluate();
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			int r = result.get(i);
-			if (r == 0) {
+			if r == 0 {
 				assertEquals(evaluator.getWireValue(result1[i]), BigInteger.ZERO);
 				assertEquals(evaluator.getWireValue(result2[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result3[i]), BigInteger.ZERO);
 				assertEquals(evaluator.getWireValue(result4[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result5[i]), BigInteger.ONE);
-			} else if (r == 1) {
+			} else if r == 1 {
 				assertEquals(evaluator.getWireValue(result1[i]), BigInteger.ZERO);
 				assertEquals(evaluator.getWireValue(result2[i]), BigInteger.ZERO);
 				assertEquals(evaluator.getWireValue(result3[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result4[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result5[i]), BigInteger.ZERO);
-			} else if (r == -1) {
+			} else if r == -1 {
 				assertEquals(evaluator.getWireValue(result1[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result2[i]), BigInteger.ONE);
 				assertEquals(evaluator.getWireValue(result3[i]), BigInteger.ZERO);
@@ -209,7 +209,7 @@ public class PrimitiveOpTest extends TestCase {
 
 		BigInteger mask = new BigInteger("2").pow(Config.LOG2_FIELD_PRIME).subtract(BigInteger.ONE);
 		
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).mod(Config.FIELD_PRIME);
 			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).mod(Config.FIELD_PRIME);
 			rotatedRightVals[i] = BigInteger.valueOf(Integer.rotateRight(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
@@ -225,7 +225,7 @@ public class PrimitiveOpTest extends TestCase {
 			Wire[] inputs2;
 			Wire[] inputs3;
 
-			@Override
+			
 			protected void buildCircuit() {
 
 				inputs1 = createInputWireArray(numIns);
@@ -241,7 +241,7 @@ public class PrimitiveOpTest extends TestCase {
 				Wire[] anded = new Wire[numIns];
 				Wire[] inverted = new Wire[numIns];
 
-				for (int i = 0; i < numIns; i++) {
+				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(Config.LOG2_FIELD_PRIME, i);
 					shiftedLeft[i] = inputs1[i].shiftLeft(Config.LOG2_FIELD_PRIME, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
@@ -263,7 +263,7 @@ public class PrimitiveOpTest extends TestCase {
 				makeOutputArray(inverted);
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
@@ -277,35 +277,35 @@ public class PrimitiveOpTest extends TestCase {
 
 		ArrayList<Wire> outWires = generator.getOutWires();
 		int i, outputIndex = 0;
-		for (i = 0; i < numIns; i++) 
+		for (i = 0; i < numIns; i+=1) 
 			assertEquals(shiftedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++) 
+		for (i = 0; i < numIns; i+=1) 
 			assertEquals(shiftedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(rotatedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 		
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(rotatedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(xoredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(oredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(andedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i++)
+		for (i = 0; i < numIns; i+=1)
 			assertEquals(invertedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 	}
@@ -321,7 +321,7 @@ public class PrimitiveOpTest extends TestCase {
 		
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
 		result.add(inVals1[0].multiply(inVals1[0]).mod(Config.FIELD_PRIME));
-		for (int i = 0; i < numIns; i++) {
+		for i in 0..numIns {
 			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
@@ -330,7 +330,7 @@ public class PrimitiveOpTest extends TestCase {
 			WireArray inputs2;
 			WireArray solutions; // provide solutions as witnesses
 
-			@Override
+			
 			protected void buildCircuit() {
 				inputs1 = new WireArray(createInputWireArray(numIns));
 				inputs2 = new WireArray(createInputWireArray(numIns));
@@ -338,17 +338,17 @@ public class PrimitiveOpTest extends TestCase {
 
 				specifyProverWitnessComputation(new Instruction() {
 					
-					@Override
+					
 					public void evaluate(CircuitEvaluator evaluator) {
 						evaluator.setWireValue(solutions.get(0),result.get(0));
-						for(int i =0; i < numIns;i++){
+						for(int i =0; i < numIns;i+=1){
 							evaluator.setWireValue(solutions.get(i+1),result.get(i+1));
 						}
 					}
 				});
 				
 				addAssertion(inputs1.get(0), inputs1.get(0), solutions.get(0));
-				for(int i = 0; i < numIns;i++){
+				for(int i = 0; i < numIns;i+=1){
 					addAssertion(inputs1.get(i), inputs2.get(i), solutions.get(i+1));
 				}
 				
@@ -369,7 +369,7 @@ public class PrimitiveOpTest extends TestCase {
 				
 			}
 
-			@Override
+			
 			public void generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);

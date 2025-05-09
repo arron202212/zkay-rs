@@ -6,13 +6,13 @@ use circuit::structure::wire;
  */
 public class ZkayElgamalAddGadget extends ZkayBabyJubJubGadget {
 
-    private final JubJubPoint c1;
+     JubJubPoint c1;
 
-    private final JubJubPoint c2;
+     JubJubPoint c2;
 
-    private final JubJubPoint d1;
+     JubJubPoint d1;
 
-    private final JubJubPoint d2;
+     JubJubPoint d2;
 
     private JubJubPoint e1;
 
@@ -31,7 +31,7 @@ public class ZkayElgamalAddGadget extends ZkayBabyJubJubGadget {
         e2 = addPoints(c2, d2);
     }
 
-    @Override
+    
     public Wire[] getOutputWires() {
         return new Wire[]{ e1.x, e1.y, e2.x, e2.y };
     }

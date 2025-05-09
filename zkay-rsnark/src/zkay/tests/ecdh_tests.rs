@@ -29,13 +29,13 @@ public class EcdhTests {
         BigInteger sec2 = ZkayECDHGenerator.rnd_to_secret("6c0f17e169532e67f0fa96999f652bca942bd97617295a025eaa6c5d1cd3fd5c");
 
         CircuitGenerator cgen = new CircuitGenerator("pkder") {
-            @Override
+            
             protected void buildCircuit() {
                Wire s = createConstantWire(sec1);
                makeOutput(new ZkayEcPkDerivationGadget(s, true).getOutputWires()[0]);
             }
 
-            @Override
+            
             public void generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
@@ -45,13 +45,13 @@ public class EcdhTests {
         BigInteger pk1_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
 
         cgen = new CircuitGenerator("pkder") {
-            @Override
+            
             protected void buildCircuit() {
                 Wire s = createConstantWire(sec2);
                 makeOutput(new ZkayEcPkDerivationGadget(s, true).getOutputWires()[0]);
             }
 
-            @Override
+            
             public void generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
@@ -66,14 +66,14 @@ public class EcdhTests {
         Assert.assertEquals(pk2, pk2_circ);
 
         cgen = new CircuitGenerator("ecdh") {
-            @Override
+            
             protected void buildCircuit() {
                 Wire p = createConstantWire(pk2);
                 Wire s = createConstantWire(sec1);
                 makeOutput(new ZkayECDHGadget(p, s, false).getOutputWires()[0]);
             }
 
-            @Override
+            
             public void generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
