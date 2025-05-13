@@ -5,24 +5,27 @@ use zkay::typed_wire;
 use zkay::zkay_cbc_symmetric_enc_gadget;
 use zkay::zkay_cbc_symmetric_enc_gadget::cipher_type;
 
-public class ECDHBackend extends CryptoBackend.Symmetric {
+pub struct ECDHBackend{
+CipherType cipherType
+}
+ impl ECDHBackend CryptoBackend.Symmetric {
 
-	public static final int KEY_CHUNK_SIZE = 256;
+	const KEY_CHUNK_SIZE:i32 = 256;
 
-	 CipherType cipherType;
+	 
 
-	public ECDHBackend(int keyBits, CipherType cipherType) {
+	pub  fn new( keyBits:i32 ,  cipherType:CipherType )->Self {
 		super(keyBits);
-		this.cipherType = cipherType;
+		self.cipherType = cipherType;
 	}
 
 	
-	public int getKeyChunkSize() {
+	pub  fn getKeyChunkSize()-> i32 {
 		return KEY_CHUNK_SIZE;
 	}
 
-	
-	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] ivArr, String... desc) {
-		return new ZkayCBCSymmetricEncGadget(plain, getKey(key), extractIV(ivArr), cipherType, desc);
+	 impl Symmetric for ECDHBackend  {
+	pub  fn createEncryptionGadget( plain:TypedWire ,  key:String ,  ivArr:Vec<Wire> , desc:Vec<String>)-> Gadget {
+		return ZkayCBCSymmetricEncGadget::new(plain, getKey(key), extractIV(ivArr), cipherType, desc);
 	}
 }

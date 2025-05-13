@@ -1,32 +1,31 @@
 
 
-public class ChaskeyLTSEngine implements BlockCipher {
-    boolean enc;
-    private int[] key;
-
-    
-    public void init(boolean encrypt, CipherParameters cipherParameters) throws IllegalArgumentException {
-        if ! (cipherParameters instanceof KeyParameter) || ((KeyParameter) cipherParameters).getKey().length != 16 {
-            throw new IllegalArgumentException();
-        }
+pub struct ChaskeyLTSEngine 
+{     enc:bool,
+      key:Vec<i32>,
+}
+    impl BlockCipher for ChaskeyLTSEngine {
+    pub  fn init(encrypt:bool , cipherParameters:CipherParameters )  {
+            assert!( (cipherParameters.instanceof( KeyParameter)) && (cipherParameters).getKey().length == 16);
+        
         enc = encrypt;
-        key = new int[4];
+        key = vec![i32::default();4];
         ByteBuffer.wrap(((KeyParameter) cipherParameters).getKey()).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(key);
     }
 
     
-    public String getAlgorithmName() {
+ pub fn getAlgorithmName()->      String {
         return "chaskey_lts_128";
     }
 
     
-    public int getBlockSize() {
+    pub  fn getBlockSize()->  i32 {
         return 16;
     }
 
     
-    public int processBlock(byte[] in, int inOff, byte[] out, int outOff) throws DataLengthException, IllegalStateException {
-        int[] v = new int[4];
+    pub   processBlock(in:Vec<byte>, inOff:i32 , out:Vec<byte>, outOff:i32 )->i32  {
+let v =  vec![i32::default();4];
         ByteBuffer.wrap(in, inOff, 16).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(v);
 
         v[0] ^= key[0];
@@ -35,8 +34,7 @@ public class ChaskeyLTSEngine implements BlockCipher {
         v[3] ^= key[3];
 
         if enc {
-            for (int round = 0; round < 16; +=1round)
-            {
+            for round in 0..16{
                 v[0] += v[1];
                 v[1] = Integer.rotateLeft(v[1], 5) ^ v[0];
                 v[0] = Integer.rotateLeft(v[0], 16);
@@ -55,8 +53,7 @@ public class ChaskeyLTSEngine implements BlockCipher {
             }
         }
         else {
-            for (int round = 0; round < 16; +=1round)
-            {
+            for round in 0..16{
                 v[2] = Integer.rotateRight(v[2], 16);
                 v[1] = Integer.rotateRight(v[1] ^ v[2], 7);
                 v[2] -= v[1];
@@ -85,7 +82,7 @@ public class ChaskeyLTSEngine implements BlockCipher {
     }
 
     
-    public void reset() {
+    pub   reset() {
         // There are no state modifications -> nothing to do here
     }
 }

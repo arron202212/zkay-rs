@@ -10,16 +10,16 @@ use circuit::structure::wire;
 
 // see notes in the end of the code.
 
-public class FieldDivisionGadget extends Gadget {
+pub struct FieldDivisionGadget extends Gadget {
 
 	 Wire a;
 	 Wire b;
-	private Wire c;
+	 Wire c;
 
-	public FieldDivisionGadget(Wire a, Wire b, String... desc) {
+	pub  FieldDivisionGadget(Wire a, Wire b, desc:Vec<String>) {
 		super(desc);
-		this.a = a;
-		this.b = b;
+		self.a = a;
+		self.b = b;
 		// if the input values are constant (i.e. known at compilation time), we
 		// can save one constraint
 		if a instanceof ConstantWire && b instanceof ConstantWire {
@@ -34,14 +34,14 @@ public class FieldDivisionGadget extends Gadget {
 		}
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
 		// This is an example of computing a value outside the circuit and
 		// verifying constraints about it in the circuit. See notes below.
 
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a);
 				BigInteger bValue = evaluator.getWireValue(b);
 				BigInteger cValue = aValue.multiply(
@@ -67,7 +67,7 @@ public class FieldDivisionGadget extends Gadget {
 		 * and (b) during runtime. This means that if any point later in the
 		 * program, the references a, and b referred to other wires, these wires
 		 * are going to be used instead in this instruction. Therefore, it will
-		 * be safer to use final references in cases like that to reduce the
+		 * be safer to use references in cases like that to reduce the
 		 * possibility of errors.
 		 * 
 		 * 3) The above constraint does not check if a and b are both zeros. In that
@@ -80,8 +80,8 @@ public class FieldDivisionGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { c };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { c };
 	}
 
 }

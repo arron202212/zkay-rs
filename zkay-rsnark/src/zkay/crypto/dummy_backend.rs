@@ -4,22 +4,23 @@ use circuit::structure::wire;
 use zkay::typed_wire;
 use zkay::zkay_dummy_encryption_gadget;
 
-public class DummyBackend extends CryptoBackend.Asymmetric {
+pub struct DummyBackend;
+ impl  DummyBackend{
 
-	public static final int CIPHER_CHUNK_SIZE = 256;
-	public static final int KEY_CHUNK_SIZE = 256;
+	  CIPHER_CHUNK_SIZE:i32 = 256;
+	  KEY_CHUNK_SIZE:i32 = 256;
 
-	public DummyBackend(int keyBits) {
-		super(keyBits);
-	}
+	// pub  DummyBackend(i32 keyBits) {
+	// 	super(keyBits);
+	// }
 
 	
-	public int getKeyChunkSize() {
+	pub fn getKeyChunkSize()->i32 {
 		return KEY_CHUNK_SIZE;
 	}
-
-	
-	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] random, String... desc) {
-		return new ZkayDummyEncryptionGadget(plain, getKey(key), random, keyBits, desc);
+ }
+	 impl Asymmetric for DummyBackend{
+	  createEncryptionGadget( plain:TypedWire,  key:String, random:Vec<Wire> , desc:Vec<String>)->Gadget {
+		return  ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc);
 	}
 }

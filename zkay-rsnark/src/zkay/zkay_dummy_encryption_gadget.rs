@@ -5,36 +5,36 @@ use circuit::structure::wire;
 
 
 
-use static zkay::crypto::DummyBackend::CIPHER_CHUNK_SIZE;
+use  zkay::crypto::DummyBackend::CIPHER_CHUNK_SIZE;
 
-public class ZkayDummyEncryptionGadget extends Gadget {
+pub struct ZkayDummyEncryptionGadget   {
 
-     Wire pk;
-     Wire plain;
-     Wire[] cipher;
-
-    public ZkayDummyEncryptionGadget(TypedWire plain, LongElement pk, Wire[] rnd, int keyBits, String... desc) {
+     pk:Wire,
+     plain:Wire,
+     cipher:Vec<Wire>,
+}
+impl  ZkayDummyEncryptionGadget{
+    pub  fn new(plain:TypedWire , pk:LongElement , rnd:Vec<Wire>, keyBits:i32 , desc:Vec<String>)->Self {
         super(desc);
-        if plain == null || pk == null || rnd == null {
-            panic!();
-        }
-        this.plain = plain.wire;
-        Wire[] pkarr = pk.getBits().packBitsIntoWords(256);
+            assert!(plain.is_some() && pk.is_some() && rnd.is_some());
+        self.plain = plain.wire;
+        let pkarr = pk.getBits().packBitsIntoWords(256);
         for i in 1..pkarr.length {
             generator.addZeroAssertion(pkarr[i], "Dummy enc pk valid");
         }
-        this.pk = pkarr[0];
-        this.cipher = new Wire[(int)Math.ceil((1.0*keyBits) / CIPHER_CHUNK_SIZE)];
+        self.pk = pkarr[0];
+        self.cipher = vec![Wire::default();(i32)Math.ceil((1.0*keyBits) / CIPHER_CHUNK_SIZE)];
         buildCircuit();
     }
-
-    protected void buildCircuit() {
-        Wire res = plain.add(pk, "plain + pk");
-        Arrays.fill(cipher, res);
+}
+impl Gadget for ZkayDummyEncryptionGadget{
+      fn buildCircuit() {
+        let res = plain.add(pk, "plain + pk");
+        cipher.fill( res);
     }
 
     
-    public Wire[] getOutputWires() {
+    pub  fn getOutputWires()->  Vec<Wire> {
         return cipher;
     }
 }

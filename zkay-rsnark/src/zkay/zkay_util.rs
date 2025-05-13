@@ -5,84 +5,71 @@ use circuit::structure::wire_array;
 use util::util;
 
 
-public class ZkayUtil {
+pub struct ZkayUtil;
+impl ZkayUtil {
 
-    public static final boolean ZKAY_RESTRICT_EVERYTHING = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just private inputs)
+    pub   const  ZKAY_RESTRICT_EVERYTHING:bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
-    public static Wire[] reverseBytes(WireArray bitArray, int targetWordBits) {
-        return new WireArray(Util.reverseBytes(bitArray.asArray())).packBitsIntoWords(targetWordBits);
+    pub  fn reverseBytes(bitArray:WireArray , targetWordBits:i32 )->Vec<Wire>  {
+        return WireArray::new(Util::reverseBytes(bitArray.asArray())).packBitsIntoWords(targetWordBits);
     }
 
-    public static BigInteger unsignedBytesToBigInt(byte[] bytes) {
-        int signum = 0;
-        for (byte b : bytes) {
+    pub  fn  unsignedBytesToBigInt(bytes:Vec<byte>)->BigInteger {
+        let signum = 0;
+        for b in bytes {
             if b != 0 {
                 signum = 1;
                 break;
             }
         }
-        return new BigInteger(signum, bytes);
+        return BigInteger::new(signum, bytes);
     }
 
-    public static byte[] unsignedBigintToBytes(BigInteger val) {
-        byte[] b = val.toByteArray();
-        byte[] ret;
+    pub  fn unsignedBigintToBytes(val:BigInteger )-> Vec<byte> {
+        let b = val.toByteArray();
+        let mut ret;
         if b[0] == 0 && b.length > 1 {
-            ret = new byte[b.length - 1];
-            System.arraycopy(b, 1, ret, 0, b.length-1);
+            ret = vec![byte::default();b.length - 1];
+            ret[..b.length-1].clone_from_slice(&b[1..]);
         } else {
             ret = b;
         }
         return ret;
     }
 
-    public static byte[] unsignedBigintToBytes(BigInteger val, int byteCount) {
-        byte[] t = unsignedBigintToBytes(val);
-        if t.length > byteCount {
-            throw new IllegalArgumentException("Value too large to fit into " + byteCount + " bytes");
-        }
-        byte[] ret = new byte[byteCount];
-        System.arraycopy(t, 0, ret, byteCount - t.length, t.length);
+    pub  fn  unsignedBigintToBytes(val:BigInteger , byteCount:i32 )->Vec<byte> {
+        let t = unsignedBigintToBytes(val);
+            assert!(t.length <= byteCount,"Value too large to fit into {byteCount} bytes");
+        let ret = vec![byte::default();byteCount];
+        ret[byteCount - t.length..byteCount].clone_from_slice(&t);
         return ret;
     }
 
-    public static void runZkayJsnarkInterface() {
-        try {
-            Process p;
-            p = Runtime.getRuntime()
-                    .exec(new String[] { "../libsnark/build/libsnark/zkay_interface/run_snark", "keygen",  ".", ".", "1"});
-            p.waitFor();
+    pub  fn  runZkayJsnarkInterface() {
+
+           let  p =runcomand(vec![ "../libsnark/build/libsnark/zkay_interface/run_snark", "keygen",  ".", ".", "1"]);
             println!(
                     "\n-----------------------------------RUNNING LIBSNARK KEYGEN -----------------------------------------");
-            String line;
-            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            StringBuilder buf = new StringBuilder();
-            while ((line = input.readLine()) != null) {
+            let input = BufReader::new(p.getInputStream());
+            let buf = StringBuilder::new();
+            for line in  input.lines() {
                 buf.append(line).append("\n");
             }
-            input.close();
+           
             println!(buf.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+      
 
-        try {
-            Process p;
-            p = Runtime.getRuntime()
-                    .exec(new String[] { "../libsnark/build/libsnark/zkay_interface/run_snark", "proofgen",  ".", "proof.out", ".", "1", "1"});
-            p.waitFor();
+     
+            let p = runcomand(vec![ "../libsnark/build/libsnark/zkay_interface/run_snark", "proofgen",  ".", "proof.out", ".", "1", "1"]);
             println!(
                     "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------");
-            String line;
-            BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            StringBuilder buf = new StringBuilder();
-            while ((line = input.readLine()) != null) {
+            let input = BufferedReader::new(InputStreamReader::new(p.getInputStream()));
+            let buf = StringBuilder::new();
+            for line  in  input.lines() {
                 buf.append(line).append("\n");
             }
-            input.close();
+           
             println!(buf.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+      
     }
 }

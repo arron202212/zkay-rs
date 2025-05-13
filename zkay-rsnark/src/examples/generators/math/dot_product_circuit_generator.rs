@@ -4,30 +4,30 @@ use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 use examples::gadgets::math::dot_product_gadget;
 
-public class DotProductCircuitGenerator extends CircuitGenerator {
+pub struct DotProductCircuitGenerator extends CircuitGenerator {
 
-	private Wire[] a;
-	private Wire[] b;
-	private int dimension;
+	 Vec<Wire> a;
+	 Vec<Wire> b;
+	 i32 dimension;
 
-	public DotProductCircuitGenerator(String circuitName, int dimension) {
+	pub  DotProductCircuitGenerator(String circuitName, i32 dimension) {
 		super(circuitName);
-		this.dimension = dimension;
+		self.dimension = dimension;
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		a = createInputWireArray(dimension, "Input a");
 		b = createInputWireArray(dimension, "Input b");
 
-		DotProductGadget dotProductGadget = new DotProductGadget(a, b);
-		Wire[] result = dotProductGadget.getOutputWires();
+		DotProductGadget dotProductGadget = DotProductGadget::new(a, b);
+		Vec<Wire> result = dotProductGadget.getOutputWires();
 		makeOutput(result[0], "output of dot product a, b");
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
+	pub   generateSampleInput(CircuitEvaluator circuitEvaluator) {
 
 		for i in 0..dimension {
 			circuitEvaluator.setWireValue(a[i], 10 + i);
@@ -35,9 +35,9 @@ public class DotProductCircuitGenerator extends CircuitGenerator {
 		}
 	}
 
-	public static void main(String[] args)  {
+	pub    main(args:Vec<String>)  {
 
-		DotProductCircuitGenerator generator = new DotProductCircuitGenerator("dot_product", 3);
+		DotProductCircuitGenerator generator = DotProductCircuitGenerator::new("dot_product", 3);
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

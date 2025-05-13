@@ -185,7 +185,7 @@ import static zkay.ZkayType.ZkUint;
 import static zkay.ZkayType.ZkInt;
 import static zkay.ZkayType.ZkBool;
 
-public class {circuit_class_name} extends ZkayCircuitBase {{
+pub struct {circuit_class_name} extends ZkayCircuitBase {{
     public {circuit_class_name}() {{
         super("{circuit_name}", {pub_in_size}, {pub_out_size}, {priv_in_size}, {use_input_hashing});
 {crypto_init_stmts}

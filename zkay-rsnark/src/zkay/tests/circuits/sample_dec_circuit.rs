@@ -1,14 +1,14 @@
 
 use zkay::zkay_circuit_base;
-use static zkay::zkay_type::zk_uint;
+use  zkay::zkay_type::zk_uint;
 
-public class SampleDecCircuit extends ZkayCircuitBase {
-    public SampleDecCircuit() {
+pub struct SampleDecCircuit extends ZkayCircuitBase {
+    pub  SampleDecCircuit() {
         super("zk__Verify_Test_bar", 6, 1, 2, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
-    private void __zk__bar() {
+      __zk__bar() {
         stepIn("_zk__bar");
         addS("secret0_plain_val", 1, ZkUint(32));
         addS("zk__in0_cipher_val_R", 1, ZkUint(256));
@@ -26,15 +26,15 @@ public class SampleDecCircuit extends ZkayCircuitBase {
     }
 
     
-    protected void buildCircuit() {
+      fn buildCircuit() {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__me", 2);
 
         __zk__bar();
     }
 
-    public static void main(String[] args) {
-        SampleDecCircuit circuit = new SampleDecCircuit();
+    pub    main(args:Vec<String>) {
+        SampleDecCircuit circuit = SampleDecCircuit::new();
         circuit.run(args);
     }
 }

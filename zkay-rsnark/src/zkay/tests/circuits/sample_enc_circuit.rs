@@ -1,15 +1,15 @@
 
 use zkay::zkay_circuit_base;
 use zkay::homomorphic_input;
-use static zkay::zkay_type::zk_uint;
+use  zkay::zkay_type::zk_uint;
 
-public class SampleEncCircuit extends ZkayCircuitBase {
-    public SampleEncCircuit() {
+pub struct SampleEncCircuit extends ZkayCircuitBase {
+    pub  SampleEncCircuit() {
         super("zk__Verify_Test_foo", 6, 8, 1, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
-    private void __zk__foo() {
+      __zk__foo() {
         stepIn("_zk__foo");
         addS("zk__out0_cipher_R", 1, ZkUint(256));
         addIn("zk__in0_cipher_val", 4, ZkUint(256));
@@ -32,15 +32,15 @@ public class SampleEncCircuit extends ZkayCircuitBase {
     }
 
     
-    protected void buildCircuit() {
+      fn buildCircuit() {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__owner", 2);
 
         __zk__foo();
     }
 
-    public static void main(String[] args) {
-        SampleEncCircuit circuit = new SampleEncCircuit();
+    pub    main(args:Vec<String>) {
+        SampleEncCircuit circuit = SampleEncCircuit::new();
         circuit.run(args);
     }
 }

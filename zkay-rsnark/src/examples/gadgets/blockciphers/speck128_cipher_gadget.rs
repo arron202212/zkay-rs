@@ -9,11 +9,11 @@ use circuit::structure::wire;
  *
  */
 
-public class Speck128CipherGadget extends Gadget {
+pub struct Speck128CipherGadget extends Gadget {
 
-	private Wire[] plaintext;
-	private Wire[] expandedKey;
-	private Wire[] ciphertext;
+	 Vec<Wire> plaintext;
+	 Vec<Wire> expandedKey;
+	 Vec<Wire> ciphertext;
 
 	
 	/**
@@ -24,24 +24,24 @@ public class Speck128CipherGadget extends Gadget {
 	 *            : Array of 32 64-bit elements. (Call expandKey(..))
 	 * @param desc
 	 */
-	public Speck128CipherGadget(Wire[] plaintext, Wire[] expandedKey,
-			String... desc) {
+	pub  Speck128CipherGadget(plaintext:Vec<Wire>, expandedKey:Vec<Wire>,
+			desc:Vec<String>) {
 		super(desc);
 		if plaintext.length != 2 || expandedKey.length != 32 {
-			throw new IllegalArgumentException("Invalid Input");
+			assert!("Invalid Input");
 		}
-		this.plaintext = plaintext;
-		this.expandedKey = expandedKey;
+		self.plaintext = plaintext;
+		self.expandedKey = expandedKey;
 		buildCircuit();
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		Wire x, y;
 		x = plaintext[1];
 		y = plaintext[0];
-		ciphertext = new Wire[2];
-		for (int i = 0; i <= 31; i+=1) {
+		ciphertext = vec![Wire::default();2];
+		for i in 0..=31{
 			x = x.rotateRight(64, 8).add(y);
 			x = x.trimBits(65, 64);
 			x = x.xorBitwise(expandedKey[i], 64);
@@ -57,14 +57,14 @@ public class Speck128CipherGadget extends Gadget {
 	 *            : 2 64-bit words
 	 * @return
 	 */
-	public static Wire[] expandKey(Wire[] key) {
+	pub   Vec<Wire> expandKey(key:Vec<Wire>) {
 		CircuitGenerator generator = CircuitGenerator
 				.getActiveCircuitGenerator();
-		Wire[] k = new Wire[32];
-		Wire[] l = new Wire[32];
+		Vec<Wire> k = vec![Wire::default();32];
+		Vec<Wire> l = vec![Wire::default();32];
 		k[0] = key[0];
 		l[0] = key[1];
-		for (int i = 0; i <= 32 - 2; i+=1) {
+		for i in 0..=32 - 2{
 			l[i + 1] = k[i].add(l[i].rotateLeft(64, 56));
 			l[i + 1] = l[i + 1].trimBits(65, 64);
 			l[i + 1] = l[i + 1].xorBitwise(generator.createConstantWire(i), 64);
@@ -74,7 +74,7 @@ public class Speck128CipherGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return ciphertext;
 	}
 }

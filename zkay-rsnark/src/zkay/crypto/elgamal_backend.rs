@@ -4,74 +4,73 @@ use circuit::structure::wire;
 use circuit::structure::wire_array;
 use zkay::*;
 
-public class ElgamalBackend extends CryptoBackend.Asymmetric implements HomomorphicBackend {
+pub struct ElgamalBackend;
 
-    public static final int EC_COORD_BITS = 254;    // a BabyJubJub affine coordinate fits into 254 bits
+ impl ElgamalBackend{
 
-    public static final int KEY_CHUNK_SIZE = 256;   // needs to be a multiple of 8
+    const EC_COORD_BITS:i32 = 254;    // a BabyJubJub affine coordinate fits into 254 bits
 
-    public static final int RND_CHUNK_SIZE = 256;
+    const KEY_CHUNK_SIZE:i32 = 256;   // needs to be a multiple of 8
 
-    public ElgamalBackend(int keyBits) {
+    const RND_CHUNK_SIZE:i32 = 256;
+
+ fn ElgamalBackend( keyBits:i32 ) {
         super(keyBits);
 
-        // public key must be a BabyJubJub point (two coordinates)
-        if keyBits != 2*EC_COORD_BITS {
-            throw new IllegalArgumentException("public key size mismatch");
-        }
+        // pub  key must be a BabyJubJub point (two coordinates)
+            assert!(keyBits == 2*EC_COORD_BITS,"pub  key size mismatch");
     }
 
-    
-    public int getKeyChunkSize() {
+ }
+ impl  Asymmetric for ElgamalBackend{
+ fn getKeyChunkSize()->  i32 {
         return KEY_CHUNK_SIZE;
     }
 
     
-    public boolean usesDecryptionGadget() {
+ fn usesDecryptionGadget()->  bool {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
         return true;
     }
 
     
-    public void addKey(String keyName, Wire[] keyWires) {
-        // elgamal does not require a bit-representation of the public key, so store it directly
-        keys.put(keyName, new WireArray(keyWires));
+ fn addKey( keyName:String ,  keyWires:Vec<Wire> )   {
+        // elgamal does not require a bit-representation of the pub  key, so store it directly
+        keys.put(keyName, WireArray::new(keyWires));
     }
 
     
-    public Gadget createEncryptionGadget(TypedWire plain, String keyName, Wire[] random, String... desc) {
-        WireArray pkArray = getKeyArray(keyName);
-        ZkayBabyJubJubGadget.JubJubPoint pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
-        Wire[] randomArray = new WireArray(random).getBits(RND_CHUNK_SIZE).asArray();
-        if plain.type.bitwidth > 32 {
-            throw new IllegalArgumentException("plaintext must be at most 32 bits for elgamal backend");
-        }
-        return new ZkayElgamalEncGadget(plain.wire.getBitWires(plain.type.bitwidth).asArray(), pk, randomArray);
+ fn createEncryptionGadget( plain:TypedWire ,  keyName:String ,  random:Vec<Wire> , desc:Vec<String>)->  Gadget {
+        let pkArray = getKeyArray(keyName);
+        let pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
+        let randomArray = WireArray::new(random).getBits(RND_CHUNK_SIZE).asArray();
+            assert!(plain.type.bitwidth <= 32,"plaintext must be at most 32 bits for elgamal backend");
+        return ZkayElgamalEncGadget::new(plain.wire.getBitWires(plain.type.bitwidth).asArray(), pk, randomArray);
     }
 
     
-    public Gadget createDecryptionGadget(TypedWire plain, Wire[] cipher, String pkName, Wire[] sk, String... desc) {
-        WireArray pkArray = getKeyArray(pkName);
-        ZkayBabyJubJubGadget.JubJubPoint pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
-        ZkayBabyJubJubGadget.JubJubPoint c1 = new ZkayBabyJubJubGadget.JubJubPoint(cipher[0], cipher[1]);
-        ZkayBabyJubJubGadget.JubJubPoint c2 = new ZkayBabyJubJubGadget.JubJubPoint(cipher[2], cipher[3]);
-        Wire[] skBits = new WireArray(sk).getBits(RND_CHUNK_SIZE).asArray();
-        return new ZkayElgamalDecGadget(pk, skBits, c1, c2, plain.wire);
+ fn createDecryptionGadget( plain:TypedWire ,  cipher:Vec<Wire> ,  pkName:String ,  sk:Vec<Wire> , desc:Vec<String>)->  Gadget {
+        let pkArray = getKeyArray(pkName);
+        let pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
+        let c1 = new ZkayBabyJubJubGadget.JubJubPoint(cipher[0], cipher[1]);
+        let c2 = new ZkayBabyJubJubGadget.JubJubPoint(cipher[2], cipher[3]);
+        let skBits = WireArray::new(sk).getBits(RND_CHUNK_SIZE).asArray();
+        return ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire);
     }
 
-    private TypedWire[] toTypedWireArray(Wire[] wires, String name) {
-        TypedWire[] typedWires = new TypedWire[wires.length];
-        ZkayType uint256 = ZkayType.ZkUint(256);
+ fn toTypedWireArray( wires:Vec<Wire> ,  name:String )->     Vec<TypedWire> {
+        let typedWires = vec![TypedWire::default();wires.length];
+        let uint256 = ZkayType.ZkUint(256);
         for i in 0..wires.length {
-            typedWires[i] = new TypedWire(wires[i], uint256, name);
+            typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
         return typedWires;
     }
 
-    private Wire[] fromTypedWireArray(TypedWire[] typedWires) {
-        Wire[] wires = new Wire[typedWires.length];
-        ZkayType uint256 = ZkayType.ZkUint(256);
+ fn fromTypedWireArray( typedWires:Vec<TypedWire> )->     Vec<Wire> {
+        let wires = vec![Wire::default();typedWires.length];
+        let uint256 = ZkayType.ZkUint(256);
         for i in 0..typedWires.length {
             ZkayType.checkType(uint256, typedWires[i].type);
             wires[i] = typedWires[i].wire;
@@ -79,39 +78,40 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
         return wires;
     }
 
-    private ZkayBabyJubJubGadget.JubJubPoint parseJubJubPoint(Wire[] wire, int offset) {
+ fn parseJubJubPoint( wire:Vec<Wire> ,  offset:i32 )->     ZkayBabyJubJubGadget.JubJubPoint {
         return new ZkayBabyJubJubGadget.JubJubPoint(wire[offset], wire[offset+1]);
     }
 
-    private static ZkayBabyJubJubGadget.JubJubPoint uninitZeroToIdentity(ZkayBabyJubJubGadget.JubJubPoint p) {
+ fn uninitZeroToIdentity(ZkayBabyJubJubGadget.JubJubPoint p)->      ZkayBabyJubJubGadget.JubJubPoint {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
-        Wire oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
+        let oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
         return new ZkayBabyJubJubGadget.JubJubPoint(p.x, p.y.add(oneIfBothZero));
     }
-
-    public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
+ }
+impl HomomorphicBackend for ElgamalBackend{
+ fn doHomomorphicOp( lhs:HomomorphicInput ,  op:char ,  rhs:HomomorphicInput ,  keyName:String )->  Vec<TypedWire> {
         if (op == '+') || (op == '-') {
             // for (c1, c2) = Enc(m1, r1)
             //     (d1, d2) = Enc(m2, r2)
             //     e1 = c1 + d1
             //     e2 = c2 + d2
             // it is (e1, e2) = Enc(m1 + m2, r1 + r2)
-            String outputName = "(" + lhs.getName() + ") + (" + rhs.getName() + ")";
+            let outputName = "(" + lhs.getName() + ") + (" + rhs.getName() + ")";
 
-            TypedWire[] lhs_twires = lhs.getCipher();
-            TypedWire[] rhs_twires = rhs.getCipher();
+            let lhs_twires = lhs.getCipher();
+            let rhs_twires = rhs.getCipher();
 
             // sanity checks
-            assert (lhs_twires.length == 4);  // 4 BabyJubJub coordinates
-            assert (rhs_twires.length == 4);  // 4 BabyJubJub coordinates
-            Wire[] lhs_wires = fromTypedWireArray(lhs_twires);
-            Wire[] rhs_wires = fromTypedWireArray(rhs_twires);
+            assert! (lhs_twires.length == 4);  // 4 BabyJubJub coordinates
+            assert! (rhs_twires.length == 4);  // 4 BabyJubJub coordinates
+            let lhs_wires = fromTypedWireArray(lhs_twires);
+            let rhs_wires = fromTypedWireArray(rhs_twires);
 
-            ZkayBabyJubJubGadget.JubJubPoint c1 = parseJubJubPoint(lhs_wires, 0);
-            ZkayBabyJubJubGadget.JubJubPoint c2 = parseJubJubPoint(lhs_wires, 2);
-            ZkayBabyJubJubGadget.JubJubPoint d1 = parseJubJubPoint(rhs_wires, 0);
-            ZkayBabyJubJubGadget.JubJubPoint d2 = parseJubJubPoint(rhs_wires, 2);
+            let c1 = parseJubJubPoint(lhs_wires, 0);
+            let c2 = parseJubJubPoint(lhs_wires, 2);
+            let d1 = parseJubJubPoint(rhs_wires, 0);
+            let d2 = parseJubJubPoint(rhs_wires, 2);
 
             c1 = uninitZeroToIdentity(c1);
             c2 = uninitZeroToIdentity(c2);
@@ -123,13 +123,13 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
                 d2.x = d2.x.negate();
             }
 
-            ZkayElgamalAddGadget gadget = new ZkayElgamalAddGadget(c1, c2, d1, d2);
+            let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2);
             return toTypedWireArray(gadget.getOutputWires(), outputName);
         } else if op == '*' {
-            String outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
+            let outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
 
-            TypedWire plain_wire;
-            TypedWire[] cipher_twires;
+            let mut  plain_wire;
+             let mut  cipher_twires;
             if lhs.isPlain() && rhs.isCipher() {
                 plain_wire = lhs.getPlain();
                 cipher_twires = rhs.getCipher();
@@ -137,41 +137,41 @@ public class ElgamalBackend extends CryptoBackend.Asymmetric implements Homomorp
                 cipher_twires = lhs.getCipher();
                 plain_wire = rhs.getPlain();
             } else {
-                throw new IllegalArgumentException("Elgamal multiplication requires exactly 1 plaintext argument");
+               panic!("Elgamal multiplication requires exactly 1 plaintext argument");
             }
 
-            Wire[] cipher_wires = fromTypedWireArray(cipher_twires);
-            ZkayBabyJubJubGadget.JubJubPoint c1 = parseJubJubPoint(cipher_wires, 0);
-            ZkayBabyJubJubGadget.JubJubPoint c2 = parseJubJubPoint(cipher_wires, 2);
+            let cipher_wires = fromTypedWireArray(cipher_twires);
+            let c1 = parseJubJubPoint(cipher_wires, 0);
+            let c2 = parseJubJubPoint(cipher_wires, 2);
 
             c1 = uninitZeroToIdentity(c1);
             c2 = uninitZeroToIdentity(c2);
 
-            ZkayElgamalMulGadget gadget = new ZkayElgamalMulGadget(c1, c2, plain_wire.wire.getBitWires(32).asArray());
+            let gadget = ZkayElgamalMulGadget::new(c1, c2, plain_wire.wire.getBitWires(32).asArray());
             return toTypedWireArray(gadget.getOutputWires(), outputName);
         } else {
-            throw new UnsupportedOperationException("Binary operation " + op + " not supported");
+            panic!("Binary operation {op} not supported");
         }
     }
 
     
-    public TypedWire[] doHomomorphicRerand(TypedWire[] arg, String keyName, TypedWire randomness) {
-        String outputName = "rerand(" + arg[0].name + ")";
+ fn doHomomorphicRerand( arg:Vec<TypedWire> ,  keyName:String ,  randomness:TypedWire )->  Vec<TypedWire> {
+        let outputName = "rerand(" + arg[0].name + ")";
 
         // parse argument
-        Wire[] arg_wires = fromTypedWireArray(arg);
-        ZkayBabyJubJubGadget.JubJubPoint c1 = parseJubJubPoint(arg_wires, 0);
-        ZkayBabyJubJubGadget.JubJubPoint c2 = parseJubJubPoint(arg_wires, 2);
+        let arg_wires = fromTypedWireArray(arg);
+        let c1 = parseJubJubPoint(arg_wires, 0);
+        let c2 = parseJubJubPoint(arg_wires, 2);
         c1 = uninitZeroToIdentity(c1);
         c2 = uninitZeroToIdentity(c2);
 
         // parse key and randomness
-        WireArray pkArray = getKeyArray(keyName);
-        ZkayBabyJubJubGadget.JubJubPoint pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
-        Wire[] randomArray = randomness.wire.getBitWires(RND_CHUNK_SIZE).asArray();
+        let pkArray = getKeyArray(keyName);
+        let pk = new ZkayBabyJubJubGadget.JubJubPoint(pkArray.get(0), pkArray.get(1));
+        let randomArray = randomness.wire.getBitWires(RND_CHUNK_SIZE).asArray();
 
         // create gadget
-        ZkayElgamalRerandGadget gadget = new ZkayElgamalRerandGadget(c1, c2, pk, randomArray);
+        let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray);
         return toTypedWireArray(gadget.getOutputWires(), outputName);
     }
 }

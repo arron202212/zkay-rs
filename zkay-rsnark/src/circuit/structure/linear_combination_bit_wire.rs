@@ -1,13 +1,13 @@
 
 
-public class LinearCombinationBitWire extends BitWire {
-
-	public LinearCombinationBitWire(int wireId) {
-		super(wireId);
-	}
+pub struct LinearCombinationBitWire;
+impl LinearCombinationBitWire {
+	// pub fn new( wireId:i32) {
+	// 	super(wireId);
+	// }
 	
-	public WireArray getBitWires() {
-		return new WireArray(new Wire[]{this});
+	pub fn  getBitWires(&self)->WireArray {
+		 WireArray::new(vec![self.clone()])
 	}
 
 }

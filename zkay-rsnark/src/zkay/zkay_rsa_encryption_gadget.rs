@@ -9,25 +9,26 @@ use examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
 
 
 
-use static zkay.ZkayUtil.*;
-use static zkay.crypto.RSABackend.*;
-
-public class ZkayRSAEncryptionGadget extends Gadget {
-
-    public enum PaddingType {
+use  zkay.ZkayUtil.*;
+use  zkay.crypto.RSABackend.*;
+   pub  enum PaddingType {
         PKCS_1_5,
         OAEP
     }
 
+pub struct ZkayRSAEncryptionGadget   {
+
+ 
      PaddingType paddingType;
      LongElement pk;
      Wire plain;
-     Wire[] rnd;
-     int keyBits;
+     Vec<Wire> rnd;
+     i32 keyBits;
 
-    private Wire[] cipher = null;
-
-    public ZkayRSAEncryptionGadget(TypedWire plain, LongElement pk, Wire[] rnd, int keyBits, PaddingType paddingType, String... desc) {
+     Vec<Wire> cipher = null;
+}
+impl ZkayRSAEncryptionGadget{
+    pub  fn new(plain:TypedWire , pk:LongElement , rnd:Vec<Wire>, keyBits:i32 , paddingType:PaddingType , desc:Vec<String>) ->Self{
         super(desc);
 
         Objects.requireNonNull(plain, "plain");
@@ -35,42 +36,43 @@ public class ZkayRSAEncryptionGadget extends Gadget {
         Objects.requireNonNull(rnd, "rnd");
         Objects.requireNonNull(paddingType, "paddingType");
 
-        this.paddingType = paddingType;
-        this.plain = plain.wire;
-        this.pk = pk;
-        this.rnd = rnd;
-        this.keyBits = keyBits;
+        self.paddingType = paddingType;
+        self.plain = plain.wire;
+        self.pk = pk;
+        self.rnd = rnd;
+        self.keyBits = keyBits;
 
         buildCircuit();
     }
+}
+impl Gadget for ZkayRSAEncryptionGadget{
+      fn buildCircuit() {
+        let plainBytes = reverseBytes(plain.getBitWires(256), 8);
 
-    protected void buildCircuit() {
-        Wire[] plainBytes = reverseBytes(plain.getBitWires(256), 8);
-
-        Gadget enc;
-        switch (paddingType) {
-            case OAEP: {
-                Wire[] rndBytes = reverseBytes(new WireArray(rnd).getBits(OAEP_RND_CHUNK_SIZE), 8);
-                RSAEncryptionOAEPGadget e = new RSAEncryptionOAEPGadget(pk, plainBytes, rndBytes, keyBits, description);
+        let mut  enc;
+        match paddingType {
+             OAEP=>{
+                let rndBytes = reverseBytes(WireArray::new(rnd).getBits(OAEP_RND_CHUNK_SIZE), 8);
+                let e = RSAEncryptionOAEPGadget::new(pk, plainBytes, rndBytes, keyBits, description);
                 e.checkSeedCompliance();
                 enc = e;
-                break;
+                
             }
-            case PKCS_1_5: {
-                int rndLen = keyBits / 8 - 3 - plainBytes.length;
-                Wire[] rndBytes = reverseBytes(new WireArray(rnd).getBits(PKCS15_RND_CHUNK_SIZE).adjustLength(rndLen * 8), 8);
-                enc = new RSAEncryptionV1_5_Gadget(pk, plainBytes, rndBytes, keyBits, description);
-                break;
+             PKCS_1_5=>{
+                let rndLen = keyBits / 8 - 3 - plainBytes.length;
+                let rndBytes = reverseBytes(WireArray::new(rnd).getBits(PKCS15_RND_CHUNK_SIZE).adjustLength(rndLen * 8), 8);
+                enc = RSAEncryptionV1_5_Gadget::new(pk, plainBytes, rndBytes, keyBits, description);
+                
             }
-            default:
-                throw new IllegalStateException("Unexpected padding type: " + paddingType);
+           _=>
+                assert!("Unexpected padding type: " + paddingType)
         }
 
-        cipher = new WireArray(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
+        cipher = WireArray::new(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
     }
 
     
-    public Wire[] getOutputWires() {
+    pub  fn getOutputWires()->Vec<Wire>  {
         return cipher;
     }
 }

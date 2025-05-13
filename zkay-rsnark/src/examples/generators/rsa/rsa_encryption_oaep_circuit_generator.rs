@@ -6,30 +6,30 @@ use circuit::structure::wire;
 use circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 
-public class RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
+pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 
-	private int rsaKeyLength;
-	private int plainTextLength;
-	private Wire[] inputMessage;
-	private Wire[] seed;
-	private Wire[] cipherText;
-	private LongElement rsaModulus;
+	 i32 rsaKeyLength;
+	 i32 plainTextLength;
+	 Vec<Wire> inputMessage;
+	 Vec<Wire> seed;
+	 Vec<Wire> cipherText;
+	 LongElement rsaModulus;
 
-	private RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
+	 RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
 
-	public RSAEncryptionOAEPCircuitGenerator(String circuitName, int rsaKeyLength,
-			int plainTextLength) {
+	pub  RSAEncryptionOAEPCircuitGenerator(String circuitName, i32 rsaKeyLength,
+			i32 plainTextLength) {
 		super(circuitName);
-		this.rsaKeyLength = rsaKeyLength;
-		this.plainTextLength = plainTextLength;
+		self.rsaKeyLength = rsaKeyLength;
+		self.plainTextLength = plainTextLength;
 		// constraints on the plaintext length will be checked by the gadget
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-		for(int i = 0; i < plainTextLength;i+=1){
+		for i in 0..plainTextLength{
 			inputMessage[i].restrictBitLength(8);
 		}
 		
@@ -40,36 +40,36 @@ public class RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 
 		// The modulus can also be hardcoded by changing the statement above to the following
 
-		// rsaModulus = new LongElement(Util.split(new
+		// rsaModulus = LongElement::new(Util::split(new
 		// BigInteger("f0dac4df56945ec31a037c5b736b64192f14baf27f2036feb85dfe45dc99d8d3c024e226e6fd7cabb56f780f9289c000a873ce32c66f4c1b2970ae6b7a3ceb2d7167fbbfe41f7b0ed7a07e3c32f14c3940176d280ceb25ed0bf830745a9425e1518f27de822b17b2b599e0aea7d72a2a6efe37160e46bf7c78b0573c9014380ab7ec12ce272a83aaa464f814c08a0b0328e191538fefaadd236ae10ba9cbb525df89da59118c7a7b861ec1c05e09976742fc2d08bd806d3715e702d9faa3491a3e4cf76b5546f927e067b281c25ddc1a21b1fb12788d39b27ca0052144ab0aad7410dc316bd7e9d2fe5e0c7a1028102454be9c26c3c347dd93ee044b680c93cb",
 		// 16), LongElement.CHUNK_BITWIDTH));
 
 		// In case of hardcoding, comment the line that sets the modulus value in generateSampleInput() 
 
 		
-		rsaEncryptionOAEPGadget = new RSAEncryptionOAEPGadget(rsaModulus, inputMessage,
+		rsaEncryptionOAEPGadget = RSAEncryptionOAEPGadget::new(rsaModulus, inputMessage,
 				seed, rsaKeyLength);
 		
 		// since seed is a witness in this example, verify any needed constraints
 		// If the key or the msg are witnesses, similar constraints are needed
 		rsaEncryptionOAEPGadget.checkSeedCompliance();
 		
-		Wire[] cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires(); // in bytes
+		Vec<Wire> cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires(); // in bytes
 		
 		// do some grouping to reduce VK Size	
-		cipherText = new WireArray(cipherTextInBytes).packWordsIntoLargerWords(8, 30);
+		cipherText = WireArray::new(cipherTextInBytes).packWordsIntoLargerWords(8, 30);
 		makeOutputArray(cipherText,
 				"Output cipher text");
 
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 		String msg = "";
 		for i in 0..inputMessage.length {
 
-			evaluator.setWireValue(inputMessage[i], (int) ('a' + i));
+			evaluator.setWireValue(inputMessage[i], (i32) ('a' + i));
 			msg = msg + (char) ('a' + i);
 		}
 		println!("PlainText:" + msg);
@@ -83,42 +83,42 @@ public class RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 			
 			// The BouncyCastle implementation is used at is supports SHA-256 for the MGF, while the native Java implementation uses SHA-1 by default.
 
-			Security.addProvider(new BouncyCastleProvider());  
+			Security.addProvider(BouncyCastleProvider::new());  
 			Cipher cipher = Cipher
 					.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 			
-			SecureRandom random = new SecureRandom();
+			SecureRandom random = SecureRandom::new();
 			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
 			generator.initialize(rsaKeyLength, random);
 			KeyPair pair = generator.generateKeyPair();
 			Key pubKey = pair.getPublic();
 			BigInteger modulus = ((RSAPublicKey) pubKey).getModulus();
 
-			evaluator.setWireValue(this.rsaModulus, modulus,
+			evaluator.setWireValue(self.rsaModulus, modulus,
 					LongElement.CHUNK_BITWIDTH);
 
 			Key privKey = pair.getPrivate();
 
 			cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-			byte[] cipherText = cipher.doFinal(msg.getBytes());
-//			println!("ciphertext : " + new String(cipherText));
-			byte[] cipherTextPadded = new byte[cipherText.length + 1];
+			Vec<byte> cipherText = cipher.doFinal(msg.getBytes());
+//			println!("ciphertext : " + String::new(cipherText));
+			Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
 			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 			cipherTextPadded[0] = 0;
 
 
-			byte[][] result = RSAUtil.extractRSAOAEPSeed(cipherText,
+			Vec<Vec<byte>> result = RSAUtil.extractRSAOAEPSeed(cipherText,
 					(RSAPrivateKey) privKey);
 			// result[0] contains the plaintext (after decryption)
 			// result[1] contains the randomness
 
-			boolean check = Arrays.equals(result[0], msg.getBytes());
+			bool check = Arrays.equals(result[0], msg.getBytes());
 			if !check {
 				panic!(
 						"Randomness Extraction did not decrypt right");
 			}
 
-			byte[] sampleRandomness = result[1];
+			Vec<byte> sampleRandomness = result[1];
 			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(seed[i], (sampleRandomness[i]+256)%256);
 			}
@@ -130,10 +130,10 @@ public class RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	public static void main(String[] args)  {
-		int keyLength = 2048;
-		int msgLength = 3;
-		RSAEncryptionOAEPCircuitGenerator generator = new RSAEncryptionOAEPCircuitGenerator(
+	pub    main(args:Vec<String>)  {
+		i32 keyLength = 2048;
+		i32 msgLength = 3;
+		RSAEncryptionOAEPCircuitGenerator generator = RSAEncryptionOAEPCircuitGenerator::new(
 				"rsa" + keyLength + "_oaep_encryption", keyLength, msgLength);
 		generator.generateCircuit();
 		generator.evalCircuit();

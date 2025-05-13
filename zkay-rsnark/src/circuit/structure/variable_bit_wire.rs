@@ -1,13 +1,14 @@
 
 
-public class VariableBitWire extends BitWire {
+pub struct VariableBitWire;
+impl VariableBitWire {
 
-	public VariableBitWire(int wireId) {
-		super(wireId);
-	}
+	// pub fn  new(wireId:i32) {
+	// 	super(wireId);
+	// }
 
-	public WireArray getBitWires() {
-		return new WireArray(new Wire[] { this });
+	pub fn   getBitWires(&self)->WireArray {
+		  WireArray::new(vec![self.clone()])
 	}
 
 }

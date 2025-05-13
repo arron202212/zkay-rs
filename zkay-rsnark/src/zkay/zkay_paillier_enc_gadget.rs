@@ -7,49 +7,51 @@ use examples::gadgets::math::long_integer_mod_gadget;
 use examples::gadgets::math::long_integer_mod_inverse_gadget;
 use examples::gadgets::math::long_integer_mod_pow_gadget;
 
-public class ZkayPaillierEncGadget extends Gadget {
+pub struct ZkayPaillierEncGadget   {
 
-	 LongElement n;
-	 LongElement nSquare;
-	 int nBits;
-	 int nSquareMaxBits;
-	 LongElement g;
-	 LongElement plain;
-	 LongElement random;
-	private LongElement cipher;
-
-	public ZkayPaillierEncGadget(LongElement n, int nBits, LongElement generator, LongElement plain, LongElement random,
-	                             String... desc) {
+	 n:LongElement,
+	 nSquare:LongElement,
+	 nBits:i32,
+	 nSquareMaxBits:i32,
+	 g:LongElement,
+	 plain:LongElement,
+	 random:LongElement,
+	 cipher:LongElement,
+}
+impl ZkayPaillierEncGadget{
+	pub  fn new(n:LongElement , nBits:i32 , generator:LongElement , plain:LongElement , random:LongElement ,
+	                             desc:Vec<String>)->Self {
 		super(desc);
-		this.n = n;
-		this.nBits = nBits;
-		this.nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
-		int maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
-		this.nSquare = n.mul(n).align(maxNumChunks);
-		this.g = generator;
-		this.plain = plain;
-		this.random = random;
+		self.n = n;
+		self.nBits = nBits;
+		self.nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
+		let maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+		self.nSquare = n.mul(n).align(maxNumChunks);
+		self.g = generator;
+		self.plain = plain;
+		self.random = random;
 		buildCircuit();
 	}
-
-	private void buildCircuit() {
-		int nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
+}
+impl Gadget for ZkayPaillierEncGadget{
+	  fn buildCircuit() {
+		let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
 		// Prove that random is in Z_n* by checking that random has an inverse mod n
-		LongElement randInv = new LongIntegerModInverseGadget(random, n, false).getResult();
+		let randInv = LongIntegerModInverseGadget::new(random, n, false).getResult();
 		generator.addOneAssertion(randInv.checkNonZero());
-		// Compute c = g^m * r^n mod n^2
-		LongElement gPowPlain = new LongIntegerModPowGadget(g, plain, nBits, nSquare, nSquareMinBits, "g^m").getResult();
-		LongElement randPowN = new LongIntegerModPowGadget(random, n, nBits, nSquare, nSquareMinBits, "r^n").getResult();
-		LongElement product = gPowPlain.mul(randPowN);
-		cipher = new LongIntegerModGadget(product, nSquare, nSquareMinBits, true, "g^m * r^n mod n^2").getRemainder();
+		// let c = g^m * r^n mod n^2
+		let gPowPlain = LongIntegerModPowGadget::new(g, plain, nBits, nSquare, nSquareMinBits, "g^m").getResult();
+		let randPowN = LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits, "r^n").getResult();
+		let product = gPowPlain.mul(randPowN);
+		cipher = LongIntegerModGadget::new(product, nSquare, nSquareMinBits, true, "g^m * r^n mod n^2").getRemainder();
 	}
 
-	public LongElement getCiphertext() {
+	pub fn getCiphertext()->LongElement {
 		return cipher;
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return cipher.getArray();
 	}
 }

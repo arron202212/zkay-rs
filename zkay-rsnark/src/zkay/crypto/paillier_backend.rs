@@ -13,93 +13,99 @@ use zkay::zkay_type;
 
 
 
-public class PaillierBackend extends CryptoBackend.Asymmetric implements HomomorphicBackend {
+pub struct PaillierBackend  {
 
+	  minNumCipherChunks:i32,
+	  maxNumCipherChunks:i32,
+}
+impl  PaillierBackend
+{
+const  CHUNK_SIZE:i32 = LongElement.CHUNK_BITWIDTH ;//120;
+pub  fn new(keyBits:i32 ) {
 	// Same chunk size for key, randomness, and ciphertext
-	public static final int CHUNK_SIZE = 120;
+	
 
-	static {
-		if CHUNK_SIZE != LongElement.CHUNK_BITWIDTH {
-			throw new IllegalStateException("Paillier chunk size must match LongElement.CHUNK_BITWIDTH.\n" +
-					"If LongElement.CHUNK_BITWIDTH needs to be changed, change this _and_ meta.py in jsnark!");
-		}
-	}
+	//  {
+	// 	if CHUNK_SIZE != LongElement.CHUNK_BITWIDTH {
+	// 		assert!("Paillier chunk size must match LongElement.CHUNK_BITWIDTH.\n" +
+	// 				"If LongElement.CHUNK_BITWIDTH needs to be changed, change this _and_ meta.py in jsnark!");
+	// 	}
+	// }
 
-	 int minNumCipherChunks;
-	 int maxNumCipherChunks;
-
-	public PaillierBackend(int keyBits) {
-		super(keyBits); // keyBits = bits of n
-		if keyBits <= CHUNK_SIZE {
-			throw new IllegalArgumentException("Key size too small (" + keyBits + " < " + CHUNK_SIZE + " bits)");
-		}
+		// super(keyBits); // keyBits = bits of n
+			assert!(keyBits > CHUNK_SIZE,"Key size too small ( {keyBits}  <  {CHUNK_SIZE}  bits)");
 
 		// n^2 has either length (2 * keyBits - 1) or (2 * keyBits) bits
 		// minNumCipherChunks = ceil((2 * keyBits - 1) / CHUNK_SIZE)
 		// maxNumCipherChunks = ceil((2 * keyBits) / CHUNK_SIZE)
-		int minNSquareBits = 2 * keyBits - 1;
-		this.minNumCipherChunks = (minNSquareBits + CHUNK_SIZE - 1) / CHUNK_SIZE;
-		this.maxNumCipherChunks = (minNSquareBits + CHUNK_SIZE) / CHUNK_SIZE;
+		let  minNSquareBits = 2 * keyBits - 1;
+		Self{minNumCipherChunks: (minNSquareBits + CHUNK_SIZE - 1) / CHUNK_SIZE,
+		maxNumCipherChunks : (minNSquareBits + CHUNK_SIZE) / CHUNK_SIZE,
+}
 	}
 
+}
+
+impl Asymmetric for PaillierBackend{
 	
-	public int getKeyChunkSize() {
+	
+	pub  fn getKeyChunkSize()-> i32 {
 		return CHUNK_SIZE;
 	}
 
 	
-	public Gadget createEncryptionGadget(TypedWire plain, String keyName, Wire[] randomWires, String... desc) {
-		LongElement key = getKey(keyName);
-		LongElement encodedPlain = encodeSignedToModN(plain, key);
-		LongElement randArr = new LongElement(new WireArray(randomWires).getBits(CHUNK_SIZE).adjustLength(keyBits));
-		LongElement random = uninitZeroToOne(randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
-		return new ZkayPaillierFastEncGadget(key, keyBits, encodedPlain, random, desc);
+	pub  fn createEncryptionGadget(plain:TypedWire , keyName:String , randomWires:Vec<Wire> , desc:Vec<String>)-> Gadget {
+		let key = getKey(keyName);
+		let encodedPlain = encodeSignedToModN(plain, key);
+		let randArr = LongElement::new(WireArray::new(randomWires).getBits(CHUNK_SIZE).adjustLength(keyBits));
+		let random = uninitZeroToOne(randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
+		return ZkayPaillierFastEncGadget::new(key, keyBits, encodedPlain, random, desc);
 	}
+}
+	impl Asymmetric for HomomorphicBackend{
+	pub  fn doHomomorphicOp(op:char , arg:HomomorphicInput , keyName:String )-> Vec<TypedWire> {
+		 assert!(arg.is_some() && !arg.isPlain(),"arg");
 
-	
-	public TypedWire[] doHomomorphicOp(char op, HomomorphicInput arg, String keyName) {
-		if arg == null || arg.isPlain()) throw new IllegalArgumentException("arg";
-
-		LongElement nSquare = getNSquare(keyName);
-		LongElement cipherVal = toLongElement(arg);
+		let nSquare = getNSquare(keyName);
+		let cipherVal = toLongElement(arg);
 
 		if op == '-' {
 			// Enc(m, r)^(-1) = (g^m * r^n)^(-1) = (g^m)^(-1) * (r^n)^(-1) = g^(-m) * (r^(-1))^n = Enc(-m, r^(-1))
-			LongElement result = invert(cipherVal, nSquare);
+			let result = invert(cipherVal, nSquare);
 			return toWireArray(result, "-(" + arg.getName() + ")");
 		} else {
-			throw new UnsupportedOperationException("Unary operation " + op + " not supported");
+			panic!("Unary operation {op} not supported");
 		}
 	}
 
 	
-	public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
-		LongElement nSquare = getNSquare(keyName);
+	pub  fn doHomomorphicOp(lhs:HomomorphicInput , op:char , rhs:HomomorphicInput , keyName:String )-> Vec<TypedWire> {
+		let nSquare = getNSquare(keyName);
 
-		switch (op) {
-			case '+': {
+		match op {
+			 '+'=>{
 				// Enc(m1, r1) * Enc(m2, r2) = (g^m1 * r1^n) * (g^m2 * r2^n) = g^(m1 + m2) * (r1 * r2)^n = Enc(m1 + m2, r1 * r2)
-				String outputName = "(" + lhs.getName() + ") + (" + rhs.getName() + ")";
-				LongElement lhsVal = toLongElement(lhs);
-				LongElement rhsVal = toLongElement(rhs);
-				LongElement result = mulMod(lhsVal, rhsVal, nSquare);
+				let outputName = "(" + lhs.getName() + ") + (" + rhs.getName() + ")";
+				let lhsVal = toLongElement(lhs);
+				let rhsVal = toLongElement(rhs);
+				let result = mulMod(lhsVal, rhsVal, nSquare);
 				return toWireArray(result, outputName);
 			}
-			case '-': {
+			 '-'=>{
 				// Enc(m1, r1) * Enc(m2, r2)^(-1) = Enc(m1 + (-m2), r1 * r2^(-1)) = Enc(m1 - m2, r1 * r2^(-1))
-				String outputName = "(" + lhs.getName() + ") - (" + rhs.getName() + ")";
-				LongElement lhsVal = toLongElement(lhs);
-				LongElement rhsVal = toLongElement(rhs);
-				LongElement result = mulMod(lhsVal, invert(rhsVal, nSquare), nSquare);
+				let outputName = "(" + lhs.getName() + ") - (" + rhs.getName() + ")";
+				let lhsVal = toLongElement(lhs);
+				let rhsVal = toLongElement(rhs);
+				let result = mulMod(lhsVal, invert(rhsVal, nSquare), nSquare);
 				return toWireArray(result, outputName);
 			}
-			case '*': {
+			 '*'=>{
 				// Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
 				LongElement cipherVal;
 				TypedWire plainWire;
 
-				if lhs == null) throw new IllegalArgumentException("lhs is null";
-				if rhs == null) throw new IllegalArgumentException("rhs is null";
+				assert!(lhs.is_some(),"lhs is null");
+				assert!(rhs.is_some(),"rhs is null");
 				if lhs.isPlain() && rhs.isCipher() {
 					plainWire = lhs.getPlain();
 					cipherVal = toLongElement(rhs);
@@ -107,131 +113,124 @@ public class PaillierBackend extends CryptoBackend.Asymmetric implements Homomor
 					cipherVal = toLongElement(lhs);
 					plainWire = rhs.getPlain();
 				} else {
-					throw new IllegalArgumentException("Paillier multiplication requires exactly 1 plaintext argument");
+					assert!("Paillier multiplication requires exactly 1 plaintext argument");
 				}
 
-				int plainBits = plainWire.type.bitwidth;
-				WireArray plainBitWires = plainWire.wire.getBitWires(plainBits);
-				LongElement absPlainVal;
+				let plainBits = plainWire.type.bitwidth;
+				let plainBitWires = plainWire.wire.getBitWires(plainBits);
+				let mut  absPlainVal;
 				if !plainWire.type.signed {
-					// Unsigned, easy case, just do the multiplication.
-					absPlainVal = new LongElement(plainBitWires);
+					// Unsigned, easy , just do the multiplication.
+					absPlainVal = LongElement::new(plainBitWires);
 				} else {
 					// Signed. Multiply by the absolute value, later negate result if sign bit was set.
-					Wire twosComplement = plainWire.wire.invBits(plainBits).add(1);
-					LongElement posValue = new LongElement(plainBitWires);
-					LongElement negValue = new LongElement(twosComplement.getBitWires(plainBits));
-					Wire signBit = plainBitWires.get(plainBits - 1);
+					let twosComplement = plainWire.wire.invBits(plainBits).add(1);
+					let posValue = LongElement::new(plainBitWires);
+					let negValue = LongElement::new(twosComplement.getBitWires(plainBits));
+					let signBit = plainBitWires.get(plainBits - 1);
 					absPlainVal = posValue.muxBit(negValue, signBit);
 				}
-				String outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
+				let outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
 
 				// Enc(m1, r1) ^ m2 = (g^m1 * r1^n) ^ m2 = (g^m1)^m2 * (r1^n)^m2 = g^(m1*m2) * (r1^m2)^n = Enc(m1 * m2, r1 ^ m2)
-				LongElement result = modPow(cipherVal, absPlainVal, plainBits, nSquare);
+				let result = modPow(cipherVal, absPlainVal, plainBits, nSquare);
 
 				if plainWire.type.signed {
 					// Correct for sign
-					Wire signBit = plainBitWires.get(plainBits - 1);
-					LongElement negResult = invert(result, nSquare);
+					let signBit = plainBitWires.get(plainBits - 1);
+					let negResult = invert(result, nSquare);
 					result = result.muxBit(negResult, signBit);
 				}
 
 				return toWireArray(result, outputName);
 			}
-			default:
-				throw new UnsupportedOperationException("Binary operation " + op + " not supported");
+			_=>
+				panic!("Binary operation  {op} not supported"),
 		}
 	}
 
-	private LongElement getNSquare(String keyName) {
-		LongElement n = getKey(keyName);
-		int nSquareMaxBits = 2 * keyBits; // Maximum bit length of n^2
-		int maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+	 fn getNSquare(keyName:String )-> LongElement {
+		let n = getKey(keyName);
+		let  nSquareMaxBits = 2 * keyBits; // Maximum bit length of n^2
+		let  maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
 		return n.mul(n).align(maxNumChunks);
 	}
 
-	private static LongElement invert(LongElement val, LongElement nSquare) {
-		return new LongIntegerModInverseGadget(val, nSquare, true, "Paillier negation").getResult();
+	 fn invert(val:LongElement , nSquare:LongElement )->  LongElement {
+		return LongIntegerModInverseGadget::new(val, nSquare, true, "Paillier negation").getResult();
 	}
 
-	private LongElement mulMod(LongElement lhs, LongElement rhs, LongElement nSquare) {
-		return new LongIntegerModGadget(lhs.mul(rhs), nSquare, 2 * keyBits, true, "Paillier addition").getRemainder();
+	 fn mulMod(lhs:LongElement , rhs:LongElement , nSquare:LongElement )-> LongElement {
+		return LongIntegerModGadget::new(lhs.mul(rhs), nSquare, 2 * keyBits, true, "Paillier addition").getRemainder();
 	}
 
-	private LongElement modPow(LongElement lhs, LongElement rhs, int rhsBits, LongElement nSquare) {
-		return new LongIntegerModPowGadget(lhs, rhs, rhsBits, nSquare, 2 * keyBits, "Paillier multiplication").getResult();
+	 fn modPow(lhs:LongElement , rhs:LongElement , rhsBits:i32 , nSquare:LongElement )-> LongElement {
+		return LongIntegerModPowGadget::new(lhs, rhs, rhsBits, nSquare, 2 * keyBits, "Paillier multiplication").getResult();
 	}
 
-	private LongElement toLongElement(HomomorphicInput input) {
-		if input == null || input.isPlain() {
-			throw new IllegalArgumentException("Input null or not ciphertext");
-		}
-		TypedWire[] cipher = input.getCipher();
-		if cipher.length < minNumCipherChunks || cipher.length > maxNumCipherChunks {
-			throw new IllegalArgumentException("Ciphertext has invalid length " + cipher.length);
-		}
+	 fn toLongElement(input:HomomorphicInput )-> LongElement {
+			assert!(input.is_some() && !input.isPlain(),"Input null or not ciphertext");
+		let cipher = input.getCipher();
+		assert!(cipher.length >= minNumCipherChunks && cipher.length <= maxNumCipherChunks ,"Ciphertext has invalid length {}" , cipher.length);
 
 		// Ciphertext inputs seem to be passed as ZkUint(256); sanity check to make sure we got that.
-		ZkayType uint256 = ZkayType.ZkUint(256);
-		for (TypedWire cipherWire : cipher) {
+		let uint256 = ZkayType.ZkUint(256);
+		for cipherWire in cipher {
 			ZkayType.checkType(uint256, cipherWire.type);
 		}
 
-		// Input is a Paillier ciphertext - front-end must already check that this is the case
-		Wire[] wires = new Wire[cipher.length];
+		// Input is a Paillier ciphertext - front-end must already check that this is the 
+		let wires = vec![Wire::default();cipher.length];
 		for i in 0..cipher.length {
 			wires[i] = cipher[i].wire;
 		}
-		int[] bitWidths = new int[wires.length];
+		Vec<i32> bitWidths = vec![i32::default();wires.length];
 		Arrays.fill(bitWidths, CHUNK_SIZE);
 		bitWidths[bitWidths.length - 1] = 2 * keyBits - (bitWidths.length - 1) * CHUNK_SIZE;
 
 		// Cipher could still be uninitialized-zero, which we need to fix
-		return uninitZeroToOne(new LongElement(wires, bitWidths));
+		return uninitZeroToOne(LongElement::new(wires, bitWidths));
 	}
 
-	private TypedWire[] toWireArray(LongElement value, String name) {
+	 fn toWireArray(value:LongElement , name:String )-> Vec<TypedWire> {
 		// First, sanity check that the result has at most maxNumCipherChunks wires of at most CHUNK_SIZE bits each
-		if value.getSize() > maxNumCipherChunks {
-			throw new IllegalStateException("Paillier output contains too many wires");
-		}
-		for (int bitWidth : value.getCurrentBitwidth()) {
-			if bitWidth > CHUNK_SIZE) throw new IllegalStateException("Paillier output cipher bit width too large";
-		}
+			assert!(value.getSize() <= maxNumCipherChunks,"Paillier output contains too many wires");
+			assert!(value.getCurrentBitwidth().iter().all(|bitWidth|bitWidth <= CHUNK_SIZE),"Paillier output cipher bit width too large");
+		
 
 		// If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
-		Wire[] wires = value.getArray();
-		TypedWire[] typedWires = new TypedWire[wires.length];
-		ZkayType uint256 = ZkayType.ZkUint(256);
+		let wires = value.getArray();
+		let typedWires = vec![TypedWire::default();wires.length];
+		let uint256 = ZkayType.ZkUint(256);
 		for i in 0..wires.length {
-			typedWires[i] = new TypedWire(wires[i], uint256, name);
+			typedWires[i] = TypedWire::new(wires[i], uint256, name);
 		}
 		return typedWires;
 	}
 
-	private static LongElement uninitZeroToOne(LongElement val) {
+	 fn uninitZeroToOne(val:LongElement )->  LongElement {
 		// Uninitialized values have a ciphertext of all zeros, which is not a valid Paillier cipher.
 		// Instead, replace those values with 1 == g^0 * 1^n = Enc(0, 1)
-		Wire valIsZero = val.checkNonZero().invAsBit();
-		LongElement oneIfAllZero = new LongElement(valIsZero, 1 /* bit */);
+		let valIsZero = val.checkNonZero().invAsBit();
+		let oneIfAllZero = LongElement::new(valIsZero, 1 /* bit */);
 		return val.add(oneIfAllZero);
 	}
 
-	private static LongElement encodeSignedToModN(TypedWire input, LongElement key) {
+	 fn encodeSignedToModN( input:TypedWire ,  key:LongElement )->  LongElement {
 		if input.type.signed {
 			// Signed. Encode positive values as-is, negative values (-v) as (key - v)
-			int bits = input.type.bitwidth;
-			WireArray inputBits = input.wire.getBitWires(bits);
-			Wire signBit = inputBits.get(bits - 1);
+			let  bits = input.type.bitwidth;
+			let inputBits = input.wire.getBitWires(bits);
+			let signBit = inputBits.get(bits - 1);
 
-			LongElement posValue = new LongElement(inputBits);
-			LongElement rawNegValue = new LongElement(input.wire.invBits(bits).add(1).getBitWires(bits + 1));
-			LongElement negValue = key.subtract(rawNegValue);
+			let posValue = LongElement::new(inputBits);
+			let rawNegValue = LongElement::new(input.wire.invBits(bits).add(1).getBitWires(bits + 1));
+			let negValue = key.subtract(rawNegValue);
 
 			return posValue.muxBit(negValue, signBit);
 		} else {
 			// Unsigned, encode as-is, just convert the input wire to a LongElement
-			return new LongElement(input.wire.getBitWires(input.type.bitwidth));
+			return LongElement::new(input.wire.getBitWires(input.type.bitwidth));
 		}
 	}
 }

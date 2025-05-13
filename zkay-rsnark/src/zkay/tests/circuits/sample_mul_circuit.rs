@@ -1,18 +1,18 @@
 
 use zkay::zkay_circuit_base;
 use zkay::homomorphic_input;
-use static zkay::zkay_type::zk_uint;
-use static zkay::zkay_type::zk_int;
-use static zkay::zkay_type::zk_bool;
+use  zkay::zkay_type::zk_uint;
+use  zkay::zkay_type::zk_int;
+use  zkay::zkay_type::zk_bool;
 
 
-public class SampleMulCircuit extends ZkayCircuitBase {
-    public SampleMulCircuit() {
+pub struct SampleMulCircuit extends ZkayCircuitBase {
+    pub  SampleMulCircuit() {
         super("zk__Verify_Test_foo", 6, 4, 0, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
-    private void __zk__foo() {
+      __zk__foo() {
         stepIn("_zk__foo");
         addIn("zk__in0_cipher_val", 4, ZkUint(256));
         addOut("zk__out0_cipher", 4, ZkUint(256));
@@ -27,15 +27,15 @@ public class SampleMulCircuit extends ZkayCircuitBase {
     }
 
     
-    protected void buildCircuit() {
+      fn buildCircuit() {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__owner", 2);
 
         __zk__foo();
     }
 
-    public static void main(String[] args) {
-        SampleMulCircuit circuit = new SampleMulCircuit();
+    pub    main(args:Vec<String>) {
+        SampleMulCircuit circuit = SampleMulCircuit::new();
         circuit.run(args);
     }
 }

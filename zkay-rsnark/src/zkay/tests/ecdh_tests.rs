@@ -9,14 +9,14 @@ use zkay::zkay_ec_pk_derivation_gadget;
 
 
 
-public class EcdhTests {
+pub struct EcdhTests {
     @Test
-    public void testECDH() {
+    pub   testECDH() {
         BigInteger sec1 = ZkayECDHGenerator.rnd_to_secret("0032f06dfe06a7f7d1a4f4292c136ee78b5d4b4bb26904b2363330bd213ccea0");
         BigInteger sec2 = ZkayECDHGenerator.rnd_to_secret("6c0f17e169532e67f0fa96999f652bca942bd97617295a025eaa6c5d1cd3fd5c");
 
-        BigInteger pk1 = new BigInteger(ZkayECDHGenerator.derivePk(sec1), 16);
-        BigInteger pk2 = new BigInteger(ZkayECDHGenerator.derivePk(sec2), 16);
+        BigInteger pk1 = BigInteger::new(ZkayECDHGenerator.derivePk(sec1), 16);
+        BigInteger pk2 = BigInteger::new(ZkayECDHGenerator.derivePk(sec2), 16);
 
         String sk1 = ZkayECDHGenerator.getSharedSecret(pk2, sec1);
         String sk2 = ZkayECDHGenerator.getSharedSecret(pk1, sec2);
@@ -24,65 +24,65 @@ public class EcdhTests {
     }
 
     @Test
-    public void testSameAsGadget() {
+    pub   testSameAsGadget() {
         BigInteger sec1 = ZkayECDHGenerator.rnd_to_secret("0032f06dfe06a7f7d1a4f4292c136ee78b5d4b4bb26904b2363330bd213ccea0");
         BigInteger sec2 = ZkayECDHGenerator.rnd_to_secret("6c0f17e169532e67f0fa96999f652bca942bd97617295a025eaa6c5d1cd3fd5c");
 
-        CircuitGenerator cgen = new CircuitGenerator("pkder") {
+        CircuitGenerator cgen = CircuitGenerator::new("pkder") {
             
-            protected void buildCircuit() {
+              fn buildCircuit() {
                Wire s = createConstantWire(sec1);
-               makeOutput(new ZkayEcPkDerivationGadget(s, true).getOutputWires()[0]);
+               makeOutput(ZkayEcPkDerivationGadget::new(s, true).getOutputWires()[0]);
             }
 
             
-            public void generateSampleInput(CircuitEvaluator evaluator) {}
+            pub   generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
-        CircuitEvaluator evaluator = new CircuitEvaluator(cgen);
+        CircuitEvaluator evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
         BigInteger pk1_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
 
-        cgen = new CircuitGenerator("pkder") {
+        cgen = CircuitGenerator::new("pkder") {
             
-            protected void buildCircuit() {
+              fn buildCircuit() {
                 Wire s = createConstantWire(sec2);
-                makeOutput(new ZkayEcPkDerivationGadget(s, true).getOutputWires()[0]);
+                makeOutput(ZkayEcPkDerivationGadget::new(s, true).getOutputWires()[0]);
             }
 
             
-            public void generateSampleInput(CircuitEvaluator evaluator) {}
+            pub   generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
-        evaluator = new CircuitEvaluator(cgen);
+        evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
         BigInteger pk2_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
 
-        BigInteger pk1 = new BigInteger(ZkayECDHGenerator.derivePk(sec1), 16);
-        BigInteger pk2 = new BigInteger(ZkayECDHGenerator.derivePk(sec2), 16);
+        BigInteger pk1 = BigInteger::new(ZkayECDHGenerator.derivePk(sec1), 16);
+        BigInteger pk2 = BigInteger::new(ZkayECDHGenerator.derivePk(sec2), 16);
         Assert.assertEquals(pk1, pk1_circ);
         Assert.assertEquals(pk2, pk2_circ);
 
-        cgen = new CircuitGenerator("ecdh") {
+        cgen = CircuitGenerator::new("ecdh") {
             
-            protected void buildCircuit() {
+              fn buildCircuit() {
                 Wire p = createConstantWire(pk2);
                 Wire s = createConstantWire(sec1);
-                makeOutput(new ZkayECDHGadget(p, s, false).getOutputWires()[0]);
+                makeOutput(ZkayECDHGadget::new(p, s, false).getOutputWires()[0]);
             }
 
             
-            public void generateSampleInput(CircuitEvaluator evaluator) {}
+            pub   generateSampleInput(CircuitEvaluator evaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
-        evaluator = new CircuitEvaluator(cgen);
+        evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
         BigInteger sk_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
 
-        BigInteger sk_exp = new BigInteger(ZkayECDHGenerator.getSharedSecret(pk2, sec1), 16);
+        BigInteger sk_exp = BigInteger::new(ZkayECDHGenerator.getSharedSecret(pk2, sec1), 16);
         Assert.assertEquals(sk_exp, sk_circ);
     }
 }

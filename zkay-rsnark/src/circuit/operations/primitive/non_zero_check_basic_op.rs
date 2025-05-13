@@ -2,41 +2,45 @@
 
 use circuit::structure::wire;
 
-public class NonZeroCheckBasicOp extends BasicOp {
-
-	public NonZeroCheckBasicOp(Wire w, Wire out1, Wire out2 , String...desc) {
-		super(new Wire[] { w }, new Wire[]{out1, out2}, desc);
+pub struct NonZeroCheckBasicOp;
+	fn newNonZeroCheckBasicOp(w:Wire , out1:Wire , out2:Wire , desc:Vec<String>)-> Op<NonZeroCheckBasicOp> {
+            Op<NonZeroCheckBasicOp>{self.self.self.inputs:vec![w ],
+        self.self.self.outputs: vec![out1, out2] ,  
+        desc:descl.get(0).unwrap_or(&String::new()).clone(),
+        t:NonZeroCheckBasicOp
+        }
 	}
+ impl  BasicOp for Op<NonZeroCheckBasicOp>{
 
-	public String getOpcode(){
+
+
+	fn getOpcode(&self)->String{
 		return "zerop";
 	}
 	
-	public void compute(BigInteger[] assignment) {
+	fn compute(&self, mut assignment:Vec<BigInteger>){
 
-		if assignment[inputs[0].getWireId()].signum() == 0 {
-			assignment[outputs[1].getWireId()] = BigInteger.ZERO;
+		if assignment[self.inputs[0].getWireId()].signum() == 0 {
+			assignment[self.outputs[1].getWireId()] = BigInteger.ZERO;
 		} else {
-			assignment[outputs[1].getWireId()] = BigInteger.ONE;
+			assignment[self.outputs[1].getWireId()] = BigInteger.ONE;
 		}
-		assignment[outputs[0].getWireId()] = BigInteger.ZERO; // a dummy value
+		assignment[self.outputs[0].getWireId()] = BigInteger.ZERO; // a dummy value
 	}
 	
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof NonZeroCheckBasicOp) {
-			return false;
-		}
-		NonZeroCheckBasicOp op = (NonZeroCheckBasicOp) obj;
-		return inputs[0].equals(op.inputs[0]);
+		if self == rhs
+			{return true;}
+
+		let op =  rhs;
+		 self.inputs[0].equals(op.self.inputs[0])
 
 	}
 
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 2;
 	}
 

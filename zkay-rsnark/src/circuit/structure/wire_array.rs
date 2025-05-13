@@ -5,208 +5,201 @@ use circuit::eval::instruction;
 use circuit::operations::primitive::add_basic_op;
 use circuit::operations::primitive::pack_basic_op;
 
-public class WireArray {
+pub struct WireArray {
+	self.array: Vec<Wire> ;
+	  self.generator:CircuitGenerator;
+}
+	pub fn newWireArrayWithI32(n:i32)->WireArray {
+		newWireArrayWithNAndGenerator(n, CircuitGenerator.getActiveCircuitGenerator())
+	}
+	
+	pub fn newWireArrayWithNAndGenerator(n:i32, self.generator:CircuitGenerator)->WireArray {
+        WireArray::new(vec![Wire::default();n as usize],self.generator)
+	}
+	
+	pub fn newWireArrayWithArray(wireArray:Vec<Wire>)->WireArray {
+		WireArray::new(wireArray, CircuitGenerator.getActiveCircuitGenerator())
+	}
 
-	protected Wire[] array;
-	protected CircuitGenerator generator;
-
-	public WireArray(int n) {
-		this(n, CircuitGenerator.getActiveCircuitGenerator());
+impl WireArray{
+	pub fn new(wireArray:Vec<Wire>, self.generator:CircuitGenerator)->Self {
+        Self{self.array : wireArray,self.generator}
 	}
 	
-	public WireArray(int n, CircuitGenerator generator) {
-		array = new Wire[n];
-		this.generator = generator;
+	pub fn get(i:i32)->Wire{
+		return self.array[i];
 	}
 	
-	public WireArray(Wire[] wireArray) {
-		this(wireArray, CircuitGenerator.getActiveCircuitGenerator());
+	pub fn set(&mut self,i:i32, w:Wire){
+		self.self.array[i] = w;
 	}
 	
-	public WireArray(Wire[] wireArray, CircuitGenerator generator) {
-		this.array = wireArray;
-		this.generator = generator;
+	pub fn size(&self)->usize{
+		return self.self.array.len();
 	}
 	
-	public Wire get(int i){
-		return array[i];
+	pub fn asArray(&self)-> Vec<Wire>{
+		return self.self.array.clone();
 	}
 	
-	public void set(int i, Wire w){
-		array[i] = w;
-	}
-	
-	public int size(){
-		return array.length;
-	}
-	
-	public Wire[] asArray(){
-		return array;
-	}
-	
-	public WireArray mulWireArray(WireArray v, int desiredLength, String...desc) {
-		Wire[] ws1 = adjustLength( array, desiredLength);
-		Wire[] ws2 = adjustLength( v.array, desiredLength);
-		Wire[] out = new Wire[desiredLength];
-		for i in 0..out.length {
+	pub fn mulWireArray(v:WireArray , desiredLength:i32 , desc:Vec<String>)->WireArray {
+let ws1 = adjustLength( self.array, desiredLength);
+let ws2 = adjustLength( v.self.array, desiredLength);
+let out = vec![Wire::default();desiredLength];
+		for i in 0..out.len() {
 			out[i] = ws1[i].mul(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
 	
-	public Wire sumAllElements(String...desc) {
-		boolean allConstant = true;
-		Wire output;
-		BigInteger sum = BigInteger.ZERO;
-		for (Wire w : array) {
-			if !(w instanceof ConstantWire) {
+	pub fn sumAllElements(desc:Vec<String>)->Wire {
+let allConstant = true;
+let sum = BigInteger.ZERO;
+		for w in  &self.self.array {
+			if w.ConstantWire().is_none() {
 				allConstant = false;
 				break;
 			} else {
-				sum = sum.add(((ConstantWire) w).getConstant());
+				sum = sum.add( w.getConstant());
 			}
 		}
-		if allConstant {
-			output = generator.createConstantWire(sum, desc);
-		} else {
-			output = new LinearCombinationWire(generator.currentWireId+=1);
-			Instruction op = new AddBasicOp(array, output, desc);
-//			generator.addToEvaluationQueue(op);
-			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-			if(cachedOutputs == null){
-				return output;
-			}
-			else{
-				generator.currentWireId--;
-				return cachedOutputs[0];
-			}	
+		if !allConstant {
+
+			let output = LinearCombinationWire::new(self.generator.currentWireId);
+            self.generator.currentWireId+=1;
+let op = AddBasicOp::new(self.array, output, desc);
+//			self.generator.addToEvaluationQueue(op);
+let cachedOutputs = self.generator.addToEvaluationQueue(op);
+			return if let Some(cachedOutputs) =cachedOutputs{
+				self.self.generator.currentWireId-=1;
+				 cachedOutputs[0].clone()
+			}	else{
+             output}
 		}
-		return output;
+
+		self.generator.createConstantWire(sum, desc)
 	}
 	
 	
-	public WireArray addWireArray(WireArray v, int desiredLength, String...desc) {
-		Wire[] ws1 = adjustLength(array, desiredLength);
-		Wire[] ws2 = adjustLength( v.array, desiredLength);
-		Wire[] out = new Wire[desiredLength];
-		for i in 0..out.length {
+	pub fn addWireArray(v:WireArray , desiredLength:i32 , desc:Vec<String>)->WireArray {
+let ws1 = adjustLength(self.array, desiredLength);
+let ws2 = adjustLength( v.self.array, desiredLength);
+let out = vec![Wire::default();desiredLength];
+		for i in 0..out.len() {
 			out[i] = ws1[i].add(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
-	public WireArray xorWireArray(WireArray v, int desiredLength, String...desc) {
-		Wire[] ws1 = adjustLength(array, desiredLength);
-		Wire[] ws2 = adjustLength(v.array, desiredLength);
-		Wire[] out = new Wire[desiredLength];
-		for i in 0..out.length {
+	pub fn xorWireArray(v:WireArray , desiredLength:i32 , desc:Vec<String>)->WireArray {
+let ws1 = adjustLength(self.array, desiredLength);
+let ws2 = adjustLength(v.self.array, desiredLength);
+let out = vec![Wire::default();desiredLength];
+		for i in 0..out.len() {
 			out[i] = ws1[i].xor(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
-	public WireArray xorWireArray(WireArray v, String...desc) {
-		if(size() != v.size()){
-			throw new IllegalArgumentException();
-		}
-		Wire[] ws1 = array;
-		Wire[] ws2 = v.array;
+	pub fn xorWireArray(v:WireArray , desc:Vec<String>)->WireArray {
+		assert!(self.self.size() == v.self.size());
+let ws1 = self.array;
+let ws2 = v.self.array;
 		
-		Wire[] out = new Wire[size()];
-		for i in 0..out.length {
+let out = vec![Wire::default();self.size()];
+		for i in 0..out.len() {
 			out[i] = ws1[i].xor(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
-	public WireArray andWireArray(WireArray v, int desiredLength, String...desc) {
-		Wire[] ws1 = adjustLength( array, desiredLength);
-		Wire[] ws2 = adjustLength( v.array, desiredLength);
-		Wire[] out = new Wire[desiredLength];
-		for i in 0..out.length {
+	pub fn andWireArray(v:WireArray , desiredLength:i32 , desc:Vec<String>)->WireArray {
+let ws1 = adjustLength( self.array, desiredLength);
+let ws2 = adjustLength( v.self.array, desiredLength);
+let out = vec![Wire::default();desiredLength];
+		for i in 0..out.len() {
 			out[i] = ws1[i].mul(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
-	public WireArray orWireArray(WireArray v, int desiredLength, String...desc) {
-		Wire[] ws1 = adjustLength(array, desiredLength);
-		Wire[] ws2 = adjustLength(v.array, desiredLength);
-		Wire[] out = new Wire[desiredLength];
-		for i in 0..out.length {
+	pub fn orWireArray(v:WireArray , desiredLength:i32 , desc:Vec<String>)->WireArray {
+let ws1 = adjustLength(self.array, desiredLength);
+let ws2 = adjustLength(v.self.array, desiredLength);
+let out = vec![Wire::default();desiredLength];
+		for i in 0..out.len() {
 			out[i] = ws1[i].or(ws2[i], desc);
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}
 	
 	
 	
-	public WireArray invAsBits(int desiredBitWidth, String...desc) {
-		Wire[] out = new Wire[desiredBitWidth];
-		for(int i = 0; i < desiredBitWidth; i+=1){
-			if(i < array.length){
-				out[i] = array[i].invAsBit(desc);
+	pub fn invAsBits(desiredBitWidth:i32 , desc:Vec<String>) ->WireArray{
+let out = vec![Wire::default();desiredBitWidth];
+		for i in  0.. desiredBitWidth{
+			if i < self.array.len(){
+				out[i] = self.array[i].invAsBit(desc);
 			}
 			else{
-				out[i] = generator.oneWire;
+				out[i] = self.generator.oneWire;
 			}
 		}
-		return new WireArray(out);
+		return WireArray::new(out);
 	}	
 	
 	
-	private Wire[] adjustLength(Wire[] ws, int desiredLength) {
-		if(ws.length == desiredLength){
+	fn adjustLength(ws:Vec<Wire> , desiredLength:i32 )->Vec<Wire> {
+		if ws.len() == desiredLength{
 			return ws;
 		}
-		Wire[] newWs = new Wire[desiredLength];
-		System.arraycopy(ws, 0, newWs, 0, Math.min(ws.length, desiredLength));
-		if ws.length < desiredLength {
-			for (int i = ws.length; i < desiredLength; i+=1) {
-				newWs[i] = generator.zeroWire;
+        let mut newWs = vec![Wire::default();desiredLength];
+		newWs[0, std::cmp::min(ws.len(), desiredLength)].clone_from_slice(&ws);
+		if ws.len() < desiredLength {
+			for i in  ws.len().. desiredLength{
+				newWs[i] = self.generator.zeroWire;
 			}
 		}
 		return newWs;
 	}
 	
-	public WireArray adjustLength(int desiredLength) {
-		if(array.length == desiredLength){
+	pub fn adjustLength(desiredLength:i32 ) ->WireArray{
+		if self.array.len() == desiredLength{
 			return this;
 		}
-		Wire[] newWs = new Wire[desiredLength];
-		System.arraycopy(array, 0, newWs, 0, Math.min(array.length, desiredLength));
-		if array.length < desiredLength {
-			for (int i = array.length; i < desiredLength; i+=1) {
-				newWs[i] = generator.zeroWire;
+let newWs = vec![Wire::default();desiredLength];
+		newWs[.. std::cmp::min(self.array.len(), desiredLength)].clone_from_slice(&self.array);
+		if self.array.len() < desiredLength {
+			for i in  self.array.len().. desiredLength{
+				newWs[i] = self.generator.zeroWire;
 			}
 		}
-		return new WireArray(newWs);
+		return WireArray::new(newWs);
 	}
 	
 	
 	
-	public Wire packAsBits(int n, String...desc) {
+	pub fn packAsBits(n:i32, desc:Vec<String>)->Wire {
 		return packAsBits(0, n, desc);
 	}
 	
-	public Wire packAsBits(String...desc) {
-		return packAsBits(array.length, desc);
+	pub fn packAsBits(desc:Vec<String>) ->Wire{
+		return packAsBits(self.array.len(), desc);
 	}
 	
-	protected BigInteger checkIfConstantBits(String...desc){
-		boolean allConstant = true;
-		BigInteger sum = BigInteger.ZERO;
-		for(int i = 0; i < array.length; i+=1){
-			Wire w = array[i];
-			if(w instanceof ConstantWire){
-				ConstantWire cw = (ConstantWire)w;
-				BigInteger v = cw.constant;
-				if(v.equals(BigInteger.ONE)){
+	 fn  checkIfConstantBits(desc:Vec<String>)->Option<BigInteger>{
+let mut allConstant = true;
+let sum = BigInteger.ZERO;
+		for i in  0.. self.array.len(){
+			let w = self.array[i];
+			if let Some(cw)=w.ConstantWire(){
+                let v = cw.constant;
+				if v.equals(BigInteger.ONE){
 					sum = sum.add(v.shiftLeft(i));
 				}
 				else if !v.equals(BigInteger.ZERO){
-					println!("Warning, one of the bit wires is constant but not binary : " + Util.getDesc(desc));					
+					println!("Warning, one of the bit wires is constant but not binary : {}" , Util::getDesc(desc));					
 				}
 				
 			}
@@ -214,30 +207,24 @@ public class WireArray {
 				allConstant = false;
 			}
 		}
-		if(allConstant)
-			return sum;
-		else
-			return null;
+		 allConstant.then_some(sum)
 	}
 
-	public Wire packAsBits(int from, int to, String...desc) {
+	pub fn packAsBits(from:i32 , to:i32 , desc:Vec<String>)->Wire {
+		assert!(from <= to && to <= self.array.len(),"Invalid bounds: from > to");
 		
-		if from > to || to > array.length
-			throw new IllegalArgumentException("Invalid bounds: from > to");
-		
-		Wire[] bits = Arrays.copyOfRange(array, from, to);
-		boolean allConstant = true;
-		BigInteger sum = BigInteger.ZERO;
-		for(int i = 0; i < bits.length; i+=1){
-			Wire w = bits[i];
-			if(w instanceof ConstantWire){
-				ConstantWire cw = (ConstantWire)w;
-				BigInteger v = cw.constant;
-				if(v.equals(BigInteger.ONE)){
+let bits =self.array[from.. to].to_vec();
+let allConstant = true;
+let sum = BigInteger.ZERO;
+		for i in  0.. bits.len(){
+			let w = bits[i];
+			if let Some(cw)=w.ConstantWire(){
+let v = cw.constant;
+				if v.equals(BigInteger.ONE){
 					sum = sum.add(v.shiftLeft(i));
 				}
-				else if !v.equals(BigInteger.ZERO){
-					panic!("Trying to pack non-binary constant bits : " + Util.getDesc(desc));					
+				else {
+					assert!(v.equals(BigInteger.ZERO),"Trying to pack non-binary constant bits : {}" , Util::getDesc(desc));					
 				}
 				
 			}
@@ -245,108 +232,109 @@ public class WireArray {
 				allConstant = false;
 			}
 		}
-		if(!allConstant){
-			Wire out = new LinearCombinationWire(generator.currentWireId+=1);
-			out.setBits(new WireArray(bits));
-			Instruction op = new PackBasicOp(bits, out, desc);
-			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-			if(cachedOutputs == null){
-				return out;		
+		if !allConstant{
+let out = LinearCombinationWire::new(self.generator.currentWireId+=1);
+			out.setBits(WireArray::new(bits));
+let op = PackBasicOp::new(bits, out, desc);
+let cachedOutputs = self.generator.addToEvaluationQueue(op);
+			return if let Some(cachedOutputs) =cachedOutputs{
+                self.self.generator.currentWireId-=1;         
+				 cachedOutputs[0].clone()
+            else
+				 {out}	
 			}
-			else{
-				generator.currentWireId--;
-				return cachedOutputs[0];
-			}
-		} else{
-			return generator.createConstantWire(sum, desc);
+			
 
-		}
+		} 
+			 self.generator.createConstantWire(sum, desc)
+
+		
 	}
 	
 	
-	public WireArray rotateLeft(int numBits, int s, String...desc) {
-		Wire[] bits = adjustLength(array, numBits);
-		Wire[] rotatedBits = new Wire[numBits];
+	pub fn rotateLeft(numBits:i32 , s:i32 , desc:Vec<String>)->WireArray {
+		Vec<Wire> bits = adjustLength(self.array, numBits);
+let mut rotatedBits = vec![Wire::default();numBits];
 		for i in 0..numBits {
 			if i < s
-				rotatedBits[i] = bits[i + (numBits - s)];
+				{rotatedBits[i] = bits[i + (numBits - s)].clone();}
 			else
-				rotatedBits[i] = bits[i - s];
+				{rotatedBits[i] = bits[i - s].clone();}
 		}
-		return new WireArray(rotatedBits);
+		return WireArray::new(rotatedBits);
 	}
 	
-	public WireArray rotateRight(int numBits, int s, String...desc) {
-		Wire[] bits = adjustLength(array, numBits);
-		Wire[] rotatedBits = new Wire[numBits];
+	pub fn rotateRight(numBits:i32 , s:i32 , desc:Vec<String>)->WireArray {
+let bits = adjustLength(self.array, numBits);
+let rotatedBits = vec![Wire::default();numBits];
 		for i in 0..numBits {
 			if i >= numBits - s
-				rotatedBits[i] = bits[i - (numBits - s)];
+				{rotatedBits[i] = bits[i - (numBits - s)];}
 			else
-				rotatedBits[i] = bits[i + s];
+				{rotatedBits[i] = bits[i + s];}
 		}
-		return new WireArray(rotatedBits);
+		return WireArray::new(rotatedBits);
 	}
 	
 	
 
-	public WireArray shiftLeft(int numBits, int s, String...desc) {
-		Wire[] bits = adjustLength( array, numBits);
-		Wire[] shiftedBits = new Wire[numBits];
+	pub fn shiftLeft(numBits:i32 , s:i32 , desc:Vec<String>)->WireArray {
+let bits = adjustLength( self.array, numBits);
+let shiftedBits = vec![Wire::default();numBits];
 		for i in 0..numBits {
 			if i < s
-				shiftedBits[i] = generator.zeroWire;
+				{shiftedBits[i] = self.generator.zeroWire;}
 			else
-				shiftedBits[i] = bits[i - s];
+				{shiftedBits[i] = bits[i - s];}
 		}
-		return new WireArray(shiftedBits);
+		return WireArray::new(shiftedBits);
 	}
 	
-	public WireArray shiftRight(int numBits, int s, String...desc) {
-		Wire[] bits = adjustLength(array, numBits);
-		Wire[] shiftedBits = new Wire[numBits];
+	pub fn shiftRight(numBits:i32 , s:i32 , desc:Vec<String>)->WireArray {
+let bits = adjustLength(self.array, numBits);
+let shiftedBits = vec![Wire::default();numBits];
 		for i in 0..numBits {
 			if i >= numBits - s
-				shiftedBits[i] = generator.zeroWire;
+				{shiftedBits[i] = self.generator.zeroWire;}
 			else
-				shiftedBits[i] = bits[i + s];
+				{shiftedBits[i] = bits[i + s];}
 		}
-		return new WireArray(shiftedBits);
+		return WireArray::new(shiftedBits);
 	}
 		
-	public Wire[] packBitsIntoWords(int wordBitwidth, String...desc){
-		int numWords = (int)Math.ceil(array.length*1.0/wordBitwidth);
-		Wire[] padded = adjustLength( array, wordBitwidth*numWords);
-		Wire[] result = new Wire[numWords];
-		for(int i = 0; i < numWords; i+=1){
-			result[i] = new WireArray(Arrays.copyOfRange(padded, i*wordBitwidth, (i+1)*wordBitwidth)).packAsBits();
+	pub fn packBitsIntoWords(wordBitwidth:i32 , desc:Vec<String>)-> Vec<Wire> {
+let numWords = (self.array.len() as f64*1.0/wordBitwidth as f64).ceil() as i32;
+let padded = adjustLength( self.array, wordBitwidth*numWords);
+let result = vec![Wire::default();numWords];
+		for i in  0.. numWords{
+			result[i] = WireArray::new(Arrays.copyOfRange(padded, i*wordBitwidth, (i+1)*wordBitwidth)).packAsBits();
 		}
 		return result;
 	}
 	
-	public Wire[] packWordsIntoLargerWords(int wordBitwidth, int numWordsPerLargerWord, String...desc){
-		int numLargerWords = (int)Math.ceil(array.length*1.0/numWordsPerLargerWord);
-		Wire[] result = new Wire[numLargerWords];
-		Arrays.fill(result, generator.zeroWire);
-		for(int i = 0; i < array.length; i+=1){
-			int subIndex = i % numWordsPerLargerWord;
-			result[i/numWordsPerLargerWord] = result[i/numWordsPerLargerWord].add(array[i]
-					.mul(new BigInteger("2").pow(subIndex*wordBitwidth)));
+	pub fn packWordsIntoLargerWords(wordBitwidth:i32 , numWordsPerLargerWord:i32 , desc:Vec<String>)-> Vec<Wire> {
+let numLargerWords = (i32)Math.ceil(self.array.len()*1.0/numWordsPerLargerWord);
+let result = vec![Wire::default();numLargerWords];
+		Arrays.fill(result, self.generator.zeroWire);
+		for i in  0.. self.array.len(){
+let subIndex = i % numWordsPerLargerWord;
+			result[i/numWordsPerLargerWord] = result[i/numWordsPerLargerWord].add(self.array[i]
+					.mul(BigInteger::new("2").pow(subIndex*wordBitwidth)));
  		}
 		return result;
 		
 	}
 
-	public WireArray getBits(int bitwidth, String...desc) {
-		Wire[] bits = new Wire[bitwidth * array.length];
-		int idx = 0;
-		for i in 0..array.length {
-			Wire[] tmp = array[i].getBitWires(bitwidth, desc).asArray();
+	pub fn getBits(bitwidth:i32 , desc:Vec<String>) ->WireArray{
+let bits = vec![Wire::default();bitwidth * self.array.len()];
+let idx = 0;
+		for i in 0..self.array.len() {
+let tmp = self.array[i].getBitWires(bitwidth, desc).asArray();
 			for j in 0..bitwidth {
 				bits[idx+=1] = tmp[j];
 			}
 		}
-		return new WireArray(bits);
+		return WireArray::new(bits);
 	}
 	
 }

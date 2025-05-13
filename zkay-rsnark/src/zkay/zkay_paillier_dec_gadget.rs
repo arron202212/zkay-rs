@@ -7,46 +7,48 @@ use examples::gadgets::math::long_integer_floor_div_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
 use examples::gadgets::math::long_integer_mod_pow_gadget;
 
-public class ZkayPaillierDecGadget extends Gadget {
+pub struct ZkayPaillierDecGadget  {
+	 n:LongElement,
+	 nSquare:LongElement,
+	 nBits:i32,
+	 lambda:LongElement,
+	 mu:LongElement,
+	 cipher:LongElement,
+	 plain:LongElement,
+}
 
-	 LongElement n;
-	 LongElement nSquare;
-	 int nBits;
-	 LongElement lambda;
-	 LongElement mu;
-	 LongElement cipher;
-	private LongElement plain;
-
-	public ZkayPaillierDecGadget(LongElement n, int nBits, LongElement lambda, LongElement mu, LongElement cipher,
-	                             String... desc) {
+impl ZkayPaillierDecGadget{
+	pub  fn new(n:LongElement , nBits:i32 , lambda:LongElement , mu:LongElement , cipher:LongElement ,
+	                             desc:Vec<String>)->Self {
 		super(desc);
-		this.n = n;
-		this.nBits = nBits;
-		int nSquareMaxBits = 2 * nBits;
-		int maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
-		this.nSquare = n.mul(n).align(maxNumChunks);
-		this.lambda = lambda;
-		this.mu = mu;
-		this.cipher = cipher;
+		self.n = n;
+		self.nBits = nBits;
+		let nSquareMaxBits = 2 * nBits;
+		let maxNumChunks = (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+		self.nSquare = n.mul(n).align(maxNumChunks);
+		self.lambda = lambda;
+		self.mu = mu;
+		self.cipher = cipher;
 		buildCircuit();
 	}
-
-	private void buildCircuit() {
-		int nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
+}
+impl Gadget for ZkayPaillierDecGadget{
+	  fn buildCircuit() {
+		let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
 
 		// plain = L(cipher^lambda mod n^2) * mu mod n
-		LongElement cPowLambda = new LongIntegerModPowGadget(cipher, lambda, nSquare, nSquareMinBits, "c^lambda").getResult();
-		LongElement lOutput = new LongIntegerFloorDivGadget(cPowLambda.subtract(1), n, "(c^lambda - 1) / n").getQuotient();
-		LongElement timesMu = lOutput.mul(mu);
-		plain = new LongIntegerModGadget(timesMu, n, nBits, true).getRemainder();
+		let cPowLambda = LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, "c^lambda").getResult();
+		let lOutput = LongIntegerFloorDivGadget::new(cPowLambda.subtract(1), n, "(c^lambda - 1) / n").getQuotient();
+		let timesMu = lOutput.mul(mu);
+		plain = LongIntegerModGadget::new(timesMu, n, nBits, true).getRemainder();
 	}
 
-	public LongElement getPlaintext() {
+	pub  fn getPlaintext()-> LongElement {
 		return plain;
 	}
 
 	
-	public Wire[] getOutputWires() {
+	pub fn getOutputWires()->Vec<Wire>  {
 		return plain.getArray();
 	}
 }

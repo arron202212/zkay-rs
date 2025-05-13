@@ -4,67 +4,66 @@ use circuit::config::config;
 use circuit::structure::wire;
 use util::util;
 
-public class ConstMulBasicOp extends BasicOp {
+pub struct ConstMulBasicOp {
+	  constInteger:BigInteger;
+	 inSign:bool;
+}
 
-	private BigInteger constInteger;
-	private boolean inSign;
-	
-	public ConstMulBasicOp(Wire w, Wire out, BigInteger constInteger,
-			String...desc) {
-		super(new Wire[] { w }, new Wire[] { out }, desc);
-		inSign = constInteger.signum() == -1;
+	pub fn newConstMulBasicOp(w:Wire , out:Wire , mut constInteger:BigInteger ,
+			desc:Vec<String>)->Op<ConstMulBasicOp> {
+		let inSign = constInteger.signum() == -1;
 		if !inSign {
-			constInteger = Util.mod(constInteger, Config.FIELD_PRIME);
-			this.constInteger = constInteger;
+			constInteger = Util::mod(constInteger, Config.FIELD_PRIME);
 		} else {
-			constInteger = constInteger.negate();
-			constInteger = Util.mod(constInteger, Config.FIELD_PRIME);
-			this.constInteger = Config.FIELD_PRIME.subtract(constInteger);
+			let mut _constInteger = constInteger.negate();
+			_constInteger = Util::mod(_constInteger, Config.FIELD_PRIME);
+			constInteger = Config.FIELD_PRIME.subtract(_constInteger);
 		}
+         Op<ConstMulBasicOp>{self.inputs:vec![w ],
+        self.outputs: vec![out] ,  
+        desc:desc[0].clone(),
+        t:ConstMulBasicOp{constInteger,inSign}
+        }
 	}
+impl   BasicOp for Op<ConstMulBasicOp>{
 
-	public String getOpcode(){
+
+	fn getOpcode(&self)->String{
 		if !inSign {
-			return "const-mul-" + constInteger.toString(16);
+			fomrat!( "const-mul-{:x}",constInteger)
 		} else{
-			return "const-mul-neg-" + Config.FIELD_PRIME.subtract(constInteger).toString(16);
+			fomrat!( "const-mul-neg-{:x}",Config.FIELD_PRIME.subtract(constInteger))
 		}
 	}
 	
 	
-	public void compute(BigInteger[] assignment) {
-		BigInteger result = assignment[inputs[0].getWireId()].multiply(constInteger);
+	fn compute(&self, assignment:Vec<BigInteger>){
+		let mut  result = assignment[self.inputs[0].getWireId()].multiply(self.t.constInteger);
 		if result.bitLength() >= Config.LOG2_FIELD_PRIME {
 			result = result.mod(Config.FIELD_PRIME);
 		}
-		assignment[outputs[0].getWireId()] = result;
+		assignment[self.outputs[0].getWireId()] = result;
 	}
 	
 	
-	public boolean equals(Object obj) {
-		if this == obj
-			return true;
-		if !(obj instanceof ConstMulBasicOp) {
-			return false;
-		}
-		ConstMulBasicOp op = (ConstMulBasicOp) obj;
-		return inputs[0].equals(op.inputs[0]) && constInteger.equals(op.constInteger);
-
+	fn equals(&self,rhs:&Self)->bool {
+		if self == rhs
+			{return true;}
+		let  op =  rhs;
+		self.inputs[0].equals(op.inputs[0]) && self.t.constInteger.equals(op.t.constInteger)
 	}
 	
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 0;
 	}
 
-
-	
-	public int hashCode() {
-		int h = constInteger.hashCode();
-		for(Wire in:inputs){
-			h+=in.hashCode();
+	fn hashCode(&self)->i32{
+		let mut  h = self.t.constInteger.hashCode();
+		for i in inputs{
+			h+=i.hashCode();
 		}
-		return h;
+		h
 	}
 	
 	

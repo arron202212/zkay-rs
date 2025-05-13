@@ -3,23 +3,23 @@
 use circuit::operations::gadget;
 use circuit::structure::wire;
 
-public class DotProductGadget extends Gadget {
+pub struct DotProductGadget extends Gadget {
 
-	private Wire[] a;
-	private Wire[] b;
-	private Wire output;
+	 Vec<Wire> a;
+	 Vec<Wire> b;
+	 Wire output;
 
-	public DotProductGadget(Wire[] a, Wire[] b, String... desc) {
+	pub  DotProductGadget(a:Vec<Wire>, b:Vec<Wire>, desc:Vec<String>) {
 		super(desc);
 		if a.length != b.length {
-			throw new IllegalArgumentException();
+			assert!();
 		}
-		this.a = a;
-		this.b = b;
+		self.a = a;
+		self.b = b;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 		output = generator.getZeroWire();
 		for i in 0..a.length {
 			Wire product = a[i].mul(b[i], "Multiply elements # " + i);
@@ -28,7 +28,7 @@ public class DotProductGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { output };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { output };
 	}
 }

@@ -17,74 +17,74 @@ use circuit::structure::wire;
  * 
  * 
  */
-public class FieldExtensionDHKeyExchange extends Gadget {
+pub struct FieldExtensionDHKeyExchange extends Gadget {
 
-	private Wire[] g; // base
-	private Wire[] h; // other party's public input (supposedly, h = g^(the
+	 Vec<Wire> g; // base
+	 Vec<Wire> h; // other party's pub  input (supposedly, h = g^(the
 						// other party's secret))
 
-	private Wire[] secretExponentBits; // the bits of the secret exponent of the
+	 Vec<Wire> secretExponentBits; // the bits of the secret exponent of the
 										// party
 	// executing this gadget
-	private long omega;
-	private int mu;
+	 long omega;
+	 i32 mu;
 
 	// gadget outputs
-	private Wire[] outputPublicValue; // g^s (to be sent to the other party)
-	private Wire[] sharedSecret; // the derived secret key h^s
-	private Wire[][] gPowersTable;
-	private Wire[][] hPowersTable;
+	 Vec<Wire> outputPublicValue; // g^s (to be sent to the other party)
+	 Vec<Wire> sharedSecret; // the derived secret key h^s
+	 Vec<Vec<Wire>> gPowersTable;
+	 Vec<Vec<Wire>> hPowersTable;
 
 	/**
 	 * Note: In the default mode, the gadget only validates the secret input
-	 * provided by the prover, but it does not validate that the base and public
+	 * provided by the prover, but it does not validate that the base and pub 
 	 * input of the other's party are proper elements. Since these values are
-	 * public, they could be checked outside the circuit.
+	 * pub , they could be checked outside the circuit.
 	 * 
 	 * If the validation is needed inside, the method "validateInputs()" should
 	 * be called explicitly. Example is provided in
 	 * FieldExtensionDHKeyExchange_Test
 	 * 
 	 */
-	public FieldExtensionDHKeyExchange(Wire[] g, Wire[] h,
-			Wire[] secretExponentBits, long omega, String desc) {
+	pub  FieldExtensionDHKeyExchange(g:Vec<Wire>, h:Vec<Wire>,
+			secretExponentBits:Vec<Wire>, long omega, String desc) {
 		super(desc);
-		this.g = g;
-		this.h = h;
-		this.secretExponentBits = secretExponentBits;
-		this.omega = omega;
+		self.g = g;
+		self.h = h;
+		self.secretExponentBits = secretExponentBits;
+		self.omega = omega;
 		mu = g.length;
 		if h.length != g.length {
-			throw new IllegalArgumentException(
+			assert!(
 					"g and h must have the same dimension");
 		}
 
-		// since this is typically a private input by the prover,
+		// since this is typically a  input by the prover,
 		// the check is also done here for safety. No need to remove this if
 		// done also outside the gadget. The back end takes care of caching
-		for (Wire w : secretExponentBits) {
+		for w in secretExponentBits {
 			generator.addBinaryAssertion(w);
 		}
 
 		buildCircuit();
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 		gPowersTable = preparePowersTable(g);
 		hPowersTable = preparePowersTable(h);
 		outputPublicValue = exp(g, secretExponentBits, gPowersTable);
 		sharedSecret = exp(h, secretExponentBits, hPowersTable);
 	}
 
-	private Wire[] mul(Wire[] a, Wire[] b) {
-		Wire[] c = new Wire[mu];
-		int i, j;
-		for (i = 0; i < mu; i += 1) {
+	 Vec<Wire> mul(a:Vec<Wire>, b:Vec<Wire>) {
+		Vec<Wire> c = vec![Wire::default();mu];
+		i32 i, j;
+		for i in 0..mu
 			c[i] = generator.getZeroWire();
 		}
-		for (i = 0; i < mu; i += 1) {
-			for (j = 0; j < mu; j += 1) {
-				int k = i + j;
+		for i in 0..mu
+			for j in 0..mu
+				i32 k = i + j;
 				if k < mu {
 					c[k] = c[k].add(a[i].mul(b[j]));
 				}
@@ -97,22 +97,22 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 		return c;
 	}
 
-	private Wire[][] preparePowersTable(Wire[] base) {
-		Wire[][] powersTable = new Wire[secretExponentBits.length + 1][mu];
+	 Vec<Vec<Wire>> preparePowersTable(base:Vec<Wire>) {
+		Vec<Vec<Wire>> powersTable = vec![Wire::default();secretExponentBits.length + 1][mu];
 		powersTable[0] = Arrays.copyOf(base, mu);
-		for (int j = 1; j < secretExponentBits.length + 1; j += 1) {
+		for j in 1..secretExponentBits.length + 1{
 			powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
 		}
 		return powersTable;
 	}
 
-	private Wire[] exp(Wire[] base, Wire[] expBits, Wire[][] powersTable) {
+	 Vec<Wire> exp(base:Vec<Wire>, expBits:Vec<Wire>, Vec<Vec<Wire>> powersTable) {
 
-		Wire[] c = new Wire[mu];
+		Vec<Wire> c = vec![Wire::default();mu];
 		Arrays.fill(c, generator.getZeroWire());
 		c[0] = generator.getOneWire();
 		for j in 0..expBits.length {
-			Wire[] tmp = mul(c, powersTable[j]);
+			Vec<Wire> tmp = mul(c, powersTable[j]);
 			for i in 0..mu {
 				c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
 			}
@@ -121,7 +121,7 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 	}
 
 	// TODO: Test more scenarios
-	public void validateInputs(BigInteger subGroupOrder) {
+	pub   validateInputs(BigInteger subGroupOrder) {
 
 		// g and h are not zero and not one
 
@@ -144,8 +144,8 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 
 		// verify order of points
 
-		int bitLength = subGroupOrder.bitLength();
-		Wire[] bits = new Wire[bitLength];
+		i32 bitLength = subGroupOrder.bitLength();
+		Vec<Wire> bits = vec![Wire::default();bitLength];
 		for i in 0..bitLength {
 			if subGroupOrder.testBit(i)
 				bits[i] = generator.getOneWire();
@@ -153,8 +153,8 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 				bits[i] = generator.getZeroWire();
 		}
 
-		Wire[] result1 = exp(g, bits, gPowersTable);
-		Wire[] result2 = exp(h, bits, hPowersTable);
+		Vec<Wire> result1 = exp(g, bits, gPowersTable);
+		Vec<Wire> result2 = exp(h, bits, hPowersTable);
 
 		// both should be one
 
@@ -167,15 +167,15 @@ public class FieldExtensionDHKeyExchange extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return Util.concat(outputPublicValue, sharedSecret);
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return Util::concat(outputPublicValue, sharedSecret);
 	}
 
-	public Wire[] getOutputPublicValue() {
+	pub  Vec<Wire> getOutputPublicValue() {
 		return outputPublicValue;
 	}
 
-	public Wire[] getSharedSecret() {
+	pub  Vec<Wire> getSharedSecret() {
 		return sharedSecret;
 	}
 

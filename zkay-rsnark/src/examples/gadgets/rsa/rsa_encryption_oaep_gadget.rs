@@ -10,7 +10,7 @@ use examples::gadgets::math::long_integer_mod_gadget;
 
 /**
  * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
- * hardcoded public exponent of 0x10001, and uses SHA256 as the hash function
+ * hardcoded pub  exponent of 0x10001, and uses SHA256 as the hash function
  * for mask generation function (mgf).
  * This gadget can accept a hardcoded or a variable RSA modulus. See the
  * corresponding generator example. 
@@ -23,64 +23,64 @@ use examples::gadgets::math::long_integer_mod_gadget;
  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
  */
 
-public class RSAEncryptionOAEPGadget extends Gadget {
+pub struct RSAEncryptionOAEPGadget extends Gadget {
 
-	private LongElement modulus;
+	 LongElement modulus;
 
 	// every wire represents a byte in the following three arrays
-	private Wire[] plainText;
-	private Wire[] seed;
+	 Vec<Wire> plainText;
+	 Vec<Wire> seed;
 
-	private Wire[] ciphertext;
+	 Vec<Wire> ciphertext;
 
-	private int rsaKeyBitLength; // in bits (assumed to be divisible by 8)
-	public static final int SHA256_DIGEST_LENGTH = 32; // in bytes
+	 i32 rsaKeyBitLength; // in bits (assumed to be divisible by 8)
+	pub   i32 SHA256_DIGEST_LENGTH = 32; // in bytes
 
-	public static final byte[] lSHA256_HASH = new byte[] { (byte) 0xe3,
+	pub   Vec<byte> lSHA256_HASH = vec![byte::default();] { (byte) 0xe3,
 			(byte) 0xb0, (byte) 0xc4, 0x42, (byte) 0x98, (byte) 0xfc, 0x1c,
 			0x14, (byte) 0x9a, (byte) 0xfb, (byte) 0xf4, (byte) 0xc8,
 			(byte) 0x99, 0x6f, (byte) 0xb9, 0x24, 0x27, (byte) 0xae, 0x41,
 			(byte) 0xe4, 0x64, (byte) 0x9b, (byte) 0x93, 0x4c, (byte) 0xa4,
 			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 };
 
-	public RSAEncryptionOAEPGadget(LongElement modulus, Wire[] plainText,
-			Wire[] seed, int rsaKeyBitLength, String... desc) {
+	pub  RSAEncryptionOAEPGadget(LongElement modulus, plainText:Vec<Wire>,
+			seed:Vec<Wire>, i32 rsaKeyBitLength, desc:Vec<String>) {
 		super(desc);
 
 		if rsaKeyBitLength % 8 != 0 {
-			throw new IllegalArgumentException(
+			assert!(
 					"RSA Key bit length is assumed to be a multiple of 8");
 		}
 
 		if plainText.length > rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2 {
 			println!("Message too long");
-			throw new IllegalArgumentException(
+			assert!(
 					"Invalid message length for RSA Encryption");
 		}
 
 		if seed.length != SHA256_DIGEST_LENGTH {
 			println!("Seed must have the same length as the hash function output ");
-			throw new IllegalArgumentException(
+			assert!(
 					"Invalid seed dimension for RSA Encryption");
 		}
 
-		this.seed = seed;
-		this.plainText = plainText;
-		this.modulus = modulus;
-		this.rsaKeyBitLength = rsaKeyBitLength;
+		self.seed = seed;
+		self.plainText = plainText;
+		self.modulus = modulus;
+		self.rsaKeyBitLength = rsaKeyBitLength;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
-		int mLen = plainText.length;
-		int hLen = SHA256_DIGEST_LENGTH;
-		int keyLen = rsaKeyBitLength / 8; // in bytes
-		Wire[] paddingString = new Wire[keyLen - mLen - 2 * hLen - 2];
+		i32 mLen = plainText.length;
+		i32 hLen = SHA256_DIGEST_LENGTH;
+		i32 keyLen = rsaKeyBitLength / 8; // in bytes
+		Vec<Wire> paddingString = vec![Wire::default();keyLen - mLen - 2 * hLen - 2];
 		Arrays.fill(paddingString, generator.getZeroWire());
 
-		Wire[] db = new Wire[keyLen - hLen - 1];
-		for (int i = 0; i < keyLen - hLen - 1; i+=1) {
+		Vec<Wire> db = vec![Wire::default();keyLen - hLen - 1];
+		for i in 0..keyLen - hLen - 1{
 			if i < hLen {
 				db[i] = generator
 						.createConstantWire((lSHA256_HASH[i] + 256) % 256);
@@ -93,27 +93,27 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 			}
 		}
 
-		Wire[] dbMask = mgf1(seed, keyLen - hLen - 1);
-		Wire[] maskedDb = new Wire[keyLen - hLen - 1];
-		for (int i = 0; i < keyLen - hLen - 1; i+=1) {
+		Vec<Wire> dbMask = mgf1(seed, keyLen - hLen - 1);
+		Vec<Wire> maskedDb = vec![Wire::default();keyLen - hLen - 1];
+		for i in 0..keyLen - hLen - 1{
 			maskedDb[i] = dbMask[i].xorBitwise(db[i], 8);
 		}
 
-		Wire[] seededMask = mgf1(maskedDb, hLen);
-		Wire[] maskedSeed = new Wire[hLen];
+		Vec<Wire> seededMask = mgf1(maskedDb, hLen);
+		Vec<Wire> maskedSeed = vec![Wire::default();hLen];
 		for i in 0..hLen {
 			maskedSeed[i] = seededMask[i].xorBitwise(seed[i], 8);
 		}
 		
-		Wire[] paddedByteArray = Util.concat(maskedSeed, maskedDb); // Big-Endian
+		Vec<Wire> paddedByteArray = Util::concat(maskedSeed, maskedDb); // Big-Endian
 		
 		// The LongElement implementation is LittleEndian, so we will process the array in reverse order
 		
-		LongElement paddedMsg = new LongElement(
-				new BigInteger[] { BigInteger.ZERO });
+		LongElement paddedMsg = LongElement::new(
+				vec![BigInteger::default();] { BigInteger.ZERO });
 		for i in 0..paddedByteArray.length {
-			LongElement e = new LongElement(paddedByteArray[paddedByteArray.length-i-1], 8);
-			LongElement c = new LongElement(Util.split(
+			LongElement e = LongElement::new(paddedByteArray[paddedByteArray.length-i-1], 8);
+			LongElement c = LongElement::new(Util::split(
 					BigInteger.ONE.shiftLeft(8 * i),
 					LongElement.CHUNK_BITWIDTH));
 			paddedMsg = paddedMsg.add(e.mul(c));
@@ -123,16 +123,16 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		LongElement s = paddedMsg;
 		for i in 0..16 {
 			s = s.mul(s);
-			s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, false).getRemainder();
+			s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, false).getRemainder();
 		}
 		s = s.mul(paddedMsg);
-		s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, true).getRemainder();
+		s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, true).getRemainder();
 
 		// return the cipher text as byte array
 		ciphertext = s.getBits(rsaKeyBitLength).packBitsIntoWords(8);
 	}
 
-	public void checkSeedCompliance() {
+	pub   checkSeedCompliance() {
 		for i in 0..seed.length {
 			// Verify that the seed wires are bytes
 			// This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
@@ -140,23 +140,22 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 		}
 	}
 	
-	private Wire[] mgf1(Wire[] in, int length) {
+	 Vec<Wire> mgf1(in:Vec<Wire>, i32 length) {
 
 		ArrayList<Wire> mgfOutputList = new ArrayList<Wire>();
-		for (int i = 0; i <= ((int) Math.ceil(length * 1.0
-				/ SHA256_DIGEST_LENGTH)) - 1; i+=1) {
+		for  i in  0..=(length * 1.0/ SHA256_DIGEST_LENGTH).ceil() as i32 - 1 {
 
 			// the standard follows a Big Endian format
-			Wire[] counter = generator.createConstantWireArray(new long[] {
+			Vec<Wire> counter = generator.createConstantWireArray(vec![long::default();] {
 					(byte) (i >>> 24), (byte) (i >>> 16), (byte) (i >>> 8),
 					(byte) i });
 
-			Wire[] inputToHash = Util.concat(in, counter);
-			SHA256Gadget shaGadget = new SHA256Gadget(inputToHash, 8,
+			Vec<Wire> inputToHash = Util::concat(in, counter);
+			SHA256Gadget shaGadget = SHA256Gadget::new(inputToHash, 8,
 					inputToHash.length, false, true);
-			Wire[] digest = shaGadget.getOutputWires();
+			Vec<Wire> digest = shaGadget.getOutputWires();
 
-			Wire[] msgHashBytes = new WireArray(digest).getBits(32)
+			Vec<Wire> msgHashBytes = WireArray::new(digest).getBits(32)
 					.packBitsIntoWords(8);
 			// reverse the byte array representation of each word of the digest
 			// to
@@ -173,12 +172,12 @@ public class RSAEncryptionOAEPGadget extends Gadget {
 				mgfOutputList.add(msgHashBytes[j]);
 			}
 		}
-		Wire[] out = mgfOutputList.toArray(new Wire[] {});
+		Vec<Wire> out = mgfOutputList.toArray(vec![Wire::default();] {});
 		return Arrays.copyOf(out, length);
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return ciphertext;
 	}
 

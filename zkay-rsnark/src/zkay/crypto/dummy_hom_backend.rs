@@ -9,113 +9,55 @@ use zkay::typed_wire;
 use zkay::zkay_dummy_hom_encryption_gadget;
 use zkay::zkay_type;
 
-public class DummyHomBackend extends CryptoBackend.Asymmetric implements HomomorphicBackend {
+pub struct DummyHomBackend;
+impl  Asymmetric for   DummyHomBackend{
 
-	public static final int KEY_CHUNK_SIZE = 256;
+	 const KEY_CHUNK_SIZE:i32 = 256;
 
-	protected DummyHomBackend(int keyBits) {
-		super(keyBits);
-	}
+	// fn DummyHomBackend( keyBits:i32 )->   {
+	// 	super(keyBits);
+	// }
 
 	
-	public int getKeyChunkSize() {
+	pub fn getKeyChunkSize()-> i32 {
 		return KEY_CHUNK_SIZE;
 	}
 
 	
-	public Gadget createEncryptionGadget(TypedWire plain, String key, Wire[] random, String... desc) {
-		Wire encodedPlain = encodePlaintextIfSigned(plain);
-		return new ZkayDummyHomEncryptionGadget(encodedPlain, getKeyWire(key), random, keyBits, desc);
+	pub fn createEncryptionGadget( plain:TypedWire ,  key:String ,  random:Vec<Wire> , desc:Vec<String>)-> Gadget {
+		let encodedPlain = encodePlaintextIfSigned(plain);
+		return ZkayDummyHomEncryptionGadget::new(encodedPlain, getKeyWire(key), random, keyBits, desc);
 	}
 
 	
-	public TypedWire[] doHomomorphicOp(char op, HomomorphicInput arg, String keyName) {
-		Wire cipher = getCipherWire(arg, "arg");
+	 fn getKeyWire( keyName:String )-> Wire {
+		let key = getKey(keyName);
+		let generator = CircuitGenerator.getActiveCircuitGenerator();
 
-		if op == '-' {
-			// -Enc(msg, p) = -(msg * p) = (-msg) * p = Enc(-msg, p)
-			Wire minus = cipher.negate();
-			return typedAsUint(minus, "-(" + arg.getName() + ")");
-		} else {
-			throw new UnsupportedOperationException("Unary operation " + op + " not supported");
-		}
-	}
-
-	
-	public TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
-		switch (op) {
-			case '+': {
-				// Enc(m1, p) + Enc(m2, p) = (m1 * p) + (m2 * p) = (m1 + m2) * p = Enc(m1 + m2, p)
-				Wire l = getCipherWire(lhs, "lhs");
-				Wire r = getCipherWire(rhs, "rhs");
-				Wire sum = l.add(r);
-				return typedAsUint(sum, "(" + lhs.getName() + ") + (" + rhs.getName() + ")");
-			}
-			case '-': {
-				// Enc(m1, p) - Enc(m2, p) = (m1 * p) - (m2 * p) = (m1 - m2) * p = Enc(m1 - m2, p)
-				Wire l = getCipherWire(lhs, "lhs");
-				Wire r = getCipherWire(rhs, "rhs");
-				Wire diff = l.sub(r);
-				return typedAsUint(diff, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
-			}
-			case '*': {
-				// Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
-				Wire plain;
-				Wire cipher;
-				if lhs == null) throw new IllegalArgumentException("lhs is null";
-				if rhs == null) throw new IllegalArgumentException("rhs is null";
-				if lhs.isPlain() && rhs.isCipher() {
-					plain = encodePlaintextIfSigned(lhs.getPlain());
-					cipher = getCipherWire(rhs, "rhs");
-				} else if lhs.isCipher() && rhs.isPlain() {
-					cipher = getCipherWire(lhs, "lhs");
-					plain = encodePlaintextIfSigned(rhs.getPlain());
-				} else {
-					throw new IllegalArgumentException("DummyHom multiplication requires exactly 1 plaintext argument");
-				}
-
-				// Enc(m1, p) * m2 = (m1 * p) * m2 = (m1 * m2) * p = Enc(m1 * m2, p)
-				Wire prod = cipher.mul(plain);
-				return typedAsUint(prod, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
-			}
-			default:
-				throw new UnsupportedOperationException("Binary operation " + op + " not supported");
-		}
-	}
-
-	
-	public TypedWire[] doHomomorphicRerand(TypedWire[] arg, String keyName, TypedWire randomness) {
-		return arg;
-	}
-
-	private Wire getKeyWire(String keyName) {
-		LongElement key = getKey(keyName);
-		CircuitGenerator generator = CircuitGenerator.getActiveCircuitGenerator();
-
-		Wire[] keyArr = key.getBits().packBitsIntoWords(256);
+		let keyArr = key.getBits().packBitsIntoWords(256);
 		for i in 1..keyArr.length {
 			generator.addZeroAssertion(keyArr[i], "Dummy-hom enc pk valid");
 		}
 		return keyArr[0];
 	}
 
-	private static Wire getCipherWire(HomomorphicInput input, String name) {
-		if input == null) throw new IllegalArgumentException(name + " is null";
-		if input.isPlain()) throw new IllegalArgumentException(name + " is not a ciphertext";
-		if input.getLength() != 1) throw new IllegalArgumentException(name + " has invalid length";
+	 fn getCipherWire( input:HomomorphicInput ,  name:String )->   Wire {
+		 assert!(input.is_some(), "{name} is null");
+		 assert!(!input.isPlain(), "{name} is not a ciphertext");
+		 assert!(input.getLength() == 1, "{name} has invalid length");
 
 		// Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
-		Wire cipherWire = input.getCipher()[0].wire;
-		Wire isNonZero = cipherWire.checkNonZero();
+let cipherWire = input.getCipher()[0].wire;
+let isNonZero = cipherWire.checkNonZero();
 		return cipherWire.sub(isNonZero);
 	}
 
-	private static Wire encodePlaintextIfSigned(TypedWire plain) {
+	 fn encodePlaintextIfSigned( plain:TypedWire )->   Wire {
 		if plain.type.signed {
 			// Signed: wrap negative values around the field prime instead of around 2^n
-			int bits = plain.type.bitwidth;
-			Wire signBit = plain.wire.getBitWires(bits).get(bits - 1);
-			Wire negValue = plain.wire.invBits(bits).add(1).negate();
+let bits = plain.type.bitwidth;
+let signBit = plain.wire.getBitWires(bits).get(bits - 1);
+let negValue = plain.wire.invBits(bits).add(1).negate();
 			return signBit.mux(negValue, plain.wire);
 		} else {
 			// Unsigned values get encoded as-is
@@ -123,8 +65,73 @@ public class DummyHomBackend extends CryptoBackend.Asymmetric implements Homomor
 		}
 	}
 
-	private static TypedWire[] typedAsUint(Wire wire, String name) {
+	 fn typedAsUint( wire:Wire ,  name:String )->   Vec<TypedWire> {
 		// Always type cipher wires as ZkUint(256)
-		return new TypedWire[] {new TypedWire(wire.add(1), ZkayType.ZkUint(256), name)};
+		return vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)];
 	}
+}
+
+impl HomomorphicBackend for DummyHomBackend
+
+{
+
+	pub fn doHomomorphicOp( op:char ,  arg:HomomorphicInput ,  keyName:String )->  Vec<TypedWire> {
+let cipher = getCipherWire(arg, "arg");
+
+		if op == '-' {
+let p = Enc(-msg, p)
+let minus = cipher.negate();
+			return typedAsUint(minus, "-(" + arg.getName() + ")");
+		} else {
+			panic!("Unary operation " + op + " not supported");
+		}
+	}
+
+	
+	pub fn doHomomorphicOp( lhs:HomomorphicInput ,  op:char ,  rhs:HomomorphicInput ,  keyName:String )->  Vec<TypedWire> {
+		match op {
+			 '+'=> {
+				// Enc(m1, p) + Enc(m2, p) = (m1 * p) + (m2 * p) = (m1 + m2) * p = Enc(m1 + m2, p)
+let l = getCipherWire(lhs, "lhs");
+let r = getCipherWire(rhs, "rhs");
+let sum = l.add(r);
+				return typedAsUint(sum, "(" + lhs.getName() + ") + (" + rhs.getName() + ")");
+			}
+			 '-'=> {
+				// Enc(m1, p) - Enc(m2, p) = (m1 * p) - (m2 * p) = (m1 - m2) * p = Enc(m1 - m2, p)
+				let l = getCipherWire(lhs, "lhs");
+				let r = getCipherWire(rhs, "rhs");
+				let diff = l.sub(r);
+				return typedAsUint(diff, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
+			}
+			 '*'=> {
+				// Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
+				let  plain;
+				let cipher;
+				 assert!(lhs.is_some(),"lhs is null");
+				 assert!(rhs.is_some(),"rhs is null");
+				if lhs.isPlain() && rhs.isCipher() {
+					plain = encodePlaintextIfSigned(lhs.getPlain());
+					cipher = getCipherWire(rhs, "rhs");
+				} else if lhs.isCipher() && rhs.isPlain() {
+					cipher = getCipherWire(lhs, "lhs");
+					plain = encodePlaintextIfSigned(rhs.getPlain());
+				} else {
+					panic!("DummyHom multiplication requires exactly 1 plaintext argument");
+				}
+
+				// Enc(m1, p) * m2 = (m1 * p) * m2 = (m1 * m2) * p = Enc(m1 * m2, p)
+				let prod = cipher.mul(plain);
+				return typedAsUint(prod, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
+			}
+			_=>
+				panic!("Binary operation {op} not supported");
+		}
+	}
+
+	
+	pub fn doHomomorphicRerand( arg: Vec<TypedWire> ,  keyName:String ,  randomness:TypedWire )->  Vec<TypedWire> {
+		return arg;
+	}
+
 }

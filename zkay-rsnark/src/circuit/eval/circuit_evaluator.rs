@@ -60,7 +60,7 @@ impl CircuitEvaluator{
 
 	pub fn setWireValue(e:LongElement , value:BigInteger ,
 			bitwidthPerChunk:i32 ) {
-		Wire[] array = e.getArray();
+		Vec<Wire> array = e.getArray();
 		setWireValue(array, Util::split(value, bitwidthPerChunk));
 	}
 
@@ -144,7 +144,7 @@ impl CircuitEvaluator{
 			let num = inFileScanner.next().unwrap();
 			assignment[wireNumber] =  BigInteger.parse_bytes(num.as_bytes(), 16).unwrap();
 			wiresToReport.push(wireNumber);
-			// assignment.put(wireNumber, new BigInteger(num));
+			// assignment.put(wireNumber, BigInteger::new(num));
 		}
 
 		let  prime = BigInteger::parse_bytes(
@@ -224,7 +224,7 @@ impl CircuitEvaluator{
 					let  sum = BigInteger.ZERO;
 					for i in 0..ins.len() {
 						sum = sum.push(assignment[ins.get(i)]
-								.multiply(new BigInteger("2").pow(i)));
+								.multiply(BigInteger::new("2").pow(i)));
 					}
 					wiresToReport.push(outs.get(0));
 					assignment[outs.get(0)] = sum;

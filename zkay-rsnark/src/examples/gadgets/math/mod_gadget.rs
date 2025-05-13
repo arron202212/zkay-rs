@@ -11,36 +11,36 @@ use circuit::structure::wire;
  *
  */
 
-public class ModGadget extends Gadget {
+pub struct ModGadget extends Gadget {
 
 	 Wire a;
 	 Wire b;
-	private Wire r;
-	private Wire q;
+	 Wire r;
+	 Wire q;
 
-	private int bitwidth; // bitwidth for both a, b
+	 i32 bitwidth; // bitwidth for both a, b
 
-	public ModGadget(Wire a,  Wire b, int bitwidth, String...desc) {
+	pub  ModGadget(Wire a,  Wire b, i32 bitwidth, desc:Vec<String>) {
 		super(desc);
-		this.a = a;
-		this.b = b;
-		this.bitwidth = bitwidth;
-		if(bitwidth > 126){
-			throw new IllegalArgumentException("Bitwidth not supported yet.");
+		self.a = a;
+		self.b = b;
+		self.bitwidth = bitwidth;
+		if bitwidth > 126{
+			assert!("Bitwidth not supported yet.");
 		}
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 		
 		r = generator.createProverWitnessWire("mod result");
 		q = generator.createProverWitnessWire("division result");
 
 		
 		// notes about how to use this code block can be found in FieldDivisionGadget
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a);
 				BigInteger bValue = evaluator.getWireValue(b);
 				BigInteger rValue = aValue.mod(bValue);
@@ -58,8 +58,8 @@ public class ModGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { r };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { r };
 	}
 
 }

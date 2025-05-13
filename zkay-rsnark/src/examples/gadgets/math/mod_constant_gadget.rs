@@ -11,40 +11,40 @@ use circuit::structure::wire;
  *
  */
 
-public class ModConstantGadget extends Gadget {
+pub struct ModConstantGadget extends Gadget {
 
 	 Wire a;
 	 BigInteger b;
-	private Wire r;
-	private Wire q;
+	 Wire r;
+	 Wire q;
 
-	private int bitwidth; // a's bitwidth
+	 i32 bitwidth; // a's bitwidth
 
-	public ModConstantGadget(Wire a, int bitwidth, BigInteger b, String...desc) {
+	pub  ModConstantGadget(Wire a, i32 bitwidth, BigInteger b, desc:Vec<String>) {
 		super(desc);
-		this.a = a;
-		this.b = b;
-		this.bitwidth = bitwidth;
-		if(b.signum() != 1){
-			throw new IllegalArgumentException("b must be a positive constant. Signed operations not supported yet.");
+		self.a = a;
+		self.b = b;
+		self.bitwidth = bitwidth;
+		if b.signum() != 1{
+			assert!("b must be a positive constant. Signed operations not supported yet.");
 		}
-		if(bitwidth < b.bitLength()){
-			throw new IllegalArgumentException("a's bitwidth < b's bitwidth -- This gadget is not needed.");
+		if bitwidth < b.bitLength(){
+			assert!("a's bitwidth < b's bitwidth -- This gadget is not needed.");
 		}
 		// TODO: add further checks.
 		
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 		
 		r = generator.createProverWitnessWire("mod result");
 		q = generator.createProverWitnessWire("division result");
 
 		// notes about how to use this code block can be found in FieldDivisionGadget
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a);
 				BigInteger rValue = aValue.mod(b);
 				evaluator.setWireValue(r, rValue);
@@ -54,7 +54,7 @@ public class ModConstantGadget extends Gadget {
 
 		});
 		
-		int bBitwidth = b.bitLength();
+		i32 bBitwidth = b.bitLength();
 		r.restrictBitLength(bBitwidth);
 		q.restrictBitLength(bitwidth - bBitwidth + 1);
 		generator.addOneAssertion(r.isLessThan(b, bBitwidth));
@@ -62,8 +62,8 @@ public class ModConstantGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { r };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { r };
 	}
 
 }

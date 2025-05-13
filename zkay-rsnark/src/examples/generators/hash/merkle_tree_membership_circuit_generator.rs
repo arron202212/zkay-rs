@@ -7,26 +7,26 @@ use circuit::structure::wire;
 use examples::gadgets::hash::merkle_tree_path_gadget;
 use examples::gadgets::hash::subset_sum_hash_gadget;
 
-public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
+pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 
-	private Wire[] publicRootWires;
-	private Wire[] intermediateHasheWires;
-	private Wire directionSelector;
-	private Wire[] leafWires;
-	private int leafNumOfWords = 10;
-	private int leafWordBitWidth = 32;
-	private int treeHeight;
-	private int hashDigestDimension = SubsetSumHashGadget.DIMENSION;
+	 Vec<Wire> publicRootWires;
+	 Vec<Wire> intermediateHasheWires;
+	 Wire directionSelector;
+	 Vec<Wire> leafWires;
+	 i32 leafNumOfWords = 10;
+	 i32 leafWordBitWidth = 32;
+	 i32 treeHeight;
+	 i32 hashDigestDimension = SubsetSumHashGadget.DIMENSION;
 
-	private MerkleTreePathGadget merkleTreeGadget;
+	 MerkleTreePathGadget merkleTreeGadget;
 	
-	public MerkleTreeMembershipCircuitGenerator(String circuitName, int treeHeight) {
+	pub  MerkleTreeMembershipCircuitGenerator(String circuitName, i32 treeHeight) {
 		super(circuitName);
-		this.treeHeight = treeHeight;
+		self.treeHeight = treeHeight;
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 		
 		/** declare inputs **/
 		
@@ -37,13 +37,13 @@ public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 
 		/** connect gadget **/
 
-		merkleTreeGadget = new MerkleTreePathGadget(
+		merkleTreeGadget = MerkleTreePathGadget::new(
 				directionSelector, leafWires, intermediateHasheWires, leafWordBitWidth, treeHeight);
-		Wire[] actualRoot = merkleTreeGadget.getOutputWires();
+		Vec<Wire> actualRoot = merkleTreeGadget.getOutputWires();
 		
-		/** Now compare the actual root with the public known root **/
+		/** Now compare the actual root with the pub  known root **/
 		Wire errorAccumulator = getZeroWire();
-		for(int i = 0; i < hashDigestDimension; i+=1){
+		for i in 0..hashDigestDimension{
 			Wire diff = actualRoot[i].sub(publicRootWires[i]);
 			Wire check = diff.checkNonZero();
 			errorAccumulator = errorAccumulator.add(check);
@@ -57,27 +57,27 @@ public class MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
+	pub   generateSampleInput(CircuitEvaluator circuitEvaluator) {
 		
 		for i in 0..hashDigestDimension {
-			circuitEvaluator.setWireValue(publicRootWires[i], Util.nextRandomBigInteger(Config.FIELD_PRIME));
+			circuitEvaluator.setWireValue(publicRootWires[i], Util::nextRandomBigInteger(Config.FIELD_PRIME));
 		}
 		
-		circuitEvaluator.setWireValue(directionSelector, Util.nextRandomBigInteger(treeHeight));
+		circuitEvaluator.setWireValue(directionSelector, Util::nextRandomBigInteger(treeHeight));
 		for i in 0..hashDigestDimension*treeHeight {
-			circuitEvaluator.setWireValue(intermediateHasheWires[i],  Util.nextRandomBigInteger(Config.FIELD_PRIME));
+			circuitEvaluator.setWireValue(intermediateHasheWires[i],  Util::nextRandomBigInteger(Config.FIELD_PRIME));
 		}
 		
-		for(int i = 0; i < leafNumOfWords; i+=1){
+		for i in 0..leafNumOfWords{
 			circuitEvaluator.setWireValue(leafWires[i], Integer.MAX_VALUE);
 		}
 		
 	}
 	
 	
-	public static void main(String[] args)  {
+	pub    main(args:Vec<String>)  {
 		
-		MerkleTreeMembershipCircuitGenerator generator = new MerkleTreeMembershipCircuitGenerator("tree_64", 64);
+		MerkleTreeMembershipCircuitGenerator generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

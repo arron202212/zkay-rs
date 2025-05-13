@@ -3,23 +3,24 @@
  * shares big integer constants
  *
  */
-public class BigIntStorage {
+pub struct BigIntStorage {
 	
-	private ConcurrentMap<BigInteger, BigInteger> bigIntegerSet;
-	private static BigIntStorage instance;
-	
-	private BigIntStorage(){
+	  bigIntegerSet:ConcurrentMap<BigInteger, BigInteger>,
+	  instance:BigIntStorage,
+}
+impl BigIntStorage{
+	 BigIntStorage(){
 		bigIntegerSet = new ConcurrentHashMap<BigInteger, BigInteger>();
 	}
 	
-	public static BigIntStorage getInstance(){
-		if(instance == null){
-			instance = new BigIntStorage();
+	pub   BigIntStorage getInstance(){
+		if instance == null{
+			instance = BigIntStorage::new();
 		}
 		return instance;
 	}
 	
-	public BigInteger getBigInteger(BigInteger x){
+	pub  BigInteger getBigInteger(x:BigInteger ){
 		bigIntegerSet.putIfAbsent(x, x);
 	    return bigIntegerSet.get(x);
 	}

@@ -1,23 +1,23 @@
 
 
-public class LinearCombinationWire extends Wire {
-
-	private WireArray bitWires;
-
-	public LinearCombinationWire(int wireId) {
-		super(wireId);
-	}
+pub struct LinearCombinationWire  {
+	  bitWires:WireArray;
+}
+impl LinearCombinationWire{
+	// pub fn new ( wireId:i32) {
+	// 	super(wireId);
+	// }
 	
-	public LinearCombinationWire(WireArray bits) {
-		super(bits);
-	}
+	// pub  LinearCombinationWire(WireArray bits) {
+	// 	super(bits);
+	// }
 	
-	WireArray getBitWires() {
-		return bitWires;
+	fn  getBitWires(&self)->WireArray {
+		 self.bitWires.clone()
 	}
 
-	void setBits(WireArray bitWires) {
-		this.bitWires = bitWires;
+	fn  setBits(&mut self, bitWires:WireArray) {
+		self.bitWires = bitWires;
 	}
 
 }

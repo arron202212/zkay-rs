@@ -1,15 +1,15 @@
 
 use zkay::zkay_circuit_base;
 use zkay::homomorphic_input;
-use static zkay::zkay_type::zk_uint;
+use  zkay::zkay_type::zk_uint;
 
-public class SampleRehomCircuit extends ZkayCircuitBase {
-    public SampleRehomCircuit() {
+pub struct SampleRehomCircuit extends ZkayCircuitBase {
+    pub  SampleRehomCircuit() {
         super("zk__Verify_Test_foo", 16, 4, 5, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
-    private void __zk__foo() {
+      __zk__foo() {
         stepIn("_zk__foo");
         addS("secret0_rnd", 1, ZkUint(256));
         addS("secret1_plain_x1", 1, ZkUint(32));
@@ -30,7 +30,7 @@ public class SampleRehomCircuit extends ZkayCircuitBase {
     }
 
     
-    protected void buildCircuit() {
+      fn buildCircuit() {
         super.buildCircuit();
         addS("x1", 1, ZkUint(32));
         addS("x1_R", 1, ZkUint(256));
@@ -43,8 +43,8 @@ public class SampleRehomCircuit extends ZkayCircuitBase {
         __zk__foo();
     }
 
-    public static void main(String[] args) {
-        SampleRehomCircuit circuit = new SampleRehomCircuit();
+    pub    main(args:Vec<String>) {
+        SampleRehomCircuit circuit = SampleRehomCircuit::new();
         circuit.run(args);
     }
 }

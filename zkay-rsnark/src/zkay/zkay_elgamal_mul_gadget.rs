@@ -4,32 +4,34 @@ use circuit::structure::wire;
 /**
  * Gadget for homomorphically multiplying an ElGamal ciphertext (c1, c2) by a plaintext scalar
  */
-public class ZkayElgamalMulGadget extends ZkayBabyJubJubGadget {
+pub struct ZkayElgamalMulGadget   {
 
-     JubJubPoint c1;
+     c1:JubJubPoint,
 
-     JubJubPoint c2;
+     c2:JubJubPoint,
 
-    private Wire[] scalarBits;
+      scalarBits:Vec<Wire>,
 
-    private JubJubPoint e1;
+     e1:JubJubPoint,
 
-    private JubJubPoint e2;
-
-    public ZkayElgamalMulGadget(JubJubPoint c1, JubJubPoint c2, Wire [] scalarBits) {
-        this.c1 = c1;
-        this.c2 = c2;
-        this.scalarBits = scalarBits;
+     e2:JubJubPoint,
+}
+impl ZkayElgamalMulGadget{
+    pub  fn new(c1:JubJubPoint , c2:JubJubPoint , Wire [] scalarBits)->Self {
+        self.c1 = c1;
+        self.c2 = c2;
+        self.scalarBits = scalarBits;
         buildCircuit();
     }
-
-    protected void buildCircuit() {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget{
+      fn buildCircuit() {
         e1 = mulScalar(c1, scalarBits);
         e2 = mulScalar(c2, scalarBits);
     }
 
     
-    public Wire[] getOutputWires() {
-        return new Wire[]{ e1.x, e1.y, e2.x, e2.y };
+    pub  fn getOutputWires()->Vec<Wire>  {
+        return vec![Wire::default();]{ e1.x, e1.y, e2.x, e2.y };
     }
 }

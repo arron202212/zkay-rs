@@ -1,13 +1,13 @@
 
 
-public interface Instruction {
+pub trait Instruction {
 
-	public void evaluate(CircuitEvaluator evaluator);
+	fn evaluate( evaluator:CircuitEvaluator);
 
-	public default void emit(CircuitEvaluator evaluator) {
+	fn emit( evaluator:CircuitEvaluator) {
 	}
 
-	public default boolean doneWithinCircuit() {
-		return false;
+	fn doneWithinCircuit()->bool {
+		 false
 	}
 }

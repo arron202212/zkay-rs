@@ -7,118 +7,116 @@ use circuit::structure::wire_array;
 use examples::gadgets::math::long_integer_floor_div_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
 
-use static zkay::zkay_circuit_base::negate;
-use static zkay::zkay_type::*;
+use  zkay::zkay_circuit_base::negate;
+use  zkay::zkay_type::*;
 
-public class TypedWire {
-    public final Wire wire;
-    public final ZkayType type;
-    public final String name;
-
-    public TypedWire(Wire wire, ZkayType type, String name, boolean ...restrict) {
-        if wire == null || type == null {
-            throw new IllegalArgumentException("Arguments cannot be null");
-        }
+pub struct TypedWire {
+    pub   wire:Wire,
+    pub  type:ZkayType,
+    pub  name:String,
+}
+impl TypedWire {
+    pub  new(wire:Wire , type:ZkayType , name:String , restrict:Vec<bool>)->Self {
+        assert!(wire.is_some() && type.is_some(),"Arguments cannot be null");
+        
         if (restrict.length > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
             wire.restrictBitLength(type.bitwidth);
         }
-        this.wire = wire;
-        this.type = type;
-        this.name = name;
+        self.wire = wire;
+        self.type = type;
+        self.name = name;
     }
 
     /** ARITH OPS **/
 
-    public TypedWire plus(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type);
-        String op = this.name + " + " + rhs.name;
-        return handle_overflow(this.wire.add(rhs.wire, op), resultType, false, op);
+    pub  fn plus(rhs:TypedWire )->  TypedWire {
+        let  resultType = checkType(self.type, rhs.type);
+        let  op = self.name + " + " + rhs.name;
+        return handle_overflow(self.wire.add(rhs.wire, op), resultType, false, op);
     }
 
-    public TypedWire minus(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type);
-        String op = this.name + " - " + rhs.name;
-        Wire ret = this.wire.add(negate(rhs).wire, op);
+    pub  fn minus(rhs:TypedWire )->  TypedWire {
+        let resultType = checkType(self.type, rhs.type);
+        let op = self.name + " - " + rhs.name;
+        let ret = self.wire.add(negate(rhs).wire, op);
         return handle_overflow(ret, resultType, false, op);
     }
 
-    public TypedWire times(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type);
-        String op = this.name + " * " + rhs.name;
+    pub  fn times(rhs:TypedWire )->  TypedWire {
+        let resultType = checkType(self.type, rhs.type);
+        let op = self.name + " * " + rhs.name;
         if resultType.bitwidth == 256 {
             // Don't care about overflow with uint type
-            return new TypedWire(this.wire.mul(rhs.wire, op), resultType, op);
+            return TypedWire::new(self.wire.mul(rhs.wire, op), resultType, op);
         }
-        else if resultType.bitwidth <= 120 {
+         if resultType.bitwidth <= 120 {
             // Result always fits into 240 < 253 bits
-            return handle_overflow(this.wire.mul(rhs.wire, op), resultType, true, op);
+            return handle_overflow(self.wire.mul(rhs.wire, op), resultType, true, op);
         }
-        else {
+       
             // Result could overflow 253 bits -> do it in two halves to get correct overflow behavior
-            Wire[] LhsLoHi = this.wire.getBitWires(resultType.bitwidth).packBitsIntoWords(124);
-            Wire[] RhsLoHi = rhs.wire.getBitWires(resultType.bitwidth).packBitsIntoWords(124);
+            let LhsLoHi = self.wire.getBitWires(resultType.bitwidth).packBitsIntoWords(124);
+            let RhsLoHi = rhs.wire.getBitWires(resultType.bitwidth).packBitsIntoWords(124);
 
             // https://www.codeproject.com/Tips/618570/UInt-Multiplication-Squaring, BSD license
-            Wire[] ansLoHi = LhsLoHi[0].mul(RhsLoHi[0], op + "[lo*lo]").getBitWires(resultType.bitwidth).packBitsIntoWords(124);
-            Wire hiLoMul = handle_overflow(LhsLoHi[1].mul(RhsLoHi[0], op + "[hi*lo]"), Zk124, true, op + "[hi*lo]").wire;
-            Wire loHiMul = handle_overflow(LhsLoHi[0].mul(RhsLoHi[1], op + "[lo*hi]"), Zk124, true, op + "[lo*hi]").wire;
-            Wire hiLoPlusloHi = handle_overflow(hiLoMul.add(loHiMul, op + "[hi*lo + lo*hi]"), Zk124, false, op + "[hi*lo + lo*hi]").wire;
+            let ansLoHi = LhsLoHi[0].mul(RhsLoHi[0], op + "[lo*lo]").getBitWires(resultType.bitwidth).packBitsIntoWords(124);
+            let hiLoMul = handle_overflow(LhsLoHi[1].mul(RhsLoHi[0], op + "[hi*lo]"), Zk124, true, op + "[hi*lo]").wire;
+            let loHiMul = handle_overflow(LhsLoHi[0].mul(RhsLoHi[1], op + "[lo*hi]"), Zk124, true, op + "[lo*hi]").wire;
+            let hiLoPlusloHi = handle_overflow(hiLoMul.add(loHiMul, op + "[hi*lo + lo*hi]"), Zk124, false, op + "[hi*lo + lo*hi]").wire;
             ansLoHi[1] = handle_overflow(ansLoHi[1].add(hiLoPlusloHi, op + "[anshi + hi*lo + lo*hi]"), Zk124, false, op + "[anshi + hi*lo + lo*hi]").wire;
 
-            Wire[] ans = new WireArray(ansLoHi).getBits(124).packBitsIntoWords(resultType.bitwidth, op + "[combine hi and lo]");
-            if ans.length != 1 {
-                panic!("Multiplication ans array has wrong length");
-            }
-            return new TypedWire(ans[0], resultType, op);
-        }
+            let ans = WireArray::new(ansLoHi).getBits(124).packBitsIntoWords(resultType.bitwidth, op + "[combine hi and lo]");
+                assert!(ans.length == 1,"Multiplication ans array has wrong length");
+            return TypedWire::new(ans[0], resultType, op);
+        
     }
 
-    public TypedWire divideBy(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type);
-        String op = this.name + " / " + rhs.name;
-        CircuitGenerator generator = CircuitGenerator.getActiveCircuitGenerator();
+    pub  fn divideBy(rhs:TypedWire )->  TypedWire {
+        let  resultType = checkType(self.type, rhs.type);
+        let op = self.name + " / " + rhs.name;
+        let generator = CircuitGenerator.getActiveCircuitGenerator();
         generator.addOneAssertion(rhs.wire.checkNonZero(), "no div by 0");
 
         // Sign handling...
-        Wire resultSign = generator.getZeroWire();
-        Wire lhsWire = this.wire;
-        Wire rhsWire = rhs.wire;
+        let resultSign = generator.getZeroWire();
+        let lhsWire = self.wire;
+        let rhsWire = rhs.wire;
 
-        if this.type.signed {
-            Wire lhsSign = lhsWire.getBitWires(this.type.bitwidth).get(this.type.bitwidth - 1);
+        if self.type.signed {
+            let lhsSign = lhsWire.getBitWires(self.type.bitwidth).get(self.type.bitwidth - 1);
             lhsWire = lhsSign.mux(negate(this).wire, lhsWire);
             resultSign = resultSign.xorBitwise(lhsSign, 1);
         }
         if rhs.type.signed {
-            Wire rhsSign = rhsWire.getBitWires(rhs.type.bitwidth).get(rhs.type.bitwidth - 1);
+            let rhsSign = rhsWire.getBitWires(rhs.type.bitwidth).get(rhs.type.bitwidth - 1);
             rhsWire = rhsSign.mux(negate(rhs).wire, rhsWire);
             resultSign = resultSign.xorBitwise(rhsSign, 1);
         }
 
-        // Need to operate on long integers, regular div / mod gadget only works for <= 126 bits
-        LongElement lhsLong = new LongElement(lhsWire.getBitWires(this.type.bitwidth));
-        LongElement rhsLong = new LongElement(rhsWire.getBitWires(rhs.type.bitwidth));
-        LongElement q = new LongIntegerFloorDivGadget(lhsLong, rhsLong, op).getQuotient();
-        Wire resAbs = q.getBits(resultType.bitwidth).packBitsIntoWords(resultType.bitwidth)[0];
+        // Need to operate on integers:long , regular div / mod gadget only works for <= 126 bits
+        let lhsLong = LongElement::new(lhsWire.getBitWires(self.type.bitwidth));
+        let rhsLong = LongElement::new(rhsWire.getBitWires(rhs.type.bitwidth));
+        let q = LongIntegerFloorDivGadget::new(lhsLong, rhsLong, op).getQuotient();
+        let resAbs = q.getBits(resultType.bitwidth).packBitsIntoWords(resultType.bitwidth)[0];
 
-        TypedWire resPos = new TypedWire(resAbs, resultType, op);
-        TypedWire resNeg = negate(resPos);
-        return new TypedWire(resultSign.mux(resNeg.wire, resPos.wire), resultType, op);
+        let resPos = TypedWire::new(resAbs, resultType, op);
+        let resNeg = negate(resPos);
+        return TypedWire::new(resultSign.mux(resNeg.wire, resPos.wire), resultType, op);
     }
 
-    public TypedWire modulo(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type);
-        String op = this.name + " % " + rhs.name;
-        CircuitGenerator generator = CircuitGenerator.getActiveCircuitGenerator();
+    pub  fn modulo(rhs:TypedWire )->  TypedWire {
+        let resultType = checkType(self.type, rhs.type);
+        let op = self.name + " % " + rhs.name;
+        let generator = CircuitGenerator.getActiveCircuitGenerator();
         generator.addOneAssertion(rhs.wire.checkNonZero(), "no div by 0");
 
         // Sign handling...
-        Wire resultSign = generator.getZeroWire();
-        Wire lhsWire = this.wire;
-        Wire rhsWire = rhs.wire;
+        let resultSign = generator.getZeroWire();
+        let lhsWire = self.wire;
+        let rhsWire = rhs.wire;
 
-        if this.type.signed {
-            Wire lhsSign = lhsWire.getBitWires(this.type.bitwidth).get(this.type.bitwidth - 1);
+        if self.type.signed {
+            Wire lhsSign = lhsWire.getBitWires(self.type.bitwidth).get(self.type.bitwidth - 1);
             lhsWire = lhsSign.mux(negate(this).wire, lhsWire);
             resultSign = lhsSign;
         }
@@ -128,142 +126,142 @@ public class TypedWire {
         }
 
         // Need to operate on long integers, regular div / mod gadget only works for <= 126 bits
-        LongElement lhsLong = new LongElement(lhsWire.getBitWires(this.type.bitwidth));
-        LongElement rhsLong = new LongElement(rhsWire.getBitWires(rhs.type.bitwidth));
-        LongElement r = new LongIntegerModGadget(lhsLong, rhsLong, true, op).getRemainder();
-        Wire resAbs = r.getBits(resultType.bitwidth).packBitsIntoWords(resultType.bitwidth)[0];
+let lhsLong =  LongElement::new(lhsWire.getBitWires(self.type.bitwidth));
+let rhsLong =  LongElement::new(rhsWire.getBitWires(rhs.type.bitwidth));
+let r =  LongIntegerModGadget::new(lhsLong, rhsLong, true, op).getRemainder();
+let resAbs =  r.getBits(resultType.bitwidth).packBitsIntoWords(resultType.bitwidth)[0];
 
-        TypedWire resPos = new TypedWire(resAbs, resultType, op);
-        TypedWire resNeg = negate(resPos);
-        return new TypedWire(resultSign.mux(resNeg.wire, resPos.wire), resultType, op);
+let resPos =  TypedWire::new(resAbs, resultType, op);
+let resNeg =  negate(resPos);
+        return TypedWire::new(resultSign.mux(resNeg.wire, resPos.wire), resultType, op);
     }
 
     /** BIT OPS */
 
-    public TypedWire bitOr(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type, false);
-        String op = this.name + " | " + rhs.name;
-        Wire res = this.wire.orBitwise(rhs.wire, resultType.bitwidth, op);
-        return new TypedWire(res, resultType, op);
+    pub  fn bitOr(rhs:TypedWire )->  TypedWire {
+let resultType =  checkType(self.type, rhs.type, false);
+let op =  self.name + " | " + rhs.name;
+let res =  self.wire.orBitwise(rhs.wire, resultType.bitwidth, op);
+        return TypedWire::new(res, resultType, op);
     }
 
-    public TypedWire bitAnd(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type, false);
-        String op = this.name + " & " + rhs.name;
-        Wire res = this.wire.andBitwise(rhs.wire, resultType.bitwidth, op);
-        return new TypedWire(res, resultType, op);
+    pub  fn bitAnd(rhs:TypedWire )->  TypedWire {
+let resultType =  checkType(self.type, rhs.type, false);
+let op =  self.name + " & " + rhs.name;
+let res =  self.wire.andBitwise(rhs.wire, resultType.bitwidth, op);
+        return TypedWire::new(res, resultType, op);
     }
 
-    public TypedWire bitXor(TypedWire rhs) {
-        ZkayType resultType = checkType(this.type, rhs.type, false);
-        String op = this.name + " ^ " + rhs.name;
-        Wire res = this.wire.xorBitwise(rhs.wire, resultType.bitwidth, op);
-        return new TypedWire(res, resultType, op);
+    pub  fn bitXor(rhs:TypedWire )->  TypedWire {
+let resultType =  checkType(self.type, rhs.type, false);
+let op =  self.name + " ^ " + rhs.name;
+let res =  self.wire.xorBitwise(rhs.wire, resultType.bitwidth, op);
+        return TypedWire::new(res, resultType, op);
     }
 
     /** SHIFT OPS */
 
-    public TypedWire shiftLeftBy(int amount) {
-        ZkayType resultType = checkType(this.type, this.type, false);
-        String op = this.name + " << " + amount;
-        Wire res = this.wire.shiftLeft(resultType.bitwidth, amount, op);
-        return new TypedWire(res, resultType, op);
+    pub  fn shiftLeftBy(amount:i32 )->  TypedWire {
+let resultType =  checkType(self.type, self.type, false);
+let op =  self.name + " << " + amount;
+let res =  self.wire.shiftLeft(resultType.bitwidth, amount, op);
+        return TypedWire::new(res, resultType, op);
     }
 
-    public TypedWire shiftRightBy(int amount) {
-        ZkayType resultType = checkType(this.type, this.type, false);
+    pub  fn shiftRightBy(amount:i32 )->  TypedWire {
+let resultType =  checkType(self.type, self.type, false);
         Wire res;
-        String op = this.name + " >> " + amount;
+let op =  self.name + " >> " + amount;
         if resultType.signed {
-            res = this.wire.shiftArithRight(resultType.bitwidth, Math.min(amount, resultType.bitwidth), op);
+            res = self.wire.shiftArithRight(resultType.bitwidth, std::cmp::min(amount, resultType.bitwidth), op);
         } else {
-            res = this.wire.shiftRight(resultType.bitwidth, amount, op);
+            res = self.wire.shiftRight(resultType.bitwidth, amount, op);
         }
-        return new TypedWire(res, resultType, op);
+        return TypedWire::new(res, resultType, op);
     }
 
     /** EQ OPS **/
 
-    public TypedWire isEqualTo(TypedWire rhs) {
-        checkType(this.type, rhs.type);
-        String op = this.name + " == " + rhs.name;
-        return new TypedWire(this.wire.isEqualTo(rhs.wire, op), ZkBool, op);
+    pub  fn isEqualTo(rhs:TypedWire )->  TypedWire {
+        checkType(self.type, rhs.type);
+       let op =  self.name + " == " + rhs.name;
+        return TypedWire::new(self.wire.isEqualTo(rhs.wire, op), ZkBool, op);
     }
 
-    public TypedWire isNotEqualTo(TypedWire rhs) {
-        checkType(this.type, rhs.type);
-        String op = this.name + " != " + rhs.name;
-        return new TypedWire(this.wire.sub(rhs.wire, op).checkNonZero(op), ZkBool, op);
+    pub  fn isNotEqualTo(rhs:TypedWire )->  TypedWire {
+        checkType(self.type, rhs.type);
+       let op =  self.name + " != " + rhs.name;
+        return TypedWire::new(self.wire.sub(rhs.wire, op).checkNonZero(op), ZkBool, op);
     }
 
     /** INEQ OPS **/
 
-    public TypedWire isLessThan(TypedWire rhs) {
-        ZkayType commonType = checkType(this.type, rhs.type);
-        String op = this.name + " < " + rhs.name;
+    pub  fn isLessThan(rhs:TypedWire )->  TypedWire {
+       let commonType =  checkType(self.type, rhs.type);
+       let op =  self.name + " < " + rhs.name;
         if commonType.signed {
-            Wire lhsSign = this.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
-            Wire rhsSign = rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
+           let lhsSign =  self.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
+           let rhsSign =  rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
 
-            Wire alwaysLt = lhsSign.isGreaterThan(rhsSign, 1);
-            Wire sameSign = lhsSign.isEqualTo(rhsSign);
-            Wire lhsLess = this.wire.isLessThan(rhs.wire, commonType.bitwidth);
-            Wire isLt = alwaysLt.or(sameSign.and(lhsLess), op);
-            return new TypedWire(isLt, ZkBool, op);
+           let alwaysLt =  lhsSign.isGreaterThan(rhsSign, 1);
+           let sameSign =  lhsSign.isEqualTo(rhsSign);
+           let lhsLess =  self.wire.isLessThan(rhs.wire, commonType.bitwidth);
+           let isLt =  alwaysLt.or(sameSign.and(lhsLess), op);
+            return TypedWire::new(isLt, ZkBool, op);
         } else {
             // Note: breaks if value > 253 bit
-            return new TypedWire(this.wire.isLessThan(rhs.wire, Math.min(253, commonType.bitwidth), op), ZkBool, op);
+            return TypedWire::new(self.wire.isLessThan(rhs.wire, std::cmp::min(253, commonType.bitwidth), op), ZkBool, op);
         }
     }
 
-    public TypedWire isLessThanOrEqual(TypedWire rhs) {
-        ZkayType commonType = checkType(this.type, rhs.type);
-        String op = this.name + " <= " + rhs.name;
+    pub  fn isLessThanOrEqual(rhs:TypedWire )->  TypedWire {
+       let commonType =  checkType(self.type, rhs.type);
+       let op =  self.name + " <= " + rhs.name;
         if commonType.signed {
-            Wire lhsSign = this.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
-            Wire rhsSign = rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
+           let lhsSign =  self.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
+           let rhsSign =  rhs.wire.getBitWires(commonType.bitwidth).get(commonType.bitwidth-1);
 
-            Wire alwaysLt = lhsSign.isGreaterThan(rhsSign, 1);
-            Wire sameSign = lhsSign.isEqualTo(rhsSign);
-            Wire lhsLessEq = this.wire.isLessThanOrEqual(rhs.wire, commonType.bitwidth);
-            Wire isLt = alwaysLt.or(sameSign.and(lhsLessEq), op);
-            return new TypedWire(isLt, ZkBool, op);
+           let alwaysLt =  lhsSign.isGreaterThan(rhsSign, 1);
+           let sameSign =  lhsSign.isEqualTo(rhsSign);
+           let lhsLessEq =  self.wire.isLessThanOrEqual(rhs.wire, commonType.bitwidth);
+           let isLt =  alwaysLt.or(sameSign.and(lhsLessEq), op);
+            return TypedWire::new(isLt, ZkBool, op);
         } else {
             // Note: breaks if value > 253 bit
-            return new TypedWire(this.wire.isLessThanOrEqual(rhs.wire, Math.min(253, commonType.bitwidth), op), ZkBool, op);
+            return TypedWire::new(self.wire.isLessThanOrEqual(rhs.wire, std::cmp::min(253, commonType.bitwidth), op), ZkBool, op);
         }
     }
 
-    public TypedWire isGreaterThan(TypedWire rhs) {
+    pub  fn isGreaterThan(rhs:TypedWire )->  TypedWire {
         return rhs.isLessThan(this);
     }
 
-    public TypedWire isGreaterThanOrEqual(TypedWire rhs) {
+    pub  fn isGreaterThanOrEqual(rhs:TypedWire )->  TypedWire {
         return rhs.isLessThanOrEqual(this);
     }
 
     /** BOOL OPS */
 
-    public TypedWire and(TypedWire rhs) {
-        checkType(ZkBool, this.type);
+    pub  fn and(rhs:TypedWire )->  TypedWire {
+        checkType(ZkBool, self.type);
         checkType(ZkBool, rhs.type);
-        String op = this.name + " && " + rhs.name;
-        return new TypedWire(this.wire.and(rhs.wire, op), ZkBool, op);
+       let op =  self.name + " && " + rhs.name;
+        return TypedWire::new(self.wire.and(rhs.wire, op), ZkBool, op);
     }
 
-    public TypedWire or(TypedWire rhs) {
-        checkType(ZkBool, this.type);
+    pub  fn or(rhs:TypedWire )->  TypedWire {
+        checkType(ZkBool, self.type);
         checkType(ZkBool, rhs.type);
-        String op = this.name + " || " + rhs.name;
-        return new TypedWire(this.wire.or(rhs.wire, op), ZkBool, op);
+       let op =  self.name + " || " + rhs.name;
+        return TypedWire::new(self.wire.or(rhs.wire, op), ZkBool, op);
     }
 
-    private static TypedWire handle_overflow(Wire w, ZkayType targetType, boolean was_mul, String name) {
+      TypedWire handle_overflow(w:Wire , targetType:ZkayType , was_mul:bool , name:String ) {
         if targetType.bitwidth < 256 {
             // Downcast or result with overflow modulo < field prime -> modulo/mask lower bits
-            int from_bits = Math.min(256, was_mul  { targetType.bitwidth * 2 }else { targetType.bitwidth + 1});
+           let from_bits =  std::cmp::min(256, was_mul  { targetType.bitwidth * 2 }else { targetType.bitwidth + 1});
             w = w.trimBits(from_bits, targetType.bitwidth, "% 2^" + targetType.bitwidth);
         }
-        return new TypedWire(w, targetType, targetType.toString() + "(" + name + ")");
+        return TypedWire::new(w, targetType, targetType.toString() + "(" + name + ")");
     }
 }

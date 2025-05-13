@@ -12,27 +12,27 @@ use examples::gadgets::hash::sha256_gadget;
  * 
  */
 
-public class SHA256_Test extends TestCase {
+pub struct SHA256_Test extends TestCase {
 
 	@Test
-	public void testCase1() {
+	pub   testCase1() {
 
 		String inputStr = "";
 		String expectedDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-		CircuitGenerator generator = new CircuitGenerator("SHA2_Test1") {
+		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test1") {
 
-			Wire[] inputWires;
+			Vec<Wire> inputWires;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
-				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
+				Vec<Wire> digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator e) {
+			pub   generateSampleInput(CircuitEvaluator e) {
 				// no input needed
 			}
 		};
@@ -42,32 +42,32 @@ public class SHA256_Test extends TestCase {
 		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 
 		String outDigest = "";
-		for (Wire w : generator.getOutWires()) {
-			outDigest += Util.padZeros(evaluator.getWireValue(w).toString(16), 8);
+		for w in generator.getOutWires() {
+			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
 
 	}
 
 	@Test
-	public void testCase2() {
+	pub   testCase2() {
 
 		String inputStr = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
 		String expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
 
-		CircuitGenerator generator = new CircuitGenerator("SHA2_Test2") {
+		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test2") {
 
-			Wire[] inputWires;
+			Vec<Wire> inputWires;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
-				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
+				Vec<Wire> digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator e) {
+			pub   generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -79,32 +79,32 @@ public class SHA256_Test extends TestCase {
 		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 
 		String outDigest = "";
-		for (Wire w : generator.getOutWires()) {
-			outDigest += Util.padZeros(evaluator.getWireValue(w).toString(16), 8);
+		for w in generator.getOutWires() {
+			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
 
 	}
 
 	@Test
-	public void testCase3() {
+	pub   testCase3() {
 
 		String inputStr = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
 		String expectedDigest = "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1";
 
-		CircuitGenerator generator = new CircuitGenerator("SHA2_Test3") {
+		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test3") {
 
-			Wire[] inputWires;
+			Vec<Wire> inputWires;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
-				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
+				Vec<Wire> digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator e) {
+			pub   generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -116,32 +116,32 @@ public class SHA256_Test extends TestCase {
 		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 
 		String outDigest = "";
-		for (Wire w : generator.getOutWires()) {
-			outDigest += Util.padZeros(evaluator.getWireValue(w).toString(16), 8);
+		for w in generator.getOutWires() {
+			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
 
 	}
 
 	@Test
-	public void testCase4() {
+	pub   testCase4() {
 
 		String inputStr = "abc";
 		String expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
-		CircuitGenerator generator = new CircuitGenerator("SHA2_Test4") {
+		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test4") {
 
-			Wire[] inputWires;
+			Vec<Wire> inputWires;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
-				Wire[] digest = new SHA256Gadget(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
+				Vec<Wire> digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, "").getOutputWires();
 				makeOutputArray(digest);
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator e) {
+			pub   generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -153,8 +153,8 @@ public class SHA256_Test extends TestCase {
 		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 
 		String outDigest = "";
-		for (Wire w : generator.getOutWires()) {
-			outDigest += Util.padZeros(evaluator.getWireValue(w).toString(16), 8);
+		for w in generator.getOutWires() {
+			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
 	}
@@ -162,7 +162,7 @@ public class SHA256_Test extends TestCase {
 	
 	
 	@Test
-	public void testCase5() {
+	pub   testCase5() {
 
 		String inputStr = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
 		String expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
@@ -170,30 +170,30 @@ public class SHA256_Test extends TestCase {
 		// Testing different settings of the bitWidthPerInputElement parameter
 		// wordSize = # of bytes per input wire
 		
-		for (int wordSize = 1; wordSize <= Config.LOG2_FIELD_PRIME / 8 - 1; wordSize+=1) {
+		for wordSize in 1..=Config.LOG2_FIELD_PRIME / 8 - 1{
 			
-			final int numBytesPerInputWire = wordSize;
+			i32 numBytesPerInputWire = wordSize;
 			
-			CircuitGenerator generator = new CircuitGenerator("SHA2_Test5") {
+			CircuitGenerator generator = CircuitGenerator::new("SHA2_Test5") {
 
-				Wire[] inputWires;
+				Vec<Wire> inputWires;
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputWires = createInputWireArray(inputStr.length()
 							/ numBytesPerInputWire
 							+ (if inputStr.length() % numBytesPerInputWire != 0  { 1 }else { 0}));
-					Wire[] digest = new SHA256Gadget(inputWires, 8 * numBytesPerInputWire,
+					Vec<Wire> digest = SHA256Gadget::new(inputWires, 8 * numBytesPerInputWire,
 							inputStr.length(), false, true, "")
 							.getOutputWires();
 					makeOutputArray(digest);
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator e) {
+				pub   generateSampleInput(CircuitEvaluator e) {
 					for i in 0..inputWires.length {
 						BigInteger sum = BigInteger.ZERO;
-						for (int j = i * numBytesPerInputWire; j < (i + 1) * numBytesPerInputWire
-								&& j < inputStr.length(); j+=1) {
+						for  j in  i * numBytesPerInputWire.. j < inputStr.length().min((i + 1) * numBytesPerInputWire)
+								 {
 							BigInteger v = BigInteger.valueOf(inputStr
 									.charAt(j));
 							sum = sum.add(v.shiftLeft((j % numBytesPerInputWire) * 8));
@@ -208,8 +208,8 @@ public class SHA256_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 
 			String outDigest = "";
-			for (Wire w : generator.getOutWires()) {
-				outDigest += Util.padZeros(
+			for w in generator.getOutWires() {
+				outDigest += Util::padZeros(
 						evaluator.getWireValue(w).toString(16), 8);
 			}
 			assertEquals(outDigest, expectedDigest);

@@ -4,62 +4,60 @@ use util::util;
 use circuit::config::config;
 use circuit::structure::wire;
 
-public class PackBasicOp extends BasicOp {
-
-	public PackBasicOp(Wire[] inBits, Wire out, String... desc) {
-		super(inBits, new Wire[] { out }, desc);
+pub struct PackBasicOp;
+	pub fn newPackBasicOp( inBits:Vec<Wire>, out:Wire , desc:Vec<String>) {
+    Op<PackBasicOp>{self.self.self.self.inputs:inBits,
+        self.self.self.self.outputs: vec![out] ,  
+        desc:descl.get(0).unwrap_or(&String::new()).clone(),
+        t:PackBasicOp
+        }
 	}
+ impl BasicOp for Op<PackBasicOp> {
 
-	public String getOpcode(){
+
+
+	fn getOpcode(&self)->String{
 		return "pack";
 	}
 	
 	
-	public void checkInputs(BigInteger[] assignment) {
+	fn checkInputs(&self,assignment:Vec<BigInteger>) {
 		super.checkInputs(assignment);
-		boolean check = true;
-		for i in 0..inputs.length {
-			check &= Util.isBinary(assignment[inputs[i].getWireId()]);
-		}
-		if !check {
-			println!("Error - Input(s) to Pack are not binary. "
-					+ this);
-			panic!("Error During Evaluation");
+	
+		assert!((0..self.inputs.length).all(|i|Util::isBinary(assignment[self.inputs[i].getWireId()])),"Error - Input(s) to Pack are not binary.{self:?} During Evaluation "
+					);
 
-		}
 	}
 
 	
-	public void compute(BigInteger[] assignment) {
-		BigInteger sum = BigInteger.ZERO;
-		for i in 0..inputs.length {
-			sum = sum.add(assignment[inputs[i].getWireId()]
-					.multiply(new BigInteger("2").pow(i)));
+	fn compute(&self, assignment:Vec<BigInteger>){
+		let mut  sum = BigInteger.ZERO;
+		for i in 0..self.inputs.length {
+			sum = sum.add(assignment[self.inputs[i].getWireId()]
+					.multiply(BigInteger::new("2").pow(i)));
 		}
-		assignment[outputs[0].getWireId()] = sum.mod(Config.FIELD_PRIME);
+		assignment[self.outputs[0].getWireId()] = sum.mod(Config.FIELD_PRIME);
 	}
 
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof PackBasicOp) {
-			return false;
-		}
-		PackBasicOp op = (PackBasicOp) obj;
-		if op.inputs.length != inputs.length
-			return false;
+		if self == rhs
+			{return true;}
 
-		boolean check = true;
-		for i in 0..inputs.length {
-			check = check && inputs[i].equals(op.inputs[i]);
+		let op = obj;
+		if op.self.inputs.length != self.inputs.length
+			{return false;}
+
+		let mut  check = true;
+		for i in 0..self.inputs.length {
+			check = check && self.inputs[i].equals(op.inputs[i]);
 		}
-		return check;
+		 check
 	}
 	
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 0;
 	}
 

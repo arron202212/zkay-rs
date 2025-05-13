@@ -13,81 +13,81 @@ use examples::gadgets::hash::sha256_gadget;
  *
  */
 
-public class AugmentedAuctionCircuitGenerator extends CircuitGenerator {
+pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 
 	// each value is assumed to be a 64-bit value
-	private Wire[] secretInputValues;
-	private Wire[] secretOutputValues; 
+	 Vec<Wire> secretInputValues;
+	 Vec<Wire> secretOutputValues; 
 
 	// randomness vectors for each participant (each random vector is 7 64-bit words)
-	private Wire[][] secretInputRandomness;
-	private Wire[][] secretOutputRandomness; 
+	 Vec<Vec<Wire>> secretInputRandomness;
+	 Vec<Vec<Wire>> secretOutputRandomness; 
 	
-	private String pathToCompiledCircuit;
-	private int numParties; // includes the auction manager + the participants
+	 String pathToCompiledCircuit;
+	 i32 numParties; // includes the auction manager + the participants
 	
-	public AugmentedAuctionCircuitGenerator(String circuitName, String pathToCompiledCircuit, int numParticipants) {
+	pub  AugmentedAuctionCircuitGenerator(String circuitName, String pathToCompiledCircuit, i32 numParticipants) {
 		super(circuitName);
-		this.pathToCompiledCircuit  = pathToCompiledCircuit;
-		this.numParties = numParticipants + 1;
+		self.pathToCompiledCircuit  = pathToCompiledCircuit;
+		self.numParties = numParticipants + 1;
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		secretInputValues = createProverWitnessWireArray(numParties - 1); // the manager has a zero input (no need to commit to it)
-		secretInputRandomness = new Wire[numParties - 1][];
-		secretOutputRandomness = new Wire[numParties][];
-		for(int i = 0; i < numParties - 1; i+=1){
+		secretInputRandomness = vec![Wire::default();numParties - 1][];
+		secretOutputRandomness = vec![Wire::default();numParties][];
+		for i in 0..numParties - 1{
 			secretInputRandomness[i] =   createProverWitnessWireArray(7);
 			secretOutputRandomness[i] =   createProverWitnessWireArray(7);
 		}
 		secretOutputRandomness[numParties-1] =   createProverWitnessWireArray(7);
 
 		// instantiate a Pinocchio gadget for the auction circuit
-		PinocchioGadget auctionGagdet = new PinocchioGadget(Util.concat(zeroWire, secretInputValues), pathToCompiledCircuit);
-		Wire[] outputs = auctionGagdet.getOutputWires();
+		PinocchioGadget auctionGagdet = PinocchioGadget::new(Util::concat(zeroWire, secretInputValues), pathToCompiledCircuit);
+		Vec<Wire> outputs = auctionGagdet.getOutputWires();
 		
 		// ignore the last output for this circuit which carries the index of the winner (not needed for this example)
 		secretOutputValues = Arrays.copyOfRange(outputs, 0, outputs.length - 1);
 		
 		// augment the input side
-		for(int i = 0; i < numParties - 1; i+=1){
-			SHA256Gadget g = new SHA256Gadget(Util.concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
+		for i in 0..numParties - 1{
+			SHA256Gadget g = SHA256Gadget::new(Util::concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
 			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s input balance.");
 		}
 		
 		// augment the output side
-		for(int i = 0; i < numParties; i+=1){
+		for i in 0..numParties{
 			// adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions) 
 			secretOutputValues[i] = secretOutputValues[i].getBitWires(64*2).packAsBits(64);
-			SHA256Gadget g = new SHA256Gadget(Util.concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
+			SHA256Gadget g = SHA256Gadget::new(Util::concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
 			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s output balance.");
 		}
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(CircuitEvaluator evaluator) {
 		
-		for(int i = 0; i < numParties - 1; i+=1){
-			evaluator.setWireValue(secretInputValues[i], Util.nextRandomBigInteger(63));
+		for i in 0..numParties - 1{
+			evaluator.setWireValue(secretInputValues[i], Util::nextRandomBigInteger(63));
 		}		
 		
-		for(int i = 0; i < numParties - 1; i+=1){
+		for i in 0..numParties - 1{
 			for(Wire w:secretInputRandomness[i]){
-				evaluator.setWireValue(w, Util.nextRandomBigInteger(64));
+				evaluator.setWireValue(w, Util::nextRandomBigInteger(64));
 			}
 		}
-		for(int i = 0; i < numParties; i+=1){
+		for i in 0..numParties{
 			for(Wire w:secretOutputRandomness[i]){
-				evaluator.setWireValue(w, Util.nextRandomBigInteger(64));
+				evaluator.setWireValue(w, Util::nextRandomBigInteger(64));
 			}
 		}
 	}
 	
 	
-	public static void main(String[] args)  {
-		AugmentedAuctionCircuitGenerator generator = new AugmentedAuctionCircuitGenerator("augmented_auction_10", "auction_10.arith", 10);
+	pub    main(args:Vec<String>)  {
+		AugmentedAuctionCircuitGenerator generator = AugmentedAuctionCircuitGenerator::new("augmented_auction_10", "auction_10.arith", 10);
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

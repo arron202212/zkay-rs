@@ -1,24 +1,17 @@
 
 
-public class VariableWire extends Wire {
 
-	private WireArray bitWires;
+pub struct VariableWire  {
+	  bitWires:WireArray;
+}
+impl VariableWire{
 	
-	public VariableWire(int wireId) {
-		super(wireId);
-	}
-	
-	public VariableWire(WireArray bits) {
-		super(bits);
+	fn  getBitWires(&self)->WireArray {
+		 self.bitWires.clone()
 	}
 
-
-	WireArray getBitWires() {
-		return bitWires;
-	}
-
-	void setBits(WireArray bitWires) {
-		this.bitWires = bitWires;
+	fn  setBits(&mut self, bitWires:WireArray) {
+		self.bitWires = bitWires;
 	}
 
 }

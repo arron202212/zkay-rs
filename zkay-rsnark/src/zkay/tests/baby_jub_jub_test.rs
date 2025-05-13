@@ -6,17 +6,17 @@ use circuit::structure::wire_array;
 use zkay::zkay_baby_jub_jub_gadget;
 
 
-public class BabyJubJubTest {
-    protected class TestGadget extends ZkayBabyJubJubGadget {
+pub struct BabyJubJubTest {
+     class TestGadget extends ZkayBabyJubJubGadget {
 
-        public TestGadget() {
+        pub  TestGadget() {
             buildCircuit();
         }
 
-        protected void buildCircuit() {
+          fn buildCircuit() {
             // check native inverse
-            Wire a = generator.createConstantWire(new BigInteger("11985782033876175911769025829561891428638139496693105005957757653258"));
-            Wire ainv_expected = generator.createConstantWire(new BigInteger("20950552912096304742729232452120498732043875737213521271262032500972060322340"));
+            Wire a = generator.createConstantWire(BigInteger::new("11985782033876175911769025829561891428638139496693105005957757653258"));
+            Wire ainv_expected = generator.createConstantWire(BigInteger::new("20950552912096304742729232452120498732043875737213521271262032500972060322340"));
             Wire ainv = nativeInverse(a);
             generator.addEqualityAssertion(ainv, ainv_expected);
 
@@ -53,28 +53,28 @@ public class BabyJubJubTest {
         }
 
         
-        public Wire[] getOutputWires() {
+        pub  fn getOutputWires()->Vec<Wire>  {
             Wire dummy = generator.getOneWire();
-            return new Wire[]{ dummy };
+            return vec![Wire::default();]{ dummy };
         }
     }
 
     @Test
-    public void testBabyJubJubGadget() {
-        CircuitGenerator cgen = new CircuitGenerator("test") {
+    pub   testBabyJubJubGadget() {
+        CircuitGenerator cgen = CircuitGenerator::new("test") {
             
-            protected void buildCircuit() {
-                TestGadget gadget = new TestGadget();
+              fn buildCircuit() {
+                TestGadget gadget = TestGadget::new();
                 makeOutput(gadget.getOutputWires()[0]);
             }
 
             
-            public void generateSampleInput(CircuitEvaluator evaluator) {}
+            pub   generateSampleInput(CircuitEvaluator evaluator) {}
         };
 
         cgen.generateCircuit();
         cgen.evalCircuit();
-        CircuitEvaluator evaluator = new CircuitEvaluator(cgen);
+        CircuitEvaluator evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
     }
 }

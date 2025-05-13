@@ -7,25 +7,25 @@
  *
  */
 
-public class RSAUtil {
+pub struct RSAUtil {
 
-	public static byte[][] extractRSARandomness1_5(byte[] cipherText,
+	pub   Vec<Vec<byte>> extractRSARandomness1_5(cipherText:Vec<byte>,
 			RSAPrivateKey privateKey) {
 
 		BigInteger modulus = privateKey.getModulus();
-		int keySize = modulus.bitLength();
+		i32 keySize = modulus.bitLength();
 		BigInteger d = privateKey.getPrivateExponent();
 
-		byte[] cipherTextPadded = new byte[cipherText.length + 1];
+		Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
 		System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 		cipherTextPadded[0] = 0;
 
-		BigInteger c = new BigInteger(cipherText);
-		c = new BigInteger(cipherTextPadded);
+		BigInteger c = BigInteger::new(cipherText);
+		c = BigInteger::new(cipherTextPadded);
 		BigInteger product = BigInteger.ONE;
-		for (int i = keySize - 1; i >= 0; i--) {
+		for i in (0..=keySize - 1).rev()
 			product = product.multiply(product).mod(modulus);
-			boolean bit = d.testBit(i);
+			bool bit = d.testBit(i);
 			if bit
 				product = product.multiply(c).mod(modulus);
 		}
@@ -33,23 +33,23 @@ public class RSAUtil {
 //		println!("After decryption manually = "
 //				+ product.toString(16));
 
-		byte[] paddedPlaintext = product.toByteArray();
+		Vec<byte> paddedPlaintext = product.toByteArray();
 		if paddedPlaintext.length != keySize / 8 - 1 {
 			println!("Error");
 			return null;
 		}
-		byte[] plaintext = null;
-		byte[] randomness = null;
+		Vec<byte> plaintext = null;
+		Vec<byte> randomness = null;
 
 		if paddedPlaintext[0] != 2 {
 			println!("Error");
 		} else {
-			for (int i = 1; i < keySize / 8 - 2; i+=1) {
+			for i in 1..keySize / 8 - 2{
 				if paddedPlaintext[i] != 0 {
 					continue;
 				} else {
-					plaintext = new byte[(keySize / 8 - 2) - i];
-					randomness = new byte[i - 1];
+					plaintext = vec![byte::default();(keySize / 8 - 2) - i];
+					randomness = vec![byte::default();i - 1];
 					System.arraycopy(paddedPlaintext, i + 1, plaintext, 0,
 							plaintext.length);
 					System.arraycopy(paddedPlaintext, 1, randomness, 0,
@@ -59,20 +59,20 @@ public class RSAUtil {
 				}
 			}
 		}
-		byte[][] result = new byte[][] { plaintext, randomness };
+		Vec<Vec<byte>> result = vec![byte::default();][] { plaintext, randomness };
 		return result;
 	}
 
-	private static final byte[] intToByteArray(int value) {
-		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16),
+	  Vec<byte> intToByteArray(i32 value) {
+		return vec![byte::default();] { (byte) (value >>> 24), (byte) (value >>> 16),
 				(byte) (value >>> 8), (byte) value };
 	}
 
-	private static byte[] mgf(byte[] array, int maskLen, int hlen) {
+	  Vec<byte> mgf(array:Vec<byte>, i32 maskLen, i32 hlen) {
 
-		byte[] v = new byte[0];
-		for (int i = 0; i <= ((int) Math.ceil(maskLen * 1.0 / hlen)) - 1; i+=1) {
-			byte[] c = intToByteArray(i);
+		Vec<byte> v = vec![byte::default();0];
+		for i in 0..=((i32) Math.ceil(maskLen * 1.0 / hlen)) - 1{
+			Vec<byte> c = intToByteArray(i);
 			MessageDigest hash = null;
 			try {
 				hash = MessageDigest.getInstance("SHA-256");
@@ -80,16 +80,16 @@ public class RSAUtil {
 				e.printStackTrace();
 			}
 			hash.update(concat(array, c));
-			byte[] digest = hash.digest();
+			Vec<byte> digest = hash.digest();
 			hash.reset();
 			v = concat(v, digest);
 		}
 		return v;
 	}
 
-	private static byte[] concat(byte[] a1, byte[] a2) {
-		int l = a1.length + a2.length;
-		byte[] result = new byte[l];
+	  Vec<byte> concat(a1:Vec<byte>, a2:Vec<byte>) {
+		i32 l = a1.length + a2.length;
+		Vec<byte> result = vec![byte::default();l];
 		for i in 0..a1.length {
 			result[i] = a1[i];
 		}
@@ -99,74 +99,74 @@ public class RSAUtil {
 		return result;
 	}
 
-	public static byte[][] extractRSAOAEPSeed(byte[] cipherText,
+	pub   Vec<Vec<byte>> extractRSAOAEPSeed(cipherText:Vec<byte>,
 			RSAPrivateKey privateKey) {
 
 		BigInteger modulus = privateKey.getModulus();
-		int keySize = modulus.bitLength();
+		i32 keySize = modulus.bitLength();
 		BigInteger d = privateKey.getPrivateExponent();
 
-		byte[] cipherTextPadded = new byte[cipherText.length + 1];
+		Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
 		System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 		cipherTextPadded[0] = 0;
 
-		BigInteger c = new BigInteger(cipherText);
-		c = new BigInteger(cipherTextPadded);
+		BigInteger c = BigInteger::new(cipherText);
+		c = BigInteger::new(cipherTextPadded);
 
 		BigInteger product = BigInteger.ONE;
-		for (int i = keySize - 1; i >= 0; i--) {
+		for i in (0..=keySize - 1).rev()
 			product = product.multiply(product).mod(modulus);
-			boolean bit = d.testBit(i);
+			bool bit = d.testBit(i);
 			if bit
 				product = product.multiply(c).mod(modulus);
 		}
 
-		int hlen = 32;
-		int maskedDBLength = keySize / 8 - hlen - 1;
+		i32 hlen = 32;
+		i32 maskedDBLength = keySize / 8 - hlen - 1;
 
-		byte[] encodedMessageBytes = product.toByteArray();
+		Vec<byte> encodedMessageBytes = product.toByteArray();
 
 		if encodedMessageBytes.length > keySize / 8 {
 			encodedMessageBytes = Arrays.copyOfRange(encodedMessageBytes, 1,
 					encodedMessageBytes.length);
 		} else {
 			while (encodedMessageBytes.length < keySize / 8) {
-				encodedMessageBytes = concat(new byte[] { 0 },
+				encodedMessageBytes = concat(vec![byte::default();] { 0 },
 						encodedMessageBytes);
 			}
 		}
 
-		byte[] maskedSeed = Arrays
+		Vec<byte> maskedSeed = Arrays
 				.copyOfRange(encodedMessageBytes, 1, hlen + 1);
-		byte[] maskedDb = Arrays.copyOfRange(encodedMessageBytes, hlen + 1,
+		Vec<byte> maskedDb = Arrays.copyOfRange(encodedMessageBytes, hlen + 1,
 				encodedMessageBytes.length);
 
-		byte[] seedMask = mgf(maskedDb, hlen, hlen);
-		byte[] seed = Arrays.copyOf(seedMask, hlen);
+		Vec<byte> seedMask = mgf(maskedDb, hlen, hlen);
+		Vec<byte> seed = Arrays.copyOf(seedMask, hlen);
 		for i in 0..hlen {
 			seed[i] ^= maskedSeed[i];
 		}
 
-		byte[] dbMask = mgf(seed, keySize / 8 - hlen - 1, hlen);
+		Vec<byte> dbMask = mgf(seed, keySize / 8 - hlen - 1, hlen);
 		dbMask= Arrays.copyOf(dbMask, keySize/8-hlen-1);
 
-		byte[] DB = new byte[dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
+		Vec<byte> DB = vec![byte::default();dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
 		System.arraycopy(maskedDb, 0, DB, 1, maskedDBLength);
 		for i in 0..maskedDBLength {
 			DB[i + 1] ^= dbMask[i];
 		}
-//		BigInteger dbInt = new BigInteger(DB);
+//		BigInteger dbInt = BigInteger::new(DB);
 
-		int shift1 = 0;
+		i32 shift1 = 0;
 		while (DB[shift1] == 0) {
 			shift1+=1;
 		}
-		int idx = 32 + shift1;
+		i32 idx = 32 + shift1;
 		while (DB[idx] == 0) {
 			idx+=1;
 		}
-		byte[] plaintext = Arrays.copyOfRange(DB, idx + 1, DB.length);
-		byte[][] result = new byte[][] { plaintext, seed };
+		Vec<byte> plaintext = Arrays.copyOfRange(DB, idx + 1, DB.length);
+		Vec<Vec<byte>> result = vec![byte::default();][] { plaintext, seed };
 		return result;
 	}
 

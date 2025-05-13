@@ -3,46 +3,49 @@
 use circuit::config::config;
 use circuit::structure::wire;
 
-public class MulBasicOp extends BasicOp {
-
-	public MulBasicOp(Wire w1, Wire w2, Wire output, String... desc) {
-		super(new Wire[] { w1, w2 }, new Wire[] { output }, desc);
+pub struct MulBasicOp;
+pub fn newMulBasicOp(w1:Wire , w2:Wire , output:Wire , desc:Vec<String>)-> Op<MulBasicOp> {
+    Op<MulBasicOp>{self.self.inputs:vec![w1, w2 ],
+        self.self.outputs: vec![output] ,  
+        desc:descl.get(0).unwrap_or(&String::new()).clone(),
+        t:MulBasicOp
+        }
 	}
+ impl BasicOp for Op<MulBasicOp>{
 
-	public String getOpcode(){
+	
+
+	fn getOpcode(&self)->String{
 		return "mul";
 	}
 	
-	
-	public void compute(BigInteger[] assignment) {
-		BigInteger result = assignment[inputs[0].getWireId()]
-				.multiply(assignment[inputs[1].getWireId()]);
+	fn compute(&self,mut  assignment:Vec<BigInteger>){
+		let mut  result = assignment[self.inputs[0].getWireId()]
+				.multiply(assignment[self.inputs[1].getWireId()]);
 		if result.compareTo(Config.FIELD_PRIME) > 0 {
 			result = result.mod(Config.FIELD_PRIME);
 		}
-		assignment[outputs[0].getWireId()] = result;
+		assignment[self.outputs[0].getWireId()] = result;
 	}
 
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof MulBasicOp) {
-			return false;
-		}
-		MulBasicOp op = (MulBasicOp) obj;
+		if self == rhs
+			{return true;}
 
-		boolean check1 = inputs[0].equals(op.inputs[0])
-				&& inputs[1].equals(op.inputs[1]);
-		boolean check2 = inputs[1].equals(op.inputs[0])
-				&& inputs[0].equals(op.inputs[1]);
-		return check1 || check2;
+		let  op =  rhs;
+
+		let  check1 =self.self.inputs[0].equals(op.self.inputs[0])
+				&&self.self.inputs[1].equals(op.self.inputs[1]);
+		let check2 =self.self.inputs[1].equals(op.self.inputs[0])
+				&&self.self.inputs[0].equals(op.self.inputs[1]);
+		 check1 || check2
 
 	}
 	
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 1;
 	}
 

@@ -5,53 +5,48 @@ use circuit::eval::circuit_evaluator;
 
 use circuit::eval::instruction;
 use circuit::structure::wire;
-
-public class WireLabelInstruction implements Instruction {
-
-	public enum LabelType {
+	pub enum LabelType {
 		input, output, nizkinput, debug
 	}
+pub struct WireLabelInstruction{
+	  label_type:LabelType;
+	  w:Wire;
+	  desc:String;
+}
+ impl  WireLabelInstruction{
 
-	private LabelType type;
-	private Wire w;
-	private String desc;
-
-	public WireLabelInstruction(LabelType type, Wire w, String... desc) {
-		this.type = type;
-		this.w = w;
-		if desc.length > 0 {
-			this.desc = desc[0];
-		} else {
-			this.desc = "";
-		}
+	pub  new( label_type:LabelType,  w:Wire, desc:Vec<String>)->Self {
+        Self{label_type,w,desc:desc.get(0).unwrap_or(&String::new()).clone()}
 	}
 
-	public Wire getWire() {
-		return w;
+	pub  fn getWire()->Wire {
+		 w.clone()
 	}
 
-	public String toString() {
-		return type + " " + w + (if desc.length() == 0  { "" }else { "\t\t\t # " + desc});
+	pub  fn toString(&self)->String {
+		format!("{} {}{}",self.label_type,self.w, (if desc.length() == 0  { "" }else { "\t\t\t # " + desc}) )
 	}
+	pub fn  getType(&self)->LabelType {
+		self.label_type.clone()
+	}
+ }
 
-	public void evaluate(CircuitEvaluator evaluator) {
+ impl Instruction  for WireLabelInstruction{
+	pub  fn evaluate(CircuitEvaluator evaluator) {
 		// nothing to do.
 	}
-
 	
-	public void emit(CircuitEvaluator evaluator) {
+	pub  fn emit(CircuitEvaluator evaluator) {
 		if type == LabelType.output && Config.outputVerbose || type == LabelType.debug && Config.debugVerbose {
 			println!("\t[" + type + "] Value of Wire # " + w + (desc.length() > 0  { " (" + desc + ")" }else { ""}) + " :: "
 					+ evaluator.getWireValue(w).toString(Config.hexOutputEnabled  { 16 }else { 10}));
 		}
 	}
 
-	public LabelType getType() {
-		return type;
-	}
 
-	public boolean doneWithinCircuit() {
-		return type != LabelType.debug;
+
+	pub  fn doneWithinCircuit(&self)->bool {
+		self.labe_type != LabelType.debug
 	}
 
 }

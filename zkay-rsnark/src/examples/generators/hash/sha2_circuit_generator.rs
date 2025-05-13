@@ -4,23 +4,23 @@ use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 use examples::gadgets::hash::sha256_gadget;
 
-public class SHA2CircuitGenerator extends CircuitGenerator {
+pub struct SHA2CircuitGenerator extends CircuitGenerator {
 
-	private Wire[] inputWires;
-	private SHA256Gadget sha2Gadget;
+	 Vec<Wire> inputWires;
+	 SHA256Gadget sha2Gadget;
 
-	public SHA2CircuitGenerator(String circuitName) {
+	pub  SHA2CircuitGenerator(String circuitName) {
 		super(circuitName);
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 		
 		// assuming the circuit input will be 64 bytes
 		inputWires = createInputWireArray(64);
 		// this gadget is not applying any padding.
-		sha2Gadget = new SHA256Gadget(inputWires, 8, 64, false, false);
-		Wire[] digest = sha2Gadget.getOutputWires();
+		sha2Gadget = SHA256Gadget::new(inputWires, 8, 64, false, false);
+		Vec<Wire> digest = sha2Gadget.getOutputWires();
 		makeOutputArray(digest, "digest");
 		
 		// ======================================================================
@@ -28,23 +28,23 @@ public class SHA2CircuitGenerator extends CircuitGenerator {
 		// try the snippet below instead.
 		/*
 			inputWires = createInputWireArray(3); 	// 3-byte input
-			sha2Gadget = new SHA256Gadget(inputWires, 8, 3, false, true);
-			Wire[] digest = sha2Gadget.getOutputWires();
+			sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
+			Vec<Wire> digest = sha2Gadget.getOutputWires();
 			makeOutputArray(digest, "digest");
 		*/
 		
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(CircuitEvaluator evaluator) {
 		String inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
 		for i in 0..inputWires.length {
 			evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
 		}
 	}
 
-	public static void main(String[] args)  {
-		SHA2CircuitGenerator generator = new SHA2CircuitGenerator("sha_256");
+	pub    main(args:Vec<String>)  {
+		SHA2CircuitGenerator generator = SHA2CircuitGenerator::new("sha_256");
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

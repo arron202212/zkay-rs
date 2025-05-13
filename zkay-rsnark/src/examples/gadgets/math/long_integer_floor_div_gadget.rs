@@ -8,18 +8,18 @@ use circuit::structure::wire;
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-public class LongIntegerFloorDivGadget extends LongIntegerDivision {
+pub struct LongIntegerFloorDivGadget extends LongIntegerDivision {
 
-	public LongIntegerFloorDivGadget(LongElement a, LongElement b, String... desc) {
+	pub  LongIntegerFloorDivGadget(LongElement a, LongElement b, desc:Vec<String>) {
 		super(a, b, true, desc);
 	}
 
-	public LongIntegerFloorDivGadget(LongElement a, LongElement b, int bMinBitwidth, String... desc) {
+	pub  LongIntegerFloorDivGadget(LongElement a, LongElement b, i32 bMinBitwidth, desc:Vec<String>) {
 		super(a, b, bMinBitwidth, true, desc);
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return getQuotient().getArray();
 	}
 }

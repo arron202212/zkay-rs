@@ -5,48 +5,51 @@ use circuit::structure::wire;
  * Gadget for checking correct exponential ElGamal decryption.
  * The expected message is provided as an input.
  */
-public class ZkayElgamalDecGadget extends ZkayBabyJubJubGadget {
+pub struct ZkayElgamalDecGadget   {
 
-     Wire[] skBits;    // little-endian randomness bits
+     skBits:Vec<Wire>,    // little-endian randomness bits
 
-     JubJubPoint pk;
+     pk:JubJubPoint,
 
-     JubJubPoint c1;
+     c1:JubJubPoint,
 
-     JubJubPoint c2;
+     c2:JubJubPoint,
 
-     Wire expectedMsg;
+     expectedMsg:Wire,
 
-    private Wire msgOk;
+     msgOk:Wire,
+}
 
-    public ZkayElgamalDecGadget(JubJubPoint pk, Wire[] skBits, JubJubPoint c1, JubJubPoint c2, Wire expectedMsg) {
-        this.pk = pk;
-        this.skBits = skBits;
-        this.c1 = c1;
-        this.c2 = c2;
-        this.expectedMsg = expectedMsg;
+impl  ZkayElgamalDecGadget{
+    pub  fn new(pk:JubJubPoint , skBits:Vec<Wire>, c1:JubJubPoint , c2:JubJubPoint , expectedMsg:Wire )->Self {
+        self.pk = pk;
+        self.skBits = skBits;
+        self.c1 = c1;
+        self.c2 = c2;
+        self.expectedMsg = expectedMsg;
         buildCircuit();
     }
-
-    protected void buildCircuit() {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget{
+      fn buildCircuit() {
         // ensure pk and skBits form a key pair
-        JubJubPoint pkExpected = mulScalar(getGenerator(), skBits);
-        Wire keyOk = pkExpected.x.isEqualTo(pk.x).and(pkExpected.y.isEqualTo(pk.y));
+        let pkExpected = mulScalar(getGenerator(), skBits);
+        let keyOk = pkExpected.x.isEqualTo(pk.x).and(pkExpected.y.isEqualTo(pk.y));
 
         // decrypt ciphertext (without de-embedding)
-        JubJubPoint sharedSecret = mulScalar(c1, skBits);
-        JubJubPoint msgEmbedded = addPoints(c2, negatePoint(sharedSecret));
+        let sharedSecret = mulScalar(c1, skBits);
+        let msgEmbedded = addPoints(c2, negatePoint(sharedSecret));
 
         // embed expected message and assert equality
-        Wire[] expectedMsgBits = expectedMsg.getBitWires(32).asArray();
-        JubJubPoint expectedMsgEmbedded = mulScalar(getGenerator(), expectedMsgBits);
-        this.msgOk = expectedMsgEmbedded.x.isEqualTo(msgEmbedded.x)
+        let expectedMsgBits = expectedMsg.getBitWires(32).asArray();
+        let expectedMsgEmbedded = mulScalar(getGenerator(), expectedMsgBits);
+        self.msgOk = expectedMsgEmbedded.x.isEqualTo(msgEmbedded.x)
                 .and(expectedMsgEmbedded.y.isEqualTo(msgEmbedded.y))
                 .and(keyOk);
     }
 
     
-    public Wire[] getOutputWires() {
-        return new Wire[] { this.msgOk };
+    pub fn  getOutputWires()->Vec<Wire>  {
+        return vec![Wire::default();] { self.msgOk };
     }
 }

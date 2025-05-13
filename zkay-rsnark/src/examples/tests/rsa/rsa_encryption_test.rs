@@ -10,11 +10,11 @@ use examples::generators::rsa::rsa_util;
 
 // Tests RSA PKCS #1, V1.5
 
-public class RSAEncryption_Test extends TestCase {
+pub struct RSAEncryption_Test extends TestCase {
 
 	
 	@Test
-	public void testEncryptionDifferentKeyLengths() {
+	pub   testEncryptionDifferentKeyLengths() {
 
 		
 		String plainText = "abc";
@@ -23,55 +23,55 @@ public class RSAEncryption_Test extends TestCase {
 
 		// might need to increase memory heap to run this test on some platforms
 		
-		int[] keySizeArray = new int[] { 1024, 2048, 3072, 4096};
+		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096};
 
-		for (int keySize : keySizeArray) {
+		for keySize in keySizeArray {
 
-			final byte[] cipherTextBytes = new byte[keySize/8];			
-			SecureRandom random = new SecureRandom();
+			Vec<byte> cipherTextBytes = vec![byte::default();keySize/8];			
+			SecureRandom random = SecureRandom::new();
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
 			KeyPair keyPair = keyGen.generateKeyPair();
 			Key pubKey = keyPair.getPublic();
 			BigInteger rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
 			
-			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
+			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_Enc_TestEncryption") {
 
-				 int rsaKeyLength = keySize;
-				 int plainTextLength = plainText.length();
-				 Wire[] inputMessage;
-				 Wire[] randomness;
-				 Wire[] cipherText;
+				 i32 rsaKeyLength = keySize;
+				 i32 plainTextLength = plainText.length();
+				 Vec<Wire> inputMessage;
+				 Vec<Wire> randomness;
+				 Vec<Wire> cipherText;
 				 LongElement rsaModulus;
 
 				 RSAEncryptionV1_5_Gadget rsaEncryptionV1_5_Gadget;
 
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-					for(int i = 0; i < plainTextLength;i+=1){
+					for i in 0..plainTextLength{
 						inputMessage[i].restrictBitLength(8);
 					}
 					
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					randomness = createProverWitnessWireArray(RSAEncryptionV1_5_Gadget
 							.getExpectedRandomnessLength(rsaKeyLength, plainTextLength));
-					rsaEncryptionV1_5_Gadget = new RSAEncryptionV1_5_Gadget(rsaModulus, inputMessage,
+					rsaEncryptionV1_5_Gadget = RSAEncryptionV1_5_Gadget::new(rsaModulus, inputMessage,
 							randomness, rsaKeyLength);
 					
 					// since randomness is a witness
 					rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
-					Wire[] cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
+					Vec<Wire> cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 					
 					// group every 8 bytes together
-					cipherText = new WireArray(cipherTextInBytes).packWordsIntoLargerWords(8, 8);
+					cipherText = WireArray::new(cipherTextInBytes).packWordsIntoLargerWords(8, 8);
 					makeOutputArray(cipherText,
 							"Output cipher text");
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -79,29 +79,29 @@ public class RSAEncryption_Test extends TestCase {
 					}
 					try {
 						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-						evaluator.setWireValue(this.rsaModulus, rsaModulusValue,
+						evaluator.setWireValue(self.rsaModulus, rsaModulusValue,
 								LongElement.CHUNK_BITWIDTH);
 
 						Key privKey = keyPair.getPrivate();
 
 						cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-						byte[] tmp = cipher.doFinal(plainText.getBytes());
+						Vec<byte> tmp = cipher.doFinal(plainText.getBytes());
 						System.arraycopy(tmp, 0, cipherTextBytes, 0, keySize/8);
 						
-						byte[] cipherTextPadded = new byte[cipherTextBytes.length + 1];
+						Vec<byte> cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						System.arraycopy(cipherTextBytes, 0, cipherTextPadded, 1, cipherTextBytes.length);
 						cipherTextPadded[0] = 0;
 
-						byte[][] result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
+						Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
 								(RSAPrivateKey) privKey);
 
-						boolean check = Arrays.equals(result[0], plainText.getBytes());
+						bool check = Arrays.equals(result[0], plainText.getBytes());
 						if !check {
 							panic!(
 									"Randomness Extraction did not decrypt right");
 						}
 
-						byte[] sampleRandomness = result[1];
+						Vec<byte> sampleRandomness = result[1];
 						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 						}
@@ -121,7 +121,7 @@ public class RSAEncryption_Test extends TestCase {
 			// retrieve the ciphertext from the circuit, and verify that it matches the expected ciphertext and that it decrypts correctly (using the Java built-in RSA decryptor)
 			ArrayList<Wire> cipherTextList = generator.getOutWires();
 			BigInteger t = BigInteger.ZERO;
-			int i = 0;
+			i32 i = 0;
 			for(Wire w:cipherTextList){
 				BigInteger val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i*64));
@@ -129,21 +129,21 @@ public class RSAEncryption_Test extends TestCase {
 			}
 		
 			// extract the bytes
-			byte[] cipherTextBytesFromCircuit = t.toByteArray();
+			Vec<byte> cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
-			if(t.bitLength() == keySize && cipherTextBytesFromCircuit.length == keySize/8+1){
+			if t.bitLength() == keySize && cipherTextBytesFromCircuit.length == keySize/8+1{
 				cipherTextBytesFromCircuit=Arrays.copyOfRange(cipherTextBytesFromCircuit, 1, cipherTextBytesFromCircuit.length);
 			}
 			
-			for(int k = 0; k < cipherTextBytesFromCircuit.length;k+=1){
+			for k in 0..cipherTextBytesFromCircuit.length{
 				assertEquals(cipherTextBytes[k], cipherTextBytesFromCircuit[k]);
 
 			}
 			
 			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-			byte[] cipherTextDecrypted = cipher.doFinal(cipherTextBytesFromCircuit);
+			Vec<byte> cipherTextDecrypted = cipher.doFinal(cipherTextBytesFromCircuit);
 			assertTrue(Arrays.equals(plainText.getBytes(), cipherTextDecrypted));
 		}
 

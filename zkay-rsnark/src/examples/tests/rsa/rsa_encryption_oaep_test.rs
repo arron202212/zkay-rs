@@ -7,10 +7,10 @@ use circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 use examples::generators::rsa::rsa_util;
 
-public class RSAEncryptionOAEP_Test extends TestCase {
+pub struct RSAEncryptionOAEP_Test extends TestCase {
 
 	@Test
-	public void testEncryptionDifferentKeyLengths()  {
+	pub   testEncryptionDifferentKeyLengths()  {
 
 		String plainText = "abc";
 
@@ -18,57 +18,57 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 
 		// might need to increase memory heap to run this test on some platforms
 
-		int[] keySizeArray = new int[] { 1024, 2048, 3072 };
+		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072 };
 
-		for (int keySize : keySizeArray) {
+		for keySize in keySizeArray {
 
-			final byte[] cipherTextBytes = new byte[keySize / 8];
+			Vec<byte> cipherTextBytes = vec![byte::default();keySize / 8];
 
-			SecureRandom random = new SecureRandom();
+			SecureRandom random = SecureRandom::new();
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
 			KeyPair keyPair = keyGen.generateKeyPair();
 			Key pubKey = keyPair.getPublic();
 			BigInteger rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
 
-			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
+			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_OAEP_Enc_TestEncryption") {
 
-				int rsaKeyLength = keySize;
-				int plainTextLength = plainText.length();
-				Wire[] inputMessage;
-				Wire[] seed;
-				Wire[] cipherText;
+				i32 rsaKeyLength = keySize;
+				i32 plainTextLength = plainText.length();
+				Vec<Wire> inputMessage;
+				Vec<Wire> seed;
+				Vec<Wire> cipherText;
 				LongElement rsaModulus;
 
 				RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
 
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
-					for(int i = 0; i < plainTextLength;i+=1){
+					for i in 0..plainTextLength{
 						inputMessage[i].restrictBitLength(8);
 					}
 					
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					seed = createProverWitnessWireArray(RSAEncryptionOAEPGadget.SHA256_DIGEST_LENGTH);
-					rsaEncryptionOAEPGadget = new RSAEncryptionOAEPGadget(
+					rsaEncryptionOAEPGadget = RSAEncryptionOAEPGadget::new(
 							rsaModulus, inputMessage, seed, rsaKeyLength);
 
 					// since seed is a witness
 					rsaEncryptionOAEPGadget.checkSeedCompliance();
 					
-					Wire[] cipherTextInBytes = rsaEncryptionOAEPGadget
+					Vec<Wire> cipherTextInBytes = rsaEncryptionOAEPGadget
 							.getOutputWires(); // in bytes
 
 					// group every 8 bytes together
-					cipherText = new WireArray(cipherTextInBytes)
+					cipherText = WireArray::new(cipherTextInBytes)
 							.packWordsIntoLargerWords(8, 8);
 					makeOutputArray(cipherText, "Output cipher text");
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -76,37 +76,37 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 					}
 					try {
 
-						Security.addProvider(new BouncyCastleProvider());
+						Security.addProvider(BouncyCastleProvider::new());
 						Cipher cipher = Cipher.getInstance(
 								"RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 
 						evaluator
-								.setWireValue(this.rsaModulus, rsaModulusValue,
+								.setWireValue(self.rsaModulus, rsaModulusValue,
 										LongElement.CHUNK_BITWIDTH);
 
 						Key privKey = keyPair.getPrivate();
 
 						cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-						byte[] tmp = cipher.doFinal(plainText.getBytes());
+						Vec<byte> tmp = cipher.doFinal(plainText.getBytes());
 						System.arraycopy(tmp, 0, cipherTextBytes, 0,
 								keySize / 8);
 
-						byte[] cipherTextPadded = new byte[cipherTextBytes.length + 1];
+						Vec<byte> cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						System.arraycopy(cipherTextBytes, 0, cipherTextPadded,
 								1, cipherTextBytes.length);
 						cipherTextPadded[0] = 0;
 
-						byte[][] result = RSAUtil.extractRSAOAEPSeed(
+						Vec<Vec<byte>> result = RSAUtil.extractRSAOAEPSeed(
 								cipherTextBytes, (RSAPrivateKey) privKey);
 
-						boolean check = Arrays.equals(result[0],
+						bool check = Arrays.equals(result[0],
 								plainText.getBytes());
 						if !check {
 							panic!(
 									"Randomness Extraction did not decrypt right");
 						}
 
-						byte[] sampleRandomness = result[1];
+						Vec<byte> sampleRandomness = result[1];
 						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(seed[i],
 									(sampleRandomness[i] + 256) % 256);
@@ -129,15 +129,15 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 			// (using the BouncyCastle RSA decryptor)
 			ArrayList<Wire> cipherTextList = generator.getOutWires();
 			BigInteger t = BigInteger.ZERO;
-			int i = 0;
-			for (Wire w : cipherTextList) {
+			i32 i = 0;
+			for w in cipherTextList {
 				BigInteger val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i * 64));
 				i+=1;
 			}
 
 			// extract the bytes
-			byte[] cipherTextBytesFromCircuit = t.toByteArray();
+			Vec<byte> cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
 			if t.bitLength( == keySize
@@ -155,7 +155,7 @@ public class RSAEncryptionOAEP_Test extends TestCase {
 			Cipher cipher = Cipher.getInstance(
 					"RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 			cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-			byte[] cipherTextDecrypted = cipher
+			Vec<byte> cipherTextDecrypted = cipher
 					.doFinal(cipherTextBytesFromCircuit);
 			assertTrue(Arrays.equals(plainText.getBytes(), cipherTextDecrypted));
 		}

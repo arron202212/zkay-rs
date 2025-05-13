@@ -19,46 +19,46 @@ use examples::gadgets::blockciphers::sbox::util::linear_system_solver;
  * half of the cost of a single access.
  */
 
-public class AESSBoxGadgetOptimized1 extends Gadget {
+pub struct AESSBoxGadgetOptimized1 extends Gadget {
 
-	private static int SBox[] = AES128CipherGadget.SBox;
+	  i32 Vec<SBox> = AES128CipherGadget.SBox;
 
-	static ArrayList<BigInteger[]> allCoeffSet;
+	 ArrayList<Vec<BigInteger>> allCoeffSet;
 
-	static {
+	 {
 		// preprocessing
 		solveLinearSystems();
 	}
 
 	 Wire input;
-	private Wire output;
+	 Wire output;
 
-	public AESSBoxGadgetOptimized1(Wire input, String... desc) {
+	pub  AESSBoxGadgetOptimized1(Wire input, desc:Vec<String>) {
 		super(desc);
-		this.input = input;
+		self.input = input;
 		buildCircuit();
 	}
 
-	public static void solveLinearSystems() {
-		allCoeffSet = new ArrayList<BigInteger[]>();
+	pub    solveLinearSystems() {
+		allCoeffSet = new ArrayList<Vec<BigInteger>>();
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		for (int i = 0; i <= 255; i+=1) {
+		for i in 0..=255{
 			list.add(256 * i + SBox[i]);
 		}
 
-		for (int i = 0; i <= 15; i+=1) {
+		for i in 0..=15{
 			HashSet<Integer> memberValueSet = new HashSet<>();
-			BigInteger[][] mat = new BigInteger[16][17];
+			Vec<Vec<BigInteger>> mat = vec![BigInteger::default();16][17];
 
 			// used for sanity checks
-			BigInteger[] polyCoeffs = new BigInteger[] { BigInteger.ONE };
+			Vec<BigInteger> polyCoeffs = vec![BigInteger::default();] { BigInteger.ONE };
 
 			for k in 0..mat.length {
-				int value = list.get(k + i * 16);
+				i32 value = list.get(k + i * 16);
 				memberValueSet.add(value);
 				BigInteger p = BigInteger.valueOf(value);
 				mat[k][0] = BigInteger.ONE;
-				for (int j = 1; j <= 16; j+=1) {
+				for j in 1..=16{
 					mat[k][j] = p.multiply(mat[k][j - 1]).mod(
 							Config.FIELD_PRIME);
 				}
@@ -70,11 +70,11 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 				// used for a sanity check (verifying that the output solution
 				// is equivalent to coefficients of polynomial that has roots at
 				// memberValueSet. see note above)
-				polyCoeffs = polyMul(polyCoeffs, new BigInteger[] {
+				polyCoeffs = polyMul(polyCoeffs, vec![BigInteger::default();] {
 						Config.FIELD_PRIME.subtract(p), BigInteger.ONE });
 			}
 
-			new LinearSystemSolver(mat).solveInPlace();
+			LinearSystemSolver::new(mat).solveInPlace();
 
 			// Note that this is just a sanity check here. It should be always
 			// the case that the prover cannot cheat using this method,
@@ -87,8 +87,8 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 				panic!("The prover can cheat.");
 			}
 
-			BigInteger[] coeffs = new BigInteger[16];
-			for (int ii = 0; ii < 16; ii+=1) {
+			Vec<BigInteger> coeffs = vec![BigInteger::default();16];
+			for ii in 0..16{
 				coeffs[ii] = mat[ii][16];
 				if !coeffs[ii].equals(polyCoeffs[ii]) {
 					panic!("Inconsistency found.");
@@ -100,8 +100,8 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 	}
 
 	// method for sanity checks during preprocessing
-	private static BigInteger[] polyMul(BigInteger[] a1, BigInteger[] a2) {
-		BigInteger[] out = new BigInteger[a1.length + a2.length - 1];
+	  Vec<BigInteger> polyMul(a1:Vec<BigInteger>, a2:Vec<BigInteger>) {
+		Vec<BigInteger> out = vec![BigInteger::default();a1.length + a2.length - 1];
 		Arrays.fill(out, BigInteger.ZERO);
 		for i in 0..a1.length {
 			for j in 0..a2.length {
@@ -112,20 +112,20 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 		return out;
 	}
 
-	private static boolean checkIfProverCanCheat(BigInteger[][] mat,
+	  bool checkIfProverCanCheat(Vec<Vec<BigInteger>> mat,
 			HashSet<Integer> valueSet) {
 
-		BigInteger[] coeffs = new BigInteger[16];
+		Vec<BigInteger> coeffs = vec![BigInteger::default();16];
 		for i in 0..16 {
 			coeffs[i] = mat[i][16];
 		}
 
-		int validResults = 0;
-		int outsidePermissibleSet = 0;
+		i32 validResults = 0;
+		i32 outsidePermissibleSet = 0;
 
 		// loop over the whole permissible domain (recall that input & output
 		// are bounded)
-		for (int k = 0; k < 256 * 256; k+=1) {
+		for k in 0..256 * 256{
 
 			BigInteger result = coeffs[0];
 			BigInteger p = BigInteger.valueOf(k);
@@ -155,14 +155,14 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 		}
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		output = generator.createProverWitnessWire();
 		input.restrictBitLength(8);
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				// TODO Auto-generated method stub
 				BigInteger value = evaluator.getWireValue(input);
 				evaluator.setWireValue(output,
@@ -171,7 +171,7 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 		});
 
 		output.restrictBitLength(8);
-		Wire[] vars = new Wire[16];
+		Vec<Wire> vars = vec![Wire::default();16];
 		Wire p = input.mul(256).add(output);
 		vars[0] = generator.getOneWire();
 		for i in 1..16 {
@@ -179,7 +179,7 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 		}
 
 		Wire product = generator.getOneWire();
-		for (BigInteger[] coeffs : allCoeffSet) {
+		for coeffs in  allCoeffSet {
 			Wire accum = generator.getZeroWire();
 			for j in 0..vars.length {
 				accum = accum.add(vars[j].mul(coeffs[j]));
@@ -191,8 +191,8 @@ public class AESSBoxGadgetOptimized1 extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { output };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { output };
 	}
 
 }

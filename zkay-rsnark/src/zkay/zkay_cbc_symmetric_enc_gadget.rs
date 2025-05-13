@@ -9,108 +9,109 @@ use examples::gadgets::blockciphers::speck128_cipher_gadget;
 use util::util;
 use zkay::crypto::crypto_backend;
 
-
-
-/**
- * Performs symmetric encryption in the CBC mode.
- */
-public class ZkayCBCSymmetricEncGadget extends Gadget {
-
-	public enum CipherType {
+	pub  enum CipherType {
 		SPECK_128,
 		AES_128,
 		CHASKEY
 	}
 
-	 CipherType cipherType;
-	 Wire[] keyBits;
-	 Wire[] plaintextBits;
-	 Wire[] ivBits;
+/**
+ * Performs symmetric encryption in the CBC mode.
+ */
+pub struct ZkayCBCSymmetricEncGadget {
 
-	private Wire[] cipherBits = null;
 
-	public static final int BLOCK_SIZE = 128;
-	public static final int KEY_SIZE = 128;
 
-	public ZkayCBCSymmetricEncGadget(TypedWire plaintext, Wire key, Wire iv, CipherType cipherType, String... desc) {
+	 cipherType:CipherType,
+	 keyBits:Vec<Wire>,
+	 plaintextBits:Vec<Wire>,
+	 ivBits:Vec<Wire>,
+
+	 Vec<Wire> cipherBits = null;
+}
+
+ impl  Gadget for ZkayCBCSymmetricEncGadget {
+	pub const BLOCK_SIZE:i32= 128;
+	pub const KEY_SIZE:i32= 128;
+
+	pub  fn new(plaintext:TypedWire , key:Wire , iv:Wire , cipherType:CipherType , desc:Vec<String>)->Self {
 		super(desc);
-		this.plaintextBits = Util.reverseBytes(plaintext.wire.getBitWires(256).asArray());
-		this.keyBits = Util.reverseBytes(key.getBitWires(KEY_SIZE).asArray());
-		this.ivBits = Util.reverseBytes(iv.getBitWires(BLOCK_SIZE).asArray());
-		this.cipherType = cipherType;
+		self.plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());
+		self.keyBits = Util::reverseBytes(key.getBitWires(KEY_SIZE).asArray());
+		self.ivBits = Util::reverseBytes(iv.getBitWires(BLOCK_SIZE).asArray());
+		self.cipherType = cipherType;
 
-		println!("Plain length [bits]: " + this.plaintextBits.length);
+		println!("Plain length [bits]: " + self.plaintextBits.length);
 		buildCircuit();
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
-		int numBlocks = (int) Math.ceil(plaintextBits.length * 1.0 / BLOCK_SIZE);
-		Wire[] plaintextArray = new WireArray(plaintextBits).adjustLength(numBlocks * BLOCK_SIZE).asArray();
+		let numBlocks =  (i32) Math.ceil(plaintextBits.length * 1.0 / BLOCK_SIZE);
+		let plaintextArray =  WireArray::new(plaintextBits).adjustLength(numBlocks * BLOCK_SIZE).asArray();
 
-		Wire[] preparedKey = prepareKey();
-		WireArray prevCipher = new WireArray(ivBits);
+		let preparedKey =  prepareKey();
+		let prevCipher =  WireArray::new(ivBits);
 
-		cipherBits = new Wire[0];
+		cipherBits = vec![Wire::default();0];
 		for i in 0..numBlocks {
-			WireArray msgBlock = new WireArray(Arrays.copyOfRange(plaintextArray, i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE));
-			Wire[] xored = msgBlock.xorWireArray(prevCipher).asArray();
-			switch (cipherType) {
-				case SPECK_128: {
-					Wire[] tmp = new WireArray(xored).packBitsIntoWords(64);
-					Gadget gadget = new Speck128CipherGadget(tmp, preparedKey, description);
-					Wire[] outputs = gadget.getOutputWires();
-					prevCipher = new WireArray(outputs).getBits(64);
-					break;
+			let msgBlock =  WireArray::new(Arrays.copyOfRange(plaintextArray, i * BLOCK_SIZE, (i + 1) * BLOCK_SIZE));
+			let xored =  msgBlock.xorWireArray(prevCipher).asArray();
+			match cipherType {
+				 SPECK_128=>{
+					let tmp =  WireArray::new(xored).packBitsIntoWords(64);
+					let gadget =  Speck128CipherGadget::new(tmp, preparedKey, description);
+					let outputs =  gadget.getOutputWires();
+					prevCipher = WireArray::new(outputs).getBits(64);
+					
 				}
-				case AES_128: {
-					Wire[] tmp = new WireArray(xored).packBitsIntoWords(8);
-					Gadget gadget = new AES128CipherGadget(tmp, preparedKey, "aes: " + description);
-					Wire[] outputs = gadget.getOutputWires();
-					prevCipher = new WireArray(outputs).getBits(8);
-					break;
+				 AES_128=>{
+					let tmp =  WireArray::new(xored).packBitsIntoWords(8);
+					let gadget =  AES128CipherGadget::new(tmp, preparedKey, "aes: " + description);
+					let outputs =  gadget.getOutputWires();
+					prevCipher = WireArray::new(outputs).getBits(8);
+					
 				}
-				case CHASKEY: {
-					Wire[] tmp = new WireArray(xored).packBitsIntoWords(32);
-					Gadget gadget = new ChaskeyLTS128CipherGadget(tmp, preparedKey, "chaskey: " + description);
-					Wire[] outputs = gadget.getOutputWires();
-					prevCipher = new WireArray(outputs).getBits(32);
-					break;
+				 CHASKEY=>{
+					let tmp =  WireArray::new(xored).packBitsIntoWords(32);
+					let gadget =  ChaskeyLTS128CipherGadget::new(tmp, preparedKey, "chaskey: " + description);
+					let outputs =  gadget.getOutputWires();
+					prevCipher = WireArray::new(outputs).getBits(32);
 				}
-				default:
-					throw new IllegalStateException("Unknown cipher value: " + cipherType);
+				_=>
+					assert!("Unknown cipher value:{cipherType} "  );
 			}
-			cipherBits = Util.concat(cipherBits, prevCipher.asArray());
+			cipherBits = Util::concat(cipherBits, prevCipher.asArray());
 		}
 	}
 
-	private Wire[] prepareKey() {
-		Wire[] preparedKey;
-		switch (cipherType) {
-			case SPECK_128: {
-				Wire[] packedKey = new WireArray(keyBits).packBitsIntoWords(64);
+	 fn prepareKey()->Vec<Wire> {
+		let mut  preparedKey;
+		match cipherType {
+			 SPECK_128=>{
+				let packedKey =  WireArray::new(keyBits).packBitsIntoWords(64);
 				preparedKey = Speck128CipherGadget.expandKey(packedKey);
-				break;
+				
 			}
-			case AES_128: {
-				Wire[] packedKey = new WireArray(keyBits).packBitsIntoWords(8);
+			 AES_128=>{
+				let packedKey =  WireArray::new(keyBits).packBitsIntoWords(8);
 				preparedKey = AES128CipherGadget.expandKey(packedKey);
-				break;
+				
 			}
-			case CHASKEY: {
-				preparedKey = new WireArray(keyBits).packBitsIntoWords(32);
-				break;
+			 CHASKEY=>{
+				preparedKey = WireArray::new(keyBits).packBitsIntoWords(32);
+				
 			}
-			default:
-				throw new UnsupportedOperationException("Other Ciphers not supported in this version!");
+			_=>
+				panic!("Other Ciphers not supported in this version!"),
 		}
 		return preparedKey;
 	}
 
 	
-	public Wire[] getOutputWires() {
-		println!("Cipher length [bits]: " + cipherBits.length);
-		return new WireArray(Util.reverseBytes(Util.concat(ivBits, cipherBits)))
+	pub  fn getOutputWires()->  Vec<Wire> {
+		println!("Cipher length [bits]: {}" , cipherBits.length);
+		return WireArray::new(Util::reverseBytes(Util::concat(ivBits, cipherBits)))
 				.packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);
 	}
 }

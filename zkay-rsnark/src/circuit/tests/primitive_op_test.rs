@@ -9,14 +9,14 @@ use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 use circuit::structure::wire_array;
 
-public class PrimitiveOpTest extends TestCase {
+pub struct PrimitiveOpTest extends TestCase {
 
 	@Test
-	public void testAddition() {
+	pub   testAddition() {
 
-		int numIns = 100;
-		BigInteger[] inVals1 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
-		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		i32 numIns = 100;
+		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
 		result.add(inVals1[0].add(inVals1[1]).mod(Config.FIELD_PRIME));
@@ -29,14 +29,14 @@ public class PrimitiveOpTest extends TestCase {
 			result.add(inVals1[i].add(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
-		CircuitGenerator generator = new CircuitGenerator("addition") {
+		CircuitGenerator generator = CircuitGenerator::new("addition") {
 			WireArray inputs1;
 			WireArray inputs2;
 
 			
-			protected void buildCircuit() {
-				inputs1 = new WireArray(createInputWireArray(numIns));
-				inputs2 = new WireArray(createInputWireArray(numIns));
+			  fn buildCircuit() {
+				inputs1 = WireArray::new(createInputWireArray(numIns));
+				inputs2 = WireArray::new(createInputWireArray(numIns));
 
 				Wire result1 = inputs1.get(0).add(inputs1.get(1), "");
 				Wire result2 = inputs1.sumAllElements();
@@ -48,7 +48,7 @@ public class PrimitiveOpTest extends TestCase {
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
@@ -56,12 +56,12 @@ public class PrimitiveOpTest extends TestCase {
 		};
 
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = new CircuitEvaluator(generator);
+		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 
-		int idx = 0;
-		for (Wire output : generator.getOutWires()) {
+		i32 idx = 0;
+		for output in generator.getOutWires() {
 			assertEquals(evaluator.getWireValue(output), result.get(idx+=1));
 		}
 		assertEquals(generator.getNumOfConstraints(), numIns + 2);
@@ -69,11 +69,11 @@ public class PrimitiveOpTest extends TestCase {
 	}
 
 	@Test
-	public void testMultiplication() {
+	pub   testMultiplication() {
 
-		int numIns = 100;
-		BigInteger[] inVals1 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
-		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		i32 numIns = 100;
+		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
 		result.add(inVals1[0].multiply(inVals1[1]).mod(Config.FIELD_PRIME));
@@ -81,14 +81,14 @@ public class PrimitiveOpTest extends TestCase {
 			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
-		CircuitGenerator generator = new CircuitGenerator("multiplication") {
+		CircuitGenerator generator = CircuitGenerator::new("multiplication") {
 			WireArray inputs1;
 			WireArray inputs2;
 
 			
-			protected void buildCircuit() {
-				inputs1 = new WireArray(createInputWireArray(numIns));
-				inputs2 = new WireArray(createInputWireArray(numIns));
+			  fn buildCircuit() {
+				inputs1 = WireArray::new(createInputWireArray(numIns));
+				inputs2 = WireArray::new(createInputWireArray(numIns));
 
 				Wire result1 = inputs1.get(0).mul(inputs1.get(1), "");
 				WireArray resultArray = inputs1.mulWireArray(inputs2, numIns);
@@ -98,49 +98,49 @@ public class PrimitiveOpTest extends TestCase {
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = new CircuitEvaluator(generator);
+		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
-		int idx = 0;
-		for (Wire output : generator.getOutWires()) {
+		i32 idx = 0;
+		for output in generator.getOutWires() {
 			assertEquals(evaluator.getWireValue(output), result.get(idx+=1));
 		}
 		assertEquals(generator.getNumOfConstraints(), numIns + 1);
 	}
 
 	@Test
-	public void testComparison() {
+	pub   testComparison() {
 
-		int numIns = 10000;
-		int numBits = 10;
-		BigInteger[] inVals1 = Util.randomBigIntegerArray(numIns, numBits);
-		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, numBits);
+		i32 numIns = 10000;
+		i32 numBits = 10;
+		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns, numBits);
+		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns, numBits);
 
 		ArrayList<Integer> result = new ArrayList<Integer>();
 		for i in 0..numIns {
 			result.add(inVals1[i].compareTo(inVals2[i]));
 		}
 
-		final Wire[] result1 = new Wire[numIns];
-		final Wire[] result2 = new Wire[numIns];
-		final Wire[] result3 = new Wire[numIns];
-		final Wire[] result4 = new Wire[numIns];
-		final Wire[] result5 = new Wire[numIns];
+		Vec<Wire> result1 = vec![Wire::default();numIns];
+		Vec<Wire> result2 = vec![Wire::default();numIns];
+		Vec<Wire> result3 = vec![Wire::default();numIns];
+		Vec<Wire> result4 = vec![Wire::default();numIns];
+		Vec<Wire> result5 = vec![Wire::default();numIns];
 
-		CircuitGenerator generator = new CircuitGenerator("comparison") {
+		CircuitGenerator generator = CircuitGenerator::new("comparison") {
 
-			Wire[] inputs1;
-			Wire[] inputs2;
+			Vec<Wire> inputs1;
+			Vec<Wire> inputs2;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 
 				inputs1 = createInputWireArray(numIns);
 				inputs2 = createInputWireArray(numIns);
@@ -155,19 +155,19 @@ public class PrimitiveOpTest extends TestCase {
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = new CircuitEvaluator(generator);
+		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 //		generator.printCircuit();
 		evaluator.evaluate();
 		for i in 0..numIns {
-			int r = result.get(i);
+			i32 r = result.get(i);
 			if r == 0 {
 				assertEquals(evaluator.getWireValue(result1[i]), BigInteger.ZERO);
 				assertEquals(evaluator.getWireValue(result2[i]), BigInteger.ONE);
@@ -191,23 +191,23 @@ public class PrimitiveOpTest extends TestCase {
 	}
 
 	@Test
-	public void testBooleanOperations() {
+	pub   testBooleanOperations() {
 
-		int numIns = Config.LOG2_FIELD_PRIME;
-		BigInteger[] inVals1 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
-		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
-		BigInteger[] inVals3 = Util.randomBigIntegerArray(numIns, 32);
+		i32 numIns = Config.LOG2_FIELD_PRIME;
+		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		Vec<BigInteger> inVals3 = Util::randomBigIntegerArray(numIns, 32);
 
-		BigInteger[] shiftedRightVals = new BigInteger[numIns];
-		BigInteger[] shiftedLeftVals = new BigInteger[numIns];
-		BigInteger[] rotatedRightVals = new BigInteger[numIns];
-		BigInteger[] rotatedLeftVals = new BigInteger[numIns];
-		BigInteger[] xoredVals = new BigInteger[numIns];
-		BigInteger[] oredVals = new BigInteger[numIns];
-		BigInteger[] andedVals = new BigInteger[numIns];
-		BigInteger[] invertedVals = new BigInteger[numIns];
+		Vec<BigInteger> shiftedRightVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> shiftedLeftVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> rotatedRightVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> rotatedLeftVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> xoredVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> oredVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> andedVals = vec![BigInteger::default();numIns];
+		Vec<BigInteger> invertedVals = vec![BigInteger::default();numIns];
 
-		BigInteger mask = new BigInteger("2").pow(Config.LOG2_FIELD_PRIME).subtract(BigInteger.ONE);
+		BigInteger mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME).subtract(BigInteger.ONE);
 		
 		for i in 0..numIns {
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).mod(Config.FIELD_PRIME);
@@ -220,26 +220,26 @@ public class PrimitiveOpTest extends TestCase {
 			invertedVals[i] = BigInteger.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
 		}
 
-		CircuitGenerator generator = new CircuitGenerator("boolean_operations") {
-			Wire[] inputs1;
-			Wire[] inputs2;
-			Wire[] inputs3;
+		CircuitGenerator generator = CircuitGenerator::new("boolean_operations") {
+			Vec<Wire> inputs1;
+			Vec<Wire> inputs2;
+			Vec<Wire> inputs3;
 
 			
-			protected void buildCircuit() {
+			  fn buildCircuit() {
 
 				inputs1 = createInputWireArray(numIns);
 				inputs2 = createInputWireArray(numIns);
 				inputs3 = createInputWireArray(numIns);
 
-				Wire[] shiftedRight = new Wire[numIns];
-				Wire[] shiftedLeft = new Wire[numIns];
-				Wire[] rotatedRight = new Wire[numIns];
-				Wire[] rotatedLeft = new Wire[numIns];
-				Wire[] xored = new Wire[numIns];
-				Wire[] ored = new Wire[numIns];
-				Wire[] anded = new Wire[numIns];
-				Wire[] inverted = new Wire[numIns];
+				Vec<Wire> shiftedRight = vec![Wire::default();numIns];
+				Vec<Wire> shiftedLeft = vec![Wire::default();numIns];
+				Vec<Wire> rotatedRight = vec![Wire::default();numIns];
+				Vec<Wire> rotatedLeft = vec![Wire::default();numIns];
+				Vec<Wire> xored = vec![Wire::default();numIns];
+				Vec<Wire> ored = vec![Wire::default();numIns];
+				Vec<Wire> anded = vec![Wire::default();numIns];
+				Vec<Wire> inverted = vec![Wire::default();numIns];
 
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(Config.LOG2_FIELD_PRIME, i);
@@ -264,59 +264,59 @@ public class PrimitiveOpTest extends TestCase {
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = new CircuitEvaluator(generator);
+		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 
 		ArrayList<Wire> outWires = generator.getOutWires();
-		int i, outputIndex = 0;
-		for (i = 0; i < numIns; i+=1) 
+		i32 i, outputIndex = 0;
+		for i in 0..numIns
 			assertEquals(shiftedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1) 
+		for i in 0..numIns
 			assertEquals(shiftedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(rotatedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 		
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(rotatedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(xoredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(oredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(andedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 		outputIndex += numIns;
-		for (i = 0; i < numIns; i+=1)
+		for i in 0..numIns
 			assertEquals(invertedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
 
 	}
 	
 	
 	@Test
-	public void testAssertion() {
+	pub   testAssertion() {
 
-		int numIns = 100;
-		BigInteger[] inVals1 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
-		BigInteger[] inVals2 = Util.randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		i32 numIns = 100;
+		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
+		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 		
 		
 		ArrayList<BigInteger> result = new ArrayList<BigInteger>();
@@ -325,30 +325,30 @@ public class PrimitiveOpTest extends TestCase {
 			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
 		}
 
-		CircuitGenerator generator = new CircuitGenerator("assertions") {
+		CircuitGenerator generator = CircuitGenerator::new("assertions") {
 			WireArray inputs1;
 			WireArray inputs2;
 			WireArray solutions; // provide solutions as witnesses
 
 			
-			protected void buildCircuit() {
-				inputs1 = new WireArray(createInputWireArray(numIns));
-				inputs2 = new WireArray(createInputWireArray(numIns));
-				solutions = new WireArray(createProverWitnessWireArray(numIns+1));
+			  fn buildCircuit() {
+				inputs1 = WireArray::new(createInputWireArray(numIns));
+				inputs2 = WireArray::new(createInputWireArray(numIns));
+				solutions = WireArray::new(createProverWitnessWireArray(numIns+1));
 
-				specifyProverWitnessComputation(new Instruction() {
+				specifyProverWitnessComputation(Instruction::new() {
 					
 					
-					public void evaluate(CircuitEvaluator evaluator) {
+					pub   evaluate(CircuitEvaluator evaluator) {
 						evaluator.setWireValue(solutions.get(0),result.get(0));
-						for(int i =0; i < numIns;i+=1){
+						for(i32 i =0; i < numIns;i+=1){
 							evaluator.setWireValue(solutions.get(i+1),result.get(i+1));
 						}
 					}
 				});
 				
 				addAssertion(inputs1.get(0), inputs1.get(0), solutions.get(0));
-				for(int i = 0; i < numIns;i+=1){
+				for i in 0..numIns{
 					addAssertion(inputs1.get(i), inputs2.get(i), solutions.get(i+1));
 				}
 				
@@ -370,14 +370,14 @@ public class PrimitiveOpTest extends TestCase {
 			}
 
 			
-			public void generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = new CircuitEvaluator(generator);
+		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate(); // no exception will be thrown
 		assertEquals(generator.getNumOfConstraints(), numIns + 2);

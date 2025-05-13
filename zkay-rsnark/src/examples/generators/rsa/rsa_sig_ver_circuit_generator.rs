@@ -7,29 +7,29 @@ use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 
 //a demo for RSA Signatures PKCS #1, V1.5
-public class RSASigVerCircuitGenerator extends CircuitGenerator {
+pub struct RSASigVerCircuitGenerator extends CircuitGenerator {
 
-	private int rsaKeyLength;
-	private Wire[] inputMessage;
-	private LongElement signature;
-	private LongElement rsaModulus;
+	 i32 rsaKeyLength;
+	 Vec<Wire> inputMessage;
+	 LongElement signature;
+	 LongElement rsaModulus;
 
-	private SHA256Gadget sha2Gadget;
-	private RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
+	 SHA256Gadget sha2Gadget;
+	 RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
-	public RSASigVerCircuitGenerator(String circuitName, int rsaKeyLength) {
+	pub  RSASigVerCircuitGenerator(String circuitName, i32 rsaKeyLength) {
 		super(circuitName);
-		this.rsaKeyLength = rsaKeyLength;
+		self.rsaKeyLength = rsaKeyLength;
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		// a sample input message of 3 byte
 		inputMessage = createInputWireArray(3);
-		sha2Gadget = new SHA256Gadget(inputMessage, 8, inputMessage.length,
+		sha2Gadget = SHA256Gadget::new(inputMessage, 8, inputMessage.length,
 				false, true);
-		Wire[] digest = sha2Gadget.getOutputWires();
+		Vec<Wire> digest = sha2Gadget.getOutputWires();
 
 		/**
 		 * Since an RSA modulus take many wires to present, it could increase
@@ -50,7 +50,7 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 
 		// The modulus can also be hardcoded by changing the statement above to the following
 
-		// rsaModulus = new LongElement(Util.split(new
+		// rsaModulus = LongElement::new(Util::split(new
 		// BigInteger("f0dac4df56945ec31a037c5b736b64192f14baf27f2036feb85dfe45dc99d8d3c024e226e6fd7cabb56f780f9289c000a873ce32c66f4c1b2970ae6b7a3ceb2d7167fbbfe41f7b0ed7a07e3c32f14c3940176d280ceb25ed0bf830745a9425e1518f27de822b17b2b599e0aea7d72a2a6efe37160e46bf7c78b0573c9014380ab7ec12ce272a83aaa464f814c08a0b0328e191538fefaadd236ae10ba9cbb525df89da59118c7a7b861ec1c05e09976742fc2d08bd806d3715e702d9faa3491a3e4cf76b5546f927e067b281c25ddc1a21b1fb12788d39b27ca0052144ab0aad7410dc316bd7e9d2fe5e0c7a1028102454be9c26c3c347dd93ee044b680c93cb",
 		// 16), LongElement.CHUNK_BITWIDTH));
 		
@@ -64,7 +64,7 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 		signature.assertLessThan(rsaModulus); // might not be really necessary in that
 										      // case
 
-		rsaSigVerificationV1_5_Gadget = new RSASigVerificationV1_5_Gadget(
+		rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
 				rsaModulus, digest, signature, rsaKeyLength);
 		makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0],
 				"Is Signature valid?");
@@ -72,7 +72,7 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(CircuitEvaluator evaluator) {
 		String inputStr = "abc";
 		for i in 0..inputMessage.length {
 			evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
@@ -80,34 +80,34 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 
 		try {
 			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-			keyGen.initialize(rsaKeyLength, new SecureRandom());
+			keyGen.initialize(rsaKeyLength, SecureRandom::new());
 			KeyPair keyPair = keyGen.generateKeyPair();
 
 			Signature signature = Signature.getInstance("SHA256withRSA");
 			signature.initSign(keyPair.getPrivate());
 
-			byte[] message = inputStr.getBytes();
+			Vec<byte> message = inputStr.getBytes();
 			signature.update(message);
 
-			byte[] sigBytes = signature.sign();
-			byte[] signaturePadded = new byte[sigBytes.length + 1];
+			Vec<byte> sigBytes = signature.sign();
+			Vec<byte> signaturePadded = vec![byte::default();sigBytes.length + 1];
 			System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.length);
 			signaturePadded[0] = 0;
 			BigInteger modulus = ((RSAPublicKey) keyPair.getPublic())
 					.getModulus();
 //			println!(modulus.toString(16));
-			BigInteger sig = new BigInteger(signaturePadded);
+			BigInteger sig = BigInteger::new(signaturePadded);
 
 			// if !minimizeVerificationKey {
-			evaluator.setWireValue(this.rsaModulus, modulus,
+			evaluator.setWireValue(self.rsaModulus, modulus,
 					LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(this.signature, sig,
+			evaluator.setWireValue(self.signature, sig,
 					LongElement.CHUNK_BITWIDTH);
 			// } else {
-			// evaluator.setWireValue(this.rsaModulusWires,
-			// Util.split(modulus, Config.LOG2_FIELD_PRIME - 1));
-			// evaluator.setWireValue(this.signatureWires,
-			// Util.split(sig, Config.LOG2_FIELD_PRIME - 1));
+			// evaluator.setWireValue(self.rsaModulusWires,
+			// Util::split(modulus, Config.LOG2_FIELD_PRIME - 1));
+			// evaluator.setWireValue(self.signatureWires,
+			// Util::split(sig, Config.LOG2_FIELD_PRIME - 1));
 			// }
 		} catch (Exception e) {
 			println!("Error while generating sample input for circuit");
@@ -116,9 +116,9 @@ public class RSASigVerCircuitGenerator extends CircuitGenerator {
 
 	}
 
-	public static void main(String[] args)  {
-		int keyLength = 2048;
-		RSASigVerCircuitGenerator generator = new RSASigVerCircuitGenerator(
+	pub    main(args:Vec<String>)  {
+		i32 keyLength = 2048;
+		RSASigVerCircuitGenerator generator = RSASigVerCircuitGenerator::new(
 				"rsa" + keyLength + "_sha256_sig_verify", keyLength);
 		generator.generateCircuit();
 		generator.evalCircuit();

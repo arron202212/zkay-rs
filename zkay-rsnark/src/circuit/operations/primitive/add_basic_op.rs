@@ -2,56 +2,55 @@
 use circuit::config::config;
 use circuit::structure::wire;
 
-public class AddBasicOp extends BasicOp {
+pub struct AddBasicOp; 
 
-	public AddBasicOp(Wire[] ws, Wire output, String...desc) {
-		super(ws, new Wire[] { output }, desc);
+	pub fn  NewAddBasicOp( ws:Vec<Wire>, Wire output, desc:Vec<String>)->Op<AddBasicOp> {
+		Op<AddBasicOp>{inputs:ws,
+        outputs: vec![output] ,  
+        desc,
+        t:AddBasicOp
+        }
 	}
 
-	public String getOpcode(){
+impl<T> BasicOp for Op<AddBasicOp>{
+	fn getOpcode(&self)->String{
 		return "add";
 	}
 	
 	
-	public void compute(BigInteger[] assignment) {
-		BigInteger s = BigInteger.ZERO;
-		for (Wire w : inputs) {
+	fn compute(&self, assignment:Vec<BigInteger>){
+		let mut  s = BigInteger.ZERO;
+		for  w  in  self.inputs {
 			s = s.add(assignment[w.getWireId()]);
 		}
-		assignment[outputs[0].getWireId()] = s.mod(Config.FIELD_PRIME);
+		assignment[self.outputs[0].getWireId()] = s.mod(Config.FIELD_PRIME);
 	}
 	
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof AddBasicOp) {
-			return false;
-		}
-		AddBasicOp op = (AddBasicOp) obj;
-		if(op.inputs.length!=inputs.length ){
+		if self == rhs
+			{return true;}
+
+		let  op = rhs;
+		if  op.inputs.len()!=self.inputs.len() {
 			return false;
 		}
 		
-		if(inputs.length == 2){
-			boolean check1 = inputs[0].equals(op.inputs[0])
-					&& inputs[1].equals(op.inputs[1]);
-			boolean check2 = inputs[1].equals(op.inputs[0])
-					&& inputs[0].equals(op.inputs[1]);
+		if self.inputs.len() == 2{
+			let  check1 = self.inputs[0].equals(op.inputs[0])
+					&& self.inputs[1].equals(op.inputs[1]);
+			let  check2 = self.inputs[1].equals(op.inputs[0])
+					&& self.inputs[0].equals(op.inputs[1]);
 			return check1 || check2;
-		} else {
-			boolean check = true;
-			for(int i = 0; i < inputs.length; i+=1){
-				check = check && inputs[i].equals(op.inputs[i]);
-			}
-			return check;
-		}
+		} 
+
+		self.inputs.iter().zip(&op.inputs).all(|(a,b)| a.equals(b))
 	}
 
 	
-	public int getNumMulGates() {
-		return 0;
-	}
+	fn getNumMulGates(&self)->i32 {
+		 0	
+    }
 
 }

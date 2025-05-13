@@ -7,9 +7,30 @@ use circuit::structure::wire;
 use examples::gadgets::math::field_division_gadget;
 
 
+      pub struct  AffinePoint {
+         x:Wire,
+         y:Wire,
+      }
+    // impl AffinePoint {
+    //     // AffinePoint(x:Wire ) {
+    //     //     self.x = x;
+    //     // }
+
+    //     // AffinePoint(x:Wire , y:Wire ) {
+    //     //     self.x = x;
+    //     //     self.y = y;
+    //     // }
+
+    //     // AffinePoint(p:AffinePoint ) {
+    //     //     self.x = p.x;
+    //     //     self.y = p.y;
+    //     // }
+    // }
+
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
-public abstract class ZkayEcGadget extends Gadget {
-    public ZkayEcGadget(String... desc) {
+pub  struct  ZkayEcGadget;
+ impl   ZkayEcGadget{
+    pub  fn new(desc:Vec<String>) {
         super(desc);
     }
 
@@ -17,7 +38,7 @@ public abstract class ZkayEcGadget extends Gadget {
     // Config.FIELD_PRIME =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
-    public final static int SECRET_BITWIDTH = 253; // number of bits in the
+    pub    i32 SECRET_BITWIDTH = 253; // number of bits in the
     // exponent. Note that the
     // most significant bit
     // should
@@ -27,37 +48,19 @@ public abstract class ZkayEcGadget extends Gadget {
     // See
     // the constructor
 
-    public final static BigInteger COEFF_A = new BigInteger("126932"); // parameterization
+    pub    BigInteger COEFF_A = BigInteger::new("126932"); // parameterization
     // in
     // https://eprint.iacr.org/2015/1093.pdf
 
-    public final static BigInteger CURVE_ORDER = new BigInteger(
+    pub    BigInteger CURVE_ORDER = BigInteger::new(
             "21888242871839275222246405745257275088597270486034011716802747351550446453784");
 
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
-    public final static BigInteger SUBGROUP_ORDER = new BigInteger(
+    pub    BigInteger SUBGROUP_ORDER = BigInteger::new(
             "2736030358979909402780800718157159386074658810754251464600343418943805806723");
 
-    protected static class AffinePoint {
-        protected Wire x;
-        protected Wire y;
 
-        AffinePoint(Wire x) {
-            this.x = x;
-        }
-
-        AffinePoint(Wire x, Wire y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        AffinePoint(ZkayEcGadget.AffinePoint p) {
-            this.x = p.x;
-            this.y = p.y;
-        }
-    }
-
-    public static void checkSecretBits(CircuitGenerator generator, Wire[] secretBits) {
+    pub    checkSecretBits(generator:CircuitGenerator , secretBits:Vec<Wire>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
@@ -72,7 +75,7 @@ public abstract class ZkayEcGadget extends Gadget {
         generator.addOneAssertion(secretBits[SECRET_BITWIDTH - 1],
                 "Asserting secret bit conditions");
 
-        for (int i = 3; i < SECRET_BITWIDTH - 1; i+=1) {
+        for i in 3..SECRET_BITWIDTH - 1{
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
@@ -82,15 +85,15 @@ public abstract class ZkayEcGadget extends Gadget {
 
     // this is only called, when Wire y is provided as witness by the prover
     // (not as input to the gadget)
-    protected void assertValidPointOnEC(Wire x, Wire y) {
-        Wire ySqr = y.mul(y);
-        Wire xSqr = x.mul(x);
-        Wire xCube = xSqr.mul(x);
+     fn  assertValidPointOnEC(x:Wire , y:Wire ) {
+        let ySqr = y.mul(y);
+        let xSqr = x.mul(x);
+        let xCube = xSqr.mul(x);
         generator.addEqualityAssertion(ySqr, xCube.add(xSqr.mul(COEFF_A)).add(x));
     }
 
-    protected AffinePoint[] preprocess(AffinePoint p) {
-        AffinePoint[] precomputedTable = new AffinePoint[SECRET_BITWIDTH];
+     fn preprocess(p:AffinePoint )->Vec<AffinePoint> {
+        let precomputedTable = vec![AffinePoint::default();SECRET_BITWIDTH];
         precomputedTable[0] = p;
         for j in 1..SECRET_BITWIDTH {
             precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
@@ -102,60 +105,61 @@ public abstract class ZkayEcGadget extends Gadget {
      * Performs scalar multiplication (secretBits must comply with the
      * conditions above)
      */
-    protected AffinePoint mul(AffinePoint p, Wire[] secretBits,
-                            AffinePoint[] precomputedTable) {
+     fn  mul(p:AffinePoint , secretBits:Vec<Wire>,
+                            precomputedTable:Vec<AffinePoint>)->AffinePoint {
 
-        AffinePoint result = new AffinePoint(
+        let result = AffinePoint::new(
                 precomputedTable[secretBits.length - 1]);
-        for (int j = secretBits.length - 2; j >= 0; j--) {
-            AffinePoint tmp = addAffinePoints(result, precomputedTable[j]);
-            Wire isOne = secretBits[j];
+        for j in (0..=secretBits.length - 2).rev()
+            let tmp = addAffinePoints(result, precomputedTable[j]);
+            let isOne = secretBits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
             result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
         }
         return result;
     }
 
-    protected AffinePoint doubleAffinePoint(AffinePoint p) {
-        Wire x_2 = p.x.mul(p.x);
-        Wire l1 = new FieldDivisionGadget(x_2.mul(3)
+     fn doubleAffinePoint(p:AffinePoint ) ->AffinePoint{
+        let x_2 = p.x.mul(p.x);
+        let l1 = FieldDivisionGadget::new(x_2.mul(3)
                 .add(p.x.mul(COEFF_A).mul(2)).add(1), p.y.mul(2))
                 .getOutputWires()[0];
-        Wire l2 = l1.mul(l1);
-        Wire newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
-        Wire newY = p.x.mul(3).add(COEFF_A).sub(l2).mul(l1).sub(p.y);
-        return new AffinePoint(newX, newY);
+        let l2 = l1.mul(l1);
+        let newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
+        let newY = p.x.mul(3).add(COEFF_A).sub(l2).mul(l1).sub(p.y);
+        return AffinePoint::new(newX, newY);
     }
 
-    protected AffinePoint addAffinePoints(AffinePoint p1, AffinePoint p2) {
-        Wire diffY = p1.y.sub(p2.y);
-        Wire diffX = p1.x.sub(p2.x);
-        Wire q = new FieldDivisionGadget(diffY, diffX).getOutputWires()[0];
-        Wire q2 = q.mul(q);
-        Wire q3 = q2.mul(q);
-        Wire newX = q2.sub(COEFF_A).sub(p1.x).sub(p2.x);
-        Wire newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
-        return new AffinePoint(newX, newY);
+     fn addAffinePoints(p1:AffinePoint , p2:AffinePoint )->AffinePoint{
+        let diffY = p1.y.sub(p2.y);
+        let diffX = p1.x.sub(p2.x);
+        let q = FieldDivisionGadget::new(diffY, diffX).getOutputWires()[0];
+        let q2 = q.mul(q);
+        let q3 = q2.mul(q);
+        let newX = q2.sub(COEFF_A).sub(p1.x).sub(p2.x);
+        let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
+        return AffinePoint::new(newX, newY);
     }
-
-    public static BigInteger computeYCoordinate(BigInteger x) {
-        BigInteger xSqred = x.multiply(x).mod(Config.FIELD_PRIME);
-        BigInteger xCubed = xSqred.multiply(x).mod(Config.FIELD_PRIME);
-        BigInteger ySqred = xCubed.add(COEFF_A.multiply(xSqred)).add(x)
+ }
+ impl  Gadget  for ZkayEcGadget{
+    pub  fn computeYCoordinate(x:BigInteger )->   BigInteger {
+        let xSqred = x.multiply(x).mod(Config.FIELD_PRIME);
+        let xCubed = xSqred.multiply(x).mod(Config.FIELD_PRIME);
+        let ySqred = xCubed.add(COEFF_A.multiply(xSqred)).add(x)
                 .mod(Config.FIELD_PRIME);
-        BigInteger y = IntegerFunctions.ressol(ySqred, Config.FIELD_PRIME);
+        let y = IntegerFunctions.ressol(ySqred, Config.FIELD_PRIME);
         return y;
     }
 
-    protected void assertPointOrder(AffinePoint p, AffinePoint[] table) {
+    fn assertPointOrder(p:AffinePoint , table:Vec<AffinePoint>) {
 
-        Wire o = generator.createConstantWire(SUBGROUP_ORDER);
-        Wire[] bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();
+        let o = generator.createConstantWire(SUBGROUP_ORDER);
+        let bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();
 
-        AffinePoint result = new AffinePoint(table[bits.length - 1]);
-        for (int j = bits.length - 2; j >= 1; j--) {
-            AffinePoint tmp = addAffinePoints(result, table[j]);
-            Wire isOne = bits[j];
+        let result = AffinePoint::new(table[bits.length - 1]);
+        for j in (1..=bits.length - 2).rev()
+            let tmp = addAffinePoints(result, table[j]);
+            let isOne = bits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
             result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
         }

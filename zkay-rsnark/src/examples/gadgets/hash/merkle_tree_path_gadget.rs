@@ -10,64 +10,64 @@ use circuit::structure::wire_array;
  * 
  */
 
-public class MerkleTreePathGadget extends Gadget {
+pub struct MerkleTreePathGadget extends Gadget {
 
-	private static int digestWidth = SubsetSumHashGadget.DIMENSION;
+	  i32 digestWidth = SubsetSumHashGadget.DIMENSION;
 
-	private int treeHeight;
-	private Wire directionSelectorWire;
-	private Wire[] directionSelectorBits;
-	private Wire[] leafWires;
-	private Wire[] intermediateHashWires;
-	private Wire[] outRoot;
+	 i32 treeHeight;
+	 Wire directionSelectorWire;
+	 Vec<Wire> directionSelectorBits;
+	 Vec<Wire> leafWires;
+	 Vec<Wire> intermediateHashWires;
+	 Vec<Wire> outRoot;
 
-	private int leafWordBitWidth;
+	 i32 leafWordBitWidth;
 
-	public MerkleTreePathGadget(Wire directionSelectorWire, Wire[] leafWires, Wire[] intermediateHasheWires,
-			int leafWordBitWidth, int treeHeight, String... desc) {
+	pub  MerkleTreePathGadget(Wire directionSelectorWire, leafWires:Vec<Wire>, intermediateHasheWires:Vec<Wire>,
+			i32 leafWordBitWidth, i32 treeHeight, desc:Vec<String>) {
 
 		super(desc);
-		this.directionSelectorWire = directionSelectorWire;
-		this.treeHeight = treeHeight;
-		this.leafWires = leafWires;
-		this.intermediateHashWires = intermediateHasheWires;
-		this.leafWordBitWidth = leafWordBitWidth;
+		self.directionSelectorWire = directionSelectorWire;
+		self.treeHeight = treeHeight;
+		self.leafWires = leafWires;
+		self.intermediateHashWires = intermediateHasheWires;
+		self.leafWordBitWidth = leafWordBitWidth;
 
 		buildCircuit();
 
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
 		directionSelectorBits = directionSelectorWire.getBitWires(treeHeight).asArray();
 
 		// Apply CRH to leaf data
-		Wire[] leafBits = new WireArray(leafWires).getBits(leafWordBitWidth).asArray();
-		SubsetSumHashGadget subsetSumGadget = new SubsetSumHashGadget(leafBits, false);
-		Wire[] currentHash = subsetSumGadget.getOutputWires();
+		Vec<Wire> leafBits = WireArray::new(leafWires).getBits(leafWordBitWidth).asArray();
+		SubsetSumHashGadget subsetSumGadget = SubsetSumHashGadget::new(leafBits, false);
+		Vec<Wire> currentHash = subsetSumGadget.getOutputWires();
 
 		// Apply CRH across tree path guided by the direction bits
 		for i in 0..treeHeight {
-			Wire[] inHash = new Wire[2 * digestWidth];
+			Vec<Wire> inHash = vec![Wire::default();2 * digestWidth];
 			for j in 0..digestWidth {
 				Wire temp = currentHash[j].sub(intermediateHashWires[i * digestWidth + j]);
 				Wire temp2 = directionSelectorBits[i].mul(temp);
 				inHash[j] = intermediateHashWires[i * digestWidth + j].add(temp2);
 			}
-			for (int j = digestWidth; j < 2 * digestWidth; j+=1) {
+			for j in digestWidth..2 * digestWidth{
 				Wire temp = currentHash[j - digestWidth].add(intermediateHashWires[i * digestWidth + j - digestWidth]);
 				inHash[j] = temp.sub(inHash[j - digestWidth]);
 			}
 
-			Wire[] nextInputBits = new WireArray(inHash).getBits(Config.LOG2_FIELD_PRIME).asArray();
-			subsetSumGadget = new SubsetSumHashGadget(nextInputBits, false);
+			Vec<Wire> nextInputBits = WireArray::new(inHash).getBits(Config.LOG2_FIELD_PRIME).asArray();
+			subsetSumGadget = SubsetSumHashGadget::new(nextInputBits, false);
 			currentHash = subsetSumGadget.getOutputWires();
 		}
 		outRoot = currentHash;
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return outRoot;
 	}
 

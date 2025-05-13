@@ -6,45 +6,45 @@ use examples::gadgets::blockciphers::aes128_cipher_gadget;
 use examples::gadgets::blockciphers::sbox.aes_s_box_gadget_optimized2;
 
 
-public class AES128_Test extends TestCase {
+pub struct AES128_Test extends TestCase {
 
 	@Test
-	public void testCase1() {
+	pub   testCase1() {
 		
 		// key: "2b7e151628aed2a6abf7158809cf4f3c"
 		// plaintext: "ae2d8a571e03ac9c9eb76fac45af8e51"
 		// ciphertext: "f5d3d58503b9699de785895a96fdbaaf"
 		
 		// testing all available sBox implementations
-		for(AES128CipherGadget.SBoxOption sboxOption: AES128CipherGadget.SBoxOption.values()){
+for sboxOption in AES128CipherGadget.SBoxOption.values()
 			
 			AES128CipherGadget.sBoxOption = sboxOption;
-			CircuitGenerator generator = new CircuitGenerator("AES128_Test1_"+sboxOption) {
+			CircuitGenerator generator = CircuitGenerator::new("AES128_Test1_"+sboxOption) {
 	
-				private Wire[] plaintext; // 16 bytes
-				private Wire[] key; // 16 bytes
-				private Wire[] ciphertext; // 16 bytes
+				 Vec<Wire> plaintext; // 16 bytes
+				 Vec<Wire> key; // 16 bytes
+				 Vec<Wire> ciphertext; // 16 bytes
 	
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
-					Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-					ciphertext = new AES128CipherGadget(plaintext, expandedKey)
+					Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+					ciphertext = AES128CipherGadget::new(plaintext, expandedKey)
 							.getOutputWires();
 					makeOutputArray(ciphertext);
 				}
 	
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 	
-					BigInteger keyV = new BigInteger(
+					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
-					BigInteger msgV = new BigInteger(
+					BigInteger msgV = BigInteger::new(
 							"ae2d8a571e03ac9c9eb76fac45af8e51", 16);
 	
-					byte[] keyArray = keyV.toByteArray();
-					byte[] msgArray = msgV.toByteArray();
+					Vec<byte> keyArray = keyV.toByteArray();
+					Vec<byte> msgArray = msgV.toByteArray();
 					msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 							msgArray.length);
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -64,10 +64,10 @@ public class AES128_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 			ArrayList<Wire> cipherText = generator.getOutWires();
 	
-			BigInteger result = new BigInteger("f5d3d58503b9699de785895a96fdbaaf",
+			BigInteger result = BigInteger::new("f5d3d58503b9699de785895a96fdbaaf",
 					16);
 		
-			byte[] resultArray = result.toByteArray();
+			Vec<byte> resultArray = result.toByteArray();
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
@@ -80,42 +80,42 @@ public class AES128_Test extends TestCase {
 	
 	
 	@Test
-	public void testCase2() {
+	pub   testCase2() {
 		
 		// key: "2b7e151628aed2a6abf7158809cf4f3c"
 		// plaintext: "6bc1bee22e409f96e93d7e117393172a"
 		// ciphertext: "3ad77bb40d7a3660a89ecaf32466ef97"
 		
 		// testing all available sBox implementations
-		for(AES128CipherGadget.SBoxOption sboxOption: AES128CipherGadget.SBoxOption.values()){
+for sboxOption in AES128CipherGadget.SBoxOption.values()
 			
 			AES128CipherGadget.sBoxOption = sboxOption;
-			CircuitGenerator generator = new CircuitGenerator("AES128_Test2_"+sboxOption) {
+			CircuitGenerator generator = CircuitGenerator::new("AES128_Test2_"+sboxOption) {
 	
-				private Wire[] plaintext; // 16 bytes
-				private Wire[] key; // 16 bytes
-				private Wire[] ciphertext; // 16 bytes
+				 Vec<Wire> plaintext; // 16 bytes
+				 Vec<Wire> key; // 16 bytes
+				 Vec<Wire> ciphertext; // 16 bytes
 	
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
-					Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-					ciphertext = new AES128CipherGadget(plaintext, expandedKey)
+					Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+					ciphertext = AES128CipherGadget::new(plaintext, expandedKey)
 							.getOutputWires();
 					makeOutputArray(ciphertext);
 				}
 	
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 	
-					BigInteger keyV = new BigInteger(
+					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
-					BigInteger msgV = new BigInteger(
+					BigInteger msgV = BigInteger::new(
 							"6bc1bee22e409f96e93d7e117393172a", 16);
 	
-					byte[] keyArray = keyV.toByteArray();
-					byte[] msgArray = msgV.toByteArray();
+					Vec<byte> keyArray = keyV.toByteArray();
+					Vec<byte> msgArray = msgV.toByteArray();
 					msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 							msgArray.length);
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -135,12 +135,12 @@ public class AES128_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 			ArrayList<Wire> cipherText = generator.getOutWires();
 	
-			BigInteger result = new BigInteger("3ad77bb40d7a3660a89ecaf32466ef97",
+			BigInteger result = BigInteger::new("3ad77bb40d7a3660a89ecaf32466ef97",
 					16);
 	
 			// expected output:0xf5d3d58503b9699de785895a96fdbaaf
 	
-			byte[] resultArray = result.toByteArray();
+			Vec<byte> resultArray = result.toByteArray();
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
@@ -152,42 +152,42 @@ public class AES128_Test extends TestCase {
 	}
 
 	@Test
-	public void testCase3() {
+	pub   testCase3() {
 		
 		// key: "2b7e151628aed2a6abf7158809cf4f3c"
 		// plaintext: "6bc1bee22e409f96e93d7e117393172a"
 		// ciphertext: "3ad77bb40d7a3660a89ecaf32466ef97"
 		
 		// testing all available sBox implementations
-		for(AES128CipherGadget.SBoxOption sboxOption: AES128CipherGadget.SBoxOption.values()){
+for sboxOption in AES128CipherGadget.SBoxOption.values()
 			
 			AES128CipherGadget.sBoxOption = sboxOption;
-			CircuitGenerator generator = new CircuitGenerator("AES128_Test3_"+sboxOption) {
+			CircuitGenerator generator = CircuitGenerator::new("AES128_Test3_"+sboxOption) {
 	
-				private Wire[] plaintext; // 16 bytes
-				private Wire[] key; // 16 bytes
-				private Wire[] ciphertext; // 16 bytes
+				 Vec<Wire> plaintext; // 16 bytes
+				 Vec<Wire> key; // 16 bytes
+				 Vec<Wire> ciphertext; // 16 bytes
 	
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
-					Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-					ciphertext = new AES128CipherGadget(plaintext, expandedKey)
+					Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+					ciphertext = AES128CipherGadget::new(plaintext, expandedKey)
 							.getOutputWires();
 					makeOutputArray(ciphertext);
 				}
 	
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 	
-					BigInteger keyV = new BigInteger(
+					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
-					BigInteger msgV = new BigInteger(
+					BigInteger msgV = BigInteger::new(
 							"30c81c46a35ce411e5fbc1191a0a52ef", 16);
 	
-					byte[] keyArray = keyV.toByteArray();
-					byte[] msgArray = msgV.toByteArray();
+					Vec<byte> keyArray = keyV.toByteArray();
+					Vec<byte> msgArray = msgV.toByteArray();
 					msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 							msgArray.length);
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -207,10 +207,10 @@ public class AES128_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 			ArrayList<Wire> cipherText = generator.getOutWires();
 	
-			BigInteger result = new BigInteger("43b1cd7f598ece23881b00e3ed030688",
+			BigInteger result = BigInteger::new("43b1cd7f598ece23881b00e3ed030688",
 					16);
 	
-			byte[] resultArray = result.toByteArray();
+			Vec<byte> resultArray = result.toByteArray();
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
@@ -223,42 +223,42 @@ public class AES128_Test extends TestCase {
 
 
 	@Test
-	public void testCase4() {
+	pub   testCase4() {
 		
 		// key: "2b7e151628aed2a6abf7158809cf4f3c"
 		// plaintext: "30c81c46a35ce411e5fbc1191a0a52ef"
 		// ciphertext: "43b1cd7f598ece23881b00e3ed030688"
 		
 		// testing all available sBox implementations
-		for(AES128CipherGadget.SBoxOption sboxOption: AES128CipherGadget.SBoxOption.values()){
+for sboxOption in AES128CipherGadget.SBoxOption.values()
 			
 			AES128CipherGadget.sBoxOption = sboxOption;
-			CircuitGenerator generator = new CircuitGenerator("AES128_Test4_"+sboxOption) {
+			CircuitGenerator generator = CircuitGenerator::new("AES128_Test4_"+sboxOption) {
 	
-				private Wire[] plaintext; // 16 bytes
-				private Wire[] key; // 16 bytes
-				private Wire[] ciphertext; // 16 bytes
+				 Vec<Wire> plaintext; // 16 bytes
+				 Vec<Wire> key; // 16 bytes
+				 Vec<Wire> ciphertext; // 16 bytes
 	
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
-					Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-					ciphertext = new AES128CipherGadget(plaintext, expandedKey)
+					Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+					ciphertext = AES128CipherGadget::new(plaintext, expandedKey)
 							.getOutputWires();
 					makeOutputArray(ciphertext);
 				}
 	
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 	
-					BigInteger keyV = new BigInteger(
+					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
-					BigInteger msgV = new BigInteger(
+					BigInteger msgV = BigInteger::new(
 							"f69f2445df4f9b17ad2b417be66c3710", 16);
 	
-					byte[] keyArray = keyV.toByteArray();
-					byte[] msgArray = msgV.toByteArray();
+					Vec<byte> keyArray = keyV.toByteArray();
+					Vec<byte> msgArray = msgV.toByteArray();
 					msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 							msgArray.length);
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -278,11 +278,11 @@ public class AES128_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 			ArrayList<Wire> cipherText = generator.getOutWires();
 	
-			BigInteger result = new BigInteger("7b0c785e27e8ad3f8223207104725dd4",
+			BigInteger result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4",
 					16);
 
 			
-			byte[] resultArray = result.toByteArray();
+			Vec<byte> resultArray = result.toByteArray();
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	
@@ -294,40 +294,40 @@ public class AES128_Test extends TestCase {
 	}
 	
 	@Test
-	public void testCustomSboxImplementation() {
+	pub   testCustomSboxImplementation() {
 		
 		
 		AES128CipherGadget.sBoxOption = AES128CipherGadget.SBoxOption.OPTIMIZED2;
-		for(int b = 0; b <= 15; b+=1){
+		for(i32 b = 0; b <= 15; b+=1){
 			
 			AESSBoxGadgetOptimized2.setBitCount(b);
 			AESSBoxGadgetOptimized2.solveLinearSystems();
-			CircuitGenerator generator = new CircuitGenerator("AES128_Test_SBox_Parametrization_"+b) {
+			CircuitGenerator generator = CircuitGenerator::new("AES128_Test_SBox_Parametrization_"+b) {
 	
-				private Wire[] plaintext; // 16 bytes
-				private Wire[] key; // 16 bytes
-				private Wire[] ciphertext; // 16 bytes
+				 Vec<Wire> plaintext; // 16 bytes
+				 Vec<Wire> key; // 16 bytes
+				 Vec<Wire> ciphertext; // 16 bytes
 	
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					plaintext = createInputWireArray(16);
 					key = createInputWireArray(16);
-					Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-					ciphertext = new AES128CipherGadget(plaintext, expandedKey)
+					Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+					ciphertext = AES128CipherGadget::new(plaintext, expandedKey)
 							.getOutputWires();
 					makeOutputArray(ciphertext);
 				}
 	
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 	
-					BigInteger keyV = new BigInteger(
+					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
-					BigInteger msgV = new BigInteger(
+					BigInteger msgV = BigInteger::new(
 							"f69f2445df4f9b17ad2b417be66c3710", 16);
 	
-					byte[] keyArray = keyV.toByteArray();
-					byte[] msgArray = msgV.toByteArray();
+					Vec<byte> keyArray = keyV.toByteArray();
+					Vec<byte> msgArray = msgV.toByteArray();
 					msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 							msgArray.length);
 					keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -347,11 +347,11 @@ public class AES128_Test extends TestCase {
 			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
 			ArrayList<Wire> cipherText = generator.getOutWires();
 	
-			BigInteger result = new BigInteger("7b0c785e27e8ad3f8223207104725dd4",
+			BigInteger result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4",
 					16);
 
 			
-			byte[] resultArray = result.toByteArray();
+			Vec<byte> resultArray = result.toByteArray();
 			resultArray = Arrays.copyOfRange(resultArray, resultArray.length - 16,
 					resultArray.length);
 	

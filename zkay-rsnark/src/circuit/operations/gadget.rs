@@ -3,26 +3,23 @@
 use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 
-public abstract class Gadget {
-
-	protected CircuitGenerator generator;
-	protected String description;
-
-	public Gadget(String...desc) {
-		this.generator = CircuitGenerator.getActiveCircuitGenerator();
-		if(desc.length > 0)
-			this.description = desc[0];
-		else
-			this.description = "";
+pub struct Gadget<T>{
+    generator:CircuitGenerator;
+	  description:String;
+    t:T,
+}
+	pub fn  newGadget(desc:Vec<String>)->(CircuitGenerator,String) {
+		( CircuitGenerator.getActiveCircuitGenerator(),desc.get(0).unwrap_or(&String::new()))
 	}
 
-	public abstract Wire[] getOutputWires();
+pub trait GadgetConfig {
+	fn getOutputWires()->Vec<Wire>;
 	
-	public String toString() {
-		return  getClass().getSimpleName() + " " + description;
+	fn  toString(&self)->String {
+		 "getClass().getSimpleName()".to_owned() + " " + self.description
 	}
 	
-	public String debugStr(String s) {
-		return this + ":" + s;
+	fn  debugStr(&self,String s)->String {
+		format!( "{self:?}:{s}")
 	}
 }

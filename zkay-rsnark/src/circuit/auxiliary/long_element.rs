@@ -197,7 +197,7 @@ impl LongElement{
 	pub fn align(totalNumChunks:usize)->Self {
 		let mut  newArray = array[..totalNumChunks].to_vec();
 		for  i in  0..newArray.len(){
-			if(newArray[i].is_empty()){
+			if newArray[i].is_empty(){
 				newArray[i]= self.generator.getZeroWire();
 			}
 		}
@@ -292,7 +292,7 @@ impl LongElement{
 					idx += alignedChunkBits.len();
 				}
 				let  out = WireArray::new(bitWires);
-				if(limit >= maxVal.bitLength()){
+				if limit >= maxVal.bitLength(){
 					bits = out.adjustLength(maxVal.bitLength());
 				}
 				 out
@@ -670,7 +670,7 @@ impl LongElement{
 		// first verify that both elements are aligned
 		assert!(self.isAligned() && other.isAligned(),"input chunks are not aligned");
 
-		let  a1 = this.getArray();
+		let  a1 = self.getArray();
 		let  a2 = other.getArray();
 		let length = std::cmp::max(a1.len(), a2.len());
 		let  paddedA1 = Util::padWireArray(a1, length,
@@ -820,7 +820,7 @@ impl Sub for LongElement {
 				BigInteger otherValue = evaluator.getWireValue(other, CHUNK_BITWIDTH);
 				BigInteger resultValue = myValue.subtract(otherValue);
 				if resultValue.signum() < 0 {
-					throw new IllegalArgumentException("Result of subtraction is negative!");
+					assert!("Result of subtraction is negative!");
 				}
 				evaluator.setWireValue(result, resultValue, CHUNK_BITWIDTH);
 			}
@@ -885,7 +885,7 @@ impl Mul for LongElement {
 			});
 
 			for k in 0..length {
-				let  constant = new BigInteger((k + 1) + "");
+				let  constant = BigInteger::new((k + 1) + "");
 				let coeff = BigInteger.ONE;
 
 				let vector1 = vec![self.generator.getZeroWire();array.len()];

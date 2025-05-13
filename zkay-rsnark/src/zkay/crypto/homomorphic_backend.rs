@@ -2,7 +2,7 @@
 use zkay::homomorphic_input;
 use zkay::typed_wire;
 
-public interface HomomorphicBackend {
+pub trait  HomomorphicBackend {
 
 	/**
 	 * Perform the unary homomorphic operation 'op' on the ciphertext 'cipher'.
@@ -19,8 +19,8 @@ public interface HomomorphicBackend {
 	 * @throws UnsupportedOperationException
 	 * 		if the backend does not support operation 'op'
 	 */
-	default TypedWire[] doHomomorphicOp(char op, HomomorphicInput arg, String keyName) {
-		throw new UnsupportedOperationException("Unary operation " + op + " not supported");
+	fn  doHomomorphicOp( op:char ,  arg:HomomorphicInput ,  keyName:String ) {
+		panic!("Unary operation {op} not supported");
 	}
 
 	/**
@@ -40,12 +40,12 @@ public interface HomomorphicBackend {
 	 * @throws UnsupportedOperationException
 	 * 		if the backend does not support operation 'op'
 	 */
-	default TypedWire[] doHomomorphicOp(HomomorphicInput lhs, char op, HomomorphicInput rhs, String keyName) {
-		throw new UnsupportedOperationException("Binary operation " + op + " not supported");
+	fn  doHomomorphicOp( lhs:HomomorphicInput ,  op:char ,  rhs:HomomorphicInput ,  keyName:String )->Vec<TypedWire> {
+		panic!("Binary operation {op} not supported");
 	}
 
 	/**
-	 * Perform the boolean / comparison homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
+	 * Perform the bool / comparison homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
 	 *
 	 * @param lhs
 	 * 		the left-hand side operand, either a ciphertext or a plain wire
@@ -61,8 +61,8 @@ public interface HomomorphicBackend {
 	 * @throws UnsupportedOperationException
 	 * 		if the backend does not support operation 'op'
 	 */
-	default TypedWire[] doHomomorphicOp(HomomorphicInput lhs, String op, HomomorphicInput rhs, String keyName) {
-		throw new UnsupportedOperationException("Boolean / comparison operation " + op + " not supported");
+	fn  doHomomorphicOp( lhs:HomomorphicInput ,  op:String ,  rhs:HomomorphicInput ,  keyName:String )->Vec<TypedWire> {
+		panic!("Boolean / comparison operation {op} not supported");
 	}
 
 	/**
@@ -82,8 +82,8 @@ public interface HomomorphicBackend {
 	 * @throws UnsupportedOperationException
 	 * 		if the backend does not support operation 'op'
 	 */
-	default TypedWire[] doHomomorphicCond(HomomorphicInput cond, HomomorphicInput trueVal, HomomorphicInput falseVal, String keyName) {
-		throw new UnsupportedOperationException("Ternary conditional not supported");
+	fn  doHomomorphicCond( cond:HomomorphicInput ,  trueVal:HomomorphicInput ,  falseVal:HomomorphicInput ,  keyName:String )-> Vec<TypedWire>{
+		panic!("Ternary conditional not supported");
 	}
 
 	/**
@@ -98,7 +98,7 @@ public interface HomomorphicBackend {
 	 *
 	 * @return the re-randomized ciphertext
 	 */
-	default TypedWire[] doHomomorphicRerand(TypedWire[] arg, String keyName, TypedWire randomness) {
-		throw new UnsupportedOperationException("Homomorphic re-randomization not supported");
+	fn  doHomomorphicRerand( arg:Vec<TypedWire> ,  keyName:String ,  randomness:TypedWire )->Vec<TypedWire> {
+		panic!("Homomorphic re-randomization not supported");
 	}
 }

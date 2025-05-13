@@ -5,12 +5,12 @@ use circuit::operations::gadget;
 use circuit::structure::wire;
 use circuit::structure::wire_array;
 
-public class SHA256Gadget extends Gadget {
+pub struct SHA256Gadget extends Gadget {
 
-	private static final long H[] = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
+	  long Vec<H> = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
 			0x1f83d9abL, 0x5be0cd19L };
 
-	private static final long K[] = { 0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L, 0x3956c25bL, 0x59f111f1L,
+	  long Vec<K> = { 0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L, 0x3956c25bL, 0x59f111f1L,
 			0x923f82a4L, 0xab1c5ed5L, 0xd807aa98L, 0x12835b01L, 0x243185beL, 0x550c7dc3L, 0x72be5d74L, 0x80deb1feL,
 			0x9bdc06a7L, 0xc19bf174L, 0xe49b69c1L, 0xefbe4786L, 0x0fc19dc6L, 0x240ca1ccL, 0x2de92c6fL, 0x4a7484aaL,
 			0x5cb0a9dcL, 0x76f988daL, 0x983e5152L, 0xa831c66dL, 0xb00327c8L, 0xbf597fc7L, 0xc6e00bf3L, 0xd5a79147L,
@@ -20,64 +20,64 @@ public class SHA256Gadget extends Gadget {
 			0x5b9cca4fL, 0x682e6ff3L, 0x748f82eeL, 0x78a5636fL, 0x84c87814L, 0x8cc70208L, 0x90befffaL, 0xa4506cebL,
 			0xbef9a3f7L, 0xc67178f2L };
 
-	private Wire[] unpaddedInputs;
+	 Vec<Wire> unpaddedInputs;
 
-	private int bitwidthPerInputElement;
-	private int totalLengthInBytes;
+	 i32 bitwidthPerInputElement;
+	 i32 totalLengthInBytes;
 
-	private int numBlocks;
-	private boolean binaryOutput;
-	private boolean paddingRequired;
+	 i32 numBlocks;
+	 bool binaryOutput;
+	 bool paddingRequired;
 
-	private Wire[] preparedInputBits;
-	private Wire[] output;
+	 Vec<Wire> preparedInputBits;
+	 Vec<Wire> output;
 
-	public SHA256Gadget(Wire[] ins, int bitWidthPerInputElement, int totalLengthInBytes, boolean binaryOutput,
-			boolean paddingRequired, String... desc) {
+	pub  SHA256Gadget(ins:Vec<Wire>, i32 bitWidthPerInputElement, i32 totalLengthInBytes, bool binaryOutput,
+			bool paddingRequired, desc:Vec<String>) {
 
 		super(desc);
 		if (totalLengthInBytes * 8 > ins.length * bitWidthPerInputElement
 				|| totalLengthInBytes * 8 < (ins.length - 1) * bitWidthPerInputElement) {
-			throw new IllegalArgumentException("Inconsistent Length Information");
+			assert!("Inconsistent Length Information");
 		}
 
 		if (!paddingRequired && totalLengthInBytes % 64 != 0
 				&& ins.length * bitWidthPerInputElement != totalLengthInBytes) {
-			throw new IllegalArgumentException("When padding is not forced, totalLengthInBytes % 64 must be zero.");
+			assert!("When padding is not forced, totalLengthInBytes % 64 must be zero.");
 		}
 
-		this.unpaddedInputs = ins;
-		this.bitwidthPerInputElement = bitWidthPerInputElement;
-		this.totalLengthInBytes = totalLengthInBytes;
-		this.binaryOutput = binaryOutput;
-		this.paddingRequired = paddingRequired;
+		self.unpaddedInputs = ins;
+		self.bitwidthPerInputElement = bitWidthPerInputElement;
+		self.totalLengthInBytes = totalLengthInBytes;
+		self.binaryOutput = binaryOutput;
+		self.paddingRequired = paddingRequired;
 
 		buildCircuit();
 
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		// pad if needed
 		prepare();
 
-		Wire[] outDigest = new Wire[8];
-		Wire[] hWires = new Wire[H.length];
+		Vec<Wire> outDigest = vec![Wire::default();8];
+		Vec<Wire> hWires = vec![Wire::default();H.length];
 		for i in 0..H.length {
 			hWires[i] = generator.createConstantWire(H[i]);
 		}
 
-		for (int blockNum = 0; blockNum < numBlocks; blockNum+=1) {
+		for blockNum in 0..numBlocks{
 
-			Wire[][] wsSplitted = new Wire[64][];
-			Wire[] w = new Wire[64];
+			Vec<Vec<Wire>> wsSplitted = vec![Wire::default();64][];
+			Vec<Wire> w = vec![Wire::default();64];
 
 			for i in 0..64 {
 				if i < 16 {
-					wsSplitted[i] = Util.reverseBytes(Arrays.copyOfRange(preparedInputBits, blockNum * 512 + i * 32,
+					wsSplitted[i] = Util::reverseBytes(Arrays.copyOfRange(preparedInputBits, blockNum * 512 + i * 32,
 							blockNum * 512 + (i + 1) * 32));
 
-					w[i] = new WireArray(wsSplitted[i]).packAsBits(32);
+					w[i] = WireArray::new(wsSplitted[i]).packAsBits(32);
 				} else {
 					Wire t1 = w[i - 15].rotateRight(32, 7);
 					Wire t2 = w[i - 15].rotateRight(32, 18);
@@ -125,7 +125,7 @@ public class SHA256Gadget extends Gadget {
 				Wire maj;
 				// since after each iteration, SHA256 does c = b; and b = a;, we can make use of that to save multiplications in maj computation.
 				// To do this, we make use of the caching feature, by just changing the order of wires sent to maj(). Caching will take care of the rest.
-				if(i % 2 == 1){
+				if i % 2 == 1{
 					maj = computeMaj(c, b, a, 32);
 				}
 				else{
@@ -172,9 +172,9 @@ public class SHA256Gadget extends Gadget {
 		if !binaryOutput {
 			output = outDigest;
 		} else {
-			output = new Wire[8 * 32];
+			output = vec![Wire::default();8 * 32];
 			for i in 0..8 {
-				Wire[] bits = outDigest[i].getBitWires(32).asArray();
+				Vec<Wire> bits = outDigest[i].getBitWires(32).asArray();
 				for j in 0..32 {
 					output[j + i * 32] = bits[j];
 				}
@@ -182,62 +182,62 @@ public class SHA256Gadget extends Gadget {
 		}
 	}
 
-	private Wire computeMaj(Wire a, Wire b, Wire c, int numBits) {
+	 Wire computeMaj(Wire a, Wire b, Wire c, i32 numBits) {
 
-		Wire[] result = new Wire[numBits];
-		Wire[] aBits = a.getBitWires(numBits).asArray();
-		Wire[] bBits = b.getBitWires(numBits).asArray();
-		Wire[] cBits = c.getBitWires(numBits).asArray();
+		Vec<Wire> result = vec![Wire::default();numBits];
+		Vec<Wire> aBits = a.getBitWires(numBits).asArray();
+		Vec<Wire> bBits = b.getBitWires(numBits).asArray();
+		Vec<Wire> cBits = c.getBitWires(numBits).asArray();
 
 		for i in 0..numBits {
 			Wire t1 = aBits[i].mul(bBits[i]);
 			Wire t2 = aBits[i].add(bBits[i]).add(t1.mul(-2));
 			result[i] = t1.add(cBits[i].mul(t2));
 		}
-		return new WireArray(result).packAsBits();
+		return WireArray::new(result).packAsBits();
 	}
 
-	private Wire computeCh(Wire a, Wire b, Wire c, int numBits) {
-		Wire[] result = new Wire[numBits];
+	 Wire computeCh(Wire a, Wire b, Wire c, i32 numBits) {
+		Vec<Wire> result = vec![Wire::default();numBits];
 
-		Wire[] aBits = a.getBitWires(numBits).asArray();
-		Wire[] bBits = b.getBitWires(numBits).asArray();
-		Wire[] cBits = c.getBitWires(numBits).asArray();
+		Vec<Wire> aBits = a.getBitWires(numBits).asArray();
+		Vec<Wire> bBits = b.getBitWires(numBits).asArray();
+		Vec<Wire> cBits = c.getBitWires(numBits).asArray();
 
 		for i in 0..numBits {
 			Wire t1 = bBits[i].sub(cBits[i]);
 			Wire t2 = t1.mul(aBits[i]);
 			result[i] = t2.add(cBits[i]);
 		}
-		return new WireArray(result).packAsBits();
+		return WireArray::new(result).packAsBits();
 	}
 
-	private void prepare() {
+	  prepare() {
 
-		numBlocks = (int) Math.ceil(totalLengthInBytes * 1.0 / 64);
-		Wire[] bits = new WireArray(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
-		int tailLength = totalLengthInBytes % 64;
+		numBlocks = (i32) Math.ceil(totalLengthInBytes * 1.0 / 64);
+		Vec<Wire> bits = WireArray::new(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
+		i32 tailLength = totalLengthInBytes % 64;
 		if paddingRequired {
-			Wire[] pad;
+			Vec<Wire> pad;
 			if (64 - tailLength >= 9) {
-				pad = new Wire[64 - tailLength];
+				pad = vec![Wire::default();64 - tailLength];
 			} else {
-				pad = new Wire[128 - tailLength];
+				pad = vec![Wire::default();128 - tailLength];
 			}
 			numBlocks = (totalLengthInBytes + pad.length)/64;
 			pad[0] = generator.createConstantWire(0x80);
-			for (int i = 1; i < pad.length - 8; i+=1) {
+			for i in 1..pad.length - 8{
 				pad[i] = generator.getZeroWire();
 			}
 			long lengthInBits = totalLengthInBytes * 8;
-			Wire[] lengthBits = new Wire[64];
+			Vec<Wire> lengthBits = vec![Wire::default();64];
 			for i in 0..8 {
 				pad[pad.length - 1 - i] = generator.createConstantWire((lengthInBits >>> (8 * i)) & 0xFFL);
-				Wire[] tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
+				Vec<Wire> tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
 				System.arraycopy(tmp, 0, lengthBits, (7 - i) * 8, 8);
 			}
-			int totalNumberOfBits = numBlocks * 512;
-			preparedInputBits = new Wire[totalNumberOfBits];
+			i32 totalNumberOfBits = numBlocks * 512;
+			preparedInputBits = vec![Wire::default();totalNumberOfBits];
 			Arrays.fill(preparedInputBits, generator.getZeroWire());
 			System.arraycopy(bits, 0, preparedInputBits, 0, totalLengthInBytes * 8);
 			preparedInputBits[totalLengthInBytes * 8 + 7] = generator.getOneWire();
@@ -251,7 +251,7 @@ public class SHA256Gadget extends Gadget {
 	 * outputs digest as 32-bit words
 	 */
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return output;
 	}
 }

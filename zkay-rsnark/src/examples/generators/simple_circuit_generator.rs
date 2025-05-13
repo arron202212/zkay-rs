@@ -3,16 +3,16 @@ use circuit::eval::circuit_evaluator;
 use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 
-public class SimpleCircuitGenerator extends CircuitGenerator {
+pub struct SimpleCircuitGenerator extends CircuitGenerator {
 
-	private Wire[] inputs;
+	 Vec<Wire> inputs;
 
-	public SimpleCircuitGenerator(String circuitName) {
+	pub  SimpleCircuitGenerator(String circuitName) {
 		super(circuitName);
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		// declare input array of length 4.
 		inputs = createInputWireArray(4);
@@ -32,15 +32,15 @@ public class SimpleCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
+	pub   generateSampleInput(CircuitEvaluator circuitEvaluator) {
 		for i in 0..4 {
 			circuitEvaluator.setWireValue(inputs[i], i + 1);
 		}
 	}
 
-	public static void main(String[] args)  {
+	pub    main(args:Vec<String>)  {
 
-		SimpleCircuitGenerator generator = new SimpleCircuitGenerator("simple_example");
+		SimpleCircuitGenerator generator = SimpleCircuitGenerator::new("simple_example");
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

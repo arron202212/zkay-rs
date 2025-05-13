@@ -4,111 +4,106 @@ use circuit::eval::circuit_evaluator;
 use circuit::eval::instruction;
 use circuit::structure::wire;
 
-public abstract class BasicOp implements Instruction {
-
-	protected Wire[] inputs;
-	protected Wire[] outputs;
-	protected String desc;
-
-	public BasicOp(Wire[] inputs, Wire[] outputs, String... desc) {
-		this.inputs = inputs;
-		this.outputs = outputs;
-		if desc.length > 0 {
-			this.desc = desc[0];
+struct Op<T>{
+inputs:Vec<Wire>,
+outputs:Vec<Wire>,
+desc:String,
+t:T,
+}
+impl<T> Op<T>{
+    fn new( inputs:Vec<Wire>, outputs:Vec<Wire>,  desc:Vec<String>)->eyre::Result<Self> {
+		self.set_inputs (inputs);
+		self.set_outputs  (outputs);
+		if desc.len() > 0 {
+			self.set_desc(desc[0].clone());
 		} else {
-			this.desc = "";
+			self.set_desc(String::new());
 		}
 
-		for (Wire w : inputs) {
-			if w == null {
-				println!("One of the input wires is null: " + this);
-				throw new NullPointerException("A null wire");
+		for  w  in  inputs {
+			if w.is_none() {
+				println!("One of the input wires is null: {self:?}");
+				eyre::bail!("A null wire");
 			} else if w.getWireId() == -1 {
-				println!("One of the input wires is not packed: " + this);
-				throw new IllegalArgumentException("A wire with a negative id");
+				println!("One of the input wires is not packed: {self:?}");
+				eyre::bail!("A wire with a negative id");
 			}
 		}
-		for (Wire w : outputs) {
-			if w == null {
-				println!("One of the output wires is null" + this);
-				throw new NullPointerException("A null wire");
+		for  w in  outputs {
+			if w.is_none() {
+				println!("One of the output wires is null {self:?}" );
+				eyre::bail!("A null wire");
 			}
 		}
-
+        Ok(Self{
+        })
 	}
+}
+pub trait BasicOp :Instruction {
 
 
-	public BasicOp(Wire[] inputs, Wire[] outputs) {
-		this(inputs, outputs, "");
-	}
 
-	public void evaluate(CircuitEvaluator evaluator) {
-		BigInteger[] assignment = evaluator.getAssignment();
-		checkInputs(assignment);
-		checkOutputs(assignment);
-		compute(assignment);
-	}
-
-	protected void checkInputs(BigInteger[] assignment) {
-		for (Wire w : inputs) {
-			if assignment[w.getWireId()] == null {
-				println!("Error - The inWire " + w + " has not been assigned\n" + this);
+	 fn checkInputs(&self,assignment:Vec<BigInteger>) {
+		for  w in  inputs {
+			if assignment[w.getWireId()].is_none() {
+				println!("Error - The inWire {w } has not been assigned {self:?}\n");
 				panic!("Error During Evaluation");
 			}
 		}
 	}
 
-	protected abstract void compute(BigInteger[] assignment);
+	 fn compute(&self, assignment:Vec<BigInteger>);
 
-	protected void checkOutputs(BigInteger[] assignment) {
-		for (Wire w : outputs) {
-			if assignment[w.getWireId()] != null {
-				println!("Error - The outWire " + w + " has already been assigned\n" + this);
+	 fn checkOutputs( assignment:Vec<BigInteger>) {
+		for  w in  outputs {
+			if assignment[w.getWireId()].is_some() {
+				println!("Error - The outWire {w} has already been assigned {self:?}\n");
 				panic!("Error During Evaluation");
 			}
 		}
 	}
 
-	public abstract String getOpcode();
-	public abstract int getNumMulGates();
+	fn getOpcode(&self)->String;
+	fn getNumMulGates(&self)->i32;
 	
-	public String toString() {
-		return getOpcode() + " in " + inputs.length + " <" + Util.arrayToString(inputs, " ") + "> out " + outputs.length
-				+ " <" + Util.arrayToString(outputs, " ") + ">" + (desc.length() > 0  { (" \t\t# " + desc) }else { ""});
+	fn  toString(&self)->String {
+		format!("{} in {} <{}> out  <{}> {}",getOpcode(),inputs.length,Util::arrayToString(inputs, " "),outputs.length,Util::arrayToString(outputs, " "),desc.length() > 0  { " \t\t# ".to_owned() + desc }else {String::new()} )
 	}
 
-	public Wire[] getInputs() {
-		return inputs;
+	fn  getInputs(&self)->Vec<Wire> {
+		self.inputs.clone()
 	}
 
-	public Wire[] getOutputs() {
-		return outputs;
+	fn getOutputs(&self)->Vec<Wire> {
+		self.outputs.clone()
 	}
 
-	public boolean doneWithinCircuit() {
-		return true;
+	fn doneWithinCircuit(&self)->bool {
+		 true
 	}
 	
 	
-	public int hashCode() {
+	fn hashCode(&self)->i32 {
 		// this method should be overriden when a subclass can have more than one opcode, or have other arguments
-		int h = getOpcode().hashCode();
-		for(Wire in:inputs){
-			h+=in.hashCode();
+		let mut  h = getOpcode().hashCode();
+		for i in inputs{
+			h+=i.hashCode();
 		}
-		return h;
+		h
 	}
 	
 	
-	
-	
-	public boolean equals(Object obj) {
-		if(this == obj)
-			return true;
-		else
-			return false;
-
+	fn equals(&self,rhs:&Self)->bool {
+		    self==rhs
 		// logic moved to subclasses
 	}
 
+}
+impl<T:BasicOp> Instruction for T{
+	fn evaluate(&self,evaluator:CircuitEvaluator) {
+		let  assignment = evaluator.getAssignment();
+		self.checkInputs(assignment);
+		self.checkOutputs(assignment);
+		self.compute(assignment);
+	}
 }

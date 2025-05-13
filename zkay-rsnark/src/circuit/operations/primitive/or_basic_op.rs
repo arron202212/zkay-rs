@@ -3,54 +3,57 @@
 use util::util;
 use circuit::structure::wire;
 
-public class ORBasicOp extends BasicOp {
+pub struct ORBasicOp;
+ impl BasicOp  for Op<ORBasicOp>{
 
-	public ORBasicOp(Wire w1, Wire w2, Wire output, String...desc) {
-		super(new Wire[] { w1, w2 }, new Wire[] { output }, desc);
+	pub fn newORBasicOp(w1:Wire , w2:Wire , output:Wire , desc:Vec<String>) {
+            Op<ORBasicOp>{self.self.self.inputs:vec![w1, w2],
+        self.self.self.outputs: vec![output] ,  
+        desc:descl.get(0).unwrap_or(&String::new()).clone(),
+        t:ORBasicOp
+        }
 	}
 
-	public String getOpcode(){
+	fn getOpcode(&self)->String{
 		return "or";
 	}
 	
-	public void checkInputs(BigInteger[] assignment) {
+	fn checkInputs(&self,assignment:Vec<BigInteger>) {
 		super.checkInputs(assignment);
-		boolean check = Util.isBinary(assignment[inputs[0].getWireId()])
-				&& Util.isBinary(assignment[inputs[1].getWireId()]);
+		let  check = Util::isBinary(assignment[self.inputs[0].getWireId()])
+				&& Util::isBinary(assignment[self.inputs[1].getWireId()]);
 		if !check{			
-			println!("Error - Input(s) to OR are not binary. "
-					+ this);
+			println!("Error - Input(s) to OR are not binary.{self:?} "
+					);
 			panic!("Error During Evaluation");
 
 		}
 	}
 
 	
-	public void compute(BigInteger[] assignment) {
-		assignment[outputs[0].getWireId()] = assignment[inputs[0].getWireId()].or(
-				assignment[inputs[1].getWireId()]);
+	fn compute(&self, assignment:Vec<BigInteger>){
+		assignment[outputs[0].getWireId()] = assignment[self.inputs[0].getWireId()].or(
+				assignment[self.inputs[1].getWireId()]);
 	}
 
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof ORBasicOp) {
-			return false;
-		}
-		ORBasicOp op = (ORBasicOp) obj;
+		if self == rhs
+			{return true;}
 
-		boolean check1 = inputs[0].equals(op.inputs[0])
-				&& inputs[1].equals(op.inputs[1]);
-		boolean check2 = inputs[1].equals(op.inputs[0])
-				&& inputs[0].equals(op.inputs[1]);
-		return check1 || check2;
+		let  op =  rhs;
+
+		let  check1 = self.inputs[0].equals(op.self.inputs[0])
+				&& self.inputs[1].equals(op.self.inputs[1]);
+		let check2 = self.inputs[1].equals(op.self.inputs[0])
+				&& self.inputs[0].equals(op.self.inputs[1]);
+		 check1 || check2
 
 	}
 	
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 1;
 	}
 }

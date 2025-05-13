@@ -5,33 +5,35 @@ use circuit::structure::wire;
 /**
  * Gadget homomorphically re-randomizing an ElGamal encrypted ciphertext.
  */
-public class ZkayElgamalRerandGadget extends ZkayBabyJubJubGadget {
+pub struct ZkayElgamalRerandGadget   {
 
-     Wire[] randomnessBits;    // little-endian randomness bits
+      randomnessBits:Vec<Wire>,    // little-endian randomness bits
 
-     JubJubPoint pk;   // public key
+     pk:JubJubPoint,   // pub  key
 
-     JubJubPoint c1;   // input ciphertext first point
+     c1:JubJubPoint,   // input ciphertext first point
 
-     JubJubPoint c2;   // input ciphertext second point
+     c2:JubJubPoint,   // input ciphertext second point
 
-    private JubJubPoint o1;
+     o1:JubJubPoint,
 
-    private JubJubPoint o2;
-
-    public ZkayElgamalRerandGadget(JubJubPoint c1, JubJubPoint c2, JubJubPoint pk, Wire[] randomnessBits) {
-        this.c1 = c1;
-        this.c2 = c2;
-        this.randomnessBits = randomnessBits;
-        this.pk = pk;
+     o2:JubJubPoint,
+}
+impl ZkayElgamalRerandGadget{
+    pub  fn new(c1:JubJubPoint , c2:JubJubPoint , pk:JubJubPoint , randomnessBits:Vec<Wire>)->Self {
+        self.c1 = c1;
+        self.c2 = c2;
+        self.randomnessBits = randomnessBits;
+        self.pk = pk;
         buildCircuit();
     }
-
-    protected void buildCircuit() {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget{
+      fn buildCircuit() {
         // create encryption of zero (z1, z2)
-        JubJubPoint sharedSecret = mulScalar(pk, randomnessBits);
-        JubJubPoint z1 = mulScalar(getGenerator(), randomnessBits);
-        JubJubPoint z2 = sharedSecret;
+        let sharedSecret = mulScalar(pk, randomnessBits);
+        let z1 = mulScalar(getGenerator(), randomnessBits);
+        let z2 = sharedSecret;
 
         // add encryption of zero to re-randomize
         o1 = addPoints(c1, z1);
@@ -39,7 +41,7 @@ public class ZkayElgamalRerandGadget extends ZkayBabyJubJubGadget {
     }
 
     
-    public Wire[] getOutputWires() {
-        return new Wire[]{ o1.x, o1.y, o2.x, o2.y };
+    pub  fn getOutputWires()->Vec<Wire>  {
+        return vec![Wire::default();]{ o1.x, o1.y, o2.x, o2.y };
     }
 }

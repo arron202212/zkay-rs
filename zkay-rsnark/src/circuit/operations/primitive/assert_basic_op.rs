@@ -3,57 +3,62 @@
 use circuit::config::config;
 use circuit::structure::wire;
 
-public class AssertBasicOp extends BasicOp {
-
-	public AssertBasicOp(Wire w1, Wire w2, Wire output, String...desc) {
-		super(new Wire[] { w1, w2 }, new Wire[] { output }, desc);
+pub struct AssertBasicOp;
+	pub fn newAssertBasicOp( w1:Wire,  w2:Wire,  output:Wire, desc:Vec<String>)-> Op<AssertBasicOp> {
+        Op<AssertBasicOp>{self.inputs:vec![w1, w2 ],
+        self.outputs: vec![output] ,  
+        desc,
+        t:AssertBasicOp
+        }
 	}
+
+ impl BasicOp  for AssertBasicOp{
+
+
 	
 	
-	protected void compute(BigInteger[] assignment) {
-		BigInteger leftSide = assignment[inputs[0].getWireId()].multiply(
-				assignment[inputs[1].getWireId()]).mod(
+	fn compute(&self, assignment:Vec<BigInteger>) {
+		let  leftSide = assignment[self.inputs[0].getWireId()].multiply(
+				assignment[self.inputs[1].getWireId()]).mod(
 						Config.FIELD_PRIME);
-		BigInteger rightSide = assignment[outputs[0].getWireId()];
-		boolean check = leftSide.equals(rightSide);
+		let  rightSide = assignment[self.outputs[0].getWireId()];
+		let  check = leftSide.equals(rightSide);
 		if !check {
-			println!("Error - Assertion Failed " + this);
-			println!(assignment[inputs[0].getWireId()] + "*"
-					+ assignment[inputs[1].getWireId()] + "!="
-					+ assignment[outputs[0].getWireId()]);
+			println!("Error - Assertion Failed {self:?}" );
+			println!("{} * {} != {}",
+					 assignment[self.inputs[1].getWireId()] ,assignment[self.inputs[0].getWireId()] ,
+					 assignment[self.outputs[0].getWireId()]);
 			panic!("Error During Evaluation");
 		}
 	}
 
 	
-	protected void checkOutputs(BigInteger[] assignment) {
+	fn checkOutputs( assignment:Vec<BigInteger>) {
 		// do nothing
 	}
 	
-	public String getOpcode(){
+	fn getOpcode(&self)->String{
 		return "assert";
 	}
 	
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof AssertBasicOp) {
-			return false;
-		}
-		AssertBasicOp op = (AssertBasicOp) obj;
+		if self == rhs
+			{return true;}
 
-		boolean check1 = inputs[0].equals(op.inputs[0])
-				&& inputs[1].equals(op.inputs[1]);
-		boolean check2 = inputs[1].equals(op.inputs[0])
-				&& inputs[0].equals(op.inputs[1]);
-		return (check1 || check2) && outputs[0].equals(op.outputs[0]);
+		let  op = rhs;
+
+		let  check1 = self.inputs[0].equals(op.self.inputs[0])
+				&& self.inputs[1].equals(op.self.inputs[1]);
+		let  check2 = self.inputs[1].equals(op.self.inputs[0])
+				&& self.inputs[0].equals(op.self.inputs[1]);
+		return (check1 || check2) && self.outputs[0].equals(op.self.outputs[0]);
 
 	}
 	
 	
-	public int getNumMulGates() {
+	fn getNumMulGates(&self)->i32{
 		return 1;
 	}
 

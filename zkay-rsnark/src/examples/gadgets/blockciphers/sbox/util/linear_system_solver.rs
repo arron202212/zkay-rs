@@ -8,20 +8,20 @@ use circuit::config::config;
  * Used for efficient representation of AES S-box gadget
  */
 
-public class LinearSystemSolver {
+pub struct LinearSystemSolver {
 
-	public static BigInteger prime = Config.FIELD_PRIME;
+	pub   BigInteger prime = Config.FIELD_PRIME;
 
-	private BigInteger[][] mat;
-	private int numRows, numCols;
+	 Vec<Vec<BigInteger>> mat;
+	 i32 numRows, numCols;
 
-	public LinearSystemSolver(BigInteger[][] mat) {
-		this.mat = mat;
+	pub  LinearSystemSolver(Vec<Vec<BigInteger>> mat) {
+		self.mat = mat;
 		numRows = mat.length;
 		numCols = mat[0].length;
 	}
 
-	public void solveInPlace() {
+	pub   solveInPlace() {
 
 		// https://www.csun.edu/~panferov/math262/262_rref.pdf
 		// https://www.math.purdue.edu/~shao92/documents/Algorithm%20REF.pdf
@@ -29,9 +29,9 @@ public class LinearSystemSolver {
 		rref();
 	}
 
-	private void guassJordan() {
-		for (int colIdx = 0, rowIdx = 0; colIdx < numCols; colIdx+=1, rowIdx+=1) {
-			int pivotRowIdx = rowIdx;
+	  guassJordan() {
+		for colIdx in 0..numCols{
+			i32 pivotRowIdx = rowIdx;
 			while (pivotRowIdx < numRows
 					&& mat[pivotRowIdx][colIdx].equals(BigInteger.ZERO)) {
 				pivotRowIdx+=1;
@@ -40,7 +40,7 @@ public class LinearSystemSolver {
 				continue;
 
 			// swap
-			BigInteger[] tmp = mat[pivotRowIdx];
+			Vec<BigInteger> tmp = mat[pivotRowIdx];
 			mat[pivotRowIdx] = mat[rowIdx];
 			mat[rowIdx] = tmp;
 
@@ -53,7 +53,7 @@ public class LinearSystemSolver {
 						prime);
 			}
 
-			for (int k = pivotRowIdx + 1; k < numRows; k+=1) {
+			for k in pivotRowIdx..numRows{
 				BigInteger f = negate(mat[k][colIdx]);
 				for j in 0..numCols {
 					mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].multiply(f));
@@ -64,9 +64,9 @@ public class LinearSystemSolver {
 		}
 	}
 
-	private void rref() {
-		for (int rowIdx = numRows - 1; rowIdx >= 0; rowIdx--) {
-			int pivotColIdx = 0;
+	  rref() {
+		for rowIdx in (0..=numRows - 1).rev()
+			i32 pivotColIdx = 0;
 			while (pivotColIdx < numCols
 					&& mat[rowIdx][pivotColIdx].equals(BigInteger.ZERO)) {
 				pivotColIdx+=1;
@@ -74,7 +74,7 @@ public class LinearSystemSolver {
 			if pivotColIdx == numCols
 				continue;
 
-			for (int k = rowIdx - 1; k >= 0; k--) {
+			for k in (0..=rowIdx - 1).rev()
 				BigInteger f = mat[k][pivotColIdx];
 				for j in 0..numCols {
 					mat[k][j] = mat[k][j]
@@ -85,11 +85,11 @@ public class LinearSystemSolver {
 		}
 	}
 
-	private static BigInteger negate(BigInteger x) {
+	  BigInteger negate(BigInteger x) {
 		return (prime.subtract(x.mod(prime))).mod(prime);
 	}
 
-	private static BigInteger inverse(BigInteger x) {
+	  BigInteger inverse(BigInteger x) {
 		return (x.mod(prime)).modInverse(prime);
 	}
 

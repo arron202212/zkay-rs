@@ -7,34 +7,36 @@ use circuit::structure::wire;
  * Because the message is in the exponent it is simply a bit string and
  * does not have to be embedded into the curve.
  */
-public class ZkayElgamalEncGadget extends ZkayBabyJubJubGadget {
+pub struct ZkayElgamalEncGadget  {
 
-     Wire[] randomnessBits;    // little-endian randomness bits
+     randomnessBits:Vec<Wire>,    // little-endian randomness bits
 
-     Wire[] msgBits;   // little-endian message bits
+     msgBits:Vec<Wire>,   // little-endian message bits
 
-     JubJubPoint pk;   // public key
+     pk:JubJubPoint,   // pub  key
 
-    private JubJubPoint c1;
+     c1:JubJubPoint,
 
-    private JubJubPoint c2;
-
-    public ZkayElgamalEncGadget(Wire[] msgBits, JubJubPoint pk, Wire[] randomnessBits) {
-        this.randomnessBits = randomnessBits;
-        this.msgBits = msgBits;
-        this.pk = pk;
+     c2:JubJubPoint,
+}
+impl ZkayElgamalEncGadget{
+    pub  fn new(msgBits:Vec<Wire>, pk:JubJubPoint , randomnessBits:Vec<Wire>)->Self {
+        self.randomnessBits = randomnessBits;
+        self.msgBits = msgBits;
+        self.pk = pk;
         buildCircuit();
     }
-
-    protected void buildCircuit() {
-        JubJubPoint msgEmbedded = mulScalar(getGenerator(), msgBits);
-        JubJubPoint sharedSecret = mulScalar(pk, randomnessBits);
+}
+impl  ZkayBabyJubJubGadget for ZkayElgamalEncGadget{
+      fn buildCircuit() {
+        let msgEmbedded = mulScalar(getGenerator(), msgBits);
+        let sharedSecret = mulScalar(pk, randomnessBits);
         c1 = mulScalar(getGenerator(), randomnessBits);
         c2 = addPoints(msgEmbedded, sharedSecret);
     }
 
     
-    public Wire[] getOutputWires() {
-        return new Wire[]{ c1.x, c1.y, c2.x, c2.y };
+    pub  fn getOutputWires()->Vec<Wire>  {
+        return vec![Wire::default();]{ c1.x, c1.y, c2.x, c2.y };
     }
 }

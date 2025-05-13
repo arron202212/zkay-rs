@@ -5,21 +5,21 @@ use circuit::config::config;
 use circuit::operations::gadget;
 use circuit::structure::wire;
 
-public class SubsetSumHashGadget extends Gadget {
+pub struct SubsetSumHashGadget extends Gadget {
 
-	public static final int DIMENSION = 3; // set to 4 for higher security
-	public static final int INPUT_LENGTH = 2 * DIMENSION * Config.LOG2_FIELD_PRIME; // length in bits
-	private static final BigInteger[][] COEFFS;
+	pub   i32 DIMENSION = 3; // set to 4 for higher security
+	pub   i32 INPUT_LENGTH = 2 * DIMENSION * Config.LOG2_FIELD_PRIME; // length in bits
+	  Vec<Vec<BigInteger>> COEFFS;
 
-	private Wire[] inputWires;
-	private Wire[] outWires;
-	private boolean binaryOutput;
+	 Vec<Wire> inputWires;
+	 Vec<Wire> outWires;
+	 bool binaryOutput;
 
-	static {
-		COEFFS = new BigInteger[DIMENSION][INPUT_LENGTH];
+	 {
+		COEFFS = vec![BigInteger::default();DIMENSION][INPUT_LENGTH];
 		for i in 0..DIMENSION {
 			for k in 0..INPUT_LENGTH {
-				COEFFS[i][k] = Util.nextRandomBigInteger(Config.FIELD_PRIME);
+				COEFFS[i][k] = Util::nextRandomBigInteger(Config.FIELD_PRIME);
 			}
 
 		}
@@ -32,29 +32,29 @@ public class SubsetSumHashGadget extends Gadget {
 	 *            Whether the output digest should be splitted into bits or not.
 	 * @param desc
 	 */
-	public SubsetSumHashGadget(Wire[] ins, boolean binaryOutput, String... desc) {
+	pub  SubsetSumHashGadget(ins:Vec<Wire>, bool binaryOutput, desc:Vec<String>) {
 
 		super(desc);
-		int numBlocks = (int) Math.ceil(ins.length * 1.0 / INPUT_LENGTH);
+		i32 numBlocks = (i32) Math.ceil(ins.length * 1.0 / INPUT_LENGTH);
 
 		if numBlocks > 1 {
-			throw new IllegalArgumentException("Only one block is supported at this point");
+			assert!("Only one block is supported at this point");
 		}
 
-		int rem = numBlocks * INPUT_LENGTH - ins.length;
+		i32 rem = numBlocks * INPUT_LENGTH - ins.length;
 
-		Wire[] pad = new Wire[rem];
+		Vec<Wire> pad = vec![Wire::default();rem];
 		for i in 0..pad.length {
 			pad[i] = generator.getZeroWire(); // TODO: adjust padding
 		}
-		inputWires = Util.concat(ins, pad);
-		this.binaryOutput = binaryOutput;
+		inputWires = Util::concat(ins, pad);
+		self.binaryOutput = binaryOutput;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
-		Wire[] outDigest = new Wire[DIMENSION];
+		Vec<Wire> outDigest = vec![Wire::default();DIMENSION];
 		Arrays.fill(outDigest, generator.getZeroWire());
 
 		for i in 0..DIMENSION {
@@ -66,9 +66,9 @@ public class SubsetSumHashGadget extends Gadget {
 		if !binaryOutput {
 			outWires = outDigest;
 		} else {
-			outWires = new Wire[DIMENSION * Config.LOG2_FIELD_PRIME];
+			outWires = vec![Wire::default();DIMENSION * Config.LOG2_FIELD_PRIME];
 			for i in 0..DIMENSION {
-				Wire[] bits = outDigest[i].getBitWires(Config.LOG2_FIELD_PRIME).asArray();
+				Vec<Wire> bits = outDigest[i].getBitWires(Config.LOG2_FIELD_PRIME).asArray();
 				for j in 0..bits.length {
 					outWires[j + i * Config.LOG2_FIELD_PRIME] = bits[j];
 				}
@@ -77,7 +77,7 @@ public class SubsetSumHashGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return outWires;
 	}
 }

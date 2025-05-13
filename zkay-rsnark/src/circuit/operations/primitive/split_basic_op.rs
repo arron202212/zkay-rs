@@ -3,55 +3,55 @@
 use circuit::config::config;
 use circuit::structure::wire;
 
-public class SplitBasicOp extends BasicOp {
-
-	public SplitBasicOp(Wire w, Wire[] outs, String...desc) {
-		super(new Wire[] { w }, outs, desc);
+pub struct SplitBasicOp;
+pub fn newSplitBasicOp(w:Wire ,  outs:Vec<Wire>, desc:Vec<String>) {
+ Op<SplitBasicOp>{self.self.self.self.inputs:vec![w],
+        self.self.self.self.outputs: outs ,  
+        desc:descl.get(0).unwrap_or(&String::new()).clone(),
+        t:SplitBasicOp
+        }
 	}
+ impl BasicOp for Op<SplitBasicOp>{
 
-	public String getOpcode(){
+	
+
+	fn getOpcode(&self)->String{
 		return "split";
 	}
 	
-	protected void checkInputs(BigInteger[] assignment) {
+	fn checkInputs(&self,assignment:Vec<BigInteger>) {
 		super.checkInputs(assignment);
-		if outputs.length < assignment[inputs[0].getWireId()].bitLength() {
-			println!("Error in Split --- The number of bits does not fit -- Input: "
-							+ assignment[inputs[0].getWireId()].toString(16) + "\n\t" + this);
+		assert!(self.outputs.len() >= assignment[self.inputs[0].getWireId()].bitLength() ,"Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t", assignment[self.inputs[0].getWireId()]);
 
-			panic!("Error During Evaluation -- " + this);
-		}
 	}
 
 	
-	protected void compute(BigInteger[] assignment) {
+	fn compute(&self,assignment:Vec<BigInteger>) {
 
-		BigInteger inVal = assignment[inputs[0].getWireId()];
+		let mut  inVal = assignment[self.inputs[0].getWireId()];
 		if inVal.compareTo(Config.FIELD_PRIME) > 0 {
 			inVal = inVal.mod(Config.FIELD_PRIME);
 		}
-		for i in 0..outputs.length {
-			assignment[outputs[i].getWireId()] = if inVal.testBit(i)  {BigInteger.ONE}
+		for i in 0..self.outputs.length {
+			assignment[self.outputs[i].getWireId()] = if inVal.testBit(i)  {BigInteger.ONE}
 					else {BigInteger.ZERO};
 		}
 	}
 
 	
-	public boolean equals(Object obj) {
+	fn equals(&self,rhs:&Self)->bool {
 
-		if this == obj
-			return true;
-		if !(obj instanceof SplitBasicOp) {
-			return false;
-		}
-		SplitBasicOp op = (SplitBasicOp) obj;
-		return inputs[0].equals(op.inputs[0]) && outputs.length == op.outputs.length;
+		if self == rhs
+			{return true;}
+
+		let  op = rhs;
+		 self.inputs[0].equals(op.self.inputs[0]) && self.outputs.length == op.self.outputs.length
 
 	}
 	
 	
-	public int getNumMulGates() {
-		return outputs.length + 1;
+	fn getNumMulGates(&self)->i32{
+		 self.outputs.len() as i32 + 1
 	}
 
 }

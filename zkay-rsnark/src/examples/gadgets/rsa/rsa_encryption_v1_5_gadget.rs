@@ -9,7 +9,7 @@ use examples::gadgets::math::long_integer_mod_gadget;
 /**
  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
  * have the RSA-OAEP method according to PKCS#1 v2.x. The gadget assumes a
- * hardcoded public exponent of 0x10001.
+ * hardcoded pub  exponent of 0x10001.
  * This gadget can accept a hardcoded or a variable RSA modulus. See the
  * corresponding generator example. 
  * 
@@ -19,55 +19,55 @@ use examples::gadgets::math::long_integer_mod_gadget;
  * 
  */
 
-public class RSAEncryptionV1_5_Gadget extends Gadget {
+pub struct RSAEncryptionV1_5_Gadget extends Gadget {
 
-	private LongElement modulus;
+	 LongElement modulus;
 
 	// every wire represents a byte in the following three arrays
-	private Wire[] plainText;
-	private Wire[] randomness; // (rsaKeyBitLength / 8 - 3 - plainTextLength)
+	 Vec<Wire> plainText;
+	 Vec<Wire> randomness; // (rsaKeyBitLength / 8 - 3 - plainTextLength)
 								// non-zero bytes
-	private Wire[] ciphertext;
+	 Vec<Wire> ciphertext;
 
-	private int rsaKeyBitLength; // in bits (assumed to be divisible by 8)
+	 i32 rsaKeyBitLength; // in bits (assumed to be divisible by 8)
 
-	public RSAEncryptionV1_5_Gadget(LongElement modulus, Wire[] plainText,
-			Wire[] randomness, int rsaKeyBitLength, String... desc) {
+	pub  RSAEncryptionV1_5_Gadget(LongElement modulus, plainText:Vec<Wire>,
+			randomness:Vec<Wire>, i32 rsaKeyBitLength, desc:Vec<String>) {
 		super(desc);
 
 		if rsaKeyBitLength % 8 != 0 {
-			throw new IllegalArgumentException(
+			assert!(
 					"RSA Key bit length is assumed to be a multiple of 8");
 		}
 
 		if (plainText.length > rsaKeyBitLength / 8 - 11
 				|| plainText.length + randomness.length != rsaKeyBitLength / 8 - 3) {
 			println!("Check Message & Padding length");
-			throw new IllegalArgumentException(
+			assert!(
 					"Invalid Argument Dimensions for RSA Encryption");
 		}
 
-		this.randomness = randomness;
-		this.plainText = plainText;
-		this.modulus = modulus;
-		this.rsaKeyBitLength = rsaKeyBitLength;
+		self.randomness = randomness;
+		self.plainText = plainText;
+		self.modulus = modulus;
+		self.rsaKeyBitLength = rsaKeyBitLength;
 		buildCircuit();
 	}
 
-	public static int getExpectedRandomnessLength(int rsaKeyBitLength,
-			int plainTextLength) {
+	pub   i32 getExpectedRandomnessLength(i32 rsaKeyBitLength,
+			i32 plainTextLength) {
 		if rsaKeyBitLength % 8 != 0 {
-			throw new IllegalArgumentException(
+			assert!(
 					"RSA Key bit length is assumed to be a multiple of 8");
 
 		}
 		return rsaKeyBitLength / 8 - 3 - plainTextLength;
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
-		int lengthInBytes = rsaKeyBitLength / 8;
-		Wire[] paddedPlainText = new Wire[lengthInBytes];
+		i32 lengthInBytes = rsaKeyBitLength / 8;
+		Vec<Wire> paddedPlainText = vec![Wire::default();lengthInBytes];
 		for i in 0..plainText.length {
 			paddedPlainText[plainText.length - i - 1] = plainText[i];
 		}
@@ -83,17 +83,17 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 		 * padddedPlainText array to a long element. Two ways to do that.
 		 */
 		// 1. safest method:
-//		 WireArray allBits = new WireArray(paddedPlainText).getBits(8);
-//		 LongElement paddedMsg = new LongElement(allBits);
+//		 WireArray allBits = WireArray::new(paddedPlainText).getBits(8);
+//		 LongElement paddedMsg = LongElement::new(allBits);
 
 
 		// 2. Make multiple long integer constant multiplications (need to be
 		// done carefully)
-		LongElement paddedMsg = new LongElement(
-				new BigInteger[] { BigInteger.ZERO });
+		LongElement paddedMsg = LongElement::new(
+				vec![BigInteger::default();] { BigInteger.ZERO });
 		for i in 0..paddedPlainText.length {
-			LongElement e = new LongElement(paddedPlainText[i], 8);
-			LongElement c = new LongElement(Util.split(
+			LongElement e = LongElement::new(paddedPlainText[i], 8);
+			LongElement c = LongElement::new(Util::split(
 					BigInteger.ONE.shiftLeft(8 * i),
 					LongElement.CHUNK_BITWIDTH));
 			paddedMsg = paddedMsg.add(e.mul(c));
@@ -102,27 +102,27 @@ public class RSAEncryptionV1_5_Gadget extends Gadget {
 		LongElement s = paddedMsg;
 		for i in 0..16 {
 			s = s.mul(s);
-			s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, false).getRemainder();
+			s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, false).getRemainder();
 		}
 		s = s.mul(paddedMsg);
-		s = new LongIntegerModGadget(s, modulus, rsaKeyBitLength, true).getRemainder();
+		s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, true).getRemainder();
 
 		// return the cipher text as byte array
 		ciphertext = s.getBits(rsaKeyBitLength).packBitsIntoWords(8);
 	}
 
 	
-	public void checkRandomnessCompliance(){
+	pub   checkRandomnessCompliance(){
 		// assert the randomness vector has non-zero bytes
 		for i in 0..randomness.length {
 			randomness[i].restrictBitLength(8);
 			// verify that each element has a multiplicative inverse
-			new FieldDivisionGadget(generator.getOneWire(), randomness[i]);
+			FieldDivisionGadget::new(generator.getOneWire(), randomness[i]);
 		}
 	}
 	
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return ciphertext;
 	}
 }

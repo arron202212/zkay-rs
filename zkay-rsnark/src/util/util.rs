@@ -1,18 +1,19 @@
 
 use circuit::structure::wire;
 
-public class Util {
+pub struct Util {
 
 	// seeded by 1 for testing purposes
-	static Random rand = new Random(1);
-
-	public static BigInteger[] split(BigInteger x, int chunkSize) {
-		int numChunks = Math.max(1, (x.bitLength() + chunkSize - 1) / chunkSize); // ceil(x.bitLength() / chunkSize)
+	 Random rand = Random::new(1);
+}
+impl Util{
+	pub   Vec<BigInteger> split(x:BigInteger , chunkSize:i32 ) {
+		i32 numChunks = Math.max(1, (x.bitLength() + chunkSize - 1) / chunkSize); // ceil(x.bitLength() / chunkSize)
 		return split(x, numChunks, chunkSize);
 	}
 
-	public static BigInteger[] split(BigInteger x, int numChunks, int chunkSize) {
-		BigInteger[] chunks = new BigInteger[numChunks];
+	pub   Vec<BigInteger> split(x:BigInteger , numChunks:i32 , chunkSize:i32 ) {
+		Vec<BigInteger> chunks = vec![BigInteger::default();numChunks];
 		BigInteger mask = BigInteger.ONE.shiftLeft(chunkSize).subtract(BigInteger.ONE);
 		for i in 0..numChunks {
 			chunks[i] = x.shiftRight(chunkSize * i).and(mask);
@@ -20,7 +21,7 @@ public class Util {
 		return chunks;
 	}
 
-	public static BigInteger combine(BigInteger[] table, Wire[] blocks, int bitwidth) {
+	pub   BigInteger combine(table:Vec<BigInteger>, blocks:Vec<Wire>, bitwidth:i32 ) {
 		BigInteger sum = BigInteger.ZERO;
 		for i in 0..blocks.length {
 			if table[blocks[i].getWireId()] == null {
@@ -31,7 +32,7 @@ public class Util {
 		return sum;
 	}
 
-	public static BigInteger group(BigInteger[] list, int width) {
+	pub   BigInteger group(list:Vec<BigInteger>, width:i32 ) {
 		BigInteger x = BigInteger.ZERO;
 		for i in 0..list.length {
 			x = x.add(list[i].shiftLeft(width * i));
@@ -39,74 +40,74 @@ public class Util {
 		return x;
 	}
 
-	public static int[] concat(int[] a1, int[] a2) {
-		int[] all = new int[a1.length + a2.length];
+	pub   Vec<i32> concat(a1:Vec<i32>, a2:Vec<i32>) {
+		Vec<i32> all = vec![i32::default();a1.length + a2.length];
 		for i in 0..all.length {
 			all[i] = i < a1.length  { a1[i] }else { a2[i - a1.length]};
 		}
 		return all;
 	}
 
-	public static Wire[] concat(Wire[] a1, Wire[] a2) {
-		Wire[] all = new Wire[a1.length + a2.length];
+	pub   Vec<Wire> concat(a1:Vec<Wire>, a2:Vec<Wire>) {
+		Vec<Wire> all = vec![Wire::default();a1.length + a2.length];
 		for i in 0..all.length {
 			all[i] = i < a1.length  { a1[i] }else { a2[i - a1.length]};
 		}
 		return all;
 	}
 
-	public static Wire[] concat(Wire w, Wire[] a) {
-		Wire[] all = new Wire[1 + a.length];
+	pub   Vec<Wire> concat(w:Wire , a:Vec<Wire>) {
+		Vec<Wire> all = vec![Wire::default();1 + a.length];
 		for i in 0..all.length {
 			all[i] = i < 1  { w }else { a[i - 1]};
 		}
 		return all;
 	}
 
-	public static int[] concat(int[][] arrays) {
-		int sum = 0;
-		for (int[] array : arrays) {
+	pub   Vec<i32> concat(Vec<Vec<i32>> arrays) {
+		i32 sum = 0;
+		for array in  arrays {
 			sum += array.length;
 		}
-		int[] all = new int[sum];
-		int idx = 0;
-		for (int[] array : arrays) {
-			for (int a : array) {
+		Vec<i32> all = vec![i32::default();sum];
+		i32 idx = 0;
+		for array in  arrays {
+			for a in array {
 				all[idx+=1] = a;
 			}
 		}
 		return all;
 	}
 
-	public static BigInteger[] randomBigIntegerArray(int num, BigInteger n) {
-		BigInteger[] result = new BigInteger[num];
+	pub   Vec<BigInteger> randomBigIntegerArray(num:i32 , n:BigInteger ) {
+		Vec<BigInteger> result = vec![BigInteger::default();num];
 		for i in 0..num {
 			result[i] = nextRandomBigInteger(n);
 		}
 		return result;
 	}
 
-	public static BigInteger nextRandomBigInteger(BigInteger n) {
-		BigInteger result = new BigInteger(n.bitLength(), rand);
+	pub   BigInteger nextRandomBigInteger(n:BigInteger ) {
+		BigInteger result = BigInteger::new(n.bitLength(), rand);
 		while (result.compareTo(n) >= 0) {
-			result = new BigInteger(n.bitLength(), rand);
+			result = BigInteger::new(n.bitLength(), rand);
 		}
 		return result;
 	}
 
-	public static BigInteger[] randomBigIntegerArray(int num, int numBits) {
-		BigInteger[] result = new BigInteger[num];
+	pub   Vec<BigInteger> randomBigIntegerArray(num:i32 , numBits:i32 ) {
+		Vec<BigInteger> result = vec![BigInteger::default();num];
 		for i in 0..num {
 			result[i] = nextRandomBigInteger(numBits);
 		}
 		return result;
 	}
 
-	public static BigInteger nextRandomBigInteger(int numBits) {
-		return new BigInteger(numBits, rand);
+	pub   BigInteger nextRandomBigInteger(numBits:i32 ) {
+		return BigInteger::new(numBits, rand);
 	}
 
-	public static String getDesc(String... desc) {
+	pub   String getDesc(desc:Vec<String>) {
 		if desc.length == 0 {
 			return "";
 		} else {
@@ -114,26 +115,26 @@ public class Util {
 		}
 	}
 
-	public static List<Integer> parseSequenceLists(String s) {
+	pub   List<Integer> parseSequenceLists(s:String ) {
 		List<Integer> list = new ArrayList<>();
-		String[] chunks = s.split(",");
-		for (String chunk : chunks) {
+		Vec<String> chunks = s.split(",");
+		for chunk in chunks {
 			if chunk.equals("")
 				continue;
-			int lower = Integer.parseInt(chunk.split(":")[0]);
-			int upper = Integer.parseInt(chunk.split(":")[1]);
-			for (int i = lower; i <= upper; i+=1) {
+			i32 lower = Integer.parseInt(chunk.split(":")[0]);
+			i32 upper = Integer.parseInt(chunk.split(":")[1]);
+			for i in lower..=upper{
 				list.add(i);
 			}
 		}
 		return list;
 	}
 
-	public static Wire[] reverseBytes(Wire[] inBitWires) {
-		Wire[] outs = Arrays.copyOf(inBitWires, inBitWires.length);
-		int numBytes = inBitWires.length / 8;
-		for (int i = 0; i < numBytes / 2; i+=1) {
-			int other = numBytes - i - 1;
+	pub   Vec<Wire> reverseBytes(inBitWires:Vec<Wire>) {
+		Vec<Wire> outs = Arrays.copyOf(inBitWires, inBitWires.length);
+		i32 numBytes = inBitWires.length / 8;
+		for i in 0..numBytes / 2{
+			i32 other = numBytes - i - 1;
 			for j in 0..8 {
 				Wire temp = outs[i * 8 + j];
 				outs[i * 8 + j] = outs[other * 8 + j];
@@ -143,60 +144,60 @@ public class Util {
 		return outs;
 	}
 
-	public static String arrayToString(int[] a, String separator) {
-		StringBuilder s = new StringBuilder();
-		for (int i = 0; i < a.length - 1; i+=1) {
+	pub   String arrayToString(a:Vec<i32>, separator:String ) {
+		StringBuilder s = StringBuilder::new();
+		for i in 0..a.length - 1{
 			s.append(a[i]).append(separator);
 		}
 		s.append(a[a.length - 1]);
 		return s.toString();
 	}
 
-	public static String arrayToString(Wire[] a, String separator) {
-		StringBuilder s = new StringBuilder();
-		for (int i = 0; i < a.length - 1; i+=1) {
+	pub   String arrayToString(a:Vec<Wire>, separator:String ) {
+		StringBuilder s = StringBuilder::new();
+		for i in 0..a.length - 1{
 			s.append(a[i]).append(separator);
 		}
 		s.append(a[a.length - 1]);
 		return s.toString();
 	}
 
-	public static boolean isBinary(BigInteger v) {
+	pub   bool isBinary(v:BigInteger ) {
 		return v.equals(BigInteger.ZERO) || v.equals(BigInteger.ONE);
 	}
 
-	public static String padZeros(String s, int l) {
+	pub   String padZeros(s:String , l:i32 ) {
 		return format!("%" + l + "s",s).replace(' ', '0');
 	}
 
 	// Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
-	private static final Map<Integer, BigInteger> maxValueCache = Collections.synchronizedMap(new WeakHashMap<>());
-	public static BigInteger computeMaxValue(int numBits) {
+	  Map<Integer, BigInteger> maxValueCache = Collections.synchronizedMap(new WeakHashMap<>());
+	pub   BigInteger computeMaxValue(numBits:i32 ) {
 		return maxValueCache.computeIfAbsent(numBits, i -> BigInteger.ONE.shiftLeft(i).subtract(BigInteger.ONE));
 	}
 
-	private static final Map<Integer, BigInteger> boundCache = Collections.synchronizedMap(new WeakHashMap<>());
-	public static BigInteger computeBound(int numBits) {
+	  Map<Integer, BigInteger> boundCache = Collections.synchronizedMap(new WeakHashMap<>());
+	pub   BigInteger computeBound(numBits:i32 ) {
 		return boundCache.computeIfAbsent(numBits, i -> BigInteger.ONE.shiftLeft(numBits));
 	}
 
-	public static Wire[] padWireArray(Wire[] a, int length, Wire p) {
+	pub   Vec<Wire> padWireArray(a:Vec<Wire>, length:i32 , p:Wire ) {
 		if a.length == length {
 			return a;
 		} else if a.length > length {
 			println!("No padding needed!");
 			return a;
 		} else {
-			Wire[] newArray = new Wire[length];
+			Vec<Wire> newArray = vec![Wire::default();length];
 			System.arraycopy(a, 0, newArray, 0, a.length);
-			for (int k = a.length; k < length; k+=1) {
+			for k in a..length{
 				newArray[k] = p;
 			}
 			return newArray;
 		}
 	}
 
-	public static BigInteger mod(BigInteger x, BigInteger m) {
+	pub   BigInteger mod(x:BigInteger , m:BigInteger ) {
 		if x.signum() >= 0 && x.compareTo(m) < 0 {
 			return x; // In range, 'mod' is no-op, but creates new BigInteger
 		} else {

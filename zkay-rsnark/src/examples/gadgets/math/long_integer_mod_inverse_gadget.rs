@@ -17,37 +17,37 @@ use util::util;
  * It is the responsibility of the caller to ensure that a and m are
  * relatively co-prime, i.e. the modular inverse actually exists.
  */
-public class LongIntegerModInverseGadget extends Gadget {
+pub struct LongIntegerModInverseGadget extends Gadget {
 
 	 LongElement a; // the value to be inverted
 	 LongElement m; // the modulus
-	 boolean restrictRange; // whether to enforce that a^(-1) < m
-	private LongElement inverse;
+	 bool restrictRange; // whether to enforce that a^(-1) < m
+	 LongElement inverse;
 
-	public LongIntegerModInverseGadget(LongElement a, LongElement m, boolean restrictRange, String... desc) {
+	pub  LongIntegerModInverseGadget(LongElement a, LongElement m, bool restrictRange, desc:Vec<String>) {
 		super(desc);
-		this.a = a;
-		this.m = m;
-		this.restrictRange = restrictRange;
+		self.a = a;
+		self.m = m;
+		self.restrictRange = restrictRange;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
-		Wire[] inverseWires = generator.createProverWitnessWireArray(m.getSize());
-		inverse = new LongElement(inverseWires, m.getCurrentBitwidth());
-		Wire[] quotientWires = generator.createProverWitnessWireArray(m.getSize());
-		LongElement quotient = new LongElement(quotientWires, m.getCurrentBitwidth());
+	  fn buildCircuit() {
+		Vec<Wire> inverseWires = generator.createProverWitnessWireArray(m.getSize());
+		inverse = LongElement::new(inverseWires, m.getCurrentBitwidth());
+		Vec<Wire> quotientWires = generator.createProverWitnessWireArray(m.getSize());
+		LongElement quotient = LongElement::new(quotientWires, m.getCurrentBitwidth());
 
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
 				BigInteger mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
 				BigInteger inverseValue = aValue.modInverse(mValue);
 				BigInteger quotientValue = aValue.multiply(inverseValue).divide(mValue);
 
-				evaluator.setWireValue(inverseWires, Util.split(inverseValue, LongElement.CHUNK_BITWIDTH));
-				evaluator.setWireValue(quotientWires, Util.split(quotientValue, LongElement.CHUNK_BITWIDTH));
+				evaluator.setWireValue(inverseWires, Util::split(inverseValue, LongElement.CHUNK_BITWIDTH));
+				evaluator.setWireValue(quotientWires, Util::split(quotientValue, LongElement.CHUNK_BITWIDTH));
 			}
 		});
 
@@ -65,12 +65,12 @@ public class LongIntegerModInverseGadget extends Gadget {
 		}
 	}
 
-	public LongElement getResult() {
+	pub  LongElement getResult() {
 		return inverse;
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return inverse.getArray();
 	}
 }

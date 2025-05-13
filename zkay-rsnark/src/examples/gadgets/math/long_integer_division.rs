@@ -18,10 +18,10 @@ abstract class LongIntegerDivision extends Gadget {
 	 LongElement a;
 	 LongElement b;
 
-	private LongElement r;
-	private LongElement q;
-	private boolean restrictRange;
-	private int bMinBitwidth;
+	 LongElement r;
+	 LongElement q;
+	 bool restrictRange;
+	 i32 bMinBitwidth;
 
 	/**
 	 * @param a
@@ -46,7 +46,7 @@ abstract class LongIntegerDivision extends Gadget {
 	 * @param desc
 	 */
 
-	public LongIntegerDivision(LongElement a, LongElement b, boolean restrictRange, String... desc) {
+	pub  LongIntegerDivision(LongElement a, LongElement b, bool restrictRange, desc:Vec<String>) {
 		this(a, b, 0, restrictRange, desc);
 	}
 
@@ -72,37 +72,37 @@ abstract class LongIntegerDivision extends Gadget {
 	 * 		See the RSA encryption gadget for an illustration.
 	 * @param desc
 	 */
-	public LongIntegerDivision(LongElement a, LongElement b, int bMinBitwidth, boolean restrictRange,
-	                           String... desc) {
+	pub  LongIntegerDivision(LongElement a, LongElement b, i32 bMinBitwidth, bool restrictRange,
+	                           desc:Vec<String>) {
 		super(desc);
-		this.a = a;
-		this.b = b;
-		this.bMinBitwidth = bMinBitwidth;
-		this.restrictRange = restrictRange;
+		self.a = a;
+		self.b = b;
+		self.bMinBitwidth = bMinBitwidth;
+		self.restrictRange = restrictRange;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
+	  fn buildCircuit() {
 
-		int aBitwidth = Math.max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
-		int bBitwidth = Math.max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		i32 aBitwidth = Math.max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		i32 bBitwidth = Math.max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
 
-		int rBitwidth = Math.min(aBitwidth, bBitwidth);
-		int qBitwidth = aBitwidth;
+		i32 rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
+		i32 qBitwidth = aBitwidth;
 
 		if bMinBitwidth > 0 {
 			qBitwidth = Math.max(1, qBitwidth - bMinBitwidth + 1);
 		}
 
 		// length in what follows means the number of chunks
-		int rLength = (int) Math.ceil(rBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
-		int qLength = (int) Math.ceil(qBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
+		i32 rLength = (i32) Math.ceil(rBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
+		i32 qLength = (i32) Math.ceil(qBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
 
-		Wire[] rWires = generator.createProverWitnessWireArray(rLength);
-		Wire[] qWires = generator.createProverWitnessWireArray(qLength);
+		Vec<Wire> rWires = generator.createProverWitnessWireArray(rLength);
+		Vec<Wire> qWires = generator.createProverWitnessWireArray(qLength);
 
-		int[] rChunkBitwidths = new int[rLength];
-		int[] qChunkBitwidths = new int[qLength];
+		Vec<i32> rChunkBitwidths = vec![i32::default();rLength];
+		Vec<i32> qChunkBitwidths = vec![i32::default();qLength];
 
 		Arrays.fill(rChunkBitwidths, LongElement.CHUNK_BITWIDTH);
 		Arrays.fill(qChunkBitwidths, LongElement.CHUNK_BITWIDTH);
@@ -114,19 +114,19 @@ abstract class LongIntegerDivision extends Gadget {
 			qChunkBitwidths[qLength - 1] = qBitwidth % LongElement.CHUNK_BITWIDTH;
 		}
 
-		r = new LongElement(rWires, rChunkBitwidths);
-		q = new LongElement(qWires, qChunkBitwidths);
+		r = LongElement::new(rWires, rChunkBitwidths);
+		q = LongElement::new(qWires, qChunkBitwidths);
 
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
 				BigInteger bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
 				BigInteger rValue = aValue.mod(bValue);
 				BigInteger qValue = aValue.divide(bValue);
 
-				evaluator.setWireValue(r.getArray(), Util.split(rValue, LongElement.CHUNK_BITWIDTH));
-				evaluator.setWireValue(q.getArray(), Util.split(qValue, LongElement.CHUNK_BITWIDTH));
+				evaluator.setWireValue(r.getArray(), Util::split(rValue, LongElement.CHUNK_BITWIDTH));
+				evaluator.setWireValue(q.getArray(), Util::split(qValue, LongElement.CHUNK_BITWIDTH));
 			}
 		});
 
@@ -143,11 +143,11 @@ abstract class LongIntegerDivision extends Gadget {
 		}
 	}
 
-	public LongElement getQuotient() {
+	pub  LongElement getQuotient() {
 		return q;
 	}
 
-	public LongElement getRemainder() {
+	pub  LongElement getRemainder() {
 		return r;
 	}
 }

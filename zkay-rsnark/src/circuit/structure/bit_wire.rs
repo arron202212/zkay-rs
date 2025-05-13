@@ -8,120 +8,113 @@ use circuit::operations::primitive::orbasic_op;
 use circuit::operations::primitive::xor_basic_op;
 
 
-public class BitWire extends Wire {
+pub struct BitWire;
 
-	public BitWire(int wireId) {
-		super(wireId);
-	}
+impl BitWire{
 
-	public Wire mul(Wire w, String desc) {
+	// pub  BitWire(wireId:i32 ) {
+	// 	super(wireId);
+	// }
+
+	pub  fn mul(w:Wire , desc:String )-> Wire {
 		if w instanceof ConstantWire {
-			return this.mul(((ConstantWire) w).getConstant(), desc);
-		} else {
-			Wire output;
-			if w instanceof BitWire
-				output = new VariableBitWire(generator.currentWireId+=1);
+			return self.mul(((ConstantWire) w).getConstant(), desc);
+		} 
+			let  output=
+			if w.instanceof( BitWire)
+				{ VariableBitWire::new(self.generator.currentWireId)
+                }
 			else
-				output = new VariableWire(generator.currentWireId+=1);
-			Instruction op = new MulBasicOp(this, w, output, desc);
-			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-			if(cachedOutputs == null){
-				return output;
-			}
-			else{
-				generator.currentWireId--;
+				{output = VariableWire::new(self.generator.currentWireId)
+            };
+self.generator.currentWireId+=1;
+let op =   MulBasicOp::new(self, w, output, desc);
+let cachedOutputs =   self.generator.addToEvaluationQueue(op);
+			if let Some(cachedOutputs) =cachedOutputs{
+		
+				self.generator.currentWireId-=1;
 				return cachedOutputs[0];
 			}
-		}
+				 output
+			
 	}
 
-	public Wire mul(BigInteger b, String... desc) {
-		Wire out;
-		if(b.equals(BigInteger.ZERO)){
-			return generator.zeroWire;
-		} else if(b.equals(BigInteger.ONE)){
-			return this;
-		} else{
-			out = new LinearCombinationWire(generator.currentWireId+=1);
-			Instruction op = new ConstMulBasicOp(this, out, b, desc);
-//			generator.addToEvaluationQueue(op);
+	pub  fn mul(b:BigInteger , desc:Vec<String>)-> Wire {
+		if b.equals(BigInteger.ZERO){
+			return self.generator.zeroWire;
+		} else if b.equals(BigInteger.ONE){
+			return self;
+		} 
+		let 	out = LinearCombinationWire::new(self.generator.currentWireId+=1);
+let op =  ConstMulBasicOp::new(self, out, b, desc);
+//			self.generator.addToEvaluationQueue(op);
 //			return out;			
-			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-			if(cachedOutputs == null){
-				return out;
-			}
-			else{
-				generator.currentWireId--;
-				return cachedOutputs[0];
+let cachedOutputs =  self.generator.addToEvaluationQueue(op);
+			if let Some(cachedOutputs) =cachedOutputs{
+				self.generator.currentWireId-=1;
+				return cachedOutputs[0].clone();
 			}	
-		}
+		out
 	}
 
-	public Wire invAsBit(String...desc) {
-//		Wire neg = new Wire(generator.currentWireId+=1);
-//		Instruction op = new ConstMulBasicOp(this, neg, -1, desc);
-//		generator.addToEvaluationQueue(op);
-		Wire neg = this.mul(-1, desc);
-		Wire out = new LinearCombinationBitWire(generator.currentWireId+=1);
-		Instruction op = new AddBasicOp(new Wire[] { generator.oneWire, neg }, out, desc);
-//		generator.addToEvaluationQueue(op);
-		Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-		if(cachedOutputs == null){
-			return out;
-		}
-		else{
-			generator.currentWireId--;
-			return cachedOutputs[0];
-		}		
+	pub  fn invAsBit(desc:Vec<String>)-> Wire {
+//		Wire neg = Wire::new(self.generator.currentWireId+=1);
+//		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
+//		self.generator.addToEvaluationQueue(op);
+let neg =  self.mul(-1, desc);
+let out =   LinearCombinationBitWire::new(self.generator.currentWireId);
+self.generator.currentWireId+=1;
+let op =   AddBasicOp::new(vec![ self.generator.oneWire, neg] , out, desc);
+//		self.generator.addToEvaluationQueue(op);
+let cachedOutputs =  self.generator.addToEvaluationQueue(op);
+		if let Some(cachedOutputs) =cachedOutputs{
+			self.generator.currentWireId-=1;
+			return cachedOutputs[0].clone();
+		}	
+out	
 	}
 	
-	public Wire or(Wire w, String...desc) {
-		 if w instanceof ConstantWire {
-			return w.or(this, desc);
-		} else {
-			Wire out;
-			if w instanceof BitWire {
-				out = new VariableBitWire(generator.currentWireId+=1);
-				Instruction op = new ORBasicOp(this, w, out, desc);
-				Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-				if(cachedOutputs == null){
-					return out;
-				}
-				else{
-					generator.currentWireId--;
-					return cachedOutputs[0];
-				}
-			} else {
+	pub  fn or(w:Wire , desc:Vec<String>)-> Wire {
+		 if w.instanceof(ConstantWire) {
+			return w.or(self, desc);
+		} 
+			if w.instanceof( BitWire) {
+			let 	out = VariableBitWire::new(self.generator.currentWireId);
+            self.generator.currentWireId+=1;
+let op =  ORBasicOp::new(self, w, out, desc);
+let cachedOutputs =  self.generator.addToEvaluationQueue(op);
+				return if let Some(cachedOutputs) =cachedOutputs{
+					self.generator.currentWireId-=1;
+					 cachedOutputs[0].clone()
+				}else{out}
+			} 
 				return super.or(w, desc);
-			}	
-		}
+			
+		
 	}
 	
 	
-	public Wire xor(Wire w, String...desc) {
+	pub  fn xor(w:Wire , desc:Vec<String>)-> Wire {
 		 if w instanceof ConstantWire {
-			return w.xor(this, desc);
-		} else {
-			Wire out;
-			if w instanceof BitWire {
-				out = new VariableBitWire(generator.currentWireId+=1);
-				Instruction op = new XorBasicOp(this, w, out, desc);
-				Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-				if(cachedOutputs == null){
-					return out;
-				}
-				else{
-					generator.currentWireId--;
-					return cachedOutputs[0];
-				}
-			} else {
-				return super.xor(w, desc);
-			}	
+			return w.xor(self, desc);
 		}
+			if w.instanceof( BitWire) {
+				let out = VariableBitWire::new(self.generator.currentWireId);
+self.generator.currentWireId+=1;
+let op =  XorBasicOp::new(self, w, out, desc);
+let cachedOutputs =  self.generator.addToEvaluationQueue(op);
+				return if let Some(cachedOutputs) =cachedOutputs{
+					self.generator.currentWireId-=1;
+					 cachedOutputs[0].clone()
+				}else{out}
+			} 
+			super.xor(w, desc)
+				
+		
 	}
 	
-	public WireArray getBits(Wire w, int bitwidth, String...desc) {
-		return new WireArray( new Wire[]{this}).adjustLength(bitwidth);
+	pub  fn getBits(w:Wire , bitwidth:i32 , desc:Vec<String>)-> WireArray {
+		return WireArray::new( vec![self]).adjustLength(bitwidth);
 	}
 	
 }

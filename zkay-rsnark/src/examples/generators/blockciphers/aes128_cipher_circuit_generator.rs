@@ -8,41 +8,41 @@ use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
 
 // A sample usage of the AES128 block cipher gadget
-public class AES128CipherCircuitGenerator extends CircuitGenerator {
+pub struct AES128CipherCircuitGenerator extends CircuitGenerator {
 
-	private Wire[] inputs;
-	private Wire[] key;
-	private Wire[] outputs;
-	private AES128CipherGadget gadget;
+	 Vec<Wire> inputs;
+	 Vec<Wire> key;
+	 Vec<Wire> outputs;
+	 AES128CipherGadget gadget;
 
-	public AES128CipherCircuitGenerator(String circuitName) {
+	pub  AES128CipherCircuitGenerator(String circuitName) {
 		super(circuitName);
 	}
 
 	
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 		inputs = createInputWireArray(16); // in bytes
 		key = createInputWireArray(16); // in bytes
 
-		Wire[] expandedKey = AES128CipherGadget.expandKey(key);
-		gadget = new AES128CipherGadget(inputs, expandedKey, "");
+		Vec<Wire> expandedKey = AES128CipherGadget.expandKey(key);
+		gadget = AES128CipherGadget::new(inputs, expandedKey, "");
 		outputs = gadget.getOutputWires();
-		for (Wire o : outputs) {
+		for o in outputs {
 			makeOutput(o);
 		}
 
 	}
 
 	
-	public void generateSampleInput(CircuitEvaluator circuitEvaluator) {
+	pub   generateSampleInput(CircuitEvaluator circuitEvaluator) {
 
-		BigInteger keyV = new BigInteger("2b7e151628aed2a6abf7158809cf4f3c", 16);
-		BigInteger msgV = new BigInteger("ae2d8a571e03ac9c9eb76fac45af8e51", 16);
+		BigInteger keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
+		BigInteger msgV = BigInteger::new("ae2d8a571e03ac9c9eb76fac45af8e51", 16);
 
 		// expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
-		byte[] keyArray = keyV.toByteArray();
-		byte[] msgArray = msgV.toByteArray();
+		Vec<byte> keyArray = keyV.toByteArray();
+		Vec<byte> msgArray = msgV.toByteArray();
 		msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
 				msgArray.length);
 		keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
@@ -57,10 +57,10 @@ public class AES128CipherCircuitGenerator extends CircuitGenerator {
 		}
 	}
 
-	public static void main(String[] args)  {
+	pub    main(args:Vec<String>)  {
 
 		Config.hexOutputEnabled = true;
-		AES128CipherCircuitGenerator generator = new AES128CipherCircuitGenerator(
+		AES128CipherCircuitGenerator generator = AES128CipherCircuitGenerator::new(
 				"AES_Circuit");
 		generator.generateCircuit();
 		generator.evalCircuit();

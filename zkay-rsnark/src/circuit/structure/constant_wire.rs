@@ -4,146 +4,132 @@ use circuit::config::config;
 use circuit::eval::instruction;
 use circuit::operations::primitive::const_mul_basic_op;
 
-public class ConstantWire extends Wire {
-
-	protected BigInteger constant;
-
-	public ConstantWire(int wireId, BigInteger value) {
+pub struct ConstantWire {
+	  constant:BigInteger;
+}
+impl ConstantWire{
+	pub fn new(wireId:i32 , value:BigInteger )  {
 		super(wireId);
 		constant = value.mod(Config.FIELD_PRIME);
 	}
 	
-	public BigInteger getConstant() {
+	pub  fn getConstant()-> BigInteger {
 		return constant;
 	}
 
-	public boolean isBinary() {
+	pub  fn isBinary()-> bool {
 		return constant.equals(BigInteger.ONE)
 				|| constant.equals(BigInteger.ZERO);
 	}
 
-	public Wire mul(Wire w, String... desc) {
-		if w instanceof ConstantWire {
-			return generator.createConstantWire(
+	pub  fn mul(w:Wire , desc:Vec<String>)-> Wire {
+		if w.instanceof( ConstantWire) {
+			return self.generator.createConstantWire(
 					constant.multiply(((ConstantWire) w).constant), desc);
 		} else {
 			return w.mul(constant, desc);
 		}
 	}
 
-	public Wire mul(BigInteger b, String... desc) {
+	pub  fn mul(b:BigInteger , desc:Vec<String>)-> Wire {
 		Wire out;
-		boolean sign = b.signum() == -1;
-		BigInteger newConstant = constant.multiply(b).mod(Config.FIELD_PRIME);
+let sign =  b.signum() == -1;
+let newConstant =  constant.multiply(b).mod(Config.FIELD_PRIME);
 		 	
-		out = generator.knownConstantWires.get(newConstant);
-		if out == null {
-			
-			if(!sign){
-				out = new ConstantWire(generator.currentWireId+=1, newConstant);
-			} else{
-				out = new ConstantWire(generator.currentWireId+=1, newConstant.subtract(Config.FIELD_PRIME));
-			}			
-			Instruction op = new ConstMulBasicOp(this, out,
+		let mut out = self.generator.knownConstantWires.get(newConstant);
+		if out.is_some() {
+			return out;
+        }
+
+
+		out = ConstantWire::new(self.generator.currentWireId, if !sign{newConstant}else{newConstant.subtract(Config.FIELD_PRIME)});
+		
+self.generator.currentWireId+=1;
+let op =  ConstMulBasicOp::new(self, out,
 					b, desc);
-			Wire[] cachedOutputs = generator.addToEvaluationQueue(op);
-			if(cachedOutputs == null){
-				generator.knownConstantWires.put(newConstant, out);
-				return out;
-			}
-			else{
-				// this branch might not be needed
-				generator.currentWireId--;
+let cachedOutputs =  self.generator.addToEvaluationQueue(op);
+			if let Some(cachedOutputs) = cachedOutputs{
+				// self branch might not be needed
+				self.generator.currentWireId-=1;
 				return cachedOutputs[0];
 			}
 			
-		}
-		return out;
+		self.generator.knownConstantWires.put(newConstant, out);
+				 out
+		
 	}
 
-	public Wire checkNonZero(Wire w, String... desc) {
+	pub  fn checkNonZero(w:Wire , desc:Vec<String>)-> Wire {
 		if constant.equals(BigInteger.ZERO) {
-			return generator.zeroWire;
+			return self.generator.zeroWire;
 		} else {
-			return generator.oneWire;
+			return self.generator.oneWire;
 		}
 	}
 
-	public Wire invAsBit(String... desc) {
-		if !isBinary() {
-			panic!(
+	pub  fn invAsBit(desc:Vec<String>)-> Wire {
+			assert!(self.isBinary(),
 					"Trying to invert a non-binary constant!");
-		}
+		
 		if constant.equals(BigInteger.ZERO) {
-			return generator.oneWire;
+			 self.generator.oneWire
 		} else {
-			return generator.zeroWire;
+			 self.generator.zeroWire
 		}
 	}
 
-	public Wire or(Wire w, String... desc) {
-		if w instanceof ConstantWire {
-			ConstantWire cw = (ConstantWire) w;
-			if isBinary() && cw.isBinary() {
-				if constant.equals(BigInteger.ZERO
-						&& cw.getConstant().equals(BigInteger.ZERO)) {
-					return generator.zeroWire;
-				} else {
-					return generator.oneWire;
-				}
-			} else {
-				panic!(
+	pub  fn or(w:Wire , desc:Vec<String>)-> Wire {
+		if let Some(cw)=w.ConstantWire() {
+                assert!(self.isBinary() && cw.isBinary() ,
 						"Trying to OR two non-binary constants");
-			}
-		} else {
-			if constant.equals(BigInteger.ONE) {
-				return generator.oneWire;
-			} else {
-				return w;
-			}
-		}
-	}
-
-	public Wire xor(Wire w, String... desc) {
-		if w instanceof ConstantWire {
-			ConstantWire cw = (ConstantWire) w;
-			if isBinary() && cw.isBinary() {
-				if constant.equals(cw.getConstant()) {
-					return generator.zeroWire;
+			return	if constant.equals(BigInteger.ZERO
+						&& cw.getConstant().equals(BigInteger.ZERO)) {
+					 self.generator.zeroWire
 				} else {
-					return generator.oneWire;
+					 self.generator.oneWire
 				}
-			} else {
-				panic!(
-						"Trying to XOR two non-binary constants");
-			}
-		} else {
+		} 
 			if constant.equals(BigInteger.ONE) {
-				return w.invAsBit(desc);
+				 self.generator.oneWire
 			} else {
-				return w;
+				 w
 			}
-		}
+		
 	}
 
-	public WireArray getBitWires(int bitwidth, String... desc) {
-		if constant.bitLength() > bitwidth {
-			panic!("Trying to split a constant of "
-					+ constant.bitLength() + " bits into " + bitwidth + "bits");
-		} else {
-			Wire[] bits = new ConstantWire[bitwidth];
-			for i in 0..bitwidth {
-				bits[i] = constant.testBit(i)  { generator.oneWire }else { generator.zeroWire};
+	pub  fn xor(w:Wire , desc:Vec<String>)-> Wire {
+		if let Some(cw)=w.ConstantWire() {
+            assert!(isBinary() && cw.isBinary(),
+						"Trying to XOR two non-binary constants");
+				return if constant.equals(cw.getConstant()) {
+					 self.generator.zeroWire
+				} else {
+					 self.generator.oneWire
+				}
+		} 
+			if constant.equals(BigInteger.ONE) {
+				 w.invAsBit(desc)
+			} else {
+				 w
 			}
-			return new WireArray(bits);
-		}
+		
+	}
+
+	pub  fn getBitWires(bitwidth:i32 , desc:Vec<String>)-> WireArray {
+			assert!(constant.bitLength() <= bitwidth,"Trying to split a constant of {} bits into  {bitwidth} bits",constant.bitLength() );
+let mut bits =  vec![ConstantWire::default();bitwidth];
+			for i in 0..bitwidth {
+				bits[i] = constant.testBit(i)  { self.generator.oneWire }else { self.generator.zeroWire};
+			}
+			return WireArray::new(bits);
+		
 	}
 	
-	public void restrictBitLength(int bitwidth, String...desc) {
+	pub  fn restrictBitLength(bitwidth:i32 , desc:Vec<String>) {
 		getBitWires(bitwidth, desc);
 	}
 	
-	protected void pack(String...desc){
+	fn pack(desc:Vec<String>){
 	}
 	
 }

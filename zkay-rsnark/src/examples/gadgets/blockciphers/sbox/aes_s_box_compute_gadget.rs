@@ -12,27 +12,27 @@ use circuit::structure::wire;
  *
  */
 
-public class AESSBoxComputeGadget extends Gadget {
+pub struct AESSBoxComputeGadget extends Gadget {
 
 	 Wire input;
-	private Wire inverse;
-	private Wire output;
+	 Wire inverse;
+	 Wire output;
 
-	public AESSBoxComputeGadget(Wire input, String... desc) {
+	pub  AESSBoxComputeGadget(Wire input, desc:Vec<String>) {
 		super(desc);
-		this.input = input;
+		self.input = input;
 		buildCircuit();
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 		inverse = generator.createProverWitnessWire();
 
-		generator.addToEvaluationQueue(new Instruction() {
+		generator.addToEvaluationQueue(Instruction::new() {
 
 			
-			public void evaluate(CircuitEvaluator evaluator) {
-				int p = evaluator.getWireValue(input).intValue(); 
-				int q = findInv(p);
+			pub   evaluate(CircuitEvaluator evaluator) {
+				i32 p = evaluator.getWireValue(input).intValue(); 
+				i32 q = findInv(p);
 				evaluator.setWireValue(inverse, q);
 
 			}
@@ -51,14 +51,14 @@ public class AESSBoxComputeGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { output };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { output };
 	}
 
-	private Wire gmul(Wire a, Wire b) {
+	 Wire gmul(Wire a, Wire b) {
 		Wire p = generator.getZeroWire();
-		int counter;
-		for (counter = 0; counter < 8; counter+=1) {
+		i32 counter;
+		for counter in 0..8
 			Wire tmp = p.xorBitwise(a, 8);
 			Wire bit = b.getBitWires(8).get(0);
 			p = p.add(bit.mul(tmp.sub(p)));
@@ -73,10 +73,10 @@ public class AESSBoxComputeGadget extends Gadget {
 		return p;
 	}
 
-	private int gmul(int a, int b) {
-		int p = 0;
-		int j;
-		for (j = 0; j < 8; j+=1) {
+	 i32 gmul(i32 a, i32 b) {
+		i32 p = 0;
+		i32 j;
+		for j in 0..8
 			if (b & 1) != 0
 				p ^= a;
 			a <<= 1;
@@ -87,7 +87,7 @@ public class AESSBoxComputeGadget extends Gadget {
 		return p;
 	}
 
-	private int findInv(int a) {
+	 i32 findInv(i32 a) {
 		if a == 0
 			return 0;
 		for i in 0..256 {

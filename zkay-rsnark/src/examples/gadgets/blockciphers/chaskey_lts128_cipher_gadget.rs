@@ -10,27 +10,27 @@ use circuit::structure::wire;
  * https://www.nist.gov/sites/default/files/documents/2016/10/18/perrin-paper-lwc2016.pdf
  * https://www.cryptolux.org/index.php/FELICS
  */
-public class ChaskeyLTS128CipherGadget extends Gadget {
+pub struct ChaskeyLTS128CipherGadget extends Gadget {
 
-	private Wire[] plaintext; // 4 32-bit words
-	private Wire[] key; // 4 32-bit words
-	private Wire[] ciphertext; // 4 32-bit words
+	 Vec<Wire> plaintext; // 4 32-bit words
+	 Vec<Wire> key; // 4 32-bit words
+	 Vec<Wire> ciphertext; // 4 32-bit words
 
-	public ChaskeyLTS128CipherGadget(Wire[] inputs, Wire[] key, String... desc) {
+	pub  ChaskeyLTS128CipherGadget(inputs:Vec<Wire>, key:Vec<Wire>, desc:Vec<String>) {
 		super(desc);
 		if inputs.length != 4 || key.length != 4 {
-			throw new IllegalArgumentException("Invalid Input");
+			assert!("Invalid Input");
 		}
-		this.plaintext = inputs;
-		this.key = key;
+		self.plaintext = inputs;
+		self.key = key;
 
 		buildCircuit();
 
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
-		Wire[] v = new Wire[4];
+		Vec<Wire> v = vec![Wire::default();4];
 		for i in 0..4 {
 			v[i] = (plaintext[i].xorBitwise(key[i], 32));
 		}
@@ -62,7 +62,7 @@ public class ChaskeyLTS128CipherGadget extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return ciphertext;
 	}
 

@@ -8,55 +8,55 @@ use circuit::structure::wire;
  * This gadget computes the result of the modular exponentiation c = b^e mod m,
  * where c, b, e, and m are LongElements.
  */
-public class LongIntegerModPowGadget extends Gadget {
+pub struct LongIntegerModPowGadget extends Gadget {
 
 	 LongElement b; // base
 	 LongElement e; // exponent
-	 int eMaxBits; // maximum bit length of e
+	 i32 eMaxBits; // maximum bit length of e
 	 LongElement m; // modulus
-	 int mMinBits; // minimum bit length of m
+	 i32 mMinBits; // minimum bit length of m
 
-	private LongElement c; // c = m^e mod m
+	 LongElement c; // c = m^e mod m
 
-	public LongIntegerModPowGadget(LongElement b, LongElement e, LongElement m, int mMinBitLength, String... desc) {
+	pub  LongIntegerModPowGadget(LongElement b, LongElement e, LongElement m, i32 mMinBitLength, desc:Vec<String>) {
 		this(b, e, -1, m, mMinBitLength, desc);
 	}
 
-	public LongIntegerModPowGadget(LongElement b, LongElement e, int eMaxBits, LongElement m, int mMinBits, String... desc) {
+	pub  LongIntegerModPowGadget(LongElement b, LongElement e, i32 eMaxBits, LongElement m, i32 mMinBits, desc:Vec<String>) {
 		super(desc);
-		this.b = b;
-		this.e = e;
-		this.eMaxBits = eMaxBits;
-		this.m = m;
-		this.mMinBits = mMinBits;
+		self.b = b;
+		self.e = e;
+		self.eMaxBits = eMaxBits;
+		self.m = m;
+		self.mMinBits = mMinBits;
 		buildCircuit();
 	}
 
-	private void buildCircuit() {
-		final LongElement one = new LongElement(new BigInteger[] {BigInteger.ONE});
-		Wire[] eBits = e.getBits(eMaxBits).asArray();
+	  fn buildCircuit() {
+		LongElement one = LongElement::new(vec![BigInteger::default();] {BigInteger.ONE});
+		Vec<Wire> eBits = e.getBits(eMaxBits).asArray();
 
 		// Start with product = 1
 		LongElement product = one;
 		// From the most significant to the least significant bit of the exponent, proceed as follow:
 		// product = product^2 mod m
 		// if eBit == 1) product = (product * base mod m
-		for (int i = eBits.length - 1; i >= 0; --i) {
+		for i in (0..=eBits.length - 1).rev()
 			LongElement square = product.mul(product);
-			LongElement squareModM = new LongIntegerModGadget(square, m, mMinBits, false, "modPow: prod^2 mod m").getRemainder();
+			LongElement squareModM = LongIntegerModGadget::new(square, m, mMinBits, false, "modPow: prod^2 mod m").getRemainder();
 			LongElement squareTimesBase = squareModM.mul(one.muxBit(b, eBits[i]));
-			product = new LongIntegerModGadget(squareTimesBase, m, mMinBits, false, "modPow: prod * base mod m").getRemainder();
+			product = LongIntegerModGadget::new(squareTimesBase, m, mMinBits, false, "modPow: prod * base mod m").getRemainder();
 		}
 
-		c = new LongIntegerModGadget(product, m, true, "modPow: final prod mod m").getRemainder();
+		c = LongIntegerModGadget::new(product, m, true, "modPow: prod mod m").getRemainder();
 	}
 
-	public LongElement getResult() {
+	pub  LongElement getResult() {
 		return c;
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return c.getArray();
 	}
 }

@@ -10,7 +10,7 @@ use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 
 //Tests RSA PKCS #1, V1.5 Signature
 
-public class RSASignature_Test extends TestCase {
+pub struct RSASignature_Test extends TestCase {
 
 	/*
 	 * Note that these tests are for ensuring the basic functionality. To verify
@@ -20,7 +20,7 @@ public class RSASignature_Test extends TestCase {
 	 */
 
 	@Test
-	public void testValidSignatureDifferentKeyLengths() {
+	pub   testValidSignatureDifferentKeyLengths() {
 
 		String inputStr = "abc";
 
@@ -29,14 +29,14 @@ public class RSASignature_Test extends TestCase {
 
 		// might need to increase memory heap to run this test on some platforms
 
-		int[] keySizeArray = new int[] { 1024, 2048, 3072, 4096, 2047, 2049 };
+		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 
-		for (int keySize : keySizeArray) {
-			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
+		for keySize in keySizeArray {
+			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_SIG_TestValid") {
 
-				int rsaKeyLength = keySize;
-				Wire[] inputMessage;
+				i32 rsaKeyLength = keySize;
+				Vec<Wire> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -44,20 +44,20 @@ public class RSASignature_Test extends TestCase {
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
-					sha2Gadget = new SHA256Gadget(inputMessage, 8,
+					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
 							inputMessage.length, false, true);
-					Wire[] digest = sha2Gadget.getOutputWires();
+					Vec<Wire> digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
-					rsaSigVerificationV1_5_Gadget = new RSASigVerificationV1_5_Gadget(
+					rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
 							rsaModulus, digest, signature, rsaKeyLength);
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -66,30 +66,30 @@ public class RSASignature_Test extends TestCase {
 					try {
 						KeyPairGenerator keyGen = KeyPairGenerator
 								.getInstance("RSA");
-						keyGen.initialize(rsaKeyLength, new SecureRandom());
+						keyGen.initialize(rsaKeyLength, SecureRandom::new());
 						KeyPair keyPair = keyGen.generateKeyPair();
 						Signature signature = Signature
 								.getInstance("SHA256withRSA");
 						signature.initSign(keyPair.getPrivate());
 
-						byte[] message = inputStr.getBytes();
+						Vec<byte> message = inputStr.getBytes();
 						signature.update(message);
 
-						byte[] sigBytes = signature.sign();
+						Vec<byte> sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-						byte[] signaturePadded = new byte[sigBytes.length + 1];
+						Vec<byte> signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
 						BigInteger modulus = ((RSAPublicKey) keyPair
 								.getPublic()).getModulus();
-						BigInteger sig = new BigInteger(signaturePadded);
+						BigInteger sig = BigInteger::new(signaturePadded);
 
-						evaluator.setWireValue(this.rsaModulus, modulus,
+						evaluator.setWireValue(self.rsaModulus, modulus,
 								LongElement.CHUNK_BITWIDTH);
-						evaluator.setWireValue(this.signature, sig,
+						evaluator.setWireValue(self.signature, sig,
 								LongElement.CHUNK_BITWIDTH);
 
 					} catch (Exception e) {
@@ -110,7 +110,7 @@ public class RSASignature_Test extends TestCase {
 	}
 
 	@Test
-	public void testInvalidSignatureDifferentKeyLengths() {
+	pub   testInvalidSignatureDifferentKeyLengths() {
 
 		
 		String inputStr = "abc";
@@ -119,14 +119,14 @@ public class RSASignature_Test extends TestCase {
 		// ones
 
 
-		int[] keySizeArray = new int[] { 1024, 2048, 3072, 4096, 2047, 2049 };
+		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 
-		for (int keySize : keySizeArray) {
-			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
+		for keySize in keySizeArray {
+			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_SIG_TestInvalid") {
 
-				int rsaKeyLength = keySize;
-				Wire[] inputMessage;
+				i32 rsaKeyLength = keySize;
+				Vec<Wire> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -134,20 +134,20 @@ public class RSASignature_Test extends TestCase {
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
-					sha2Gadget = new SHA256Gadget(inputMessage, 8,
+					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
 							inputMessage.length, false, true);
-					Wire[] digest = sha2Gadget.getOutputWires();
+					Vec<Wire> digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
-					rsaSigVerificationV1_5_Gadget = new RSASigVerificationV1_5_Gadget(
+					rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
 							rsaModulus, digest, signature, rsaKeyLength);
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -156,32 +156,32 @@ public class RSASignature_Test extends TestCase {
 					try {
 						KeyPairGenerator keyGen = KeyPairGenerator
 								.getInstance("RSA");
-						keyGen.initialize(rsaKeyLength, new SecureRandom());
+						keyGen.initialize(rsaKeyLength, SecureRandom::new());
 						KeyPair keyPair = keyGen.generateKeyPair();
 						Signature signature = Signature
 								.getInstance("SHA256withRSA");
 						signature.initSign(keyPair.getPrivate());
 
-						byte[] message = inputStr.getBytes();
+						Vec<byte> message = inputStr.getBytes();
 						signature.update(message);
 
-						byte[] sigBytes = signature.sign();
+						Vec<byte> sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-						byte[] signaturePadded = new byte[sigBytes.length + 1];
+						Vec<byte> signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
 						BigInteger modulus = ((RSAPublicKey) keyPair
 								.getPublic()).getModulus();
-						BigInteger sig = new BigInteger(signaturePadded);
+						BigInteger sig = BigInteger::new(signaturePadded);
 
-						evaluator.setWireValue(this.rsaModulus, modulus,
+						evaluator.setWireValue(self.rsaModulus, modulus,
 								LongElement.CHUNK_BITWIDTH);
 
 						// input the modulus itself instead of the signature
-						evaluator.setWireValue(this.signature, sig.subtract(BigInteger.ONE),
+						evaluator.setWireValue(self.signature, sig.subtract(BigInteger.ONE),
 								LongElement.CHUNK_BITWIDTH);
 
 					} catch (Exception e) {
@@ -204,22 +204,22 @@ public class RSASignature_Test extends TestCase {
 	// This test checks the robustness of the code when the chunk bitwidth changes
 	
 	@Test
-	public void testValidSignatureDifferentChunkBitwidth() {
+	pub   testValidSignatureDifferentChunkBitwidth() {
 
 		String inputStr = "abc";
 
-		int keySize = 1024;
-		int defaultBitwidth = LongElement.CHUNK_BITWIDTH ;
+		i32 keySize = 1024;
+		i32 defaultBitwidth = LongElement.CHUNK_BITWIDTH ;
 
-		int[] chunkBiwidthArray = new int[106];
-		for(int b = 16; b-16 < chunkBiwidthArray.length; b+=1){
+		Vec<i32> chunkBiwidthArray = vec![i32::default();106];
+		for b in 16..chunkBiwidthArray.length{
 			
 			LongElement.CHUNK_BITWIDTH = b;
-			CircuitGenerator generator = new CircuitGenerator("RSA" + keySize
+			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_SIG_TestValid_ChunkB_"+b) {
 
-				int rsaKeyLength = keySize;
-				Wire[] inputMessage;
+				i32 rsaKeyLength = keySize;
+				Vec<Wire> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -227,20 +227,20 @@ public class RSASignature_Test extends TestCase {
 				RSASigVerificationV1_5_Gadget rsaSigVerificationV1_5_Gadget;
 
 				
-				protected void buildCircuit() {
+				  fn buildCircuit() {
 					inputMessage = createInputWireArray(inputStr.length());
-					sha2Gadget = new SHA256Gadget(inputMessage, 8,
+					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
 							inputMessage.length, false, true);
-					Wire[] digest = sha2Gadget.getOutputWires();
+					Vec<Wire> digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
-					rsaSigVerificationV1_5_Gadget = new RSASigVerificationV1_5_Gadget(
+					rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
 							rsaModulus, digest, signature, rsaKeyLength);
 					makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
 				}
 
 				
-				public void generateSampleInput(CircuitEvaluator evaluator) {
+				pub   generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -249,30 +249,30 @@ public class RSASignature_Test extends TestCase {
 					try {
 						KeyPairGenerator keyGen = KeyPairGenerator
 								.getInstance("RSA");
-						keyGen.initialize(rsaKeyLength, new SecureRandom());
+						keyGen.initialize(rsaKeyLength, SecureRandom::new());
 						KeyPair keyPair = keyGen.generateKeyPair();
 						Signature signature = Signature
 								.getInstance("SHA256withRSA");
 						signature.initSign(keyPair.getPrivate());
 
-						byte[] message = inputStr.getBytes();
+						Vec<byte> message = inputStr.getBytes();
 						signature.update(message);
 
-						byte[] sigBytes = signature.sign();
+						Vec<byte> sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-						byte[] signaturePadded = new byte[sigBytes.length + 1];
+						Vec<byte> signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
 						BigInteger modulus = ((RSAPublicKey) keyPair
 								.getPublic()).getModulus();
-						BigInteger sig = new BigInteger(signaturePadded);
+						BigInteger sig = BigInteger::new(signaturePadded);
 
-						evaluator.setWireValue(this.rsaModulus, modulus,
+						evaluator.setWireValue(self.rsaModulus, modulus,
 								LongElement.CHUNK_BITWIDTH);
-						evaluator.setWireValue(this.signature, sig,
+						evaluator.setWireValue(self.signature, sig,
 								LongElement.CHUNK_BITWIDTH);
 
 					} catch (Exception e) {

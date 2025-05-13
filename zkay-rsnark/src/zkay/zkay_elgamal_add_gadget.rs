@@ -4,35 +4,37 @@ use circuit::structure::wire;
 /**
  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
  */
-public class ZkayElgamalAddGadget extends ZkayBabyJubJubGadget {
+pub struct ZkayElgamalAddGadget {
 
-     JubJubPoint c1;
+     c1:JubJubPoint,
 
-     JubJubPoint c2;
+     c2:JubJubPoint,
 
-     JubJubPoint d1;
+     d1:JubJubPoint,
 
-     JubJubPoint d2;
+     d2:JubJubPoint,
 
-    private JubJubPoint e1;
+     e1:JubJubPoint,
 
-    private JubJubPoint e2;
-
-    public ZkayElgamalAddGadget(JubJubPoint c1, JubJubPoint c2, JubJubPoint d1, JubJubPoint d2) {
-        this.c1 = c1;
-        this.c2 = c2;
-        this.d1 = d1;
-        this.d2 = d2;
+     e2:JubJubPoint,
+}
+impl  ZkayElgamalAddGadget{
+    pub  fn new(c1:JubJubPoint , c2:JubJubPoint , d1:JubJubPoint , d2:JubJubPoint )->Self {
+        self.c1 = c1;
+        self.c2 = c2;
+        self.d1 = d1;
+        self.d2 = d2;
         buildCircuit();
     }
-
-    protected void buildCircuit() {
+}
+impl  ZkayBabyJubJubGadget for ZkayElgamalAddGadget{
+       fn buildCircuit() {
         e1 = addPoints(c1, d1);
         e2 = addPoints(c2, d2);
     }
 
     
-    public Wire[] getOutputWires() {
-        return new Wire[]{ e1.x, e1.y, e2.x, e2.y };
+    pub fn getOutputWires()->Vec<Wire>  {
+        return vec![Wire::default();]{ e1.x, e1.y, e2.x, e2.y };
     }
 }

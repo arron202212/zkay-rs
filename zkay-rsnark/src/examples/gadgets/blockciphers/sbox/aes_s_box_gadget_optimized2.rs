@@ -23,11 +23,11 @@ use examples::gadgets::blockciphers::sbox::util::linear_system_solver;
  * 
  */
 
-public class AESSBoxGadgetOptimized2 extends Gadget {
+pub struct AESSBoxGadgetOptimized2 extends Gadget {
 
-	private static int SBox[] = AES128CipherGadget.SBox;
+	  i32 Vec<SBox> = AES128CipherGadget.SBox;
 
-	private static ArrayList<BigInteger[]> allCoeffSet;
+	  ArrayList<Vec<BigInteger>> allCoeffSet;
 
 	/*
 	 * bitCount represents how many bits are going to be used to construct the
@@ -39,39 +39,39 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 	 * products (as in AESSBoxGadgetOptimized1). As x increases, the more
 	 * savings. x cannot increase beyond 16.
 	 */
-	private static int bitCount = 15;
+	  i32 bitCount = 15;
 
-	public static void setBitCount(int x) {
+	pub    setBitCount(i32 x) {
 		if x < 0 || x > 16
-			throw new IllegalArgumentException();
+			assert!();
 		else
 			bitCount = x;
 	}
 
-	static {
+	 {
 		// preprocessing
 		solveLinearSystems();
 	}
 
 	 Wire input;
-	private Wire output;
+	 Wire output;
 
-	public AESSBoxGadgetOptimized2(Wire input, String... desc) {
+	pub  AESSBoxGadgetOptimized2(Wire input, desc:Vec<String>) {
 		super(desc);
-		this.input = input;
+		self.input = input;
 		buildCircuit();
 	}
 
-	public static void solveLinearSystems() {
+	pub    solveLinearSystems() {
 
 		long seed = 1;
-		ArrayList<BigInteger[]> allCoeffSet = new ArrayList<BigInteger[]>();
+		ArrayList<Vec<BigInteger>> allCoeffSet = new ArrayList<Vec<BigInteger>>();
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		for (int i = 0; i <= 255; i+=1) {
+		for i in 0..=255{
 			list.add(256 * i + SBox[i]);
 		}
-		boolean done = false;
-		int trialCounter = 0;
+		bool done = false;
+		i32 trialCounter = 0;
 		loop1: while (!done) {
 			trialCounter+=1;
 			if trialCounter == 100 {
@@ -82,32 +82,32 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 					.println("Attempting to solve linear systems for efficient S-Box Access: Attempt#"
 							+ trialCounter);
 			seed+=1;
-			Collections.shuffle(list, new Random(seed));
+			Collections.shuffle(list, Random::new(seed));
 			allCoeffSet.clear();
 
-			for (int i = 0; i <= 15; i+=1) {
-				BigInteger[][] mat = new BigInteger[16][17];
+			for i in 0..=15{
+				Vec<Vec<BigInteger>> mat = vec![BigInteger::default();16][17];
 				HashSet<Integer> memberValueSet = new HashSet<>();
 
 				for k in 0..mat.length {
-					int memberValue = list.get(k + i * 16);
+					i32 memberValue = list.get(k + i * 16);
 					memberValueSet.add(memberValue);
 					mat[k][16] = BigInteger.ONE;
 
 					// now extract the values that correspond to memberValue
 					// the method getVariableValues takes the bitCount settings
 					// into account
-					BigInteger[] variableValues = getVariableValues(memberValue);
-					for (int j = 0; j <= 15; j+=1) {
+					Vec<BigInteger> variableValues = getVariableValues(memberValue);
+					for j in 0..=15{
 						mat[k][j] = variableValues[j];
 					}
 				}
 
-				new LinearSystemSolver(mat).solveInPlace();
+				LinearSystemSolver::new(mat).solveInPlace();
 
 				if checkIfProverCanCheat(mat, memberValueSet) {
 					println!("Invalid solution");
-					for (int ii = 0; ii < 16; ii+=1) {
+					for ii in 0..16{
 						if mat[ii][16].equals(BigInteger.ZERO) {
 							System.out
 									.println("Possibly invalid due to having zero coefficient(s)");
@@ -118,8 +118,8 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 					continue loop1;
 				}
 
-				BigInteger[] coeffs = new BigInteger[16];
-				for (int ii = 0; ii < 16; ii+=1) {
+				Vec<BigInteger> coeffs = vec![BigInteger::default();16];
+				for ii in 0..16{
 					coeffs[ii] = mat[ii][16];
 				}
 				allCoeffSet.add(coeffs);
@@ -131,13 +131,13 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		}
 	}
 
-	protected void buildCircuit() {
+	  fn buildCircuit() {
 
 		output = generator.createProverWitnessWire();
-		generator.specifyProverWitnessComputation(new Instruction() {
+		generator.specifyProverWitnessComputation(Instruction::new() {
 
 			
-			public void evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(CircuitEvaluator evaluator) {
 				// TODO Auto-generated method stub
 				BigInteger value = evaluator.getWireValue(input);
 				evaluator.setWireValue(output,
@@ -154,9 +154,9 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		output.restrictBitLength(8);
 		input.restrictBitLength(8);
 
-		Wire[] bitsIn = input.getBitWires(8).asArray();
-		Wire[] bitsOut = output.getBitWires(8).asArray();
-		Wire[] vars = new Wire[16];
+		Vec<Wire> bitsIn = input.getBitWires(8).asArray();
+		Vec<Wire> bitsOut = output.getBitWires(8).asArray();
+		Vec<Wire> vars = vec![Wire::default();16];
 		Wire p = input.mul(256).add(output).add(1);
 		Wire currentProduct = p;
 		if bitCount != 0 && bitCount != 16 {
@@ -178,7 +178,7 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		}
 
 		Wire product = generator.getOneWire();
-		for (BigInteger[] coeffs : allCoeffSet) {
+		for coeffs in  allCoeffSet {
 			Wire accum = generator.getZeroWire();
 			for j in 0..vars.length {
 				accum = accum.add(vars[j].mul(coeffs[j]));
@@ -190,13 +190,13 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 	}
 
 	
-	public Wire[] getOutputWires() {
-		return new Wire[] { output };
+	 pub  fn getOutputWires()->Vec<Wire>  {
+		return vec![Wire::default();] { output };
 	}
 
-	private static BigInteger[] getVariableValues(int k) {
+	  Vec<BigInteger> getVariableValues(i32 k) {
 
-		BigInteger[] vars = new BigInteger[16];
+		Vec<BigInteger> vars = vec![BigInteger::default();16];
 		BigInteger v = BigInteger.valueOf(k).add(BigInteger.ONE);
 		BigInteger product = v;
 		if bitCount != 0 {
@@ -214,23 +214,23 @@ public class AESSBoxGadgetOptimized2 extends Gadget {
 		return vars;
 	}
 
-	private static boolean checkIfProverCanCheat(BigInteger[][] mat,
+	  bool checkIfProverCanCheat(Vec<Vec<BigInteger>> mat,
 			HashSet<Integer> valueSet) {
 
-		BigInteger[] coeffs = new BigInteger[16];
+		Vec<BigInteger> coeffs = vec![BigInteger::default();16];
 		for i in 0..16 {
 			coeffs[i] = mat[i][16];
 		}
 
-		int validResults = 0;
-		int outsidePermissibleSet = 0;
+		i32 validResults = 0;
+		i32 outsidePermissibleSet = 0;
 
 		// loop over the whole permissible domain (recall that input & output
 		// are bounded)
 
-		for (int k = 0; k < 256 * 256; k+=1) {
+		for k in 0..256 * 256{
 
-			BigInteger[] variableValues = getVariableValues(k);
+			Vec<BigInteger> variableValues = getVariableValues(k);
 			BigInteger result = BigInteger.ZERO;
 			for i in 0..16 {
 				result = result.add(variableValues[i].multiply(coeffs[i]));

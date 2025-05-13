@@ -8,7 +8,7 @@ use circuit::structure::wire;
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-public class LongIntegerModGadget extends LongIntegerDivision {
+pub struct LongIntegerModGadget extends LongIntegerDivision {
 
 	/**
 	 * @param a
@@ -33,7 +33,7 @@ public class LongIntegerModGadget extends LongIntegerDivision {
 	 * @param desc
 	 */
 
-	public LongIntegerModGadget(LongElement a, LongElement b, boolean restrictRange, String... desc) {
+	pub  LongIntegerModGadget(LongElement a, LongElement b, bool restrictRange, desc:Vec<String>) {
 		super(a, b, restrictRange, desc);
 	}
 
@@ -61,12 +61,12 @@ public class LongIntegerModGadget extends LongIntegerDivision {
 	 * 		illustration.
 	 * @param desc
 	 */
-	public LongIntegerModGadget(LongElement a, LongElement b, int bMinBitwidth, boolean restrictRange, String... desc) {
+	pub  LongIntegerModGadget(LongElement a, LongElement b, i32 bMinBitwidth, bool restrictRange, desc:Vec<String>) {
 		super(a, b, bMinBitwidth, restrictRange, desc);
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return getRemainder().getArray();
 	}
 }

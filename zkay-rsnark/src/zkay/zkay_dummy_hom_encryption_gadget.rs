@@ -14,32 +14,34 @@ use circuit::structure::wire;
  *                        = (m1 + m2) * p
  *                        = Enc(m1 + m2, p)
  */
-public class ZkayDummyHomEncryptionGadget extends Gadget {
-
-	 Wire pk;
-	 Wire plain;
-	 Wire[] cipher;
-
-	public ZkayDummyHomEncryptionGadget(Wire plain, Wire pk, Wire[] rnd, int keyBits, String... desc) {
+pub struct ZkayDummyHomEncryptionGadget {
+	 pk:Wire,
+	 plain:Wire,
+	 cipher:Vec<Wire>,
+}
+impl  ZkayDummyHomEncryptionGadget{
+	pub  fn new(plain:Wire , pk:Wire , rnd:Vec<Wire>, keyBits:i32 , desc:Vec<String>)->Self {
 		super(desc);
 
 		Objects.requireNonNull(plain, "plain");
 		Objects.requireNonNull(pk, "pk");
 		Objects.requireNonNull(rnd, "rnd");
-		if rnd.length > 1) throw new IllegalArgumentException("Randomness wire array too long";
+		if rnd.length > 1) assert!("Randomness wire array too long";
 
-		this.plain = plain;
-		this.pk = pk;
-		this.cipher = new Wire[1];
+		self.plain = plain;
+		self.pk = pk;
+		self.cipher = vec![Wire::default();1];
 		buildCircuit();
 	}
+}
 
-	protected void buildCircuit() {
+impl Gadget for ZkayDummyHomEncryptionGadget{
+	  fn buildCircuit() {
 		cipher[0] = plain.mul(pk, "plain * pk").add(1);
 	}
 
 	
-	public Wire[] getOutputWires() {
+	 pub  fn getOutputWires()->Vec<Wire>  {
 		return cipher;
 	}
 }
