@@ -13,27 +13,30 @@ use examples::gadgets::hash::sha256_gadget;
 
 pub struct HybridEncryptionCircuitGenerator extends CircuitGenerator {
 
-	 Vec<Wire> plaintext; // as 64-bit words
-	 i32 plaintextSize; // number of 64-bit words
-	 Vec<Wire> ciphertext; // as 64-bit words
+	 plaintext:Vec<Wire>, // as 64-bit words
+	 plaintextSize:i32, // number of 64-bit words
+	 ciphertext:Vec<Wire>, // as 64-bit words
 
-	 String ciphername;
-	 Vec<Wire> secExpBits; 
+	 ciphername:String,
+	 secExpBits:Vec<Wire>, 
 
+
+	}
+impl  HybridEncryptionCircuitGenerator{
 	// Will assume the parameterization used in the test files ~ 80-bits
 	// security
 	pub   i32 EXPONENT_BITWIDTH = 397; // in bits
 	pub   i32 MU = 4;
 	pub   i32 OMEGA = 7;
-	
-	pub  HybridEncryptionCircuitGenerator(String circuitName, i32 plaintextSize,
+	pub  fn new(circuitName:String, i32 plaintextSize,
 			String ciphername) {
 		super(circuitName);
 		self.ciphername = ciphername;
 		self.plaintextSize = plaintextSize;
 	}
 
-	
+	}
+impl Gadget for HybridEncryptionCircuitGenerator{
 	  fn buildCircuit() {
 
 		plaintext = createInputWireArray(plaintextSize, "plaint text");
@@ -47,8 +50,8 @@ pub struct HybridEncryptionCircuitGenerator extends CircuitGenerator {
 			addBinaryAssertion(secExpBits[i]); // verify all bits are binary
 		}
 
-		Vec<Wire> g = vec![Wire::default();MU];
-		Vec<Wire> h = vec![Wire::default();MU];
+		let g = vec![Wire::default();MU];
+		let h = vec![Wire::default();MU];
 
 		// Hardcode the base and the other party's key (suitable when keys are not expected to change)
 		g[0] = createConstantWire(BigInteger::new("16377448892084713529161739182205318095580119111576802375181616547062197291263"));
@@ -70,34 +73,34 @@ pub struct HybridEncryptionCircuitGenerator extends CircuitGenerator {
 		 */
 
 		// Exchange keys
-		FieldExtensionDHKeyExchange exchange = FieldExtensionDHKeyExchange::new(g, h, secExpBits,
+		let exchange = FieldExtensionDHKeyExchange::new(g, h, secExpBits,
 				OMEGA, "");
 
 		// Output g^s
-		Vec<Wire> g_to_s = exchange.getOutputPublicValue();
+		let g_to_s = exchange.getOutputPublicValue();
 		makeOutputArray(g_to_s, "DH Key Exchange Output");
 
 		// Use h^s to generate a symmetric secret key and an initialization
 		// vector. Apply a Hash-based KDF.
-		Vec<Wire> h_to_s = exchange.getSharedSecret();
-		SHA256Gadget hashGadget = SHA256Gadget::new(h_to_s, 256, 128, true,
+		let h_to_s = exchange.getSharedSecret();
+		let hashGadget = SHA256Gadget::new(h_to_s, 256, 128, true,
 				false);
-		Vec<Wire> secret = hashGadget.getOutputWires();
-		Vec<Wire> key = Arrays.copyOfRange(secret, 0, 128);
-		Vec<Wire> iv = Arrays.copyOfRange(secret, 128, 256);
+		let secret = hashGadget.getOutputWires();
+		let key = Arrays.copyOfRange(secret, 0, 128);
+		let iv = Arrays.copyOfRange(secret, 128, 256);
 
 	
 		// Part II: Apply symmetric Encryption
 
-		Vec<Wire> plaintextBits = WireArray::new(plaintext).getBits(64).asArray();
-		SymmetricEncryptionCBCGadget symEncGagdet = SymmetricEncryptionCBCGadget::new(
+		let plaintextBits = WireArray::new(plaintext).getBits(64).asArray();
+		let symEncGagdet = SymmetricEncryptionCBCGadget::new(
 				plaintextBits, key, iv, ciphername);
 		ciphertext = symEncGagdet.getOutputWires();
 		makeOutputArray(ciphertext, "Cipher Text");
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(evaluator:CircuitEvaluator) {
 		// TODO Auto-generated method stub
 		for i in 0..plaintextSize{
 			evaluator.setWireValue(plaintext[i], Util::nextRandomBigInteger(64));
@@ -109,7 +112,7 @@ pub struct HybridEncryptionCircuitGenerator extends CircuitGenerator {
 	}
 
 	pub    main(args:Vec<String>)  {
-		HybridEncryptionCircuitGenerator generator = HybridEncryptionCircuitGenerator::new(
+		let generator = HybridEncryptionCircuitGenerator::new(
 				"enc_example", 16, "speck128");
 		generator.generateCircuit();
 		generator.evalCircuit();

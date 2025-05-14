@@ -11,16 +11,17 @@ use circuit::structure::wire;
  *
  */
 
-pub struct ModGadget extends Gadget {
+pub struct ModGadget  {
 
-	 Wire a;
-	 Wire b;
-	 Wire r;
-	 Wire q;
+	 a:Wire,
+	 b:Wire,
+	 r:Wire,
+	 q:Wire,
 
-	 i32 bitwidth; // bitwidth for both a, b
-
-	pub  ModGadget(Wire a,  Wire b, i32 bitwidth, desc:Vec<String>) {
+	 bitwidth:i32, // bitwidth for both a, b
+}
+impl  ModGadget{
+	pub  fn new(a:Wire,  Wire b, i32 bitwidth, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.b = b;
@@ -30,7 +31,8 @@ pub struct ModGadget extends Gadget {
 		}
 		buildCircuit();
 	}
-
+}
+impl Gadget for ModGadget{
 	  fn buildCircuit() {
 		
 		r = generator.createProverWitnessWire("mod result");
@@ -40,12 +42,12 @@ pub struct ModGadget extends Gadget {
 		// notes about how to use this code block can be found in FieldDivisionGadget
 		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				BigInteger aValue = evaluator.getWireValue(a);
-				BigInteger bValue = evaluator.getWireValue(b);
-				BigInteger rValue = aValue.mod(bValue);
+			pub   evaluate(evaluator:CircuitEvaluator) {
+				let aValue = evaluator.getWireValue(a);
+				let bValue = evaluator.getWireValue(b);
+				let rValue = aValue.mod(bValue);
 				evaluator.setWireValue(r, rValue);
-				BigInteger qValue = aValue.divide(bValue);
+				let qValue = aValue.divide(bValue);
 				evaluator.setWireValue(q, qValue);
 			}
 

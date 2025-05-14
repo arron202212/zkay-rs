@@ -9,13 +9,14 @@ use circuit::structure::wire;
  *
  */
 
-pub struct Speck128CipherGadget extends Gadget {
+pub struct Speck128CipherGadget  {
 
-	 Vec<Wire> plaintext;
-	 Vec<Wire> expandedKey;
-	 Vec<Wire> ciphertext;
+	 plaintext:Vec<Wire>,
+	 expandedKey:Vec<Wire>,
+	 ciphertext:Vec<Wire>,
 
-	
+	}
+impl  Speck128CipherGadget{
 	/**
 	 * 
 	 * @param inputs
@@ -24,7 +25,7 @@ pub struct Speck128CipherGadget extends Gadget {
 	 *            : Array of 32 64-bit elements. (Call expandKey(..))
 	 * @param desc
 	 */
-	pub  Speck128CipherGadget(plaintext:Vec<Wire>, expandedKey:Vec<Wire>,
+	pub  fn new(plaintext:Vec<Wire>, expandedKey:Vec<Wire>,
 			desc:Vec<String>) {
 		super(desc);
 		if plaintext.length != 2 || expandedKey.length != 32 {
@@ -34,7 +35,8 @@ pub struct Speck128CipherGadget extends Gadget {
 		self.expandedKey = expandedKey;
 		buildCircuit();
 	}
-
+}
+impl Gadget for Speck128CipherGadget{
 	  fn buildCircuit() {
 
 		Wire x, y;
@@ -57,11 +59,11 @@ pub struct Speck128CipherGadget extends Gadget {
 	 *            : 2 64-bit words
 	 * @return
 	 */
-	pub   Vec<Wire> expandKey(key:Vec<Wire>) {
-		CircuitGenerator generator = CircuitGenerator
+	pub fn expandKey(key:Vec<Wire>)->  Vec<Wire> {
+		let generator = CircuitGenerator
 				.getActiveCircuitGenerator();
-		Vec<Wire> k = vec![Wire::default();32];
-		Vec<Wire> l = vec![Wire::default();32];
+		let k = vec![Wire::default();32];
+		let l = vec![Wire::default();32];
 		k[0] = key[0];
 		l[0] = key[1];
 		for i in 0..=32 - 2{

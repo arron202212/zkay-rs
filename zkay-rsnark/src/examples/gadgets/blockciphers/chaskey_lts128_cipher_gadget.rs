@@ -10,13 +10,14 @@ use circuit::structure::wire;
  * https://www.nist.gov/sites/default/files/documents/2016/10/18/perrin-paper-lwc2016.pdf
  * https://www.cryptolux.org/index.php/FELICS
  */
-pub struct ChaskeyLTS128CipherGadget extends Gadget {
+pub struct ChaskeyLTS128CipherGadget  {
 
-	 Vec<Wire> plaintext; // 4 32-bit words
-	 Vec<Wire> key; // 4 32-bit words
-	 Vec<Wire> ciphertext; // 4 32-bit words
-
-	pub  ChaskeyLTS128CipherGadget(inputs:Vec<Wire>, key:Vec<Wire>, desc:Vec<String>) {
+	 plaintext:Vec<Wire>, // 4 32-bit words
+	 key:Vec<Wire>, // 4 32-bit words
+	 ciphertext:Vec<Wire>, // 4 32-bit words
+}
+impl ChaskeyLTS128CipherGadget{
+	pub  fn new(inputs:Vec<Wire>, key:Vec<Wire>, desc:Vec<String>)  ->Self{
 		super(desc);
 		if inputs.length != 4 || key.length != 4 {
 			assert!("Invalid Input");
@@ -27,10 +28,11 @@ pub struct ChaskeyLTS128CipherGadget extends Gadget {
 		buildCircuit();
 
 	}
-
+}
+impl Gadget for ChaskeyLTS128CipherGadget{
 	  fn buildCircuit() {
 
-		Vec<Wire> v = vec![Wire::default();4];
+let v = vec![Wire::default();4];
 		for i in 0..4 {
 			v[i] = (plaintext[i].xorBitwise(key[i], 32));
 		}

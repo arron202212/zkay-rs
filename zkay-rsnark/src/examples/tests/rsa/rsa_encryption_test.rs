@@ -122,7 +122,7 @@ pub struct RSAEncryption_Test extends TestCase {
 			ArrayList<Wire> cipherTextList = generator.getOutWires();
 			BigInteger t = BigInteger.ZERO;
 			i32 i = 0;
-			for(Wire w:cipherTextList){
+			for  w in &cipherTextList{
 				BigInteger val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i*64));
 				i+=1;

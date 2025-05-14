@@ -1,27 +1,25 @@
+std::sync::OnceLock;
+static instance:OnceLock<BigIntStorage>=OnceLock::new();
+	instance.get_or_init(||{
+            BigIntStorage::new()            
+	});
 
 /**
  * shares big integer constants
  *
  */
 pub struct BigIntStorage {
-	
-	  bigIntegerSet:ConcurrentMap<BigInteger, BigInteger>,
-	  instance:BigIntStorage,
+	  bigIntegerSet:HashMap<BigInteger, BigInteger>,
 }
 impl BigIntStorage{
-	 BigIntStorage(){
-		bigIntegerSet = new ConcurrentHashMap<BigInteger, BigInteger>();
+	 pub fn new()->Self ->Self{
+		Self{bigIntegerSet : HashMap::new()}
 	}
 	
-	pub   BigIntStorage getInstance(){
-		if instance == null{
-			instance = BigIntStorage::new();
-		}
-		return instance;
-	}
+
 	
-	pub  BigInteger getBigInteger(x:BigInteger ){
-		bigIntegerSet.putIfAbsent(x, x);
-	    return bigIntegerSet.get(x);
+	pub  fn getBigInteger(x:BigInteger )->BigInteger{
+		bigIntegerSet.entry(x).or_insert(x);
+	     bigIntegerSet.get(x).unwrap().clone()
 	}
 }

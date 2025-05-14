@@ -341,7 +341,7 @@ pub struct PrimitiveOpTest extends TestCase {
 					
 					pub   evaluate(CircuitEvaluator evaluator) {
 						evaluator.setWireValue(solutions.get(0),result.get(0));
-						for(i32 i =0; i < numIns;i+=1){
+						for i  in 0..numIns{
 							evaluator.setWireValue(solutions.get(i+1),result.get(i+1));
 						}
 					}

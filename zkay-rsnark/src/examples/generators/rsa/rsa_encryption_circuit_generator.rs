@@ -11,23 +11,25 @@ use examples::gadgets::rsa::rsa_encryptionv1_5_gadget;
 // a demo for RSA Encryption PKCS #1, V1.5
 pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 
-	 i32 rsaKeyLength;
-	 i32 plainTextLength;
-	 Vec<Wire> inputMessage;
-	 Vec<Wire> randomness;
-	 Vec<Wire> cipherText;
-	 LongElement rsaModulus;
+	 rsaKeyLength:i32,
+	 plainTextLength:i32,
+	 inputMessage:Vec<Wire>,
+	 randomness:Vec<Wire>,
+	 cipherText:Vec<Wire>,
+	 rsaModulus:LongElement,
 
-	 RSAEncryptionV1_5_Gadget rsaEncryptionV1_5_Gadget;
-
-	pub  RSAEncryptionCircuitGenerator(String circuitName, i32 rsaKeyLength,
+	 rsaEncryptionV1_5_Gadget:RSAEncryptionV1_5_Gadget,
+}
+impl  RSAEncryptionCircuitGenerator{
+	pub  fn new(circuitName:String, i32 rsaKeyLength,
 			i32 plainTextLength) {
 		super(circuitName);
 		self.rsaKeyLength = rsaKeyLength;
 		self.plainTextLength = plainTextLength;
 		// constraints on the plaintext length will be checked by the gadget
 	}
-
+}
+impl Gadget for RSAEncryptionCircuitGenerator{
 	
 	  fn buildCircuit() {
 
@@ -72,7 +74,7 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 		// since the randomness vector is a witness in this example, verify any needed constraints
 		rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
 		
-		Vec<Wire> cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
+		let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 		
 		// do some grouping to reduce VK Size	
 		cipherText = WireArray::new(cipherTextInBytes).packWordsIntoLargerWords(8, 30);
@@ -82,9 +84,9 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(evaluator:CircuitEvaluator) {
 
-		String msg = "";
+		let msg = "";
 		for i in 0..inputMessage.length {
 
 			evaluator.setWireValue(inputMessage[i], (i32) ('a' + i));
@@ -100,27 +102,27 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 			// extract the randomness (after decryption manually), then run the
 			// circuit with the extracted randomness
 
-			SecureRandom random = SecureRandom::new();
-			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			let random = SecureRandom::new();
+			let generator = KeyPairGenerator.getInstance("RSA");
 			generator.initialize(rsaKeyLength, random);
-			KeyPair pair = generator.generateKeyPair();
-			Key pubKey = pair.getPublic();
-			BigInteger modulus = ((RSAPublicKey) pubKey).getModulus();
+			let pair = generator.generateKeyPair();
+			let pubKey = pair.getPublic();
+			let modulus = ((RSAPublicKey) pubKey).getModulus();
 
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			evaluator.setWireValue(self.rsaModulus, modulus,
 					LongElement.CHUNK_BITWIDTH);
 
-			Key privKey = pair.getPrivate();
+			let privKey = pair.getPrivate();
 
 			cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-			Vec<byte> cipherText = cipher.doFinal(msg.getBytes());
+			let cipherText = cipher.doFinal(msg.getBytes());
 //			println!("ciphertext : " + String::new(cipherText));
-			Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
+			let cipherTextPadded = vec![byte::default();cipherText.length + 1];
 			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 			cipherTextPadded[0] = 0;
 
-			Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherText,
+			let result = RSAUtil.extractRSARandomness1_5(cipherText,
 					(RSAPrivateKey) privKey);
 			// result[0] contains the plaintext (after decryption)
 			// result[1] contains the randomness
@@ -131,12 +133,12 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 						"Randomness Extraction did not decrypt right");
 			}
 
-			Vec<byte> sampleRandomness = result[1];
+			let sampleRandomness = result[1];
 			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 			}
 
-		} catch (Exception e) {
+		} catch (e:Exception) {
 			println!("Error while generating sample input for circuit");
 			e.printStackTrace();
 		}
@@ -144,9 +146,9 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 	}
 
 	pub    main(args:Vec<String>)  {
-		i32 keyLength = 2048;
-		i32 msgLength = 3;
-		RSAEncryptionCircuitGenerator generator = RSAEncryptionCircuitGenerator::new(
+		let keyLength = 2048;
+		let msgLength = 3;
+		let generator = RSAEncryptionCircuitGenerator::new(
 				"rsa" + keyLength + "_encryption", keyLength, msgLength);
 		generator.generateCircuit();
 		generator.evalCircuit();

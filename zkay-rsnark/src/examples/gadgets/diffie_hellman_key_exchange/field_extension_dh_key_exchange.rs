@@ -17,24 +17,25 @@ use circuit::structure::wire;
  * 
  * 
  */
-pub struct FieldExtensionDHKeyExchange extends Gadget {
+pub struct FieldExtensionDHKeyExchange  {
 
-	 Vec<Wire> g; // base
-	 Vec<Wire> h; // other party's pub  input (supposedly, h = g^(the
+	 g:Vec<Wire>, // base
+	 h:Vec<Wire>, // other party's pub  input (supposedly, h = g^(the
 						// other party's secret))
 
-	 Vec<Wire> secretExponentBits; // the bits of the secret exponent of the
+	 secretExponentBits:Vec<Wire>, // the bits of the secret exponent of the
 										// party
 	// executing this gadget
-	 long omega;
-	 i32 mu;
+	 omega:long,
+	 mu:i32,
 
 	// gadget outputs
-	 Vec<Wire> outputPublicValue; // g^s (to be sent to the other party)
-	 Vec<Wire> sharedSecret; // the derived secret key h^s
-	 Vec<Vec<Wire>> gPowersTable;
-	 Vec<Vec<Wire>> hPowersTable;
-
+	 outputPublicValue:Vec<Wire>, // g^s (to be sent to the other party)
+	 sharedSecret:Vec<Wire>, // the derived secret key h^s
+	 gPowersTable:Vec<Vec<Wire>>,
+	 hPowersTable:Vec<Vec<Wire>>,
+}
+impl  FieldExtensionDHKeyExchange{
 	/**
 	 * Note: In the default mode, the gadget only validates the secret input
 	 * provided by the prover, but it does not validate that the base and pub 
@@ -46,8 +47,8 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 	 * FieldExtensionDHKeyExchange_Test
 	 * 
 	 */
-	pub  FieldExtensionDHKeyExchange(g:Vec<Wire>, h:Vec<Wire>,
-			secretExponentBits:Vec<Wire>, long omega, String desc) {
+	pub  fn new(g:Vec<Wire>, h:Vec<Wire>,
+			secretExponentBits:Vec<Wire>, long omega, desc:String) {
 		super(desc);
 		self.g = g;
 		self.h = h;
@@ -68,7 +69,8 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 
 		buildCircuit();
 	}
-
+}
+impl Gadget for FieldExtensionDHKeyExchange{
 	  fn buildCircuit() {
 		gPowersTable = preparePowersTable(g);
 		hPowersTable = preparePowersTable(h);
@@ -76,15 +78,15 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 		sharedSecret = exp(h, secretExponentBits, hPowersTable);
 	}
 
-	 Vec<Wire> mul(a:Vec<Wire>, b:Vec<Wire>) {
-		Vec<Wire> c = vec![Wire::default();mu];
+	 fn mul(a:Vec<Wire>, b:Vec<Wire>)->Vec<Wire> {
+		let c = vec![Wire::default();mu];
 		i32 i, j;
 		for i in 0..mu
 			c[i] = generator.getZeroWire();
 		}
 		for i in 0..mu
 			for j in 0..mu
-				i32 k = i + j;
+				let k = i + j;
 				if k < mu {
 					c[k] = c[k].add(a[i].mul(b[j]));
 				}
@@ -97,8 +99,8 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 		return c;
 	}
 
-	 Vec<Vec<Wire>> preparePowersTable(base:Vec<Wire>) {
-		Vec<Vec<Wire>> powersTable = vec![Wire::default();secretExponentBits.length + 1][mu];
+	 fn preparePowersTable(base:Vec<Wire>)->Vec<Vec<Wire>> {
+		let powersTable = vec![Wire::default();secretExponentBits.length + 1][mu];
 		powersTable[0] = Arrays.copyOf(base, mu);
 		for j in 1..secretExponentBits.length + 1{
 			powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
@@ -106,13 +108,13 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 		return powersTable;
 	}
 
-	 Vec<Wire> exp(base:Vec<Wire>, expBits:Vec<Wire>, Vec<Vec<Wire>> powersTable) {
+	 fn exp(base:Vec<Wire>, expBits:Vec<Wire>, Vec<Vec<Wire>> powersTable)->Vec<Wire> {
 
-		Vec<Wire> c = vec![Wire::default();mu];
+		let c = vec![Wire::default();mu];
 		Arrays.fill(c, generator.getZeroWire());
 		c[0] = generator.getOneWire();
 		for j in 0..expBits.length {
-			Vec<Wire> tmp = mul(c, powersTable[j]);
+			let tmp = mul(c, powersTable[j]);
 			for i in 0..mu {
 				c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
 			}
@@ -121,17 +123,17 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 	}
 
 	// TODO: Test more scenarios
-	pub   validateInputs(BigInteger subGroupOrder) {
+	pub fn validateInputs(subGroupOrder:BigInteger)->  {
 
 		// g and h are not zero and not one
 
 		// checking the first chunk
-		Wire zeroOrOne1 = g[0].mul(g[0].sub(1));
-		Wire zeroOrOne2 = h[0].mul(h[0].sub(1));
+		let zeroOrOne1 = g[0].mul(g[0].sub(1));
+		let zeroOrOne2 = h[0].mul(h[0].sub(1));
 
 		// checking the rest
-		Wire allZero1 = generator.getOneWire();
-		Wire allZero2 = generator.getOneWire();
+		let allZero1 = generator.getOneWire();
+		let allZero2 = generator.getOneWire();
 
 		for i in 1..mu {
 			allZero1 = allZero1.mul(g[i].checkNonZero().invAsBit());
@@ -144,8 +146,8 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 
 		// verify order of points
 
-		i32 bitLength = subGroupOrder.bitLength();
-		Vec<Wire> bits = vec![Wire::default();bitLength];
+		let bitLength = subGroupOrder.bitLength();
+		let bits = vec![Wire::default();bitLength];
 		for i in 0..bitLength {
 			if subGroupOrder.testBit(i)
 				bits[i] = generator.getOneWire();
@@ -153,8 +155,8 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 				bits[i] = generator.getZeroWire();
 		}
 
-		Vec<Wire> result1 = exp(g, bits, gPowersTable);
-		Vec<Wire> result2 = exp(h, bits, hPowersTable);
+		let result1 = exp(g, bits, gPowersTable);
+		let result2 = exp(h, bits, hPowersTable);
 
 		// both should be one
 
@@ -171,11 +173,11 @@ pub struct FieldExtensionDHKeyExchange extends Gadget {
 		return Util::concat(outputPublicValue, sharedSecret);
 	}
 
-	pub  Vec<Wire> getOutputPublicValue() {
+	pub fn getOutputPublicValue()-> Vec<Wire> {
 		return outputPublicValue;
 	}
 
-	pub  Vec<Wire> getSharedSecret() {
+	pub fn getSharedSecret()-> Vec<Wire> {
 		return sharedSecret;
 	}
 

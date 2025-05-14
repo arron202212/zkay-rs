@@ -9,19 +9,21 @@ use circuit::structure::wire_array;
  * Only supports one cipher (speck128) as an example at the moment. Other ciphers will be integrated soon.
  *
  */
-pub struct SymmetricEncryptionCBCGadget extends Gadget {
+pub struct SymmetricEncryptionCBCGadget  {
 
-	 Vec<Wire> ciphertext;
-	 String cipherName;
+	 ciphertext:Vec<Wire>,
+	 cipherName:String,
 
-	 Vec<Wire> keyBits;
-	 Vec<Wire> plaintextBits;
-	 Vec<Wire> ivBits;
+	 keyBits:Vec<Wire>,
+	 plaintextBits:Vec<Wire>,
+	 ivBits:Vec<Wire>,
 
-	 i32 blocksize = 128;
+	
+}
+impl  SymmetricEncryptionCBCGadget{
+ i32 blocksize = 128;
 	 i32 keysize = 128;
-
-	pub  SymmetricEncryptionCBCGadget(plaintextBits:Vec<Wire>, keyBits:Vec<Wire>,
+	pub  fn new(plaintextBits:Vec<Wire>, keyBits:Vec<Wire>,
 			ivBits:Vec<Wire>, String cipherName, desc:Vec<String>) {
 		super(desc);
 		if keyBits.length != keysize || ivBits.length != keysize{
@@ -33,25 +35,26 @@ pub struct SymmetricEncryptionCBCGadget extends Gadget {
 		self.cipherName = cipherName;
 		buildCircuit();
 	}
-
+}
+impl Gadget for SymmetricEncryptionCBCGadget{
 	  fn buildCircuit() {
 
 		i32 numBlocks = (i32) Math.ceil(plaintextBits.length * 1.0 / blocksize);
 		plaintextBits = WireArray::new(plaintextBits).adjustLength(numBlocks * blocksize)
 				.asArray();
 
-		Vec<Wire> preparedKey = prepareKey();
-		WireArray prevCipher = WireArray::new(ivBits);
+		let preparedKey = prepareKey();
+		let prevCipher = WireArray::new(ivBits);
 
 		ciphertext = vec![Wire::default();0];
 		for i in 0..numBlocks {
-			WireArray msgBlock = WireArray::new(Arrays.copyOfRange(plaintextBits, i
+			let msgBlock = WireArray::new(Arrays.copyOfRange(plaintextBits, i
 					* blocksize, (i + 1) * blocksize));
-			Vec<Wire> xored = msgBlock.xorWireArray(prevCipher).asArray();
+			let xored = msgBlock.xorWireArray(prevCipher).asArray();
 			if cipherName.equals("speck128") {
-				Vec<Wire> tmp = WireArray::new(xored).packBitsIntoWords(64);
-				Gadget gadget = Speck128CipherGadget::new(tmp, preparedKey, "");
-				Vec<Wire> outputs = gadget.getOutputWires();
+				let tmp = WireArray::new(xored).packBitsIntoWords(64);
+				let gadget = Speck128CipherGadget::new(tmp, preparedKey, "");
+				let outputs = gadget.getOutputWires();
 				prevCipher = WireArray::new(outputs).getBits(64);
 			} else {
 				assert!("Other Ciphers not supported in this version!");
@@ -61,11 +64,11 @@ pub struct SymmetricEncryptionCBCGadget extends Gadget {
 		}
 	}
 
-	 Vec<Wire> prepareKey() {
+	 fn prepareKey()->Vec<Wire> {
 
 		Vec<Wire> preparedKey;
 		if cipherName.equals("speck128") {
-			Vec<Wire> packedKey = WireArray::new(keyBits).packBitsIntoWords(64);
+			let packedKey = WireArray::new(keyBits).packBitsIntoWords(64);
 			preparedKey = Speck128CipherGadget.expandKey(packedKey);
 		} else {
 			assert!("Other Ciphers not supported in this version!");

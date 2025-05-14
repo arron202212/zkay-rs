@@ -32,11 +32,11 @@ pub struct WireLabelInstruction{
  }
 
  impl Instruction  for WireLabelInstruction{
-	pub  fn evaluate(CircuitEvaluator evaluator) {
+	pub  fn evaluate( evaluator:CircuitEvaluator ) {
 		// nothing to do.
 	}
 	
-	pub  fn emit(CircuitEvaluator evaluator) {
+	pub  fn emit( evaluator:CircuitEvaluator ) {
 		if type == LabelType.output && Config.outputVerbose || type == LabelType.debug && Config.debugVerbose {
 			println!("\t[" + type + "] Value of Wire # " + w + (desc.length() > 0  { " (" + desc + ")" }else { ""}) + " :: "
 					+ evaluator.getWireValue(w).toString(Config.hexOutputEnabled  { 16 }else { 10}));

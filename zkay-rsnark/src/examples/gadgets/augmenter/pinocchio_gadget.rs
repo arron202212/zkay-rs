@@ -3,41 +3,40 @@
 use circuit::operations::gadget;
 use circuit::structure::wire;
 
-pub struct PinocchioGadget extends Gadget {
+pub struct PinocchioGadget  {
 
-	 Vec<Wire> inputWires;
-	 Vec<Wire> proverWitnessWires;
-	 Vec<Wire> outputWires;
-
-	pub  PinocchioGadget(inputWires:Vec<Wire>, String pathToArithFile, desc:Vec<String>) {
+	 inputWires:Vec<Wire>,
+	 proverWitnessWires:Vec<Wire>,
+	 outputWires:Vec<Wire>,
+}
+impl PinocchioGadget{
+	pub  fn new(inputWires:Vec<Wire>, pathToArithFile:String, desc:Vec<String>)  ->Self
 		super(desc);
 		self.inputWires = inputWires;
-		try {
 			buildCircuit(pathToArithFile);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+
 	}
+}
+impl Gadget for PinocchioGadget{
+	  buildCircuit(path:String) throws FileNotFoundException {
 
-	  buildCircuit(String path) throws FileNotFoundException {
-
-		ArrayList<Wire> proverWitnessWires = new ArrayList<Wire>();
-		ArrayList<Wire> outputWires = new ArrayList<Wire>();
+let proverWitnessWires = new ArrayList<Wire>();
+let outputWires = new ArrayList<Wire>();
 
 		Vec<Wire> wireMapping;
-		Scanner scanner = Scanner::new(File::new(path));
+let scanner = Scanner::new(File::new(path));
 
 		if !scanner.next().equals("total") {
 			scanner.close();
 			panic!("Expected total %d in the first line");
 		}
-		i32 numWires = scanner.nextInt();
+let numWires = scanner.nextInt();
 		scanner.nextLine();
 		wireMapping = vec![Wire::default();numWires];
 
-		i32 inputCount = 0;
+let inputCount = 0;
 		while (scanner.hasNext()) {
-			String line = scanner.nextLine();
+let line = scanner.nextLine();
 			// remove comments
 			if line.contains("#") {
 				line = line.substring(0, line.indexOf("#"));
@@ -45,8 +44,8 @@ pub struct PinocchioGadget extends Gadget {
 			if line.equals("") {
 				continue;
 			} else if line.startsWith("input") {
-				Vec<String> tokens = line.split("\\s+");
-				i32 wireIndex = Integer.parseInt(tokens[1]);
+let tokens = line.split("\\s+");
+let wireIndex = Integer.parseInt(tokens[1]);
 				if wireMapping[wireIndex] != null {
 					throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
 				}
@@ -58,30 +57,30 @@ pub struct PinocchioGadget extends Gadget {
 				}
 				inputCount+=1;
 			} else if line.startsWith("output") {
-				Vec<String> tokens = line.split("\\s+");
-				i32 wireIndex = Integer.parseInt(tokens[1]);
+let tokens = line.split("\\s+");
+let wireIndex = Integer.parseInt(tokens[1]);
 				outputWires.add(wireMapping[wireIndex]);
 			} else if line.startsWith("nizk") {
-				Vec<String> tokens = line.split("\\s+");
-				i32 wireIndex = Integer.parseInt(tokens[1]);
+let tokens = line.split("\\s+");
+let wireIndex = Integer.parseInt(tokens[1]);
 				if wireMapping[wireIndex] != null {
 					throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
 				}
-				Wire w = generator.createProverWitnessWire();
+let w = generator.createProverWitnessWire();
 				proverWitnessWires.add(w);
 				wireMapping[wireIndex] = w;
 			} else {
-				ArrayList<Integer> ins = getInputs(line);
+let ins = getInputs(line);
 				for i in  ins {
 					if wireMapping[i] == null {
 						throwParsingError(scanner, "Undefined input wire " + i + " at line " + line);
 					}
 				}
-				ArrayList<Integer> outs = getOutputs(line);
+let outs = getOutputs(line);
 				if line.startsWith("mul ") {
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(wireMapping[ins.get(1)]);
 				} else if line.startsWith("add ") {
-					Wire result = wireMapping[ins.get(0)];
+let result = wireMapping[ins.get(0)];
 					for i in 1..ins.size() {
 						result = result.add(wireMapping[ins.get(i)]);
 					}
@@ -89,17 +88,17 @@ pub struct PinocchioGadget extends Gadget {
 				} else if line.startsWith("zerop ") {
 					wireMapping[outs.get(1)] = wireMapping[ins.get(0)].checkNonZero();
 				} else if line.startsWith("split ") {
-					Vec<Wire> bits = wireMapping[ins.get(0)].getBitWires(outs.size()).asArray();
+let bits = wireMapping[ins.get(0)].getBitWires(outs.size()).asArray();
 					for i in 0..outs.size() {
 						wireMapping[outs.get(i)] = bits[i];
 					}
 				} else if line.startsWith("const-mul-neg-") {
-					String constantStr = line.substring("const-mul-neg-".length(), line.indexOf(" "));
-					BigInteger constant = BigInteger::new(constantStr, 16);
+let constantStr = line.substring("const-mul-neg-".length(), line.indexOf(" "));
+let constant = BigInteger::new(constantStr, 16);
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant.negate());
 				} else if line.startsWith("const-mul-") {
-					String constantStr = line.substring("const-mul-".length(), line.indexOf(" "));
-					BigInteger constant = BigInteger::new(constantStr, 16);
+let constantStr = line.substring("const-mul-".length(), line.indexOf(" "));
+let constant = BigInteger::new(constantStr, 16);
 					wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant);
 				} else {
 					throwParsingError(scanner, "Unsupport Circuit Line " + line);
@@ -116,20 +115,20 @@ pub struct PinocchioGadget extends Gadget {
 		outputWires.toArray(self.outputWires);
 	}
 
-	 ArrayList<Integer> getOutputs(String line) {
-		Scanner scanner = Scanner::new(line.substring(line.lastIndexOf("<") + 1, line.lastIndexOf(">")));
-		ArrayList<Integer> outs = new ArrayList<>();
+	fn getOutputs(line:String)->ArrayList<Integer> {
+let scanner = Scanner::new(line.substring(line.lastIndexOf("<") + 1, line.lastIndexOf(">")));
+let outs = new ArrayList<>();
 		while (scanner.hasNextInt()) {
-			i32 v = scanner.nextInt();
+let v = scanner.nextInt();
 			outs.add(v);
 		}
 		scanner.close();
 		return outs;
 	}
 
-	 ArrayList<Integer> getInputs(String line) {
-		Scanner scanner = Scanner::new(line.substring(line.indexOf("<") + 1, line.indexOf(">")));
-		ArrayList<Integer> ins = new ArrayList<>();
+	fn getInputs(line:String)->ArrayList<Integer> {
+let scanner = Scanner::new(line.substring(line.indexOf("<") + 1, line.indexOf(">")));
+let ins = new ArrayList<>();
 		while (scanner.hasNextInt()) {
 			ins.add(scanner.nextInt());
 		}
@@ -142,11 +141,11 @@ pub struct PinocchioGadget extends Gadget {
 		return outputWires;
 	}
 
-	pub  Vec<Wire> getProverWitnessWires() {
+	pub fn getProverWitnessWires()-> Vec<Wire> {
 		return proverWitnessWires;
 	}
 
-	  throwParsingError(Scanner s, String m) {
+	fn  throwParsingError(s:Scanner, m:String) {
 		s.close();
 		panic!(m);
 	}

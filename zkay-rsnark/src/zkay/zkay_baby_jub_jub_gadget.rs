@@ -11,7 +11,7 @@ use circuit::structure::wire;
         pub  y:Wire,
   }
 impl JubJubPoint{
-        pub  fn new(x:Wire , y:Wire ) {
+        pub  fn new(x:Wire , y:Wire )  ->Self{
             self.x = x;
             self.y = y;
         }

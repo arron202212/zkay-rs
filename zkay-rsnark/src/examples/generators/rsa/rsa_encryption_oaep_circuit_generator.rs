@@ -8,16 +8,17 @@ use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 
 pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 
-	 i32 rsaKeyLength;
-	 i32 plainTextLength;
-	 Vec<Wire> inputMessage;
-	 Vec<Wire> seed;
-	 Vec<Wire> cipherText;
-	 LongElement rsaModulus;
+	 rsaKeyLength:i32,
+	 plainTextLength:i32,
+	 inputMessage:Vec<Wire>,
+	 seed:Vec<Wire>,
+	 cipherText:Vec<Wire>,
+	 rsaModulus:LongElement,
 
-	 RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
-
-	pub  RSAEncryptionOAEPCircuitGenerator(String circuitName, i32 rsaKeyLength,
+	 rsaEncryptionOAEPGadget:RSAEncryptionOAEPGadget,
+}
+impl  RSAEncryptionOAEPCircuitGenerator{
+	pub  fn new(circuitName:String, i32 rsaKeyLength,
 			i32 plainTextLength) {
 		super(circuitName);
 		self.rsaKeyLength = rsaKeyLength;
@@ -25,7 +26,8 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 		// constraints on the plaintext length will be checked by the gadget
 	}
 
-	
+	}
+impl Gadget for RSAEncryptionOAEPCircuitGenerator{
 	  fn buildCircuit() {
 
 		inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
@@ -54,7 +56,7 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 		// If the key or the msg are witnesses, similar constraints are needed
 		rsaEncryptionOAEPGadget.checkSeedCompliance();
 		
-		Vec<Wire> cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires(); // in bytes
+		let cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires(); // in bytes
 		
 		// do some grouping to reduce VK Size	
 		cipherText = WireArray::new(cipherTextInBytes).packWordsIntoLargerWords(8, 30);
@@ -64,9 +66,9 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(evaluator:CircuitEvaluator) {
 
-		String msg = "";
+		let msg = "";
 		for i in 0..inputMessage.length {
 
 			evaluator.setWireValue(inputMessage[i], (i32) ('a' + i));
@@ -84,30 +86,30 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 			// The BouncyCastle implementation is used at is supports SHA-256 for the MGF, while the native Java implementation uses SHA-1 by default.
 
 			Security.addProvider(BouncyCastleProvider::new());  
-			Cipher cipher = Cipher
+			let cipher = Cipher
 					.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 			
-			SecureRandom random = SecureRandom::new();
-			KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+			let random = SecureRandom::new();
+			let generator = KeyPairGenerator.getInstance("RSA");
 			generator.initialize(rsaKeyLength, random);
-			KeyPair pair = generator.generateKeyPair();
-			Key pubKey = pair.getPublic();
-			BigInteger modulus = ((RSAPublicKey) pubKey).getModulus();
+			let pair = generator.generateKeyPair();
+			let pubKey = pair.getPublic();
+			let modulus = ((RSAPublicKey) pubKey).getModulus();
 
 			evaluator.setWireValue(self.rsaModulus, modulus,
 					LongElement.CHUNK_BITWIDTH);
 
-			Key privKey = pair.getPrivate();
+			let privKey = pair.getPrivate();
 
 			cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-			Vec<byte> cipherText = cipher.doFinal(msg.getBytes());
+			let cipherText = cipher.doFinal(msg.getBytes());
 //			println!("ciphertext : " + String::new(cipherText));
-			Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
+			let cipherTextPadded = vec![byte::default();cipherText.length + 1];
 			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 			cipherTextPadded[0] = 0;
 
 
-			Vec<Vec<byte>> result = RSAUtil.extractRSAOAEPSeed(cipherText,
+			let result = RSAUtil.extractRSAOAEPSeed(cipherText,
 					(RSAPrivateKey) privKey);
 			// result[0] contains the plaintext (after decryption)
 			// result[1] contains the randomness
@@ -118,12 +120,12 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 						"Randomness Extraction did not decrypt right");
 			}
 
-			Vec<byte> sampleRandomness = result[1];
+			let sampleRandomness = result[1];
 			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(seed[i], (sampleRandomness[i]+256)%256);
 			}
 
-		} catch (Exception e) {
+		} catch (e:Exception) {
 			println!("Error while generating sample input for circuit");
 			e.printStackTrace();
 		}
@@ -131,9 +133,9 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 	}
 
 	pub    main(args:Vec<String>)  {
-		i32 keyLength = 2048;
-		i32 msgLength = 3;
-		RSAEncryptionOAEPCircuitGenerator generator = RSAEncryptionOAEPCircuitGenerator::new(
+		let keyLength = 2048;
+		let msgLength = 3;
+		let generator = RSAEncryptionOAEPCircuitGenerator::new(
 				"rsa" + keyLength + "_oaep_encryption", keyLength, msgLength);
 		generator.generateCircuit();
 		generator.evalCircuit();

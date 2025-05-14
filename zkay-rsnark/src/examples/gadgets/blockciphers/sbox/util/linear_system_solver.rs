@@ -9,13 +9,13 @@ use circuit::config::config;
  */
 
 pub struct LinearSystemSolver {
-
-	pub   BigInteger prime = Config.FIELD_PRIME;
-
-	 Vec<Vec<BigInteger>> mat;
-	 i32 numRows, numCols;
-
-	pub  LinearSystemSolver(Vec<Vec<BigInteger>> mat) {
+	 mat:Vec<Vec<BigInteger>>,
+	 numCols:i32 ,
+numRows:i32,
+}
+impl  LinearSystemSolver{
+pub   BigInteger prime = Config.FIELD_PRIME;
+	pub  fn new(Vec<Vec<BigInteger>> mat)  ->Self{
 		self.mat = mat;
 		numRows = mat.length;
 		numCols = mat[0].length;
@@ -31,7 +31,7 @@ pub struct LinearSystemSolver {
 
 	  guassJordan() {
 		for colIdx in 0..numCols{
-			i32 pivotRowIdx = rowIdx;
+let pivotRowIdx = rowIdx;
 			while (pivotRowIdx < numRows
 					&& mat[pivotRowIdx][colIdx].equals(BigInteger.ZERO)) {
 				pivotRowIdx+=1;
@@ -40,21 +40,21 @@ pub struct LinearSystemSolver {
 				continue;
 
 			// swap
-			Vec<BigInteger> tmp = mat[pivotRowIdx];
+let tmp = mat[pivotRowIdx];
 			mat[pivotRowIdx] = mat[rowIdx];
 			mat[rowIdx] = tmp;
 
 			pivotRowIdx = rowIdx;
 
 			// dividing by pivot
-			BigInteger invF = inverse(mat[pivotRowIdx][colIdx]);
+let invF = inverse(mat[pivotRowIdx][colIdx]);
 			for j in 0..numCols {
 				mat[pivotRowIdx][j] = mat[pivotRowIdx][j].multiply(invF).mod(
 						prime);
 			}
 
 			for k in pivotRowIdx..numRows{
-				BigInteger f = negate(mat[k][colIdx]);
+let f = negate(mat[k][colIdx]);
 				for j in 0..numCols {
 					mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].multiply(f));
 					mat[k][j] = mat[k][j].mod(prime);
@@ -66,7 +66,7 @@ pub struct LinearSystemSolver {
 
 	  rref() {
 		for rowIdx in (0..=numRows - 1).rev()
-			i32 pivotColIdx = 0;
+let pivotColIdx = 0;
 			while (pivotColIdx < numCols
 					&& mat[rowIdx][pivotColIdx].equals(BigInteger.ZERO)) {
 				pivotColIdx+=1;
@@ -75,7 +75,7 @@ pub struct LinearSystemSolver {
 				continue;
 
 			for k in (0..=rowIdx - 1).rev()
-				BigInteger f = mat[k][pivotColIdx];
+let f = mat[k][pivotColIdx];
 				for j in 0..numCols {
 					mat[k][j] = mat[k][j]
 							.add(negate(mat[rowIdx][j].multiply(f)));
@@ -85,11 +85,11 @@ pub struct LinearSystemSolver {
 		}
 	}
 
-	  BigInteger negate(BigInteger x) {
+	 fn negate(x:BigInteger)-> BigInteger {
 		return (prime.subtract(x.mod(prime))).mod(prime);
 	}
 
-	  BigInteger inverse(BigInteger x) {
+	 fn inverse(x:BigInteger)-> BigInteger {
 		return (x.mod(prime)).modInverse(prime);
 	}
 

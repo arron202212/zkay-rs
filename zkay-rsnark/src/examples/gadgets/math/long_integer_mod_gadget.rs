@@ -9,7 +9,8 @@ use circuit::structure::wire;
  * in the LongElement class methods called by this gadget.
  */
 pub struct LongIntegerModGadget extends LongIntegerDivision {
-
+}
+impl  LongIntegerModGadget{
 	/**
 	 * @param a
 	 * @param b
@@ -33,7 +34,7 @@ pub struct LongIntegerModGadget extends LongIntegerDivision {
 	 * @param desc
 	 */
 
-	pub  LongIntegerModGadget(LongElement a, LongElement b, bool restrictRange, desc:Vec<String>) {
+	pub  fn new(a:LongElement, b:LongElement, bool restrictRange, desc:Vec<String>)  ->Self{
 		super(a, b, restrictRange, desc);
 	}
 
@@ -61,11 +62,12 @@ pub struct LongIntegerModGadget extends LongIntegerDivision {
 	 * 		illustration.
 	 * @param desc
 	 */
-	pub  LongIntegerModGadget(LongElement a, LongElement b, i32 bMinBitwidth, bool restrictRange, desc:Vec<String>) {
+	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, bool restrictRange, desc:Vec<String>)  ->Self{
 		super(a, b, bMinBitwidth, restrictRange, desc);
 	}
 
-	
+	}
+impl Gadget for LongIntegerModGadget{
 	 pub  fn getOutputWires()->Vec<Wire>  {
 		return getRemainder().getArray();
 	}

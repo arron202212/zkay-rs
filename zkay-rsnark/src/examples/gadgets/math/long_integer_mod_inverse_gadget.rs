@@ -17,34 +17,36 @@ use util::util;
  * It is the responsibility of the caller to ensure that a and m are
  * relatively co-prime, i.e. the modular inverse actually exists.
  */
-pub struct LongIntegerModInverseGadget extends Gadget {
+pub struct LongIntegerModInverseGadget  {
 
-	 LongElement a; // the value to be inverted
-	 LongElement m; // the modulus
-	 bool restrictRange; // whether to enforce that a^(-1) < m
-	 LongElement inverse;
-
-	pub  LongIntegerModInverseGadget(LongElement a, LongElement m, bool restrictRange, desc:Vec<String>) {
+	 a:LongElement, // the value to be inverted
+	 m:LongElement, // the modulus
+	 restrictRange:bool, // whether to enforce that a^(-1) < m
+	 inverse:LongElement,
+}
+impl  LongIntegerModInverseGadget{
+	pub  fn new(a:LongElement, m:LongElement, bool restrictRange, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.m = m;
 		self.restrictRange = restrictRange;
 		buildCircuit();
 	}
-
+}
+impl Gadget for LongIntegerModInverseGadget{
 	  fn buildCircuit() {
-		Vec<Wire> inverseWires = generator.createProverWitnessWireArray(m.getSize());
+		let inverseWires = generator.createProverWitnessWireArray(m.getSize());
 		inverse = LongElement::new(inverseWires, m.getCurrentBitwidth());
-		Vec<Wire> quotientWires = generator.createProverWitnessWireArray(m.getSize());
-		LongElement quotient = LongElement::new(quotientWires, m.getCurrentBitwidth());
+		let quotientWires = generator.createProverWitnessWireArray(m.getSize());
+		let quotient = LongElement::new(quotientWires, m.getCurrentBitwidth());
 
 		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
-				BigInteger mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
-				BigInteger inverseValue = aValue.modInverse(mValue);
-				BigInteger quotientValue = aValue.multiply(inverseValue).divide(mValue);
+			pub   evaluate(evaluator:CircuitEvaluator) {
+				let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
+				let mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
+				let inverseValue = aValue.modInverse(mValue);
+				let quotientValue = aValue.multiply(inverseValue).divide(mValue);
 
 				evaluator.setWireValue(inverseWires, Util::split(inverseValue, LongElement.CHUNK_BITWIDTH));
 				evaluator.setWireValue(quotientWires, Util::split(quotientValue, LongElement.CHUNK_BITWIDTH));
@@ -56,8 +58,8 @@ pub struct LongIntegerModInverseGadget extends Gadget {
 
 		// a * a^(-1) = 1   (mod m)
 		// <=> Exist q:  a * a^(-1) = q * m + 1
-		LongElement product = a.mul(inverse);
-		LongElement oneModM = quotient.mul(m).add(1);
+		let product = a.mul(inverse);
+		let oneModM = quotient.mul(m).add(1);
 		product.assertEquality(oneModM);
 
 		if restrictRange {
@@ -65,7 +67,7 @@ pub struct LongIntegerModInverseGadget extends Gadget {
 		}
 	}
 
-	pub  LongElement getResult() {
+	pub fn getResult()-> LongElement {
 		return inverse;
 	}
 

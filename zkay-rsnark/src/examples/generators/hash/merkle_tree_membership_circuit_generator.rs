@@ -9,23 +9,27 @@ use examples::gadgets::hash::subset_sum_hash_gadget;
 
 pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 
-	 Vec<Wire> publicRootWires;
-	 Vec<Wire> intermediateHasheWires;
-	 Wire directionSelector;
-	 Vec<Wire> leafWires;
+	 publicRootWires:Vec<Wire>,
+	 intermediateHasheWires:Vec<Wire>,
+	 directionSelector:Wire,
+	 leafWires:Vec<Wire>,
+
+	 treeHeight:i32,
+	
+
+	 merkleTreeGadget:MerkleTreePathGadget,
+	}
+impl  MerkleTreeMembershipCircuitGenerator{
 	 i32 leafNumOfWords = 10;
 	 i32 leafWordBitWidth = 32;
-	 i32 treeHeight;
-	 i32 hashDigestDimension = SubsetSumHashGadget.DIMENSION;
-
-	 MerkleTreePathGadget merkleTreeGadget;
-	
-	pub  MerkleTreeMembershipCircuitGenerator(String circuitName, i32 treeHeight) {
+ i32 hashDigestDimension = SubsetSumHashGadget.DIMENSION;
+	pub  fn new(circuitName:String, i32 treeHeight)  ->Self{
 		super(circuitName);
 		self.treeHeight = treeHeight;
 	}
 
-	
+	}
+impl Gadget for MerkleTreeMembershipCircuitGenerator{
 	  fn buildCircuit() {
 		
 		/** declare inputs **/
@@ -39,13 +43,13 @@ pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 
 		merkleTreeGadget = MerkleTreePathGadget::new(
 				directionSelector, leafWires, intermediateHasheWires, leafWordBitWidth, treeHeight);
-		Vec<Wire> actualRoot = merkleTreeGadget.getOutputWires();
+		let actualRoot = merkleTreeGadget.getOutputWires();
 		
 		/** Now compare the actual root with the pub  known root **/
-		Wire errorAccumulator = getZeroWire();
+		let errorAccumulator = getZeroWire();
 		for i in 0..hashDigestDimension{
-			Wire diff = actualRoot[i].sub(publicRootWires[i]);
-			Wire check = diff.checkNonZero();
+			let diff = actualRoot[i].sub(publicRootWires[i]);
+			let check = diff.checkNonZero();
 			errorAccumulator = errorAccumulator.add(check);
 		}
 		
@@ -57,7 +61,7 @@ pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator circuitEvaluator) {
+	pub   generateSampleInput(circuitEvaluator:CircuitEvaluator) {
 		
 		for i in 0..hashDigestDimension {
 			circuitEvaluator.setWireValue(publicRootWires[i], Util::nextRandomBigInteger(Config.FIELD_PRIME));
@@ -77,7 +81,7 @@ pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 	
 	pub    main(args:Vec<String>)  {
 		
-		MerkleTreeMembershipCircuitGenerator generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
+		let generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

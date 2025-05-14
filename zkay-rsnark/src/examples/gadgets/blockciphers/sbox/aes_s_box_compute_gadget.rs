@@ -12,37 +12,39 @@ use circuit::structure::wire;
  *
  */
 
-pub struct AESSBoxComputeGadget extends Gadget {
+pub struct AESSBoxComputeGadget  {
 
-	 Wire input;
-	 Wire inverse;
-	 Wire output;
-
-	pub  AESSBoxComputeGadget(Wire input, desc:Vec<String>) {
+	 input:Wire,
+	 inverse:Wire,
+	 output:Wire,
+}
+impl  AESSBoxComputeGadget{
+	pub  fn new(input:Wire, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.input = input;
 		buildCircuit();
 	}
-
+}
+impl Gadget for AESSBoxComputeGadget{
 	  fn buildCircuit() {
 		inverse = generator.createProverWitnessWire();
 
 		generator.addToEvaluationQueue(Instruction::new() {
 
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				i32 p = evaluator.getWireValue(input).intValue(); 
-				i32 q = findInv(p);
+			pub   evaluate(evaluator:CircuitEvaluator) {
+let p = evaluator.getWireValue(input).intValue(); 
+let q = findInv(p);
 				evaluator.setWireValue(inverse, q);
 
 			}
 		});
 
 		inverse.restrictBitLength(8);
-		Wire v = gmul(input, inverse);
+let v = gmul(input, inverse);
 		generator.addAssertion(v.sub(generator.getOneWire()),
 				input.add(inverse), generator.getZeroWire());
-		Wire constant = generator.createConstantWire(0x63L);
+let constant = generator.createConstantWire(0x63L);
 		output = constant.xorBitwise(inverse, 8);
 		output = output.xorBitwise(inverse.rotateLeft(8, 1), 8);
 		output = output.xorBitwise(inverse.rotateLeft(8, 2), 8);
@@ -55,26 +57,26 @@ pub struct AESSBoxComputeGadget extends Gadget {
 		return vec![Wire::default();] { output };
 	}
 
-	 Wire gmul(Wire a, Wire b) {
-		Wire p = generator.getZeroWire();
+	 fn gmul(a:Wire, b:Wire)->Wire {
+let p = generator.getZeroWire();
 		i32 counter;
 		for counter in 0..8
-			Wire tmp = p.xorBitwise(a, 8);
-			Wire bit = b.getBitWires(8).get(0);
+let tmp = p.xorBitwise(a, 8);
+let bit = b.getBitWires(8).get(0);
 			p = p.add(bit.mul(tmp.sub(p)));
 
-			Wire bit2 = a.getBitWires(8).get(7);
+let bit2 = a.getBitWires(8).get(7);
 			a = a.shiftLeft(8, 1);
 
-			Wire tmp2 = a.xorBitwise(generator.createConstantWire(0x1bL), 8);
+let tmp2 = a.xorBitwise(generator.createConstantWire(0x1bL), 8);
 			a = a.add(bit2.mul(tmp2.sub(a)));
 			b = b.shiftRight(8, 1);
 		}
 		return p;
 	}
 
-	 i32 gmul(i32 a, i32 b) {
-		i32 p = 0;
+	 fn gmul( a:i32 , b:i32 )->i32 {
+let p = 0;
 		i32 j;
 		for j in 0..8
 			if (b & 1) != 0
@@ -87,7 +89,7 @@ pub struct AESSBoxComputeGadget extends Gadget {
 		return p;
 	}
 
-	 i32 findInv(i32 a) {
+	 fn findInv( a:i32 )->i32 {
 		if a == 0
 			return 0;
 		for i in 0..256 {

@@ -8,7 +8,7 @@ pub struct ConstantWire {
 	  constant:BigInteger;
 }
 impl ConstantWire{
-	pub fn new(wireId:i32 , value:BigInteger )  {
+	pub fn new(wireId:i32 , value:BigInteger ) ->Self {
 		super(wireId);
 		constant = value.mod(Config.FIELD_PRIME);
 	}

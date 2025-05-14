@@ -19,44 +19,46 @@ use examples::gadgets::blockciphers::sbox::util::linear_system_solver;
  * half of the cost of a single access.
  */
 
-pub struct AESSBoxGadgetOptimized1 extends Gadget {
+pub struct AESSBoxGadgetOptimized1  {
 
 	  i32 Vec<SBox> = AES128CipherGadget.SBox;
 
-	 ArrayList<Vec<BigInteger>> allCoeffSet;
+	 allCoeffSet:ArrayList<Vec<BigInteger>>,
 
 	 {
 		// preprocessing
 		solveLinearSystems();
 	}
 
-	 Wire input;
-	 Wire output;
-
-	pub  AESSBoxGadgetOptimized1(Wire input, desc:Vec<String>) {
+	 input:Wire,
+	 output:Wire,
+}
+impl  AESSBoxGadgetOptimized1{
+	pub  fn new(input:Wire, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.input = input;
 		buildCircuit();
 	}
-
+}
+impl Gadget for AESSBoxGadgetOptimized1{
 	pub    solveLinearSystems() {
 		allCoeffSet = new ArrayList<Vec<BigInteger>>();
-		ArrayList<Integer> list = new ArrayList<Integer>();
+let list = new ArrayList<Integer>();
 		for i in 0..=255{
 			list.add(256 * i + SBox[i]);
 		}
 
 		for i in 0..=15{
-			HashSet<Integer> memberValueSet = new HashSet<>();
-			Vec<Vec<BigInteger>> mat = vec![BigInteger::default();16][17];
+let memberValueSet = new HashSet<>();
+let mat = vec![BigInteger::default();16][17];
 
 			// used for sanity checks
-			Vec<BigInteger> polyCoeffs = vec![BigInteger::default();] { BigInteger.ONE };
+let polyCoeffs = vec![BigInteger::default();] { BigInteger.ONE };
 
 			for k in 0..mat.length {
-				i32 value = list.get(k + i * 16);
+let value = list.get(k + i * 16);
 				memberValueSet.add(value);
-				BigInteger p = BigInteger.valueOf(value);
+let p = BigInteger.valueOf(value);
 				mat[k][0] = BigInteger.ONE;
 				for j in 1..=16{
 					mat[k][j] = p.multiply(mat[k][j - 1]).mod(
@@ -87,7 +89,7 @@ pub struct AESSBoxGadgetOptimized1 extends Gadget {
 				panic!("The prover can cheat.");
 			}
 
-			Vec<BigInteger> coeffs = vec![BigInteger::default();16];
+let coeffs = vec![BigInteger::default();16];
 			for ii in 0..16{
 				coeffs[ii] = mat[ii][16];
 				if !coeffs[ii].equals(polyCoeffs[ii]) {
@@ -100,8 +102,8 @@ pub struct AESSBoxGadgetOptimized1 extends Gadget {
 	}
 
 	// method for sanity checks during preprocessing
-	  Vec<BigInteger> polyMul(a1:Vec<BigInteger>, a2:Vec<BigInteger>) {
-		Vec<BigInteger> out = vec![BigInteger::default();a1.length + a2.length - 1];
+	 fn polyMul(a1:Vec<BigInteger>, a2:Vec<BigInteger>)-> Vec<BigInteger> {
+let out = vec![BigInteger::default();a1.length + a2.length - 1];
 		Arrays.fill(out, BigInteger.ZERO);
 		for i in 0..a1.length {
 			for j in 0..a2.length {
@@ -115,20 +117,20 @@ pub struct AESSBoxGadgetOptimized1 extends Gadget {
 	  bool checkIfProverCanCheat(Vec<Vec<BigInteger>> mat,
 			HashSet<Integer> valueSet) {
 
-		Vec<BigInteger> coeffs = vec![BigInteger::default();16];
+let coeffs = vec![BigInteger::default();16];
 		for i in 0..16 {
 			coeffs[i] = mat[i][16];
 		}
 
-		i32 validResults = 0;
-		i32 outsidePermissibleSet = 0;
+let validResults = 0;
+let outsidePermissibleSet = 0;
 
 		// loop over the whole permissible domain (recall that input & output
 		// are bounded)
 		for k in 0..256 * 256{
 
-			BigInteger result = coeffs[0];
-			BigInteger p = BigInteger.valueOf(k);
+let result = coeffs[0];
+let p = BigInteger.valueOf(k);
 			for i in 1..16 {
 				result = result.add(p.multiply(coeffs[i]));
 				p = p.multiply(BigInteger.valueOf(k)).mod(Config.FIELD_PRIME);
@@ -162,25 +164,25 @@ pub struct AESSBoxGadgetOptimized1 extends Gadget {
 		generator.specifyProverWitnessComputation(Instruction::new() {
 
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
+			pub   evaluate(evaluator:CircuitEvaluator) {
 				// TODO Auto-generated method stub
-				BigInteger value = evaluator.getWireValue(input);
+let value = evaluator.getWireValue(input);
 				evaluator.setWireValue(output,
 						BigInteger.valueOf(SBox[value.intValue()]));
 			}
 		});
 
 		output.restrictBitLength(8);
-		Vec<Wire> vars = vec![Wire::default();16];
-		Wire p = input.mul(256).add(output);
+let vars = vec![Wire::default();16];
+let p = input.mul(256).add(output);
 		vars[0] = generator.getOneWire();
 		for i in 1..16 {
 			vars[i] = vars[i - 1].mul(p);
 		}
 
-		Wire product = generator.getOneWire();
+let product = generator.getOneWire();
 		for coeffs in  allCoeffSet {
-			Wire accum = generator.getZeroWire();
+let accum = generator.getZeroWire();
 			for j in 0..vars.length {
 				accum = accum.add(vars[j].mul(coeffs[j]));
 			}

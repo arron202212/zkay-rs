@@ -6,21 +6,23 @@ use examples::gadgets::hash::sha256_gadget;
 
 pub struct SHA2CircuitGenerator extends CircuitGenerator {
 
-	 Vec<Wire> inputWires;
-	 SHA256Gadget sha2Gadget;
-
-	pub  SHA2CircuitGenerator(String circuitName) {
+	 inputWires:Vec<Wire>,
+	 sha2Gadget:SHA256Gadget,
+}
+impl  SHA2CircuitGenerator{
+	pub  fn new(circuitName:String)  ->Self{
 		super(circuitName);
 	}
 
-	
+	}
+impl Gadget for SHA2CircuitGenerator{
 	  fn buildCircuit() {
 		
 		// assuming the circuit input will be 64 bytes
 		inputWires = createInputWireArray(64);
 		// this gadget is not applying any padding.
 		sha2Gadget = SHA256Gadget::new(inputWires, 8, 64, false, false);
-		Vec<Wire> digest = sha2Gadget.getOutputWires();
+		let digest = sha2Gadget.getOutputWires();
 		makeOutputArray(digest, "digest");
 		
 		// ======================================================================
@@ -36,15 +38,15 @@ pub struct SHA2CircuitGenerator extends CircuitGenerator {
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator evaluator) {
-		String inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
+	pub   generateSampleInput(evaluator:CircuitEvaluator) {
+		let inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
 		for i in 0..inputWires.length {
 			evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
 		}
 	}
 
 	pub    main(args:Vec<String>)  {
-		SHA2CircuitGenerator generator = SHA2CircuitGenerator::new("sha_256");
+		let generator = SHA2CircuitGenerator::new("sha_256");
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

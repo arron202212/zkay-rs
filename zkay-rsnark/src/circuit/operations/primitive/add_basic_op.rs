@@ -4,7 +4,7 @@ use circuit::structure::wire;
 
 pub struct AddBasicOp; 
 
-	pub fn  NewAddBasicOp( ws:Vec<Wire>, Wire output, desc:Vec<String>)->Op<AddBasicOp> {
+	pub fn  NewAddBasicOp( ws:Vec<Wire>, output:Wire , desc:Vec<String>)->Op<AddBasicOp> {
 		Op<AddBasicOp>{inputs:ws,
         outputs: vec![output] ,  
         desc,

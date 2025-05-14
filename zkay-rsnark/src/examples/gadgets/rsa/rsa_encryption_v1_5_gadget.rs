@@ -19,19 +19,20 @@ use examples::gadgets::math::long_integer_mod_gadget;
  * 
  */
 
-pub struct RSAEncryptionV1_5_Gadget extends Gadget {
+pub struct RSAEncryptionV1_5_Gadget  {
 
-	 LongElement modulus;
+	 modulus:LongElement,
 
 	// every wire represents a byte in the following three arrays
-	 Vec<Wire> plainText;
-	 Vec<Wire> randomness; // (rsaKeyBitLength / 8 - 3 - plainTextLength)
+	 plainText:Vec<Wire>,
+	 randomness:Vec<Wire>, // (rsaKeyBitLength / 8 - 3 - plainTextLength)
 								// non-zero bytes
-	 Vec<Wire> ciphertext;
+	 ciphertext:Vec<Wire>,
 
-	 i32 rsaKeyBitLength; // in bits (assumed to be divisible by 8)
-
-	pub  RSAEncryptionV1_5_Gadget(LongElement modulus, plainText:Vec<Wire>,
+	 rsaKeyBitLength:i32, // in bits (assumed to be divisible by 8)
+}
+impl RSAEncryptionV1_5_Gadget{
+	pub  fn new(LongElement modulus, plainText:Vec<Wire>,
 			randomness:Vec<Wire>, i32 rsaKeyBitLength, desc:Vec<String>) {
 		super(desc);
 
@@ -53,7 +54,8 @@ pub struct RSAEncryptionV1_5_Gadget extends Gadget {
 		self.rsaKeyBitLength = rsaKeyBitLength;
 		buildCircuit();
 	}
-
+}
+impl Gadget for RSAEncryptionV1_5_Gadget{
 	pub   i32 getExpectedRandomnessLength(i32 rsaKeyBitLength,
 			i32 plainTextLength) {
 		if rsaKeyBitLength % 8 != 0 {
@@ -66,8 +68,8 @@ pub struct RSAEncryptionV1_5_Gadget extends Gadget {
 
 	  fn buildCircuit() {
 
-		i32 lengthInBytes = rsaKeyBitLength / 8;
-		Vec<Wire> paddedPlainText = vec![Wire::default();lengthInBytes];
+		let lengthInBytes = rsaKeyBitLength / 8;
+		let paddedPlainText = vec![Wire::default();lengthInBytes];
 		for i in 0..plainText.length {
 			paddedPlainText[plainText.length - i - 1] = plainText[i];
 		}
@@ -89,17 +91,17 @@ pub struct RSAEncryptionV1_5_Gadget extends Gadget {
 
 		// 2. Make multiple long integer constant multiplications (need to be
 		// done carefully)
-		LongElement paddedMsg = LongElement::new(
+		let paddedMsg = LongElement::new(
 				vec![BigInteger::default();] { BigInteger.ZERO });
 		for i in 0..paddedPlainText.length {
-			LongElement e = LongElement::new(paddedPlainText[i], 8);
-			LongElement c = LongElement::new(Util::split(
+			let e = LongElement::new(paddedPlainText[i], 8);
+			let c = LongElement::new(Util::split(
 					BigInteger.ONE.shiftLeft(8 * i),
 					LongElement.CHUNK_BITWIDTH));
 			paddedMsg = paddedMsg.add(e.mul(c));
 		}
 		
-		LongElement s = paddedMsg;
+		let s = paddedMsg;
 		for i in 0..16 {
 			s = s.mul(s);
 			s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, false).getRemainder();

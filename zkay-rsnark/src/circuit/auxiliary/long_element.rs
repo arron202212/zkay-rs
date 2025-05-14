@@ -321,7 +321,7 @@ impl LongElement{
 
 	}
 
-	pub fn muxBit(LongElement other, w:Wire)->Self {
+	pub fn muxBit( other:LongElement , w:Wire)->Self {
 
 		let length = std::cmp::max(array.len(), other.array.len());
 		let mut  newArray = vec![self.generator.getZeroWire();length];

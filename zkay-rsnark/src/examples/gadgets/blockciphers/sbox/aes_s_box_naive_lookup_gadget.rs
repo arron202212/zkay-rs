@@ -3,19 +3,21 @@ use circuit::operations::gadget;
 use circuit::structure::wire;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
-pub struct AESSBoxNaiveLookupGadget extends Gadget {
+pub struct AESSBoxNaiveLookupGadget  {
 
 	  i32 Vec<SBox> = AES128CipherGadget.SBox;
 
-	 Wire input;
-	 Wire output;
-
-	pub  AESSBoxNaiveLookupGadget(Wire input, desc:Vec<String>) {
+	 input:Wire,
+	 output:Wire,
+}
+impl AESSBoxNaiveLookupGadget{
+	pub  fn new(input:Wire, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.input = input;
 		buildCircuit();
 	}
-
+}
+impl Gadget for AESSBoxNaiveLookupGadget{
 	  fn buildCircuit() {
 		output = generator.getZeroWire();
 		for i in 0..256 {

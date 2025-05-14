@@ -7,22 +7,23 @@
  *
  */
 
-pub struct RSAUtil {
+pub struct RSAUtil;
+impl RSAUtil {
 
-	pub   Vec<Vec<byte>> extractRSARandomness1_5(cipherText:Vec<byte>,
-			RSAPrivateKey privateKey) {
+	pub   fn extractRSARandomness1_5(cipherText:Vec<byte>,
+			RSAPrivateKey privateKey)->Vec<Vec<byte>>  {
 
-		BigInteger modulus = privateKey.getModulus();
-		i32 keySize = modulus.bitLength();
-		BigInteger d = privateKey.getPrivateExponent();
+		let modulus = privateKey.getModulus();
+		let keySize = modulus.bitLength();
+		let d = privateKey.getPrivateExponent();
 
-		Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
+		let cipherTextPadded = vec![byte::default();cipherText.length + 1];
 		System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 		cipherTextPadded[0] = 0;
 
-		BigInteger c = BigInteger::new(cipherText);
+		let c = BigInteger::new(cipherText);
 		c = BigInteger::new(cipherTextPadded);
-		BigInteger product = BigInteger.ONE;
+		let product = BigInteger.ONE;
 		for i in (0..=keySize - 1).rev()
 			product = product.multiply(product).mod(modulus);
 			bool bit = d.testBit(i);
@@ -33,13 +34,13 @@ pub struct RSAUtil {
 //		println!("After decryption manually = "
 //				+ product.toString(16));
 
-		Vec<byte> paddedPlaintext = product.toByteArray();
+		let paddedPlaintext = product.toByteArray();
 		if paddedPlaintext.length != keySize / 8 - 1 {
 			println!("Error");
 			return null;
 		}
-		Vec<byte> plaintext = null;
-		Vec<byte> randomness = null;
+		let plaintext = null;
+		let randomness = null;
 
 		if paddedPlaintext[0] != 2 {
 			println!("Error");
@@ -59,37 +60,37 @@ pub struct RSAUtil {
 				}
 			}
 		}
-		Vec<Vec<byte>> result = vec![byte::default();][] { plaintext, randomness };
+		let result = vec![byte::default();][] { plaintext, randomness };
 		return result;
 	}
 
-	  Vec<byte> intToByteArray(i32 value) {
+	 fn intToByteArray( value:i32 )-> Vec<byte> {
 		return vec![byte::default();] { (byte) (value >>> 24), (byte) (value >>> 16),
 				(byte) (value >>> 8), (byte) value };
 	}
 
-	  Vec<byte> mgf(array:Vec<byte>, i32 maskLen, i32 hlen) {
+	 fn mgf(array:Vec<byte>, maskLen:i32 , hlen:i32 )-> Vec<byte> {
 
-		Vec<byte> v = vec![byte::default();0];
+		let v = vec![byte::default();0];
 		for i in 0..=((i32) Math.ceil(maskLen * 1.0 / hlen)) - 1{
-			Vec<byte> c = intToByteArray(i);
-			MessageDigest hash = null;
+			let c = intToByteArray(i);
+			let hash = null;
 			try {
 				hash = MessageDigest.getInstance("SHA-256");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			hash.update(concat(array, c));
-			Vec<byte> digest = hash.digest();
+			let digest = hash.digest();
 			hash.reset();
 			v = concat(v, digest);
 		}
 		return v;
 	}
 
-	  Vec<byte> concat(a1:Vec<byte>, a2:Vec<byte>) {
-		i32 l = a1.length + a2.length;
-		Vec<byte> result = vec![byte::default();l];
+	 fn concat(a1:Vec<byte>, a2:Vec<byte>)-> Vec<byte> {
+		let l = a1.length + a2.length;
+		let result = vec![byte::default();l];
 		for i in 0..a1.length {
 			result[i] = a1[i];
 		}
@@ -99,21 +100,21 @@ pub struct RSAUtil {
 		return result;
 	}
 
-	pub   Vec<Vec<byte>> extractRSAOAEPSeed(cipherText:Vec<byte>,
-			RSAPrivateKey privateKey) {
+	pub  fn  extractRSAOAEPSeed(cipherText:Vec<byte>,
+			RSAPrivateKey privateKey)->Vec<Vec<byte>> {
 
-		BigInteger modulus = privateKey.getModulus();
-		i32 keySize = modulus.bitLength();
-		BigInteger d = privateKey.getPrivateExponent();
+		let modulus = privateKey.getModulus();
+		let keySize = modulus.bitLength();
+		let d = privateKey.getPrivateExponent();
 
-		Vec<byte> cipherTextPadded = vec![byte::default();cipherText.length + 1];
+		let cipherTextPadded = vec![byte::default();cipherText.length + 1];
 		System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
 		cipherTextPadded[0] = 0;
 
-		BigInteger c = BigInteger::new(cipherText);
+		let c = BigInteger::new(cipherText);
 		c = BigInteger::new(cipherTextPadded);
 
-		BigInteger product = BigInteger.ONE;
+		let product = BigInteger.ONE;
 		for i in (0..=keySize - 1).rev()
 			product = product.multiply(product).mod(modulus);
 			bool bit = d.testBit(i);
@@ -121,10 +122,10 @@ pub struct RSAUtil {
 				product = product.multiply(c).mod(modulus);
 		}
 
-		i32 hlen = 32;
-		i32 maskedDBLength = keySize / 8 - hlen - 1;
+		let hlen = 32;
+		let maskedDBLength = keySize / 8 - hlen - 1;
 
-		Vec<byte> encodedMessageBytes = product.toByteArray();
+		let encodedMessageBytes = product.toByteArray();
 
 		if encodedMessageBytes.length > keySize / 8 {
 			encodedMessageBytes = Arrays.copyOfRange(encodedMessageBytes, 1,
@@ -136,37 +137,37 @@ pub struct RSAUtil {
 			}
 		}
 
-		Vec<byte> maskedSeed = Arrays
+		let maskedSeed = Arrays
 				.copyOfRange(encodedMessageBytes, 1, hlen + 1);
-		Vec<byte> maskedDb = Arrays.copyOfRange(encodedMessageBytes, hlen + 1,
+		let maskedDb = Arrays.copyOfRange(encodedMessageBytes, hlen + 1,
 				encodedMessageBytes.length);
 
-		Vec<byte> seedMask = mgf(maskedDb, hlen, hlen);
-		Vec<byte> seed = Arrays.copyOf(seedMask, hlen);
+		let seedMask = mgf(maskedDb, hlen, hlen);
+		let seed = Arrays.copyOf(seedMask, hlen);
 		for i in 0..hlen {
 			seed[i] ^= maskedSeed[i];
 		}
 
-		Vec<byte> dbMask = mgf(seed, keySize / 8 - hlen - 1, hlen);
+		let dbMask = mgf(seed, keySize / 8 - hlen - 1, hlen);
 		dbMask= Arrays.copyOf(dbMask, keySize/8-hlen-1);
 
-		Vec<byte> DB = vec![byte::default();dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
+		let DB = vec![byte::default();dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
 		System.arraycopy(maskedDb, 0, DB, 1, maskedDBLength);
 		for i in 0..maskedDBLength {
 			DB[i + 1] ^= dbMask[i];
 		}
-//		BigInteger dbInt = BigInteger::new(DB);
+//		let dbInt = BigInteger::new(DB);
 
-		i32 shift1 = 0;
+		let shift1 = 0;
 		while (DB[shift1] == 0) {
 			shift1+=1;
 		}
-		i32 idx = 32 + shift1;
+		let idx = 32 + shift1;
 		while (DB[idx] == 0) {
 			idx+=1;
 		}
-		Vec<byte> plaintext = Arrays.copyOfRange(DB, idx + 1, DB.length);
-		Vec<Vec<byte>> result = vec![byte::default();][] { plaintext, seed };
+		let plaintext = Arrays.copyOfRange(DB, idx + 1, DB.length);
+		let result = vec![byte::default();][] { plaintext, seed };
 		return result;
 	}
 

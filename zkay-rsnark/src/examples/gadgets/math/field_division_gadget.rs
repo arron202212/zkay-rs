@@ -10,21 +10,22 @@ use circuit::structure::wire;
 
 // see notes in the end of the code.
 
-pub struct FieldDivisionGadget extends Gadget {
+pub struct FieldDivisionGadget  {
 
-	 Wire a;
-	 Wire b;
-	 Wire c;
-
-	pub  FieldDivisionGadget(Wire a, Wire b, desc:Vec<String>) {
+	 a:Wire,
+	 b:Wire,
+	 c:Wire,
+}
+impl  FieldDivisionGadget{
+	pub  fn new(a:Wire, b:Wire, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.b = b;
 		// if the input values are constant (i.e. known at compilation time), we
 		// can save one constraint
 		if a instanceof ConstantWire && b instanceof ConstantWire {
-			BigInteger aConst = ((ConstantWire) a).getConstant();
-			BigInteger bInverseConst = ((ConstantWire) b).getConstant().modInverse(
+			let aConst = ((ConstantWire) a).getConstant();
+			let bInverseConst = ((ConstantWire) b).getConstant().modInverse(
 					Config.FIELD_PRIME);
 			c = generator.createConstantWire(aConst.multiply(bInverseConst)
 					.mod(Config.FIELD_PRIME));
@@ -33,7 +34,8 @@ pub struct FieldDivisionGadget extends Gadget {
 			buildCircuit();
 		}
 	}
-
+}
+impl Gadget for FieldDivisionGadget{
 	  fn buildCircuit() {
 
 		// This is an example of computing a value outside the circuit and
@@ -41,10 +43,10 @@ pub struct FieldDivisionGadget extends Gadget {
 
 		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				BigInteger aValue = evaluator.getWireValue(a);
-				BigInteger bValue = evaluator.getWireValue(b);
-				BigInteger cValue = aValue.multiply(
+			pub   evaluate(evaluator:CircuitEvaluator) {
+				let aValue = evaluator.getWireValue(a);
+				let bValue = evaluator.getWireValue(b);
+				let cValue = aValue.multiply(
 						bValue.modInverse(Config.FIELD_PRIME)).mod(
 						Config.FIELD_PRIME);
 				evaluator.setWireValue(c, cValue);

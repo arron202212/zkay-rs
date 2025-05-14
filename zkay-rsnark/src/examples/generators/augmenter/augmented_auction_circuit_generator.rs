@@ -16,23 +16,25 @@ use examples::gadgets::hash::sha256_gadget;
 pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 
 	// each value is assumed to be a 64-bit value
-	 Vec<Wire> secretInputValues;
-	 Vec<Wire> secretOutputValues; 
+	 secretInputValues:Vec<Wire>,
+	 secretOutputValues:Vec<Wire>, 
 
 	// randomness vectors for each participant (each random vector is 7 64-bit words)
-	 Vec<Vec<Wire>> secretInputRandomness;
-	 Vec<Vec<Wire>> secretOutputRandomness; 
+	 secretInputRandomness:Vec<Vec<Wire>>,
+	 secretOutputRandomness:Vec<Vec<Wire>>, 
 	
-	 String pathToCompiledCircuit;
-	 i32 numParties; // includes the auction manager + the participants
-	
-	pub  AugmentedAuctionCircuitGenerator(String circuitName, String pathToCompiledCircuit, i32 numParticipants) {
+	 pathToCompiledCircuit:String,
+	 numParties:i32, // includes the auction manager + the participants
+	}
+impl  AugmentedAuctionCircuitGenerator{
+	pub  fn new(circuitName:String, pathToCompiledCircuit:String, i32 numParticipants)  ->Self{
 		super(circuitName);
 		self.pathToCompiledCircuit  = pathToCompiledCircuit;
 		self.numParties = numParticipants + 1;
 	}
 
-	
+	}
+impl Gadget for AugmentedAuctionCircuitGenerator{
 	  fn buildCircuit() {
 
 		secretInputValues = createProverWitnessWireArray(numParties - 1); // the manager has a zero input (no need to commit to it)
@@ -45,15 +47,15 @@ pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 		secretOutputRandomness[numParties-1] =   createProverWitnessWireArray(7);
 
 		// instantiate a Pinocchio gadget for the auction circuit
-		PinocchioGadget auctionGagdet = PinocchioGadget::new(Util::concat(zeroWire, secretInputValues), pathToCompiledCircuit);
-		Vec<Wire> outputs = auctionGagdet.getOutputWires();
+		let auctionGagdet = AugmentedAuctionCircuitGenerator::new(Util::concat(zeroWire, secretInputValues), pathToCompiledCircuit);
+		let outputs = auctionGagdet.getOutputWires();
 		
 		// ignore the last output for this circuit which carries the index of the winner (not needed for this example)
 		secretOutputValues = Arrays.copyOfRange(outputs, 0, outputs.length - 1);
 		
 		// augment the input side
 		for i in 0..numParties - 1{
-			SHA256Gadget g = SHA256Gadget::new(Util::concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
+			let g = SHA256Gadget::new(Util::concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
 			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s input balance.");
 		}
 		
@@ -61,25 +63,25 @@ pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 		for i in 0..numParties{
 			// adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions) 
 			secretOutputValues[i] = secretOutputValues[i].getBitWires(64*2).packAsBits(64);
-			SHA256Gadget g = SHA256Gadget::new(Util::concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
+			let g = SHA256Gadget::new(Util::concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
 			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s output balance.");
 		}
 	}
 
 	
-	pub   generateSampleInput(CircuitEvaluator evaluator) {
+	pub   generateSampleInput(evaluator:CircuitEvaluator) {
 		
 		for i in 0..numParties - 1{
 			evaluator.setWireValue(secretInputValues[i], Util::nextRandomBigInteger(63));
 		}		
 		
 		for i in 0..numParties - 1{
-			for(Wire w:secretInputRandomness[i]){
+			for  w in &secretInputRandomness[i{
 				evaluator.setWireValue(w, Util::nextRandomBigInteger(64));
 			}
 		}
 		for i in 0..numParties{
-			for(Wire w:secretOutputRandomness[i]){
+			for  w in &secretOutputRandomness[i]{
 				evaluator.setWireValue(w, Util::nextRandomBigInteger(64));
 			}
 		}
@@ -87,7 +89,7 @@ pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 	
 	
 	pub    main(args:Vec<String>)  {
-		AugmentedAuctionCircuitGenerator generator = AugmentedAuctionCircuitGenerator::new("augmented_auction_10", "auction_10.arith", 10);
+		let generator = AugmentedAuctionCircuitGenerator::new("augmented_auction_10", "auction_10.arith", 10);
 		generator.generateCircuit();
 		generator.evalCircuit();
 		generator.prepFiles();

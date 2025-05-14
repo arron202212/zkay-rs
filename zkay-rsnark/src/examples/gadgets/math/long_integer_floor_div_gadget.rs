@@ -9,15 +9,17 @@ use circuit::structure::wire;
  * in the LongElement class methods called by this gadget.
  */
 pub struct LongIntegerFloorDivGadget extends LongIntegerDivision {
-
-	pub  LongIntegerFloorDivGadget(LongElement a, LongElement b, desc:Vec<String>) {
+}
+impl LongIntegerFloorDivGadget{
+	pub  fn new(a:LongElement, b:LongElement, desc:Vec<String>)  ->Self{
 		super(a, b, true, desc);
 	}
 
-	pub  LongIntegerFloorDivGadget(LongElement a, LongElement b, i32 bMinBitwidth, desc:Vec<String>) {
+	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, desc:Vec<String>)  ->Self{
 		super(a, b, bMinBitwidth, true, desc);
 	}
-
+}
+impl Gadget for LongIntegerFloorDivGadget{
 	
 	 pub  fn getOutputWires()->Vec<Wire>  {
 		return getQuotient().getArray();

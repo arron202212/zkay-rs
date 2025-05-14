@@ -298,7 +298,7 @@ for sboxOption in AES128CipherGadget.SBoxOption.values()
 		
 		
 		AES128CipherGadget.sBoxOption = AES128CipherGadget.SBoxOption.OPTIMIZED2;
-		for(i32 b = 0; b <= 15; b+=1){
+		for  b in  0..= 15; b{
 			
 			AESSBoxGadgetOptimized2.setBitCount(b);
 			AESSBoxGadgetOptimized2.solveLinearSystems();

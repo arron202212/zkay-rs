@@ -5,9 +5,24 @@ use circuit::operations::gadget;
 use circuit::structure::wire;
 use circuit::structure::wire_array;
 
-pub struct SHA256Gadget extends Gadget {
+pub struct SHA256Gadget  {
 
-	  long Vec<H> = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
+	 
+
+	 unpaddedInputs:Vec<Wire>,
+
+	 bitwidthPerInputElement:i32,
+	 totalLengthInBytes:i32,
+
+	 numBlocks:i32,
+	 binaryOutput:bool,
+	 paddingRequired:bool,
+
+	 preparedInputBits:Vec<Wire>,
+	 output:Vec<Wire>,
+}
+impl  SHA256Gadget{
+ long Vec<H> = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
 			0x1f83d9abL, 0x5be0cd19L };
 
 	  long Vec<K> = { 0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L, 0x3956c25bL, 0x59f111f1L,
@@ -19,20 +34,7 @@ pub struct SHA256Gadget extends Gadget {
 			0xf40e3585L, 0x106aa070L, 0x19a4c116L, 0x1e376c08L, 0x2748774cL, 0x34b0bcb5L, 0x391c0cb3L, 0x4ed8aa4aL,
 			0x5b9cca4fL, 0x682e6ff3L, 0x748f82eeL, 0x78a5636fL, 0x84c87814L, 0x8cc70208L, 0x90befffaL, 0xa4506cebL,
 			0xbef9a3f7L, 0xc67178f2L };
-
-	 Vec<Wire> unpaddedInputs;
-
-	 i32 bitwidthPerInputElement;
-	 i32 totalLengthInBytes;
-
-	 i32 numBlocks;
-	 bool binaryOutput;
-	 bool paddingRequired;
-
-	 Vec<Wire> preparedInputBits;
-	 Vec<Wire> output;
-
-	pub  SHA256Gadget(ins:Vec<Wire>, i32 bitWidthPerInputElement, i32 totalLengthInBytes, bool binaryOutput,
+	pub  fn new(ins:Vec<Wire>, i32 bitWidthPerInputElement, i32 totalLengthInBytes, bool binaryOutput,
 			bool paddingRequired, desc:Vec<String>) {
 
 		super(desc);
@@ -55,22 +57,23 @@ pub struct SHA256Gadget extends Gadget {
 		buildCircuit();
 
 	}
-
+}
+impl Gadget for SHA256Gadget{
 	  fn buildCircuit() {
 
 		// pad if needed
 		prepare();
 
-		Vec<Wire> outDigest = vec![Wire::default();8];
-		Vec<Wire> hWires = vec![Wire::default();H.length];
+		let outDigest = vec![Wire::default();8];
+		let hWires = vec![Wire::default();H.length];
 		for i in 0..H.length {
 			hWires[i] = generator.createConstantWire(H[i]);
 		}
 
 		for blockNum in 0..numBlocks{
 
-			Vec<Vec<Wire>> wsSplitted = vec![Wire::default();64][];
-			Vec<Wire> w = vec![Wire::default();64];
+			let wsSplitted = vec![Wire::default();64][];
+			let w = vec![Wire::default();64];
 
 			for i in 0..64 {
 				if i < 16 {
@@ -79,16 +82,16 @@ pub struct SHA256Gadget extends Gadget {
 
 					w[i] = WireArray::new(wsSplitted[i]).packAsBits(32);
 				} else {
-					Wire t1 = w[i - 15].rotateRight(32, 7);
-					Wire t2 = w[i - 15].rotateRight(32, 18);
-					Wire t3 = w[i - 15].shiftRight(32, 3);
-					Wire s0 = t1.xorBitwise(t2, 32);
+					let t1 = w[i - 15].rotateRight(32, 7);
+					let t2 = w[i - 15].rotateRight(32, 18);
+					let t3 = w[i - 15].shiftRight(32, 3);
+					let s0 = t1.xorBitwise(t2, 32);
 					s0 = s0.xorBitwise(t3, 32);
 
-					Wire t4 = w[i - 2].rotateRight(32, 17);
-					Wire t5 = w[i - 2].rotateRight(32, 19);
-					Wire t6 = w[i - 2].shiftRight(32, 10);
-					Wire s1 = t4.xorBitwise(t5, 32);
+					let t4 = w[i - 2].rotateRight(32, 17);
+					let t5 = w[i - 2].rotateRight(32, 19);
+					let t6 = w[i - 2].shiftRight(32, 10);
+					let s1 = t4.xorBitwise(t5, 32);
 					s1 = s1.xorBitwise(t6, 32);
 
 					w[i] = w[i - 16].add(w[i - 7]);
@@ -97,29 +100,29 @@ pub struct SHA256Gadget extends Gadget {
 				}
 			}
 
-			Wire a = hWires[0];
-			Wire b = hWires[1];
-			Wire c = hWires[2];
-			Wire d = hWires[3];
-			Wire e = hWires[4];
-			Wire f = hWires[5];
-			Wire g = hWires[6];
-			Wire h = hWires[7];
+			let a = hWires[0];
+			let b = hWires[1];
+			let c = hWires[2];
+			let d = hWires[3];
+			let e = hWires[4];
+			let f = hWires[5];
+			let g = hWires[6];
+			let h = hWires[7];
 
 			for i in 0..64 {
 
-				Wire t1 = e.rotateRight(32, 6);
-				Wire t2 = e.rotateRight(32, 11);
-				Wire t3 = e.rotateRight(32, 25);
-				Wire s1 = t1.xorBitwise(t2, 32);
+				let t1 = e.rotateRight(32, 6);
+				let t2 = e.rotateRight(32, 11);
+				let t3 = e.rotateRight(32, 25);
+				let s1 = t1.xorBitwise(t2, 32);
 				s1 = s1.xorBitwise(t3, 32);
 
-				Wire ch = computeCh(e, f, g, 32);
+				let ch = computeCh(e, f, g, 32);
 
-				Wire t4 = a.rotateRight(32, 2);
-				Wire t5 = a.rotateRight(32, 13);
-				Wire t6 = a.rotateRight(32, 22);
-				Wire s0 = t4.xorBitwise(t5, 32);
+				let t4 = a.rotateRight(32, 2);
+				let t5 = a.rotateRight(32, 13);
+				let t6 = a.rotateRight(32, 22);
+				let s0 = t4.xorBitwise(t5, 32);
 				s0 = s0.xorBitwise(t6, 32);
 
 				Wire maj;
@@ -132,9 +135,9 @@ pub struct SHA256Gadget extends Gadget {
 					maj = computeMaj(a, b, c, 32);
 				}
 				
-				Wire temp1 = w[i].add(K[i]).add(s1).add(h).add(ch);
+				let temp1 = w[i].add(K[i]).add(s1).add(h).add(ch);
 
-				Wire temp2 = maj.add(s0);
+				let temp2 = maj.add(s0);
 
 				h = g;
 				g = f;
@@ -174,7 +177,7 @@ pub struct SHA256Gadget extends Gadget {
 		} else {
 			output = vec![Wire::default();8 * 32];
 			for i in 0..8 {
-				Vec<Wire> bits = outDigest[i].getBitWires(32).asArray();
+				let bits = outDigest[i].getBitWires(32).asArray();
 				for j in 0..32 {
 					output[j + i * 32] = bits[j];
 				}
@@ -182,31 +185,31 @@ pub struct SHA256Gadget extends Gadget {
 		}
 	}
 
-	 Wire computeMaj(Wire a, Wire b, Wire c, i32 numBits) {
+	 fn computeMaj(a:Wire, b:Wire, c:Wire, numBits:i32 )->Wire {
 
-		Vec<Wire> result = vec![Wire::default();numBits];
-		Vec<Wire> aBits = a.getBitWires(numBits).asArray();
-		Vec<Wire> bBits = b.getBitWires(numBits).asArray();
-		Vec<Wire> cBits = c.getBitWires(numBits).asArray();
+		let result = vec![Wire::default();numBits];
+		let aBits = a.getBitWires(numBits).asArray();
+		let bBits = b.getBitWires(numBits).asArray();
+		let cBits = c.getBitWires(numBits).asArray();
 
 		for i in 0..numBits {
-			Wire t1 = aBits[i].mul(bBits[i]);
-			Wire t2 = aBits[i].add(bBits[i]).add(t1.mul(-2));
+			let t1 = aBits[i].mul(bBits[i]);
+			let t2 = aBits[i].add(bBits[i]).add(t1.mul(-2));
 			result[i] = t1.add(cBits[i].mul(t2));
 		}
 		return WireArray::new(result).packAsBits();
 	}
 
-	 Wire computeCh(Wire a, Wire b, Wire c, i32 numBits) {
-		Vec<Wire> result = vec![Wire::default();numBits];
+	 fn computeCh(a:Wire, b:Wire, c:Wire, numBits:i32 )->Wire {
+		let result = vec![Wire::default();numBits];
 
-		Vec<Wire> aBits = a.getBitWires(numBits).asArray();
-		Vec<Wire> bBits = b.getBitWires(numBits).asArray();
-		Vec<Wire> cBits = c.getBitWires(numBits).asArray();
+		let aBits = a.getBitWires(numBits).asArray();
+		let bBits = b.getBitWires(numBits).asArray();
+		let cBits = c.getBitWires(numBits).asArray();
 
 		for i in 0..numBits {
-			Wire t1 = bBits[i].sub(cBits[i]);
-			Wire t2 = t1.mul(aBits[i]);
+			let t1 = bBits[i].sub(cBits[i]);
+			let t2 = t1.mul(aBits[i]);
 			result[i] = t2.add(cBits[i]);
 		}
 		return WireArray::new(result).packAsBits();
@@ -215,8 +218,8 @@ pub struct SHA256Gadget extends Gadget {
 	  prepare() {
 
 		numBlocks = (i32) Math.ceil(totalLengthInBytes * 1.0 / 64);
-		Vec<Wire> bits = WireArray::new(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
-		i32 tailLength = totalLengthInBytes % 64;
+		let bits = WireArray::new(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
+		let tailLength = totalLengthInBytes % 64;
 		if paddingRequired {
 			Vec<Wire> pad;
 			if (64 - tailLength >= 9) {
@@ -230,13 +233,13 @@ pub struct SHA256Gadget extends Gadget {
 				pad[i] = generator.getZeroWire();
 			}
 			long lengthInBits = totalLengthInBytes * 8;
-			Vec<Wire> lengthBits = vec![Wire::default();64];
+			let lengthBits = vec![Wire::default();64];
 			for i in 0..8 {
 				pad[pad.length - 1 - i] = generator.createConstantWire((lengthInBits >>> (8 * i)) & 0xFFL);
-				Vec<Wire> tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
+				let tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
 				System.arraycopy(tmp, 0, lengthBits, (7 - i) * 8, 8);
 			}
-			i32 totalNumberOfBits = numBlocks * 512;
+			let totalNumberOfBits = numBlocks * 512;
 			preparedInputBits = vec![Wire::default();totalNumberOfBits];
 			Arrays.fill(preparedInputBits, generator.getZeroWire());
 			System.arraycopy(bits, 0, preparedInputBits, 0, totalLengthInBytes * 8);

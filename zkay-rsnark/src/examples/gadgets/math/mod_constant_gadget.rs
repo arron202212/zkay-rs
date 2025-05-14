@@ -11,16 +11,17 @@ use circuit::structure::wire;
  *
  */
 
-pub struct ModConstantGadget extends Gadget {
+pub struct ModConstantGadget  {
 
-	 Wire a;
-	 BigInteger b;
-	 Wire r;
-	 Wire q;
+	 a:Wire,
+	 b:BigInteger,
+	 r:Wire,
+	 q:Wire,
 
-	 i32 bitwidth; // a's bitwidth
-
-	pub  ModConstantGadget(Wire a, i32 bitwidth, BigInteger b, desc:Vec<String>) {
+	 bitwidth:i32, // a's bitwidth
+}
+impl  ModConstantGadget{
+	pub  fn new(a:Wire, i32 bitwidth, b:BigInteger, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.b = b;
@@ -35,7 +36,8 @@ pub struct ModConstantGadget extends Gadget {
 		
 		buildCircuit();
 	}
-
+}
+impl Gadget for ModConstantGadget{
 	  fn buildCircuit() {
 		
 		r = generator.createProverWitnessWire("mod result");
@@ -44,17 +46,17 @@ pub struct ModConstantGadget extends Gadget {
 		// notes about how to use this code block can be found in FieldDivisionGadget
 		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				BigInteger aValue = evaluator.getWireValue(a);
-				BigInteger rValue = aValue.mod(b);
+			pub   evaluate(evaluator:CircuitEvaluator) {
+				let aValue = evaluator.getWireValue(a);
+				let rValue = aValue.mod(b);
 				evaluator.setWireValue(r, rValue);
-				BigInteger qValue = aValue.divide(b);
+				let qValue = aValue.divide(b);
 				evaluator.setWireValue(q, qValue);
 			}
 
 		});
 		
-		i32 bBitwidth = b.bitLength();
+		let bBitwidth = b.bitLength();
 		r.restrictBitLength(bBitwidth);
 		q.restrictBitLength(bitwidth - bBitwidth + 1);
 		generator.addOneAssertion(r.isLessThan(b, bBitwidth));

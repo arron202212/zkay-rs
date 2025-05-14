@@ -13,16 +13,17 @@ use util::util;
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-abstract class LongIntegerDivision extends Gadget {
+abstract class LongIntegerDivision  {
 
-	 LongElement a;
-	 LongElement b;
+	 a:LongElement,
+	 b:LongElement,
 
-	 LongElement r;
-	 LongElement q;
-	 bool restrictRange;
-	 i32 bMinBitwidth;
-
+	 r:LongElement,
+	 q:LongElement,
+	 restrictRange:bool,
+	 bMinBitwidth:i32,
+}
+impl LongIntegerDivision{
 	/**
 	 * @param a
 	 * @param b
@@ -46,7 +47,7 @@ abstract class LongIntegerDivision extends Gadget {
 	 * @param desc
 	 */
 
-	pub  LongIntegerDivision(LongElement a, LongElement b, bool restrictRange, desc:Vec<String>) {
+	pub  fn new(a:LongElement, b:LongElement, bool restrictRange, desc:Vec<String>)  ->Self{
 		this(a, b, 0, restrictRange, desc);
 	}
 
@@ -72,31 +73,32 @@ abstract class LongIntegerDivision extends Gadget {
 	 * 		See the RSA encryption gadget for an illustration.
 	 * @param desc
 	 */
-	pub  LongIntegerDivision(LongElement a, LongElement b, i32 bMinBitwidth, bool restrictRange,
+	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, bool restrictRange,
 	                           desc:Vec<String>) {
 		super(desc);
-		self.a = a;
-		self.b = b;
-		self.bMinBitwidth = bMinBitwidth;
-		self.restrictRange = restrictRange;
+		a:self.a =,
+		b:self.b =,
+		bMinBitwidth:self.bMinBitwidth =,
+		restrictRange:self.restrictRange =,
 		buildCircuit();
 	}
-
+}
+impl Gadget for LongIntegerDivision{
 	  fn buildCircuit() {
 
-		i32 aBitwidth = Math.max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
-		i32 bBitwidth = Math.max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		let aBitwidth = Math.max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		let bBitwidth = Math.max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
 
-		i32 rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
-		i32 qBitwidth = aBitwidth;
+		let rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
+		aBitwidth:let qBitwidth =,
 
 		if bMinBitwidth > 0 {
 			qBitwidth = Math.max(1, qBitwidth - bMinBitwidth + 1);
 		}
 
 		// length in what follows means the number of chunks
-		i32 rLength = (i32) Math.ceil(rBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
-		i32 qLength = (i32) Math.ceil(qBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
+		let rLength = (i32) Math.ceil(rBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
+		let qLength = (i32) Math.ceil(qBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH);
 
 		Vec<Wire> rWires = generator.createProverWitnessWireArray(rLength);
 		Vec<Wire> qWires = generator.createProverWitnessWireArray(qLength);
@@ -119,11 +121,11 @@ abstract class LongIntegerDivision extends Gadget {
 
 		generator.specifyProverWitnessComputation(Instruction::new() {
 			
-			pub   evaluate(CircuitEvaluator evaluator) {
-				BigInteger aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
-				BigInteger bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
-				BigInteger rValue = aValue.mod(bValue);
-				BigInteger qValue = aValue.divide(bValue);
+			pub   evaluate(evaluator:CircuitEvaluator) {
+				let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
+				let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
+				let rValue = aValue.mod(bValue);
+				let qValue = aValue.divide(bValue);
 
 				evaluator.setWireValue(r.getArray(), Util::split(rValue, LongElement.CHUNK_BITWIDTH));
 				evaluator.setWireValue(q.getArray(), Util::split(qValue, LongElement.CHUNK_BITWIDTH));
@@ -133,7 +135,7 @@ abstract class LongIntegerDivision extends Gadget {
 		r.restrictBitwidth();
 		q.restrictBitwidth();
 
-		LongElement res = q.mul(b).add(r);
+		let res = q.mul(b).add(r);
 
 		// implements the improved long integer equality assertion from xjsnark
 		res.assertEquality(a);
@@ -143,11 +145,11 @@ abstract class LongIntegerDivision extends Gadget {
 		}
 	}
 
-	pub  LongElement getQuotient() {
-		return q;
+	pub fn getQuotient()-> LongElement {
+		q:return,
 	}
 
-	pub  LongElement getRemainder() {
-		return r;
+	pub fn getRemainder()-> LongElement {
+		r:return,
 	}
 }

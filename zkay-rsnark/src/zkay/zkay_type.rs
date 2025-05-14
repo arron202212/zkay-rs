@@ -31,7 +31,7 @@ impl ZkayType{
    
   
 
-    pub   fn  ZkUint(i32 bitwidth)->ZkayType {
+    pub   fn  ZkUint( bitwidth:i32 )->ZkayType {
             assert!(utypes.containsKey(bitwidth),"No uint type with bitwidth {bitwidth} exists.");
         return utypes.get(bitwidth);
     }
