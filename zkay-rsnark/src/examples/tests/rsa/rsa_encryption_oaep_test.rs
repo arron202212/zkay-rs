@@ -7,35 +7,35 @@ use circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 use examples::generators::rsa::rsa_util;
 
-pub struct RSAEncryptionOAEP_Test extends TestCase {
+pub struct RSAEncryptionOAEP_Test  {
 
-	@Test
+	
 	pub   testEncryptionDifferentKeyLengths()  {
 
-		String plainText = "abc";
+let plainText = "abc";
 
 		// testing commonly used rsa key lengths
 
 		// might need to increase memory heap to run this test on some platforms
 
-		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072 };
+let keySizeArray = vec![i32::default();] { 1024, 2048, 3072 };
 
 		for keySize in keySizeArray {
 
-			Vec<byte> cipherTextBytes = vec![byte::default();keySize / 8];
+let cipherTextBytes = vec![byte::default();keySize / 8];
 
-			SecureRandom random = SecureRandom::new();
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+let random = SecureRandom::new();
+let keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
-			KeyPair keyPair = keyGen.generateKeyPair();
-			Key pubKey = keyPair.getPublic();
-			BigInteger rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
+let keyPair = keyGen.generateKeyPair();
+let pubKey = keyPair.getPublic();
+let rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
 
 			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_OAEP_Enc_TestEncryption") {
 
-				i32 rsaKeyLength = keySize;
-				i32 plainTextLength = plainText.length();
+let rsaKeyLength = keySize;
+let plainTextLength = plainText.length();
 				Vec<Wire> inputMessage;
 				Vec<Wire> seed;
 				Vec<Wire> cipherText;
@@ -84,14 +84,14 @@ pub struct RSAEncryptionOAEP_Test extends TestCase {
 								.setWireValue(self.rsaModulus, rsaModulusValue,
 										LongElement.CHUNK_BITWIDTH);
 
-						Key privKey = keyPair.getPrivate();
+let privKey = keyPair.getPrivate();
 
 						cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-						Vec<byte> tmp = cipher.doFinal(plainText.getBytes());
+let tmp = cipher.doFinal(plainText.getBytes());
 						System.arraycopy(tmp, 0, cipherTextBytes, 0,
 								keySize / 8);
 
-						Vec<byte> cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
+let cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						System.arraycopy(cipherTextBytes, 0, cipherTextPadded,
 								1, cipherTextBytes.length);
 						cipherTextPadded[0] = 0;
@@ -106,7 +106,7 @@ pub struct RSAEncryptionOAEP_Test extends TestCase {
 									"Randomness Extraction did not decrypt right");
 						}
 
-						Vec<byte> sampleRandomness = result[1];
+let sampleRandomness = result[1];
 						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(seed[i],
 									(sampleRandomness[i] + 256) % 256);
@@ -122,22 +122,22 @@ pub struct RSAEncryptionOAEP_Test extends TestCase {
 
 			generator.generateCircuit();
 			generator.evalCircuit();
-			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
+let evaluator = generator.getCircuitEvaluator();
 
 			// retrieve the ciphertext from the circuit, and verify that it
 			// matches the expected ciphertext and that it decrypts correctly
 			// (using the BouncyCastle RSA decryptor)
-			ArrayList<Wire> cipherTextList = generator.getOutWires();
-			BigInteger t = BigInteger.ZERO;
-			i32 i = 0;
+let cipherTextList = generator.getOutWires();
+let t = BigInteger.ZERO;
+let i = 0;
 			for w in cipherTextList {
-				BigInteger val = evaluator.getWireValue(w);
+let val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i * 64));
 				i+=1;
 			}
 
 			// extract the bytes
-			Vec<byte> cipherTextBytesFromCircuit = t.toByteArray();
+let cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
 			if t.bitLength( == keySize

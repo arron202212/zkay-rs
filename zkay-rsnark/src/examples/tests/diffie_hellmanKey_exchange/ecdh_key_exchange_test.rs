@@ -9,18 +9,18 @@ use examples::gadgets::diffie_hellman_key_exchange::ecdh_key_exchange_gadget;
 
  */
 
-pub struct ECDHKeyExchange_Test extends TestCase {
+pub struct ECDHKeyExchange_Test  {
 
 	
 	// The sage script to compute the sample case is commented in the end of the file.
 	// TODO: Add more test cases
 	
-	@Test
+	
 	pub   testVariableInputCase() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test") {
 
-			i32 exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
+let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
 			 Vec<Wire> secretBits;
 			 Wire baseX;
 			 Wire hX;
@@ -49,7 +49,7 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(baseX, BigInteger::new("4"));
 				evaluator.setWireValue(hX, BigInteger::new("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
-				BigInteger exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
+let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -58,21 +58,21 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> output = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let output = generator.getOutWires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("13458082339735734368462130456283583571822918321676509705348825437102113182254"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("4167917227796707610764894996898236918915412447839980711033808347811701875717"));	
 	}
 	
 
-	@Test
+	
 	pub   testHardcodedInputCase() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test2") {
 
 
-			i32 exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
+let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
 			 Vec<Wire> secretBits;
 			 Wire baseX;
 			 Wire hX;
@@ -98,7 +98,7 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 			pub   generateSampleInput(CircuitEvaluator evaluator) {
 				
 
-				BigInteger exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
+let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -107,21 +107,21 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> output = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let output = generator.getOutWires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("13458082339735734368462130456283583571822918321676509705348825437102113182254"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("4167917227796707610764894996898236918915412447839980711033808347811701875717"));	
 	}
 
 	
-	@Test
+	
 	pub   testInputValidation1() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test_InputValidation") {
 
 
-			i32 exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
+let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
 			 Vec<Wire> secretBits;
 			 Wire baseX;
 			 Wire hX;
@@ -146,7 +146,7 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(baseX, BigInteger::new("4"));
 				evaluator.setWireValue(hX, BigInteger::new("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
-				BigInteger exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
+let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -168,7 +168,7 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test_InputValidation2") {
 
 
-			i32 exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
+let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
 			 Vec<Wire> secretBits;
 			 Wire baseX;
 			 Wire hX;
@@ -194,7 +194,7 @@ pub struct ECDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(baseX, BigInteger::new("14"));
 				evaluator.setWireValue(hX, BigInteger::new("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 				
-				BigInteger exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
+let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
 				}

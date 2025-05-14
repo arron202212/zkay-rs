@@ -7,9 +7,9 @@ use examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget;
 
 // test case from:  https://www.cryptolux.org/index.php/FELICS
 
-pub struct Chaskey128_Test extends TestCase {
+pub struct Chaskey128_Test  {
 
-	@Test
+	
 	pub   testCase1() {
 
 		CircuitGenerator generator = CircuitGenerator::new("Chaskey_Test1") {
@@ -51,8 +51,8 @@ pub struct Chaskey128_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> cipherText = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let cipherText = generator.getOutWires();
 
 		Vec<BigInteger> expeectedCiphertext = { BigInteger.valueOf(0x4d8d60d5L),
 				BigInteger.valueOf(0x7b34bfa2L),

@@ -22,8 +22,8 @@ pub struct ElgamalTest {
         }
 
         pub  ZkayBabyJubJubGadget.JubJubPoint asConstJubJub(CircuitGenerator gen) {
-            Wire wx = gen.createConstantWire(x);
-            Wire wy = gen.createConstantWire(y);
+            let wx = gen.createConstantWire(x);
+            let wy = gen.createConstantWire(y);
             return new ZkayBabyJubJubGadget.JubJubPoint(wx, wy);
         }
     }
@@ -42,10 +42,10 @@ pub struct ElgamalTest {
 
         
           fn buildCircuit() {
-            Wire randomness = createConstantWire(random);
-            WireArray randomnessBits = randomness.getBitWires(random.bitLength());
-            Wire message = createConstantWire(plain);
-            WireArray messageBits = message.getBitWires(32);
+            let randomness = createConstantWire(random);
+            let randomnessBits = randomness.getBitWires(random.bitLength());
+            let message = createConstantWire(plain);
+            let messageBits = message.getBitWires(32);
 
             ZkayElgamalEncGadget gadget = ZkayElgamalEncGadget::new(messageBits.asArray(),
                     pk.asConstJubJub(this), randomnessBits.asArray());
@@ -72,8 +72,8 @@ pub struct ElgamalTest {
 
         
           fn buildCircuit() {
-            Wire randomness = createConstantWire(random);
-            WireArray randomnessBits = randomness.getBitWires(random.bitLength());
+            let randomness = createConstantWire(random);
+            let randomnessBits = randomness.getBitWires(random.bitLength());
 
             ZkayElgamalRerandGadget gadget = ZkayElgamalRerandGadget::new(
                     c1.asConstJubJub(this),
@@ -105,9 +105,9 @@ pub struct ElgamalTest {
 
         
           fn buildCircuit() {
-            Wire secretKey = createConstantWire(sk);
-            WireArray skBits = secretKey.getBitWires(sk.bitLength());
-            Wire msgWire = createConstantWire(msg);
+            let secretKey = createConstantWire(sk);
+            let skBits = secretKey.getBitWires(sk.bitLength());
+            let msgWire = createConstantWire(msg);
 
             ZkayElgamalDecGadget gadget = ZkayElgamalDecGadget::new(pk.asConstJubJub(this),
                     skBits.asArray(), c1.asConstJubJub(this), c2.asConstJubJub(this), msgWire);
@@ -127,14 +127,14 @@ pub struct ElgamalTest {
                               AffinePoint c2Expected,
                               AffinePoint r1Expected,
                               AffinePoint r2Expected) {
-        CircuitGenerator cgen = ElgamalEncCircuitGenerator::new("test_enc", plain, random, pk);
+        let cgen = ElgamalEncCircuitGenerator::new("test_enc", plain, random, pk);
         cgen.generateCircuit();
-        CircuitEvaluator evaluator = CircuitEvaluator::new(cgen);
+        let evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        BigInteger c1x = evaluator.getWireValue(cgen.getOutWires().get(0));
-        BigInteger c1y = evaluator.getWireValue(cgen.getOutWires().get(1));
-        BigInteger c2x = evaluator.getWireValue(cgen.getOutWires().get(2));
-        BigInteger c2y = evaluator.getWireValue(cgen.getOutWires().get(3));
+        let c1x = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let c1y = evaluator.getWireValue(cgen.getOutWires().get(1));
+        let c2x = evaluator.getWireValue(cgen.getOutWires().get(2));
+        let c2y = evaluator.getWireValue(cgen.getOutWires().get(3));
         Assert.assertEquals(c1Expected.x, c1x);
         Assert.assertEquals(c1Expected.y, c1y);
         Assert.assertEquals(c2Expected.x, c2x);
@@ -144,17 +144,17 @@ pub struct ElgamalTest {
         cgen.generateCircuit();
         evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        BigInteger one = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let one = evaluator.getWireValue(cgen.getOutWires().get(0));
         Assert.assertEquals(BigInteger.ONE, one);
 
-        CircuitGenerator rgen = ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
+        let rgen = ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
         rgen.generateCircuit();
         evaluator = CircuitEvaluator::new(rgen);
         evaluator.evaluate();
-        BigInteger r1x = evaluator.getWireValue(rgen.getOutWires().get(0));
-        BigInteger r1y = evaluator.getWireValue(rgen.getOutWires().get(1));
-        BigInteger r2x = evaluator.getWireValue(rgen.getOutWires().get(2));
-        BigInteger r2y = evaluator.getWireValue(rgen.getOutWires().get(3));
+        let r1x = evaluator.getWireValue(rgen.getOutWires().get(0));
+        let r1y = evaluator.getWireValue(rgen.getOutWires().get(1));
+        let r2x = evaluator.getWireValue(rgen.getOutWires().get(2));
+        let r2y = evaluator.getWireValue(rgen.getOutWires().get(3));
         Assert.assertEquals(r1Expected.x, r1x);
         Assert.assertEquals(r1Expected.y, r1y);
         Assert.assertEquals(r2Expected.x, r2x);
@@ -243,7 +243,7 @@ pub struct ElgamalTest {
 
      */
 
-    @Test
+    
     pub   testElgamal1() {
         BigInteger plain = BigInteger::new("42");
         BigInteger random = BigInteger::new("405309899802");
@@ -263,7 +263,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal2() {
         BigInteger plain = BigInteger::new("439864");
         BigInteger random = BigInteger::new("450983970634");
@@ -283,7 +283,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal3() {
         BigInteger plain = BigInteger::new("29479828");
         BigInteger random = BigInteger::new("11053400909823");
@@ -303,7 +303,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal4() {
         BigInteger plain = BigInteger::new("20503");
         BigInteger random = BigInteger::new("40394702098873424340");
@@ -323,7 +323,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal5() {
         BigInteger plain = BigInteger::new("9973");
         BigInteger random = BigInteger::new("400939876470980734");
@@ -343,7 +343,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal6() {
         BigInteger plain = BigInteger::new("3092");
         BigInteger random = BigInteger::new("304047020868704");
@@ -363,7 +363,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal7() {
         BigInteger plain = BigInteger::new("11");
         BigInteger random = BigInteger::new("9438929848");
@@ -383,7 +383,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal8() {
         BigInteger plain = BigInteger::new("309904");
         BigInteger random = BigInteger::new("2249");
@@ -403,7 +403,7 @@ pub struct ElgamalTest {
         oneInputTest(plain, random, random2, sk, AffinePoint::new(pkx, pky), AffinePoint::new(c1x_exp, c1y_exp), AffinePoint::new(c2x_exp, c2y_exp), AffinePoint::new(r1x_exp, r1y_exp), AffinePoint::new(r2x_exp, r2y_exp));
     }
 
-    @Test
+    
     pub   testElgamal9() {
         BigInteger plain = BigInteger::new("42");
         BigInteger random = BigInteger::new("4992017890738015216991440853823451346783754228142718316135811893930821210517");

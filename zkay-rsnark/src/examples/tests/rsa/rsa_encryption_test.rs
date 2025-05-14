@@ -10,36 +10,36 @@ use examples::generators::rsa::rsa_util;
 
 // Tests RSA PKCS #1, V1.5
 
-pub struct RSAEncryption_Test extends TestCase {
+pub struct RSAEncryption_Test  {
 
 	
-	@Test
+	
 	pub   testEncryptionDifferentKeyLengths() {
 
 		
-		String plainText = "abc";
+let plainText = "abc";
 
 		// testing commonly used rsa key lengths
 
 		// might need to increase memory heap to run this test on some platforms
 		
-		Vec<i32> keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096};
+let keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096};
 
 		for keySize in keySizeArray {
 
-			Vec<byte> cipherTextBytes = vec![byte::default();keySize/8];			
-			SecureRandom random = SecureRandom::new();
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+let cipherTextBytes = vec![byte::default();keySize/8];			
+let random = SecureRandom::new();
+let keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
-			KeyPair keyPair = keyGen.generateKeyPair();
-			Key pubKey = keyPair.getPublic();
-			BigInteger rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
+let keyPair = keyGen.generateKeyPair();
+let pubKey = keyPair.getPublic();
+let rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
 			
 			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_Enc_TestEncryption") {
 
-				 i32 rsaKeyLength = keySize;
-				 i32 plainTextLength = plainText.length();
+let i32 rsaKeyLength = keySize;
+let i32 plainTextLength = plainText.length();
 				 Vec<Wire> inputMessage;
 				 Vec<Wire> randomness;
 				 Vec<Wire> cipherText;
@@ -62,7 +62,7 @@ pub struct RSAEncryption_Test extends TestCase {
 					
 					// since randomness is a witness
 					rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
-					Vec<Wire> cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
+let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 					
 					// group every 8 bytes together
 					cipherText = WireArray::new(cipherTextInBytes).packWordsIntoLargerWords(8, 8);
@@ -78,30 +78,30 @@ pub struct RSAEncryption_Test extends TestCase {
 								plainText.charAt(i));
 					}
 					try {
-						Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 						evaluator.setWireValue(self.rsaModulus, rsaModulusValue,
 								LongElement.CHUNK_BITWIDTH);
 
-						Key privKey = keyPair.getPrivate();
+let privKey = keyPair.getPrivate();
 
 						cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-						Vec<byte> tmp = cipher.doFinal(plainText.getBytes());
+let tmp = cipher.doFinal(plainText.getBytes());
 						System.arraycopy(tmp, 0, cipherTextBytes, 0, keySize/8);
 						
-						Vec<byte> cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
+let cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						System.arraycopy(cipherTextBytes, 0, cipherTextPadded, 1, cipherTextBytes.length);
 						cipherTextPadded[0] = 0;
 
 						Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
 								(RSAPrivateKey) privKey);
 
-						bool check = Arrays.equals(result[0], plainText.getBytes());
+let check = Arrays.equals(result[0], plainText.getBytes());
 						if !check {
 							panic!(
 									"Randomness Extraction did not decrypt right");
 						}
 
-						Vec<byte> sampleRandomness = result[1];
+let sampleRandomness = result[1];
 						for i in 0..sampleRandomness.length {
 							evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 						}
@@ -116,20 +116,20 @@ pub struct RSAEncryption_Test extends TestCase {
 
 			generator.generateCircuit();
 			generator.evalCircuit();
-			CircuitEvaluator evaluator = generator.getCircuitEvaluator();
+let evaluator = generator.getCircuitEvaluator();
 			
 			// retrieve the ciphertext from the circuit, and verify that it matches the expected ciphertext and that it decrypts correctly (using the Java built-in RSA decryptor)
-			ArrayList<Wire> cipherTextList = generator.getOutWires();
-			BigInteger t = BigInteger.ZERO;
-			i32 i = 0;
+let cipherTextList = generator.getOutWires();
+let t = BigInteger.ZERO;
+let i = 0;
 			for  w in &cipherTextList{
-				BigInteger val = evaluator.getWireValue(w);
+let val = evaluator.getWireValue(w);
 				t = t.add(val.shiftLeft(i*64));
 				i+=1;
 			}
 		
 			// extract the bytes
-			Vec<byte> cipherTextBytesFromCircuit = t.toByteArray();
+let cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
 			if t.bitLength() == keySize && cipherTextBytesFromCircuit.length == keySize/8+1{
@@ -141,9 +141,9 @@ pub struct RSAEncryption_Test extends TestCase {
 
 			}
 			
-			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-			Vec<byte> cipherTextDecrypted = cipher.doFinal(cipherTextBytesFromCircuit);
+let cipherTextDecrypted = cipher.doFinal(cipherTextBytesFromCircuit);
 			assertTrue(Arrays.equals(plainText.getBytes(), cipherTextDecrypted));
 		}
 

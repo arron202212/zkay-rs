@@ -9,30 +9,30 @@ use circuit::structure::wire;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::math::field_division_gadget;
 
-pub struct CachingTest extends TestCase {
+pub struct CachingTest  {
 
-	@Test
+	
 	pub   testCaching1() {
 
-		i32 numIns = Config.LOG2_FIELD_PRIME;
-		Vec<BigInteger> inVals1 = Util::randomBigIntegerArray(numIns,
+		let numIns = Config.LOG2_FIELD_PRIME;
+		let inVals1 = Util::randomBigIntegerArray(numIns,
 				Config.FIELD_PRIME);
-		Vec<BigInteger> inVals2 = Util::randomBigIntegerArray(numIns,
+		let inVals2 = Util::randomBigIntegerArray(numIns,
 				Config.FIELD_PRIME);
-		Vec<BigInteger> inVals3 = Util::randomBigIntegerArray(numIns, 32);
+		let inVals3 = Util::randomBigIntegerArray(numIns, 32);
 
-		Vec<BigInteger> shiftedRightVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> shiftedLeftVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> rotatedRightVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> rotatedLeftVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> xoredVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> oredVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> andedVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> invertedVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> multipliedVals = vec![BigInteger::default();numIns];
-		Vec<BigInteger> addedVals = vec![BigInteger::default();numIns];
+		let shiftedRightVals = vec![BigInteger::default();numIns];
+		let shiftedLeftVals = vec![BigInteger::default();numIns];
+		let rotatedRightVals = vec![BigInteger::default();numIns];
+		let rotatedLeftVals = vec![BigInteger::default();numIns];
+		let xoredVals = vec![BigInteger::default();numIns];
+		let oredVals = vec![BigInteger::default();numIns];
+		let andedVals = vec![BigInteger::default();numIns];
+		let invertedVals = vec![BigInteger::default();numIns];
+		let multipliedVals = vec![BigInteger::default();numIns];
+		let addedVals = vec![BigInteger::default();numIns];
 
-		BigInteger mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME)
+		let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME)
 				.subtract(BigInteger.ONE);
 
 		for i in 0..numIns {
@@ -56,10 +56,10 @@ pub struct CachingTest extends TestCase {
 
 		}
 
-		CircuitGenerator generator = CircuitGenerator::new("Caching_Test") {
-			Vec<Wire> inputs1;
-			Vec<Wire> inputs2;
-			Vec<Wire> inputs3; // 32-bit values
+		let generator = CircuitGenerator::new("Caching_Test") {
+			let inputs1;
+			let inputs2;
+			let inputs3; // 32-bit values
 
 			
 			  fn buildCircuit() {
@@ -68,17 +68,17 @@ pub struct CachingTest extends TestCase {
 				inputs2 = createInputWireArray(numIns);
 				inputs3 = createInputWireArray(numIns);
 
-				Vec<Wire> shiftedRight = vec![Wire::default();numIns];
-				Vec<Wire> shiftedLeft = vec![Wire::default();numIns];
-				Vec<Wire> rotatedRight = vec![Wire::default();numIns];
-				Vec<Wire> rotatedLeft = vec![Wire::default();numIns];
-				Vec<Wire> xored = vec![Wire::default();numIns];
-				Vec<Wire> ored = vec![Wire::default();numIns];
-				Vec<Wire> anded = vec![Wire::default();numIns];
-				Vec<Wire> inverted = vec![Wire::default();numIns];
+				let shiftedRight = vec![Wire::default();numIns];
+				let shiftedLeft = vec![Wire::default();numIns];
+				let rotatedRight = vec![Wire::default();numIns];
+				let rotatedLeft = vec![Wire::default();numIns];
+				let xored = vec![Wire::default();numIns];
+				let ored = vec![Wire::default();numIns];
+				let anded = vec![Wire::default();numIns];
+				let inverted = vec![Wire::default();numIns];
 
-				Vec<Wire> multiplied = vec![Wire::default();numIns];
-				Vec<Wire> added = vec![Wire::default();numIns];
+				let multiplied = vec![Wire::default();numIns];
+				let added = vec![Wire::default();numIns];
 				
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
@@ -98,7 +98,7 @@ pub struct CachingTest extends TestCase {
 					added[i] = inputs1[i].add(inputs2[i]);
 				}
 
-				i32 currentCost = getNumOfConstraints();
+				let currentCost = getNumOfConstraints();
 
 				// repeat everything again, and verify that the number of
 				// multiplication gates will not be affected
@@ -168,19 +168,19 @@ pub struct CachingTest extends TestCase {
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(let evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
+		let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 
 		ArrayList<Wire> outWires = generator.getOutWires();
-		i32 i, outputIndex = 0;
+		let i, outputIndex = 0;
 		for i in 0..numIns
 			assertEquals(shiftedRightVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
@@ -232,17 +232,17 @@ pub struct CachingTest extends TestCase {
 
 	}
 
-	@Test
+	
 	pub   testAssertionCache() {
 
 		// make sure we remove some of the clear duplicate assertions
 		// and most importantly, no assertions are removed
-		CircuitGenerator generator = CircuitGenerator::new("assertions") {
+		let generator = CircuitGenerator::new("assertions") {
 
-			Wire in1;
-			Wire in2;
-			Wire witness1;
-			Wire witness2;
+			let in1;
+			let in2;
+			let witness1;
+			let witness2;
 
 			
 			  fn buildCircuit() {
@@ -283,7 +283,7 @@ pub struct CachingTest extends TestCase {
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub   generateSampleInput(let evaluator) {
 				evaluator.setWireValue(in1, BigInteger.valueOf(5));
 				evaluator.setWireValue(in2, BigInteger.valueOf(6));
 				evaluator.setWireValue(witness1, BigInteger.valueOf(30));
@@ -292,29 +292,29 @@ pub struct CachingTest extends TestCase {
 			}
 		};
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
+		let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 	}
 
-	@Test
+	
 	pub   testMultiSHA256Calls() {
 
 		// testing multiple unncessary calls to SHA256
 
-		String inputStr = "abc";
-		String expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+		let inputStr = "abc";
+		let expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
-		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test4") {
+		let generator = CircuitGenerator::new("SHA2_Test4") {
 
-			Vec<Wire> inputWires;
+			let inputWires;
 
 			
 			  fn buildCircuit() {
 				inputWires = createInputWireArray(inputStr.length());
-				Vec<Wire> digest = SHA256Gadget::new(inputWires, 8,
+				let digest = SHA256Gadget::new(inputWires, 8,
 						inputStr.length(), false, true, "").getOutputWires();
-				i32 numOfConstraintsBefore = getNumOfConstraints();
+				let numOfConstraintsBefore = getNumOfConstraints();
 				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
 						false, true, "").getOutputWires();
 				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
@@ -330,7 +330,7 @@ pub struct CachingTest extends TestCase {
 				assertEquals(numOfConstraintsBefore, getNumOfConstraints());
 
 				// do a small change and verify that number changes
-				Vec<Wire> in2 = Arrays.copyOf(inputWires, inputWires.length);
+				let in2 = Arrays.copyOf(inputWires, inputWires.length);
 				in2[0] = in2[1];
 				SHA256Gadget::new(in2, 8, inputStr.length(), false, true, "")
 						.getOutputWires();
@@ -340,7 +340,7 @@ pub struct CachingTest extends TestCase {
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub   generateSampleInput(let e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -349,9 +349,9 @@ pub struct CachingTest extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
+		let evaluator = generator.getCircuitEvaluator();
 
-		String outDigest = "";
+		let outDigest = "";
 		for w in generator.getOutWires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16),
 					8);

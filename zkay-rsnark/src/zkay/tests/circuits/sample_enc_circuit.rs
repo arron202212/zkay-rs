@@ -40,7 +40,7 @@ pub struct SampleEncCircuit extends ZkayCircuitBase {
     }
 
     pub    main(args:Vec<String>) {
-        SampleEncCircuit circuit = SampleEncCircuit::new();
+        let circuit = SampleEncCircuit::new();
         circuit.run(args);
     }
 }

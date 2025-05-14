@@ -9,7 +9,7 @@ use examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_excha
  * Parameters used here assumes ~80-bit security
  */
 
-pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
+pub struct FieldExtensionDHKeyExchange_Test  {
 
 	
 	// This is a very simple example for testing purposes. To see how key exchange gadgets could be used, 
@@ -17,14 +17,14 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 	
 	// The sage script to compute the sample case is commented in the end of the file.
 	
-	@Test
+	
 	pub   testHardcodedKeys() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("FieldExtension_Test1") {
 
-			i32 mu = 4;
-			i32 omega = 7;
-			i32 exponentBitlength = 397;
+let mu = 4;
+let omega = 7;
+let exponentBitlength = 397;
 			
 			 Vec<Wire> exponentBits;
 			
@@ -33,8 +33,8 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
 
-				Vec<Wire> g = vec![Wire::default();mu];
-				Vec<Wire> h = vec![Wire::default();mu];
+let g = vec![Wire::default();mu];
+let h = vec![Wire::default();mu];
 
 				// Hardcode the base and the other party's key (suitable when keys are not expected to change)
 				g[0] = createConstantWire(BigInteger::new("16377448892084713529161739182205318095580119111576802375181616547062197291263"));
@@ -50,15 +50,15 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				FieldExtensionDHKeyExchange fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(g, h, exponentBits,
 						omega, "");
 
-				Vec<Wire> g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
+let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
 				makeOutputArray(g_to_s, "DH Key Exchange Output");
-				Vec<Wire> h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
+let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
 			
 			pub   generateSampleInput(CircuitEvaluator evaluator) {
-				BigInteger exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
+let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -67,8 +67,8 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> output = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let output = generator.getOutWires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("9327289243415079515318132023689497171271904433099600200400859968177425894580"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("21312311033900790023937954575527091756377215260488498667283640904465223526236"));
@@ -82,14 +82,14 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 	
 	}
 	
-	@Test
+	
 	pub   testVariableKeys() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("FieldExtension_Test2") {
 
-			i32 mu = 4;
-			i32 omega = 7;
-			i32 exponentBitlength = 397;
+let mu = 4;
+let omega = 7;
+let exponentBitlength = 397;
 			
 			 Vec<Wire> exponentBits;
 			 Vec<Wire> g;
@@ -106,9 +106,9 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				FieldExtensionDHKeyExchange fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(g, h, exponentBits,
 						omega, "");
 
-				Vec<Wire> g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
+let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
 				makeOutputArray(g_to_s, "DH Key Exchange Output");
-				Vec<Wire> h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
+let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
@@ -124,7 +124,7 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(h[2],BigInteger::new("1540379511125324102377803754608881114249455137236500477169164628692514244862"));
 				evaluator.setWireValue(h[3],BigInteger::new("1294177986177175279602421915789749270823809536595962994745244158374705688266"));
 
-				BigInteger exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
+let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -133,8 +133,8 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> output = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let output = generator.getOutWires();
 
 
 		
@@ -151,14 +151,14 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 	}
 	
 	
-	@Test
+	
 	pub   testInputValidation() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("FieldExtension_Test3") {
 
-			i32 mu = 4;
-			i32 omega = 7;
-			i32 exponentBitlength = 397;
+let mu = 4;
+let omega = 7;
+let exponentBitlength = 397;
 			
 			 Vec<Wire> exponentBits;
 			 Vec<Wire> g;
@@ -178,9 +178,9 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				// provide prime order subgroup
 				fieldExtensionDHKeyExchange.validateInputs(BigInteger::new("566003748421165623973140684210338877916630960782201693595769129706864925719318115473892932098619423042929922932476493069"));
 				
-				Vec<Wire> g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
+let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
 				makeOutputArray(g_to_s, "DH Key Exchange Output");
-				Vec<Wire> h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
+let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 				makeOutputArray(h_to_s, "Derived Secret Key");
 			}
 
@@ -196,7 +196,7 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 				evaluator.setWireValue(h[2],BigInteger::new("1540379511125324102377803754608881114249455137236500477169164628692514244862"));
 				evaluator.setWireValue(h[3],BigInteger::new("1294177986177175279602421915789749270823809536595962994745244158374705688266"));
 
-				BigInteger exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
+let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
 					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
 				}
@@ -205,8 +205,8 @@ pub struct FieldExtensionDHKeyExchange_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> output = generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let output = generator.getOutWires();
 
 
 		

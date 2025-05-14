@@ -9,9 +9,9 @@ use examples::gadgets::blockciphers::speck128_cipher_gadget;
  * Test vector obtained from:  https://github.com/inmcm/Simon_Speck_Ciphers/blob/master/Python/SimonSpeckCiphers/tests/test_simonspeck.py			
  */
 
-pub struct Speck128_Test extends TestCase {
+pub struct Speck128_Test  {
 
-	@Test
+	
 	pub   testCase1() {
 		
 		CircuitGenerator generator = CircuitGenerator::new("Speck128_Test") {
@@ -24,7 +24,7 @@ pub struct Speck128_Test extends TestCase {
 			  fn buildCircuit() {
 				plaintext = createInputWireArray(2);
 				key = createInputWireArray(2);
-				Vec<Wire> expandedKey = Speck128CipherGadget.expandKey(key);
+let expandedKey = Speck128CipherGadget.expandKey(key);
 				ciphertext = Speck128CipherGadget::new(plaintext, expandedKey).getOutputWires();
 				makeOutputArray(ciphertext);
 			}
@@ -40,8 +40,8 @@ pub struct Speck128_Test extends TestCase {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		CircuitEvaluator evaluator = generator.getCircuitEvaluator();
-		ArrayList<Wire> cipherText= generator.getOutWires();
+let evaluator = generator.getCircuitEvaluator();
+let cipherText= generator.getOutWires();
 		assertEquals(evaluator.getWireValue(cipherText.get(0)), BigInteger::new("7860fedf5c570d18", 16));
 		assertEquals(evaluator.getWireValue(cipherText.get(1)), BigInteger::new("a65d985179783265", 16));
 	}

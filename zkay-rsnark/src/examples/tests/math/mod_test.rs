@@ -7,14 +7,14 @@ use examples::gadgets::math::mod_constant_gadget;
 use examples::gadgets::math::mod_gadget;
 
 
-pub struct Mod_Test extends TestCase {
+pub struct Mod_Test  {
 
 	// TODO; add more tests
-	@Test
+	
 	pub   testCase1() {
 
-		i32 a = 1262178522;
-		i32 b = 257; // b will be an input to the circuit
+let a = 1262178522;
+let b = 257; // b will be an input to the circuit
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test1") {
 
@@ -27,7 +27,7 @@ pub struct Mod_Test extends TestCase {
 //				Wire r = ModGadget::new(inputWires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), inputWires[1],
 //						(i32) Math.ceil(Math.log10(b) / Math.log10(2))).getOutputWires()[0];
 				
-				Wire r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
+let r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
 				makeOutput(r);
 			}
 
@@ -40,18 +40,18 @@ pub struct Mod_Test extends TestCase {
 		};
 
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
+let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
-		Wire rWire = generator.getOutWires().get(0);
+let rWire = generator.getOutWires().get(0);
 		assertEquals(evaluator.getWireValue(rWire), BigInteger.valueOf(a % b));
 	}
 	
-	@Test
+	
 	pub   testCase2() {
 
-		i32 a = 1262178522;
-		i32 b = 257; // b will be a constant
+let a = 1262178522;
+let b = 257; // b will be a constant
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test2") {
 
@@ -61,7 +61,7 @@ pub struct Mod_Test extends TestCase {
 			  fn buildCircuit() {
 
 				inputWires = createInputWireArray(1);
-				Wire r = ModConstantGadget::new(inputWires[0], 32, BigInteger.valueOf(b)).getOutputWires()[0];
+let r = ModConstantGadget::new(inputWires[0], 32, BigInteger.valueOf(b)).getOutputWires()[0];
 				makeOutput(r);
 			}
 
@@ -72,10 +72,10 @@ pub struct Mod_Test extends TestCase {
 		};
 
 		generator.generateCircuit();
-		CircuitEvaluator evaluator = CircuitEvaluator::new(generator);
+let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
-		Wire rWire = generator.getOutWires().get(0);
+let rWire = generator.getOutWires().get(0);
 		assertEquals(evaluator.getWireValue(rWire), BigInteger.valueOf(a % b));
 	}
 	

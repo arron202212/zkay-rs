@@ -44,7 +44,7 @@ pub struct SampleRehomCircuit extends ZkayCircuitBase {
     }
 
     pub    main(args:Vec<String>) {
-        SampleRehomCircuit circuit = SampleRehomCircuit::new();
+        let circuit = SampleRehomCircuit::new();
         circuit.run(args);
     }
 }

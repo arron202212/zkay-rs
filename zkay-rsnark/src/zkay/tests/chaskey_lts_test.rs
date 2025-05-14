@@ -29,29 +29,29 @@ pub struct ChaskeyLtsTest {
         (byte) 0xdf, (byte) 0xed, (byte) 0xde, (byte) 0x07
     };
 
-    @Test
+    
     pub   byteBigintConversionTest() {
-        BigInteger b = ZkayUtil.unsignedBytesToBigInt(plain);
-        Vec<byte> o = ZkayUtil.unsignedBigintToBytes(b, plain.length);
+        let b = ZkayUtil.unsignedBytesToBigInt(plain);
+        let o = ZkayUtil.unsignedBigintToBytes(b, plain.length);
         Assert.assertArrayEquals("Array bigint conversion does not preserve values", o, plain);
 
         b = ZkayUtil.unsignedBytesToBigInt(cipher);
         o = ZkayUtil.unsignedBigintToBytes(b, cipher.length);
         Assert.assertArrayEquals("Array bigint conversion does not preserve values", o, cipher);
 
-        Vec<byte> zero_arr = vec![byte::default();16];
+        let zero_arr = vec![byte::default();16];
         b = ZkayUtil.unsignedBytesToBigInt(zero_arr);
         o = ZkayUtil.unsignedBigintToBytes(b, zero_arr.length);
         Assert.assertArrayEquals("Array bigint conversion does not preserve values", o, zero_arr);
     }
 
-    @Test
+    
     pub   chaskeyLtsTest() {
-        ChaskeyLTSEngine crypto = ChaskeyLTSEngine::new();
+        let crypto = ChaskeyLTSEngine::new();
 
         // Test encrypt
         crypto.init(true, KeyParameter::new(key));
-        Vec<byte> out = vec![byte::default();16];
+        let out = vec![byte::default();16];
         crypto.processBlock(plain, 0, out, 0);
         Assert.assertArrayEquals("Wrong encryption output", cipher, out);
 
@@ -63,20 +63,20 @@ pub struct ChaskeyLtsTest {
         Assert.assertArrayEquals("Wrong decryption output", plain, out);
     }
 
-    @Test
+    
     pub   cbcChaskeyOutputSameAsGadgetTest() throws InvalidCipherTextException {
         // Define inputs
-        BigInteger key = BigInteger::new("b2e21df10a222a69ee1e6a2d60465f4c", 16);
-        BigInteger iv = BigInteger::new("f2c605c86352cea9fcaf88f12eba6371", 16);
-        BigInteger plain = BigInteger::new("6d60ad00cd9efa16841c842876fd4dc9f0fba1eb9e1ce623a83f45483a221f9", 16);
+        let key = BigInteger::new("b2e21df10a222a69ee1e6a2d60465f4c", 16);
+        let iv = BigInteger::new("f2c605c86352cea9fcaf88f12eba6371", 16);
+        let plain = BigInteger::new("6d60ad00cd9efa16841c842876fd4dc9f0fba1eb9e1ce623a83f45483a221f9", 16);
 
         // Compute encryption via jsnark gadget
         CircuitGenerator cgen = CircuitGenerator::new("cbcchaskey") {
             
               fn buildCircuit() {
-                TypedWire plainwire = TypedWire::new(createConstantWire(plain), ZkayType.ZkUint(256), "plaintext");
-                Wire ivwire = createConstantWire(iv);
-                Wire keywire = createConstantWire(key);
+                let plainwire = TypedWire::new(createConstantWire(plain), ZkayType.ZkUint(256), "plaintext");
+                let ivwire = createConstantWire(iv);
+                let keywire = createConstantWire(key);
 
                 makeOutputArray(ZkayCBCSymmetricEncGadget::new(plainwire, keywire, ivwire,
                         ZkayCBCSymmetricEncGadget.CipherType.CHASKEY).getOutputWires());
@@ -89,35 +89,35 @@ pub struct ChaskeyLtsTest {
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
-        CircuitEvaluator evaluator = CircuitEvaluator::new(cgen);
+        let evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        ArrayList<Wire> outwires = cgen.getOutWires();
-        Vec<BigInteger> outs = vec![BigInteger::default();outwires.size()];
+        let outwires = cgen.getOutWires();
+        let outs = vec![BigInteger::default();outwires.size()];
         for i in 0..outs.length {
             outs[i] = evaluator.getWireValue(outwires.get(i));
         }
 
 
         // Compute encryption via CbcChaskey implementation
-        Vec<byte> iv_bytes = ZkayUtil.unsignedBigintToBytes(iv, 16);
+        let iv_bytes = ZkayUtil.unsignedBigintToBytes(iv, 16);
         Vec<byte> result = ChaskeyLtsCbc.crypt(true, ZkayUtil.unsignedBigintToBytes(key, 16),
                                             iv_bytes, ZkayUtil.unsignedBigintToBytes(plain, 32));
 
 
         // Convert output to format produced by gadget (iv included, packed 248bit values in reverse order)
-        Vec<byte> iv_cipher = vec![byte::default();16 + result.length];
+        let iv_cipher = vec![byte::default();16 + result.length];
         System.arraycopy(iv_bytes, 0, iv_cipher, 0, iv_bytes.length);
         System.arraycopy(result, 0, iv_cipher, iv_bytes.length, result.length);
 
-        i32 chunk_size = CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE / 8;
-        i32 first_chunk_size = iv_cipher.length % chunk_size;
-        List<BigInteger> bigints = new ArrayList<>();
+        let chunk_size = CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE / 8;
+        let first_chunk_size = iv_cipher.length % chunk_size;
+        let bigints = new ArrayList<>();
         if first_chunk_size != 0 {
-            Vec<byte> chunk = Arrays.copyOfRange(iv_cipher, 0, first_chunk_size);
+            let chunk = Arrays.copyOfRange(iv_cipher, 0, first_chunk_size);
             bigints.add(ZkayUtil.unsignedBytesToBigInt(chunk));
         }
         for i in first_chunk_size..iv_cipher.length - first_chunk_size{
-            Vec<byte> chunk = Arrays.copyOfRange(iv_cipher, i, i + chunk_size);
+            let chunk = Arrays.copyOfRange(iv_cipher, i, i + chunk_size);
             bigints.add(ZkayUtil.unsignedBytesToBigInt(chunk));
         }
         Collections.reverse(bigints);
