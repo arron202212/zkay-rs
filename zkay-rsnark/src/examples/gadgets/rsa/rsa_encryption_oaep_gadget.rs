@@ -37,34 +37,31 @@ pub struct RSAEncryptionOAEPGadget  {
 	
 }
 impl  RSAEncryptionOAEPGadget{
-pub   i32 SHA256_DIGEST_LENGTH = 32; // in bytes
+pub   const SHA256_DIGEST_LENGTH :i32= 32; // in bytes
 
-	pub   Vec<byte> lSHA256_HASH = vec![byte::default();] { (byte) 0xe3,
+	pub  const lSHA256_HASH: Vec<byte>  = vec![ (byte) 0xe3,
 			(byte) 0xb0, (byte) 0xc4, 0x42, (byte) 0x98, (byte) 0xfc, 0x1c,
 			0x14, (byte) 0x9a, (byte) 0xfb, (byte) 0xf4, (byte) 0xc8,
 			(byte) 0x99, 0x6f, (byte) 0xb9, 0x24, 0x27, (byte) 0xae, 0x41,
 			(byte) 0xe4, 0x64, (byte) 0x9b, (byte) 0x93, 0x4c, (byte) 0xa4,
-			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 };
+			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 ];
 	pub  fn new(LongElement modulus, plainText:Vec<Wire>,
-			seed:Vec<Wire>, i32 rsaKeyBitLength, desc:Vec<String>) {
+			seed:Vec<Wire>, rsaKeyBitLength:i32, desc:Vec<String>) ->Self{
 		super(desc);
 
-		if rsaKeyBitLength % 8 != 0 {
-			assert!(
+			assert!(rsaKeyBitLength % 8 == 0,
 					"RSA Key bit length is assumed to be a multiple of 8");
-		}
+		
 
-		if plainText.length > rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2 {
-			println!("Message too long");
-			assert!(
-					"Invalid message length for RSA Encryption");
-		}
 
-		if seed.length != SHA256_DIGEST_LENGTH {
-			println!("Seed must have the same length as the hash function output ");
-			assert!(
-					"Invalid seed dimension for RSA Encryption");
-		}
+			assert!( plainText.length <= rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2,
+					"Message too long,Invalid message length for RSA Encryption");
+		
+
+
+			assert!(seed.length == SHA256_DIGEST_LENGTH ,
+					"Seed must have the same length as the hash function output,Invalid seed dimension for RSA Encryption");
+		
 
 		self.seed = seed;
 		self.plainText = plainText;
@@ -79,10 +76,9 @@ impl Gadget for RSAEncryptionOAEPGadget{
 		let mLen = plainText.length;
 		let hLen = SHA256_DIGEST_LENGTH;
 		let keyLen = rsaKeyBitLength / 8; // in bytes
-		let paddingString = vec![Wire::default();keyLen - mLen - 2 * hLen - 2];
-		Arrays.fill(paddingString, generator.getZeroWire());
+		let mut paddingString = vec![generator.getZeroWire();keyLen - mLen - 2 * hLen - 2];
 
-		let db = vec![Wire::default();keyLen - hLen - 1];
+		let mut db = vec![Wire::default();keyLen - hLen - 1];
 		for i in 0..keyLen - hLen - 1{
 			if i < hLen {
 				db[i] = generator
@@ -113,7 +109,7 @@ impl Gadget for RSAEncryptionOAEPGadget{
 		// The LongElement implementation is LittleEndian, so we will process the array in reverse order
 		
 		let paddedMsg = LongElement::new(
-				vec![BigInteger::default();] { BigInteger.ZERO });
+				vec![BigInteger.ZERO ]);
 		for i in 0..paddedByteArray.length {
 			let e = LongElement::new(paddedByteArray[paddedByteArray.length-i-1], 8);
 			let c = LongElement::new(Util::split(
@@ -145,13 +141,13 @@ impl Gadget for RSAEncryptionOAEPGadget{
 	
 	 fn mgf1(in:Vec<Wire>, length:i32 )->Vec<Wire> {
 
-		let mgfOutputList = new ArrayList<Wire>();
+		let mut mgfOutputList = vec![];
 		for  i in  0..=(length * 1.0/ SHA256_DIGEST_LENGTH).ceil() as i32 - 1 {
 
 			// the standard follows a Big Endian format
-			let counter = generator.createConstantWireArray(vec![long::default();] {
+			let counter = generator.createConstantWireArray(vec![
 					(byte) (i >>> 24), (byte) (i >>> 16), (byte) (i >>> 8),
-					(byte) i });
+					(byte) i ]);
 
 			let inputToHash = Util::concat(in, counter);
 			let shaGadget = SHA256Gadget::new(inputToHash, 8,
@@ -175,8 +171,8 @@ impl Gadget for RSAEncryptionOAEPGadget{
 				mgfOutputList.add(msgHashBytes[j]);
 			}
 		}
-		let out = mgfOutputList.toArray(vec![Wire::default();] {});
-		return Arrays.copyOf(out, length);
+		let out = mgfOutputList.toArray(vec![]);
+		return out[..length].to_vec();
 	}
 
 	

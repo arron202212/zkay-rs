@@ -59,16 +59,20 @@ impl   ZkayEcGadget  for ZkayECDHGadget{
         // Easy to handle if hPoint is constant, otherwise, let the prover input
         // a witness and verify some properties
 
-        if hPoint.x instanceof ConstantWire {
+        if hPoint.x.instanceof(ConstantWire){
             let x = ((ConstantWire) hPoint.x).getConstant();
             hPoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
             hPoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation(Instruction::new() {
-                pub   evaluate(evaluator:CircuitEvaluator ) {
+            generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
+                pub  fn evaluate(evaluator:CircuitEvaluator ) {
                     let x = evaluator.getWireValue(hPoint.x);
                     evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
-                }
+                } }
+            Prover
             });
             assertValidPointOnEC(hPoint.x, hPoint.y);
         }

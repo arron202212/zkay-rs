@@ -22,10 +22,10 @@ pub struct SHA256Gadget  {
 	 output:Vec<Wire>,
 }
 impl  SHA256Gadget{
- long Vec<H> = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
+        const H: Vec<i64> = { 0x6a09e667L, 0xbb67ae85L, 0x3c6ef372L, 0xa54ff53aL, 0x510e527fL, 0x9b05688cL,
 			0x1f83d9abL, 0x5be0cd19L };
 
-	  long Vec<K> = { 0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L, 0x3956c25bL, 0x59f111f1L,
+	  const  K:Vec<i64> = { 0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L, 0x3956c25bL, 0x59f111f1L,
 			0x923f82a4L, 0xab1c5ed5L, 0xd807aa98L, 0x12835b01L, 0x243185beL, 0x550c7dc3L, 0x72be5d74L, 0x80deb1feL,
 			0x9bdc06a7L, 0xc19bf174L, 0xe49b69c1L, 0xefbe4786L, 0x0fc19dc6L, 0x240ca1ccL, 0x2de92c6fL, 0x4a7484aaL,
 			0x5cb0a9dcL, 0x76f988daL, 0x983e5152L, 0xa831c66dL, 0xb00327c8L, 0xbf597fc7L, 0xc6e00bf3L, 0xd5a79147L,
@@ -34,19 +34,16 @@ impl  SHA256Gadget{
 			0xf40e3585L, 0x106aa070L, 0x19a4c116L, 0x1e376c08L, 0x2748774cL, 0x34b0bcb5L, 0x391c0cb3L, 0x4ed8aa4aL,
 			0x5b9cca4fL, 0x682e6ff3L, 0x748f82eeL, 0x78a5636fL, 0x84c87814L, 0x8cc70208L, 0x90befffaL, 0xa4506cebL,
 			0xbef9a3f7L, 0xc67178f2L };
-	pub  fn new(ins:Vec<Wire>, i32 bitWidthPerInputElement, i32 totalLengthInBytes, bool binaryOutput,
-			bool paddingRequired, desc:Vec<String>) {
+	pub  fn new(ins:Vec<Wire>,  bitWidthPerInputElement:i32,  totalLengthInBytes:i32,  binaryOutput:bool,
+			 paddingRequired:bool, desc:Vec<String>)->Self {
 
 		super(desc);
-		if (totalLengthInBytes * 8 > ins.length * bitWidthPerInputElement
-				|| totalLengthInBytes * 8 < (ins.length - 1) * bitWidthPerInputElement) {
-			assert!("Inconsistent Length Information");
-		}
+			assert!(totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
+				&& totalLengthInBytes * 8 >= (ins.len() - 1) * bitWidthPerInputElement,"Inconsistent Length Information");
+		
 
-		if (!paddingRequired && totalLengthInBytes % 64 != 0
-				&& ins.length * bitWidthPerInputElement != totalLengthInBytes) {
-			assert!("When padding is not forced, totalLengthInBytes % 64 must be zero.");
-		}
+		assert!(paddingRequired || totalLengthInBytes % 64 == 0
+				|| ins.len() * bitWidthPerInputElement == totalLengthInBytes,"When padding is not forced, totalLengthInBytes % 64 must be zero.");
 
 		self.unpaddedInputs = ins;
 		self.bitwidthPerInputElement = bitWidthPerInputElement;
@@ -65,15 +62,15 @@ impl Gadget for SHA256Gadget{
 		prepare();
 
 		let outDigest = vec![Wire::default();8];
-		let hWires = vec![Wire::default();H.length];
-		for i in 0..H.length {
+		let hWires = vec![Wire::default();H.len()];
+		for i in 0..H.len() {
 			hWires[i] = generator.createConstantWire(H[i]);
 		}
 
 		for blockNum in 0..numBlocks{
 
-			let wsSplitted = vec![Wire::default();64][];
-			let w = vec![Wire::default();64];
+			let mut wsSplitted = vec![vec![];64];
+			let mut w = vec![Wire::default();64];
 
 			for i in 0..64 {
 				if i < 16 {
@@ -125,7 +122,7 @@ impl Gadget for SHA256Gadget{
 				let s0 = t4.xorBitwise(t5, 32);
 				s0 = s0.xorBitwise(t6, 32);
 
-				Wire maj;
+				let mut  maj;
 				// since after each iteration, SHA256 does c = b; and b = a;, we can make use of that to save multiplications in maj computation.
 				// To do this, we make use of the caching feature, by just changing the order of wires sent to maj(). Caching will take care of the rest.
 				if i % 2 == 1{
@@ -215,36 +212,35 @@ impl Gadget for SHA256Gadget{
 		return WireArray::new(result).packAsBits();
 	}
 
-	  prepare() {
+	fn  prepare() {
 
-		numBlocks = (i32) Math.ceil(totalLengthInBytes * 1.0 / 64);
+		numBlocks = (totalLengthInBytes * 1.0 / 64).ceil() as i32;
 		let bits = WireArray::new(unpaddedInputs).getBits(bitwidthPerInputElement).asArray();
 		let tailLength = totalLengthInBytes % 64;
 		if paddingRequired {
-			Vec<Wire> pad;
+			let mut  pad;
 			if (64 - tailLength >= 9) {
 				pad = vec![Wire::default();64 - tailLength];
 			} else {
 				pad = vec![Wire::default();128 - tailLength];
 			}
-			numBlocks = (totalLengthInBytes + pad.length)/64;
+			numBlocks = (totalLengthInBytes + pad.len())/64;
 			pad[0] = generator.createConstantWire(0x80);
-			for i in 1..pad.length - 8{
+			for i in 1..pad.len() - 8{
 				pad[i] = generator.getZeroWire();
 			}
-			long lengthInBits = totalLengthInBytes * 8;
+			let  lengthInBits = totalLengthInBytes * 8;
 			let lengthBits = vec![Wire::default();64];
 			for i in 0..8 {
-				pad[pad.length - 1 - i] = generator.createConstantWire((lengthInBits >>> (8 * i)) & 0xFFL);
-				let tmp = pad[pad.length - 1 - i].getBitWires(8).asArray();
-				System.arraycopy(tmp, 0, lengthBits, (7 - i) * 8, 8);
+				pad[pad.len() - 1 - i] = generator.createConstantWire((lengthInBits >>> (8 * i)) & 0xFFL);
+				let tmp = pad[pad.len() - 1 - i].getBitWires(8).asArray();
+				lengthBits[(7 - i) * 8.. (7 - i+1) * 8].clone_from_slice(&tmp);
 			}
 			let totalNumberOfBits = numBlocks * 512;
-			preparedInputBits = vec![Wire::default();totalNumberOfBits];
-			Arrays.fill(preparedInputBits, generator.getZeroWire());
-			System.arraycopy(bits, 0, preparedInputBits, 0, totalLengthInBytes * 8);
+			preparedInputBits = vec![generator.getZeroWire();totalNumberOfBits];
+			preparedInputBits[..totalLengthInBytes * 8].clone_from_slice(&bits);
 			preparedInputBits[totalLengthInBytes * 8 + 7] = generator.getOneWire();
-			System.arraycopy(lengthBits, 0, preparedInputBits, preparedInputBits.length - 64, 64);
+			preparedInputBits[preparedInputBits.len() - 64..].clone_from_slice(&lengthBits);
 		} else {
 			preparedInputBits = bits;
 		}

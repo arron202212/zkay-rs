@@ -15,7 +15,7 @@ pub struct WireLabelInstruction{
 }
  impl  WireLabelInstruction{
 
-	pub  new( label_type:LabelType,  w:Wire, desc:Vec<String>)->Self {
+	pub fn new( label_type:LabelType,  w:Wire, desc:Vec<String>)->Self {
         Self{label_type,w,desc:desc.get(0).unwrap_or(&String::new()).clone()}
 	}
 

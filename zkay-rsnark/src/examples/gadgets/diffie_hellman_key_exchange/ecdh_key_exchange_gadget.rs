@@ -32,23 +32,23 @@ use examples::gadgets::math::field_division_gadget;
  * 
  */
 
-class AffinePoint {
-		 Wire x;
-		 Wire y;
+pub struct AffinePoint {
+		  x:Wire;
+		  y:Wire;
 
-		AffinePoint(x:Wire) {
-			self.x = x;
-		}
+		// AffinePoint(x:Wire) {
+		// 	self.x = x;
+		// }
 
-		AffinePoint(x:Wire, y:Wire) {
-			self.x = x;
-			self.y = y;
-		}
+		// AffinePoint(x:Wire, y:Wire) {
+		// 	self.x = x;
+		// 	self.y = y;
+		// }
 
-		AffinePoint(p:AffinePoint) {
-			self.x = p.x;
-			self.y = p.y;
-		}
+		// AffinePoint(p:AffinePoint) {
+		// 	self.x = p.x;
+		// 	self.y = p.y;
+		// }
 	}
 pub struct ECDHKeyExchangeGadget  {
 
@@ -82,7 +82,7 @@ impl  ECDHKeyExchangeGadget{
 	// Config.FIELD_PRIME =
 	// 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
-	pub   i32 SECRET_BITWIDTH = 253; // number of bits in the
+	pub  const   SECRET_BITWIDTH:i32 = 253; // number of bits in the
 													// exponent. Note that the
 													// most significant bit
 													// should
@@ -92,15 +92,15 @@ impl  ECDHKeyExchangeGadget{
 													// See
 													// the constructor
 
-	pub   BigInteger COEFF_A = BigInteger::new("126932"); // parameterization
+	pub   const COEFF_A:BigInteger = BigInteger::new("126932"); // parameterization
 																		// in
 																		// https://eprint.iacr.org/2015/1093.pdf
 
-	pub   BigInteger CURVE_ORDER = BigInteger::new(
+	pub   const CURVE_ORDER:BigInteger = BigInteger::new(
 			"21888242871839275222246405745257275088597270486034011716802747351550446453784");
 
 	// As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
-	pub   BigInteger SUBGROUP_ORDER = BigInteger::new(
+	pub   const SUBGROUP_ORDER:BigInteger = BigInteger::new(
 			"2736030358979909402780800718157159386074658810754251464600343418943805806723");
 	/**
 	 * This gadget receives two points: Base = (baseX) and H = (hX), and the
@@ -160,15 +160,13 @@ impl Gadget for ECDHKeyExchangeGadget{
 		sharedSecret = mul(hPoint, secretBits, hTable).x;
 	}
 
-	  checkSecretBits() {
+	fn checkSecretBits() {
 		/**
 		 * The secret key bits must be of length SECRET_BITWIDTH and are
 		 * expected to follow a little endian order. The most significant bit
 		 * should be 1, and the three least significant bits should be zero.
 		 */
-		if secretBits.length != SECRET_BITWIDTH {
-			assert!();
-		}
+			assert!(secretBits.length == SECRET_BITWIDTH);
 		generator.addZeroAssertion(secretBits[0],
 				"Asserting secret bit conditions");
 		generator.addZeroAssertion(secretBits[1],
@@ -186,36 +184,44 @@ impl Gadget for ECDHKeyExchangeGadget{
 		}
 	}
 
-	  computeYCoordinates() {
+	fn   computeYCoordinates() {
 
 		// Easy to handle if baseX is constant, otherwise, let the prover input
 		// a witness and verify some properties
 
-		if basePoint.x instanceof ConstantWire {
+		if basePoint.x.instanceof(ConstantWire) {
 
-			let x = ((ConstantWire) basePoint.x).getConstant();
+			let x = (basePoint.x).getConstant();
 			basePoint.y = generator.createConstantWire(computeYCoordinate(x));
 		} else {
 			basePoint.y = generator.createProverWitnessWire();
-			generator.specifyProverWitnessComputation(Instruction::new() {
-				pub   evaluate(evaluator:CircuitEvaluator) {
+			generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
+				pub  fn evaluate(evaluator:CircuitEvaluator ) {
 					let x = evaluator.getWireValue(basePoint.x);
 					evaluator.setWireValue(basePoint.y, computeYCoordinate(x));
-				}
+				} }
+            Prover
 			});
 			assertValidPointOnEC(basePoint.x, basePoint.y);
 		}
 
-		if hPoint.x instanceof ConstantWire {
+		if hPoint.x.instanceof( ConstantWire ){
 			let x = ((ConstantWire) hPoint.x).getConstant();
 			hPoint.y = generator.createConstantWire(computeYCoordinate(x));
 		} else {
 			hPoint.y = generator.createProverWitnessWire();
-			generator.specifyProverWitnessComputation(Instruction::new() {
-				pub   evaluate(evaluator:CircuitEvaluator) {
+			generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
+				pub  fn evaluate(evaluator:CircuitEvaluator ) {
 					let x = evaluator.getWireValue(hPoint.x);
 					evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
-				}
+				} }
+            Prover
 			});
 			assertValidPointOnEC(hPoint.x, hPoint.y);
 		}
@@ -223,7 +229,7 @@ impl Gadget for ECDHKeyExchangeGadget{
 
 	// this is only called, when Wire y is provided as witness by the prover
 	// (not as input to the gadget)
-	  assertValidPointOnEC(x:Wire, y:Wire) {
+	fn   assertValidPointOnEC(x:Wire, y:Wire) {
 		let ySqr = y.mul(y);
 		let xSqr = x.mul(x);
 		let xCube = xSqr.mul(x);
@@ -244,8 +250,8 @@ impl Gadget for ECDHKeyExchangeGadget{
 	 * Performs scalar multiplication (secretBits must comply with the
 	 * conditions above)
 	 */
-	 AffinePoint mul(p:AffinePoint, secretBits:Vec<Wire>,
-			precomputedTable:Vec<AffinePoint>) {
+	 fn mul(p:AffinePoint, secretBits:Vec<Wire>,
+			precomputedTable:Vec<AffinePoint>)->AffinePoint {
 
 		let result = AffinePoint::new(
 				precomputedTable[secretBits.length - 1]);
@@ -282,7 +288,7 @@ impl Gadget for ECDHKeyExchangeGadget{
 
 	
 	 pub  fn getOutputWires()->Vec<Wire>  {
-		return vec![Wire::default();] { outputPublicValue, sharedSecret };
+		return vec![ outputPublicValue, sharedSecret ];
 	}
 
 	pub fn computeYCoordinate(x:BigInteger)->  BigInteger {
@@ -294,7 +300,7 @@ impl Gadget for ECDHKeyExchangeGadget{
 		return y;
 	}
 
-	pub   validateInputs() {
+	pub  fn validateInputs() {
 		generator.addOneAssertion(basePoint.x.checkNonZero());
 		assertValidPointOnEC(basePoint.x, basePoint.y);
 		assertPointOrder(basePoint, baseTable);
@@ -304,7 +310,7 @@ impl Gadget for ECDHKeyExchangeGadget{
 		assertPointOrder(hPoint, hTable);
 	}
 
-	  assertPointOrder(p:AffinePoint, table:Vec<AffinePoint>) {
+	fn  assertPointOrder(p:AffinePoint, table:Vec<AffinePoint>) {
 
 		let o = generator.createConstantWire(SUBGROUP_ORDER);
 		let bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();

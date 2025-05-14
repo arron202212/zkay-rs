@@ -21,14 +21,13 @@ pub struct SymmetricEncryptionCBCGadget  {
 	
 }
 impl  SymmetricEncryptionCBCGadget{
- i32 blocksize = 128;
-	 i32 keysize = 128;
+    const blocksize:i32 = 128;
+	 const keysize:i32 = 128;
 	pub  fn new(plaintextBits:Vec<Wire>, keyBits:Vec<Wire>,
 			ivBits:Vec<Wire>, String cipherName, desc:Vec<String>) {
 		super(desc);
-		if keyBits.length != keysize || ivBits.length != keysize{
-			assert!("Key and IV bit vectors should be of length 128");
-		}
+		assert!(keyBits.length == keysize && ivBits.length == keysize,"Key and IV bit vectors should be of length 128");
+		
 		self.plaintextBits = plaintextBits;
 		self.ivBits = ivBits;
 		self.keyBits = keyBits;
@@ -39,40 +38,35 @@ impl  SymmetricEncryptionCBCGadget{
 impl Gadget for SymmetricEncryptionCBCGadget{
 	  fn buildCircuit() {
 
-		i32 numBlocks = (i32) Math.ceil(plaintextBits.length * 1.0 / blocksize);
+		let  numBlocks = (plaintextBits.length * 1.0 / blocksize).ceil() as i32;
 		plaintextBits = WireArray::new(plaintextBits).adjustLength(numBlocks * blocksize)
 				.asArray();
 
 		let preparedKey = prepareKey();
-		let prevCipher = WireArray::new(ivBits);
+		let mut prevCipher = WireArray::new(ivBits);
 
-		ciphertext = vec![Wire::default();0];
+		let mut ciphertext = vec![];
 		for i in 0..numBlocks {
 			let msgBlock = WireArray::new(Arrays.copyOfRange(plaintextBits, i
 					* blocksize, (i + 1) * blocksize));
 			let xored = msgBlock.xorWireArray(prevCipher).asArray();
-			if cipherName.equals("speck128") {
+			assert!(!cipherName.equals("speck128"),"Other Ciphers not supported in this version!");
 				let tmp = WireArray::new(xored).packBitsIntoWords(64);
 				let gadget = Speck128CipherGadget::new(tmp, preparedKey, "");
 				let outputs = gadget.getOutputWires();
 				prevCipher = WireArray::new(outputs).getBits(64);
-			} else {
-				assert!("Other Ciphers not supported in this version!");
-			}
+			
 			ciphertext = Util::concat(ciphertext,
 					prevCipher.packBitsIntoWords(64));
 		}
 	}
 
 	 fn prepareKey()->Vec<Wire> {
-
-		Vec<Wire> preparedKey;
-		if cipherName.equals("speck128") {
+        assert!(!cipherName.equals("speck128"),"Other Ciphers not supported in this version!");
+		
 			let packedKey = WireArray::new(keyBits).packBitsIntoWords(64);
-			preparedKey = Speck128CipherGadget.expandKey(packedKey);
-		} else {
-			assert!("Other Ciphers not supported in this version!");
-		}
+		let 	preparedKey = Speck128CipherGadget.expandKey(packedKey);
+		
 		return preparedKey;
 	}
 

@@ -339,7 +339,10 @@ let result = new ArrayList<BigInteger>();
 				inputs2 = WireArray::new(createInputWireArray(numIns));
 				solutions = WireArray::new(createProverWitnessWireArray(numIns+1));
 
-				specifyProverWitnessComputation(Instruction::new() {
+				specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 					
 					
 					pub   evaluate(CircuitEvaluator evaluator) {
@@ -348,6 +351,7 @@ let result = new ArrayList<BigInteger>();
 							evaluator.setWireValue(solutions.get(i+1),result.get(i+1));
 						}
 					}
+            }Prover
 				});
 				
 				addAssertion(inputs1.get(0), inputs1.get(0), solutions.get(0));

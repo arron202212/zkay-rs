@@ -29,15 +29,20 @@ impl Gadget for AESSBoxComputeGadget{
 	  fn buildCircuit() {
 		inverse = generator.createProverWitnessWire();
 
-		generator.addToEvaluationQueue(Instruction::new() {
+		generator.addToEvaluationQueue(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 let p = evaluator.getWireValue(input).intValue(); 
 let q = findInv(p);
 				evaluator.setWireValue(inverse, q);
 
 			}
+            }
+            Prover
 		});
 
 		inverse.restrictBitLength(8);

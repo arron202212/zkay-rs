@@ -6,29 +6,25 @@ use circuit::operations::gadget;
 use circuit::structure::wire;
 
 pub struct SubsetSumHashGadget  {
-
-
-
-
 	 inputWires:Vec<Wire>,
 	 outWires:Vec<Wire>,
 	 binaryOutput:bool,
-
-	
 }
+use std::sync::OnceLock;
 impl  SubsetSumHashGadget{
-	pub   let DIMENSION = 3; // set to 4 for higher security
-	pub   let INPUT_LENGTH = 2 * DIMENSION * Config.LOG2_FIELD_PRIME; // length in bits
-	  Vec<Vec<BigInteger>> COEFFS;
- {
-		COEFFS = vec![BigInteger::default();DIMENSION][INPUT_LENGTH];
+	pub   const DIMENSION:i32 = 3; // set to 4 for higher security
+	pub   const INPUT_LENGTH:i32 = 2 * DIMENSION * Config.LOG2_FIELD_PRIME; // length in bits
+	static COEFFS: OnceLock< Vec<Vec<BigInteger>>>=OnceLock::new();
+    COEFFS::get_or_init(||{
+		let mut tmp = vec![vec![BigInteger::default();INPUT_LENGTH];DIMENSION];
 		for i in 0..DIMENSION {
 			for k in 0..INPUT_LENGTH {
-				COEFFS[i][k] = Util::nextRandomBigInteger(Config.FIELD_PRIME);
+				tmp[i][k] = Util::nextRandomBigInteger(Config.FIELD_PRIME);
 			}
 
 		}
-	}
+        tmp
+	});
 
 	/**
 	 * @param ins
@@ -37,18 +33,16 @@ impl  SubsetSumHashGadget{
 	 *            Whether the output digest should be splitted into bits or not.
 	 * @param desc
 	 */
-	pub  fn new(ins:Vec<Wire>, bool binaryOutput, desc:Vec<String>)  ->Self{
+	pub  fn new(ins:Vec<Wire>,  binaryOutput:bool, desc:Vec<String>)  ->Self{
 
 		super(desc);
 		let numBlocks = (i32) Math.ceil(ins.length * 1.0 / INPUT_LENGTH);
 
-		if numBlocks > 1 {
-			assert!("Only one block is supported at this point");
-		}
+			assert!(numBlocks <= 1 ,"Only one block is supported at this point");
 
 		let rem = numBlocks * INPUT_LENGTH - ins.length;
 
-		let pad = vec![Wire::default();rem];
+		let mut pad = vec![Wire::default();rem];
 		for i in 0..pad.length {
 			pad[i] = generator.getZeroWire(); // TODO: adjust padding
 		}
@@ -60,8 +54,7 @@ impl  SubsetSumHashGadget{
 impl Gadget for SubsetSumHashGadget{
 	  fn buildCircuit() {
 
-		let outDigest = vec![Wire::default();DIMENSION];
-		Arrays.fill(outDigest, generator.getZeroWire());
+		let mut outDigest = vec![ generator.getZeroWire();DIMENSION];
 
 		for i in 0..DIMENSION {
 			for j in 0..INPUT_LENGTH {

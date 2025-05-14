@@ -7,7 +7,7 @@ use circuit::structure::wire;
 use examples::gadgets::hash::merkle_tree_path_gadget;
 use examples::gadgets::hash::subset_sum_hash_gadget;
 
-pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
+pub struct MerkleTreeMembershipCircuitGenerator   {
 
 	 publicRootWires:Vec<Wire>,
 	 intermediateHasheWires:Vec<Wire>,
@@ -20,16 +20,16 @@ pub struct MerkleTreeMembershipCircuitGenerator extends CircuitGenerator {
 	 merkleTreeGadget:MerkleTreePathGadget,
 	}
 impl  MerkleTreeMembershipCircuitGenerator{
-	 i32 leafNumOfWords = 10;
-	 i32 leafWordBitWidth = 32;
- i32 hashDigestDimension = SubsetSumHashGadget.DIMENSION;
-	pub  fn new(circuitName:String, i32 treeHeight)  ->Self{
+	 const leafNumOfWords:i32 = 10;
+	 const leafWordBitWidth:i32 = 32;
+ const hashDigestDimension:i32 = SubsetSumHashGadget.DIMENSION;
+	pub  fn new(circuitName:String, treeHeight:i32 )  ->Self{
 		super(circuitName);
 		self.treeHeight = treeHeight;
 	}
 
 	}
-impl Gadget for MerkleTreeMembershipCircuitGenerator{
+impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator{
 	  fn buildCircuit() {
 		
 		/** declare inputs **/
@@ -79,7 +79,7 @@ impl Gadget for MerkleTreeMembershipCircuitGenerator{
 	}
 	
 	
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		
 		let generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
 		generator.generateCircuit();

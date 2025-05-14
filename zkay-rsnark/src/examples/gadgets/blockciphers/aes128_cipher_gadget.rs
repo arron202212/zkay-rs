@@ -34,14 +34,14 @@ pub struct AES128CipherGadget  {
 	
 }
 impl  AES128CipherGadget{
-let nb = 4;
-let nk = 4;
-let nr = 6 + nk;
-pub   SBoxOption sBoxOption = SBoxOption.OPTIMIZED2;
-pub   i32 Vec<RCon> = vec![i32::default();] { 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10,
+const nb:i32 = 4;
+const nk:i32 = 4;
+const nr :i32= 6 + nk;
+pub  const  sBoxOption:SBoxOption = SBoxOption.OPTIMIZED2;
+pub  const RCon: Vec<i32> = vec![i32::default();] { 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10,
 			0x20, 0x40, 0x80, 0x1b, 0x36 };
 
-	pub   i32 Vec<SBox> = { 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f,
+	pub   const SBox: Vec<i32> = { 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f,
 			0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 0xca, 0x82,
 			0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c,
 			0xa4, 0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc,
@@ -74,12 +74,11 @@ pub   i32 Vec<RCon> = vec![i32::default();] { 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10
 	 *            expandKey() to get it
 	 */
 
-	pub  fn new(inputs:Vec<Wire>, expandedKey:Vec<Wire>, desc:Vec<String>)  ->Self ->Self ->Self ->Self ->Self ->Self ->Self ->Self ->Self{
+	pub  fn new(inputs:Vec<Wire>, expandedKey:Vec<Wire>, desc:Vec<String>)  ->Self{
 
 		super(desc);
-		if inputs.length != 4 * nb || expandedKey.length != 4 * nb * (nr + 1) {
-			assert!("Invalid Input");
-		}
+			assert!(inputs.len() == 4 * nb && expandedKey.len() == 4 * nb * (nr + 1),"Invalid Input");
+		
 		self.plaintext = inputs;
 		self.expandedKey = expandedKey;
 		buildCircuit();
@@ -110,17 +109,18 @@ let round = 0;
 		state = shiftRows(state);
 		state = addRoundKey(state, round * nb * 4, (round + 1) * nb * 4 - 1);
 
-		i = 0;
+		let mut i = 0;
 		for j in 0..nb {
 			for k in 0..4 {
-				ciphertext[i+=1] = state[k][j];
+				ciphertext[i] = state[k][j];
+                i+=1;
 			}
 		}
 	}
 
 	  subBytes(Vec<Vec<Wire>> state) {
-		for i in 0..state.length {
-			for j in 0..state[i].length {
+		for i in 0..state.len() {
+			for j in 0..state[i].len() {
 				state[i][j] = randomAccess(generator, state[i][j]);
 			}
 		}
@@ -128,10 +128,8 @@ let round = 0;
 
 	 fn mixColumns(Vec<Vec<Wire>> state)->Vec<Vec<Wire>> {
 
-		Wire Vec<a> = vec![Wire::default();4];
-		i32 c;
-
-		for c in 0..4
+		let mut a = vec![Wire::default();4];
+		for c in 0..4{
 			for i in 0..4 {
 				a[i] = state[i][c];
 			}
@@ -157,19 +155,19 @@ let round = 0;
 		return state;
 	}
 
-	 fn galoisMulConst(wire:Wire, i:i32 )->WireArray {
+	 fn galoisMulConst(wire:Wire, mut i:i32 )->WireArray {
 
 let p = generator.getZeroWire();
-		i32 counter;
-		Wire hiBitSet;
+		let  counter;
+		let  hiBitSet;
 
-		for counter in 0..8
+		for counter in 0..8{
 			if (i & 1) != 0 {
 				p = p.xorBitwise(wire, 8);
 			}
 			i >>= 1;
 			if i == 0
-				break;
+				{}
 			hiBitSet = wire.getBitWires(8).get(7);
 			wire = wire.shiftLeft(8, 1);
 let tmp = wire.xorBitwise(generator.createConstantWire(0x1bL), 8);
@@ -179,8 +177,8 @@ let tmp = wire.xorBitwise(generator.createConstantWire(0x1bL), 8);
 	}
 
 	 fn shiftRows(Vec<Vec<Wire>> state)->Vec<Vec<Wire>> {
-let newState = vec![Wire::default();4][nb];
-		newState[0] = Arrays.copyOf(state[0], nb);
+let mut newState = vec![vec![Wire::default();nb];4];
+		newState[0] = state[0][..nb].to_vec();
 		for j in 0..nb {
 			newState[1][j] = state[1][(j + 1) % nb];
 			newState[2][j] = state[2][(j + 2) % nb];
@@ -190,7 +188,7 @@ let newState = vec![Wire::default();4][nb];
 	}
 
 	 fn addRoundKey(Vec<Vec<Wire>> state, from:i32 , to:i32 )->Vec<Vec<Wire>> {
-let newState = vec![Wire::default();4][nb];
+let newState = vec![vec![Wire::default();nb];4];
 let idx = 0;
 		for j in 0..nb {
 			for i in 0..4 {
@@ -210,9 +208,9 @@ let idx = 0;
 	// key is a 16-byte array. Each wire represents a byte.
 	pub fn expandKey(key:Vec<Wire>)->  Vec<Wire> {
 
-let w = vec![Wire::default();nb * (nr + 1)][4];
+let w = vec![vec![Wire::default();4];nb * (nr + 1)];
 		Vec<Wire> temp;
-let i = 0;
+let mut i = 0;
 		while (i < nk) {
 			w[i] = vec![Wire::default();] { key[4 * i], key[4 * i + 1], key[4 * i + 2],
 					key[4 * i + 3] };
@@ -243,7 +241,7 @@ let generator = CircuitGenerator
 let expanded = vec![Wire::default();nb * (nr + 1) * 4];
 let idx = 0;
 		for k in 0..nb * (nr + 1){
-			for i in 0..4
+			for i in 0..4{
 				expanded[idx+=1] = w[k][i];
 			}
 		}
@@ -252,36 +250,32 @@ let idx = 0;
 	}
 
 	 fn subWord(generator:CircuitGenerator, w:Vec<Wire>)-> Vec<Wire> {
-		for i in 0..w.length {
+		for i in 0..w.len() {
 			w[i] = randomAccess(generator, w[i]);
 		}
 		return w;
 	}
 
 	 fn rotateWord(generator:CircuitGenerator, w:Vec<Wire>)-> Vec<Wire> {
-let newW = vec![Wire::default();w.length];
-		for j in 0..w.length {
-			newW[j] = w[(j + 1) % w.length];
+let newW = vec![Wire::default();w.len()];
+		for j in 0..w.len() {
+			newW[j] = w[(j + 1) % w.len()];
 		}
 		return newW;
 	}
 
 	 fn randomAccess(generator:CircuitGenerator, wire:Wire)-> Wire {
 
-let g = null;
-		switch (sBoxOption) {
-		case LINEAR_SCAN:
-			g = AESSBoxNaiveLookupGadget::new(wire);
-			break;
-		case COMPUTE:
-			g = AESSBoxComputeGadget::new(wire);
-			break;
-		case OPTIMIZED1:
-			g = AESSBoxGadgetOptimized1::new(wire);
-			break;
-		case OPTIMIZED2:
-			g = AESSBoxGadgetOptimized2::new(wire);
-			break;
+let g = None;
+		match sBoxOption {
+		 LINEAR_SCAN=>			g = AESSBoxNaiveLookupGadget::new(wire),
+			
+		 COMPUTE=>			g = AESSBoxComputeGadget::new(wire),
+			
+		 OPTIMIZED1=>			g = AESSBoxGadgetOptimized1::new(wire),
+			
+		 OPTIMIZED2=>			g = AESSBoxGadgetOptimized2::new(wire),
+			_=>{}
 		}
 
 		return g.getOutputWires()[0];

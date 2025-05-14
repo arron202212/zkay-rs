@@ -4,7 +4,7 @@ use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 use examples::gadgets::hash::sha256_gadget;
 
-pub struct SHA2CircuitGenerator extends CircuitGenerator {
+pub struct SHA2CircuitGenerator   {
 
 	 inputWires:Vec<Wire>,
 	 sha2Gadget:SHA256Gadget,
@@ -15,7 +15,7 @@ impl  SHA2CircuitGenerator{
 	}
 
 	}
-impl Gadget for SHA2CircuitGenerator{
+impl CircuitGenerator for SHA2CircuitGenerator{
 	  fn buildCircuit() {
 		
 		// assuming the circuit input will be 64 bytes
@@ -45,7 +45,7 @@ impl Gadget for SHA2CircuitGenerator{
 		}
 	}
 
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		let generator = SHA2CircuitGenerator::new("sha_256");
 		generator.generateCircuit();
 		generator.evalCircuit();

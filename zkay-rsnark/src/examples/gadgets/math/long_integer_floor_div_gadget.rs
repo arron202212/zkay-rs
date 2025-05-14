@@ -11,11 +11,7 @@ use circuit::structure::wire;
 pub struct LongIntegerFloorDivGadget extends LongIntegerDivision {
 }
 impl LongIntegerFloorDivGadget{
-	pub  fn new(a:LongElement, b:LongElement, desc:Vec<String>)  ->Self{
-		super(a, b, true, desc);
-	}
-
-	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, desc:Vec<String>)  ->Self{
+	pub  fn new(a:LongElement, b:LongElement, bMinBitwidth:i32, desc:Vec<String>)  ->Self{
 		super(a, b, bMinBitwidth, true, desc);
 	}
 }

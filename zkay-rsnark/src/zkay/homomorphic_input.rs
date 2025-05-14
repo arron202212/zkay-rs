@@ -14,7 +14,7 @@ pub struct HomomorphicInput {
 	 isCipher:bool,
 }
 impl HomomorphicInput{
-	 pub fn new(array:Vec<TypedWire>, isCipher:bool )->Self  ->Self{
+	 pub fn new(array:Vec<TypedWire>, isCipher:bool )->Self{
 		Self{array,
 		 isCipher,
     }
@@ -25,7 +25,7 @@ impl HomomorphicInput{
 	}
 
 	pub  fn of(plain:TypedWire )->   HomomorphicInput {
-		return HomomorphicInput::new(vec![TypedWire::default();] {plain}, false);
+		return HomomorphicInput::new(vec![plain], false);
 	}
 
 	pub  fn isCipher()->  bool {

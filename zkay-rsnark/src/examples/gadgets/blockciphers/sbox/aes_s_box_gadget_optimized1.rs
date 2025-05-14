@@ -161,15 +161,20 @@ let p = BigInteger.valueOf(k);
 
 		output = generator.createProverWitnessWire();
 		input.restrictBitLength(8);
-		generator.specifyProverWitnessComputation(Instruction::new() {
+		generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 				// TODO Auto-generated method stub
 let value = evaluator.getWireValue(input);
 				evaluator.setWireValue(output,
 						BigInteger.valueOf(SBox[value.intValue()]));
 			}
+            }
+            Prover
 		});
 
 		output.restrictBitLength(8);

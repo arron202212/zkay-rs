@@ -19,9 +19,8 @@ pub struct ChaskeyLTS128CipherGadget  {
 impl ChaskeyLTS128CipherGadget{
 	pub  fn new(inputs:Vec<Wire>, key:Vec<Wire>, desc:Vec<String>)  ->Self{
 		super(desc);
-		if inputs.length != 4 || key.length != 4 {
-			assert!("Invalid Input");
-		}
+			assert!(inputs.len() == 4&& key.len() == 4 ,"Invalid Input");
+		
 		self.plaintext = inputs;
 		self.key = key;
 

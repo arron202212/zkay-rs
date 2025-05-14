@@ -26,7 +26,7 @@ pub struct FieldExtensionDHKeyExchange  {
 	 secretExponentBits:Vec<Wire>, // the bits of the secret exponent of the
 										// party
 	// executing this gadget
-	 omega:long,
+	 omega:i64,
 	 mu:i32,
 
 	// gadget outputs
@@ -48,17 +48,16 @@ impl  FieldExtensionDHKeyExchange{
 	 * 
 	 */
 	pub  fn new(g:Vec<Wire>, h:Vec<Wire>,
-			secretExponentBits:Vec<Wire>, long omega, desc:String) {
+			secretExponentBits:Vec<Wire>, i64 omega, desc:String)->Self {
 		super(desc);
 		self.g = g;
 		self.h = h;
 		self.secretExponentBits = secretExponentBits;
 		self.omega = omega;
 		mu = g.length;
-		if h.length != g.length {
-			assert!(
+			assert!(h.length == g.length ,
 					"g and h must have the same dimension");
-		}
+		
 
 		// since this is typically a  input by the prover,
 		// the check is also done here for safety. No need to remove this if
@@ -80,12 +79,12 @@ impl Gadget for FieldExtensionDHKeyExchange{
 
 	 fn mul(a:Vec<Wire>, b:Vec<Wire>)->Vec<Wire> {
 		let c = vec![Wire::default();mu];
-		i32 i, j;
-		for i in 0..mu
+		
+		for i in 0..mu{
 			c[i] = generator.getZeroWire();
 		}
-		for i in 0..mu
-			for j in 0..mu
+		for i in 0..mu{
+			for j in 0..mu{
 				let k = i + j;
 				if k < mu {
 					c[k] = c[k].add(a[i].mul(b[j]));
@@ -100,8 +99,8 @@ impl Gadget for FieldExtensionDHKeyExchange{
 	}
 
 	 fn preparePowersTable(base:Vec<Wire>)->Vec<Vec<Wire>> {
-		let powersTable = vec![Wire::default();secretExponentBits.length + 1][mu];
-		powersTable[0] = Arrays.copyOf(base, mu);
+		let powersTable = vec![vec![Wire::default();mu];secretExponentBits.length + 1];
+		powersTable[0] = base[..mu].to_vec();
 		for j in 1..secretExponentBits.length + 1{
 			powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
 		}
@@ -110,8 +109,7 @@ impl Gadget for FieldExtensionDHKeyExchange{
 
 	 fn exp(base:Vec<Wire>, expBits:Vec<Wire>, Vec<Vec<Wire>> powersTable)->Vec<Wire> {
 
-		let c = vec![Wire::default();mu];
-		Arrays.fill(c, generator.getZeroWire());
+		let c = vec![generator.getZeroWire();mu];
 		c[0] = generator.getOneWire();
 		for j in 0..expBits.length {
 			let tmp = mul(c, powersTable[j]);
@@ -150,9 +148,9 @@ impl Gadget for FieldExtensionDHKeyExchange{
 		let bits = vec![Wire::default();bitLength];
 		for i in 0..bitLength {
 			if subGroupOrder.testBit(i)
-				bits[i] = generator.getOneWire();
+			{	bits[i] = generator.getOneWire();}
 			else
-				bits[i] = generator.getZeroWire();
+				{bits[i] = generator.getZeroWire();}
 		}
 
 		let result1 = exp(g, bits, gPowersTable);

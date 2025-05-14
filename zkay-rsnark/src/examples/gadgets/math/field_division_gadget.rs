@@ -11,7 +11,6 @@ use circuit::structure::wire;
 // see notes in the end of the code.
 
 pub struct FieldDivisionGadget  {
-
 	 a:Wire,
 	 b:Wire,
 	 c:Wire,
@@ -23,9 +22,9 @@ impl  FieldDivisionGadget{
 		self.b = b;
 		// if the input values are constant (i.e. known at compilation time), we
 		// can save one constraint
-		if a instanceof ConstantWire && b instanceof ConstantWire {
-			let aConst = ((ConstantWire) a).getConstant();
-			let bInverseConst = ((ConstantWire) b).getConstant().modInverse(
+		if a.instanceof(ConstantWire)&& b.instanceof(ConstantWire){
+			let aConst = a.getConstant();
+			let bInverseConst = b.getConstant().modInverse(
 					Config.FIELD_PRIME);
 			c = generator.createConstantWire(aConst.multiply(bInverseConst)
 					.mod(Config.FIELD_PRIME));
@@ -41,9 +40,12 @@ impl Gadget for FieldDivisionGadget{
 		// This is an example of computing a value outside the circuit and
 		// verifying constraints about it in the circuit. See notes below.
 
-		generator.specifyProverWitnessComputation(Instruction::new() {
+		generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 				let aValue = evaluator.getWireValue(a);
 				let bValue = evaluator.getWireValue(b);
 				let cValue = aValue.multiply(
@@ -51,7 +53,8 @@ impl Gadget for FieldDivisionGadget{
 						Config.FIELD_PRIME);
 				evaluator.setWireValue(c, cValue);
 			}
-
+ }
+            Prover
 		});
 		
 		// to handle the case where a or b can be both zero, see below

@@ -25,11 +25,11 @@ pub struct HybridEncryptionCircuitGenerator extends CircuitGenerator {
 impl  HybridEncryptionCircuitGenerator{
 	// Will assume the parameterization used in the test files ~ 80-bits
 	// security
-	pub   i32 EXPONENT_BITWIDTH = 397; // in bits
-	pub   i32 MU = 4;
-	pub   i32 OMEGA = 7;
-	pub  fn new(circuitName:String, i32 plaintextSize,
-			String ciphername) {
+	pub   const EXPONENT_BITWIDTH:i32 = 397; // in bits
+	pub   const MU:i32 = 4;
+	pub   const OMEGA:i32 = 7;
+	pub  fn new(circuitName:String, plaintextSize:i32 ,
+			ciphername:String ) {
 		super(circuitName);
 		self.ciphername = ciphername;
 		self.plaintextSize = plaintextSize;
@@ -100,7 +100,7 @@ impl Gadget for HybridEncryptionCircuitGenerator{
 	}
 
 	
-	pub   generateSampleInput(evaluator:CircuitEvaluator) {
+	pub  fn generateSampleInput(evaluator:CircuitEvaluator) {
 		// TODO Auto-generated method stub
 		for i in 0..plaintextSize{
 			evaluator.setWireValue(plaintext[i], Util::nextRandomBigInteger(64));
@@ -111,7 +111,7 @@ impl Gadget for HybridEncryptionCircuitGenerator{
 		
 	}
 
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		let generator = HybridEncryptionCircuitGenerator::new(
 				"enc_example", 16, "speck128");
 		generator.generateCircuit();

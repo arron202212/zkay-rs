@@ -34,9 +34,9 @@ impl  LongIntegerModGadget{
 	 * @param desc
 	 */
 
-	pub  fn new(a:LongElement, b:LongElement, bool restrictRange, desc:Vec<String>)  ->Self{
-		super(a, b, restrictRange, desc);
-	}
+	// pub  fn new(a:LongElement, b:LongElement, restrictRange:bool, desc:Vec<String>)  ->Self{
+	// 	super(a, b, restrictRange, desc);
+	// }
 
 	/**
 	 * @param a
@@ -62,7 +62,7 @@ impl  LongIntegerModGadget{
 	 * 		illustration.
 	 * @param desc
 	 */
-	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, bool restrictRange, desc:Vec<String>)  ->Self{
+	pub  fn new(a:LongElement, b:LongElement, bMinBitwidth:i32 restrictRange:bool, desc:Vec<String>)  ->Self{
 		super(a, b, bMinBitwidth, restrictRange, desc);
 	}
 

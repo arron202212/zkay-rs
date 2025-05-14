@@ -13,11 +13,9 @@ use util::util;
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-abstract class LongIntegerDivision  {
-
+pub struct LongIntegerDivision  {
 	 a:LongElement,
 	 b:LongElement,
-
 	 r:LongElement,
 	 q:LongElement,
 	 restrictRange:bool,
@@ -47,9 +45,7 @@ impl LongIntegerDivision{
 	 * @param desc
 	 */
 
-	pub  fn new(a:LongElement, b:LongElement, bool restrictRange, desc:Vec<String>)  ->Self{
-		this(a, b, 0, restrictRange, desc);
-	}
+
 
 	/**
 	 * @param a
@@ -73,27 +69,28 @@ impl LongIntegerDivision{
 	 * 		See the RSA encryption gadget for an illustration.
 	 * @param desc
 	 */
-	pub  fn new(a:LongElement, b:LongElement, i32 bMinBitwidth, bool restrictRange,
-	                           desc:Vec<String>) {
+	pub  fn new(a:LongElement, b:LongElement, bMinBitwidth:i32 restrictRange:bool
+	                           desc:Vec<String>)->Self {
 		super(desc);
-		a:self.a =,
-		b:self.b =,
-		bMinBitwidth:self.bMinBitwidth =,
-		restrictRange:self.restrictRange =,
+        Self{		a,
+		b,
+		bMinBitwidth,
+		restrictRange,
+        }
 		buildCircuit();
 	}
 }
 impl Gadget for LongIntegerDivision{
 	  fn buildCircuit() {
 
-		let aBitwidth = Math.max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
-		let bBitwidth = Math.max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		let aBitwidth = std::cmp:max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+		let bBitwidth = std::cmp:max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
 
 		let rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
-		aBitwidth:let qBitwidth =,
+		let qBitwidth =aBitwidth,
 
 		if bMinBitwidth > 0 {
-			qBitwidth = Math.max(1, qBitwidth - bMinBitwidth + 1);
+			qBitwidth = std::cmp:max(1, qBitwidth - bMinBitwidth + 1);
 		}
 
 		// length in what follows means the number of chunks
@@ -119,9 +116,12 @@ impl Gadget for LongIntegerDivision{
 		r = LongElement::new(rWires, rChunkBitwidths);
 		q = LongElement::new(qWires, qChunkBitwidths);
 
-		generator.specifyProverWitnessComputation(Instruction::new() {
+		generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 				let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
 				let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
 				let rValue = aValue.mod(bValue);
@@ -129,7 +129,8 @@ impl Gadget for LongIntegerDivision{
 
 				evaluator.setWireValue(r.getArray(), Util::split(rValue, LongElement.CHUNK_BITWIDTH));
 				evaluator.setWireValue(q.getArray(), Util::split(qValue, LongElement.CHUNK_BITWIDTH));
-			}
+			} }
+            Prover
 		});
 
 		r.restrictBitwidth();
@@ -146,10 +147,10 @@ impl Gadget for LongIntegerDivision{
 	}
 
 	pub fn getQuotient()-> LongElement {
-		q:return,
+		return q
 	}
 
 	pub fn getRemainder()-> LongElement {
-		r:return,
+		return r
 	}
 }

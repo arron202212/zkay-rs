@@ -23,7 +23,7 @@ impl  ZkayDummyEncryptionGadget{
             generator.addZeroAssertion(pkarr[i], "Dummy enc pk valid");
         }
         self.pk = pkarr[0];
-        self.cipher = vec![Wire::default();(i32)Math.ceil((1.0*keyBits) / CIPHER_CHUNK_SIZE)];
+        self.cipher = vec![Wire::default();((1.0*keyBits) / CIPHER_CHUNK_SIZE).ceil() as i32];
         buildCircuit();
     }
 }

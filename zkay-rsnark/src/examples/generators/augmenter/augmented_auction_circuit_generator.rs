@@ -27,7 +27,7 @@ pub struct AugmentedAuctionCircuitGenerator extends CircuitGenerator {
 	 numParties:i32, // includes the auction manager + the participants
 	}
 impl  AugmentedAuctionCircuitGenerator{
-	pub  fn new(circuitName:String, pathToCompiledCircuit:String, i32 numParticipants)  ->Self{
+	pub  fn new(circuitName:String, pathToCompiledCircuit:String, numParticipants:i32 )  ->Self{
 		super(circuitName);
 		self.pathToCompiledCircuit  = pathToCompiledCircuit;
 		self.numParties = numParticipants + 1;
@@ -56,7 +56,7 @@ impl Gadget for AugmentedAuctionCircuitGenerator{
 		// augment the input side
 		for i in 0..numParties - 1{
 			let g = SHA256Gadget::new(Util::concat(secretInputValues[i], secretInputRandomness[i]), 64, 64, false, false);
-			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s input balance.");
+			makeOutputArray(g.getOutputWires(), format!("Commitment for party # {i}'s input balance."));
 		}
 		
 		// augment the output side
@@ -64,19 +64,19 @@ impl Gadget for AugmentedAuctionCircuitGenerator{
 			// adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions) 
 			secretOutputValues[i] = secretOutputValues[i].getBitWires(64*2).packAsBits(64);
 			let g = SHA256Gadget::new(Util::concat(secretOutputValues[i], secretOutputRandomness[i]), 64, 64, false, false);
-			makeOutputArray(g.getOutputWires(), "Commitment for party # " + i + "'s output balance.");
+			makeOutputArray(g.getOutputWires(), format!("Commitment for party # {i}'s output balance."));
 		}
 	}
 
 	
-	pub   generateSampleInput(evaluator:CircuitEvaluator) {
+	pub  fn generateSampleInput(evaluator:CircuitEvaluator) {
 		
 		for i in 0..numParties - 1{
 			evaluator.setWireValue(secretInputValues[i], Util::nextRandomBigInteger(63));
 		}		
 		
 		for i in 0..numParties - 1{
-			for  w in &secretInputRandomness[i{
+			for  w in &secretInputRandomness[i]{
 				evaluator.setWireValue(w, Util::nextRandomBigInteger(64));
 			}
 		}
@@ -88,7 +88,7 @@ impl Gadget for AugmentedAuctionCircuitGenerator{
 	}
 	
 	
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		let generator = AugmentedAuctionCircuitGenerator::new("augmented_auction_10", "auction_10.arith", 10);
 		generator.generateCircuit();
 		generator.evalCircuit();

@@ -18,8 +18,8 @@ pub struct RSAEncryptionOAEPCircuitGenerator extends CircuitGenerator {
 	 rsaEncryptionOAEPGadget:RSAEncryptionOAEPGadget,
 }
 impl  RSAEncryptionOAEPCircuitGenerator{
-	pub  fn new(circuitName:String, i32 rsaKeyLength,
-			i32 plainTextLength) {
+	pub  fn new(circuitName:String, rsaKeyLength:i32 ,
+			plainTextLength:i32 ) {
 		super(circuitName);
 		self.rsaKeyLength = rsaKeyLength;
 		self.plainTextLength = plainTextLength;
@@ -70,13 +70,12 @@ impl Gadget for RSAEncryptionOAEPCircuitGenerator{
 
 		let msg = "";
 		for i in 0..inputMessage.length {
-
-			evaluator.setWireValue(inputMessage[i], (i32) ('a' + i));
-			msg = msg + (char) ('a' + i);
+			evaluator.setWireValue(inputMessage[i], (b'a' + i) as i32);
+			msg = msg +  (b'a' + i) char;
 		}
-		println!("PlainText:" + msg);
+		println!("PlainText:{msg}");
 
-		try {
+		
 
 			// to make sure that the implementation is working fine,
 			// encrypt with the BouncyCastle RSA OAEP encryption in a sample run,
@@ -105,7 +104,7 @@ impl Gadget for RSAEncryptionOAEPCircuitGenerator{
 			let cipherText = cipher.doFinal(msg.getBytes());
 //			println!("ciphertext : " + String::new(cipherText));
 			let cipherTextPadded = vec![byte::default();cipherText.length + 1];
-			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
+			cipherTextPadded[1.. 1+cipherText.length].clone_from_slice(&cipherText);
 			cipherTextPadded[0] = 0;
 
 
@@ -114,21 +113,20 @@ impl Gadget for RSAEncryptionOAEPCircuitGenerator{
 			// result[0] contains the plaintext (after decryption)
 			// result[1] contains the randomness
 
-			bool check = Arrays.equals(result[0], msg.getBytes());
-			if !check {
-				panic!(
+			let  check = Arrays.equals(result[0], msg.getBytes());
+				assert!(check ,
 						"Randomness Extraction did not decrypt right");
-			}
+			
 
 			let sampleRandomness = result[1];
 			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(seed[i], (sampleRandomness[i]+256)%256);
 			}
 
-		} catch (e:Exception) {
-			println!("Error while generating sample input for circuit");
-			e.printStackTrace();
-		}
+	
+			// println!("Error while generating sample input for circuit");
+			
+		
 
 	}
 

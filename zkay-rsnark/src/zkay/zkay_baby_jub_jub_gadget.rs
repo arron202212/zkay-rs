@@ -112,12 +112,17 @@ pub  struct  ZkayBabyJubJubGadget;
      */
  fn nativeInverse(a:Wire )->     Wire {
         let ainv =  generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation(Instruction::new() {
- fn evaluate(evaluator:CircuitEvaluator ) {
+        generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
+            fn evaluate(evaluator:CircuitEvaluator ) {
                 let aValue =  evaluator.getWireValue(a);
                 let inverseValue =  aValue.modInverse(BASE_ORDER);
                 evaluator.setWireValue(ainv, inverseValue);
             }
+            }
+            Prover
         });
 
         // check if a * ainv = 1 (natively)

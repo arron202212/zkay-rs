@@ -45,7 +45,7 @@ impl CircuitGenerator for SimpleCircuitGenerator{
 }
 
 
-pub    main(args:Vec<String>)  {
+pub fn  main(args:Vec<String>)  {
 
 		let generator = SimpleCircuitGenerator::new("simple_example");
 		generator.generateCircuit();

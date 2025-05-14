@@ -33,7 +33,7 @@ pub struct RSAEncryptionV1_5_Gadget  {
 }
 impl RSAEncryptionV1_5_Gadget{
 	pub  fn new(LongElement modulus, plainText:Vec<Wire>,
-			randomness:Vec<Wire>, i32 rsaKeyBitLength, desc:Vec<String>) {
+			randomness:Vec<Wire>, rsaKeyBitLength:i32, desc:Vec<String>) {
 		super(desc);
 
 		if rsaKeyBitLength % 8 != 0 {
@@ -56,13 +56,12 @@ impl RSAEncryptionV1_5_Gadget{
 	}
 }
 impl Gadget for RSAEncryptionV1_5_Gadget{
-	pub   i32 getExpectedRandomnessLength(i32 rsaKeyBitLength,
-			i32 plainTextLength) {
-		if rsaKeyBitLength % 8 != 0 {
-			assert!(
+	pub  fn  getExpectedRandomnessLength(rsaKeyBitLength:i32,
+			 plainTextLength:i32)->i32 {
+			assert!(rsaKeyBitLength % 8 == 0,
 					"RSA Key bit length is assumed to be a multiple of 8");
 
-		}
+		
 		return rsaKeyBitLength / 8 - 3 - plainTextLength;
 	}
 
@@ -92,7 +91,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget{
 		// 2. Make multiple long integer constant multiplications (need to be
 		// done carefully)
 		let paddedMsg = LongElement::new(
-				vec![BigInteger::default();] { BigInteger.ZERO });
+				vec![BigInteger.ZERO ]);
 		for i in 0..paddedPlainText.length {
 			let e = LongElement::new(paddedPlainText[i], 8);
 			let c = LongElement::new(Util::split(

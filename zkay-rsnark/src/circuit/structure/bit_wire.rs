@@ -17,8 +17,8 @@ impl BitWire{
 	// }
 
 	pub  fn mul(w:Wire , desc:String )-> Wire {
-		if w instanceof ConstantWire {
-			return self.mul(((ConstantWire) w).getConstant(), desc);
+		if w.instanceof(ConstantWire){
+			return self.mul(w.getConstant(), desc);
 		} 
 			let  output=
 			if w.instanceof( BitWire)
@@ -95,7 +95,7 @@ let cachedOutputs =  self.generator.addToEvaluationQueue(op);
 	
 	
 	pub  fn xor(w:Wire , desc:Vec<String>)-> Wire {
-		 if w instanceof ConstantWire {
+		 if w.instanceof(ConstantWire){
 			return w.xor(self, desc);
 		}
 			if w.instanceof( BitWire) {

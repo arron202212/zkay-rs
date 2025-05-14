@@ -45,21 +45,19 @@ impl Gadget for AES128CipherCircuitGenerator{
 
 		let keyArray = keyV.toByteArray();
 		let msgArray = msgV.toByteArray();
-		msgArray = Arrays.copyOfRange(msgArray, msgArray.length - 16,
-				msgArray.length);
-		keyArray = Arrays.copyOfRange(keyArray, keyArray.length - 16,
-				keyArray.length);
+		msgArray = msgArray[msgArray.len() - 16..].to_vec();
+		keyArray = keyArray[keyArray.len() - 16..].to_vec();
 
-		for i in 0..msgArray.length {
+		for i in 0..msgArray.len() {
 			circuitEvaluator.setWireValue(inputs[i], (msgArray[i] & 0xff));
 		}
 
-		for i in 0..keyArray.length {
+		for i in 0..keyArray.len() {
 			circuitEvaluator.setWireValue(key[i], (keyArray[i] & 0xff));
 		}
 	}
 
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 
 		Config.hexOutputEnabled = true;
 		let generator = AES128CipherCircuitGenerator::new(

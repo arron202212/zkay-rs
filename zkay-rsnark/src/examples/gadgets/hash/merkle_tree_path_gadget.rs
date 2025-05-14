@@ -24,9 +24,9 @@ pub struct MerkleTreePathGadget  {
 	 leafWordBitWidth:i32,
 }
 impl  MerkleTreePathGadget{
-let digestWidth = SubsetSumHashGadget.DIMENSION;
+     digestWidth:i32 = SubsetSumHashGadget.DIMENSION;
 	pub  fn new(directionSelectorWire:Wire, leafWires:Vec<Wire>, intermediateHasheWires:Vec<Wire>,
-			i32 leafWordBitWidth, i32 treeHeight, desc:Vec<String>) {
+			leafWordBitWidth:i32,  treeHeight:i32, desc:Vec<String>)->Self {
 
 		super(desc);
 		self.directionSelectorWire = directionSelectorWire;
@@ -42,7 +42,7 @@ let digestWidth = SubsetSumHashGadget.DIMENSION;
 impl Gadget for MerkleTreePathGadget{
 	  fn buildCircuit() {
 
-		directionSelectorBits = directionSelectorWire.getBitWires(treeHeight).asArray();
+	let 	directionSelectorBits = directionSelectorWire.getBitWires(treeHeight).asArray();
 
 		// Apply CRH to leaf data
 		let leafBits = WireArray::new(leafWires).getBits(leafWordBitWidth).asArray();

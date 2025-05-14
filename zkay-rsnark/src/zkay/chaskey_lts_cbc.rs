@@ -3,7 +3,7 @@
 
 
 
-use  zkay::zkay_util::unsigned_bigint_to_)bytes;
+use  zkay::zkay_util::unsigned_bigint_to_bytes;
 use  zkay::zkay_util::unsigned_bytes_to_bigint;
 
 pub struct ChaskeyLtsCbc;

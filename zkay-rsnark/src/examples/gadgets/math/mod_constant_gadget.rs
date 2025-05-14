@@ -21,17 +21,15 @@ pub struct ModConstantGadget  {
 	 bitwidth:i32, // a's bitwidth
 }
 impl  ModConstantGadget{
-	pub  fn new(a:Wire, i32 bitwidth, b:BigInteger, desc:Vec<String>)  ->Self{
+	pub  fn new(a:Wire, bitwidth:i32, b:BigInteger, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.b = b;
 		self.bitwidth = bitwidth;
-		if b.signum() != 1{
-			assert!("b must be a positive constant. Signed operations not supported yet.");
-		}
-		if bitwidth < b.bitLength(){
-			assert!("a's bitwidth < b's bitwidth -- This gadget is not needed.");
-		}
+			assert!(b.signum() == 1,"b must be a positive constant. Signed operations not supported yet.");
+		
+			assert!(bitwidth >= b.bitLength(),"a's bitwidth < b's bitwidth -- This gadget is not needed.");
+		
 		// TODO: add further checks.
 		
 		buildCircuit();
@@ -44,16 +42,20 @@ impl Gadget for ModConstantGadget{
 		q = generator.createProverWitnessWire("division result");
 
 		// notes about how to use this code block can be found in FieldDivisionGadget
-		generator.specifyProverWitnessComputation(Instruction::new() {
+		generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 				let aValue = evaluator.getWireValue(a);
 				let rValue = aValue.mod(b);
 				evaluator.setWireValue(r, rValue);
 				let qValue = aValue.divide(b);
 				evaluator.setWireValue(q, qValue);
 			}
-
+ }
+            Prover
 		});
 		
 		let bBitwidth = b.bitLength();
@@ -65,7 +67,7 @@ impl Gadget for ModConstantGadget{
 
 	
 	 pub  fn getOutputWires()->Vec<Wire>  {
-		return vec![Wire::default();] { r };
+		return vec![r];
 	}
 
 }

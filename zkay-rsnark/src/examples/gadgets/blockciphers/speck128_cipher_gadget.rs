@@ -28,9 +28,8 @@ impl  Speck128CipherGadget{
 	pub  fn new(plaintext:Vec<Wire>, expandedKey:Vec<Wire>,
 			desc:Vec<String>) {
 		super(desc);
-		if plaintext.length != 2 || expandedKey.length != 32 {
-			assert!("Invalid Input");
-		}
+			assert!(plaintext.length == 2 && expandedKey.length == 32,"Invalid Input");
+		
 		self.plaintext = plaintext;
 		self.expandedKey = expandedKey;
 		buildCircuit();
@@ -39,10 +38,8 @@ impl  Speck128CipherGadget{
 impl Gadget for Speck128CipherGadget{
 	  fn buildCircuit() {
 
-		Wire x, y;
-		x = plaintext[1];
-		y = plaintext[0];
-		ciphertext = vec![Wire::default();2];
+		let  (mut x, mut y)=( plaintext[1], plaintext[0]);
+		let mut ciphertext = vec![Wire::default();2];
 		for i in 0..=31{
 			x = x.rotateRight(64, 8).add(y);
 			x = x.trimBits(65, 64);

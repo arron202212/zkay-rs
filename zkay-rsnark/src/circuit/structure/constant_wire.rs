@@ -25,7 +25,7 @@ impl ConstantWire{
 	pub  fn mul(w:Wire , desc:Vec<String>)-> Wire {
 		if w.instanceof( ConstantWire) {
 			return self.generator.createConstantWire(
-					constant.multiply(((ConstantWire) w).constant), desc);
+					constant.multiply(w.constant), desc);
 		} else {
 			return w.mul(constant, desc);
 		}

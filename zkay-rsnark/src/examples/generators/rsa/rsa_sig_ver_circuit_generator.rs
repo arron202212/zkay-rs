@@ -18,7 +18,7 @@ pub struct RSASigVerCircuitGenerator extends CircuitGenerator {
 	 rsaSigVerificationV1_5_Gadget:RSASigVerificationV1_5_Gadget,
 }
 impl RSASigVerCircuitGenerator{
-	pub  fn new(circuitName:String, i32 rsaKeyLength)  ->Self{
+	pub  fn new(circuitName:String, rsaKeyLength:i32 )  ->Self{
 		super(circuitName);
 		self.rsaKeyLength = rsaKeyLength;
 	}
@@ -74,13 +74,13 @@ impl Gadget for RSASigVerCircuitGenerator{
 	}
 
 	
-	pub   generateSampleInput(evaluator:CircuitEvaluator) {
+	pub  fn generateSampleInput(evaluator:CircuitEvaluator) {
 		let inputStr = "abc";
 		for i in 0..inputMessage.length {
 			evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
 		}
 
-		try {
+	
 			let keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(rsaKeyLength, SecureRandom::new());
 			let keyPair = keyGen.generateKeyPair();
@@ -111,14 +111,13 @@ impl Gadget for RSASigVerCircuitGenerator{
 			// evaluator.setWireValue(self.signatureWires,
 			// Util::split(sig, Config.LOG2_FIELD_PRIME - 1));
 			// }
-		} catch (e:Exception) {
-			println!("Error while generating sample input for circuit");
-			e.printStackTrace();
-		}
+		
+			// println!("Error while generating sample input for circuit");
+	
 
 	}
 
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		let keyLength = 2048;
 		let generator = RSASigVerCircuitGenerator::new(
 				"rsa" + keyLength + "_sha256_sig_verify", keyLength);

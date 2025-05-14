@@ -21,14 +21,13 @@ pub struct ModGadget  {
 	 bitwidth:i32, // bitwidth for both a, b
 }
 impl  ModGadget{
-	pub  fn new(a:Wire,  Wire b, i32 bitwidth, desc:Vec<String>)  ->Self{
+	pub  fn new(a:Wire,  Wire b, bitwidth:i32, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.a = a;
 		self.b = b;
 		self.bitwidth = bitwidth;
-		if bitwidth > 126{
-			assert!("Bitwidth not supported yet.");
-		}
+			assert!(bitwidth <= 126,"Bitwidth not supported yet.");
+		
 		buildCircuit();
 	}
 }
@@ -40,9 +39,12 @@ impl Gadget for ModGadget{
 
 		
 		// notes about how to use this code block can be found in FieldDivisionGadget
-		generator.specifyProverWitnessComputation(Instruction::new() {
+		generator.specifyProverWitnessComputation(& {
+            struct Prover;
+            impl Instruction  for Prover
+			{
 			
-			pub   evaluate(evaluator:CircuitEvaluator) {
+			pub  fn evaluate(evaluator:CircuitEvaluator ) {
 				let aValue = evaluator.getWireValue(a);
 				let bValue = evaluator.getWireValue(b);
 				let rValue = aValue.mod(bValue);
@@ -50,7 +52,8 @@ impl Gadget for ModGadget{
 				let qValue = aValue.divide(bValue);
 				evaluator.setWireValue(q, qValue);
 			}
-
+ }
+            Prover
 		});
 		
 		r.restrictBitLength(bitwidth);
@@ -61,7 +64,7 @@ impl Gadget for ModGadget{
 
 	
 	 pub  fn getOutputWires()->Vec<Wire>  {
-		return vec![Wire::default();] { r };
+		return vec![r];
 	}
 
 }

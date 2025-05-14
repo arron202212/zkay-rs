@@ -19,11 +19,11 @@ pub struct LongIntegerModPowGadget  {
 	 c:LongElement, // c = m^e mod m
 }
 impl  LongIntegerModPowGadget{
-	pub  fn new(b:LongElement, e:LongElement, m:LongElement, i32 mMinBitLength, desc:Vec<String>)  ->Self{
+	pub  fn new(b:LongElement, e:LongElement, m:LongElement, mMinBitLength:i32, desc:Vec<String>)  ->Self{
 		this(b, e, -1, m, mMinBitLength, desc);
 	}
 
-	pub  fn new(b:LongElement, e:LongElement, i32 eMaxBits, m:LongElement, i32 mMinBits, desc:Vec<String>)  ->Self{
+	pub  fn new(b:LongElement, e:LongElement, eMaxBits:i32, m:LongElement, mMinBits:i32, desc:Vec<String>)  ->Self{
 		super(desc);
 		self.b = b;
 		self.e = e;

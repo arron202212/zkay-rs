@@ -9,7 +9,7 @@ use examples::gadgets::rsa::rsa_encryptionv1_5_gadget;
 
 
 // a demo for RSA Encryption PKCS #1, V1.5
-pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
+pub struct RSAEncryptionCircuitGenerator   {
 
 	 rsaKeyLength:i32,
 	 plainTextLength:i32,
@@ -21,15 +21,15 @@ pub struct RSAEncryptionCircuitGenerator extends CircuitGenerator {
 	 rsaEncryptionV1_5_Gadget:RSAEncryptionV1_5_Gadget,
 }
 impl  RSAEncryptionCircuitGenerator{
-	pub  fn new(circuitName:String, i32 rsaKeyLength,
-			i32 plainTextLength) {
+	pub  fn new(circuitName:String, rsaKeyLength:i32 ,
+			plainTextLength:i32 )->Self {
 		super(circuitName);
 		self.rsaKeyLength = rsaKeyLength;
 		self.plainTextLength = plainTextLength;
 		// constraints on the plaintext length will be checked by the gadget
 	}
 }
-impl Gadget for RSAEncryptionCircuitGenerator{
+impl CircuitGenerator for RSAEncryptionCircuitGenerator{
 	
 	  fn buildCircuit() {
 
@@ -84,17 +84,16 @@ impl Gadget for RSAEncryptionCircuitGenerator{
 	}
 
 	
-	pub   generateSampleInput(evaluator:CircuitEvaluator) {
+	pub fn  generateSampleInput(evaluator:CircuitEvaluator) {
 
 		let msg = "";
 		for i in 0..inputMessage.length {
-
-			evaluator.setWireValue(inputMessage[i], (i32) ('a' + i));
-			msg = msg + (char) ('a' + i);
+			evaluator.setWireValue(inputMessage[i],  (b'a' + i) as i32);
+			msg = msg +  (b'a' + i) as char;
 		}
-		println!("PlainText:" + msg);
+		println!("PlainText: {msg}"  );
 
-		try {
+	
 
 			// to make sure that the implementation is working fine,
 			// encrypt with the underlying java implementation for RSA
@@ -119,7 +118,7 @@ impl Gadget for RSAEncryptionCircuitGenerator{
 			let cipherText = cipher.doFinal(msg.getBytes());
 //			println!("ciphertext : " + String::new(cipherText));
 			let cipherTextPadded = vec![byte::default();cipherText.length + 1];
-			System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
+			cipherTextPadded[1..cipherText.length].clone_from_slice(&cipherText);
 			cipherTextPadded[0] = 0;
 
 			let result = RSAUtil.extractRSARandomness1_5(cipherText,
@@ -127,25 +126,22 @@ impl Gadget for RSAEncryptionCircuitGenerator{
 			// result[0] contains the plaintext (after decryption)
 			// result[1] contains the randomness
 
-			bool check = Arrays.equals(result[0], msg.getBytes());
-			if !check {
-				panic!(
+			let  check = Arrays.equals(result[0], msg.getBytes());
+				assert!(check,
 						"Randomness Extraction did not decrypt right");
-			}
+			
 
 			let sampleRandomness = result[1];
 			for i in 0..sampleRandomness.length {
 				evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 			}
 
-		} catch (e:Exception) {
-			println!("Error while generating sample input for circuit");
-			e.printStackTrace();
-		}
+			// println!("Error while generating sample input for circuit");
+
 
 	}
 
-	pub    main(args:Vec<String>)  {
+	pub  fn  main(args:Vec<String>)  {
 		let keyLength = 2048;
 		let msgLength = 3;
 		let generator = RSAEncryptionCircuitGenerator::new(

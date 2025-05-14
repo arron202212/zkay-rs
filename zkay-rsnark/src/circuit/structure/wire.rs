@@ -165,7 +165,7 @@ wireId,t
 	}
 
 	pub fn or(&self,w:Wire, desc:Vec<String>)->Wire {
-		if w instanceof ConstantWire {
+		if w.instanceof(ConstantWire){
 			return w.or(self, desc);
 		} 
 			self.packIfNeeded(desc); // just a precaution .. should not be really
@@ -183,7 +183,7 @@ wireId,t
 
 
 	pub fn xor(&self,w:Wire, desc:Vec<String>)->Wire {
-		if w instanceof ConstantWire {
+		if w.instanceof(ConstantWire){
 			return w.xor(self, desc);
 		} 
 			self.packIfNeeded(desc); // just a precaution .. should not be really

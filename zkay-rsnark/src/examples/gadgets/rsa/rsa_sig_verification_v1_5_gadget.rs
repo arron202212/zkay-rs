@@ -32,13 +32,13 @@ pub struct RSASigVerificationV1_5_Gadget  {
 
 }
 impl RSASigVerificationV1_5_Gadget{
-	pub   Vec<byte> SHA256_IDENTIFIER = vec![byte::default();] { 0x30, 0x31,
+	pub  const SHA256_IDENTIFIER: Vec<byte>  = vec![byte::default();] { 0x30, 0x31,
 			0x30, 0x0d, 0x06, 0x09, 0x60, (byte) 0x86, 0x48, 0x01, 0x65, 0x03,
 			0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20 };
 
-	pub   i32 SHA256_DIGEST_LENGTH = 32; // in bytes
-	pub  fn new(LongElement modulus, msgHash:Vec<Wire>,
-			LongElement signature, i32 rsaKeyBitLength, desc:Vec<String>) {
+	pub   const SHA256_DIGEST_LENGTH:i32 = 32; // in bytes
+	pub  fn new( modulus:LongElement, msgHash:Vec<Wire>,
+			 signature:LongElement, rsaKeyBitLength:i32, desc:Vec<String>)->Self {
 		super(desc);
 		self.modulus = modulus;
 		self.msgHash = msgHash;
@@ -80,7 +80,7 @@ impl Gadget for RSASigVerificationV1_5_Gadget{
 			msgHashBytes[4 * i + 2] = tmp;
 		}
 
-		let lengthInBytes = (i32) (Math.ceil(rsaKeyBitLength * 1.0 / 8));
+		let lengthInBytes = (rsaKeyBitLength * 1.0 / 8).ceil() as i32;
 		let sumChecks = generator.getZeroWire();
 		sumChecks = sumChecks.add(sBytes[lengthInBytes - 1].isEqualTo(0));
 		sumChecks = sumChecks.add(sBytes[lengthInBytes - 2].isEqualTo(1));
@@ -107,6 +107,6 @@ impl Gadget for RSASigVerificationV1_5_Gadget{
 
 	
 	 pub  fn getOutputWires()->Vec<Wire>  {
-		return vec![Wire::default();] { isValidSignature };
+		return vec![isValidSignature];
 	}
 }
