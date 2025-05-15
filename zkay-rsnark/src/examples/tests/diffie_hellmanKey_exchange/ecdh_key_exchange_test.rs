@@ -44,7 +44,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				
 				evaluator.setWireValue(baseX, BigInteger::new("4"));
 				evaluator.setWireValue(hX, BigInteger::new("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
@@ -95,7 +95,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				
 
 let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
@@ -141,7 +141,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				
 				evaluator.setWireValue(baseX, BigInteger::new("4"));
 				evaluator.setWireValue(hX, BigInteger::new("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
@@ -188,7 +188,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				
 				// invalid
 				evaluator.setWireValue(baseX, BigInteger::new("14"));

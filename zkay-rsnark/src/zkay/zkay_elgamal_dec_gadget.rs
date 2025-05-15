@@ -1,27 +1,31 @@
-
 use circuit::structure::wire;
 
 /**
  * Gadget for checking correct exponential ElGamal decryption.
  * The expected message is provided as an input.
  */
-pub struct ZkayElgamalDecGadget   {
+pub struct ZkayElgamalDecGadget {
+    skBits: Vec<Wire>, // little-endian randomness bits
 
-     skBits:Vec<Wire>,    // little-endian randomness bits
+    pk: JubJubPoint,
 
-     pk:JubJubPoint,
+    c1: JubJubPoint,
 
-     c1:JubJubPoint,
+    c2: JubJubPoint,
 
-     c2:JubJubPoint,
+    expectedMsg: Wire,
 
-     expectedMsg:Wire,
-
-     msgOk:Wire,
+    msgOk: Wire,
 }
 
-impl  ZkayElgamalDecGadget{
-    pub  fn new(pk:JubJubPoint , skBits:Vec<Wire>, c1:JubJubPoint , c2:JubJubPoint , expectedMsg:Wire )->Self {
+impl ZkayElgamalDecGadget {
+    pub fn new(
+        pk: JubJubPoint,
+        skBits: Vec<Wire>,
+        c1: JubJubPoint,
+        c2: JubJubPoint,
+        expectedMsg: Wire,
+    ) -> Self {
         self.pk = pk;
         self.skBits = skBits;
         self.c1 = c1;
@@ -30,11 +34,14 @@ impl  ZkayElgamalDecGadget{
         buildCircuit();
     }
 }
-impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget{
-      fn buildCircuit() {
+impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
+    fn buildCircuit() {
         // ensure pk and skBits form a key pair
         let pkExpected = mulScalar(getGenerator(), skBits);
-        let keyOk = pkExpected.x.isEqualTo(pk.x).and(pkExpected.y.isEqualTo(pk.y));
+        let keyOk = pkExpected
+            .x
+            .isEqualTo(pk.x)
+            .and(pkExpected.y.isEqualTo(pk.y));
 
         // decrypt ciphertext (without de-embedding)
         let sharedSecret = mulScalar(c1, skBits);
@@ -43,13 +50,14 @@ impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget{
         // embed expected message and assert equality
         let expectedMsgBits = expectedMsg.getBitWires(32).asArray();
         let expectedMsgEmbedded = mulScalar(getGenerator(), expectedMsgBits);
-        self.msgOk = expectedMsgEmbedded.x.isEqualTo(msgEmbedded.x)
-                .and(expectedMsgEmbedded.y.isEqualTo(msgEmbedded.y))
-                .and(keyOk);
+        self.msgOk = expectedMsgEmbedded
+            .x
+            .isEqualTo(msgEmbedded.x)
+            .and(expectedMsgEmbedded.y.isEqualTo(msgEmbedded.y))
+            .and(keyOk);
     }
 
-    
-    pub fn  getOutputWires()->Vec<Wire>  {
-        return vec![Wire::default();] { self.msgOk };
+    pub fn getOutputWires() -> Vec<Wire> {
+        return vec![self.msgOk];
     }
 }

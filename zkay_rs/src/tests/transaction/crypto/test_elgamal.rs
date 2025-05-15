@@ -80,7 +80,10 @@ mod tests {
     fn test_de_embed_0() {
         let eg = new_crypto();
         let plain = eg._de_embed(BabyJubJub::zero());
-        println!("=====BabyJubJub::zero()=============={}",BabyJubJub::zero());
+        println!(
+            "=====BabyJubJub::zero()=============={}",
+            BabyJubJub::zero()
+        );
         let expected = 0;
         assert_eq!(plain, expected);
     }

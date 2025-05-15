@@ -1,55 +1,44 @@
-
 use circuit::eval::circuit_evaluator;
 use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 
-pub struct SimpleCircuitGenerator   {
-
-	 inputs:Vec<Wire>,
+pub struct SimpleCircuitGenerator {
+    inputs: Vec<Wire>,
 }
-impl  SimpleCircuitGenerator{
-	pub  fn new(circuitName:String)  ->Self{
-		super(circuitName);
-	}
+impl SimpleCircuitGenerator {
+    pub fn new(circuitName: String) -> Self {
+        super(circuitName);
+    }
+}
+impl CircuitGenerator for SimpleCircuitGenerator {
+    fn buildCircuit() {
+        // declare input array of length 4.
+        inputs = createInputWireArray(4);
 
-	}
-impl CircuitGenerator for SimpleCircuitGenerator{
-	  fn buildCircuit() {
+        // r1 = in0 * in1
+        let r1 = inputs[0].mul(inputs[1]);
 
-		// declare input array of length 4.
-		inputs = createInputWireArray(4);
+        // r2 = in2 + in3
+        let r2 = inputs[2].add(inputs[3]);
 
-		// r1 = in0 * in1
-		let r1 = inputs[0].mul(inputs[1]);
+        // result = (r1+5)*(6*r2)
+        let result = r1.add(5).mul(r2.mul(6));
 
-		// r2 = in2 + in3
-		let r2 = inputs[2].add(inputs[3]);
+        // mark the wire as output
+        makeOutput(result);
+    }
 
-		// result = (r1+5)*(6*r2)
-		let result = r1.add(5).mul(r2.mul(6));
-
-		// mark the wire as output
-		makeOutput(result);
-
-	}
-
-	
-	pub   generateSampleInput(circuitEvaluator:CircuitEvaluator) {
-		for i in 0..4 {
-			circuitEvaluator.setWireValue(inputs[i], i + 1);
-		}
-	}
-
-	
-
+    pub fn generateSampleInput(circuitEvaluator: CircuitEvaluator) {
+        for i in 0..4 {
+            circuitEvaluator.setWireValue(inputs[i], i + 1);
+        }
+    }
 }
 
-
-pub fn  main(args:Vec<String>)  {
-
-		let generator = SimpleCircuitGenerator::new("simple_example");
-		generator.generateCircuit();
-		generator.evalCircuit();
-		generator.prepFiles();
-		generator.runLibsnark();
-	}
+pub fn main(args: Vec<String>) {
+    let generator = SimpleCircuitGenerator::new("simple_example");
+    generator.generateCircuit();
+    generator.evalCircuit();
+    generator.prepFiles();
+    generator.runLibsnark();
+}

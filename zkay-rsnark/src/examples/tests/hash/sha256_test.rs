@@ -32,7 +32,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, ""
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				// no input needed
 			}
 		};
@@ -67,7 +67,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, ""
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -104,7 +104,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, ""
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -141,7 +141,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.length(), false, true, ""
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -189,7 +189,7 @@ let inputStr.length() % numBytesPerInputWire != 0  { 1 }else { 0}));
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator e) {
+				pub  fn generateSampleInput(CircuitEvaluator e) {
 					for i in 0..inputWires.length {
 let sum = BigInteger.ZERO;
 						for  j in  i * numBytesPerInputWire.. j < inputStr.length().min((i + 1) * numBytesPerInputWire)

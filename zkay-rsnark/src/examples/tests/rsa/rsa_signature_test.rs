@@ -57,7 +57,7 @@ let digest = sha2Gadget.getOutputWires();
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -83,7 +83,7 @@ let signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
-						BigInteger modulus = ((RSAPublicKey) keyPair
+						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();
 let sig = BigInteger::new(signaturePadded);
 
@@ -147,7 +147,7 @@ let digest = sha2Gadget.getOutputWires();
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -173,7 +173,7 @@ let signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
-						BigInteger modulus = ((RSAPublicKey) keyPair
+						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();
 let sig = BigInteger::new(signaturePadded);
 
@@ -240,7 +240,7 @@ let digest = sha2Gadget.getOutputWires();
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -266,7 +266,7 @@ let signaturePadded = vec![byte::default();sigBytes.length + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
 								sigBytes.length);
 						signaturePadded[0] = 0;
-						BigInteger modulus = ((RSAPublicKey) keyPair
+						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();
 let sig = BigInteger::new(signaturePadded);
 

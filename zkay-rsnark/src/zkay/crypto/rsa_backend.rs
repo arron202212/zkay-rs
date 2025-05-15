@@ -1,34 +1,39 @@
-
-
 use circuit::operations::gadget;
 use circuit::structure::wire;
 use zkay::typed_wire;
 use zkay::zkay_rsa_encryption_gadget;
 
-pub struct RSABackend{
-
-
-	
-
-	  paddingType:ZkayRSAEncryptionGadget.PaddingType,
+pub struct RSABackend {
+    paddingType: PaddingType,
 }
- impl  RSABackend{
-    const  CIPHER_CHUNK_SIZE:i32 = 232;
-	const  KEY_CHUNK_SIZE:i32 = 232;
-	const  PKCS15_RND_CHUNK_SIZE:i32 = 224;
-	const  OAEP_RND_CHUNK_SIZE:i32 = 128;
-	pub new(keyBits:i32 , padding:PaddingType )->Self {
-		super(keyBits);
-		self.paddingType = padding;
-	}
- }
-	 impl Asymmetric for RSABackend{
-	pub fn getKeyChunkSize()-> i32 {
-		return KEY_CHUNK_SIZE;
-	}
+impl RSABackend {
+    const CIPHER_CHUNK_SIZE: i32 = 232;
+    const KEY_CHUNK_SIZE: i32 = 232;
+    const PKCS15_RND_CHUNK_SIZE: i32 = 224;
+    const OAEP_RND_CHUNK_SIZE: i32 = 128;
+    pub fn new(keyBits: i32, padding: PaddingType) -> Self {
+        super(keyBits);
+        self.paddingType = padding;
+    }
+}
+impl Asymmetric for RSABackend {
+    pub fn getKeyChunkSize() -> i32 {
+        return KEY_CHUNK_SIZE;
+    }
 
-	
-	pub fn createEncryptionGadget(plain:TypedWire , key:String ,  random:Vec<Wire>, desc:Vec<String>)-> Gadget {
-		return ZkayRSAEncryptionGadget::new(plain, getKey(key), random, keyBits, paddingType, desc);
-	}
+    pub fn createEncryptionGadget(
+        plain: TypedWire,
+        key: String,
+        random: Vec<Wire>,
+        desc: Vec<String>,
+    ) -> Gadget {
+        return ZkayRSAEncryptionGadget::new(
+            plain,
+            getKey(key),
+            random,
+            keyBits,
+            paddingType,
+            desc,
+        );
+    }
 }

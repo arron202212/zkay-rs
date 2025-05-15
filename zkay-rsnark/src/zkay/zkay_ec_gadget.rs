@@ -1,36 +1,33 @@
-
-
 use circuit::config::config;
 use circuit::operations::gadget;
 use circuit::structure::circuit_generator;
 use circuit::structure::wire;
 use examples::gadgets::math::field_division_gadget;
 
+pub struct AffinePoint {
+    x: Wire,
+    y: Wire,
+}
+// impl AffinePoint {
+//     // AffinePoint(x:Wire ) {
+//     //     self.x = x;
+//     // }
 
-      pub struct  AffinePoint {
-         x:Wire,
-         y:Wire,
-      }
-    // impl AffinePoint {
-    //     // AffinePoint(x:Wire ) {
-    //     //     self.x = x;
-    //     // }
+//     // AffinePoint(x:Wire , y:Wire ) {
+//     //     self.x = x;
+//     //     self.y = y;
+//     // }
 
-    //     // AffinePoint(x:Wire , y:Wire ) {
-    //     //     self.x = x;
-    //     //     self.y = y;
-    //     // }
-
-    //     // AffinePoint(p:AffinePoint ) {
-    //     //     self.x = p.x;
-    //     //     self.y = p.y;
-    //     // }
-    // }
+//     // AffinePoint(p:AffinePoint ) {
+//     //     self.x = p.x;
+//     //     self.y = p.y;
+//     // }
+// }
 
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
-pub  struct  ZkayEcGadget;
- impl   ZkayEcGadget{
-    pub  fn new(desc:Vec<String>) {
+pub struct ZkayEcGadget;
+impl ZkayEcGadget {
+    pub fn new(desc: Vec<String>) {
         super(desc);
     }
 
@@ -38,7 +35,7 @@ pub  struct  ZkayEcGadget;
     // Config.FIELD_PRIME =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
-    pub    i32 SECRET_BITWIDTH = 253; // number of bits in the
+    pub const SECRET_BITWIDTH: i32 = 253; // number of bits in the
     // exponent. Note that the
     // most significant bit
     // should
@@ -48,34 +45,34 @@ pub  struct  ZkayEcGadget;
     // See
     // the constructor
 
-    pub    BigInteger COEFF_A = BigInteger::new("126932"); // parameterization
+    pub const COEFF_A: BigInteger = BigInteger::new("126932"); // parameterization
     // in
     // https://eprint.iacr.org/2015/1093.pdf
 
-    pub    BigInteger CURVE_ORDER = BigInteger::new(
-            "21888242871839275222246405745257275088597270486034011716802747351550446453784");
+    pub const CURVE_ORDER: BigInteger = BigInteger::new(
+        "21888242871839275222246405745257275088597270486034011716802747351550446453784",
+    );
 
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
-    pub    BigInteger SUBGROUP_ORDER = BigInteger::new(
-            "2736030358979909402780800718157159386074658810754251464600343418943805806723");
+    pub const SUBGROUP_ORDER: BigInteger = BigInteger::new(
+        "2736030358979909402780800718157159386074658810754251464600343418943805806723",
+    );
 
-
-    pub    checkSecretBits(generator:CircuitGenerator , secretBits:Vec<Wire>) {
+    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<Wire>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
          * should be 1, and the three least significant bits should be zero.
          */
-        generator.addZeroAssertion(secretBits[0],
-                "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[1],
-                "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[2],
-                "Asserting secret bit conditions");
-        generator.addOneAssertion(secretBits[SECRET_BITWIDTH - 1],
-                "Asserting secret bit conditions");
+        generator.addZeroAssertion(secretBits[0], "Asserting secret bit conditions");
+        generator.addZeroAssertion(secretBits[1], "Asserting secret bit conditions");
+        generator.addZeroAssertion(secretBits[2], "Asserting secret bit conditions");
+        generator.addOneAssertion(
+            secretBits[SECRET_BITWIDTH - 1],
+            "Asserting secret bit conditions",
+        );
 
-        for i in 3..SECRET_BITWIDTH - 1{
+        for i in 3..SECRET_BITWIDTH - 1 {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
@@ -85,15 +82,15 @@ pub  struct  ZkayEcGadget;
 
     // this is only called, when Wire y is provided as witness by the prover
     // (not as input to the gadget)
-     fn  assertValidPointOnEC(x:Wire , y:Wire ) {
+    fn assertValidPointOnEC(x: Wire, y: Wire) {
         let ySqr = y.mul(y);
         let xSqr = x.mul(x);
         let xCube = xSqr.mul(x);
         generator.addEqualityAssertion(ySqr, xCube.add(xSqr.mul(COEFF_A)).add(x));
     }
 
-     fn preprocess(p:AffinePoint )->Vec<AffinePoint> {
-        let precomputedTable = vec![AffinePoint::default();SECRET_BITWIDTH];
+    fn preprocess(p: AffinePoint) -> Vec<AffinePoint> {
+        let precomputedTable = vec![AffinePoint::default(); SECRET_BITWIDTH];
         precomputedTable[0] = p;
         for j in 1..SECRET_BITWIDTH {
             precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
@@ -105,12 +102,13 @@ pub  struct  ZkayEcGadget;
      * Performs scalar multiplication (secretBits must comply with the
      * conditions above)
      */
-     fn  mul(p:AffinePoint , secretBits:Vec<Wire>,
-                            precomputedTable:Vec<AffinePoint>)->AffinePoint {
-
-        let result = AffinePoint::new(
-                precomputedTable[secretBits.length - 1]);
-        for j in (0..=secretBits.length - 2).rev()
+    fn mul(
+        p: AffinePoint,
+        secretBits: Vec<Wire>,
+        precomputedTable: Vec<AffinePoint>,
+    ) -> AffinePoint {
+        let result = AffinePoint::new(precomputedTable[secretBits.length - 1]);
+        for j in (0..=secretBits.length - 2).rev() {
             let tmp = addAffinePoints(result, precomputedTable[j]);
             let isOne = secretBits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
@@ -119,10 +117,10 @@ pub  struct  ZkayEcGadget;
         return result;
     }
 
-     fn doubleAffinePoint(p:AffinePoint ) ->AffinePoint{
+    fn doubleAffinePoint(p: AffinePoint) -> AffinePoint {
         let x_2 = p.x.mul(p.x);
-        let l1 = FieldDivisionGadget::new(x_2.mul(3)
-                .add(p.x.mul(COEFF_A).mul(2)).add(1), p.y.mul(2))
+        let l1 =
+            FieldDivisionGadget::new(x_2.mul(3).add(p.x.mul(COEFF_A).mul(2)).add(1), p.y.mul(2))
                 .getOutputWires()[0];
         let l2 = l1.mul(l1);
         let newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
@@ -130,7 +128,7 @@ pub  struct  ZkayEcGadget;
         return AffinePoint::new(newX, newY);
     }
 
-     fn addAffinePoints(p1:AffinePoint , p2:AffinePoint )->AffinePoint{
+    fn addAffinePoints(p1: AffinePoint, p2: AffinePoint) -> AffinePoint {
         let diffY = p1.y.sub(p2.y);
         let diffX = p1.x.sub(p2.x);
         let q = FieldDivisionGadget::new(diffY, diffX).getOutputWires()[0];
@@ -140,24 +138,25 @@ pub  struct  ZkayEcGadget;
         let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
         return AffinePoint::new(newX, newY);
     }
- }
- impl  Gadget  for ZkayEcGadget{
-    pub  fn computeYCoordinate(x:BigInteger )->   BigInteger {
-        let xSqred = x.multiply(x).mod(Config.FIELD_PRIME);
-        let xCubed = xSqred.multiply(x).mod(Config.FIELD_PRIME);
-        let ySqred = xCubed.add(COEFF_A.multiply(xSqred)).add(x)
-                .mod(Config.FIELD_PRIME);
+}
+impl Gadget for ZkayEcGadget {
+    pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
+        let xSqred = x.multiply(x).modulo(Config.FIELD_PRIME);
+        let xCubed = xSqred.multiply(x).modulo(Config.FIELD_PRIME);
+        let ySqred = xCubed
+            .add(COEFF_A.multiply(xSqred))
+            .add(x)
+            .modulo(Config.FIELD_PRIME);
         let y = IntegerFunctions.ressol(ySqred, Config.FIELD_PRIME);
         return y;
     }
 
-    fn assertPointOrder(p:AffinePoint , table:Vec<AffinePoint>) {
-
+    fn assertPointOrder(p: AffinePoint, table: Vec<AffinePoint>) {
         let o = generator.createConstantWire(SUBGROUP_ORDER);
         let bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();
 
         let result = AffinePoint::new(table[bits.length - 1]);
-        for j in (1..=bits.length - 2).rev()
+        for j in (1..=bits.length - 2).rev() {
             let tmp = addAffinePoints(result, table[j]);
             let isOne = bits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
@@ -175,6 +174,5 @@ pub  struct  ZkayEcGadget;
         // the last iteration is done manually
 
         // TODO: add more tests to check this method
-
     }
 }

@@ -30,7 +30,7 @@ let expandedKey = Speck128CipherGadget.expandKey(key);
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(key[0], BigInteger::new("0706050403020100", 16));
 				evaluator.setWireValue(key[1], BigInteger::new("0f0e0d0c0b0a0908", 16));
 				evaluator.setWireValue(plaintext[0], BigInteger::new("7469206564616d20", 16));

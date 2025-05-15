@@ -37,22 +37,22 @@ pub struct CachingTest  {
 
 		for i in 0..numIns {
 
-			shiftedRightVals[i] = inVals1[i].shiftRight(i).mod(
+			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(
 					Config.FIELD_PRIME);
 			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask)
-					.mod(Config.FIELD_PRIME);
+					.modulo(Config.FIELD_PRIME);
 			rotatedRightVals[i] = BigInteger.valueOf(Integer.rotateRight(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
 			rotatedLeftVals[i] = BigInteger.valueOf(Integer.rotateLeft(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			xoredVals[i] = inVals1[i].xor(inVals2[i]).mod(Config.FIELD_PRIME);
-			oredVals[i] = inVals1[i].or(inVals2[i]).mod(Config.FIELD_PRIME);
-			andedVals[i] = inVals1[i].and(inVals2[i]).mod(Config.FIELD_PRIME);
+			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Config.FIELD_PRIME);
+			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Config.FIELD_PRIME);
+			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Config.FIELD_PRIME);
 			invertedVals[i] = BigInteger
 					.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
-			multipliedVals[i] = inVals1[i].multiply(inVals2[i]).mod(
+			multipliedVals[i] = inVals1[i].multiply(inVals2[i]).modulo(
 					Config.FIELD_PRIME);
-			addedVals[i] = inVals1[i].add(inVals2[i]).mod(Config.FIELD_PRIME);
+			addedVals[i] = inVals1[i].add(inVals2[i]).modulo(Config.FIELD_PRIME);
 
 		}
 
@@ -168,7 +168,7 @@ pub struct CachingTest  {
 			}
 
 			
-			pub   generateSampleInput(let evaluator) {
+			pub  fn generateSampleInput(let evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
@@ -283,7 +283,7 @@ pub struct CachingTest  {
 			}
 
 			
-			pub   generateSampleInput(let evaluator) {
+			pub  fn generateSampleInput(let evaluator) {
 				evaluator.setWireValue(in1, BigInteger.valueOf(5));
 				evaluator.setWireValue(in2, BigInteger.valueOf(6));
 				evaluator.setWireValue(witness1, BigInteger.valueOf(30));
@@ -340,7 +340,7 @@ pub struct CachingTest  {
 			}
 
 			
-			pub   generateSampleInput(let e) {
+			pub  fn generateSampleInput(let e) {
 				for i in 0..inputStr.length() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}

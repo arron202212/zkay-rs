@@ -28,7 +28,7 @@ pub struct Chaskey128_Test  {
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 				Vec<BigInteger> keyV = { BigInteger.valueOf(0x68e90956L),
 						BigInteger.valueOf(0x29e3585fL),

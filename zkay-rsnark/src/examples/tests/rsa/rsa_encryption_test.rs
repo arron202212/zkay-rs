@@ -33,7 +33,7 @@ let keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
 let keyPair = keyGen.generateKeyPair();
 let pubKey = keyPair.getPublic();
-let rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
+let rsaModulusValue = ( pubKey).getModulus();
 			
 			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_Enc_TestEncryption") {
@@ -71,7 +71,7 @@ let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -93,7 +93,7 @@ let cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						cipherTextPadded[0] = 0;
 
 						Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
-								(RSAPrivateKey) privKey);
+								 privKey);
 
 let check = Arrays.equals(result[0], plainText.getBytes());
 						if !check {

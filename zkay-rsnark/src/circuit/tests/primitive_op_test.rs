@@ -19,14 +19,14 @@ let inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 let inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].add(inVals1[1]).mod(Config.FIELD_PRIME));
+		result.add(inVals1[0].add(inVals1[1]).modulo(Config.FIELD_PRIME));
 let s = BigInteger.ZERO;
 		for i in 0..numIns {
 			s = s.add(inVals1[i]);
 		}
-		result.add(s.mod(Config.FIELD_PRIME));
+		result.add(s.modulo(Config.FIELD_PRIME));
 		for i in 0..numIns {
-			result.add(inVals1[i].add(inVals2[i]).mod(Config.FIELD_PRIME));
+			result.add(inVals1[i].add(inVals2[i]).modulo(Config.FIELD_PRIME));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("addition") {
@@ -48,7 +48,7 @@ let resultArray = inputs1.addWireArray(inputs2, inputs1.size());
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
@@ -77,9 +77,9 @@ let inVals1 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 let inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].multiply(inVals1[1]).mod(Config.FIELD_PRIME));
+		result.add(inVals1[0].multiply(inVals1[1]).modulo(Config.FIELD_PRIME));
 		for i in 0..numIns {
-			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
+			result.add(inVals1[i].multiply(inVals2[i]).modulo(Config.FIELD_PRIME));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("multiplication") {
@@ -99,7 +99,7 @@ let resultArray = inputs1.mulWireArray(inputs2, numIns);
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
@@ -158,7 +158,7 @@ let result5 = vec![Wire::default();numIns];
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 
@@ -213,13 +213,13 @@ let invertedVals = vec![BigInteger::default();numIns];
 let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME).subtract(BigInteger.ONE);
 		
 		for i in 0..numIns {
-			shiftedRightVals[i] = inVals1[i].shiftRight(i).mod(Config.FIELD_PRIME);
-			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).mod(Config.FIELD_PRIME);
+			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(Config.FIELD_PRIME);
+			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).modulo(Config.FIELD_PRIME);
 			rotatedRightVals[i] = BigInteger.valueOf(Integer.rotateRight(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
 			rotatedLeftVals[i] = BigInteger.valueOf(Integer.rotateLeft(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL );
-			xoredVals[i] = inVals1[i].xor(inVals2[i]).mod(Config.FIELD_PRIME);
-			oredVals[i] = inVals1[i].or(inVals2[i]).mod(Config.FIELD_PRIME);
-			andedVals[i] = inVals1[i].and(inVals2[i]).mod(Config.FIELD_PRIME);
+			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Config.FIELD_PRIME);
+			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Config.FIELD_PRIME);
+			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Config.FIELD_PRIME);
 			invertedVals[i] = BigInteger.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
 		}
 
@@ -267,7 +267,7 @@ let inverted = vec![Wire::default();numIns];
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
@@ -323,9 +323,9 @@ let inVals2 = Util::randomBigIntegerArray(numIns, Config.FIELD_PRIME);
 		
 		
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].multiply(inVals1[0]).mod(Config.FIELD_PRIME));
+		result.add(inVals1[0].multiply(inVals1[0]).modulo(Config.FIELD_PRIME));
 		for i in 0..numIns {
-			result.add(inVals1[i].multiply(inVals2[i]).mod(Config.FIELD_PRIME));
+			result.add(inVals1[i].multiply(inVals2[i]).modulo(Config.FIELD_PRIME));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("assertions") {
@@ -377,7 +377,7 @@ let result = new ArrayList<BigInteger>();
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 

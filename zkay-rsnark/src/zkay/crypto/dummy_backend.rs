@@ -1,26 +1,28 @@
-
 use circuit::operations::gadget;
 use circuit::structure::wire;
 use zkay::typed_wire;
 use zkay::zkay_dummy_encryption_gadget;
 
 pub struct DummyBackend;
- impl  DummyBackend{
+impl DummyBackend {
+    const CIPHER_CHUNK_SIZE: i32 = 256;
+    const KEY_CHUNK_SIZE: i32 = 256;
 
-	  CIPHER_CHUNK_SIZE:i32 = 256;
-	  KEY_CHUNK_SIZE:i32 = 256;
+    // pub  DummyBackend(i32 keyBits) {
+    // 	super(keyBits);
+    // }
 
-	// pub  DummyBackend(i32 keyBits) {
-	// 	super(keyBits);
-	// }
-
-	
-	pub fn getKeyChunkSize()->i32 {
-		return KEY_CHUNK_SIZE;
-	}
- }
-	 impl Asymmetric for DummyBackend{
-	  createEncryptionGadget( plain:TypedWire,  key:String, random:Vec<Wire> , desc:Vec<String>)->Gadget {
-		return  ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc);
-	}
+    pub fn getKeyChunkSize() -> i32 {
+        return KEY_CHUNK_SIZE;
+    }
+}
+impl Asymmetric for DummyBackend {
+    fn createEncryptionGadget(
+        plain: TypedWire,
+        key: String,
+        random: Vec<Wire>,
+        desc: Vec<String>,
+    ) -> Gadget {
+        return ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc);
+    }
 }

@@ -1,5 +1,3 @@
-
-
 use circuit::eval::circuit_evaluator;
 use circuit::eval::instruction;
 use circuit::operations::gadget;
@@ -11,63 +9,63 @@ use circuit::structure::wire;
  *
  */
 
-pub struct ModConstantGadget  {
+pub struct ModConstantGadget {
+    a: Wire,
+    b: BigInteger,
+    r: Wire,
+    q: Wire,
 
-	 a:Wire,
-	 b:BigInteger,
-	 r:Wire,
-	 q:Wire,
-
-	 bitwidth:i32, // a's bitwidth
+    bitwidth: i32, // a's bitwidth
 }
-impl  ModConstantGadget{
-	pub  fn new(a:Wire, bitwidth:i32, b:BigInteger, desc:Vec<String>)  ->Self{
-		super(desc);
-		self.a = a;
-		self.b = b;
-		self.bitwidth = bitwidth;
-			assert!(b.signum() == 1,"b must be a positive constant. Signed operations not supported yet.");
-		
-			assert!(bitwidth >= b.bitLength(),"a's bitwidth < b's bitwidth -- This gadget is not needed.");
-		
-		// TODO: add further checks.
-		
-		buildCircuit();
-	}
-}
-impl Gadget for ModConstantGadget{
-	  fn buildCircuit() {
-		
-		r = generator.createProverWitnessWire("mod result");
-		q = generator.createProverWitnessWire("division result");
+impl ModConstantGadget {
+    pub fn new(a: Wire, bitwidth: i32, b: BigInteger, desc: Vec<String>) -> Self {
+        super(desc);
+        self.a = a;
+        self.b = b;
+        self.bitwidth = bitwidth;
+        assert!(
+            b.signum() == 1,
+            "b must be a positive constant. Signed operations not supported yet."
+        );
 
-		// notes about how to use this code block can be found in FieldDivisionGadget
-		generator.specifyProverWitnessComputation(& {
+        assert!(
+            bitwidth >= b.bitLength(),
+            "a's bitwidth < b's bitwidth -- This gadget is not needed."
+        );
+
+        // TODO: add further checks.
+
+        buildCircuit();
+    }
+}
+impl Gadget for ModConstantGadget {
+    fn buildCircuit() {
+        r = generator.createProverWitnessWire("mod result");
+        q = generator.createProverWitnessWire("division result");
+
+        // notes about how to use this code block can be found in FieldDivisionGadget
+        generator.specifyProverWitnessComputation(&{
             struct Prover;
-            impl Instruction  for Prover
-			{
-			
-			pub  fn evaluate(evaluator:CircuitEvaluator ) {
-				let aValue = evaluator.getWireValue(a);
-				let rValue = aValue.mod(b);
-				evaluator.setWireValue(r, rValue);
-				let qValue = aValue.divide(b);
-				evaluator.setWireValue(q, qValue);
-			}
- }
+            impl Instruction for Prover {
+                pub fn evaluate(evaluator: CircuitEvaluator) {
+                    let aValue = evaluator.getWireValue(a);
+                    let rValue = aValue.modulo(b);
+                    evaluator.setWireValue(r, rValue);
+                    let qValue = aValue.divide(b);
+                    evaluator.setWireValue(q, qValue);
+                }
+            }
             Prover
-		});
-		
-		let bBitwidth = b.bitLength();
-		r.restrictBitLength(bBitwidth);
-		q.restrictBitLength(bitwidth - bBitwidth + 1);
-		generator.addOneAssertion(r.isLessThan(b, bBitwidth));
-		generator.addEqualityAssertion(q.mul(b).add(r), a);
-	}
+        });
 
-	
-	 pub  fn getOutputWires()->Vec<Wire>  {
-		return vec![r];
-	}
+        let bBitwidth = b.bitLength();
+        r.restrictBitLength(bBitwidth);
+        q.restrictBitLength(bitwidth - bBitwidth + 1);
+        generator.addOneAssertion(r.isLessThan(b, bBitwidth));
+        generator.addEqualityAssertion(q.mul(b).add(r), a);
+    }
 
+    pub fn getOutputWires() -> Vec<Wire> {
+        return vec![r];
+    }
 }

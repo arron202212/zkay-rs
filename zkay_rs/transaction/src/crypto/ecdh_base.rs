@@ -5,7 +5,6 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use num_bigint::{BigInt,BigUint};
 use crate::interface::{
     ZkayBlockchainInterface, ZkayCryptoInterface, ZkayKeystoreInterface, ZkayProverInterface,
 };
@@ -14,6 +13,7 @@ use ark_std::rand;
 use ark_std::rand::Rng;
 use jsnark_interface::jsnark_interface::CIRCUIT_BUILDER_JAR;
 use jsnark_interface::jsnark_interface::JARS_DIR;
+use num_bigint::{BigInt, BigUint};
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -58,7 +58,14 @@ pub trait EcdhBase<
             "==keys[0], keys[1]=================={},{}",
             keys[0], keys[1]
         );
-        (BigUint::parse_bytes(keys[0].as_bytes(),16).unwrap().to_string(),BigUint::parse_bytes(keys[1].as_bytes(),16).unwrap().to_string())
+        (
+            BigUint::parse_bytes(keys[0].as_bytes(), 16)
+                .unwrap()
+                .to_string(),
+            BigUint::parse_bytes(keys[1].as_bytes(), 16)
+                .unwrap()
+                .to_string(),
+        )
     }
 
     // @staticmethod
@@ -67,9 +74,13 @@ pub trait EcdhBase<
             "======_ecdh_sha256======**********===============other_pk: , my_sk========={other_pk}========== {my_sk}======={:?}=====",
             alloy_primitives::U256::from_str(&other_pk.trim_matches(&['[', ']', '"', ' ', '\n']))
         );
-        let my_sk = BigUint::parse_bytes(my_sk.as_bytes(),10).unwrap().to_str_radix(16);
+        let my_sk = BigUint::parse_bytes(my_sk.as_bytes(), 10)
+            .unwrap()
+            .to_str_radix(16);
         let other_pk = format!("{:x}", alloy_primitives::U256::from_str(&other_pk).unwrap());
-        println!("=======_ecdh_sha256======**********=====other_pk=====my_sk===={other_pk}======={my_sk}=====");
+        println!(
+            "=======_ecdh_sha256======**********=====other_pk=====my_sk===={other_pk}======={my_sk}====="
+        );
         let (ret, _) = run_command(
             vec![
                 "java",
@@ -95,9 +106,15 @@ pub trait EcdhBase<
         .unwrap();
         println!("====_ecdh_sha256======**********=v========={}", v);
         let v: [u8; 32] = v.to_be_bytes::<32>();
-        println!("====_ecdh_sha256======**********====_ecdh_sha256===v========={:?}", v);
+        println!(
+            "====_ecdh_sha256======**********====_ecdh_sha256===v========={:?}",
+            v
+        );
         let ret = v[16..].to_vec();
-        println!("===_ecdh_sha256======**********==ret=====_ecdh_sha256===={:?}", ret);
+        println!(
+            "===_ecdh_sha256======**********==ret=====_ecdh_sha256===={:?}",
+            ret
+        );
         ret
     }
     fn _generate_or_load_key_pairs(&self, address: &str) -> KeyPair {

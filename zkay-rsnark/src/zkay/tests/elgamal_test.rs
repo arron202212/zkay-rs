@@ -53,7 +53,7 @@ pub struct ElgamalTest {
         }
 
         
-        pub   generateSampleInput(CircuitEvaluator evaluator) { }
+        pub  fn generateSampleInput(CircuitEvaluator evaluator) { }
     }
 
       class ElgamalRerandCircuitGenerator extends CircuitGenerator {
@@ -84,7 +84,7 @@ pub struct ElgamalTest {
         }
 
         
-        pub   generateSampleInput(CircuitEvaluator evaluator) { }
+        pub  fn generateSampleInput(CircuitEvaluator evaluator) { }
     }
 
       class ElgamalDecCircuitGenerator extends CircuitGenerator {
@@ -115,7 +115,7 @@ pub struct ElgamalTest {
         }
 
         
-        pub   generateSampleInput(CircuitEvaluator evaluator) { }
+        pub  fn generateSampleInput(CircuitEvaluator evaluator) { }
     }
 
       oneInputTest(BigInteger plain,

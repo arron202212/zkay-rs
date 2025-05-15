@@ -114,7 +114,7 @@ pub struct PaillierTests {
 		}
 
 		
-		pub   generateSampleInput(CircuitEvaluator evaluator) {
+		pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(randomWire, random, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
@@ -168,7 +168,7 @@ pub struct PaillierTests {
 		}
 
 		
-		pub   generateSampleInput(CircuitEvaluator evaluator) {
+		pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(cipherWire, cipher, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(lambdaWire, lambda, LongElement.CHUNK_BITWIDTH);
@@ -217,7 +217,7 @@ pub struct PaillierTests {
 		}
 
 		
-		pub   generateSampleInput(CircuitEvaluator evaluator) {
+		pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(randomWire, random, LongElement.CHUNK_BITWIDTH);
@@ -265,7 +265,7 @@ pub struct PaillierTests {
 		}
 
 		
-		pub   generateSampleInput(CircuitEvaluator evaluator) {
+		pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(lambdaWire, lambda, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(cipherWire, cipher, LongElement.CHUNK_BITWIDTH);

@@ -78,7 +78,7 @@ use proving_scheme::proving_scheme::ProvingScheme;
 use rccell::RcCell;
 use std::collections::BTreeMap;
 // use std::path::PathBuf;
-use num_bigint::{BigInt,BigUint};
+use num_bigint::{BigInt, BigUint};
 use std::str::FromStr;
 use zkay_transaction_crypto_params::params::CryptoParams;
 use zkp_u256::{U256, Zero};
@@ -1096,9 +1096,9 @@ pub trait ZkayCryptoInterface<
                 vec![0; (chunk_size as usize).saturating_sub(chunk.len())]
                     .into_iter()
                     .chain(
-                        BigUint::parse_bytes(chunk.as_bytes(), 10).unwrap()
-                            .to_bytes_be()
-                            ,
+                        BigUint::parse_bytes(chunk.as_bytes(), 10)
+                            .unwrap()
+                            .to_bytes_be(),
                     )
                     .collect::<Vec<u8>>()
             })
@@ -1107,7 +1107,7 @@ pub trait ZkayCryptoInterface<
             return a;
         }
         let n = a.len();
-    println!("===desired_length==========={n}====={desired_length}");
+        println!("===desired_length==========={n}====={desired_length}");
         a.split_off(n.saturating_sub(desired_length))
     }
 
@@ -1168,7 +1168,8 @@ pub trait ZkayProverInterface {
         in_valss: Vec<String>,
         out_valss: Vec<String>,
     ) -> Vec<String> {
-        let (mut priv_values,mut in_vals,mut out_vals)=(priv_valuess.clone(),in_valss.clone(),out_valss.clone());
+        let (mut priv_values, mut in_vals, mut out_vals) =
+            (priv_valuess.clone(), in_valss.clone(), out_valss.clone());
         for i in 0..priv_values.len() {
             let arg = priv_values[i].clone();
             // assert not isinstance(arg, JsonValue) or isinstance(arg, (RandomnessValue, AddressValue))

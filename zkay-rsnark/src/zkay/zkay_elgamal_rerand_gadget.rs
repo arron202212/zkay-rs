@@ -1,26 +1,28 @@
-
-
 use circuit::structure::wire;
 
 /**
  * Gadget homomorphically re-randomizing an ElGamal encrypted ciphertext.
  */
-pub struct ZkayElgamalRerandGadget   {
+pub struct ZkayElgamalRerandGadget {
+    randomnessBits: Vec<Wire>, // little-endian randomness bits
 
-      randomnessBits:Vec<Wire>,    // little-endian randomness bits
+    pk: JubJubPoint, // pub  key
 
-     pk:JubJubPoint,   // pub  key
+    c1: JubJubPoint, // input ciphertext first point
 
-     c1:JubJubPoint,   // input ciphertext first point
+    c2: JubJubPoint, // input ciphertext second point
 
-     c2:JubJubPoint,   // input ciphertext second point
+    o1: JubJubPoint,
 
-     o1:JubJubPoint,
-
-     o2:JubJubPoint,
+    o2: JubJubPoint,
 }
-impl ZkayElgamalRerandGadget{
-    pub  fn new(c1:JubJubPoint , c2:JubJubPoint , pk:JubJubPoint , randomnessBits:Vec<Wire>)->Self {
+impl ZkayElgamalRerandGadget {
+    pub fn new(
+        c1: JubJubPoint,
+        c2: JubJubPoint,
+        pk: JubJubPoint,
+        randomnessBits: Vec<Wire>,
+    ) -> Self {
         self.c1 = c1;
         self.c2 = c2;
         self.randomnessBits = randomnessBits;
@@ -28,8 +30,8 @@ impl ZkayElgamalRerandGadget{
         buildCircuit();
     }
 }
-impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget{
-      fn buildCircuit() {
+impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget {
+    fn buildCircuit() {
         // create encryption of zero (z1, z2)
         let sharedSecret = mulScalar(pk, randomnessBits);
         let z1 = mulScalar(getGenerator(), randomnessBits);
@@ -40,8 +42,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget{
         o2 = addPoints(c2, z2);
     }
 
-    
-    pub  fn getOutputWires()->Vec<Wire>  {
-        return vec![Wire::default();]{ o1.x, o1.y, o2.x, o2.y };
+    pub fn getOutputWires() -> Vec<Wire> {
+        return vec![o1.x, o1.y, o2.x, o2.y];
     }
 }

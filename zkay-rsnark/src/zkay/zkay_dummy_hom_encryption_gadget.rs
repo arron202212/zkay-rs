@@ -1,8 +1,5 @@
-
 use circuit::operations::gadget;
 use circuit::structure::wire;
-
-
 
 /**
  * Dummy encryption gadget whose ciphertext is additively homomorphic.
@@ -15,33 +12,32 @@ use circuit::structure::wire;
  *                        = Enc(m1 + m2, p)
  */
 pub struct ZkayDummyHomEncryptionGadget {
-	 pk:Wire,
-	 plain:Wire,
-	 cipher:Vec<Wire>,
+    pk: Wire,
+    plain: Wire,
+    cipher: Vec<Wire>,
 }
-impl  ZkayDummyHomEncryptionGadget{
-	pub  fn new(plain:Wire , pk:Wire , rnd:Vec<Wire>, keyBits:i32 , desc:Vec<String>)->Self {
-		super(desc);
+impl ZkayDummyHomEncryptionGadget {
+    pub fn new(plain: Wire, pk: Wire, rnd: Vec<Wire>, keyBits: i32, desc: Vec<String>) -> Self {
+        super(desc);
 
-		Objects.requireNonNull(plain, "plain");
-		Objects.requireNonNull(pk, "pk");
-		Objects.requireNonNull(rnd, "rnd");
-		if rnd.length > 1) assert!("Randomness wire array too long";
+        Objects.requireNonNull(plain, "plain");
+        Objects.requireNonNull(pk, "pk");
+        Objects.requireNonNull(rnd, "rnd");
+        assert!(rnd.length <= 1, "Randomness wire array too long");
 
-		self.plain = plain;
-		self.pk = pk;
-		self.cipher = vec![Wire::default();1];
-		buildCircuit();
-	}
+        self.plain = plain;
+        self.pk = pk;
+        self.cipher = vec![Wire::default(); 1];
+        buildCircuit();
+    }
 }
 
-impl Gadget for ZkayDummyHomEncryptionGadget{
-	  fn buildCircuit() {
-		cipher[0] = plain.mul(pk, "plain * pk").add(1);
-	}
+impl Gadget for ZkayDummyHomEncryptionGadget {
+    fn buildCircuit() {
+        cipher[0] = plain.mul(pk, "plain * pk").add(1);
+    }
 
-	
-	 pub  fn getOutputWires()->Vec<Wire>  {
-		return cipher;
-	}
+    pub fn getOutputWires() -> Vec<Wire> {
+        return cipher;
+    }
 }

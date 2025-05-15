@@ -137,7 +137,9 @@ impl<
         println!("====elgamal==========_enc====serialize_pk==================={pk:?}===");
         let mut rng = rand::thread_rng();
         let r = Fr::rand(&mut rng); //%Fr::from_str("2736030358979909402780800718157159386076813972158567259200215660948447373041").unwrap();
-        println!("==_enc============**************************************==Fr::rand======r========================{r:?}");
+        println!(
+            "==_enc============**************************************==Fr::rand======r========================{r:?}"
+        );
         let cipher_chunks: Vec<_> = self
             ._enc_with_rand(plain, r, pk)
             .into_iter()
@@ -230,13 +232,15 @@ impl<
         get_dlog(plain_embedded.x, plain_embedded.y)
     }
     pub fn _enc_with_rand(&self, plain: String, random: Fr, pk: Vec<String>) -> Vec<String> {
-        let plain_embedded = (EdwardsConfig::GENERATOR * Fr::from_str(&plain).unwrap()).into_affine();
+        let plain_embedded =
+            (EdwardsConfig::GENERATOR * Fr::from_str(&plain).unwrap()).into_affine();
         // let random = Fr::from(random);
         println!("==_enc_with_rand===={pk:?}======={random:?}========================"); //.as_bytes().chunks(2).map(|c| c[1] as char).collect::<String>()
         let (pk0, pk1) = (&pk[0], &pk[1]);
         println!("==_enc_with_rand=pk01==={pk0:?}======={pk1:?}========================");
         let shared_secret =
-            (BabyJubJub::new(Fq::from_str(pk0).unwrap(), Fq::from_str(pk1).unwrap()) * &random).into_affine();
+            (BabyJubJub::new(Fq::from_str(pk0).unwrap(), Fq::from_str(pk1).unwrap()) * &random)
+                .into_affine();
         let c1 = (EdwardsConfig::GENERATOR * &random).into_affine();
         let c2 = (plain_embedded + shared_secret).into_affine();
         vec![
@@ -279,10 +283,11 @@ impl<
         }
         fn deserialize_str(operand: &Vec<String>) -> Vec<BabyJubJub> {
             // # if ciphertext is 0, return (BabyJubJub.ZERO, BabyJubJub.ZERO) == Enc(0, 0)
-            println!("====**********************************===zero=======one======{:?},============={:?}",BabyJubJub::zero(),BabyJubJub::new(
-                Fq::zero(),
-                Fq::one(),
-            ));
+            println!(
+                "====**********************************===zero=======one======{:?},============={:?}",
+                BabyJubJub::zero(),
+                BabyJubJub::new(Fq::zero(), Fq::one(),)
+            );
             if operand == &vec!["0".to_owned(); 4] {
                 return vec![BabyJubJub::zero(); 2];
             }

@@ -29,7 +29,7 @@ let keyGen = KeyPairGenerator.getInstance("RSA");
 			keyGen.initialize(keySize, random);
 let keyPair = keyGen.generateKeyPair();
 let pubKey = keyPair.getPublic();
-let rsaModulusValue = ((RSAPublicKey) pubKey).getModulus();
+let rsaModulusValue = ( pubKey).getModulus();
 
 			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_OAEP_Enc_TestEncryption") {
@@ -68,7 +68,7 @@ let plainTextLength = plainText.length();
 				}
 
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
 					for i in 0..inputMessage.length {
 						evaluator.setWireValue(inputMessage[i],
@@ -97,7 +97,7 @@ let cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
 						cipherTextPadded[0] = 0;
 
 						Vec<Vec<byte>> result = RSAUtil.extractRSAOAEPSeed(
-								cipherTextBytes, (RSAPrivateKey) privKey);
+								cipherTextBytes,  privKey);
 
 						bool check = Arrays.equals(result[0],
 								plainText.getBytes());

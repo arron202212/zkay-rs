@@ -1,4 +1,3 @@
-
 use circuit::auxiliary::long_element;
 use circuit::structure::wire;
 
@@ -8,16 +7,14 @@ use circuit::structure::wire;
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-pub struct LongIntegerFloorDivGadget extends LongIntegerDivision {
+pub struct LongIntegerFloorDivGadget {}
+impl LongIntegerFloorDivGadget {
+    pub fn new(a: LongElement, b: LongElement, bMinBitwidth: i32, desc: Vec<String>) -> Self {
+        super(a, b, bMinBitwidth, true, desc);
+    }
 }
-impl LongIntegerFloorDivGadget{
-	pub  fn new(a:LongElement, b:LongElement, bMinBitwidth:i32, desc:Vec<String>)  ->Self{
-		super(a, b, bMinBitwidth, true, desc);
-	}
-}
-impl Gadget for LongIntegerFloorDivGadget{
-	
-	 pub  fn getOutputWires()->Vec<Wire>  {
-		return getQuotient().getArray();
-	}
+impl LongIntegerDivision for LongIntegerFloorDivGadget {
+    pub fn getOutputWires() -> Vec<Wire> {
+        return getQuotient().getArray();
+    }
 }

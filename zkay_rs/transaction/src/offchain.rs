@@ -1040,7 +1040,9 @@ impl<
         constr: CallableType,
         crypto_backend: &str,
     ) -> (DataType, Option<Value<String, RandomnessValue>>) {
-        println!("==offchain====dec=cipher===********************************************=========={cipher:?}======");
+        println!(
+            "==offchain====dec=cipher===********************************************=========={cipher:?}======"
+        );
         let res = self.__crypto.lock()[crypto_backend].lock().dec(
             cipher.try_as_cipher_value_ref().unwrap(),
             &self.__user_addr.lock().to_string(),
@@ -1141,7 +1143,9 @@ impl<
     }
     // @staticmethod
     pub fn __serialize_val(val: DataType, bitwidth: i32) -> String {
-        println!("==__serialize_val***********************=__serialize_val==, val===============,{val}");
+        println!(
+            "==__serialize_val***********************=__serialize_val==, val===============,{val}"
+        );
         // if isinstance(val, AddressValue):
         //     val = i32.from_be_bytes(val.val)
         // else if isinstance(val, IntEnum):
@@ -1194,7 +1198,9 @@ impl<
     ) {
         let mut idx = target_out_start_idx as usize;
         for ((_name, val), &bitwidth) in data.iter().zip(&elem_bitwidths) {
-            println!("==__serialize_circuit_array==**************************=_name, val==============={_name},{val}");
+            println!(
+                "==__serialize_circuit_array==**************************=_name, val==============={_name},{val}"
+            );
             // if isinstance(val, (list, Value)) && !isinstance(val, AddressValue) {
             //     target_array[idx..idx + vallen()] =
             //     // if isinstance(val, CipherValue) {
@@ -1211,36 +1217,53 @@ impl<
             // }
             match val {
                 DataType::CipherValue(v) => {
-                    println!("===__serialize_circuit_array==**************************========CipherValue============================={idx:?}==={}====={v:}===",idx + v.contents.len());
+                    println!(
+                        "===__serialize_circuit_array==**************************========CipherValue============================={idx:?}==={}====={v:}===",
+                        idx + v.contents.len()
+                    );
                     target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
                     idx += v.contents.len();
                 }
                 DataType::PrivateKeyValue(v) => {
-                    println!("===__serialize_circuit_array==**************************========PrivateKeyValue============================={idx:?}==={}====={v:}===",idx + v.contents.len());
+                    println!(
+                        "===__serialize_circuit_array==**************************========PrivateKeyValue============================={idx:?}==={}====={v:}===",
+                        idx + v.contents.len()
+                    );
                     target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
                     idx += v.contents.len();
                 }
                 DataType::PublicKeyValue(v) => {
-                    println!("===__serialize_circuit_array==**************************========PublicKeyValue============================={idx:?}==={}====={v:}===",idx + v.contents.len());
+                    println!(
+                        "===__serialize_circuit_array==**************************========PublicKeyValue============================={idx:?}==={}====={v:}===",
+                        idx + v.contents.len()
+                    );
 
                     target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
                     idx += v.contents.len();
                 }
                 DataType::RandomnessValue(v) => {
-                    println!("===__serialize_circuit_array==**************************========RandomnessValue============================={idx:?}==={}====={v:}===",idx + v.contents.len());
+                    println!(
+                        "===__serialize_circuit_array==**************************========RandomnessValue============================={idx:?}==={}====={v:}===",
+                        idx + v.contents.len()
+                    );
 
                     target_array[idx..idx + v.contents.len()].clone_from_slice(&v[..]);
                     idx += v.contents.len();
                 }
                 DataType::List(v) => {
                     //TODO recursive list
-                    println!("===__serialize_circuit_array==**************************========List============================={idx:?}==={}====={v:?}===",idx + v.len());
+                    println!(
+                        "===__serialize_circuit_array==**************************========List============================={idx:?}==={}====={v:?}===",
+                        idx + v.len()
+                    );
                     target_array[idx..idx + v.len()]
                         .clone_from_slice(&v.iter().map(|x| x.to_string()).collect::<Vec<_>>());
                     idx += v.len();
                 }
                 _ => {
-                    println!("===__serialize_circuit_array==**************************========__serialize_val============================={idx}==={bitwidth}====={val:?}===");
+                    println!(
+                        "===__serialize_circuit_array==**************************========__serialize_val============================={idx}==={bitwidth}====={val:?}==="
+                    );
                     target_array[idx] =
                         ApiWrapper::<P, B, K>::__serialize_val(val.clone(), bitwidth);
                     idx += 1;
@@ -1254,18 +1277,26 @@ impl<
         out_elem_bitwidths: Vec<i32>,
     ) -> Vec<String> {
         // # TODO don't depend on out var names for correctness
-        println!("===============serialize_circuit_outputs================*************=======zk_data=========={zk_data:?}====");
+        println!(
+            "===============serialize_circuit_outputs================*************=======zk_data=========={zk_data:?}===="
+        );
         let out_vals: BTreeMap<_, _> = zk_data
             .clone()
             .into_iter()
             .filter(|(name, _val)| name.starts_with(&CFG.lock().unwrap().zk_out_name()))
             .collect();
-        println!("===============serialize_circuit_outputs================*************=======out_vals=========={out_vals:?}====");
+        println!(
+            "===============serialize_circuit_outputs================*************=======out_vals=========={out_vals:?}===="
+        );
         let count = out_vals.values().map(|val| val.len()).sum::<usize>();
-        println!("=======serialize_circuit_outputs===========*************************====================={count}======");
+        println!(
+            "=======serialize_circuit_outputs===========*************************====================={count}======"
+        );
         let mut zk_out = vec![String::new(); count];
         Self::__serialize_circuit_array(out_vals, &mut zk_out, 0, out_elem_bitwidths);
-        println!("=======serialize_circuit_outputs===========*************************========zk_out============={zk_out:?}======");
+        println!(
+            "=======serialize_circuit_outputs===========*************************========zk_out============={zk_out:?}======"
+        );
         zk_out
     }
     pub fn serialize_private_inputs(

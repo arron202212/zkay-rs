@@ -36,7 +36,7 @@ let expandedKey = AES128CipherGadget.expandKey(key);
 				}
 	
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
@@ -107,7 +107,7 @@ let expandedKey = AES128CipherGadget.expandKey(key);
 				}
 	
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
@@ -179,7 +179,7 @@ let expandedKey = AES128CipherGadget.expandKey(key);
 				}
 	
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
@@ -250,7 +250,7 @@ let expandedKey = AES128CipherGadget.expandKey(key);
 				}
 	
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);
@@ -319,7 +319,7 @@ let expandedKey = AES128CipherGadget.expandKey(key);
 				}
 	
 				
-				pub   generateSampleInput(CircuitEvaluator evaluator) {
+				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 	
 					BigInteger keyV = BigInteger::new(
 							"2b7e151628aed2a6abf7158809cf4f3c", 16);

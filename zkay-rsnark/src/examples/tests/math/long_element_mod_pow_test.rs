@@ -113,7 +113,7 @@ let modPow = LongIntegerModPowGadget::new(bWire, eWire, mWire, max(m.bitLength()
 		}
 
 		
-		pub   generateSampleInput(CircuitEvaluator evaluator) {
+		pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 			evaluator.setWireValue(bWire, b, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(eWire, e, LongElement.CHUNK_BITWIDTH);
 			evaluator.setWireValue(mWire, m, LongElement.CHUNK_BITWIDTH);

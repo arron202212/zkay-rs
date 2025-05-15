@@ -6,8 +6,8 @@ use circuit::operations::primitive::add_basic_op;
 use circuit::operations::primitive::pack_basic_op;
 
 pub struct WireArray {
-	self.array: Vec<Wire> ;
-	  self.generator:CircuitGenerator;
+	array: Vec<Wire> ,
+	  generator:CircuitGenerator,
 }
 	pub fn newWireArrayWithI32(n:i32)->WireArray {
 		newWireArrayWithNAndGenerator(n, CircuitGenerator.getActiveCircuitGenerator())

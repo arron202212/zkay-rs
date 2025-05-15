@@ -32,7 +32,7 @@ let r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				e.setWireValue(inputWires[0], a);
 				e.setWireValue(inputWires[1], b);
 
@@ -66,7 +66,7 @@ let r = ModConstantGadget::new(inputWires[0], 32, BigInteger.valueOf(b)).getOutp
 			}
 
 			
-			pub   generateSampleInput(CircuitEvaluator e) {
+			pub  fn generateSampleInput(CircuitEvaluator e) {
 				e.setWireValue(inputWires[0], a);
 			}
 		};

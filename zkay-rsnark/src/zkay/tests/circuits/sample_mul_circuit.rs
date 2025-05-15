@@ -34,7 +34,7 @@ pub struct SampleMulCircuit extends ZkayCircuitBase {
         __zk__foo();
     }
 
-    pub    main(args:Vec<String>) {
+    pub fn   main(args:Vec<String>) {
         let circuit = SampleMulCircuit::new();
         circuit.run(args);
     }
