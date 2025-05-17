@@ -1,19 +1,19 @@
-use circuit::config::config;
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::config::config::Configs;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::field_division_gadget;
 
 pub struct AffinePoint {
-    x: Wire,
-    y: Wire,
+    x: WireType,
+    y: WireType,
 }
 // impl AffinePoint {
-//     // AffinePoint(x:Wire ) {
+//     // AffinePoint(x:WireType ) {
 //     //     self.x = x;
 //     // }
 
-//     // AffinePoint(x:Wire , y:Wire ) {
+//     // AffinePoint(x:WireType , y:WireType ) {
 //     //     self.x = x;
 //     //     self.y = y;
 //     // }
@@ -32,7 +32,7 @@ impl ZkayEcGadget {
     }
 
     // Note: this parameterization assumes that the underlying field has
-    // Config.FIELD_PRIME =
+    // Configs.get().unwrap().field_prime =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
     pub const SECRET_BITWIDTH: i32 = 253; // number of bits in the
@@ -58,7 +58,7 @@ impl ZkayEcGadget {
         "2736030358979909402780800718157159386074658810754251464600343418943805806723",
     );
 
-    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<Wire>) {
+    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<WireType>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
@@ -80,9 +80,9 @@ impl ZkayEcGadget {
         }
     }
 
-    // this is only called, when Wire y is provided as witness by the prover
+    // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
-    fn assertValidPointOnEC(x: Wire, y: Wire) {
+    fn assertValidPointOnEC(x: WireType, y: WireType) {
         let ySqr = y.mul(y);
         let xSqr = x.mul(x);
         let xCube = xSqr.mul(x);
@@ -104,7 +104,7 @@ impl ZkayEcGadget {
      */
     fn mul(
         p: AffinePoint,
-        secretBits: Vec<Wire>,
+        secretBits: Vec<WireType>,
         precomputedTable: Vec<AffinePoint>,
     ) -> AffinePoint {
         let result = AffinePoint::new(precomputedTable[secretBits.length - 1]);
@@ -141,13 +141,13 @@ impl ZkayEcGadget {
 }
 impl Gadget for ZkayEcGadget {
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.multiply(x).modulo(Config.FIELD_PRIME);
-        let xCubed = xSqred.multiply(x).modulo(Config.FIELD_PRIME);
+        let xSqred = x.multiply(x).modulo(Configs.get().unwrap().field_prime);
+        let xCubed = xSqred.multiply(x).modulo(Configs.get().unwrap().field_prime);
         let ySqred = xCubed
             .add(COEFF_A.multiply(xSqred))
             .add(x)
-            .modulo(Config.FIELD_PRIME);
-        let y = IntegerFunctions.ressol(ySqred, Config.FIELD_PRIME);
+            .modulo(Configs.get().unwrap().field_prime);
+        let y = IntegerFunctions.ressol(ySqred, Configs.get().unwrap().field_prime);
         return y;
     }
 

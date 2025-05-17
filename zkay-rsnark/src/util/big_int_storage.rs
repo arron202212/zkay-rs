@@ -1,6 +1,18 @@
-use std::sync::OnceLock;
-static instance: OnceLock<BigIntStorage> = OnceLock::new();
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+ use crate::util::util::{Util,BigInteger};
 
+use std::sync::OnceLock;
+use std::collections::HashMap;
+static instance: OnceLock<BigIntStorage> = OnceLock::new();
+pub fn init(){
+ instance.get_or_init(|| BigIntStorage::new());
+}
 /**
  * shares big integer constants
  *
@@ -10,14 +22,14 @@ pub struct BigIntStorage {
 }
 impl BigIntStorage {
     pub fn new() -> Self {
-        instance.get_or_init(|| BigIntStorage::new());
+       
         Self {
             bigIntegerSet: HashMap::new(),
         }
     }
 
-    pub fn getBigInteger(x: BigInteger) -> BigInteger {
-        bigIntegerSet.entry(x).or_insert(x);
-        bigIntegerSet.get(x).unwrap().clone()
+    pub fn getBigInteger(&mut self,x: BigInteger) -> BigInteger {
+        self.bigIntegerSet.entry(x).or_insert(x);
+        self.bigIntegerSet.get(&x).unwrap().clone()
     }
 }

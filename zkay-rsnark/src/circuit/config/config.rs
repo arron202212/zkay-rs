@@ -1,4 +1,9 @@
+use std::sync::OnceLock;
+pub static Configs:OnceLock<Config>=OnceLock::new();
 use num_bigint::BigUint;
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct Config {
     field_prime: String,
     log2_field_prime: u64,
@@ -9,7 +14,9 @@ pub struct Config {
     debug_verbose: bool,
     print_stack_trace_at_warnings: bool,
 }
-
+pub fn init(){
+    Configs.get_or_init(||Config::new());
+}
 impl Config {
     pub fn new() -> Self {
         let config_dir = ".";

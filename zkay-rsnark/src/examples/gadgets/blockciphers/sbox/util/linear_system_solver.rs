@@ -1,4 +1,4 @@
-use circuit::config::config;
+use crate::circuit::config::config::Configs;
 
 /**
  * Solves a linear system of equations over a finite field.
@@ -12,7 +12,7 @@ pub struct LinearSystemSolver {
     numRows: i32,
 }
 impl LinearSystemSolver {
-    const prime: BigInteger = Config.FIELD_PRIME;
+    const prime: BigInteger = Configs.get().unwrap().field_prime;
     pub fn new(mat: Vec<Vec<BigInteger>>) -> Self {
         self.mat = mat;
         numRows = mat.length;
@@ -29,7 +29,7 @@ impl LinearSystemSolver {
     fn guassJordan() {
         for colIdx in 0..numCols {
             let pivotRowIdx = rowIdx;
-            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx].equals(BigInteger.ZERO)) {
+            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx].equals(BigInteger::ZERO)) {
                 pivotRowIdx += 1;
             }
             if pivotRowIdx == numRows {
@@ -62,7 +62,7 @@ impl LinearSystemSolver {
     fn rref() {
         for rowIdx in (0..=numRows - 1).rev() {
             let pivotColIdx = 0;
-            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx].equals(BigInteger.ZERO)) {
+            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx].equals(BigInteger::ZERO)) {
                 pivotColIdx += 1;
             }
             if pivotColIdx == numCols {

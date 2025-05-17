@@ -1,33 +1,33 @@
 
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::long_integer_mod_pow_gadget;
 
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 
 pub struct LongElementModPow_Test {
 
 	
 	pub   testZeroBase() {
-let b = BigInteger.ZERO;
+let b = BigInteger::ZERO;
 let e = BigInteger::new("123");
 let m = BigInteger::new("456");
 let generator = ModPowCircuitGenerator::new("ModPow testZeroBase", b, e, m);
 let c = generator.computeResult();
-		assertEquals(BigInteger.ZERO, c);
+		assertEquals(BigInteger::ZERO, c);
 	}
 
 	
 	pub   testZeroExponent() {
 let b = BigInteger::new("123");
-let e = BigInteger.ZERO;
+let e = BigInteger::ZERO;
 let m = BigInteger::new("456");
 let generator = ModPowCircuitGenerator::new("ModPow testZeroExponent", b, e, m);
 let c = generator.computeResult();
-		assertEquals(BigInteger.ONE, c);
+		assertEquals(Util::one(), c);
 	}
 
 	
@@ -128,7 +128,7 @@ let ms = 1.e-6 * (t2 - t1);
 			evalCircuit();
 
 let evaluator = getCircuitEvaluator();
-let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![Wire::default();0]));
+let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![WireType::default();0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}

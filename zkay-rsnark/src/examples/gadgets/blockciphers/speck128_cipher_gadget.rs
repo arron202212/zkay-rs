@@ -1,6 +1,6 @@
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Implements the Speck lightweight block cipher
@@ -9,9 +9,9 @@ use circuit::structure::wire;
  */
 
 pub struct Speck128CipherGadget {
-    plaintext: Vec<Wire>,
-    expandedKey: Vec<Wire>,
-    ciphertext: Vec<Wire>,
+    plaintext: Vec<WireType>,
+    expandedKey: Vec<WireType>,
+    ciphertext: Vec<WireType>,
 }
 impl Speck128CipherGadget {
     /**
@@ -22,7 +22,7 @@ impl Speck128CipherGadget {
      *            : Array of 32 64-bit elements. (Call expandKey(..))
      * @param desc
      */
-    pub fn new(plaintext: Vec<Wire>, expandedKey: Vec<Wire>, desc: Vec<String>) {
+    pub fn new(plaintext: Vec<WireType>, expandedKey: Vec<WireType>, desc: Vec<String>) {
         super(desc);
         assert!(
             plaintext.length == 2 && expandedKey.length == 32,
@@ -37,7 +37,7 @@ impl Speck128CipherGadget {
 impl Gadget for Speck128CipherGadget {
     fn buildCircuit() {
         let (mut x, mut y) = (plaintext[1], plaintext[0]);
-        let mut ciphertext = vec![Wire::default(); 2];
+        let mut ciphertext = vec![WireType::default(); 2];
         for i in 0..=31 {
             x = x.rotateRight(64, 8).add(y);
             x = x.trimBits(65, 64);
@@ -54,10 +54,10 @@ impl Gadget for Speck128CipherGadget {
      *            : 2 64-bit words
      * @return
      */
-    pub fn expandKey(key: Vec<Wire>) -> Vec<Wire> {
+    pub fn expandKey(key: Vec<WireType>) -> Vec<WireType> {
         let generator = CircuitGenerator.getActiveCircuitGenerator();
-        let k = vec![Wire::default(); 32];
-        let l = vec![Wire::default(); 32];
+        let k = vec![WireType::default(); 32];
+        let l = vec![WireType::default(); 32];
         k[0] = key[0];
         l[0] = key[1];
         for i in 0..=32 - 2 {
@@ -69,7 +69,7 @@ impl Gadget for Speck128CipherGadget {
         return k;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 }

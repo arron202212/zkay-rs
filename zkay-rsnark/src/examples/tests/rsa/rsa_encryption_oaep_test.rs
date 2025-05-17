@@ -1,9 +1,9 @@
 
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 use examples::generators::rsa::rsa_util;
 
@@ -36,9 +36,9 @@ let rsaModulusValue = ( pubKey).getModulus();
 
 let rsaKeyLength = keySize;
 let plainTextLength = plainText.length();
-				Vec<Wire> inputMessage;
-				Vec<Wire> seed;
-				Vec<Wire> cipherText;
+				Vec<WireType> inputMessage;
+				Vec<WireType> seed;
+				Vec<WireType> cipherText;
 				LongElement rsaModulus;
 
 				RSAEncryptionOAEPGadget rsaEncryptionOAEPGadget;
@@ -58,7 +58,7 @@ let plainTextLength = plainText.length();
 					// since seed is a witness
 					rsaEncryptionOAEPGadget.checkSeedCompliance();
 					
-					Vec<Wire> cipherTextInBytes = rsaEncryptionOAEPGadget
+					Vec<WireType> cipherTextInBytes = rsaEncryptionOAEPGadget
 							.getOutputWires(); // in bytes
 
 					// group every 8 bytes together
@@ -128,7 +128,7 @@ let evaluator = generator.getCircuitEvaluator();
 			// matches the expected ciphertext and that it decrypts correctly
 			// (using the BouncyCastle RSA decryptor)
 let cipherTextList = generator.getOutWires();
-let t = BigInteger.ZERO;
+let t = BigInteger::ZERO;
 let i = 0;
 			for w in cipherTextList {
 let val = evaluator.getWireValue(w);

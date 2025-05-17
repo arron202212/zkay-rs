@@ -1,8 +1,8 @@
 
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 
@@ -36,7 +36,7 @@ let keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 					+ "_SIG_TestValid") {
 
 let rsaKeyLength = keySize;
-				Vec<Wire> inputMessage;
+				Vec<WireType> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -103,7 +103,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-			assertEquals(BigInteger.ONE,
+			assertEquals(Util::one(),
 					evaluator.getWireValue(generator.getOutWires().get(0)));
 		}
 
@@ -126,7 +126,7 @@ let keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 					+ "_SIG_TestInvalid") {
 
 let rsaKeyLength = keySize;
-				Vec<Wire> inputMessage;
+				Vec<WireType> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -181,7 +181,7 @@ let sig = BigInteger::new(signaturePadded);
 								LongElement.CHUNK_BITWIDTH);
 
 						// input the modulus itself instead of the signature
-						evaluator.setWireValue(self.signature, sig.subtract(BigInteger.ONE),
+						evaluator.setWireValue(self.signature, sig.subtract(Util::one()),
 								LongElement.CHUNK_BITWIDTH);
 
 					} catch (Exception e) {
@@ -195,7 +195,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-			assertEquals(BigInteger.ZERO,
+			assertEquals(BigInteger::ZERO,
 					evaluator.getWireValue(generator.getOutWires().get(0)));
 		}
 
@@ -219,7 +219,7 @@ let chunkBiwidthArray = vec![i32::default();106];
 					+ "_SIG_TestValid_ChunkB_"+b) {
 
 let rsaKeyLength = keySize;
-				Vec<Wire> inputMessage;
+				Vec<WireType> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -286,7 +286,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-			assertEquals(BigInteger.ONE,
+			assertEquals(Util::one(),
 					evaluator.getWireValue(generator.getOutWires().get(0)));
 			
 			LongElement.CHUNK_BITWIDTH = defaultBitwidth; // needed for running all tests together

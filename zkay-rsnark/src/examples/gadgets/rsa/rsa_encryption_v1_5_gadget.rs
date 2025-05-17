@@ -1,9 +1,9 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::field_division_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
@@ -22,18 +22,18 @@ pub struct RSAEncryptionV1_5_Gadget {
     modulus: LongElement,
 
     // every wire represents a byte in the following three arrays
-    plainText: Vec<Wire>,
-    randomness: Vec<Wire>, // (rsaKeyBitLength / 8 - 3 - plainTextLength)
+    plainText: Vec<WireType>,
+    randomness: Vec<WireType>, // (rsaKeyBitLength / 8 - 3 - plainTextLength)
     // non-zero bytes
-    ciphertext: Vec<Wire>,
+    ciphertext: Vec<WireType>,
 
     rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
 }
 impl RSAEncryptionV1_5_Gadget {
     pub fn new(
         modulus: LongElement,
-        plainText: Vec<Wire>,
-        randomness: Vec<Wire>,
+        plainText: Vec<WireType>,
+        randomness: Vec<WireType>,
         rsaKeyBitLength: i32,
         desc: Vec<String>,
     ) {
@@ -69,7 +69,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
 
     fn buildCircuit() {
         let lengthInBytes = rsaKeyBitLength / 8;
-        let paddedPlainText = vec![Wire::default(); lengthInBytes];
+        let paddedPlainText = vec![WireType::default(); lengthInBytes];
         for i in 0..plainText.length {
             paddedPlainText[plainText.length - i - 1] = plainText[i];
         }
@@ -90,11 +90,11 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
 
         // 2. Make multiple long integer constant multiplications (need to be
         // done carefully)
-        let paddedMsg = LongElement::new(vec![BigInteger.ZERO]);
+        let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
         for i in 0..paddedPlainText.length {
             let e = LongElement::new(paddedPlainText[i], 8);
             let c = LongElement::new(Util::split(
-                BigInteger.ONE.shiftLeft(8 * i),
+                Util::one().shiftLeft(8 * i),
                 LongElement.CHUNK_BITWIDTH,
             ));
             paddedMsg = paddedMsg.add(e.mul(c));
@@ -121,7 +121,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
         }
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 }

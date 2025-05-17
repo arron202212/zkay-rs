@@ -1,5 +1,5 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::typed_wire;
 use zkay::zkay_rsa_encryption_gadget;
 
@@ -24,7 +24,7 @@ impl Asymmetric for RSABackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         key: String,
-        random: Vec<Wire>,
+        random: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         return ZkayRSAEncryptionGadget::new(

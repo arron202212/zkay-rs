@@ -1,3 +1,5 @@
+use crate::circuit::structure::wire_array::WireArray;
+
 pub struct LinearCombinationWire {
     bitWires: WireArray,
 }

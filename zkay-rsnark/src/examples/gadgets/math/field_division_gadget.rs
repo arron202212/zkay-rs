@@ -1,20 +1,20 @@
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::constant_wire;
-use circuit::structure::wire;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::constant_wire;
+use crate::circuit::structure::wire_type::WireType;
 
 // see notes in the end of the code.
 
 pub struct FieldDivisionGadget {
-    a: Wire,
-    b: Wire,
-    c: Wire,
+    a: WireType,
+    b: WireType,
+    c: WireType,
 }
 impl FieldDivisionGadget {
-    pub fn new(a: Wire, b: Wire, desc: Vec<String>) -> Self {
+    pub fn new(a: WireType, b: WireType, desc: Vec<String>) -> Self {
         super(desc);
         self.a = a;
         self.b = b;
@@ -22,9 +22,9 @@ impl FieldDivisionGadget {
         // can save one constraint
         if a.instanceof(ConstantWire) && b.instanceof(ConstantWire) {
             let aConst = a.getConstant();
-            let bInverseConst = b.getConstant().modInverse(Config.FIELD_PRIME);
+            let bInverseConst = b.getConstant().modInverse(Configs.get().unwrap().field_prime);
             c = generator
-                .createConstantWire(aConst.multiply(bInverseConst).modulo(Config.FIELD_PRIME));
+                .createConstantWire(aConst.multiply(bInverseConst).modulo(Configs.get().unwrap().field_prime));
         } else {
             c = generator.createProverWitnessWire(debugStr("division result"));
             buildCircuit();
@@ -39,12 +39,12 @@ impl Gadget for FieldDivisionGadget {
         generator.specifyProverWitnessComputation(&{
             struct Prover;
             impl Instruction for Prover {
-                pub fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
                     let bValue = evaluator.getWireValue(b);
                     let cValue = aValue
-                        .multiply(bValue.modInverse(Config.FIELD_PRIME))
-                        .modulo(Config.FIELD_PRIME);
+                        .multiply(bValue.modInverse(Configs.get().unwrap().field_prime))
+                        .modulo(Configs.get().unwrap().field_prime);
                     evaluator.setWireValue(c, cValue);
                 }
             }
@@ -76,7 +76,7 @@ impl Gadget for FieldDivisionGadget {
          */
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![c];
     }
 }

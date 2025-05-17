@@ -1,7 +1,7 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange;
 
 /**
@@ -26,15 +26,15 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<Wire> exponentBits;
+			 Vec<WireType> exponentBits;
 			
 			
 			  fn buildCircuit() {
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
 
-let g = vec![Wire::default();mu];
-let h = vec![Wire::default();mu];
+let g = vec![WireType::default();mu];
+let h = vec![WireType::default();mu];
 
 				// Hardcode the base and the other party's key (suitable when keys are not expected to change)
 				g[0] = createConstantWire(BigInteger::new("16377448892084713529161739182205318095580119111576802375181616547062197291263"));
@@ -91,9 +91,9 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<Wire> exponentBits;
-			 Vec<Wire> g;
-			 Vec<Wire> h;
+			 Vec<WireType> exponentBits;
+			 Vec<WireType> g;
+			 Vec<WireType> h;
 
 			
 			  fn buildCircuit() {
@@ -160,9 +160,9 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<Wire> exponentBits;
-			 Vec<Wire> g;
-			 Vec<Wire> h;
+			 Vec<WireType> exponentBits;
+			 Vec<WireType> g;
+			 Vec<WireType> h;
 
 			
 			  fn buildCircuit() {

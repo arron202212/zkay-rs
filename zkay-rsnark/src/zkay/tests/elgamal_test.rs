@@ -1,9 +1,9 @@
 
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 
 use zkay::zkay_baby_jub_jub_gadget;
 use zkay::zkay_elgamal_dec_gadget;
@@ -145,7 +145,7 @@ pub struct ElgamalTest {
         evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
         let one = evaluator.getWireValue(cgen.getOutWires().get(0));
-        Assert.assertEquals(BigInteger.ONE, one);
+        Assert.assertEquals(Util::one(), one);
 
         let rgen = ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
         rgen.generateCircuit();

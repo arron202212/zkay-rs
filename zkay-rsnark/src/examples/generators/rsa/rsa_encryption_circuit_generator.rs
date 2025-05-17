@@ -1,17 +1,17 @@
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryptionv1_5_gadget;
 
 // a demo for RSA Encryption PKCS #1, V1.5
 pub struct RSAEncryptionCircuitGenerator {
     rsaKeyLength: i32,
     plainTextLength: i32,
-    inputMessage: Vec<Wire>,
-    randomness: Vec<Wire>,
-    cipherText: Vec<Wire>,
+    inputMessage: Vec<WireType>,
+    randomness: Vec<WireType>,
+    cipherText: Vec<WireType>,
     rsaModulus: LongElement,
 
     rsaEncryptionV1_5_Gadget: RSAEncryptionV1_5_Gadget,

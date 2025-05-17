@@ -1,7 +1,7 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::speck128_cipher_gadget;
 
 /**
@@ -16,9 +16,9 @@ pub struct Speck128_Test  {
 		
 		CircuitGenerator generator = CircuitGenerator::new("Speck128_Test") {
 
-			Vec<Wire> plaintext; // 2 64-bit words
-			Vec<Wire> key; // 2 64-bit words
-			Vec<Wire> ciphertext; // 2 64-bit words
+			Vec<WireType> plaintext; // 2 64-bit words
+			Vec<WireType> key; // 2 64-bit words
+			Vec<WireType> ciphertext; // 2 64-bit words
 			
 			
 			  fn buildCircuit() {

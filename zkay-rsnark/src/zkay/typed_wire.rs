@@ -1,7 +1,7 @@
-use circuit::auxiliary::long_element;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::math::long_integer_floor_div_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
 
@@ -9,12 +9,12 @@ use zkay::zkay_circuit_base::negate;
 use zkay::zkay_type::*;
 
 pub struct TypedWire {
-    pub wire: Wire,
+    pub wire: WireType,
     pub zkay_type: ZkayType,
     pub name: String,
 }
 impl TypedWire {
-    pub fn new(wire: Wire, zkay_type: ZkayType, name: String, restrict: Vec<bool>) -> Self {
+    pub fn new(wire: WireType, zkay_type: ZkayType, name: String, restrict: Vec<bool>) -> Self {
         assert!(
             wire.is_some() && zkay_type.is_some(),
             "Arguments cannot be null"
@@ -334,7 +334,7 @@ impl TypedWire {
         return TypedWire::new(self.wire.or(rhs.wire, op), ZkBool, op);
     }
 
-    fn handle_overflow(w: Wire, targetType: ZkayType, was_mul: bool, name: String) -> TypedWire {
+    fn handle_overflow(w: WireType, targetType: ZkayType, was_mul: bool, name: String) -> TypedWire {
         if targetType.bitwidth < 256 {
             // Downcast or result with overflow modulo < field prime -> modulo/mask lower bits
             let from_bits = std::cmp::min(

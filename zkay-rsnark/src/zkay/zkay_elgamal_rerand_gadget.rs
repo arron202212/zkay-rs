@@ -1,10 +1,10 @@
-use circuit::structure::wire;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Gadget homomorphically re-randomizing an ElGamal encrypted ciphertext.
  */
 pub struct ZkayElgamalRerandGadget {
-    randomnessBits: Vec<Wire>, // little-endian randomness bits
+    randomnessBits: Vec<WireType>, // little-endian randomness bits
 
     pk: JubJubPoint, // pub  key
 
@@ -21,7 +21,7 @@ impl ZkayElgamalRerandGadget {
         c1: JubJubPoint,
         c2: JubJubPoint,
         pk: JubJubPoint,
-        randomnessBits: Vec<Wire>,
+        randomnessBits: Vec<WireType>,
     ) -> Self {
         self.c1 = c1;
         self.c2 = c2;
@@ -42,7 +42,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget {
         o2 = addPoints(c2, z2);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![o1.x, o1.y, o2.x, o2.y];
     }
 }

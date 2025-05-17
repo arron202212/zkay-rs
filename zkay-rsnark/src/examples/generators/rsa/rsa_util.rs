@@ -22,7 +22,7 @@ impl RSAUtil {
 
         let c = BigInteger::new(cipherText);
         c = BigInteger::new(cipherTextPadded);
-        let product = BigInteger.ONE;
+        let product = Util::one();
         for i in (0..=keySize - 1).rev() {
             product = product.multiply(product).modulo(modulus);
             let bit = d.testBit(i);
@@ -107,7 +107,7 @@ impl RSAUtil {
         let c = BigInteger::new(cipherText);
         c = BigInteger::new(cipherTextPadded);
 
-        let product = BigInteger.ONE;
+        let product = Util::one();
         for i in (0..=keySize - 1).rev() {
             product = product.multiply(product).modulo(modulus);
             let bit = d.testBit(i);

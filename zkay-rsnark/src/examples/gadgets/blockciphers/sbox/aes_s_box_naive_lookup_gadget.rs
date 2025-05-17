@@ -1,14 +1,14 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
 pub struct AESSBoxNaiveLookupGadget {
-    input: Wire,
-    output: Wire,
+    input: WireType,
+    output: WireType,
 }
 impl AESSBoxNaiveLookupGadget {
     const SBox: Vec<i32> = AES128CipherGadget.SBox;
-    pub fn new(input: Wire, desc: Vec<String>) -> Self {
+    pub fn new(input: WireType, desc: Vec<String>) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();
@@ -22,7 +22,7 @@ impl Gadget for AESSBoxNaiveLookupGadget {
         }
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![output];
     }
 }

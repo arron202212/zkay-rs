@@ -1,10 +1,10 @@
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 
 pub struct SHA2CircuitGenerator {
-    inputWires: Vec<Wire>,
+    inputWires: Vec<WireType>,
     sha2Gadget: SHA256Gadget,
 }
 impl SHA2CircuitGenerator {
@@ -27,7 +27,7 @@ impl CircuitGenerator for SHA2CircuitGenerator {
         /*
             inputWires = createInputWireArray(3); 	// 3-byte input
             sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
-            Vec<Wire> digest = sha2Gadget.getOutputWires();
+            Vec<WireType> digest = sha2Gadget.getOutputWires();
             makeOutputArray(digest, "digest");
         */
     }

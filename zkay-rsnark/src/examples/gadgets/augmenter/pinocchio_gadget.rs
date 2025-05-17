@@ -1,13 +1,16 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct PinocchioGadget {
-    inputWires: Vec<Wire>,
-    proverWitnessWires: Vec<Wire>,
-    outputWires: Vec<Wire>,
+    inputWires: Vec<WireType>,
+    proverWitnessWires: Vec<WireType>,
+    outputWires: Vec<WireType>,
 }
 impl PinocchioGadget {
-    pub fn new(inputWires: Vec<Wire>, pathToArithFile: String, desc: Vec<String>) -> Self {
+    pub fn new(inputWires: Vec<WireType>, pathToArithFile: String, desc: Vec<String>) -> Self {
         super(desc);
         self.inputWires = inputWires;
         buildCircuit(pathToArithFile);
@@ -27,7 +30,7 @@ impl Gadget for PinocchioGadget {
         }
         let numWires = scanner.nextInt();
         scanner.nextLine();
-        wireMapping = vec![Wire::default(); numWires];
+        wireMapping = vec![WireType::default(); numWires];
 
         let inputCount = 0;
         while (scanner.hasNext()) {
@@ -42,7 +45,7 @@ impl Gadget for PinocchioGadget {
                 let tokens = line.split("\\s+");
                 let wireIndex = Integer.parseInt(tokens[1]);
                 if wireMapping[wireIndex] != null {
-                    throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
+                    throwParsingError(scanner, "WireType assigned twice! " + wireIndex);
                 }
                 if inputCount < inputWires.length {
                     wireMapping[wireIndex] = inputWires[inputCount];
@@ -59,7 +62,7 @@ impl Gadget for PinocchioGadget {
                 let tokens = line.split("\\s+");
                 let wireIndex = Integer.parseInt(tokens[1]);
                 if wireMapping[wireIndex] != null {
-                    throwParsingError(scanner, "Wire assigned twice! " + wireIndex);
+                    throwParsingError(scanner, "WireType assigned twice! " + wireIndex);
                 }
                 let w = generator.createProverWitnessWire();
                 proverWitnessWires.add(w);
@@ -106,9 +109,9 @@ impl Gadget for PinocchioGadget {
 
         scanner.close();
 
-        self.proverWitnessWires = vec![Wire::default(); proverWitnessWires.size()];
+        self.proverWitnessWires = vec![WireType::default(); proverWitnessWires.size()];
         proverWitnessWires.toArray(self.proverWitnessWires);
-        self.outputWires = vec![Wire::default(); outputWires.size()];
+        self.outputWires = vec![WireType::default(); outputWires.size()];
         outputWires.toArray(self.outputWires);
     }
 
@@ -134,11 +137,11 @@ impl Gadget for PinocchioGadget {
         return ins;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return outputWires;
     }
 
-    pub fn getProverWitnessWires() -> Vec<Wire> {
+    pub fn getProverWitnessWires() -> Vec<WireType> {
         return proverWitnessWires;
     }
 

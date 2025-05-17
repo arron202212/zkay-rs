@@ -1,5 +1,5 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Dummy encryption gadget whose ciphertext is additively homomorphic.
@@ -12,12 +12,12 @@ use circuit::structure::wire;
  *                        = Enc(m1 + m2, p)
  */
 pub struct ZkayDummyHomEncryptionGadget {
-    pk: Wire,
-    plain: Wire,
-    cipher: Vec<Wire>,
+    pk: WireType,
+    plain: WireType,
+    cipher: Vec<WireType>,
 }
 impl ZkayDummyHomEncryptionGadget {
-    pub fn new(plain: Wire, pk: Wire, rnd: Vec<Wire>, keyBits: i32, desc: Vec<String>) -> Self {
+    pub fn new(plain: WireType, pk: WireType, rnd: Vec<WireType>, keyBits: i32, desc: Vec<String>) -> Self {
         super(desc);
 
         Objects.requireNonNull(plain, "plain");
@@ -27,7 +27,7 @@ impl ZkayDummyHomEncryptionGadget {
 
         self.plain = plain;
         self.pk = pk;
-        self.cipher = vec![Wire::default(); 1];
+        self.cipher = vec![WireType::default(); 1];
         buildCircuit();
     }
 }
@@ -37,7 +37,7 @@ impl Gadget for ZkayDummyHomEncryptionGadget {
         cipher[0] = plain.mul(pk, "plain * pk").add(1);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return cipher;
     }
 }

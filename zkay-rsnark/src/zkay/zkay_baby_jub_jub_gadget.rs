@@ -1,15 +1,15 @@
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 pub struct JubJubPoint {
-    pub x: Wire,
-    pub y: Wire,
+    pub x: WireType,
+    pub y: WireType,
 }
 impl JubJubPoint {
-    pub fn new(x: Wire, y: Wire) -> Self {
+    pub fn new(x: WireType, y: WireType) -> Self {
         self.x = x;
         self.y = y;
     }
@@ -27,7 +27,7 @@ impl ZkayBabyJubJubGadget {
         super(desc);
 
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)
-        assert!(Config.FIELD_PRIME.toString().equals(
+        assert!(Configs.get().unwrap().field_prime.toString().equals(
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"
         ));
     }
@@ -67,7 +67,7 @@ impl ZkayBabyJubJubGadget {
         return JubJubPoint::new(g_x, g_y);
     }
 
-    fn assertOnCurve(x: Wire, y: Wire) {
+    fn assertOnCurve(x: WireType, y: WireType) {
         // assert COEFF_A*x*x + y*y == 1 + COEFF_D*x*x*y*y
         let xSqr = x.mul(x);
         let ySqr = y.mul(y);
@@ -103,7 +103,7 @@ impl ZkayBabyJubJubGadget {
     /**
      * @param scalarBits the scalar bit representation in little-endian order
      */
-    fn mulScalar(p: JubJubPoint, scalarBits: Vec<Wire>) -> JubJubPoint {
+    fn mulScalar(p: JubJubPoint, scalarBits: Vec<WireType>) -> JubJubPoint {
         // Scalar point multiplication using double-and-add algorithm
         let result = getInfinity();
         let doubling = p;
@@ -123,12 +123,12 @@ impl Gadget for ZkayBabyJubJubGadget {
     /**
      * Returns a wire holding the inverse of a in the native base field.
      */
-    fn nativeInverse(a: Wire) -> Wire {
+    fn nativeInverse(a: WireType) -> WireType {
         let ainv = generator.createProverWitnessWire();
         generator.specifyProverWitnessComputation(&{
             struct Prover;
             impl Instruction for Prover {
-                fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
                     let inverseValue = aValue.modInverse(BASE_ORDER);
                     evaluator.setWireValue(ainv, inverseValue);

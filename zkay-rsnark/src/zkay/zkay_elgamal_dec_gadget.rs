@@ -1,11 +1,11 @@
-use circuit::structure::wire;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Gadget for checking correct exponential ElGamal decryption.
  * The expected message is provided as an input.
  */
 pub struct ZkayElgamalDecGadget {
-    skBits: Vec<Wire>, // little-endian randomness bits
+    skBits: Vec<WireType>, // little-endian randomness bits
 
     pk: JubJubPoint,
 
@@ -13,18 +13,18 @@ pub struct ZkayElgamalDecGadget {
 
     c2: JubJubPoint,
 
-    expectedMsg: Wire,
+    expectedMsg: WireType,
 
-    msgOk: Wire,
+    msgOk: WireType,
 }
 
 impl ZkayElgamalDecGadget {
     pub fn new(
         pk: JubJubPoint,
-        skBits: Vec<Wire>,
+        skBits: Vec<WireType>,
         c1: JubJubPoint,
         c2: JubJubPoint,
-        expectedMsg: Wire,
+        expectedMsg: WireType,
     ) -> Self {
         self.pk = pk;
         self.skBits = skBits;
@@ -57,7 +57,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
             .and(keyOk);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![self.msgOk];
     }
 }

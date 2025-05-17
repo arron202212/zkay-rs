@@ -1,16 +1,16 @@
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::merkle_tree_path_gadget;
 use examples::gadgets::hash::subset_sum_hash_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 pub struct MerkleTreeMembershipCircuitGenerator {
-    publicRootWires: Vec<Wire>,
-    intermediateHasheWires: Vec<Wire>,
-    directionSelector: Wire,
-    leafWires: Vec<Wire>,
+    publicRootWires: Vec<WireType>,
+    intermediateHasheWires: Vec<WireType>,
+    directionSelector: WireType,
+    leafWires: Vec<WireType>,
 
     treeHeight: i32,
 
@@ -62,7 +62,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         for i in 0..hashDigestDimension {
             circuitEvaluator.setWireValue(
                 publicRootWires[i],
-                Util::nextRandomBigInteger(Config.FIELD_PRIME),
+                Util::nextRandomBigInteger(Configs.get().unwrap().field_prime),
             );
         }
 
@@ -70,7 +70,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         for i in 0..hashDigestDimension * treeHeight {
             circuitEvaluator.setWireValue(
                 intermediateHasheWires[i],
-                Util::nextRandomBigInteger(Config.FIELD_PRIME),
+                Util::nextRandomBigInteger(Configs.get().unwrap().field_prime),
             );
         }
 

@@ -1,7 +1,7 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 use examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
 
@@ -15,17 +15,17 @@ pub enum PaddingType {
 pub struct ZkayRSAEncryptionGadget {
     paddingType: PaddingType,
     pk: LongElement,
-    plain: Wire,
-    rnd: Vec<Wire>,
+    plain: WireType,
+    rnd: Vec<WireType>,
     keyBits: i32,
 
-    cipher: Vec<Wire>,
+    cipher: Vec<WireType>,
 }
 impl ZkayRSAEncryptionGadget {
     pub fn new(
         plain: TypedWire,
         pk: LongElement,
-        rnd: Vec<Wire>,
+        rnd: Vec<WireType>,
         keyBits: i32,
         paddingType: PaddingType,
         desc: Vec<String>,
@@ -76,7 +76,7 @@ impl Gadget for ZkayRSAEncryptionGadget {
             WireArray::new(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return cipher;
     }
 }

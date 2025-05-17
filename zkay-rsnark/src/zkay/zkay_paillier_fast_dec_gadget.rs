@@ -1,6 +1,6 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::long_integer_floor_div_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
 use examples::gadgets::math::long_integer_mod_inverse_gadget;
@@ -55,7 +55,7 @@ impl Gadget for ZkayPaillierFastDecGadget {
         return plain;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return plain.getArray();
     }
 }

@@ -1,6 +1,6 @@
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 
 use zkay::zkay_util::unsigned_bigint_to_bytes;
 use zkay::zkay_util::unsigned_bytes_to_bigint;
@@ -10,8 +10,8 @@ pub struct ZkayECDHGenerator {
     pk: BigInteger,
     late_eval: bool,
 
-    secret_wire: Wire,
-    pk_wire: Wire,
+    secret_wire: WireType,
+    pk_wire: WireType,
 }
 impl ZkayECDHGenerator {
     pub fn new(pk: BigInteger, secret: BigInteger, late_eval: bool) -> Self {

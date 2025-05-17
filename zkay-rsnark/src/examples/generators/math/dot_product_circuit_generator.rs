@@ -1,11 +1,11 @@
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::dot_product_gadget;
 
 pub struct DotProductCircuitGenerator {
-    a: Vec<Wire>,
-    b: Vec<Wire>,
+    a: Vec<WireType>,
+    b: Vec<WireType>,
     dimension: i32,
 }
 impl DotProductCircuitGenerator {

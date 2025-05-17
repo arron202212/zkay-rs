@@ -1,8 +1,8 @@
-use circuit::eval::circuit_evaluator;
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use zkay::crypto::crypto_backend;
 use zkay::crypto::homomorphic_backend;
 
@@ -23,10 +23,10 @@ pub struct ZkayCircuitBase {
 
     currentPubInIdx: i32,
     currentPubOutIdx: i32,
-    allPubIOWires: Vec<Wire>,
+    allPubIOWires: Vec<WireType>,
 
     currentPrivInIdx: i32,
-    allPrivInWires: Vec<Wire>,
+    allPrivInWires: Vec<WireType>,
 
     pubInNames: List<String>,
     pubOutNames: List<String>,
@@ -77,8 +77,8 @@ impl ZkayCircuitBase {
 
         self.pubInCount = pubInSize;
         self.currentPubOutIdx = pubInSize;
-        self.allPubIOWires = vec![Wire::default(); pubInSize + pubOutSize];
-        self.allPrivInWires = vec![Wire::default(); privSize];
+        self.allPubIOWires = vec![WireType::default(); pubInSize + pubOutSize];
+        self.allPrivInWires = vec![WireType::default(); privSize];
 
         self.useInputHashing = useInputHashing;
 
@@ -170,12 +170,12 @@ impl CircuitGenerator for ZkayCircuitBase {
         typeName: String,
         name: String,
         nameList: List<String>,
-        src: Vec<Wire>,
+        src: Vec<WireType>,
         startIdx: i32,
         size: i32,
         t: ZkayType,
         restrict: bool,
-    ) -> Vec<Wire> {
+    ) -> Vec<WireType> {
         name = getQualifiedName(name);
         println!(
             "Adding '{name}' = {typeName}[{startIdx}:{}]",
@@ -209,7 +209,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         setKeyPair(cryptoBackendId, get(pkName).wire, get(skName).wire);
     }
 
-    fn setKeyPair(cryptoBackendId: Object, myPk: Wire, mySk: Wire) {
+    fn setKeyPair(cryptoBackendId: Object, myPk: WireType, mySk: WireType) {
         let cryptoBackend = getCryptoBackend(cryptoBackendId);
         assert!(
             cryptoBackend.isSymmetric(),
@@ -606,7 +606,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             checkType(oldVal[0].zkay_type, val[0].zkay_type);
             assert!(
                 val.length == oldVal.length,
-                "Wire amounts differ - old ={}, new = {}",
+                "WireType amounts differ - old ={}, new = {}",
                 oldVal.length,
                 val.length
             );
@@ -631,7 +631,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         set(lhs, resVal);
     }
 
-    fn condExpr(cond: Wire, trueVal: Wire, falseVal: Wire) -> Wire {
+    fn condExpr(cond: WireType, trueVal: WireType, falseVal: WireType) -> WireType {
         if ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
             addBinaryAssertion(cond);
         }
@@ -667,7 +667,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                     } else {
                         getZeroWire()
                     };
-                    let newWs = vec![Wire::default(); toBitWidth];
+                    let newWs = vec![WireType::default(); toBitWidth];
                     newWs[..fromBitWidth].clone_from_slice(&bitWires.asArray());
                     for i in fromBitWidth..toBitWidth {
                         newWs[i] = extendBit;
@@ -694,7 +694,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         key: String,
         rnd: String,
         isDec: bool,
-    ) -> Vec<Wire> {
+    ) -> Vec<WireType> {
         assert!(
             !cryptoBackend.isSymmetric(),
             "Crypto backend is not asymmetric"
@@ -726,7 +726,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         pkey: String,
         skey: String,
         expPlain: String,
-    ) -> Wire {
+    ) -> WireType {
         let desc = if ADD_OP_LABELS {
             format!(
                 "dec(%s, %s, %s)",
@@ -753,7 +753,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         otherPk: String,
         ivCipher: String,
         isDec: bool,
-    ) -> Vec<Wire> {
+    ) -> Vec<WireType> {
         assert!(
             cryptoBackend.isSymmetric(),
             "Crypto backend is not symmetric"
@@ -773,7 +773,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         return enc.getOutputWires();
     }
 
-    fn addGuardedEncryptionAssertion(expectedCipher: String, computedCipher: Vec<Wire>) {
+    fn addGuardedEncryptionAssertion(expectedCipher: String, computedCipher: Vec<WireType>) {
         let expCipher = getArr(expectedCipher);
         let compStr = if ADD_OP_LABELS {
             format!("%s == cipher", getQualifiedName(expectedCipher))
@@ -786,7 +786,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         );
     }
 
-    fn addGuardedNonZeroAssertion(value: Vec<Wire>, name: String) {
+    fn addGuardedNonZeroAssertion(value: Vec<WireType>, name: String) {
         addGuardedOneAssertion(
             isNonZero(value, name),
             format!("assert %s != 0", getQualifiedName(name)),
@@ -967,7 +967,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn isNonZero(value: Vec<Wire>, name: String) -> Wire {
+    fn isNonZero(value: Vec<WireType>, name: String) -> WireType {
         let res = value[0].checkNonZero(name + "[0] != 0");
         for i in 1..value.length {
             res = res.add(
@@ -978,12 +978,12 @@ impl CircuitGenerator for ZkayCircuitBase {
         return res.checkNonZero(name + " != 0");
     }
 
-    fn isZero(value: Vec<Wire>, name: String) -> Wire {
+    fn isZero(value: Vec<WireType>, name: String) -> WireType {
         return isNonZero(value, name).invAsBit(name + " == 0");
     }
 
-    fn isEqual(wires1: Vec<Wire>, name1: String, wires2: Vec<Wire>, name2: String) -> Wire {
-        assert!(wires1.length == wires2.length, "Wire array size mismatch");
+    fn isEqual(wires1: Vec<WireType>, name1: String, wires2: Vec<WireType>, name2: String) -> WireType {
+        assert!(wires1.length == wires2.length, "WireType array size mismatch");
         let res = getOneWire();
         for i in 0..wires1.length {
             res = res.and(
@@ -1033,7 +1033,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedEqualityAssertion(lhs: Wire, rhs: Wire, desc: Vec<String>) {
+    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: Vec<String>) {
         if currentGuardCondition.isEmpty() {
             addEqualityAssertion(lhs, rhs, desc);
         } else {
@@ -1042,7 +1042,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedOneAssertion(val: Wire, desc: Vec<String>) {
+    fn addGuardedOneAssertion(val: WireType, desc: Vec<String>) {
         if currentGuardCondition.isEmpty() {
             addOneAssertion(val, desc);
         } else {
@@ -1063,9 +1063,9 @@ impl CircuitGenerator for ZkayCircuitBase {
         return w;
     }
 
-    fn getArr(name: String) -> Vec<Wire> {
+    fn getArr(name: String) -> Vec<WireType> {
         let w = getTypedArr(name);
-        let wa = vec![Wire::default(); w.length];
+        let wa = vec![WireType::default(); w.length];
         for i in 0..w.length {
             wa[i] = w[i].wire;
         }

@@ -1,12 +1,12 @@
-use circuit::structure::wire;
-use circuit::structure::wire_array;
-use util::util;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
+use crate::util::util::{Util,BigInteger};
 
 pub struct ZkayUtil;
 impl ZkayUtil {
     pub const ZKAY_RESTRICT_EVERYTHING: bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
-    pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<Wire> {
+    pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<WireType> {
         return WireArray::new(Util::reverseBytes(bitArray.asArray()))
             .packBitsIntoWords(targetWordBits);
     }

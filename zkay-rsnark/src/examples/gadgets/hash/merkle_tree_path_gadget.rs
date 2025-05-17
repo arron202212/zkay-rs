@@ -1,7 +1,7 @@
-use circuit::config::config;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::config::config::Configs;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 
 /**
  * A Merkle tree authentication gadget using the subsetsum hash function
@@ -10,20 +10,20 @@ use circuit::structure::wire_array;
 
 pub struct MerkleTreePathGadget {
     treeHeight: i32,
-    directionSelectorWire: Wire,
-    directionSelectorBits: Vec<Wire>,
-    leafWires: Vec<Wire>,
-    intermediateHashWires: Vec<Wire>,
-    outRoot: Vec<Wire>,
+    directionSelectorWire: WireType,
+    directionSelectorBits: Vec<WireType>,
+    leafWires: Vec<WireType>,
+    intermediateHashWires: Vec<WireType>,
+    outRoot: Vec<WireType>,
 
     leafWordBitWidth: i32,
 }
 impl MerkleTreePathGadget {
     const digestWidth: i32 = SubsetSumHashGadget.DIMENSION;
     pub fn new(
-        directionSelectorWire: Wire,
-        leafWires: Vec<Wire>,
-        intermediateHasheWires: Vec<Wire>,
+        directionSelectorWire: WireType,
+        leafWires: Vec<WireType>,
+        intermediateHasheWires: Vec<WireType>,
         leafWordBitWidth: i32,
         treeHeight: i32,
         desc: Vec<String>,
@@ -51,7 +51,7 @@ impl Gadget for MerkleTreePathGadget {
 
         // Apply CRH across tree path guided by the direction bits
         for i in 0..treeHeight {
-            let inHash = vec![Wire::default(); 2 * digestWidth];
+            let inHash = vec![WireType::default(); 2 * digestWidth];
             for j in 0..digestWidth {
                 let temp = currentHash[j].sub(intermediateHashWires[i * digestWidth + j]);
                 let temp2 = directionSelectorBits[i].mul(temp);
@@ -72,7 +72,7 @@ impl Gadget for MerkleTreePathGadget {
         outRoot = currentHash;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return outRoot;
     }
 }

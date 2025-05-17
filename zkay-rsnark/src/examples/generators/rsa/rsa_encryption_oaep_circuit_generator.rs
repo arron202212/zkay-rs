@@ -1,16 +1,16 @@
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 
 pub struct RSAEncryptionOAEPCircuitGenerator {
     rsaKeyLength: i32,
     plainTextLength: i32,
-    inputMessage: Vec<Wire>,
-    seed: Vec<Wire>,
-    cipherText: Vec<Wire>,
+    inputMessage: Vec<WireType>,
+    seed: Vec<WireType>,
+    cipherText: Vec<WireType>,
     rsaModulus: LongElement,
 
     rsaEncryptionOAEPGadget: RSAEncryptionOAEPGadget,

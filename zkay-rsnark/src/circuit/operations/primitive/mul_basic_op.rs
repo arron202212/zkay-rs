@@ -1,12 +1,24 @@
-use circuit::config::config;
-use circuit::structure::wire;
-
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+use crate::circuit::config::config::Configs;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::operations::primitive::basic_op::Op;
+ use crate::circuit::operations::primitive::basic_op::BasicOp;
+ use crate::util::util::{Util,BigInteger};
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct MulBasicOp;
-pub fn newMulBasicOp(w1: Wire, w2: Wire, output: Wire, desc: Vec<String>) -> Op<MulBasicOp> {
+pub fn newMulBasicOp(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<MulBasicOp> {
     Op::<MulBasicOp> {
         inputs: vec![w1, w2],
         outputs: vec![output],
-        desc: descl.get(0).unwrap_or(&String::new()).clone(),
+        desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: MulBasicOp,
     }
 }
@@ -18,8 +30,8 @@ impl BasicOp for Op<MulBasicOp> {
     fn compute(&self, mut assignment: Vec<BigInteger>) {
         let mut result =
             assignment[self.inputs[0].getWireId()].multiply(assignment[self.inputs[1].getWireId()]);
-        if result.compareTo(Config.FIELD_PRIME) > 0 {
-            result = result.modulo(Config.FIELD_PRIME);
+        if result.compareTo(Configs.get().unwrap().field_prime) > 0 {
+            result = result.modulo(Configs.get().unwrap().field_prime);
         }
         assignment[self.outputs[0].getWireId()] = result;
     }

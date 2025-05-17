@@ -1,7 +1,7 @@
-use circuit::eval::circuit_evaluator;
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * This gadget provides the remainder of a % b, where b is a circuit constant.
@@ -10,15 +10,15 @@ use circuit::structure::wire;
  */
 
 pub struct ModConstantGadget {
-    a: Wire,
+    a: WireType,
     b: BigInteger,
-    r: Wire,
-    q: Wire,
+    r: WireType,
+    q: WireType,
 
     bitwidth: i32, // a's bitwidth
 }
 impl ModConstantGadget {
-    pub fn new(a: Wire, bitwidth: i32, b: BigInteger, desc: Vec<String>) -> Self {
+    pub fn new(a: WireType, bitwidth: i32, b: BigInteger, desc: Vec<String>) -> Self {
         super(desc);
         self.a = a;
         self.b = b;
@@ -47,7 +47,7 @@ impl Gadget for ModConstantGadget {
         generator.specifyProverWitnessComputation(&{
             struct Prover;
             impl Instruction for Prover {
-                pub fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
                     let rValue = aValue.modulo(b);
                     evaluator.setWireValue(r, rValue);
@@ -65,7 +65,7 @@ impl Gadget for ModConstantGadget {
         generator.addEqualityAssertion(q.mul(b).add(r), a);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![r];
     }
 }

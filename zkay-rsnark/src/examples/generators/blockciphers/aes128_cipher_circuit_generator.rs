@@ -1,14 +1,14 @@
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
 // A sample usage of the AES128 block cipher gadget
 pub struct AES128CipherCircuitGenerator {
-    inputs: Vec<Wire>,
-    key: Vec<Wire>,
-    outputs: Vec<Wire>,
+    inputs: Vec<WireType>,
+    key: Vec<WireType>,
+    outputs: Vec<WireType>,
     gadget: AES128CipherGadget,
 }
 impl AES128CipherCircuitGenerator {

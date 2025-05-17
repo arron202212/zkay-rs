@@ -1,6 +1,6 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use util::util;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
@@ -16,20 +16,20 @@ use util::util;
  *
  */
 pub struct FieldExtensionDHKeyExchange {
-    g: Vec<Wire>, // base
-    h: Vec<Wire>, // other party's pub  input (supposedly, h = g^(the
+    g: Vec<WireType>, // base
+    h: Vec<WireType>, // other party's pub  input (supposedly, h = g^(the
     // other party's secret))
-    secretExponentBits: Vec<Wire>, // the bits of the secret exponent of the
+    secretExponentBits: Vec<WireType>, // the bits of the secret exponent of the
     // party
     // executing this gadget
     omega: i64,
     mu: i32,
 
     // gadget outputs
-    outputPublicValue: Vec<Wire>, // g^s (to be sent to the other party)
-    sharedSecret: Vec<Wire>,      // the derived secret key h^s
-    gPowersTable: Vec<Vec<Wire>>,
-    hPowersTable: Vec<Vec<Wire>>,
+    outputPublicValue: Vec<WireType>, // g^s (to be sent to the other party)
+    sharedSecret: Vec<WireType>,      // the derived secret key h^s
+    gPowersTable: Vec<Vec<WireType>>,
+    hPowersTable: Vec<Vec<WireType>>,
 }
 impl FieldExtensionDHKeyExchange {
     /**
@@ -44,9 +44,9 @@ impl FieldExtensionDHKeyExchange {
      *
      */
     pub fn new(
-        g: Vec<Wire>,
-        h: Vec<Wire>,
-        secretExponentBits: Vec<Wire>,
+        g: Vec<WireType>,
+        h: Vec<WireType>,
+        secretExponentBits: Vec<WireType>,
         omega: i64,
         desc: String,
     ) -> Self {
@@ -76,8 +76,8 @@ impl Gadget for FieldExtensionDHKeyExchange {
         sharedSecret = exp(h, secretExponentBits, hPowersTable);
     }
 
-    fn mul(a: Vec<Wire>, b: Vec<Wire>) -> Vec<Wire> {
-        let c = vec![Wire::default(); mu];
+    fn mul(a: Vec<WireType>, b: Vec<WireType>) -> Vec<WireType> {
+        let c = vec![WireType::default(); mu];
 
         for i in 0..mu {
             c[i] = generator.getZeroWire();
@@ -97,8 +97,8 @@ impl Gadget for FieldExtensionDHKeyExchange {
         return c;
     }
 
-    fn preparePowersTable(base: Vec<Wire>) -> Vec<Vec<Wire>> {
-        let powersTable = vec![vec![Wire::default(); mu]; secretExponentBits.length + 1];
+    fn preparePowersTable(base: Vec<WireType>) -> Vec<Vec<WireType>> {
+        let powersTable = vec![vec![WireType::default(); mu]; secretExponentBits.length + 1];
         powersTable[0] = base[..mu].to_vec();
         for j in 1..secretExponentBits.length + 1 {
             powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
@@ -106,7 +106,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         return powersTable;
     }
 
-    fn exp(base: Vec<Wire>, expBits: Vec<Wire>, powersTable: Vec<Vec<Wire>>) -> Vec<Wire> {
+    fn exp(base: Vec<WireType>, expBits: Vec<WireType>, powersTable: Vec<Vec<WireType>>) -> Vec<WireType> {
         let c = vec![generator.getZeroWire(); mu];
         c[0] = generator.getOneWire();
         for j in 0..expBits.length {
@@ -142,7 +142,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         // verify order of points
 
         let bitLength = subGroupOrder.bitLength();
-        let bits = vec![Wire::default(); bitLength];
+        let bits = vec![WireType::default(); bitLength];
         for i in 0..bitLength {
             if subGroupOrder.testBit(i) {
                 bits[i] = generator.getOneWire();
@@ -164,15 +164,15 @@ impl Gadget for FieldExtensionDHKeyExchange {
         }
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return Util::concat(outputPublicValue, sharedSecret);
     }
 
-    pub fn getOutputPublicValue() -> Vec<Wire> {
+    pub fn getOutputPublicValue() -> Vec<WireType> {
         return outputPublicValue;
     }
 
-    pub fn getSharedSecret() -> Vec<Wire> {
+    pub fn getSharedSecret() -> Vec<WireType> {
         return sharedSecret;
     }
 }

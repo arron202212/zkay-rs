@@ -1,5 +1,5 @@
-use circuit::auxiliary::long_element;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * This gadget provides floor(a / b), when both operands are represented as long
@@ -14,7 +14,7 @@ impl LongIntegerFloorDivGadget {
     }
 }
 impl LongIntegerDivision for LongIntegerFloorDivGadget {
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return getQuotient().getArray();
     }
 }

@@ -1,10 +1,10 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 use examples::gadgets::blockciphers::chaskeylts128_cipher_gadget;
 use examples::gadgets::blockciphers::speck128_cipher_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 use zkay::crypto::crypto_backend;
 
 pub enum CipherType {
@@ -18,11 +18,11 @@ pub enum CipherType {
  */
 pub struct ZkayCBCSymmetricEncGadget {
     cipherType: CipherType,
-    keyBits: Vec<Wire>,
-    plaintextBits: Vec<Wire>,
-    ivBits: Vec<Wire>,
+    keyBits: Vec<WireType>,
+    plaintextBits: Vec<WireType>,
+    ivBits: Vec<WireType>,
 
-    cipherBits: Vec<Wire>,
+    cipherBits: Vec<WireType>,
 }
 
 impl ZkayCBCSymmetricEncGadget {
@@ -31,8 +31,8 @@ impl ZkayCBCSymmetricEncGadget {
 
     pub fn new(
         plaintext: TypedWire,
-        key: Wire,
-        iv: Wire,
+        key: WireType,
+        iv: WireType,
         cipherType: CipherType,
         desc: Vec<String>,
     ) -> Self {
@@ -48,7 +48,7 @@ impl ZkayCBCSymmetricEncGadget {
         }
     }
 
-    fn buildCircuit() -> Vec<Wire> {
+    fn buildCircuit() -> Vec<WireType> {
         let numBlocks = (plaintextBits.length * 1.0 / BLOCK_SIZE).ceil() as i32;
         let plaintextArray = WireArray::new(plaintextBits)
             .adjustLength(numBlocks * BLOCK_SIZE)
@@ -88,7 +88,7 @@ impl ZkayCBCSymmetricEncGadget {
         }
     }
 
-    fn prepareKey() -> Vec<Wire> {
+    fn prepareKey() -> Vec<WireType> {
         let mut preparedKey;
         match cipherType {
             SPECK_128 => {
@@ -108,7 +108,7 @@ impl ZkayCBCSymmetricEncGadget {
     }
 }
 impl Gadget for ZkayCBCSymmetricEncGadget {
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         println!("Cipher length [bits]: {}", cipherBits.length);
         return WireArray::new(Util::reverseBytes(Util::concat(ivBits, cipherBits)))
             .packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);

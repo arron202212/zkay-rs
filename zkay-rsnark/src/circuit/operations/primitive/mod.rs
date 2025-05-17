@@ -8,3 +8,4 @@ pub mod or_basic_op;
 pub mod pack_basic_op;
 pub mod split_basic_op;
 pub mod xor_basic_op;
+pub mod op_type;

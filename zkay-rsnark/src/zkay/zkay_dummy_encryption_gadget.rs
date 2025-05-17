@@ -1,19 +1,19 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 use zkay::crypto::DummyBackend::CIPHER_CHUNK_SIZE;
 
 pub struct ZkayDummyEncryptionGadget {
-    pk: Wire,
-    plain: Wire,
-    cipher: Vec<Wire>,
+    pk: WireType,
+    plain: WireType,
+    cipher: Vec<WireType>,
 }
 impl ZkayDummyEncryptionGadget {
     pub fn new(
         plain: TypedWire,
         pk: LongElement,
-        rnd: Vec<Wire>,
+        rnd: Vec<WireType>,
         keyBits: i32,
         desc: Vec<String>,
     ) -> Self {
@@ -25,7 +25,7 @@ impl ZkayDummyEncryptionGadget {
             generator.addZeroAssertion(pkarr[i], "Dummy enc pk valid");
         }
         self.pk = pkarr[0];
-        self.cipher = vec![Wire::default(); ((1.0 * keyBits) / CIPHER_CHUNK_SIZE).ceil() as i32];
+        self.cipher = vec![WireType::default(); ((1.0 * keyBits) / CIPHER_CHUNK_SIZE).ceil() as i32];
         buildCircuit();
     }
 }
@@ -35,7 +35,7 @@ impl Gadget for ZkayDummyEncryptionGadget {
         cipher.fill(res);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return cipher;
     }
 }

@@ -1,7 +1,7 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::math::long_integer_mod_gadget;
 
 /**
@@ -23,8 +23,8 @@ use examples::gadgets::math::long_integer_mod_gadget;
 pub struct RSASigVerificationV1_5_Gadget {
     modulus: LongElement,
     signature: LongElement,
-    msgHash: Vec<Wire>, // 32-bit wires (the output of SHA256 gadget)
-    isValidSignature: Wire,
+    msgHash: Vec<WireType>, // 32-bit wires (the output of SHA256 gadget)
+    isValidSignature: WireType,
     rsaKeyBitLength: i32, // in bits
 }
 impl RSASigVerificationV1_5_Gadget {
@@ -35,7 +35,7 @@ impl RSASigVerificationV1_5_Gadget {
     pub const SHA256_DIGEST_LENGTH: i32 = 32; // in bytes
     pub fn new(
         modulus: LongElement,
-        msgHash: Vec<Wire>,
+        msgHash: Vec<WireType>,
         signature: LongElement,
         rsaKeyBitLength: i32,
         desc: Vec<String>,
@@ -104,7 +104,7 @@ impl Gadget for RSASigVerificationV1_5_Gadget {
         isValidSignature = sumChecks.isEqualTo(lengthInBytes);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![isValidSignature];
     }
 }

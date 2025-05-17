@@ -1,7 +1,7 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::diffie_hellman_key_exchange::ecdh_key_exchange_gadget;
 
 /**
@@ -21,9 +21,9 @@ pub struct ECDHKeyExchange_Test  {
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test") {
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<Wire> secretBits;
-			 Wire baseX;
-			 Wire hX;
+			 Vec<WireType> secretBits;
+			 WireType baseX;
+			 WireType hX;
 			
 			
 			  fn buildCircuit() {
@@ -73,9 +73,9 @@ let output = generator.getOutWires();
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<Wire> secretBits;
-			 Wire baseX;
-			 Wire hX;
+			 Vec<WireType> secretBits;
+			 WireType baseX;
+			 WireType hX;
 			
 			
 			  fn buildCircuit() {
@@ -122,9 +122,9 @@ let output = generator.getOutWires();
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<Wire> secretBits;
-			 Wire baseX;
-			 Wire hX;
+			 Vec<WireType> secretBits;
+			 WireType baseX;
+			 WireType hX;
 			
 			
 			  fn buildCircuit() {
@@ -169,9 +169,9 @@ let exponent = BigInteger::new("138676918421965108283523458651650183811613156058
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<Wire> secretBits;
-			 Wire baseX;
-			 Wire hX;
+			 Vec<WireType> secretBits;
+			 WireType baseX;
+			 WireType hX;
 			
 			
 			  fn buildCircuit() {

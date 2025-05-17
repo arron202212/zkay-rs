@@ -1,11 +1,11 @@
 
 
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 
-use util::util;
+use crate::util::util::{Util,BigInteger};
 use zkay::zkay_paillier_dec_gadget;
 use zkay::zkay_paillier_enc_gadget;
 use zkay::zkay_paillier_fast_dec_gadget;
@@ -130,7 +130,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![Wire::default();0]));
+			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![WireType::default();0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -184,7 +184,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![Wire::default();0]));
+			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![WireType::default();0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -232,7 +232,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![Wire::default();0]));
+			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![WireType::default();0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -280,7 +280,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![Wire::default();0]));
+			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![WireType::default();0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}

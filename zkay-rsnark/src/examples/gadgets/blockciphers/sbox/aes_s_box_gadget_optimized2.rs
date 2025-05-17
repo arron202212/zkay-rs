@@ -1,8 +1,8 @@
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 use examples::gadgets::blockciphers::sbox::util::linear_system_solver;
 
@@ -36,8 +36,8 @@ pub struct AESSBoxGadgetOptimized2 {
      */
     bitCount: i32,
 
-    input: Wire,
-    output: Wire,
+    input: WireType,
+    output: WireType,
 }
 impl AESSBoxGadgetOptimized2 {
     fn preprocessing() {
@@ -45,7 +45,7 @@ impl AESSBoxGadgetOptimized2 {
         solveLinearSystems();
     }
     const SBox: Vec<i32> = AES128CipherGadget.SBox;
-    pub fn new(input: Wire, desc: Vec<String>) -> Self {
+    pub fn new(input: WireType, desc: Vec<String>) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();
@@ -84,7 +84,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 for k in 0..mat.length {
                     let memberValue = list.get(k + i * 16);
                     memberValueSet.add(memberValue);
-                    mat[k][16] = BigInteger.ONE;
+                    mat[k][16] = Util::one();
 
                     // now extract the values that correspond to memberValue
                     // the method getVariableValues takes the bitCount settings
@@ -100,7 +100,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 if checkIfProverCanCheat(mat, memberValueSet) {
                     println!("Invalid solution");
                     for ii in 0..16 {
-                        if mat[ii][16].equals(BigInteger.ZERO) {
+                        if mat[ii][16].equals(BigInteger::ZERO) {
                             println!("Possibly invalid due to having zero coefficient(s)");
                             break;
                         }
@@ -126,10 +126,10 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         generator.specifyProverWitnessComputation(&{
             struct Prover;
             impl Instruction for Prover {
-                pub fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     // TODO Auto-generated method stub
                     let value = evaluator.getWireValue(input);
-                    evaluator.setWireValue(output, BigInteger.valueOf(SBox[value.intValue()]));
+                    evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
                 }
             }
             Prover
@@ -146,7 +146,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
         let bitsIn = input.getBitWires(8).asArray();
         let bitsOut = output.getBitWires(8).asArray();
-        let vars = vec![Wire::default(); 16];
+        let vars = vec![WireType::default(); 16];
         let p = input.mul(256).add(output).add(1);
         let currentProduct = p;
         if bitCount != 0 && bitCount != 16 {
@@ -179,27 +179,27 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         generator.addZeroAssertion(product);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![output];
     }
 
     fn getVariableValues(k: i32) -> Vec<BigInteger> {
         let vars = vec![BigInteger::default(); 16];
-        let v = BigInteger.valueOf(k).add(BigInteger.ONE);
+        let v = BigInteger::from(k).add(Util::one());
         let product = v;
         if bitCount != 0 {
-            product = product.multiply(v).modulo(Config.FIELD_PRIME);
+            product = product.multiply(v).modulo(Configs.get().unwrap().field_prime);
         }
         for j in 0..16 {
             if j < bitCount {
                 vars[j] = if ((k >> j) & 0x01) == 1 {
-                    BigInteger.ONE
+                    Util::one()
                 } else {
-                    BigInteger.ZERO
+                    BigInteger::ZERO
                 };
             } else {
                 vars[j] = product;
-                product = product.multiply(v).modulo(Config.FIELD_PRIME);
+                product = product.multiply(v).modulo(Configs.get().unwrap().field_prime);
             }
         }
         return vars;
@@ -219,12 +219,12 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
         for k in 0..256 * 256 {
             let variableValues = getVariableValues(k);
-            let result = BigInteger.ZERO;
+            let result = BigInteger::ZERO;
             for i in 0..16 {
                 result = result.add(variableValues[i].multiply(coeffs[i]));
             }
-            result = result.modulo(Config.FIELD_PRIME);
-            if result.equals(BigInteger.ONE) {
+            result = result.modulo(Configs.get().unwrap().field_prime);
+            if result.equals(Util::one()) {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;

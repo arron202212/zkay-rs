@@ -1,5 +1,5 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::typed_wire;
 use zkay::zkay_cbc_symmetric_enc_gadget;
 use zkay::zkay_cbc_symmetric_enc_gadget::cipher_type;
@@ -23,7 +23,7 @@ impl Symmetric for ECDHBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         key: String,
-        ivArr: Vec<Wire>,
+        ivArr: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         return ZkayCBCSymmetricEncGadget::new(

@@ -1,6 +1,6 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * This gadget computes the result of the modular exponentiation c = b^e mod m,
@@ -45,7 +45,7 @@ impl LongIntegerModPowGadget {
 }
 impl Gadget for LongIntegerModPowGadget {
     fn buildCircuit() {
-        let one = LongElement::new(vec![BigInteger.ONE]);
+        let one = LongElement::new(vec![Util::one()]);
         let eBits = e.getBits(eMaxBits).asArray();
 
         // Start with product = 1
@@ -76,7 +76,7 @@ impl Gadget for LongIntegerModPowGadget {
         return c;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return c.getArray();
     }
 }

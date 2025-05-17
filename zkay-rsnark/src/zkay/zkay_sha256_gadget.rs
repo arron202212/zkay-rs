@@ -1,13 +1,13 @@
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 
 pub struct ZkaySHA256Gadget {
-    _uint_output: Vec<Wire>,
+    _uint_output: Vec<WireType>,
 }
 
 impl ZkaySHA256Gadget {
     const bytes_per_word: i32 = 32;
-    fn convert_inputs_to_bytes(uint256_inputs: Vec<Wire>) -> Vec<Wire> {
+    fn convert_inputs_to_bytes(uint256_inputs: Vec<WireType>) -> Vec<WireType> {
         let input_bytes = WireArray::new(uint256_inputs)
             .getBits(bytes_per_word * 8)
             .packBitsIntoWords(8);
@@ -22,7 +22,7 @@ impl ZkaySHA256Gadget {
         return input_bytes;
     }
 
-    pub fn new(uint256_inputs: Vec<Wire>, truncated_bits: i32, desc: Vec<String>) -> self {
+    pub fn new(uint256_inputs: Vec<WireType>, truncated_bits: i32, desc: Vec<String>) -> self {
         super(
             convert_inputs_to_bytes(uint256_inputs),
             8,
@@ -45,7 +45,7 @@ impl SHA256Gadget for ZkaySHA256Gadget {
         if truncated_length < 256 {
             // Keep truncated_length left-most bits as suggested in FIPS 180-4 to shorten the digest
             if truncated_length % 32 == 0 {
-                let shortened_digest = vec![Wire::default(); truncated_length / 32];
+                let shortened_digest = vec![WireType::default(); truncated_length / 32];
                 System.arraycopy(
                     digest,
                     digest.length - shortened_digest.length,
@@ -68,7 +68,7 @@ impl SHA256Gadget for ZkaySHA256Gadget {
         assert!(_uint_output.length == 1, "Wrong wire length");
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return _uint_output;
     }
 }

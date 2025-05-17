@@ -1,7 +1,7 @@
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget;
 use examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized1;
 use examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2;
@@ -22,9 +22,9 @@ pub enum SBoxOption {
  */
 pub struct AES128CipherGadget {
     //
-    plaintext: Vec<Wire>,   // array of 16 bytes
-    expandedKey: Vec<Wire>, // array of 176 bytes (call expandKey(..))
-    ciphertext: Vec<Wire>,  // array of 16 bytes
+    plaintext: Vec<WireType>,   // array of 16 bytes
+    expandedKey: Vec<WireType>, // array of 176 bytes (call expandKey(..))
+    ciphertext: Vec<WireType>,  // array of 16 bytes
 }
 impl AES128CipherGadget {
     const nb: i32 = 4;
@@ -64,7 +64,7 @@ impl AES128CipherGadget {
      *            expandKey() to get it
      */
 
-    pub fn new(inputs: Vec<Wire>, expandedKey: Vec<Wire>, desc: Vec<String>) -> Self {
+    pub fn new(inputs: Vec<WireType>, expandedKey: Vec<WireType>, desc: Vec<String>) -> Self {
         super(desc);
         assert!(
             inputs.len() == 4 * nb && expandedKey.len() == 4 * nb * (nr + 1),
@@ -79,8 +79,8 @@ impl AES128CipherGadget {
 impl Gadget for AES128CipherGadget {
     // follows the outline in http://www.cs.utsa.edu/~wagner/laws/AESintro.html
     fn buildCircuit() {
-        ciphertext = vec![Wire::default(); 4 * nb];
-        let state = vec![Wire::default(); 4][nb];
+        ciphertext = vec![WireType::default(); 4 * nb];
+        let state = vec![WireType::default(); 4][nb];
         let i = 0;
         for j in 0..nb {
             for k in 0..4 {
@@ -110,7 +110,7 @@ impl Gadget for AES128CipherGadget {
         }
     }
 
-    fn subBytes(state: Vec<Vec<Wire>>) {
+    fn subBytes(state: Vec<Vec<WireType>>) {
         for i in 0..state.len() {
             for j in 0..state[i].len() {
                 state[i][j] = randomAccess(generator, state[i][j]);
@@ -118,8 +118,8 @@ impl Gadget for AES128CipherGadget {
         }
     }
 
-    fn mixColumns(state: Vec<Vec<Wire>>) -> Vec<Vec<Wire>> {
-        let mut a = vec![Wire::default(); 4];
+    fn mixColumns(state: Vec<Vec<WireType>>) -> Vec<Vec<WireType>> {
+        let mut a = vec![WireType::default(); 4];
         for c in 0..4 {
             for i in 0..4 {
                 a[i] = state[i][c];
@@ -152,7 +152,7 @@ impl Gadget for AES128CipherGadget {
         return state;
     }
 
-    fn galoisMulConst(wire: Wire, mut i: i32) -> WireArray {
+    fn galoisMulConst(wire: WireType, mut i: i32) -> WireArray {
         let p = generator.getZeroWire();
         let counter;
         let hiBitSet;
@@ -171,8 +171,8 @@ impl Gadget for AES128CipherGadget {
         return p.getBitWires(8);
     }
 
-    fn shiftRows(state: Vec<Vec<Wire>>) -> Vec<Vec<Wire>> {
-        let mut newState = vec![vec![Wire::default(); nb]; 4];
+    fn shiftRows(state: Vec<Vec<WireType>>) -> Vec<Vec<WireType>> {
+        let mut newState = vec![vec![WireType::default(); nb]; 4];
         newState[0] = state[0][..nb].to_vec();
         for j in 0..nb {
             newState[1][j] = state[1][(j + 1) % nb];
@@ -182,8 +182,8 @@ impl Gadget for AES128CipherGadget {
         return newState;
     }
 
-    fn addRoundKey(state: Vec<Vec<Wire>>, from: i32, to: i32) -> Vec<Vec<Wire>> {
-        let newState = vec![vec![Wire::default(); nb]; 4];
+    fn addRoundKey(state: Vec<Vec<WireType>>, from: i32, to: i32) -> Vec<Vec<WireType>> {
+        let newState = vec![vec![WireType::default(); nb]; 4];
         let idx = 0;
         for j in 0..nb {
             for i in 0..4 {
@@ -194,13 +194,13 @@ impl Gadget for AES128CipherGadget {
         return newState;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 
     // key is a 16-byte array. Each wire represents a byte.
-    pub fn expandKey(key: Vec<Wire>) -> Vec<Wire> {
-        let w = vec![vec![Wire::default(); 4]; nb * (nr + 1)];
+    pub fn expandKey(key: Vec<WireType>) -> Vec<WireType> {
+        let w = vec![vec![WireType::default(); 4]; nb * (nr + 1)];
         let mut temp;
         let mut i = 0;
         while (i < nk) {
@@ -225,7 +225,7 @@ impl Gadget for AES128CipherGadget {
 
             i += 1;
         }
-        let expanded = vec![Wire::default(); nb * (nr + 1) * 4];
+        let expanded = vec![WireType::default(); nb * (nr + 1) * 4];
         let idx = 0;
         for k in 0..nb * (nr + 1) {
             for i in 0..4 {
@@ -236,22 +236,22 @@ impl Gadget for AES128CipherGadget {
         return expanded;
     }
 
-    fn subWord(generator: CircuitGenerator, w: Vec<Wire>) -> Vec<Wire> {
+    fn subWord(generator: CircuitGenerator, w: Vec<WireType>) -> Vec<WireType> {
         for i in 0..w.len() {
             w[i] = randomAccess(generator, w[i]);
         }
         return w;
     }
 
-    fn rotateWord(generator: CircuitGenerator, w: Vec<Wire>) -> Vec<Wire> {
-        let newW = vec![Wire::default(); w.len()];
+    fn rotateWord(generator: CircuitGenerator, w: Vec<WireType>) -> Vec<WireType> {
+        let newW = vec![WireType::default(); w.len()];
         for j in 0..w.len() {
             newW[j] = w[(j + 1) % w.len()];
         }
         return newW;
     }
 
-    fn randomAccess(generator: CircuitGenerator, wire: Wire) -> Wire {
+    fn randomAccess(generator: CircuitGenerator, wire: WireType) -> WireType {
         let g = None;
         match sBoxOption {
             LINEAR_SCAN => g = AESSBoxNaiveLookupGadget::new(wire),

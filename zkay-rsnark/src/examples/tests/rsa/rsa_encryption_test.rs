@@ -1,9 +1,9 @@
 
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
 use examples::generators::rsa::rsa_util;
 
@@ -40,9 +40,9 @@ let rsaModulusValue = ( pubKey).getModulus();
 
 let i32 rsaKeyLength = keySize;
 let i32 plainTextLength = plainText.length();
-				 Vec<Wire> inputMessage;
-				 Vec<Wire> randomness;
-				 Vec<Wire> cipherText;
+				 Vec<WireType> inputMessage;
+				 Vec<WireType> randomness;
+				 Vec<WireType> cipherText;
 				 LongElement rsaModulus;
 
 				 RSAEncryptionV1_5_Gadget rsaEncryptionV1_5_Gadget;
@@ -120,7 +120,7 @@ let evaluator = generator.getCircuitEvaluator();
 			
 			// retrieve the ciphertext from the circuit, and verify that it matches the expected ciphertext and that it decrypts correctly (using the Java built-in RSA decryptor)
 let cipherTextList = generator.getOutWires();
-let t = BigInteger.ZERO;
+let t = BigInteger::ZERO;
 let i = 0;
 			for  w in &cipherTextList{
 let val = evaluator.getWireValue(w);

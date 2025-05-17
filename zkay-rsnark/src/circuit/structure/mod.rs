@@ -6,3 +6,5 @@ pub mod linear_combination_wire;
 pub mod variable_bit_wire;
 pub mod variable_wire;
 pub mod wire;
+pub mod wire_array;
+pub mod wire_type;

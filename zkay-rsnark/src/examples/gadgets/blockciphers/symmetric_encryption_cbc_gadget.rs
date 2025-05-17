@@ -1,7 +1,7 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
-use util::util;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * Performs symmetric encryption in the CBC mode.
@@ -9,20 +9,20 @@ use util::util;
  *
  */
 pub struct SymmetricEncryptionCBCGadget {
-    ciphertext: Vec<Wire>,
+    ciphertext: Vec<WireType>,
     cipherName: String,
 
-    keyBits: Vec<Wire>,
-    plaintextBits: Vec<Wire>,
-    ivBits: Vec<Wire>,
+    keyBits: Vec<WireType>,
+    plaintextBits: Vec<WireType>,
+    ivBits: Vec<WireType>,
 }
 impl SymmetricEncryptionCBCGadget {
     const blocksize: i32 = 128;
     const keysize: i32 = 128;
     pub fn new(
-        plaintextBits: Vec<Wire>,
-        keyBits: Vec<Wire>,
-        ivBits: Vec<Wire>,
+        plaintextBits: Vec<WireType>,
+        keyBits: Vec<WireType>,
+        ivBits: Vec<WireType>,
         cipherName: String,
         desc: Vec<String>,
     ) {
@@ -70,7 +70,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
         }
     }
 
-    fn prepareKey() -> Vec<Wire> {
+    fn prepareKey() -> Vec<WireType> {
         assert!(
             !cipherName.equals("speck128"),
             "Other Ciphers not supported in this version!"
@@ -82,7 +82,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
         return preparedKey;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 }

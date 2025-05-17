@@ -1,13 +1,24 @@
-use circuit::config::config;
-use circuit::structure::wire;
-use util::util;
-
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+use crate::circuit::config::config::Configs;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::operations::primitive::basic_op::Op;
+use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::util::util::{Util,BigInteger};
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct PackBasicOp;
-pub fn newPackBasicOp(inBits: Vec<Wire>, out: Wire, desc: Vec<String>) -> Self {
+pub fn newPackBasicOp(inBits: Vec<WireType>, out: WireType, desc: Vec<String>) -> Op<PackBasicOp> {
     Op::<PackBasicOp> {
         inputs: inBits,
         outputs: vec![out],
-        desc: descl.get(0).unwrap_or(&String::new()).clone(),
+        desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: PackBasicOp,
     }
 }
@@ -17,7 +28,7 @@ impl BasicOp for Op<PackBasicOp> {
     }
 
     fn checkInputs(&self, assignment: Vec<BigInteger>) {
-        super.checkInputs(assignment);
+        // //super.checkInputs(assignment);
 
         assert!(
             (0..self.inputs.length).all(|i| Util::isBinary(assignment[self.inputs[i].getWireId()])),
@@ -26,12 +37,12 @@ impl BasicOp for Op<PackBasicOp> {
     }
 
     fn compute(&self, assignment: Vec<BigInteger>) {
-        let mut sum = BigInteger.ZERO;
+        let mut sum = BigInteger::ZERO;
         for i in 0..self.inputs.length {
             sum = sum
                 .add(assignment[self.inputs[i].getWireId()].multiply(BigInteger::new("2").pow(i)));
         }
-        assignment[self.outputs[0].getWireId()] = sum.modulo(Config.FIELD_PRIME);
+        assignment[self.outputs[0].getWireId()] = sum.modulo(Configs.get().unwrap().field_prime);
     }
 
     fn equals(&self, rhs: &Self) -> bool {
@@ -39,8 +50,8 @@ impl BasicOp for Op<PackBasicOp> {
             return true;
         }
 
-        let op = obj;
-        if op.self.inputs.length != self.inputs.length {
+        let op = rhs;
+        if op.inputs.length != self.inputs.length {
             return false;
         }
 

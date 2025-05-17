@@ -1,11 +1,11 @@
 
 
-use util::util;
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
+use crate::util::util::{Util,BigInteger};
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::math::field_division_gadget;
 
@@ -16,9 +16,9 @@ pub struct CachingTest  {
 
 		let numIns = Config.LOG2_FIELD_PRIME;
 		let inVals1 = Util::randomBigIntegerArray(numIns,
-				Config.FIELD_PRIME);
+				Configs.get().unwrap().field_prime);
 		let inVals2 = Util::randomBigIntegerArray(numIns,
-				Config.FIELD_PRIME);
+				Configs.get().unwrap().field_prime);
 		let inVals3 = Util::randomBigIntegerArray(numIns, 32);
 
 		let shiftedRightVals = vec![BigInteger::default();numIns];
@@ -33,26 +33,26 @@ pub struct CachingTest  {
 		let addedVals = vec![BigInteger::default();numIns];
 
 		let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME)
-				.subtract(BigInteger.ONE);
+				.subtract(Util::one());
 
 		for i in 0..numIns {
 
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(
-					Config.FIELD_PRIME);
+					Configs.get().unwrap().field_prime);
 			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask)
-					.modulo(Config.FIELD_PRIME);
-			rotatedRightVals[i] = BigInteger.valueOf(Integer.rotateRight(
+					.modulo(Configs.get().unwrap().field_prime);
+			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			rotatedLeftVals[i] = BigInteger.valueOf(Integer.rotateLeft(
+			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Config.FIELD_PRIME);
-			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Config.FIELD_PRIME);
-			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Config.FIELD_PRIME);
+			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
+			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
+			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
 			invertedVals[i] = BigInteger
 					.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
 			multipliedVals[i] = inVals1[i].multiply(inVals2[i]).modulo(
-					Config.FIELD_PRIME);
-			addedVals[i] = inVals1[i].add(inVals2[i]).modulo(Config.FIELD_PRIME);
+					Configs.get().unwrap().field_prime);
+			addedVals[i] = inVals1[i].add(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
 
 		}
 
@@ -68,17 +68,17 @@ pub struct CachingTest  {
 				inputs2 = createInputWireArray(numIns);
 				inputs3 = createInputWireArray(numIns);
 
-				let shiftedRight = vec![Wire::default();numIns];
-				let shiftedLeft = vec![Wire::default();numIns];
-				let rotatedRight = vec![Wire::default();numIns];
-				let rotatedLeft = vec![Wire::default();numIns];
-				let xored = vec![Wire::default();numIns];
-				let ored = vec![Wire::default();numIns];
-				let anded = vec![Wire::default();numIns];
-				let inverted = vec![Wire::default();numIns];
+				let shiftedRight = vec![WireType::default();numIns];
+				let shiftedLeft = vec![WireType::default();numIns];
+				let rotatedRight = vec![WireType::default();numIns];
+				let rotatedLeft = vec![WireType::default();numIns];
+				let xored = vec![WireType::default();numIns];
+				let ored = vec![WireType::default();numIns];
+				let anded = vec![WireType::default();numIns];
+				let inverted = vec![WireType::default();numIns];
 
-				let multiplied = vec![Wire::default();numIns];
-				let added = vec![Wire::default();numIns];
+				let multiplied = vec![WireType::default();numIns];
+				let added = vec![WireType::default();numIns];
 				
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
@@ -179,7 +179,7 @@ pub struct CachingTest  {
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 
-		ArrayList<Wire> outWires = generator.getOutWires();
+		ArrayList<WireType> outWires = generator.getOutWires();
 		let i, outputIndex = 0;
 		for i in 0..numIns
 			assertEquals(shiftedRightVals[i],
@@ -284,10 +284,10 @@ pub struct CachingTest  {
 
 			
 			pub  fn generateSampleInput(let evaluator) {
-				evaluator.setWireValue(in1, BigInteger.valueOf(5));
-				evaluator.setWireValue(in2, BigInteger.valueOf(6));
-				evaluator.setWireValue(witness1, BigInteger.valueOf(30));
-				evaluator.setWireValue(witness2, BigInteger.valueOf(30));
+				evaluator.setWireValue(in1, BigInteger::from(5));
+				evaluator.setWireValue(in2, BigInteger::from(6));
+				evaluator.setWireValue(witness1, BigInteger::from(30));
+				evaluator.setWireValue(witness2, BigInteger::from(30));
 
 			}
 		};

@@ -1,7 +1,7 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::homomorphic_input;
 use zkay::typed_wire;
 use zkay::zkay_dummy_hom_encryption_gadget;
@@ -22,7 +22,7 @@ impl Asymmetric for DummyHomBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         key: String,
-        random: Vec<Wire>,
+        random: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         let encodedPlain = encodePlaintextIfSigned(plain);
@@ -35,7 +35,7 @@ impl Asymmetric for DummyHomBackend {
         );
     }
 
-    fn getKeyWire(keyName: String) -> Wire {
+    fn getKeyWire(keyName: String) -> WireType {
         let key = getKey(keyName);
         let generator = CircuitGenerator.getActiveCircuitGenerator();
 
@@ -46,7 +46,7 @@ impl Asymmetric for DummyHomBackend {
         return keyArr[0];
     }
 
-    fn getCipherWire(input: HomomorphicInput, name: String) -> Wire {
+    fn getCipherWire(input: HomomorphicInput, name: String) -> WireType {
         assert!(input.is_some(), "{name} is null");
         assert!(!input.isPlain(), "{name} is not a ciphertext");
         assert!(input.getLength() == 1, "{name} has invalid length");
@@ -57,7 +57,7 @@ impl Asymmetric for DummyHomBackend {
         return cipherWire.sub(isNonZero);
     }
 
-    fn encodePlaintextIfSigned(plain: TypedWire) -> Wire {
+    fn encodePlaintextIfSigned(plain: TypedWire) -> WireType {
         if plain.zkay_type.signed {
             // Signed: wrap negative values around the field prime instead of around 2^n
             let bits = plain.zkay_type.bitwidth;
@@ -70,7 +70,7 @@ impl Asymmetric for DummyHomBackend {
         }
     }
 
-    fn typedAsUint(wire: Wire, name: String) -> Vec<TypedWire> {
+    fn typedAsUint(wire: WireType, name: String) -> Vec<TypedWire> {
         // Always zkay_type cipher wires as ZkUint(256)
         return vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)];
     }

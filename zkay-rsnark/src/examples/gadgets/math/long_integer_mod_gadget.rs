@@ -1,5 +1,5 @@
-use circuit::auxiliary::long_element;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * This gadget provides a % b, when both operands are represented as long
@@ -71,7 +71,7 @@ impl LongIntegerModGadget {
     }
 }
 impl LongIntegerDivision for LongIntegerModGadget {
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return getRemainder().getArray();
     }
 }

@@ -1,9 +1,9 @@
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use util::util;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * This gadget computes the modular multiplicative inverse a^(-1) mod m,
@@ -39,7 +39,7 @@ impl Gadget for LongIntegerModInverseGadget {
         generator.specifyProverWitnessComputation(&{
             struct Prover;
             impl Instruction for Prover {
-                pub fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
                     let mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
                     let inverseValue = aValue.modInverse(mValue);
@@ -76,7 +76,7 @@ impl Gadget for LongIntegerModInverseGadget {
         return inverse;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return inverse.getArray();
     }
 }

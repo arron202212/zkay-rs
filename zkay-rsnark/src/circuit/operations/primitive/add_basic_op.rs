@@ -1,9 +1,21 @@
-use circuit::config::config;
-use circuit::structure::wire;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+use crate::circuit::config::config::Configs;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::operations::primitive::basic_op::{BasicOp,Op};
+ use crate::util::util::{Util,BigInteger};
 
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct AddBasicOp;
 
-pub fn NewAddBasicOp(ws: Vec<Wire>, output: Wire, desc: Vec<String>) -> Op<AddBasicOp> {
+pub fn NewAddBasicOp(ws: Vec<WireType>, output: WireType, desc: Vec<String>) -> Op<AddBasicOp> {
     Op::<AddBasicOp> {
         inputs: ws,
         outputs: vec![output],
@@ -12,17 +24,17 @@ pub fn NewAddBasicOp(ws: Vec<Wire>, output: Wire, desc: Vec<String>) -> Op<AddBa
     }
 }
 
-impl<T> BasicOp for Op<AddBasicOp> {
+impl BasicOp for Op<AddBasicOp> {
     fn getOpcode(&self) -> String {
         return "add";
     }
 
     fn compute(&self, assignment: Vec<BigInteger>) {
-        let mut s = BigInteger.ZERO;
+        let mut s = BigInteger::ZERO;
         for w in self.inputs {
             s = s.add(assignment[w.getWireId()]);
         }
-        assignment[self.outputs[0].getWireId()] = s.modulo(Config.FIELD_PRIME);
+        assignment[self.outputs[0].getWireId()] = s.modulo(Configs.get().unwrap().field_prime);
     }
 
     fn equals(&self, rhs: &Self) -> bool {

@@ -1,11 +1,11 @@
-use circuit::config::config;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use util::util;
+use crate::circuit::config::config::Configs;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{Util,BigInteger};
 
 pub struct SubsetSumHashGadget {
-    inputWires: Vec<Wire>,
-    outWires: Vec<Wire>,
+    inputWires: Vec<WireType>,
+    outWires: Vec<WireType>,
     binaryOutput: bool,
 }
 use std::sync::OnceLock;
@@ -21,12 +21,12 @@ impl SubsetSumHashGadget {
      *            Whether the output digest should be splitted into bits or not.
      * @param desc
      */
-    pub fn new(ins: Vec<Wire>, binaryOutput: bool, desc: Vec<String>) -> Self {
+    pub fn new(ins: Vec<WireType>, binaryOutput: bool, desc: Vec<String>) -> Self {
         COEFFS::get_or_init(|| {
             let mut tmp = vec![vec![BigInteger::default(); INPUT_LENGTH]; DIMENSION];
             for i in 0..DIMENSION {
                 for k in 0..INPUT_LENGTH {
-                    tmp[i][k] = Util::nextRandomBigInteger(Config.FIELD_PRIME);
+                    tmp[i][k] = Util::nextRandomBigInteger(Configs.get().unwrap().field_prime);
                 }
             }
             tmp
@@ -38,7 +38,7 @@ impl SubsetSumHashGadget {
 
         let rem = numBlocks * INPUT_LENGTH - ins.length;
 
-        let mut pad = vec![Wire::default(); rem];
+        let mut pad = vec![WireType::default(); rem];
         for i in 0..pad.length {
             pad[i] = generator.getZeroWire(); // TODO: adjust padding
         }
@@ -60,7 +60,7 @@ impl Gadget for SubsetSumHashGadget {
         if !binaryOutput {
             outWires = outDigest;
         } else {
-            outWires = vec![Wire::default(); DIMENSION * Config.LOG2_FIELD_PRIME];
+            outWires = vec![WireType::default(); DIMENSION * Config.LOG2_FIELD_PRIME];
             for i in 0..DIMENSION {
                 let bits = outDigest[i].getBitWires(Config.LOG2_FIELD_PRIME).asArray();
                 for j in 0..bits.length {
@@ -70,7 +70,7 @@ impl Gadget for SubsetSumHashGadget {
         }
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return outWires;
     }
 }

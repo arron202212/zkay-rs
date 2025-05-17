@@ -1,8 +1,8 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use zkay::*;
 enum Backend {
     Dummy,
@@ -48,7 +48,7 @@ pub trait CryptoBackendConfig {
      */
     fn usesDecryptionGadget(&self) -> bool;
 
-    fn addKey(&self, keyName: String, keyWires: Vec<Wire>);
+    fn addKey(&self, keyName: String, keyWires: Vec<WireType>);
 
     fn getKeyChunkSize(&self) -> i32;
 
@@ -56,23 +56,23 @@ pub trait CryptoBackendConfig {
         &self,
         plain: TypedWire,
         key: String,
-        random: Vec<Wire>,
+        random: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget;
 
     fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<Wire>,
+        cipher: Vec<WireType>,
         pkName: String,
-        sk: Vec<Wire>,
+        sk: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget;
 }
 
 pub struct Symmetric {
-    pub Keys: HashMap<String, Wire>,
-    sharedKeys: HashMap<String, Wire>,
+    pub Keys: HashMap<String, WireType>,
+    sharedKeys: HashMap<String, WireType>,
     myPk: String,
     mySk: String,
 }
@@ -102,15 +102,15 @@ pub trait SymmetricConfig: CryptoBackendConfig {
     pub fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<Wire>,
+        cipher: Vec<WireType>,
         pkey: String,
-        skey: Vec<Wire>,
+        skey: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<Wire>) {
+    pub fn addKey(&self, keyName: String, keyWires: Vec<WireType>) {
         assert!(
             keyWires.length == 1,
             "Expected key size 1uint for symmetric keys"
@@ -118,7 +118,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         Keys.put(keyName, keyWires[0]);
     }
 
-    fn getKey(&self, keyName: String) -> Wire {
+    fn getKey(&self, keyName: String) -> WireType {
         let key = sharedKeys.get(keyName);
         if key == null {
             key = computeKey(keyName);
@@ -127,7 +127,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         return key;
     }
 
-    fn computeKey(&self, keyName: String) -> Wire {
+    fn computeKey(&self, keyName: String) -> WireType {
         assert!(
             self.myPk.is_some(),
             "setKeyPair not called on symmetric crypto backend"
@@ -154,7 +154,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         return sharedKeyGadget.getOutputWires()[0];
     }
 
-    pub fn setKeyPair(&self, myPk: Wire, mySk: Wire) {
+    pub fn setKeyPair(&self, myPk: WireType, mySk: WireType) {
         Objects.requireNonNull(myPk);
         Objects.requireNonNull(mySk);
         assert!(self.myPk.is_none(), "Key pair already set");
@@ -168,7 +168,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         self.mySk = mySk;
     }
 
-    fn extractIV(&self, ivCipher: Option<Vec<Wire>>) -> Wire {
+    fn extractIV(&self, ivCipher: Option<Vec<WireType>>) -> WireType {
         assert!(
             ivCipher.some() && !ivCipher.as_ref().unwrap().is_empty(),
             "IV cipher must not be empty"
@@ -204,15 +204,15 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
     pub fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<Wire>,
+        cipher: Vec<WireType>,
         pkey: String,
-        skey: Vec<Wire>,
+        skey: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<Wire>) {
+    pub fn addKey(&self, keyName: String, keyWires: Vec<WireType>) {
         let chunkBits = getKeyChunkSize();
         let keyArray = WireArray::new(keyWires)
             .getBits(chunkBits, keyName + "_bits")

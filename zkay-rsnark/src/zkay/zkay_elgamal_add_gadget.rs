@@ -1,4 +1,4 @@
-use circuit::structure::wire;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
@@ -31,7 +31,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalAddGadget {
         e2 = addPoints(c2, d2);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![e1.x, e1.y, e2.x, e2.y];
     }
 }

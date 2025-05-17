@@ -1,7 +1,7 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::math::long_integer_mod_gadget;
 use examples::gadgets::math::long_integer_mod_pow_gadget;
 use examples::gadgets::math::longIntegerModInverseGadget;
@@ -51,7 +51,7 @@ impl Asymmetric for PaillierBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         keyName: String,
-        randomWires: Vec<Wire>,
+        randomWires: Vec<WireType>,
         desc: Vec<String>,
     ) -> Gadget {
         let key = getKey(keyName);
@@ -215,7 +215,7 @@ impl Asymmetric for HomomorphicBackend {
         }
 
         // Input is a Paillier ciphertext - front-end must already check that this is the
-        let wires = vec![Wire::default(); cipher.length];
+        let wires = vec![WireType::default(); cipher.length];
         for i in 0..cipher.length {
             wires[i] = cipher[i].wire;
         }

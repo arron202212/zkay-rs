@@ -1,13 +1,13 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 pub struct DotProductGadget {
-    a: Vec<Wire>,
-    b: Vec<Wire>,
-    output: Wire,
+    a: Vec<WireType>,
+    b: Vec<WireType>,
+    output: WireType,
 }
 impl DotProductGadget {
-    pub fn new(a: Vec<Wire>, b: Vec<Wire>, desc: Vec<String>) -> Self {
+    pub fn new(a: Vec<WireType>, b: Vec<WireType>, desc: Vec<String>) -> Self {
         super(desc);
         assert!(a.len() == b.len());
         self.a = a;
@@ -24,7 +24,7 @@ impl Gadget for DotProductGadget {
         }
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![output];
     }
 }

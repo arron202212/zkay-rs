@@ -1,7 +1,7 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 use examples::gadgets::blockciphers::sbox.aes_s_box_gadget_optimized2;
 
@@ -21,9 +21,9 @@ for sboxOption in AES128CipherGadget.SBoxOption.values()
 			AES128CipherGadget.sBoxOption = sboxOption;
 			CircuitGenerator generator = CircuitGenerator::new("AES128_Test1_"+sboxOption) {
 	
-				 Vec<Wire> plaintext; // 16 bytes
-				 Vec<Wire> key; // 16 bytes
-				 Vec<Wire> ciphertext; // 16 bytes
+				 Vec<WireType> plaintext; // 16 bytes
+				 Vec<WireType> key; // 16 bytes
+				 Vec<WireType> ciphertext; // 16 bytes
 	
 				
 				  fn buildCircuit() {
@@ -73,7 +73,7 @@ let resultArray = result.toByteArray();
 	
 			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
-						BigInteger.valueOf((resultArray[i] + 256) % 256));
+						BigInteger::from((resultArray[i] + 256) % 256));
 			}
 		}
 	}
@@ -92,9 +92,9 @@ for sboxOption in AES128CipherGadget.SBoxOption.values()
 			AES128CipherGadget.sBoxOption = sboxOption;
 			CircuitGenerator generator = CircuitGenerator::new("AES128_Test2_"+sboxOption) {
 	
-				 Vec<Wire> plaintext; // 16 bytes
-				 Vec<Wire> key; // 16 bytes
-				 Vec<Wire> ciphertext; // 16 bytes
+				 Vec<WireType> plaintext; // 16 bytes
+				 Vec<WireType> key; // 16 bytes
+				 Vec<WireType> ciphertext; // 16 bytes
 	
 				
 				  fn buildCircuit() {
@@ -146,7 +146,7 @@ let resultArray = result.toByteArray();
 	
 			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
-						BigInteger.valueOf((resultArray[i] + 256) % 256));
+						BigInteger::from((resultArray[i] + 256) % 256));
 			}
 		}
 	}
@@ -164,9 +164,9 @@ for sboxOption in AES128CipherGadget.SBoxOption.values()
 			AES128CipherGadget.sBoxOption = sboxOption;
 			CircuitGenerator generator = CircuitGenerator::new("AES128_Test3_"+sboxOption) {
 	
-				 Vec<Wire> plaintext; // 16 bytes
-				 Vec<Wire> key; // 16 bytes
-				 Vec<Wire> ciphertext; // 16 bytes
+				 Vec<WireType> plaintext; // 16 bytes
+				 Vec<WireType> key; // 16 bytes
+				 Vec<WireType> ciphertext; // 16 bytes
 	
 				
 				  fn buildCircuit() {
@@ -216,7 +216,7 @@ let resultArray = result.toByteArray();
 	
 			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
-						BigInteger.valueOf((resultArray[i] + 256) % 256));
+						BigInteger::from((resultArray[i] + 256) % 256));
 			}
 		}
 	}
@@ -235,9 +235,9 @@ for sboxOption in AES128CipherGadget.SBoxOption.values()
 			AES128CipherGadget.sBoxOption = sboxOption;
 			CircuitGenerator generator = CircuitGenerator::new("AES128_Test4_"+sboxOption) {
 	
-				 Vec<Wire> plaintext; // 16 bytes
-				 Vec<Wire> key; // 16 bytes
-				 Vec<Wire> ciphertext; // 16 bytes
+				 Vec<WireType> plaintext; // 16 bytes
+				 Vec<WireType> key; // 16 bytes
+				 Vec<WireType> ciphertext; // 16 bytes
 	
 				
 				  fn buildCircuit() {
@@ -288,7 +288,7 @@ let resultArray = result.toByteArray();
 	
 			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
-						BigInteger.valueOf((resultArray[i] + 256) % 256));
+						BigInteger::from((resultArray[i] + 256) % 256));
 			}
 		}
 	}
@@ -304,9 +304,9 @@ let resultArray = result.toByteArray();
 			AESSBoxGadgetOptimized2.solveLinearSystems();
 			CircuitGenerator generator = CircuitGenerator::new("AES128_Test_SBox_Parametrization_"+b) {
 	
-				 Vec<Wire> plaintext; // 16 bytes
-				 Vec<Wire> key; // 16 bytes
-				 Vec<Wire> ciphertext; // 16 bytes
+				 Vec<WireType> plaintext; // 16 bytes
+				 Vec<WireType> key; // 16 bytes
+				 Vec<WireType> ciphertext; // 16 bytes
 	
 				
 				  fn buildCircuit() {
@@ -357,7 +357,7 @@ let resultArray = result.toByteArray();
 	
 			for i in 0..16 {
 				assertEquals(evaluator.getWireValue(cipherText.get(i)),
-						BigInteger.valueOf((resultArray[i] + 256) % 256));
+						BigInteger::from((resultArray[i] + 256) % 256));
 			}
 		}
 	}

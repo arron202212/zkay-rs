@@ -1,8 +1,8 @@
 
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::mod_constant_gadget;
 use examples::gadgets::math::mod_gadget;
 
@@ -18,13 +18,13 @@ let b = 257; // b will be an input to the circuit
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test1") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
 
 				inputWires = createInputWireArray(2);
-//				Wire r = ModGadget::new(inputWires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), inputWires[1],
+//				WireType r = ModGadget::new(inputWires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), inputWires[1],
 //						(i32) Math.ceil(Math.log10(b) / Math.log10(2))).getOutputWires()[0];
 				
 let r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
@@ -44,7 +44,7 @@ let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 let rWire = generator.getOutWires().get(0);
-		assertEquals(evaluator.getWireValue(rWire), BigInteger.valueOf(a % b));
+		assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
 	}
 	
 	
@@ -55,13 +55,13 @@ let b = 257; // b will be a constant
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test2") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
 
 				inputWires = createInputWireArray(1);
-let r = ModConstantGadget::new(inputWires[0], 32, BigInteger.valueOf(b)).getOutputWires()[0];
+let r = ModConstantGadget::new(inputWires[0], 32, BigInteger::from(b)).getOutputWires()[0];
 				makeOutput(r);
 			}
 
@@ -76,7 +76,7 @@ let evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 let rWire = generator.getOutWires().get(0);
-		assertEquals(evaluator.getWireValue(rWire), BigInteger.valueOf(a % b));
+		assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
 	}
 	
 

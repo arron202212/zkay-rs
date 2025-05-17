@@ -1,7 +1,7 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget;
 
 
@@ -14,9 +14,9 @@ pub struct Chaskey128_Test  {
 
 		CircuitGenerator generator = CircuitGenerator::new("Chaskey_Test1") {
 	
-			 Vec<Wire> plaintext; // 4 32-bit words
-			 Vec<Wire> key; // 4 32-bit words
-			 Vec<Wire> ciphertext; // 4 32-bit words
+			 Vec<WireType> plaintext; // 4 32-bit words
+			 Vec<WireType> key; // 4 32-bit words
+			 Vec<WireType> ciphertext; // 4 32-bit words
 
 			
 			  fn buildCircuit() {
@@ -30,15 +30,15 @@ pub struct Chaskey128_Test  {
 			
 			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
-				Vec<BigInteger> keyV = { BigInteger.valueOf(0x68e90956L),
-						BigInteger.valueOf(0x29e3585fL),
-						BigInteger.valueOf(0x98ecec40L),
-						BigInteger.valueOf(0x2f9822c5L) };
+				Vec<BigInteger> keyV = { BigInteger::from(0x68e90956L),
+						BigInteger::from(0x29e3585fL),
+						BigInteger::from(0x98ecec40L),
+						BigInteger::from(0x2f9822c5L) };
 
-				Vec<BigInteger> msgV = { BigInteger.valueOf(0x262823b8L),
-						BigInteger.valueOf(0x5e405efdL),
-						BigInteger.valueOf(0xa901a369L),
-						BigInteger.valueOf(0xd87aea78L) };
+				Vec<BigInteger> msgV = { BigInteger::from(0x262823b8L),
+						BigInteger::from(0x5e405efdL),
+						BigInteger::from(0xa901a369L),
+						BigInteger::from(0xd87aea78L) };
 
 				for i in 0..plaintext.length {
 					evaluator.setWireValue(plaintext[i], msgV[i]);
@@ -54,10 +54,10 @@ pub struct Chaskey128_Test  {
 let evaluator = generator.getCircuitEvaluator();
 let cipherText = generator.getOutWires();
 
-		Vec<BigInteger> expeectedCiphertext = { BigInteger.valueOf(0x4d8d60d5L),
-				BigInteger.valueOf(0x7b34bfa2L),
-				BigInteger.valueOf(0x2f77f8abL),
-				BigInteger.valueOf(0x07deeddfL) };
+		Vec<BigInteger> expeectedCiphertext = { BigInteger::from(0x4d8d60d5L),
+				BigInteger::from(0x7b34bfa2L),
+				BigInteger::from(0x2f77f8abL),
+				BigInteger::from(0x07deeddfL) };
 
 		for i in 0..4 {
 			assertEquals(evaluator.getWireValue(cipherText.get(i)),

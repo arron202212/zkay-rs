@@ -1,22 +1,22 @@
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::blockciphers::symmetric_encryptioncbc_gadget;
 use examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange;
 use examples::gadgets::hash::sha256_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 // This gadget shows a simple example of hybrid encryption for illustration purposes
 // It currently uses the field extension key exchange gadget with the speck cipher
 
 pub struct HybridEncryptionCircuitGenerator {
-    plaintext: Vec<Wire>,  // as 64-bit words
+    plaintext: Vec<WireType>,  // as 64-bit words
     plaintextSize: i32,    // number of 64-bit words
-    ciphertext: Vec<Wire>, // as 64-bit words
+    ciphertext: Vec<WireType>, // as 64-bit words
 
     ciphername: String,
-    secExpBits: Vec<Wire>,
+    secExpBits: Vec<WireType>,
 }
 impl HybridEncryptionCircuitGenerator {
     // Will assume the parameterization used in the test files ~ 80-bits
@@ -42,8 +42,8 @@ impl CircuitGenerator for HybridEncryptionCircuitGenerator {
             addBinaryAssertion(secExpBits[i]); // verify all bits are binary
         }
 
-        let g = vec![Wire::default(); MU];
-        let h = vec![Wire::default(); MU];
+        let g = vec![WireType::default(); MU];
+        let h = vec![WireType::default(); MU];
 
         // Hardcode the base and the other party's key (suitable when keys are not expected to change)
         g[0] = createConstantWire(BigInteger::new(
@@ -76,8 +76,8 @@ impl CircuitGenerator for HybridEncryptionCircuitGenerator {
         // instead, and supply the above values using the generateSampleInput()
         // method instead.
         /*
-         * Vec<Wire> g = createInputWireArray(mu);
-         * Vec<Wire> h = createInputWireArray(mu);
+         * Vec<WireType> g = createInputWireArray(mu);
+         * Vec<WireType> h = createInputWireArray(mu);
          */
 
         // Exchange keys

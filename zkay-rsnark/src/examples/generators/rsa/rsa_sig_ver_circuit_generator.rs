@@ -1,14 +1,14 @@
-use circuit::auxiliary::long_element;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 
 //a demo for RSA Signatures PKCS #1, V1.5
 pub struct RSASigVerCircuitGenerator {
     rsaKeyLength: i32,
-    inputMessage: Vec<Wire>,
+    inputMessage: Vec<WireType>,
     signature: LongElement,
     rsaModulus: LongElement,
 

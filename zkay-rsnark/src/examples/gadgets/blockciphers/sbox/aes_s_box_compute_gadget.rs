@@ -1,7 +1,7 @@
-use circuit::eval::circuit_evaluator;
-use circuit::eval::instruction;
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * This gadget does not apply any lookups in the circuit. Instead, it verifies
@@ -12,12 +12,12 @@ use circuit::structure::wire;
  */
 
 pub struct AESSBoxComputeGadget {
-    input: Wire,
-    inverse: Wire,
-    output: Wire,
+    input: WireType,
+    inverse: WireType,
+    output: WireType,
 }
 impl AESSBoxComputeGadget {
-    pub fn new(input: Wire, desc: Vec<String>) -> Self {
+    pub fn new(input: WireType, desc: Vec<String>) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();
@@ -30,7 +30,7 @@ impl Gadget for AESSBoxComputeGadget {
         generator.addToEvaluationQueue(&{
             struct Prover;
             impl Instruction for Prover {
-                pub fn evaluate(evaluator: CircuitEvaluator) {
+                fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let p = evaluator.getWireValue(input).intValue();
                     let q = findInv(p);
                     evaluator.setWireValue(inverse, q);
@@ -54,11 +54,11 @@ impl Gadget for AESSBoxComputeGadget {
         output = output.xorBitwise(inverse.rotateLeft(8, 4), 8);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![output];
     }
 
-    fn gmul(a: Wire, b: Wire) -> Wire {
+    fn gmul(a: WireType, b: WireType) -> WireType {
         let p = generator.getZeroWire();
         for counter in 0..8 {
             let tmp = p.xorBitwise(a, 8);

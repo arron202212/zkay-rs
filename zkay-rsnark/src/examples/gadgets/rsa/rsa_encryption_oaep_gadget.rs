@@ -1,10 +1,10 @@
-use circuit::auxiliary::long_element;
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
@@ -25,10 +25,10 @@ pub struct RSAEncryptionOAEPGadget {
     modulus: LongElement,
 
     // every wire represents a byte in the following three arrays
-    plainText: Vec<Wire>,
-    seed: Vec<Wire>,
+    plainText: Vec<WireType>,
+    seed: Vec<WireType>,
 
-    ciphertext: Vec<Wire>,
+    ciphertext: Vec<WireType>,
 
     rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
 }
@@ -43,8 +43,8 @@ impl RSAEncryptionOAEPGadget {
 			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 ];
     pub fn new(
         modulus: LongElement,
-        plainText: Vec<Wire>,
-        seed: Vec<Wire>,
+        plainText: Vec<WireType>,
+        seed: Vec<WireType>,
         rsaKeyBitLength: i32,
         desc: Vec<String>,
     ) -> Self {
@@ -79,7 +79,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         let keyLen = rsaKeyBitLength / 8; // in bytes
         let mut paddingString = vec![generator.getZeroWire(); keyLen - mLen - 2 * hLen - 2];
 
-        let mut db = vec![Wire::default(); keyLen - hLen - 1];
+        let mut db = vec![WireType::default(); keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
                 db[i] = generator.createConstantWire((lSHA256_HASH[i] + 256) % 256);
@@ -93,13 +93,13 @@ impl Gadget for RSAEncryptionOAEPGadget {
         }
 
         let dbMask = mgf1(seed, keyLen - hLen - 1);
-        let maskedDb = vec![Wire::default(); keyLen - hLen - 1];
+        let maskedDb = vec![WireType::default(); keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             maskedDb[i] = dbMask[i].xorBitwise(db[i], 8);
         }
 
         let seededMask = mgf1(maskedDb, hLen);
-        let maskedSeed = vec![Wire::default(); hLen];
+        let maskedSeed = vec![WireType::default(); hLen];
         for i in 0..hLen {
             maskedSeed[i] = seededMask[i].xorBitwise(seed[i], 8);
         }
@@ -108,11 +108,11 @@ impl Gadget for RSAEncryptionOAEPGadget {
 
         // The LongElement implementation is LittleEndian, so we will process the array in reverse order
 
-        let paddedMsg = LongElement::new(vec![BigInteger.ZERO]);
+        let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
         for i in 0..paddedByteArray.length {
             let e = LongElement::new(paddedByteArray[paddedByteArray.length - i - 1], 8);
             let c = LongElement::new(Util::split(
-                BigInteger.ONE.shiftLeft(8 * i),
+                Util::one().shiftLeft(8 * i),
                 LongElement.CHUNK_BITWIDTH,
             ));
             paddedMsg = paddedMsg.add(e.mul(c));
@@ -139,7 +139,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         }
     }
 
-    fn mgf1(ins: Vec<Wire>, length: i32) -> Vec<Wire> {
+    fn mgf1(ins: Vec<WireType>, length: i32) -> Vec<WireType> {
         let mut mgfOutputList = vec![];
         for i in 0..=(length * 1.0 / SHA256_DIGEST_LENGTH).ceil() as i32 - 1 {
             // the standard follows a Big Endian format
@@ -171,7 +171,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         return out[..length].to_vec();
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 }

@@ -1,12 +1,25 @@
-use circuit::structure::wire;
-use util::util;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::operations::primitive::basic_op::Op;
+use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::util::util::{Util,BigInteger};
+
+ use std::hash::Hash;
+ use std::fmt::Debug;
+#[derive(Debug,Clone,Hash)]
 pub struct XorBasicOp;
 
-fn new_xor_basic_op(w1: Wire, w2: Wire, output: Wire, desc: Vec<String>) -> Op<XorBasicOp> {
+fn new_xor_basic_op(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<XorBasicOp> {
     Op::<XorBasicOp> {
         inputs: vec![w1, w2],
         outputs: output,
-        desc: descl.get(0).unwrap_or(&String::new()).clone(),
+        desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: XorBasicOp,
     }
 }
@@ -17,7 +30,7 @@ impl BasicOp for XorBasicOp {
     }
 
     fn checkInputs(&self, assignment: Vec<BigInteger>) {
-        super.checkInputs(assignment);
+        // //super.checkInputs(assignment);
         let check = Util::isBinary(assignment[self.self.inputs[0].getWireId()])
             && Util::isBinary(assignment[self.self.inputs[1].getWireId()]);
         assert!(

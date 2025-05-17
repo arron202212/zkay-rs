@@ -1,4 +1,4 @@
-use circuit::structure::wire;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Gadget for exponential ElGamal encryption, which is additively homomorphic.
@@ -6,9 +6,9 @@ use circuit::structure::wire;
  * does not have to be embedded into the curve.
  */
 pub struct ZkayElgamalEncGadget {
-    randomnessBits: Vec<Wire>, // little-endian randomness bits
+    randomnessBits: Vec<WireType>, // little-endian randomness bits
 
-    msgBits: Vec<Wire>, // little-endian message bits
+    msgBits: Vec<WireType>, // little-endian message bits
 
     pk: JubJubPoint, // pub  key
 
@@ -17,7 +17,7 @@ pub struct ZkayElgamalEncGadget {
     c2: JubJubPoint,
 }
 impl ZkayElgamalEncGadget {
-    pub fn new(msgBits: Vec<Wire>, pk: JubJubPoint, randomnessBits: Vec<Wire>) -> Self {
+    pub fn new(msgBits: Vec<WireType>, pk: JubJubPoint, randomnessBits: Vec<WireType>) -> Self {
         self.randomnessBits = randomnessBits;
         self.msgBits = msgBits;
         self.pk = pk;
@@ -32,7 +32,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalEncGadget {
         c2 = addPoints(msgEmbedded, sharedSecret);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![c1.x, c1.y, c2.x, c2.y];
     }
 }

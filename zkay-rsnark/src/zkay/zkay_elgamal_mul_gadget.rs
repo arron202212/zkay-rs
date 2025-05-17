@@ -1,4 +1,4 @@
-use circuit::structure::wire;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Gadget for homomorphically multiplying an ElGamal ciphertext (c1, c2) by a plaintext scalar
@@ -8,14 +8,14 @@ pub struct ZkayElgamalMulGadget {
 
     c2: JubJubPoint,
 
-    scalarBits: Vec<Wire>,
+    scalarBits: Vec<WireType>,
 
     e1: JubJubPoint,
 
     e2: JubJubPoint,
 }
 impl ZkayElgamalMulGadget {
-    pub fn new(c1: JubJubPoint, c2: JubJubPoint, scalarBits: Vec<Wire>) -> Self {
+    pub fn new(c1: JubJubPoint, c2: JubJubPoint, scalarBits: Vec<WireType>) -> Self {
         self.c1 = c1;
         self.c2 = c2;
         self.scalarBits = scalarBits;
@@ -28,7 +28,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget {
         e2 = mulScalar(c2, scalarBits);
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return vec![e1.x, e1.y, e2.x, e2.y];
     }
 }

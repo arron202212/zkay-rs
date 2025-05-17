@@ -1,8 +1,8 @@
 
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
 use zkay::zkay_baby_jub_jub_gadget;
 
 
@@ -53,9 +53,9 @@ pub struct BabyJubJubTest {
         }
 
         
-        pub  fn getOutputWires()->Vec<Wire>  {
+        pub  fn getOutputWires()->Vec<WireType>  {
             let dummy = generator.getOneWire();
-            return vec![Wire::default();]{ dummy };
+            return vec![WireType::default();]{ dummy };
         }
     }
 

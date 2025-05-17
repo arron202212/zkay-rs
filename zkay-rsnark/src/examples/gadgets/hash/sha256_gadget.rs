@@ -1,10 +1,10 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
-use circuit::structure::wire_array;
-use util::util;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_array;
+use crate::util::util::{Util,BigInteger};
 
 pub struct SHA256Gadget {
-    unpaddedInputs: Vec<Wire>,
+    unpaddedInputs: Vec<WireType>,
 
     bitwidthPerInputElement: i32,
     totalLengthInBytes: i32,
@@ -13,8 +13,8 @@ pub struct SHA256Gadget {
     binaryOutput: bool,
     paddingRequired: bool,
 
-    preparedInputBits: Vec<Wire>,
-    output: Vec<Wire>,
+    preparedInputBits: Vec<WireType>,
+    output: Vec<WireType>,
 }
 impl SHA256Gadget {
     const H: Vec<i64> = vec![
@@ -95,7 +95,7 @@ impl SHA256Gadget {
         0xc67178f2L,
     ];
     pub fn new(
-        ins: Vec<Wire>,
+        ins: Vec<WireType>,
         bitWidthPerInputElement: i32,
         totalLengthInBytes: i32,
         binaryOutput: bool,
@@ -130,15 +130,15 @@ impl Gadget for SHA256Gadget {
         // pad if needed
         prepare();
 
-        let outDigest = vec![Wire::default(); 8];
-        let hWires = vec![Wire::default(); H.len()];
+        let outDigest = vec![WireType::default(); 8];
+        let hWires = vec![WireType::default(); H.len()];
         for i in 0..H.len() {
             hWires[i] = generator.createConstantWire(H[i]);
         }
 
         for blockNum in 0..numBlocks {
             let mut wsSplitted = vec![vec![]; 64];
-            let mut w = vec![Wire::default(); 64];
+            let mut w = vec![WireType::default(); 64];
 
             for i in 0..64 {
                 if i < 16 {
@@ -240,7 +240,7 @@ impl Gadget for SHA256Gadget {
         if !binaryOutput {
             output = outDigest;
         } else {
-            output = vec![Wire::default(); 8 * 32];
+            output = vec![WireType::default(); 8 * 32];
             for i in 0..8 {
                 let bits = outDigest[i].getBitWires(32).asArray();
                 for j in 0..32 {
@@ -250,8 +250,8 @@ impl Gadget for SHA256Gadget {
         }
     }
 
-    fn computeMaj(a: Wire, b: Wire, c: Wire, numBits: i32) -> Wire {
-        let result = vec![Wire::default(); numBits];
+    fn computeMaj(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
+        let result = vec![WireType::default(); numBits];
         let aBits = a.getBitWires(numBits).asArray();
         let bBits = b.getBitWires(numBits).asArray();
         let cBits = c.getBitWires(numBits).asArray();
@@ -264,8 +264,8 @@ impl Gadget for SHA256Gadget {
         return WireArray::new(result).packAsBits();
     }
 
-    fn computeCh(a: Wire, b: Wire, c: Wire, numBits: i32) -> Wire {
-        let result = vec![Wire::default(); numBits];
+    fn computeCh(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
+        let result = vec![WireType::default(); numBits];
 
         let aBits = a.getBitWires(numBits).asArray();
         let bBits = b.getBitWires(numBits).asArray();
@@ -288,9 +288,9 @@ impl Gadget for SHA256Gadget {
         if paddingRequired {
             let mut pad;
             if (64 - tailLength >= 9) {
-                pad = vec![Wire::default(); 64 - tailLength];
+                pad = vec![WireType::default(); 64 - tailLength];
             } else {
-                pad = vec![Wire::default(); 128 - tailLength];
+                pad = vec![WireType::default(); 128 - tailLength];
             }
             numBlocks = (totalLengthInBytes + pad.len()) / 64;
             pad[0] = generator.createConstantWire(0x80);
@@ -298,7 +298,7 @@ impl Gadget for SHA256Gadget {
                 pad[i] = generator.getZeroWire();
             }
             let lengthInBits = totalLengthInBytes * 8;
-            let lengthBits = vec![Wire::default(); 64];
+            let lengthBits = vec![WireType::default(); 64];
             for i in 0..8 {
                 pad[pad.len() - 1 - i] =
                     generator.createConstantWire((lengthInBits >> (8 * i)) & 0xFFL);
@@ -319,7 +319,7 @@ impl Gadget for SHA256Gadget {
      * outputs digest as 32-bit words
      */
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return output;
     }
 }

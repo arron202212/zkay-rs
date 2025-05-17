@@ -1,9 +1,9 @@
 
-use util::util;
-use circuit::config::config;
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::util::util::{Util,BigInteger};
+use crate::circuit::config::config::Configs;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 
 
@@ -22,7 +22,7 @@ let expectedDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b78
 
 		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test1") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
@@ -57,7 +57,7 @@ let expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419
 
 		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test2") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
@@ -94,7 +94,7 @@ let expectedDigest = "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037a
 
 		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test3") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
@@ -131,7 +131,7 @@ let expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f2
 
 		CircuitGenerator generator = CircuitGenerator::new("SHA2_Test4") {
 
-			Vec<Wire> inputWires;
+			Vec<WireType> inputWires;
 
 			
 			  fn buildCircuit() {
@@ -176,13 +176,13 @@ let numBytesPerInputWire = wordSize;
 			
 			CircuitGenerator generator = CircuitGenerator::new("SHA2_Test5") {
 
-				Vec<Wire> inputWires;
+				Vec<WireType> inputWires;
 				
 				  fn buildCircuit() {
 					inputWires = createInputWireArray(inputStr.length()
 							/ numBytesPerInputWire
 let inputStr.length() % numBytesPerInputWire != 0  { 1 }else { 0}));
-					Vec<Wire> digest = SHA256Gadget::new(inputWires, 8 * numBytesPerInputWire,
+					Vec<WireType> digest = SHA256Gadget::new(inputWires, 8 * numBytesPerInputWire,
 							inputStr.length(), false, true, "")
 							.getOutputWires();
 					makeOutputArray(digest);
@@ -191,10 +191,10 @@ let inputStr.length() % numBytesPerInputWire != 0  { 1 }else { 0}));
 				
 				pub  fn generateSampleInput(CircuitEvaluator e) {
 					for i in 0..inputWires.length {
-let sum = BigInteger.ZERO;
+let sum = BigInteger::ZERO;
 						for  j in  i * numBytesPerInputWire.. j < inputStr.length().min((i + 1) * numBytesPerInputWire)
 								 {
-							BigInteger v = BigInteger.valueOf(inputStr
+							BigInteger v = BigInteger::from(inputStr
 									.charAt(j));
 							sum = sum.add(v.shiftLeft((j % numBytesPerInputWire) * 8));
 						}

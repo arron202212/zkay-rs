@@ -1,5 +1,5 @@
-use circuit::operations::gadget;
-use circuit::structure::wire;
+use crate::circuit::operations::gadget;
+use crate::circuit::structure::wire_type::WireType;
 
 /**
  * Implements the light weight cipher Chaskey128, the LTS version with 16 rounds
@@ -10,12 +10,12 @@ use circuit::structure::wire;
  * https://www.cryptolux.org/index.php/FELICS
  */
 pub struct ChaskeyLTS128CipherGadget {
-    plaintext: Vec<Wire>,  // 4 32-bit words
-    key: Vec<Wire>,        // 4 32-bit words
-    ciphertext: Vec<Wire>, // 4 32-bit words
+    plaintext: Vec<WireType>,  // 4 32-bit words
+    key: Vec<WireType>,        // 4 32-bit words
+    ciphertext: Vec<WireType>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
-    pub fn new(inputs: Vec<Wire>, key: Vec<Wire>, desc: Vec<String>) -> Self {
+    pub fn new(inputs: Vec<WireType>, key: Vec<WireType>, desc: Vec<String>) -> Self {
         super(desc);
         assert!(inputs.len() == 4 && key.len() == 4, "Invalid Input");
 
@@ -27,7 +27,7 @@ impl ChaskeyLTS128CipherGadget {
 }
 impl Gadget for ChaskeyLTS128CipherGadget {
     fn buildCircuit() {
-        let v = vec![Wire::default(); 4];
+        let v = vec![WireType::default(); 4];
         for i in 0..4 {
             v[i] = (plaintext[i].xorBitwise(key[i], 32));
         }
@@ -55,7 +55,7 @@ impl Gadget for ChaskeyLTS128CipherGadget {
         ciphertext = v;
     }
 
-    pub fn getOutputWires() -> Vec<Wire> {
+    pub fn getOutputWires() -> Vec<WireType> {
         return ciphertext;
     }
 }

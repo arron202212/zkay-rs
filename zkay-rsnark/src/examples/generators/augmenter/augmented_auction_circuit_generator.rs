@@ -1,9 +1,9 @@
-use circuit::eval::circuit_evaluator;
-use circuit::structure::circuit_generator;
-use circuit::structure::wire;
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::augmenter::pinocchio_gadget;
 use examples::gadgets::hash::sha256_gadget;
-use util::util;
+use crate::util::util::{Util,BigInteger};
 
 /**
  * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
@@ -13,12 +13,12 @@ use util::util;
 
 pub struct AugmentedAuctionCircuitGenerator {
     // each value is assumed to be a 64-bit value
-    secretInputValues: Vec<Wire>,
-    secretOutputValues: Vec<Wire>,
+    secretInputValues: Vec<WireType>,
+    secretOutputValues: Vec<WireType>,
 
     // randomness vectors for each participant (each random vector is 7 64-bit words)
-    secretInputRandomness: Vec<Vec<Wire>>,
-    secretOutputRandomness: Vec<Vec<Wire>>,
+    secretInputRandomness: Vec<Vec<WireType>>,
+    secretOutputRandomness: Vec<Vec<WireType>>,
 
     pathToCompiledCircuit: String,
     numParties: i32, // includes the auction manager + the participants
