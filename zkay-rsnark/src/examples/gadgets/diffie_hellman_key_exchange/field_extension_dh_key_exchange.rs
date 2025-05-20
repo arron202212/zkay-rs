@@ -16,20 +16,20 @@ use crate::util::util::{Util,BigInteger};
  *
  */
 pub struct FieldExtensionDHKeyExchange {
-    g: Vec<WireType>, // base
-    h: Vec<WireType>, // other party's pub  input (supposedly, h = g^(the
+    g: Vec<Option<WireType>>, // base
+    h: Vec<Option<WireType>>, // other party's pub  input (supposedly, h = g^(the
     // other party's secret))
-    secretExponentBits: Vec<WireType>, // the bits of the secret exponent of the
+    secretExponentBits: Vec<Option<WireType>>, // the bits of the secret exponent of the
     // party
     // executing this gadget
     omega: i64,
     mu: i32,
 
     // gadget outputs
-    outputPublicValue: Vec<WireType>, // g^s (to be sent to the other party)
-    sharedSecret: Vec<WireType>,      // the derived secret key h^s
-    gPowersTable: Vec<Vec<WireType>>,
-    hPowersTable: Vec<Vec<WireType>>,
+    outputPublicValue: Vec<Option<WireType>>, // g^s (to be sent to the other party)
+    sharedSecret: Vec<Option<WireType>>,      // the derived secret key h^s
+    gPowersTable: Vec<Vec<Option<WireType>>>,
+    hPowersTable: Vec<Vec<Option<WireType>>>,
 }
 impl FieldExtensionDHKeyExchange {
     /**
@@ -44,9 +44,9 @@ impl FieldExtensionDHKeyExchange {
      *
      */
     pub fn new(
-        g: Vec<WireType>,
-        h: Vec<WireType>,
-        secretExponentBits: Vec<WireType>,
+        g: Vec<Option<WireType>>,
+        h: Vec<Option<WireType>>,
+        secretExponentBits: Vec<Option<WireType>>,
         omega: i64,
         desc: String,
     ) -> Self {
@@ -55,8 +55,8 @@ impl FieldExtensionDHKeyExchange {
         self.h = h;
         self.secretExponentBits = secretExponentBits;
         self.omega = omega;
-        mu = g.length;
-        assert!(h.length == g.length, "g and h must have the same dimension");
+        mu = g.len();
+        assert!(h.len() == g.len(), "g and h must have the same dimension");
 
         // since this is typically a  input by the prover,
         // the check is also done here for safety. No need to remove this if
@@ -76,7 +76,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         sharedSecret = exp(h, secretExponentBits, hPowersTable);
     }
 
-    fn mul(a: Vec<WireType>, b: Vec<WireType>) -> Vec<WireType> {
+    fn mul(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let c = vec![WireType::default(); mu];
 
         for i in 0..mu {
@@ -97,19 +97,19 @@ impl Gadget for FieldExtensionDHKeyExchange {
         return c;
     }
 
-    fn preparePowersTable(base: Vec<WireType>) -> Vec<Vec<WireType>> {
-        let powersTable = vec![vec![WireType::default(); mu]; secretExponentBits.length + 1];
+    fn preparePowersTable(base: Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
+        let powersTable = vec![vec![WireType::default(); mu]; secretExponentBits.len() + 1];
         powersTable[0] = base[..mu].to_vec();
-        for j in 1..secretExponentBits.length + 1 {
+        for j in 1..secretExponentBits.len() + 1 {
             powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
         }
         return powersTable;
     }
 
-    fn exp(base: Vec<WireType>, expBits: Vec<WireType>, powersTable: Vec<Vec<WireType>>) -> Vec<WireType> {
+    fn exp(base: Vec<Option<WireType>>, expBits: Vec<Option<WireType>>, powersTable: Vec<Vec<Option<WireType>>>) -> Vec<Option<WireType>> {
         let c = vec![generator.getZeroWire(); mu];
         c[0] = generator.getOneWire();
-        for j in 0..expBits.length {
+        for j in 0..expBits.len() {
             let tmp = mul(c, powersTable[j]);
             for i in 0..mu {
                 c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
@@ -164,15 +164,15 @@ impl Gadget for FieldExtensionDHKeyExchange {
         }
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return Util::concat(outputPublicValue, sharedSecret);
     }
 
-    pub fn getOutputPublicValue() -> Vec<WireType> {
+    pub fn getOutputPublicValue() -> Vec<Option<WireType>> {
         return outputPublicValue;
     }
 
-    pub fn getSharedSecret() -> Vec<WireType> {
+    pub fn getSharedSecret() -> Vec<Option<WireType>> {
         return sharedSecret;
     }
 }

@@ -5,7 +5,7 @@ pub struct ChaskeyLTSEngine {
 impl BlockCipher for ChaskeyLTSEngine {
     pub fn init(encrypt: bool, cipherParameters: CipherParameters) {
         assert!(
-            (cipherParameters.instanceof(KeyParameter)) && (cipherParameters).getKey().length == 16
+            (cipherParameters.instance_of(KeyParameter)) && (cipherParameters).getKey().length == 16
         );
 
         enc = encrypt;

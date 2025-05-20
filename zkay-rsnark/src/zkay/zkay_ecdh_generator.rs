@@ -86,12 +86,12 @@ impl CircuitGenerator for ZkayECDHGenerator {
 }
 
 pub fn main(args: Vec<String>) {
-    if args.length == 1 {
+    if args.len() == 1 {
         let secret = rnd_to_secret(args[0]);
         println!("Deriving pub  key from secret key 0x{:x}", secret);
         println!(derivePk(secret));
         println!(secret.toString(16));
-    } else if args.length == 2 {
+    } else if args.len() == 2 {
         let secret = BigInteger::new(args[0], 16);
         let pk = BigInteger::new(args[1], 16);
         println!(

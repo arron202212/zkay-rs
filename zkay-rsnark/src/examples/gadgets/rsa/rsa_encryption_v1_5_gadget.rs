@@ -22,18 +22,18 @@ pub struct RSAEncryptionV1_5_Gadget {
     modulus: LongElement,
 
     // every wire represents a byte in the following three arrays
-    plainText: Vec<WireType>,
-    randomness: Vec<WireType>, // (rsaKeyBitLength / 8 - 3 - plainTextLength)
+    plainText: Vec<Option<WireType>>,
+    randomness: Vec<Option<WireType>>, // (rsaKeyBitLength / 8 - 3 - plainTextLength)
     // non-zero bytes
-    ciphertext: Vec<WireType>,
+    ciphertext: Vec<Option<WireType>>,
 
     rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
 }
 impl RSAEncryptionV1_5_Gadget {
     pub fn new(
         modulus: LongElement,
-        plainText: Vec<WireType>,
-        randomness: Vec<WireType>,
+        plainText: Vec<Option<WireType>>,
+        randomness: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
         desc: Vec<String>,
     ) {
@@ -43,8 +43,8 @@ impl RSAEncryptionV1_5_Gadget {
             assert!("RSA Key bit length is assumed to be a multiple of 8");
         }
 
-        if (plainText.length > rsaKeyBitLength / 8 - 11
-            || plainText.length + randomness.length != rsaKeyBitLength / 8 - 3)
+        if (plainText.len() > rsaKeyBitLength / 8 - 11
+            || plainText.len() + randomness.len() != rsaKeyBitLength / 8 - 3)
         {
             println!("Check Message & Padding length");
             assert!("Invalid Argument Dimensions for RSA Encryption");
@@ -70,12 +70,12 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
     fn buildCircuit() {
         let lengthInBytes = rsaKeyBitLength / 8;
         let paddedPlainText = vec![WireType::default(); lengthInBytes];
-        for i in 0..plainText.length {
-            paddedPlainText[plainText.length - i - 1] = plainText[i];
+        for i in 0..plainText.len() {
+            paddedPlainText[plainText.len() - i - 1] = plainText[i];
         }
-        paddedPlainText[plainText.length] = generator.getZeroWire();
-        for i in 0..randomness.length {
-            paddedPlainText[plainText.length + 1 + (randomness.length - 1) - i] = randomness[i];
+        paddedPlainText[plainText.len()] = generator.getZeroWire();
+        for i in 0..randomness.len() {
+            paddedPlainText[plainText.len() + 1 + (randomness.len() - 1) - i] = randomness[i];
         }
         paddedPlainText[lengthInBytes - 2] = generator.createConstantWire(2);
         paddedPlainText[lengthInBytes - 1] = generator.getZeroWire();
@@ -91,7 +91,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
         // 2. Make multiple long integer constant multiplications (need to be
         // done carefully)
         let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
-        for i in 0..paddedPlainText.length {
+        for i in 0..paddedPlainText.len() {
             let e = LongElement::new(paddedPlainText[i], 8);
             let c = LongElement::new(Util::split(
                 Util::one().shiftLeft(8 * i),
@@ -114,14 +114,14 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
 
     pub fn checkRandomnessCompliance() {
         // assert the randomness vector has non-zero bytes
-        for i in 0..randomness.length {
+        for i in 0..randomness.len() {
             randomness[i].restrictBitLength(8);
             // verify that each element has a multiplicative inverse
             FieldDivisionGadget::new(generator.getOneWire(), randomness[i]);
         }
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return ciphertext;
     }
 }

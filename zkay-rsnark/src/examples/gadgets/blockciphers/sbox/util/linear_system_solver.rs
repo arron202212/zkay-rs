@@ -15,7 +15,7 @@ impl LinearSystemSolver {
     const prime: BigInteger = Configs.get().unwrap().field_prime;
     pub fn new(mat: Vec<Vec<BigInteger>>) -> Self {
         self.mat = mat;
-        numRows = mat.length;
+        numRows = mat.len();
         numCols = mat[0].length;
     }
 
@@ -46,13 +46,13 @@ impl LinearSystemSolver {
             // dividing by pivot
             let invF = inverse(mat[pivotRowIdx][colIdx]);
             for j in 0..numCols {
-                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].multiply(invF).modulo(prime);
+                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].mul(invF).modulo(prime);
             }
 
             for k in pivotRowIdx..numRows {
                 let f = negate(mat[k][colIdx]);
                 for j in 0..numCols {
-                    mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].multiply(f));
+                    mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].mul(f));
                     mat[k][j] = mat[k][j].modulo(prime);
                 }
             }
@@ -72,7 +72,7 @@ impl LinearSystemSolver {
             for k in (0..=rowIdx - 1).rev() {
                 let f = mat[k][pivotColIdx];
                 for j in 0..numCols {
-                    mat[k][j] = mat[k][j].add(negate(mat[rowIdx][j].multiply(f)));
+                    mat[k][j] = mat[k][j].add(negate(mat[rowIdx][j].mul(f)));
                     mat[k][j] = mat[k][j].modulo(prime);
                 }
             }
@@ -80,7 +80,7 @@ impl LinearSystemSolver {
     }
 
     fn negate(x: BigInteger) -> BigInteger {
-        return (prime.subtract(x.modulo(prime))).modulo(prime);
+        return (prime.sub(x.modulo(prime))).modulo(prime);
     }
 
     fn inverse(x: BigInteger) -> BigInteger {

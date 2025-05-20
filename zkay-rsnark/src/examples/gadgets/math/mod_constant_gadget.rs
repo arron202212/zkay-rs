@@ -24,7 +24,7 @@ impl ModConstantGadget {
         self.b = b;
         self.bitwidth = bitwidth;
         assert!(
-            b.signum() == 1,
+            b.sign() == Sign::Plus,
             "b must be a positive constant. Signed operations not supported yet."
         );
 
@@ -44,7 +44,7 @@ impl Gadget for ModConstantGadget {
         q = generator.createProverWitnessWire("division result");
 
         // notes about how to use this code block can be found in FieldDivisionGadget
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
@@ -65,7 +65,7 @@ impl Gadget for ModConstantGadget {
         generator.addEqualityAssertion(q.mul(b).add(r), a);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![r];
     }
 }

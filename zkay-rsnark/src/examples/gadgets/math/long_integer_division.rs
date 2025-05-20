@@ -114,7 +114,7 @@ impl Gadget for LongIntegerDivision {
         r = LongElement::new(rWires, rChunkBitwidths);
         q = LongElement::new(qWires, qChunkBitwidths);
 
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {

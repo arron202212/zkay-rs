@@ -4,7 +4,7 @@ use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 
 pub struct SHA2CircuitGenerator {
-    inputWires: Vec<WireType>,
+    inputWires: Vec<Option<WireType>>,
     sha2Gadget: SHA256Gadget,
 }
 impl SHA2CircuitGenerator {
@@ -27,14 +27,14 @@ impl CircuitGenerator for SHA2CircuitGenerator {
         /*
             inputWires = createInputWireArray(3); 	// 3-byte input
             sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
-            Vec<WireType> digest = sha2Gadget.getOutputWires();
+            Vec<Option<WireType>> digest = sha2Gadget.getOutputWires();
             makeOutputArray(digest, "digest");
         */
     }
 
     pub fn generateSampleInput(evaluator: CircuitEvaluator) {
         let inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
-        for i in 0..inputWires.length {
+        for i in 0..inputWires.len() {
             evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
         }
     }

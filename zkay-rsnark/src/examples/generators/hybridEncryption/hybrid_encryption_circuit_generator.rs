@@ -11,12 +11,12 @@ use crate::util::util::{Util,BigInteger};
 // It currently uses the field extension key exchange gadget with the speck cipher
 
 pub struct HybridEncryptionCircuitGenerator {
-    plaintext: Vec<WireType>,  // as 64-bit words
+    plaintext: Vec<Option<WireType>>,  // as 64-bit words
     plaintextSize: i32,    // number of 64-bit words
-    ciphertext: Vec<WireType>, // as 64-bit words
+    ciphertext: Vec<Option<WireType>>, // as 64-bit words
 
     ciphername: String,
-    secExpBits: Vec<WireType>,
+    secExpBits: Vec<Option<WireType>>,
 }
 impl HybridEncryptionCircuitGenerator {
     // Will assume the parameterization used in the test files ~ 80-bits
@@ -76,8 +76,8 @@ impl CircuitGenerator for HybridEncryptionCircuitGenerator {
         // instead, and supply the above values using the generateSampleInput()
         // method instead.
         /*
-         * Vec<WireType> g = createInputWireArray(mu);
-         * Vec<WireType> h = createInputWireArray(mu);
+         * Vec<Option<WireType>> g = createInputWireArray(mu);
+         * Vec<Option<WireType>> h = createInputWireArray(mu);
          */
 
         // Exchange keys

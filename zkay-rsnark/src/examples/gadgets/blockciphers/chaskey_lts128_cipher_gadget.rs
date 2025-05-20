@@ -10,12 +10,12 @@ use crate::circuit::structure::wire_type::WireType;
  * https://www.cryptolux.org/index.php/FELICS
  */
 pub struct ChaskeyLTS128CipherGadget {
-    plaintext: Vec<WireType>,  // 4 32-bit words
-    key: Vec<WireType>,        // 4 32-bit words
-    ciphertext: Vec<WireType>, // 4 32-bit words
+    plaintext: Vec<Option<WireType>>,  // 4 32-bit words
+    key: Vec<Option<WireType>>,        // 4 32-bit words
+    ciphertext: Vec<Option<WireType>>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
-    pub fn new(inputs: Vec<WireType>, key: Vec<WireType>, desc: Vec<String>) -> Self {
+    pub fn new(inputs: Vec<Option<WireType>>, key: Vec<Option<WireType>>, desc: Vec<String>) -> Self {
         super(desc);
         assert!(inputs.len() == 4 && key.len() == 4, "Invalid Input");
 
@@ -55,7 +55,7 @@ impl Gadget for ChaskeyLTS128CipherGadget {
         ciphertext = v;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return ciphertext;
     }
 }

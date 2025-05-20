@@ -6,9 +6,9 @@ use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
 // A sample usage of the AES128 block cipher gadget
 pub struct AES128CipherCircuitGenerator {
-    inputs: Vec<WireType>,
-    key: Vec<WireType>,
-    outputs: Vec<WireType>,
+    inputs: Vec<Option<WireType>>,
+    key: Vec<Option<WireType>>,
+    outputs: Vec<Option<WireType>>,
     gadget: AES128CipherGadget,
 }
 impl AES128CipherCircuitGenerator {

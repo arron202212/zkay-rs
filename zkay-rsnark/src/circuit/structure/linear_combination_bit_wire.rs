@@ -1,13 +1,20 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 use crate::circuit::structure::wire_array::WireArray;
 
- use std::hash::Hash;
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct LinearCombinationBitWire;
 impl LinearCombinationBitWire {
-    // pub fn new( wireId:i32) {
-    // 	super(wireId);
-    // }
+    pub fn new( wireId:i32)->Self {
+    	// super(wireId);
+    }
 
     pub fn getBitWires(&self) -> WireArray {
         WireArray::new(vec![self.clone()])

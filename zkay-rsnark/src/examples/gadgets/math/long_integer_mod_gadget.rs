@@ -71,7 +71,7 @@ impl LongIntegerModGadget {
     }
 }
 impl LongIntegerDivision for LongIntegerModGadget {
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return getRemainder().getArray();
     }
 }

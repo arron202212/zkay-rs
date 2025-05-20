@@ -14,16 +14,16 @@ use crate::circuit::structure::wire_type::WireType;
 pub struct ZkayDummyHomEncryptionGadget {
     pk: WireType,
     plain: WireType,
-    cipher: Vec<WireType>,
+    cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyHomEncryptionGadget {
-    pub fn new(plain: WireType, pk: WireType, rnd: Vec<WireType>, keyBits: i32, desc: Vec<String>) -> Self {
+    pub fn new(plain: WireType, pk: WireType, rnd: Vec<Option<WireType>>, keyBits: i32, desc: Vec<String>) -> Self {
         super(desc);
 
         Objects.requireNonNull(plain, "plain");
         Objects.requireNonNull(pk, "pk");
         Objects.requireNonNull(rnd, "rnd");
-        assert!(rnd.length <= 1, "Randomness wire array too long");
+        assert!(rnd.len() <= 1, "Randomness wire array too long");
 
         self.plain = plain;
         self.pk = pk;
@@ -37,7 +37,7 @@ impl Gadget for ZkayDummyHomEncryptionGadget {
         cipher[0] = plain.mul(pk, "plain * pk").add(1);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return cipher;
     }
 }

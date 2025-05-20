@@ -9,9 +9,9 @@ use examples::gadgets::rsa::rsa_encryptionv1_5_gadget;
 pub struct RSAEncryptionCircuitGenerator {
     rsaKeyLength: i32,
     plainTextLength: i32,
-    inputMessage: Vec<WireType>,
-    randomness: Vec<WireType>,
-    cipherText: Vec<WireType>,
+    inputMessage: Vec<Option<WireType>>,
+    randomness: Vec<Option<WireType>>,
+    cipherText: Vec<Option<WireType>>,
     rsaModulus: LongElement,
 
     rsaEncryptionV1_5_Gadget: RSAEncryptionV1_5_Gadget,
@@ -75,7 +75,7 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
 
     pub fn generateSampleInput(evaluator: CircuitEvaluator) {
         let msg = "";
-        for i in 0..inputMessage.length {
+        for i in 0..inputMessage.len() {
             evaluator.setWireValue(inputMessage[i], (b'a' + i) as i32);
             msg = msg + (b'a' + i) as char;
         }
@@ -102,8 +102,8 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
         cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
         let cipherText = cipher.doFinal(msg.getBytes());
         //			println!("ciphertext : " + String::new(cipherText));
-        let cipherTextPadded = vec![byte::default(); cipherText.length + 1];
-        cipherTextPadded[1..cipherText.length].clone_from_slice(&cipherText);
+        let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
+        cipherTextPadded[1..cipherText.len()].clone_from_slice(&cipherText);
         cipherTextPadded[0] = 0;
 
         let result = RSAUtil.extractRSARandomness1_5(cipherText, privKey);
@@ -114,7 +114,7 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
         assert!(check, "Randomness Extraction did not decrypt right");
 
         let sampleRandomness = result[1];
-        for i in 0..sampleRandomness.length {
+        for i in 0..sampleRandomness.len() {
             evaluator.setWireValue(randomness[i], (sampleRandomness[i] + 256) % 256);
         }
 

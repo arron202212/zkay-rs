@@ -8,7 +8,7 @@ use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 //a demo for RSA Signatures PKCS #1, V1.5
 pub struct RSASigVerCircuitGenerator {
     rsaKeyLength: i32,
-    inputMessage: Vec<WireType>,
+    inputMessage: Vec<Option<WireType>>,
     signature: LongElement,
     rsaModulus: LongElement,
 
@@ -25,7 +25,7 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
     fn buildCircuit() {
         // a sample input message of 3 byte
         inputMessage = createInputWireArray(3);
-        sha2Gadget = SHA256Gadget::new(inputMessage, 8, inputMessage.length, false, true);
+        sha2Gadget = SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
         let digest = sha2Gadget.getOutputWires();
 
         /**
@@ -70,7 +70,7 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
 
     pub fn generateSampleInput(evaluator: CircuitEvaluator) {
         let inputStr = "abc";
-        for i in 0..inputMessage.length {
+        for i in 0..inputMessage.len() {
             evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
         }
 
@@ -85,8 +85,8 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         signature.update(message);
 
         let sigBytes = signature.sign();
-        let signaturePadded = vec![byte::default(); sigBytes.length + 1];
-        System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.length);
+        let signaturePadded = vec![byte::default(); sigBytes.len() + 1];
+        System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.len());
         signaturePadded[0] = 0;
         let modulus = (keyPair.getPublic()).getModulus();
         //			println!(modulus.toString(16));
@@ -97,9 +97,9 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         evaluator.setWireValue(self.signature, sig, LongElement.CHUNK_BITWIDTH);
         // } else {
         // evaluator.setWireValue(self.rsaModulusWires,
-        // Util::split(modulus, Config.LOG2_FIELD_PRIME - 1));
+        // Util::split(modulus, Config.log2_field_prime - 1));
         // evaluator.setWireValue(self.signatureWires,
-        // Util::split(sig, Config.LOG2_FIELD_PRIME - 1));
+        // Util::split(sig, Config.log2_field_prime - 1));
         // }
 
         // println!("Error while generating sample input for circuit");

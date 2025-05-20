@@ -58,7 +58,7 @@ impl ZkayEcGadget {
         "2736030358979909402780800718157159386074658810754251464600343418943805806723",
     );
 
-    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<WireType>) {
+    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<Option<WireType>>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
@@ -104,11 +104,11 @@ impl ZkayEcGadget {
      */
     fn mul(
         p: AffinePoint,
-        secretBits: Vec<WireType>,
+        secretBits: Vec<Option<WireType>>,
         precomputedTable: Vec<AffinePoint>,
     ) -> AffinePoint {
-        let result = AffinePoint::new(precomputedTable[secretBits.length - 1]);
-        for j in (0..=secretBits.length - 2).rev() {
+        let result = AffinePoint::new(precomputedTable[secretBits.len() - 1]);
+        for j in (0..=secretBits.len() - 2).rev() {
             let tmp = addAffinePoints(result, precomputedTable[j]);
             let isOne = secretBits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
@@ -141,10 +141,10 @@ impl ZkayEcGadget {
 }
 impl Gadget for ZkayEcGadget {
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.multiply(x).modulo(Configs.get().unwrap().field_prime);
-        let xCubed = xSqred.multiply(x).modulo(Configs.get().unwrap().field_prime);
+        let xSqred = x.mul(x).modulo(Configs.get().unwrap().field_prime);
+        let xCubed = xSqred.mul(x).modulo(Configs.get().unwrap().field_prime);
         let ySqred = xCubed
-            .add(COEFF_A.multiply(xSqred))
+            .add(COEFF_A.mul(xSqred))
             .add(x)
             .modulo(Configs.get().unwrap().field_prime);
         let y = IntegerFunctions.ressol(ySqred, Configs.get().unwrap().field_prime);
@@ -155,8 +155,8 @@ impl Gadget for ZkayEcGadget {
         let o = generator.createConstantWire(SUBGROUP_ORDER);
         let bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();
 
-        let result = AffinePoint::new(table[bits.length - 1]);
-        for j in (1..=bits.length - 2).rev() {
+        let result = AffinePoint::new(table[bits.len() - 1]);
+        for j in (1..=bits.len() - 2).rev() {
             let tmp = addAffinePoints(result, table[j]);
             let isOne = bits[j];
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));

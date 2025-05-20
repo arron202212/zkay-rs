@@ -8,40 +8,41 @@
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::operations::primitive::basic_op::Op;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::circuit::structure::wire::WireConfig;
 use crate::util::util::{Util,BigInteger};
-
- use std::hash::Hash;
+use std::ops::{Add,Sub,Mul,Neg,Rem,BitXor};
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct XorBasicOp;
 
 fn new_xor_basic_op(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<XorBasicOp> {
     Op::<XorBasicOp> {
-        inputs: vec![w1, w2],
-        outputs: output,
+        inputs: vec![Some(w1), Some(w2)],
+        outputs: vec![Some(output)],
         desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: XorBasicOp,
     }
 }
-
-impl BasicOp for XorBasicOp {
+crate::impl_instruction_for!(Op<XorBasicOp>);
+impl BasicOp for Op<XorBasicOp> {
     fn getOpcode(&self) -> String {
-        return "xor";
+        return "xor".to_owned();
     }
 
-    fn checkInputs(&self, assignment: Vec<BigInteger>) {
+    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         // //super.checkInputs(assignment);
-        let check = Util::isBinary(assignment[self.self.inputs[0].getWireId()])
-            && Util::isBinary(assignment[self.self.inputs[1].getWireId()]);
+        let check = Util::isBinary(assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap())
+            && Util::isBinary(assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize].clone().unwrap());
         assert!(
             check,
             "Error - Input(s) to XOR are not binary.{self:?} During Evaluation"
         );
     }
 
-    fn compute(&self, assignment: Vec<BigInteger>) {
-        assignment[self.outputs[0].getWireId()] =
-            assignment[self.inputs[0].getWireId()].xor(assignment[self.inputs[1].getWireId()]);
+    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] =
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].as_ref().map(|x|x.bitxor(assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize].clone().unwrap()));
     }
 
     fn equals(&self, rhs: &Self) -> bool {
@@ -52,9 +53,9 @@ impl BasicOp for XorBasicOp {
         let op = rhs;
 
         let check1 =
-            self.inputs[0].equals(op.self.inputs[0]) && self.inputs[1].equals(op.self.inputs[1]);
+            self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap()) && self.inputs[1].as_ref().unwrap().equals(op.inputs[1].as_ref().unwrap());
         let check2 =
-            self.inputs[1].equals(op.self.inputs[0]) && self.inputs[0].equals(op.self.inputs[1]);
+            self.inputs[1].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap()) && self.inputs[0].as_ref().unwrap().equals(op.inputs[1].as_ref().unwrap());
         check1 || check2
     }
 

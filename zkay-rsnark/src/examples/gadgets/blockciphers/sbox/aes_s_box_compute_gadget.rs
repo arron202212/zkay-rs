@@ -54,7 +54,7 @@ impl Gadget for AESSBoxComputeGadget {
         output = output.xorBitwise(inverse.rotateLeft(8, 4), 8);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![output];
     }
 

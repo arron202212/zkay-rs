@@ -16,9 +16,9 @@ pub struct Speck128_Test  {
 		
 		CircuitGenerator generator = CircuitGenerator::new("Speck128_Test") {
 
-			Vec<WireType> plaintext; // 2 64-bit words
-			Vec<WireType> key; // 2 64-bit words
-			Vec<WireType> ciphertext; // 2 64-bit words
+			Vec<Option<WireType>> plaintext; // 2 64-bit words
+			Vec<Option<WireType>> key; // 2 64-bit words
+			Vec<Option<WireType>> ciphertext; // 2 64-bit words
 			
 			
 			  fn buildCircuit() {

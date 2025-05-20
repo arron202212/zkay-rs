@@ -42,7 +42,7 @@ impl HomomorphicInput {
     }
 
     pub fn getLength() -> i32 {
-        return array.length;
+        return array.len();
     }
 
     pub fn getName() -> String {

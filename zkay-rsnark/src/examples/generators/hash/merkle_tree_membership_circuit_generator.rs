@@ -7,10 +7,10 @@ use examples::gadgets::hash::subset_sum_hash_gadget;
 use crate::util::util::{Util,BigInteger};
 
 pub struct MerkleTreeMembershipCircuitGenerator {
-    publicRootWires: Vec<WireType>,
-    intermediateHasheWires: Vec<WireType>,
+    publicRootWires: Vec<Option<WireType>>,
+    intermediateHasheWires: Vec<Option<WireType>>,
     directionSelector: WireType,
-    leafWires: Vec<WireType>,
+    leafWires: Vec<Option<WireType>>,
 
     treeHeight: i32,
 

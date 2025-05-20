@@ -11,12 +11,12 @@ use crate::circuit::operations::primitive::const_mul_basic_op::ConstMulBasicOp;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array::WireArray;
  use crate::util::util::{Util,BigInteger};
-
- use std::hash::Hash;
+use num_bigint::Sign;
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct ConstantWire {
-    constant: BigInteger,
+pub constant: BigInteger,
 }
 impl ConstantWire {
     pub fn new(wireId: i32, value: BigInteger) -> Self {
@@ -33,18 +33,18 @@ impl ConstantWire {
     }
 
     pub fn mul(&self,w: WireType, desc: Vec<String>) -> WireType {
-        if w.instanceof("ConstantWire") {
+        if w.instance_of("ConstantWire") {
             return self
                 .generator
-                .createConstantWire(self.constant.multiply(w.constant), desc);
+                .createConstantWire(self.constant.mul(w.constant), desc);
         } else {
             return w.mul(self.constant, desc);
         }
     }
 
     pub fn mulb(&self,b: BigInteger, desc: Vec<String>) -> WireType {
-        let sign = b.signum() == -1;
-        let newConstant = self.constant.multiply(b).modulo(Configs.get().unwrap().field_prime);
+        let sign = b.sign() == Sign::Minus;
+        let newConstant = self.constant.mul(b).modulo(Configs.get().unwrap().field_prime);
 
         let mut out = self.generator().knownConstantWires.get(newConstant);
         if out.is_some() {
@@ -56,7 +56,7 @@ impl ConstantWire {
             if !sign {
                 newConstant
             } else {
-                newConstant.subtract(Configs.get().unwrap().field_prime)
+                newConstant.sub(Configs.get().unwrap().field_prime)
             },
         );
 
@@ -131,7 +131,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn getBitWires(&self,bitwidth: i32, desc: Vec<String>) -> WireArray {
+    pub fn getBitWires(&self,bitwidth: u64, desc: Vec<String>) -> WireArray {
         assert!(
             self.constant.bitLength() <= bitwidth,
             "Trying to split a constant of {} bits into  {bitwidth} bits",
@@ -148,8 +148,8 @@ impl ConstantWire {
         return WireArray::new(bits);
     }
 
-    pub fn restrictBitLength(&self,bitwidth: i32, desc: Vec<String>) {
-        getBitWires(bitwidth, desc);
+    pub fn restrictBitLength(&self,bitwidth: u64, desc: Vec<String>) {
+       self.getBitWires(bitwidth, desc);
     }
 
     fn pack(&self,desc: Vec<String>) {}

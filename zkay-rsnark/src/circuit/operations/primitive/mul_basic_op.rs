@@ -9,31 +9,34 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::operations::primitive::basic_op::Op;
  use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::circuit::structure::wire::WireConfig;
  use crate::util::util::{Util,BigInteger};
- use std::hash::Hash;
+use std::ops::{Mul,Add,Sub,Rem,Neg};
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct MulBasicOp;
-pub fn newMulBasicOp(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<MulBasicOp> {
+pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<MulBasicOp> {
     Op::<MulBasicOp> {
-        inputs: vec![w1, w2],
-        outputs: vec![output],
+        inputs: vec![Some(w1), Some(w2)],
+        outputs: vec![Some(output)],
         desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: MulBasicOp,
     }
 }
+crate::impl_instruction_for!(Op<MulBasicOp>);
 impl BasicOp for Op<MulBasicOp> {
     fn getOpcode(&self) -> String {
-        return "mul";
+        return "mul".to_owned();
     }
 
-    fn compute(&self, mut assignment: Vec<BigInteger>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut result =
-            assignment[self.inputs[0].getWireId()].multiply(assignment[self.inputs[1].getWireId()]);
-        if result.compareTo(Configs.get().unwrap().field_prime) > 0 {
-            result = result.modulo(Configs.get().unwrap().field_prime);
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap().mul(assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize].clone().unwrap());
+        if result>Configs.get().unwrap().field_prime {
+            result = result.rem(Configs.get().unwrap().field_prime.clone());
         }
-        assignment[self.outputs[0].getWireId()] = result;
+        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
     }
 
     fn equals(&self, rhs: &Self) -> bool {
@@ -43,10 +46,10 @@ impl BasicOp for Op<MulBasicOp> {
 
         let op = rhs;
 
-        let check1 = self.self.inputs[0].equals(op.self.inputs[0])
-            && self.self.inputs[1].equals(op.self.inputs[1]);
-        let check2 = self.self.inputs[1].equals(op.self.inputs[0])
-            && self.self.inputs[0].equals(op.self.inputs[1]);
+        let check1 = self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap())
+            && self.inputs[1].as_ref().unwrap().equals(op.inputs[1].as_ref().unwrap());
+        let check2 = self.inputs[1].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap())
+            && self.inputs[0].as_ref().unwrap().equals(op.inputs[1].as_ref().unwrap());
         check1 || check2
     }
 

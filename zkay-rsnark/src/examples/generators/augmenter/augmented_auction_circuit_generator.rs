@@ -13,12 +13,12 @@ use crate::util::util::{Util,BigInteger};
 
 pub struct AugmentedAuctionCircuitGenerator {
     // each value is assumed to be a 64-bit value
-    secretInputValues: Vec<WireType>,
-    secretOutputValues: Vec<WireType>,
+    secretInputValues: Vec<Option<WireType>>,
+    secretOutputValues: Vec<Option<WireType>>,
 
     // randomness vectors for each participant (each random vector is 7 64-bit words)
-    secretInputRandomness: Vec<Vec<WireType>>,
-    secretOutputRandomness: Vec<Vec<WireType>>,
+    secretInputRandomness: Vec<Vec<Option<WireType>>>,
+    secretOutputRandomness: Vec<Vec<Option<WireType>>>,
 
     pathToCompiledCircuit: String,
     numParties: i32, // includes the auction manager + the participants
@@ -49,7 +49,7 @@ impl CircuitGenerator for AugmentedAuctionCircuitGenerator {
         let outputs = auctionGagdet.getOutputWires();
 
         // ignore the last output for this circuit which carries the index of the winner (not needed for this example)
-        secretOutputValues = Arrays.copyOfRange(outputs, 0, outputs.length - 1);
+        secretOutputValues = Arrays.copyOfRange(outputs, 0, outputs.len() - 1);
 
         // augment the input side
         for i in 0..numParties - 1 {

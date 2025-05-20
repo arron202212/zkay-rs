@@ -4,7 +4,7 @@ use crate::circuit::structure::wire_array;
 use crate::util::util::{Util,BigInteger};
 
 pub struct SHA256Gadget {
-    unpaddedInputs: Vec<WireType>,
+    unpaddedInputs: Vec<Option<WireType>>,
 
     bitwidthPerInputElement: i32,
     totalLengthInBytes: i32,
@@ -13,8 +13,8 @@ pub struct SHA256Gadget {
     binaryOutput: bool,
     paddingRequired: bool,
 
-    preparedInputBits: Vec<WireType>,
-    output: Vec<WireType>,
+    preparedInputBits: Vec<Option<WireType>>,
+    output: Vec<Option<WireType>>,
 }
 impl SHA256Gadget {
     const H: Vec<i64> = vec![
@@ -95,7 +95,7 @@ impl SHA256Gadget {
         0xc67178f2L,
     ];
     pub fn new(
-        ins: Vec<WireType>,
+        ins: Vec<Option<WireType>>,
         bitWidthPerInputElement: i32,
         totalLengthInBytes: i32,
         binaryOutput: bool,
@@ -319,7 +319,7 @@ impl Gadget for SHA256Gadget {
      * outputs digest as 32-bit words
      */
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return output;
     }
 }

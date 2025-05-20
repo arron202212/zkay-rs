@@ -31,7 +31,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalAddGadget {
         e2 = addPoints(c2, d2);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![e1.x, e1.y, e2.x, e2.y];
     }
 }

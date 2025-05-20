@@ -53,7 +53,7 @@ impl Gadget for LongIntegerModPowGadget {
         // From the most significant to the least significant bit of the exponent, proceed as follow:
         // product = product^2 mod m
         // if eBit == 1) product = (product * base mod m
-        for i in (0..=eBits.length - 1).rev() {
+        for i in (0..=eBits.len() - 1).rev() {
             let square = product.mul(product);
             let squareModM =
                 LongIntegerModGadget::new(square, m, mMinBits, false, "modPow: prod^2 mod m")
@@ -76,7 +76,7 @@ impl Gadget for LongIntegerModPowGadget {
         return c;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return c.getArray();
     }
 }

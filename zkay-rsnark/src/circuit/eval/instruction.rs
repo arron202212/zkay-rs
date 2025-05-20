@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::wire_label_instruction::WireLabel;
 use dyn_clone::{clone_trait_object, DynClone};
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -30,7 +31,7 @@ impl Hash for dyn DynHash + '_ {
     }
 }
 
-pub trait Instruction:DynClone+DynHash {
+pub trait Instruction:DynClone+DynHash +Debug{
     fn evaluate(&self,evaluator: CircuitEvaluator);
 
     fn emit(&self,evaluator: CircuitEvaluator) {}
@@ -44,6 +45,10 @@ pub trait Instruction:DynClone+DynHash {
     fn name(&self)->&str{
         ""
     }
+    fn wire_label(&self)->Option<Box<dyn WireLabel>>{
+        None
+    }
+
 }
 dyn_clone::clone_trait_object!(Instruction);
 

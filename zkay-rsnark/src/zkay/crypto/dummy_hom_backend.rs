@@ -22,7 +22,7 @@ impl Asymmetric for DummyHomBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         key: String,
-        random: Vec<WireType>,
+        random: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         let encodedPlain = encodePlaintextIfSigned(plain);
@@ -40,7 +40,7 @@ impl Asymmetric for DummyHomBackend {
         let generator = CircuitGenerator.getActiveCircuitGenerator();
 
         let keyArr = key.getBits().packBitsIntoWords(256);
-        for i in 1..keyArr.length {
+        for i in 1..keyArr.len() {
             generator.addZeroAssertion(keyArr[i], "Dummy-hom enc pk valid");
         }
         return keyArr[0];
@@ -62,7 +62,7 @@ impl Asymmetric for DummyHomBackend {
             // Signed: wrap negative values around the field prime instead of around 2^n
             let bits = plain.zkay_type.bitwidth;
             let signBit = plain.wire.getBitWires(bits).get(bits - 1);
-            let negValue = plain.wire.invBits(bits).add(1).negate();
+            let negValue = plain.wire.invBits(bits).add(1).neg();
             return signBit.mux(negValue, plain.wire);
         } else {
             // Unsigned values get encoded as-is
@@ -82,7 +82,7 @@ impl HomomorphicBackend for DummyHomBackend {
 
         if op == '-' {
             let p = Enc(-msg, p);
-            let minus = cipher.negate();
+            let minus = cipher.neg();
             return typedAsUint(minus, "-(" + arg.getName() + ")");
         } else {
             panic!("Unary operation " + op + " not supported");

@@ -48,7 +48,7 @@ pub trait CryptoBackendConfig {
      */
     fn usesDecryptionGadget(&self) -> bool;
 
-    fn addKey(&self, keyName: String, keyWires: Vec<WireType>);
+    fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>);
 
     fn getKeyChunkSize(&self) -> i32;
 
@@ -56,16 +56,16 @@ pub trait CryptoBackendConfig {
         &self,
         plain: TypedWire,
         key: String,
-        random: Vec<WireType>,
+        random: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget;
 
     fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<WireType>,
+        cipher: Vec<Option<WireType>>,
         pkName: String,
-        sk: Vec<WireType>,
+        sk: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget;
 }
@@ -102,17 +102,17 @@ pub trait SymmetricConfig: CryptoBackendConfig {
     pub fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<WireType>,
+        cipher: Vec<Option<WireType>>,
         pkey: String,
-        skey: Vec<WireType>,
+        skey: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<WireType>) {
+    pub fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>) {
         assert!(
-            keyWires.length == 1,
+            keyWires.len() == 1,
             "Expected key size 1uint for symmetric keys"
         );
         Keys.put(keyName, keyWires[0]);
@@ -168,14 +168,14 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         self.mySk = mySk;
     }
 
-    fn extractIV(&self, ivCipher: Option<Vec<WireType>>) -> WireType {
+    fn extractIV(&self, ivCipher: Option<Vec<Option<WireType>>>) -> WireType {
         assert!(
             ivCipher.some() && !ivCipher.as_ref().unwrap().is_empty(),
             "IV cipher must not be empty"
         );
         // This assumes as cipher length of 256 bits
-        let lastBlockCipherLen = (256 - (((ivCipher.length - 1) * CIPHER_CHUNK_SIZE) % 256)) % 256;
-        let iv = ivCipher[ivCipher.length - 1];
+        let lastBlockCipherLen = (256 - (((ivCipher.len() - 1) * CIPHER_CHUNK_SIZE) % 256)) % 256;
+        let iv = ivCipher[ivCipher.len() - 1];
         if lastBlockCipherLen > 0 {
             iv = iv.shiftRight(CIPHER_CHUNK_SIZE, lastBlockCipherLen);
         }
@@ -204,15 +204,15 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
     pub fn createDecryptionGadget(
         &self,
         plain: TypedWire,
-        cipher: Vec<WireType>,
+        cipher: Vec<Option<WireType>>,
         pkey: String,
-        skey: Vec<WireType>,
+        skey: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<WireType>) {
+    pub fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>) {
         let chunkBits = getKeyChunkSize();
         let keyArray = WireArray::new(keyWires)
             .getBits(chunkBits, keyName + "_bits")

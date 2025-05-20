@@ -39,10 +39,10 @@ let rsaModulusValue = ( pubKey).getModulus();
 					+ "_Enc_TestEncryption") {
 
 let i32 rsaKeyLength = keySize;
-let i32 plainTextLength = plainText.length();
-				 Vec<WireType> inputMessage;
-				 Vec<WireType> randomness;
-				 Vec<WireType> cipherText;
+let i32 plainTextLength = plainText.len()();
+				 Vec<Option<WireType>> inputMessage;
+				 Vec<Option<WireType>> randomness;
+				 Vec<Option<WireType>> cipherText;
 				 LongElement rsaModulus;
 
 				 RSAEncryptionV1_5_Gadget rsaEncryptionV1_5_Gadget;
@@ -73,7 +73,7 @@ let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 				
 				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
-					for i in 0..inputMessage.length {
+					for i in 0..inputMessage.len() {
 						evaluator.setWireValue(inputMessage[i],
 								plainText.charAt(i));
 					}
@@ -88,8 +88,8 @@ let privKey = keyPair.getPrivate();
 let tmp = cipher.doFinal(plainText.getBytes());
 						System.arraycopy(tmp, 0, cipherTextBytes, 0, keySize/8);
 						
-let cipherTextPadded = vec![byte::default();cipherTextBytes.length + 1];
-						System.arraycopy(cipherTextBytes, 0, cipherTextPadded, 1, cipherTextBytes.length);
+let cipherTextPadded = vec![byte::default();cipherTextBytes.len() + 1];
+						System.arraycopy(cipherTextBytes, 0, cipherTextPadded, 1, cipherTextBytes.len());
 						cipherTextPadded[0] = 0;
 
 						Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
@@ -102,7 +102,7 @@ let check = Arrays.equals(result[0], plainText.getBytes());
 						}
 
 let sampleRandomness = result[1];
-						for i in 0..sampleRandomness.length {
+						for i in 0..sampleRandomness.len() {
 							evaluator.setWireValue(randomness[i], (sampleRandomness[i]+256)%256);
 						}
 
@@ -132,11 +132,11 @@ let val = evaluator.getWireValue(w);
 let cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
-			if t.bitLength() == keySize && cipherTextBytesFromCircuit.length == keySize/8+1{
-				cipherTextBytesFromCircuit=Arrays.copyOfRange(cipherTextBytesFromCircuit, 1, cipherTextBytesFromCircuit.length);
+			if t.bitLength() == keySize && cipherTextBytesFromCircuit.len() == keySize/8+1{
+				cipherTextBytesFromCircuit=Arrays.copyOfRange(cipherTextBytesFromCircuit, 1, cipherTextBytesFromCircuit.len());
 			}
 			
-			for k in 0..cipherTextBytesFromCircuit.length{
+			for k in 0..cipherTextBytesFromCircuit.len(){
 				assertEquals(cipherTextBytes[k], cipherTextBytesFromCircuit[k]);
 
 			}

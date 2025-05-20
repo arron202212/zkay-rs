@@ -22,7 +22,7 @@ impl ZkayType {
     pub fn new(bitwidth: i32, signed: bool) -> Self {
         self.bitwidth = bitwidth;
         self.signed = signed;
-        self.minusOne = Util::one().shiftLeft(bitwidth).subtract(Util::one());
+        self.minusOne = Util::one().shiftLeft(bitwidth).sub(Util::one());
     }
 
     pub fn ZkUint(bitwidth: i32) -> ZkayType {
@@ -42,7 +42,7 @@ impl ZkayType {
 
     pub fn GetNegativeConstant(val: BigInteger, bitwidth: i32) -> BigInteger {
         let m1 = ZkInt(bitwidth).minusOne;
-        return m1.multiply(val).and(m1);
+        return m1.mul(val).and(m1);
     }
 
     pub fn checkType(expected: ZkayType, actual: ZkayType) -> ZkayType {

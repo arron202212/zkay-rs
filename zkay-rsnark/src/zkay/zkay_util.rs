@@ -6,7 +6,7 @@ pub struct ZkayUtil;
 impl ZkayUtil {
     pub const ZKAY_RESTRICT_EVERYTHING: bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
-    pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<WireType> {
+    pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<Option<WireType>> {
         return WireArray::new(Util::reverseBytes(bitArray.asArray()))
             .packBitsIntoWords(targetWordBits);
     }
@@ -25,9 +25,9 @@ impl ZkayUtil {
     pub fn unsignedBigintToBytes(val: BigInteger) -> Vec<byte> {
         let b = val.toByteArray();
         let mut ret;
-        if b[0] == 0 && b.length > 1 {
-            ret = vec![byte::default(); b.length - 1];
-            ret[..b.length - 1].clone_from_slice(&b[1..]);
+        if b[0] == 0 && b.len() > 1 {
+            ret = vec![byte::default(); b.len() - 1];
+            ret[..b.len() - 1].clone_from_slice(&b[1..]);
         } else {
             ret = b;
         }
@@ -37,11 +37,11 @@ impl ZkayUtil {
     pub fn unsignedBigintToBytes(val: BigInteger, byteCount: i32) -> Vec<byte> {
         let t = unsignedBigintToBytes(val);
         assert!(
-            t.length <= byteCount,
+            t.len() <= byteCount,
             "Value too large to fit into {byteCount} bytes"
         );
         let ret = vec![byte::default(); byteCount];
-        ret[byteCount - t.length..byteCount].clone_from_slice(&t);
+        ret[byteCount - t.len()..byteCount].clone_from_slice(&t);
         return ret;
     }
 

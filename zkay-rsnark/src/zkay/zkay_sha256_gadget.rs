@@ -2,17 +2,17 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 
 pub struct ZkaySHA256Gadget {
-    _uint_output: Vec<WireType>,
+    _uint_output: Vec<Option<WireType>>,
 }
 
 impl ZkaySHA256Gadget {
     const bytes_per_word: i32 = 32;
-    fn convert_inputs_to_bytes(uint256_inputs: Vec<WireType>) -> Vec<WireType> {
+    fn convert_inputs_to_bytes(uint256_inputs: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let input_bytes = WireArray::new(uint256_inputs)
             .getBits(bytes_per_word * 8)
             .packBitsIntoWords(8);
         // Reverse byte order of each input because jsnark reverses internally when packing
-        for j in 0..uint256_inputs.length {
+        for j in 0..uint256_inputs.len() {
             Collections.reverse(
                 Arrays
                     .asList(input_bytes)
@@ -22,11 +22,11 @@ impl ZkaySHA256Gadget {
         return input_bytes;
     }
 
-    pub fn new(uint256_inputs: Vec<WireType>, truncated_bits: i32, desc: Vec<String>) -> self {
+    pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: Vec<String>) -> self {
         super(
             convert_inputs_to_bytes(uint256_inputs),
             8,
-            uint256_inputs.length * bytes_per_word,
+            uint256_inputs.len() * bytes_per_word,
             false,
             true,
             desc,
@@ -48,10 +48,10 @@ impl SHA256Gadget for ZkaySHA256Gadget {
                 let shortened_digest = vec![WireType::default(); truncated_length / 32];
                 System.arraycopy(
                     digest,
-                    digest.length - shortened_digest.length,
+                    digest.len() - shortened_digest.len(),
                     shortened_digest,
                     0,
-                    shortened_digest.length,
+                    shortened_digest.len(),
                 );
                 digest = shortened_digest;
             } else {
@@ -65,10 +65,10 @@ impl SHA256Gadget for ZkaySHA256Gadget {
             }
         }
         _uint_output = WireArray::new(digest).packWordsIntoLargerWords(32, 8);
-        assert!(_uint_output.length == 1, "Wrong wire length");
+        assert!(_uint_output.len() == 1, "Wrong wire length");
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return _uint_output;
     }
 }

@@ -34,7 +34,7 @@ impl Gadget for ModGadget {
         q = generator.createProverWitnessWire("division result");
 
         // notes about how to use this code block can be found in FieldDivisionGadget
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
@@ -55,7 +55,7 @@ impl Gadget for ModGadget {
         generator.addEqualityAssertion(q.mul(b).add(r), a);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![r];
     }
 }

@@ -14,9 +14,9 @@ pub struct Chaskey128_Test  {
 
 		CircuitGenerator generator = CircuitGenerator::new("Chaskey_Test1") {
 	
-			 Vec<WireType> plaintext; // 4 32-bit words
-			 Vec<WireType> key; // 4 32-bit words
-			 Vec<WireType> ciphertext; // 4 32-bit words
+			 Vec<Option<WireType>> plaintext; // 4 32-bit words
+			 Vec<Option<WireType>> key; // 4 32-bit words
+			 Vec<Option<WireType>> ciphertext; // 4 32-bit words
 
 			
 			  fn buildCircuit() {
@@ -40,10 +40,10 @@ pub struct Chaskey128_Test  {
 						BigInteger::from(0xa901a369L),
 						BigInteger::from(0xd87aea78L) };
 
-				for i in 0..plaintext.length {
+				for i in 0..plaintext.len() {
 					evaluator.setWireValue(plaintext[i], msgV[i]);
 				}
-				for i in 0..key.length {
+				for i in 0..key.len() {
 					evaluator.setWireValue(key[i], keyV[i]);
 				}
 			}

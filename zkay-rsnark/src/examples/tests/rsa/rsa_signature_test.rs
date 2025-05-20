@@ -36,7 +36,7 @@ let keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 					+ "_SIG_TestValid") {
 
 let rsaKeyLength = keySize;
-				Vec<WireType> inputMessage;
+				Vec<Option<WireType>> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -45,9 +45,9 @@ let rsaKeyLength = keySize;
 
 				
 				  fn buildCircuit() {
-					inputMessage = createInputWireArray(inputStr.length());
+					inputMessage = createInputWireArray(inputStr.len()());
 					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
-							inputMessage.length, false, true);
+							inputMessage.len(), false, true);
 let digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
@@ -59,7 +59,7 @@ let digest = sha2Gadget.getOutputWires();
 				
 				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
-					for i in 0..inputMessage.length {
+					for i in 0..inputMessage.len() {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}
@@ -79,9 +79,9 @@ let sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-let signaturePadded = vec![byte::default();sigBytes.length + 1];
+let signaturePadded = vec![byte::default();sigBytes.len() + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
-								sigBytes.length);
+								sigBytes.len());
 						signaturePadded[0] = 0;
 						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();
@@ -126,7 +126,7 @@ let keySizeArray = vec![i32::default();] { 1024, 2048, 3072, 4096, 2047, 2049 };
 					+ "_SIG_TestInvalid") {
 
 let rsaKeyLength = keySize;
-				Vec<WireType> inputMessage;
+				Vec<Option<WireType>> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -135,9 +135,9 @@ let rsaKeyLength = keySize;
 
 				
 				  fn buildCircuit() {
-					inputMessage = createInputWireArray(inputStr.length());
+					inputMessage = createInputWireArray(inputStr.len()());
 					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
-							inputMessage.length, false, true);
+							inputMessage.len(), false, true);
 let digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
@@ -149,7 +149,7 @@ let digest = sha2Gadget.getOutputWires();
 				
 				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
-					for i in 0..inputMessage.length {
+					for i in 0..inputMessage.len() {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}
@@ -169,9 +169,9 @@ let sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-let signaturePadded = vec![byte::default();sigBytes.length + 1];
+let signaturePadded = vec![byte::default();sigBytes.len() + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
-								sigBytes.length);
+								sigBytes.len());
 						signaturePadded[0] = 0;
 						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();
@@ -181,7 +181,7 @@ let sig = BigInteger::new(signaturePadded);
 								LongElement.CHUNK_BITWIDTH);
 
 						// input the modulus itself instead of the signature
-						evaluator.setWireValue(self.signature, sig.subtract(Util::one()),
+						evaluator.setWireValue(self.signature, sig.sub(Util::one()),
 								LongElement.CHUNK_BITWIDTH);
 
 					} catch (Exception e) {
@@ -212,14 +212,14 @@ let keySize = 1024;
 let defaultBitwidth = LongElement.CHUNK_BITWIDTH ;
 
 let chunkBiwidthArray = vec![i32::default();106];
-		for b in 16..chunkBiwidthArray.length{
+		for b in 16..chunkBiwidthArray.len(){
 			
 			LongElement.CHUNK_BITWIDTH = b;
 			CircuitGenerator generator = CircuitGenerator::new("RSA" + keySize
 					+ "_SIG_TestValid_ChunkB_"+b) {
 
 let rsaKeyLength = keySize;
-				Vec<WireType> inputMessage;
+				Vec<Option<WireType>> inputMessage;
 				LongElement signature;
 				LongElement rsaModulus;
 
@@ -228,9 +228,9 @@ let rsaKeyLength = keySize;
 
 				
 				  fn buildCircuit() {
-					inputMessage = createInputWireArray(inputStr.length());
+					inputMessage = createInputWireArray(inputStr.len()());
 					sha2Gadget = SHA256Gadget::new(inputMessage, 8,
-							inputMessage.length, false, true);
+							inputMessage.len(), false, true);
 let digest = sha2Gadget.getOutputWires();
 					rsaModulus = createLongElementInput(rsaKeyLength);
 					signature = createLongElementInput(rsaKeyLength);
@@ -242,7 +242,7 @@ let digest = sha2Gadget.getOutputWires();
 				
 				pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 
-					for i in 0..inputMessage.length {
+					for i in 0..inputMessage.len() {
 						evaluator.setWireValue(inputMessage[i],
 								inputStr.charAt(i));
 					}
@@ -262,9 +262,9 @@ let sigBytes = signature.sign();
 
 						// pad an extra zero byte to avoid having a negative big
 						// integer
-let signaturePadded = vec![byte::default();sigBytes.length + 1];
+let signaturePadded = vec![byte::default();sigBytes.len() + 1];
 						System.arraycopy(sigBytes, 0, signaturePadded, 1,
-								sigBytes.length);
+								sigBytes.len());
 						signaturePadded[0] = 0;
 						BigInteger modulus = ( keyPair
 								.getPublic()).getModulus();

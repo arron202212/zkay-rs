@@ -87,7 +87,7 @@ impl ZkayBabyJubJubGadget {
             p1.x.mul(p2.x)
                 .mul(p1.y.mul(p2.y))
                 .mul(COEFF_D)
-                .negate()
+                .neg()
                 .add(1);
 
         let x = a1.mul(nativeInverse(a2));
@@ -96,19 +96,19 @@ impl ZkayBabyJubJubGadget {
     }
 
     fn negatePoint(p: JubJubPoint) -> JubJubPoint {
-        let new_x = p.x.negate();
+        let new_x = p.x.neg();
         return JubJubPoint::new(new_x, p.y);
     }
 
     /**
      * @param scalarBits the scalar bit representation in little-endian order
      */
-    fn mulScalar(p: JubJubPoint, scalarBits: Vec<WireType>) -> JubJubPoint {
+    fn mulScalar(p: JubJubPoint, scalarBits: Vec<Option<WireType>>) -> JubJubPoint {
         // Scalar point multiplication using double-and-add algorithm
         let result = getInfinity();
         let doubling = p;
 
-        for i in 0..scalarBits.length {
+        for i in 0..scalarBits.len() {
             let q = addPoints(doubling, result);
             let new_x = scalarBits[i].mux(q.x, result.x);
             let new_y = scalarBits[i].mux(q.y, result.y);
@@ -125,7 +125,7 @@ impl Gadget for ZkayBabyJubJubGadget {
      */
     fn nativeInverse(a: WireType) -> WireType {
         let ainv = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {

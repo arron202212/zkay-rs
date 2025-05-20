@@ -6,9 +6,9 @@ use crate::circuit::structure::wire_type::WireType;
  * does not have to be embedded into the curve.
  */
 pub struct ZkayElgamalEncGadget {
-    randomnessBits: Vec<WireType>, // little-endian randomness bits
+    randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
 
-    msgBits: Vec<WireType>, // little-endian message bits
+    msgBits: Vec<Option<WireType>>, // little-endian message bits
 
     pk: JubJubPoint, // pub  key
 
@@ -17,7 +17,7 @@ pub struct ZkayElgamalEncGadget {
     c2: JubJubPoint,
 }
 impl ZkayElgamalEncGadget {
-    pub fn new(msgBits: Vec<WireType>, pk: JubJubPoint, randomnessBits: Vec<WireType>) -> Self {
+    pub fn new(msgBits: Vec<Option<WireType>>, pk: JubJubPoint, randomnessBits: Vec<Option<WireType>>) -> Self {
         self.randomnessBits = randomnessBits;
         self.msgBits = msgBits;
         self.pk = pk;
@@ -32,7 +32,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalEncGadget {
         c2 = addPoints(msgEmbedded, sharedSecret);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![c1.x, c1.y, c2.x, c2.y];
     }
 }

@@ -5,7 +5,7 @@ use crate::circuit::structure::wire_type::WireType;
  * The expected message is provided as an input.
  */
 pub struct ZkayElgamalDecGadget {
-    skBits: Vec<WireType>, // little-endian randomness bits
+    skBits: Vec<Option<WireType>>, // little-endian randomness bits
 
     pk: JubJubPoint,
 
@@ -21,7 +21,7 @@ pub struct ZkayElgamalDecGadget {
 impl ZkayElgamalDecGadget {
     pub fn new(
         pk: JubJubPoint,
-        skBits: Vec<WireType>,
+        skBits: Vec<Option<WireType>>,
         c1: JubJubPoint,
         c2: JubJubPoint,
         expectedMsg: WireType,
@@ -57,7 +57,7 @@ impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
             .and(keyOk);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![self.msgOk];
     }
 }

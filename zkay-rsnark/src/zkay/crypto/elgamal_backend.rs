@@ -30,7 +30,7 @@ impl Asymmetric for ElgamalBackend {
         return true;
     }
 
-    fn addKey(keyName: String, keyWires: Vec<WireType>) {
+    fn addKey(keyName: String, keyWires: Vec<Option<WireType>>) {
         // elgamal does not require a bit-representation of the pub  key, so store it directly
         keys.put(keyName, WireArray::new(keyWires));
     }
@@ -38,7 +38,7 @@ impl Asymmetric for ElgamalBackend {
     fn createEncryptionGadget(
         plain: TypedWire,
         keyName: String,
-        random: Vec<WireType>,
+        random: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         let pkArray = getKeyArray(keyName);
@@ -57,9 +57,9 @@ impl Asymmetric for ElgamalBackend {
 
     fn createDecryptionGadget(
         plain: TypedWire,
-        cipher: Vec<WireType>,
+        cipher: Vec<Option<WireType>>,
         pkName: String,
-        sk: Vec<WireType>,
+        sk: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         let pkArray = getKeyArray(pkName);
@@ -70,26 +70,26 @@ impl Asymmetric for ElgamalBackend {
         return ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire);
     }
 
-    fn toTypedWireArray(wires: Vec<WireType>, name: String) -> Vec<TypedWire> {
-        let typedWires = vec![TypedWire::default(); wires.length];
+    fn toTypedWireArray(wires: Vec<Option<WireType>>, name: String) -> Vec<TypedWire> {
+        let typedWires = vec![TypedWire::default(); wires.len()];
         let uint256 = ZkayType.ZkUint(256);
-        for i in 0..wires.length {
+        for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
         return typedWires;
     }
 
-    fn fromTypedWireArray(typedWires: Vec<TypedWire>) -> Vec<WireType> {
-        let wires = vec![WireType::default(); typedWires.length];
+    fn fromTypedWireArray(typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
+        let wires = vec![WireType::default(); typedWires.len()];
         let uint256 = ZkayType.ZkUint(256);
-        for i in 0..typedWires.length {
+        for i in 0..typedWires.len() {
             ZkayType.checkType(uint256, typedWires[i].zkay_type);
             wires[i] = typedWires[i].wire;
         }
         return wires;
     }
 
-    fn parseJubJubPoint(wire: Vec<WireType>, offset: i32) -> JubJubPoint {
+    fn parseJubJubPoint(wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
         return ZkayBabyJubJubGadget::new().JubJubPoint(wire[offset], wire[offset + 1]);
     }
 
@@ -119,8 +119,8 @@ impl HomomorphicBackend for ElgamalBackend {
             let rhs_twires = rhs.getCipher();
 
             // sanity checks
-            assert!(lhs_twires.length == 4); // 4 BabyJubJub coordinates
-            assert!(rhs_twires.length == 4); // 4 BabyJubJub coordinates
+            assert!(lhs_twires.len() == 4); // 4 BabyJubJub coordinates
+            assert!(rhs_twires.len() == 4); // 4 BabyJubJub coordinates
             let lhs_wires = fromTypedWireArray(lhs_twires);
             let rhs_wires = fromTypedWireArray(rhs_twires);
 
@@ -135,8 +135,8 @@ impl HomomorphicBackend for ElgamalBackend {
             d2 = uninitZeroToIdentity(d2);
 
             if op == '-' {
-                d1.x = d1.x.negate();
-                d2.x = d2.x.negate();
+                d1.x = d1.x.neg();
+                d2.x = d2.x.neg();
             }
 
             let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2);

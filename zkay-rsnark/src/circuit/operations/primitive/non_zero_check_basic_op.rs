@@ -8,10 +8,12 @@
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::operations::primitive::basic_op::Op;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::circuit::structure::wire::WireConfig;
 use crate::util::util::{Util,BigInteger};
- use std::hash::Hash;
+use num_bigint::Sign;
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct NonZeroCheckBasicOp;
 fn newNonZeroCheckBasicOp(
     w: WireType,
@@ -20,24 +22,25 @@ fn newNonZeroCheckBasicOp(
     desc: Vec<String>,
 ) -> Op<NonZeroCheckBasicOp> {
     Op::<NonZeroCheckBasicOp> {
-        inputs: vec![w],
-        outputs: vec![out1, out2],
+        inputs: vec![Some(w)],
+        outputs: vec![Some(out1), Some(out2)],
         desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: NonZeroCheckBasicOp,
     }
 }
+crate::impl_instruction_for!(Op<NonZeroCheckBasicOp>);
 impl BasicOp for Op<NonZeroCheckBasicOp> {
     fn getOpcode(&self) -> String {
-        return "zerop";
+        return "zerop".to_owned();
     }
 
-    fn compute(&self, mut assignment: Vec<BigInteger>) {
-        if assignment[self.inputs[0].getWireId()].signum() == 0 {
-            assignment[self.outputs[1].getWireId()] = BigInteger::ZERO;
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+        if assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].as_ref().unwrap().sign() == Sign::NoSign {
+            assignment[self.outputs[1].as_ref().unwrap().getWireId() as usize] =Some (BigInteger::ZERO);
         } else {
-            assignment[self.outputs[1].getWireId()] = Util::one();
+            assignment[self.outputs[1].as_ref().unwrap().getWireId() as usize] = Some(Util::one());
         }
-        assignment[self.outputs[0].getWireId()] = BigInteger::ZERO; // a dummy value
+        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(BigInteger::ZERO); // a dummy value
     }
 
     fn equals(&self, rhs: &Self) -> bool {
@@ -46,7 +49,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
         }
 
         let op = rhs;
-        self.inputs[0].equals(op.self.inputs[0])
+        self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap())
     }
 
     fn getNumMulGates(&self) -> i32 {

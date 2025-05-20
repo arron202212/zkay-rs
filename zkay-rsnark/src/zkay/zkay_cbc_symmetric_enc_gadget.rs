@@ -18,11 +18,11 @@ pub enum CipherType {
  */
 pub struct ZkayCBCSymmetricEncGadget {
     cipherType: CipherType,
-    keyBits: Vec<WireType>,
-    plaintextBits: Vec<WireType>,
-    ivBits: Vec<WireType>,
+    keyBits: Vec<Option<WireType>>,
+    plaintextBits: Vec<Option<WireType>>,
+    ivBits: Vec<Option<WireType>>,
 
-    cipherBits: Vec<WireType>,
+    cipherBits: Vec<Option<WireType>>,
 }
 
 impl ZkayCBCSymmetricEncGadget {
@@ -48,8 +48,8 @@ impl ZkayCBCSymmetricEncGadget {
         }
     }
 
-    fn buildCircuit() -> Vec<WireType> {
-        let numBlocks = (plaintextBits.length * 1.0 / BLOCK_SIZE).ceil() as i32;
+    fn buildCircuit() -> Vec<Option<WireType>> {
+        let numBlocks = (plaintextBits.len() * 1.0 / BLOCK_SIZE).ceil() as i32;
         let plaintextArray = WireArray::new(plaintextBits)
             .adjustLength(numBlocks * BLOCK_SIZE)
             .asArray();
@@ -88,7 +88,7 @@ impl ZkayCBCSymmetricEncGadget {
         }
     }
 
-    fn prepareKey() -> Vec<WireType> {
+    fn prepareKey() -> Vec<Option<WireType>> {
         let mut preparedKey;
         match cipherType {
             SPECK_128 => {
@@ -108,8 +108,8 @@ impl ZkayCBCSymmetricEncGadget {
     }
 }
 impl Gadget for ZkayCBCSymmetricEncGadget {
-    pub fn getOutputWires() -> Vec<WireType> {
-        println!("Cipher length [bits]: {}", cipherBits.length);
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
+        println!("Cipher length [bits]: {}", cipherBits.len());
         return WireArray::new(Util::reverseBytes(Util::concat(ivBits, cipherBits)))
             .packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);
     }

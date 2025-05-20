@@ -16,16 +16,16 @@ pub struct ZkayRSAEncryptionGadget {
     paddingType: PaddingType,
     pk: LongElement,
     plain: WireType,
-    rnd: Vec<WireType>,
+    rnd: Vec<Option<WireType>>,
     keyBits: i32,
 
-    cipher: Vec<WireType>,
+    cipher: Vec<Option<WireType>>,
 }
 impl ZkayRSAEncryptionGadget {
     pub fn new(
         plain: TypedWire,
         pk: LongElement,
-        rnd: Vec<WireType>,
+        rnd: Vec<Option<WireType>>,
         keyBits: i32,
         paddingType: PaddingType,
         desc: Vec<String>,
@@ -60,7 +60,7 @@ impl Gadget for ZkayRSAEncryptionGadget {
                 enc = e;
             }
             PKCS_1_5 => {
-                let rndLen = keyBits / 8 - 3 - plainBytes.length;
+                let rndLen = keyBits / 8 - 3 - plainBytes.len();
                 let rndBytes = reverseBytes(
                     WireArray::new(rnd)
                         .getBits(PKCS15_RND_CHUNK_SIZE)
@@ -76,7 +76,7 @@ impl Gadget for ZkayRSAEncryptionGadget {
             WireArray::new(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return cipher;
     }
 }

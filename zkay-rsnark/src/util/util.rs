@@ -6,9 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::structure::wire_type::WireType;
+ use crate::circuit::structure::wire::WireConfig;
 use std::collections::HashMap;
-use std::ops::Rem;
-use std::ops::Add;
+use std::ops::{Rem,Add,Shl};
 use rand::Rng;
 // use rand::distr::{Distribution, StandardUniform};
  use rand::distributions::Distribution;
@@ -32,40 +32,40 @@ impl Util {
         BigInteger::one()
     }
     pub fn split(x: BigInteger, chunkSize: i32) -> Vec<BigInteger> {
-        let numChunks = std::cmp::max(1, (x.bitLength() + chunkSize - 1) / chunkSize); // ceil(x.bitLength() / chunkSize)
-        return Self::split(x, numChunks, chunkSize);
+        let numChunks = std::cmp::max(1, (x.bits() + chunkSize as u64 - 1) / chunkSize as u64); // ceil(x.bitLength() / chunkSize)
+        return Self::spliti(x, numChunks as i32, chunkSize);
     }
 
     pub fn spliti(x: BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
         let chunks = vec![BigInteger::default(); numChunks as usize];
-        let mask = Util::one().shiftLeft(chunkSize).subtract(Util::one());
+        let mask = Util::one().shl(chunkSize).sub(Util::one());
         for i in 0..numChunks {
-            chunks[i as usize] = x.shiftRight(chunkSize * i).and(mask);
+            chunks[i as usize] = x.shr(chunkSize * i).and(mask);
         }
         return chunks;
     }
 
-    pub fn combine(table: Vec<BigInteger>, blocks: Vec<WireType>, bitwidth: i32) -> BigInteger {
+    pub fn combine(table: Vec<Option<BigInteger>>, blocks: Vec<Option<WireType>>, bitwidth: i32) -> BigInteger {
         let sum = BigInteger::ZERO;
         for i in 0..blocks.len() {
-            if table[blocks[i].getWireId()] == None {
+            if table[blocks[i].getWireId()  as usize] == None {
                 continue;
             }
-            sum = sum.add(table[blocks[i].getWireId()].shiftLeft(bitwidth * i));
+            sum = sum.add(table[blocks[i].getWireId() as usize].shl(bitwidth as usize * i));
         }
         return sum;
     }
 
     pub fn group(list: Vec<BigInteger>, width: i32) -> BigInteger {
-        let x = BigInteger::ZERO;
+        let mut x = BigInteger::ZERO;
         for i in 0..list.len() {
-            x = x.add(list[i].shiftLeft(width * i));
+            x = x.add(list[i].clone().shl(width as usize * i));
         }
         return x;
     }
 
     pub fn concati(a1: Vec<i32>, a2: Vec<i32>) -> Vec<i32> {
-        let all = vec![i32::default(); a1.len() + a2.len()];
+        let mut all = vec![i32::default(); a1.len() + a2.len()];
         for i in 0..all.len() {
             all[i] = if i < a1.len() {
                 a1[i]
@@ -76,35 +76,35 @@ impl Util {
         return all;
     }
 
-    pub fn concat(a1: Vec<WireType>, a2: Vec<WireType>) -> Vec<WireType> {
-        let all = vec![WireType::default(); a1.len() + a2.len()];
+    pub fn concat(a1: Vec<Option<WireType>>, a2: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mut all = vec![WireType::default(); a1.len() + a2.len()];
         for i in 0..all.len() {
             all[i] = if i < a1.len() {
-                a1[i]
+                a1[i].clone()
             } else {
-                a2[i - a1.len()]
+                a2[i - a1.len()].clone()
             };
         }
         return all;
     }
 
-    pub fn concat(w: WireType, a: Vec<WireType>) -> Vec<WireType> {
-        let all = vec![WireType::default(); 1 + a.len()];
+    pub fn concata(w: WireType, a: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mut all = vec![WireType::default(); 1 + a.len()];
         for i in 0..all.len() {
-            all[i] = if i < 1 { w } else { a[i - 1] };
+            all[i] = if i < 1 { w.clone() } else { a[i - 1].clone() };
         }
         return all;
     }
 
-    pub fn concat(arrays: Vec<Vec<i32>>) -> Vec<i32> {
-        let sum = 0;
-        for array in arrays {
+    pub fn concataa(arrays: Vec<Vec<i32>>) -> Vec<i32> {
+        let mut sum = 0;
+        for array in &arrays {
             sum += array.len();
         }
-        let all = vec![i32::default(); sum];
-        let idx = 0;
-        for array in arrays {
-            for a in array {
+        let mut all = vec![i32::default(); sum];
+        let mut idx = 0;
+        for array in &arrays {
+            for &a in array {
                 all[idx] = a;
                 idx += 1;
             }
@@ -112,33 +112,33 @@ impl Util {
         return all;
     }
 
-    pub fn randomBigIntegerArray(num: i32, n: BigInteger) -> Vec<BigInteger> {
-        let result = vec![BigInteger::default(); num as usize];
+    pub fn randomBigIntegerArray(&self,num: i32, n: BigInteger) -> Vec<BigInteger> {
+        let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
-            result[i as usize] = nextRandomBigInteger(n);
+            result[i as usize] = self.nextRandomBigInteger(n.clone());
         }
         return result;
     }
 
     pub fn nextRandomBigInteger(&self,n: BigInteger) -> BigInteger {
-        let rand=RandomBits::new(n.bitLength());
-        let result = rand.sample(rand::thread_rng());
+        let rand=RandomBits::new(n.bits());
+        let result = rand.sample(&mut rand::thread_rng());
         while result.compareTo(n) >= 0 {
-            result =  rand.sample(rand::thread_rng());
+            result =  rand.sample(&mut rand::thread_rng());
         }
         return result;
     }
 
     pub fn randomBigIntegerArrayi(&self,num: i32, numBits: i32) -> Vec<BigInteger> {
-        let result = vec![BigInteger::default(); num as usize];
+        let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
             result[i as usize] = self.nextRandomBigInteger(BigInteger::from(numBits as u32));
         }
         return result;
     }
 
-    pub fn nextRandomBigInteger(&self,numBits: i32) -> BigInteger {
-        return  RandomBits::new(numBits as u64).sample(rand::thread_rng());
+    pub fn nextRandomBigIntegeri(&self,numBits: i32) -> BigInteger {
+        return  RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
     }
 
     pub fn getDesc(desc: Vec<String>) -> String {
@@ -166,14 +166,14 @@ impl Util {
         return list;
     }
 
-    pub fn reverseBytes(inBitWires: Vec<WireType>) -> Vec<WireType> {
-        let outs = inBitWires.clone();
+    pub fn reverseBytes(inBitWires: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mut outs = inBitWires.clone();
         let numBytes = inBitWires.len() / 8;
         for i in 0..numBytes / 2 {
             let other = numBytes - i - 1;
             for j in 0..8 {
-                let temp = outs[i * 8 + j];
-                outs[i * 8 + j] = outs[other * 8 + j];
+                let temp = outs[i * 8 + j].clone();
+                outs[i * 8 + j] = outs[other * 8 + j].clone();
                 outs[other * 8 + j] = temp;
             }
         }
@@ -181,7 +181,7 @@ impl Util {
     }
 
     pub fn arrayToStringi(a: Vec<i32>, separator: String) -> String {
-        let s = String::new();
+        let mut s = String::new();
         for i in 0..a.len() - 1 {
             s.push_str(&a[i].to_string());
             s.push_str(&separator);
@@ -190,13 +190,13 @@ impl Util {
         return s;
     }
 
-    pub fn arrayToString(a: Vec<WireType>, separator: String) -> String {
-        let s = String::new();
+    pub fn arrayToString(a: Vec<Option<WireType>>, separator: String) -> String {
+        let mut s = String::new();
         for i in 0..a.len() - 1 {
-            s.push_str(a[i].to_string());
+            s.push_str(&a[i].to_string());
             s.push_str(&separator);
         }
-        s.push_str(a[a.len() - 1].to_string());
+        s.push_str(&a[a.len() - 1].to_string());
         return s;
     }
 
@@ -210,28 +210,26 @@ impl Util {
 
     // Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
 
-    pub fn computeMaxValue(numBits: i32) -> BigInteger {
+    pub fn computeMaxValue(numBits: u64) -> BigInteger {
         let maxValueCache = HashMap::new();
-        return maxValueCache.entry(numBits).or_insert_with_key(|i| Util::one().shiftLeft(i).subtract(Util::one()));
+        return maxValueCache.entry(numBits).or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()));
     }
 
     pub fn computeBound(numBits: i32) -> BigInteger {
         let boundCache = HashMap::new();
-        return boundCache.entry(numBits).or_insert_with(|| Util::one().shiftLeft(numBits));
+        return *boundCache.entry(numBits).or_insert_with(|| Util::one().shl(numBits)).clone();
     }
 
-    pub fn padWireArray(a: Vec<WireType>, length: usize, p: WireType) -> Vec<WireType> {
+    pub fn padWireArray(a: Vec<Option<WireType>>, length: usize, p: WireType) -> Vec<Option<WireType>> {
         if a.len() == length {
             return a;
         } else if a.len() > length {
             println!("No padding needed!");
             return a;
         } else {
-            let newArray = vec![WireType::default(); length];
+            let mut newArray = vec![WireType::default(); length];
             newArray[..a.len()].clone_from_slice(&a);
-            for k in a.len()..length {
-                newArray[k] = p;
-            }
+            newArray[a.len()..length ].fill( p.clone());
             return newArray;
         }
     }

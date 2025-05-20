@@ -51,7 +51,7 @@ impl Asymmetric for PaillierBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         keyName: String,
-        randomWires: Vec<WireType>,
+        randomWires: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         let key = getKey(keyName);
@@ -203,9 +203,9 @@ impl Asymmetric for HomomorphicBackend {
         );
         let cipher = input.getCipher();
         assert!(
-            cipher.length >= minNumCipherChunks && cipher.length <= maxNumCipherChunks,
+            cipher.len() >= minNumCipherChunks && cipher.len() <= maxNumCipherChunks,
             "Ciphertext has invalid length {}",
-            cipher.length
+            cipher.len()
         );
 
         // Ciphertext inputs seem to be passed as ZkUint(256); sanity check to make sure we got that.
@@ -215,12 +215,12 @@ impl Asymmetric for HomomorphicBackend {
         }
 
         // Input is a Paillier ciphertext - front-end must already check that this is the
-        let wires = vec![WireType::default(); cipher.length];
-        for i in 0..cipher.length {
+        let wires = vec![WireType::default(); cipher.len()];
+        for i in 0..cipher.len() {
             wires[i] = cipher[i].wire;
         }
-        let mut bitWidths = vec![CHUNK_SIZE; wires.length];
-        bitWidths[bitWidths.length - 1] = 2 * keyBits - (bitWidths.length - 1) * CHUNK_SIZE;
+        let mut bitWidths = vec![CHUNK_SIZE; wires.len()];
+        bitWidths[bitWidths.len() - 1] = 2 * keyBits - (bitWidths.len() - 1) * CHUNK_SIZE;
 
         // Cipher could still be uninitialized-zero, which we need to fix
         return uninitZeroToOne(LongElement::new(wires, bitWidths));
@@ -242,9 +242,9 @@ impl Asymmetric for HomomorphicBackend {
 
         // If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
         let wires = value.getArray();
-        let typedWires = vec![TypedWire::default(); wires.length];
+        let typedWires = vec![TypedWire::default(); wires.len()];
         let uint256 = ZkayType.ZkUint(256);
-        for i in 0..wires.length {
+        for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
         return typedWires;
@@ -268,7 +268,7 @@ impl Asymmetric for HomomorphicBackend {
             let posValue = LongElement::new(inputBits);
             let rawNegValue =
                 LongElement::new(input.wire.invBits(bits).add(1).getBitWires(bits + 1));
-            let negValue = key.subtract(rawNegValue);
+            let negValue = key.sub(rawNegValue);
 
             return posValue.muxBit(negValue, signBit);
         } else {

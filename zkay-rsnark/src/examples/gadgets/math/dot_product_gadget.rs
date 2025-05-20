@@ -2,12 +2,12 @@ use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
 
 pub struct DotProductGadget {
-    a: Vec<WireType>,
-    b: Vec<WireType>,
+    a: Vec<Option<WireType>>,
+    b: Vec<Option<WireType>>,
     output: WireType,
 }
 impl DotProductGadget {
-    pub fn new(a: Vec<WireType>, b: Vec<WireType>, desc: Vec<String>) -> Self {
+    pub fn new(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>, desc: Vec<String>) -> Self {
         super(desc);
         assert!(a.len() == b.len());
         self.a = a;
@@ -24,7 +24,7 @@ impl Gadget for DotProductGadget {
         }
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![output];
     }
 }

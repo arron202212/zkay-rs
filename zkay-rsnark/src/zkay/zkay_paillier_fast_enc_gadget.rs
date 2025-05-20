@@ -56,7 +56,7 @@ impl Gadget for ZkayPaillierFastEncGadget {
         return cipher;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return cipher.getArray();
     }
 }

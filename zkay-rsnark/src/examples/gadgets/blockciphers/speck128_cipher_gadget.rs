@@ -9,9 +9,9 @@ use crate::circuit::structure::wire_type::WireType;
  */
 
 pub struct Speck128CipherGadget {
-    plaintext: Vec<WireType>,
-    expandedKey: Vec<WireType>,
-    ciphertext: Vec<WireType>,
+    plaintext: Vec<Option<WireType>>,
+    expandedKey: Vec<Option<WireType>>,
+    ciphertext: Vec<Option<WireType>>,
 }
 impl Speck128CipherGadget {
     /**
@@ -22,10 +22,10 @@ impl Speck128CipherGadget {
      *            : Array of 32 64-bit elements. (Call expandKey(..))
      * @param desc
      */
-    pub fn new(plaintext: Vec<WireType>, expandedKey: Vec<WireType>, desc: Vec<String>) {
+    pub fn new(plaintext: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: Vec<String>) {
         super(desc);
         assert!(
-            plaintext.length == 2 && expandedKey.length == 32,
+            plaintext.len() == 2 && expandedKey.len() == 32,
             "Invalid Input"
         );
 
@@ -54,7 +54,7 @@ impl Gadget for Speck128CipherGadget {
      *            : 2 64-bit words
      * @return
      */
-    pub fn expandKey(key: Vec<WireType>) -> Vec<WireType> {
+    pub fn expandKey(key: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let generator = CircuitGenerator.getActiveCircuitGenerator();
         let k = vec![WireType::default(); 32];
         let l = vec![WireType::default(); 32];
@@ -69,7 +69,7 @@ impl Gadget for Speck128CipherGadget {
         return k;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return ciphertext;
     }
 }

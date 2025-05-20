@@ -22,11 +22,11 @@ impl ChaskeyLtsCbc {
 
         // Encrypt / Decrypt
         assert!(
-            cipher.getOutputSize(input.length) == input.length,
+            cipher.getOutputSize(input.len()) == input.len(),
             "Wrong size"
         );
-        let outbuf = vec![byte::default(); cipher.getOutputSize(input.length)];
-        let out_size = cipher.processBytes(input, 0, input.length, outbuf, 0);
+        let outbuf = vec![byte::default(); cipher.getOutputSize(input.len())];
+        let out_size = cipher.processBytes(input, 0, input.len(), outbuf, 0);
         assert!(
             cipher.doFinal(outbuf, out_size) == 0,
             "Input not aligned to block size"
@@ -38,7 +38,7 @@ impl ChaskeyLtsCbc {
 pub fn main(args: Vec<String>) {
     // Parse inputs
     assert!(
-        args.length == 4,
+        args.len() == 4,
         "expected 4 arguments [enc|dec, key, iv, plain|cipher]"
     );
     assert!(

@@ -4,15 +4,15 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{Util,BigInteger};
 
 pub struct SubsetSumHashGadget {
-    inputWires: Vec<WireType>,
-    outWires: Vec<WireType>,
+    inputWires: Vec<Option<WireType>>,
+    outWires: Vec<Option<WireType>>,
     binaryOutput: bool,
 }
 use std::sync::OnceLock;
 static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 impl SubsetSumHashGadget {
     pub const DIMENSION: i32 = 3; // set to 4 for higher security
-    pub const INPUT_LENGTH: i32 = 2 * DIMENSION * Config.LOG2_FIELD_PRIME; // length in bits
+    pub const INPUT_LENGTH: i32 = 2 * DIMENSION * Config.log2_field_prime; // length in bits
 
     /**
      * @param ins
@@ -21,7 +21,7 @@ impl SubsetSumHashGadget {
      *            Whether the output digest should be splitted into bits or not.
      * @param desc
      */
-    pub fn new(ins: Vec<WireType>, binaryOutput: bool, desc: Vec<String>) -> Self {
+    pub fn new(ins: Vec<Option<WireType>>, binaryOutput: bool, desc: Vec<String>) -> Self {
         COEFFS::get_or_init(|| {
             let mut tmp = vec![vec![BigInteger::default(); INPUT_LENGTH]; DIMENSION];
             for i in 0..DIMENSION {
@@ -32,14 +32,14 @@ impl SubsetSumHashGadget {
             tmp
         });
         super(desc);
-        let numBlocks = (ins.length * 1.0 / INPUT_LENGTH).ceil() as i32;
+        let numBlocks = (ins.len() * 1.0 / INPUT_LENGTH).ceil() as i32;
 
         assert!(numBlocks <= 1, "Only one block is supported at this point");
 
-        let rem = numBlocks * INPUT_LENGTH - ins.length;
+        let rem = numBlocks * INPUT_LENGTH - ins.len();
 
         let mut pad = vec![WireType::default(); rem];
-        for i in 0..pad.length {
+        for i in 0..pad.len() {
             pad[i] = generator.getZeroWire(); // TODO: adjust padding
         }
         inputWires = Util::concat(ins, pad);
@@ -60,17 +60,17 @@ impl Gadget for SubsetSumHashGadget {
         if !binaryOutput {
             outWires = outDigest;
         } else {
-            outWires = vec![WireType::default(); DIMENSION * Config.LOG2_FIELD_PRIME];
+            outWires = vec![WireType::default(); DIMENSION * Config.log2_field_prime];
             for i in 0..DIMENSION {
-                let bits = outDigest[i].getBitWires(Config.LOG2_FIELD_PRIME).asArray();
-                for j in 0..bits.length {
-                    outWires[j + i * Config.LOG2_FIELD_PRIME] = bits[j];
+                let bits = outDigest[i].getBitWires(Config.log2_field_prime).asArray();
+                for j in 0..bits.len() {
+                    outWires[j + i * Config.log2_field_prime] = bits[j];
                 }
             }
         }
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return outWires;
     }
 }

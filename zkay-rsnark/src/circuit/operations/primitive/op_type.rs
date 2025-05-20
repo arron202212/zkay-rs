@@ -5,19 +5,8 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::wire_array::WireArray;
-
-
 use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
 #[derive(Debug,Clone,Hash,PartialEq)]
-pub struct VariableBitWire;
-impl VariableBitWire {
-    pub fn  new(wireId:i32)->Self {
-    	// super(wireId);
-    }
-
-    pub fn getBitWires(&self) -> Option<WireArray> {
-        Some(WireArray::new(vec![self.clone()]))
-    }
+pub enum OpType{
 }

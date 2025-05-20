@@ -14,7 +14,7 @@ pub struct CachingTest  {
 	
 	pub   testCaching1() {
 
-		let numIns = Config.LOG2_FIELD_PRIME;
+		let numIns = Config.log2_field_prime;
 		let inVals1 = Util::randomBigIntegerArray(numIns,
 				Configs.get().unwrap().field_prime);
 		let inVals2 = Util::randomBigIntegerArray(numIns,
@@ -32,8 +32,8 @@ pub struct CachingTest  {
 		let multipliedVals = vec![BigInteger::default();numIns];
 		let addedVals = vec![BigInteger::default();numIns];
 
-		let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME)
-				.subtract(Util::one());
+		let mask = BigInteger::new("2").pow(Config.log2_field_prime)
+				.sub(Util::one());
 
 		for i in 0..numIns {
 
@@ -50,7 +50,7 @@ pub struct CachingTest  {
 			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
 			invertedVals[i] = BigInteger
 					.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
-			multipliedVals[i] = inVals1[i].multiply(inVals2[i]).modulo(
+			multipliedVals[i] = inVals1[i].mul(inVals2[i]).modulo(
 					Configs.get().unwrap().field_prime);
 			addedVals[i] = inVals1[i].add(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
 
@@ -82,17 +82,17 @@ pub struct CachingTest  {
 				
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
-							Config.LOG2_FIELD_PRIME, i);
+							Config.log2_field_prime, i);
 					shiftedLeft[i] = inputs1[i].shiftLeft(
-							Config.LOG2_FIELD_PRIME, i);
+							Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
 					xored[i] = inputs1[i].xorBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					ored[i] = inputs1[i].orBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					anded[i] = inputs1[i].andBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					inverted[i] = inputs3[i].invBits(32);
 					multiplied[i] = inputs1[i].mul(inputs2[i]);
 					added[i] = inputs1[i].add(inputs2[i]);
@@ -104,17 +104,17 @@ pub struct CachingTest  {
 				// multiplication gates will not be affected
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
-							Config.LOG2_FIELD_PRIME, i);
+							Config.log2_field_prime, i);
 					shiftedLeft[i] = inputs1[i].shiftLeft(
-							Config.LOG2_FIELD_PRIME, i);
+							Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
 					xored[i] = inputs1[i].xorBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					ored[i] = inputs1[i].orBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					anded[i] = inputs1[i].andBitwise(inputs2[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					inverted[i] = inputs3[i].invBits(32);
 					multiplied[i] = inputs1[i].mul(inputs2[i]);
 					added[i] = inputs1[i].add(inputs2[i]);
@@ -127,11 +127,11 @@ pub struct CachingTest  {
 				// gates will not be affected
 				for i in 0..numIns {
 					xored[i] = inputs2[i].xorBitwise(inputs1[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					ored[i] = inputs2[i].orBitwise(inputs1[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					anded[i] = inputs2[i].andBitwise(inputs1[i],
-							Config.LOG2_FIELD_PRIME);
+							Config.log2_field_prime);
 					multiplied[i] = inputs2[i].mul(inputs1[i]);
 					added[i] = inputs2[i].add(inputs1[i]);
 				}
@@ -311,28 +311,28 @@ pub struct CachingTest  {
 
 			
 			  fn buildCircuit() {
-				inputWires = createInputWireArray(inputStr.length());
+				inputWires = createInputWireArray(inputStr.len()());
 				let digest = SHA256Gadget::new(inputWires, 8,
-						inputStr.length(), false, true, "").getOutputWires();
+						inputStr.len()(), false, true, "").getOutputWires();
 				let numOfConstraintsBefore = getNumOfConstraints();
-				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
+				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
-				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
+				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
-				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
+				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
-				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
+				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
-				digest = SHA256Gadget::new(inputWires, 8, inputStr.length(),
+				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
 
 				// verify that the number of constraints match
 				assertEquals(numOfConstraintsBefore, getNumOfConstraints());
 
 				// do a small change and verify that number changes
-				let in2 = Arrays.copyOf(inputWires, inputWires.length);
+				let in2 = Arrays.copyOf(inputWires, inputWires.len());
 				in2[0] = in2[1];
-				SHA256Gadget::new(in2, 8, inputStr.length(), false, true, "")
+				SHA256Gadget::new(in2, 8, inputStr.len()(), false, true, "")
 						.getOutputWires();
 				assertTrue(numOfConstraintsBefore < getNumOfConstraints());
 
@@ -341,7 +341,7 @@ pub struct CachingTest  {
 
 			
 			pub  fn generateSampleInput(let e) {
-				for i in 0..inputStr.length() {
+				for i in 0..inputStr.len()() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
 			}

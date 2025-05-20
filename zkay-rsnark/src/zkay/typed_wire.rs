@@ -20,7 +20,7 @@ impl TypedWire {
             "Arguments cannot be null"
         );
 
-        if (restrict.length > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
+        if (restrict.len() > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
             wire.restrictBitLength(zkay_type.bitwidth);
         }
         self.wire = wire;
@@ -107,7 +107,7 @@ impl TypedWire {
         let ans = WireArray::new(ansLoHi)
             .getBits(124)
             .packBitsIntoWords(resultType.bitwidth, op.clone() + "[combine hi and lo]");
-        assert!(ans.length == 1, "Multiplication ans array has wrong length");
+        assert!(ans.len() == 1, "Multiplication ans array has wrong length");
         return TypedWire::new(ans[0], resultType, op);
     }
 

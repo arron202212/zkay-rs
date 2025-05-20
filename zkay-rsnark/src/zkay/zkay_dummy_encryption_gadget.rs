@@ -7,13 +7,13 @@ use zkay::crypto::DummyBackend::CIPHER_CHUNK_SIZE;
 pub struct ZkayDummyEncryptionGadget {
     pk: WireType,
     plain: WireType,
-    cipher: Vec<WireType>,
+    cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyEncryptionGadget {
     pub fn new(
         plain: TypedWire,
         pk: LongElement,
-        rnd: Vec<WireType>,
+        rnd: Vec<Option<WireType>>,
         keyBits: i32,
         desc: Vec<String>,
     ) -> Self {
@@ -21,7 +21,7 @@ impl ZkayDummyEncryptionGadget {
         assert!(plain.is_some() && pk.is_some() && rnd.is_some());
         self.plain = plain.wire;
         let pkarr = pk.getBits().packBitsIntoWords(256);
-        for i in 1..pkarr.length {
+        for i in 1..pkarr.len() {
             generator.addZeroAssertion(pkarr[i], "Dummy enc pk valid");
         }
         self.pk = pkarr[0];
@@ -35,7 +35,7 @@ impl Gadget for ZkayDummyEncryptionGadget {
         cipher.fill(res);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return cipher;
     }
 }

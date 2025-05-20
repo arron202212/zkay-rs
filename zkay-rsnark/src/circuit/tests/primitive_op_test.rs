@@ -77,9 +77,9 @@ let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_p
 let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].multiply(inVals1[1]).modulo(Configs.get().unwrap().field_prime));
+		result.add(inVals1[0].mul(inVals1[1]).modulo(Configs.get().unwrap().field_prime));
 		for i in 0..numIns {
-			result.add(inVals1[i].multiply(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
+			result.add(inVals1[i].mul(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("multiplication") {
@@ -139,8 +139,8 @@ let result5 = vec![WireType::default();numIns];
 
 		CircuitGenerator generator = CircuitGenerator::new("comparison") {
 
-			Vec<WireType> inputs1;
-			Vec<WireType> inputs2;
+			Vec<Option<WireType>> inputs1;
+			Vec<Option<WireType>> inputs2;
 
 			
 			  fn buildCircuit() {
@@ -196,7 +196,7 @@ let r = result.get(i);
 	
 	pub   testBooleanOperations() {
 
-let numIns = Config.LOG2_FIELD_PRIME;
+let numIns = Config.log2_field_prime;
 let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 let inVals3 = Util::randomBigIntegerArray(numIns, 32);
@@ -210,7 +210,7 @@ let oredVals = vec![BigInteger::default();numIns];
 let andedVals = vec![BigInteger::default();numIns];
 let invertedVals = vec![BigInteger::default();numIns];
 
-let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME).subtract(Util::one());
+let mask = BigInteger::new("2").pow(Config.log2_field_prime).sub(Util::one());
 		
 		for i in 0..numIns {
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(Configs.get().unwrap().field_prime);
@@ -224,9 +224,9 @@ let mask = BigInteger::new("2").pow(Config.LOG2_FIELD_PRIME).subtract(Util::one(
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("boolean_operations") {
-			Vec<WireType> inputs1;
-			Vec<WireType> inputs2;
-			Vec<WireType> inputs3;
+			Vec<Option<WireType>> inputs1;
+			Vec<Option<WireType>> inputs2;
+			Vec<Option<WireType>> inputs3;
 
 			
 			  fn buildCircuit() {
@@ -245,13 +245,13 @@ let anded = vec![WireType::default();numIns];
 let inverted = vec![WireType::default();numIns];
 
 				for i in 0..numIns {
-					shiftedRight[i] = inputs1[i].shiftRight(Config.LOG2_FIELD_PRIME, i);
-					shiftedLeft[i] = inputs1[i].shiftLeft(Config.LOG2_FIELD_PRIME, i);
+					shiftedRight[i] = inputs1[i].shiftRight(Config.log2_field_prime, i);
+					shiftedLeft[i] = inputs1[i].shiftLeft(Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
-					xored[i] = inputs1[i].xorBitwise(inputs2[i], Config.LOG2_FIELD_PRIME);
-					ored[i] = inputs1[i].orBitwise(inputs2[i], Config.LOG2_FIELD_PRIME);
-					anded[i] = inputs1[i].andBitwise(inputs2[i], Config.LOG2_FIELD_PRIME);
+					xored[i] = inputs1[i].xorBitwise(inputs2[i], Config.log2_field_prime);
+					ored[i] = inputs1[i].orBitwise(inputs2[i], Config.log2_field_prime);
+					anded[i] = inputs1[i].andBitwise(inputs2[i], Config.log2_field_prime);
 
 					inverted[i] = inputs3[i].invBits(32);
 				}
@@ -323,9 +323,9 @@ let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_p
 		
 		
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].multiply(inVals1[0]).modulo(Configs.get().unwrap().field_prime));
+		result.add(inVals1[0].mul(inVals1[0]).modulo(Configs.get().unwrap().field_prime));
 		for i in 0..numIns {
-			result.add(inVals1[i].multiply(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
+			result.add(inVals1[i].mul(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("assertions") {

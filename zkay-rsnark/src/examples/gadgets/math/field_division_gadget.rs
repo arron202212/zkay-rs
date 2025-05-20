@@ -20,11 +20,11 @@ impl FieldDivisionGadget {
         self.b = b;
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
-        if a.instanceof(ConstantWire) && b.instanceof(ConstantWire) {
+        if a.instance_of(ConstantWire) && b.instance_of(ConstantWire) {
             let aConst = a.getConstant();
             let bInverseConst = b.getConstant().modInverse(Configs.get().unwrap().field_prime);
             c = generator
-                .createConstantWire(aConst.multiply(bInverseConst).modulo(Configs.get().unwrap().field_prime));
+                .createConstantWire(aConst.mul(bInverseConst).modulo(Configs.get().unwrap().field_prime));
         } else {
             c = generator.createProverWitnessWire(debugStr("division result"));
             buildCircuit();
@@ -36,14 +36,14 @@ impl Gadget for FieldDivisionGadget {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
 
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
                     let bValue = evaluator.getWireValue(b);
                     let cValue = aValue
-                        .multiply(bValue.modInverse(Configs.get().unwrap().field_prime))
+                        .mul(bValue.modInverse(Configs.get().unwrap().field_prime))
                         .modulo(Configs.get().unwrap().field_prime);
                     evaluator.setWireValue(c, cValue);
                 }
@@ -76,7 +76,7 @@ impl Gadget for FieldDivisionGadget {
          */
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![c];
     }
 }

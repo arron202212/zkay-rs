@@ -4,8 +4,8 @@ use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::dot_product_gadget;
 
 pub struct DotProductCircuitGenerator {
-    a: Vec<WireType>,
-    b: Vec<WireType>,
+    a: Vec<Option<WireType>>,
+    b: Vec<Option<WireType>>,
     dimension: i32,
 }
 impl DotProductCircuitGenerator {

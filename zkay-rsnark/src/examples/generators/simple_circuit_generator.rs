@@ -3,7 +3,7 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 
 pub struct SimpleCircuitGenerator {
-    inputs: Vec<WireType>,
+    inputs: Vec<Option<WireType>>,
 }
 impl SimpleCircuitGenerator {
     pub fn new(circuitName: String) -> Self {

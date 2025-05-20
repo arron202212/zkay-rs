@@ -26,7 +26,7 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<WireType> exponentBits;
+			 Vec<Option<WireType>> exponentBits;
 			
 			
 			  fn buildCircuit() {
@@ -91,9 +91,9 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<WireType> exponentBits;
-			 Vec<WireType> g;
-			 Vec<WireType> h;
+			 Vec<Option<WireType>> exponentBits;
+			 Vec<Option<WireType>> g;
+			 Vec<Option<WireType>> h;
 
 			
 			  fn buildCircuit() {
@@ -160,9 +160,9 @@ let mu = 4;
 let omega = 7;
 let exponentBitlength = 397;
 			
-			 Vec<WireType> exponentBits;
-			 Vec<WireType> g;
-			 Vec<WireType> h;
+			 Vec<Option<WireType>> exponentBits;
+			 Vec<Option<WireType>> g;
+			 Vec<Option<WireType>> h;
 
 			
 			  fn buildCircuit() {

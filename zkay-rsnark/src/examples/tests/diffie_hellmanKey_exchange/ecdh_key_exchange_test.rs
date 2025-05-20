@@ -21,7 +21,7 @@ pub struct ECDHKeyExchange_Test  {
 		CircuitGenerator generator = CircuitGenerator::new("ECDH_Test") {
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<WireType> secretBits;
+			 Vec<Option<WireType>> secretBits;
 			 WireType baseX;
 			 WireType hX;
 			
@@ -73,7 +73,7 @@ let output = generator.getOutWires();
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<WireType> secretBits;
+			 Vec<Option<WireType>> secretBits;
 			 WireType baseX;
 			 WireType hX;
 			
@@ -122,7 +122,7 @@ let output = generator.getOutWires();
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<WireType> secretBits;
+			 Vec<Option<WireType>> secretBits;
 			 WireType baseX;
 			 WireType hX;
 			
@@ -169,7 +169,7 @@ let exponent = BigInteger::new("138676918421965108283523458651650183811613156058
 
 
 let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;			
-			 Vec<WireType> secretBits;
+			 Vec<Option<WireType>> secretBits;
 			 WireType baseX;
 			 WireType hX;
 			

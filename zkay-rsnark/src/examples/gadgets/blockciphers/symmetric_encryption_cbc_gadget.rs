@@ -9,26 +9,26 @@ use crate::util::util::{Util,BigInteger};
  *
  */
 pub struct SymmetricEncryptionCBCGadget {
-    ciphertext: Vec<WireType>,
+    ciphertext: Vec<Option<WireType>>,
     cipherName: String,
 
-    keyBits: Vec<WireType>,
-    plaintextBits: Vec<WireType>,
-    ivBits: Vec<WireType>,
+    keyBits: Vec<Option<WireType>>,
+    plaintextBits: Vec<Option<WireType>>,
+    ivBits: Vec<Option<WireType>>,
 }
 impl SymmetricEncryptionCBCGadget {
     const blocksize: i32 = 128;
     const keysize: i32 = 128;
     pub fn new(
-        plaintextBits: Vec<WireType>,
-        keyBits: Vec<WireType>,
-        ivBits: Vec<WireType>,
+        plaintextBits: Vec<Option<WireType>>,
+        keyBits: Vec<Option<WireType>>,
+        ivBits: Vec<Option<WireType>>,
         cipherName: String,
         desc: Vec<String>,
     ) {
         super(desc);
         assert!(
-            keyBits.length == keysize && ivBits.length == keysize,
+            keyBits.len() == keysize && ivBits.len() == keysize,
             "Key and IV bit vectors should be of length 128"
         );
 
@@ -41,7 +41,7 @@ impl SymmetricEncryptionCBCGadget {
 }
 impl Gadget for SymmetricEncryptionCBCGadget {
     fn buildCircuit() {
-        let numBlocks = (plaintextBits.length * 1.0 / blocksize).ceil() as i32;
+        let numBlocks = (plaintextBits.len() * 1.0 / blocksize).ceil() as i32;
         plaintextBits = WireArray::new(plaintextBits)
             .adjustLength(numBlocks * blocksize)
             .asArray();
@@ -70,7 +70,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
         }
     }
 
-    fn prepareKey() -> Vec<WireType> {
+    fn prepareKey() -> Vec<Option<WireType>> {
         assert!(
             !cipherName.equals("speck128"),
             "Other Ciphers not supported in this version!"
@@ -82,7 +82,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
         return preparedKey;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return ciphertext;
     }
 }

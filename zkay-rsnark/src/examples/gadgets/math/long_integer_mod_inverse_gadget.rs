@@ -36,14 +36,14 @@ impl Gadget for LongIntegerModInverseGadget {
         let quotientWires = generator.createProverWitnessWireArray(m.getSize());
         let quotient = LongElement::new(quotientWires, m.getCurrentBitwidth());
 
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
                     let mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
                     let inverseValue = aValue.modInverse(mValue);
-                    let quotientValue = aValue.multiply(inverseValue).divide(mValue);
+                    let quotientValue = aValue.mul(inverseValue).divide(mValue);
 
                     evaluator.setWireValue(
                         inverseWires,
@@ -76,7 +76,7 @@ impl Gadget for LongIntegerModInverseGadget {
         return inverse;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return inverse.getArray();
     }
 }

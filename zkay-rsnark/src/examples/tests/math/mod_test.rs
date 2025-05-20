@@ -18,7 +18,7 @@ let b = 257; // b will be an input to the circuit
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test1") {
 
-			Vec<WireType> inputWires;
+			Vec<Option<WireType>> inputWires;
 
 			
 			  fn buildCircuit() {
@@ -55,7 +55,7 @@ let b = 257; // b will be a constant
 
 		CircuitGenerator generator = CircuitGenerator::new("Mod_Test2") {
 
-			Vec<WireType> inputWires;
+			Vec<Option<WireType>> inputWires;
 
 			
 			  fn buildCircuit() {

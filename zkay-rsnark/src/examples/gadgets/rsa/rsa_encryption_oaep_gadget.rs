@@ -25,10 +25,10 @@ pub struct RSAEncryptionOAEPGadget {
     modulus: LongElement,
 
     // every wire represents a byte in the following three arrays
-    plainText: Vec<WireType>,
-    seed: Vec<WireType>,
+    plainText: Vec<Option<WireType>>,
+    seed: Vec<Option<WireType>>,
 
-    ciphertext: Vec<WireType>,
+    ciphertext: Vec<Option<WireType>>,
 
     rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
 }
@@ -43,8 +43,8 @@ impl RSAEncryptionOAEPGadget {
 			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 ];
     pub fn new(
         modulus: LongElement,
-        plainText: Vec<WireType>,
-        seed: Vec<WireType>,
+        plainText: Vec<Option<WireType>>,
+        seed: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
         desc: Vec<String>,
     ) -> Self {
@@ -56,12 +56,12 @@ impl RSAEncryptionOAEPGadget {
         );
 
         assert!(
-            plainText.length <= rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2,
+            plainText.len() <= rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2,
             "Message too long,Invalid message length for RSA Encryption"
         );
 
         assert!(
-            seed.length == SHA256_DIGEST_LENGTH,
+            seed.len() == SHA256_DIGEST_LENGTH,
             "Seed must have the same length as the hash function output,Invalid seed dimension for RSA Encryption"
         );
 
@@ -74,7 +74,7 @@ impl RSAEncryptionOAEPGadget {
 }
 impl Gadget for RSAEncryptionOAEPGadget {
     fn buildCircuit() {
-        let mLen = plainText.length;
+        let mLen = plainText.len();
         let hLen = SHA256_DIGEST_LENGTH;
         let keyLen = rsaKeyBitLength / 8; // in bytes
         let mut paddingString = vec![generator.getZeroWire(); keyLen - mLen - 2 * hLen - 2];
@@ -83,12 +83,12 @@ impl Gadget for RSAEncryptionOAEPGadget {
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
                 db[i] = generator.createConstantWire((lSHA256_HASH[i] + 256) % 256);
-            } else if i < hLen + paddingString.length {
+            } else if i < hLen + paddingString.len() {
                 db[i] = paddingString[i - hLen];
-            } else if i < hLen + paddingString.length + 1 {
+            } else if i < hLen + paddingString.len() + 1 {
                 db[i] = generator.getOneWire();
             } else {
-                db[i] = plainText[i - (hLen + paddingString.length + 1)];
+                db[i] = plainText[i - (hLen + paddingString.len() + 1)];
             }
         }
 
@@ -109,8 +109,8 @@ impl Gadget for RSAEncryptionOAEPGadget {
         // The LongElement implementation is LittleEndian, so we will process the array in reverse order
 
         let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
-        for i in 0..paddedByteArray.length {
-            let e = LongElement::new(paddedByteArray[paddedByteArray.length - i - 1], 8);
+        for i in 0..paddedByteArray.len() {
+            let e = LongElement::new(paddedByteArray[paddedByteArray.len() - i - 1], 8);
             let c = LongElement::new(Util::split(
                 Util::one().shiftLeft(8 * i),
                 LongElement.CHUNK_BITWIDTH,
@@ -132,14 +132,14 @@ impl Gadget for RSAEncryptionOAEPGadget {
     }
 
     pub fn checkSeedCompliance() {
-        for i in 0..seed.length {
+        for i in 0..seed.len() {
             // Verify that the seed wires are bytes
             // This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
             seed[i].restrictBitLength(8);
         }
     }
 
-    fn mgf1(ins: Vec<WireType>, length: i32) -> Vec<WireType> {
+    fn mgf1(ins: Vec<Option<WireType>>, length: i32) -> Vec<Option<WireType>> {
         let mut mgfOutputList = vec![];
         for i in 0..=(length * 1.0 / SHA256_DIGEST_LENGTH).ceil() as i32 - 1 {
             // the standard follows a Big Endian format
@@ -148,7 +148,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
 					(byte) i ]);
 
             let inputToHash = Util::concat(ins, counter);
-            let shaGadget = SHA256Gadget::new(inputToHash, 8, inputToHash.length, false, true);
+            let shaGadget = SHA256Gadget::new(inputToHash, 8, inputToHash.len(), false, true);
             let digest = shaGadget.getOutputWires();
 
             let msgHashBytes = WireArray::new(digest).getBits(32).packBitsIntoWords(8);
@@ -163,7 +163,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
                 msgHashBytes[4 * j + 1] = msgHashBytes[4 * j + 2];
                 msgHashBytes[4 * j + 2] = tmp;
             }
-            for j in 0..msgHashBytes.length {
+            for j in 0..msgHashBytes.len() {
                 mgfOutputList.add(msgHashBytes[j]);
             }
         }
@@ -171,7 +171,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         return out[..length].to_vec();
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return ciphertext;
     }
 }

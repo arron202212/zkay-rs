@@ -9,44 +9,47 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::operations::primitive::basic_op::Op;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
+use crate::circuit::structure::wire::WireConfig;
  use crate::util::util::{Util,BigInteger};
- use std::hash::Hash;
+use std::ops::{Add,Sub,Mul,Neg,Rem};
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct SplitBasicOp;
-pub fn newSplitBasicOp(w: WireType, outs: Vec<WireType>, desc: Vec<String>) -> Op<SplitBasicOp> {
+pub fn newSplitBasicOp(w: WireType, outs: Vec<Option<WireType>>, desc: Vec<String>) -> Op<SplitBasicOp> {
     Op::<SplitBasicOp> {
-        inputs: vec![w],
+        inputs: vec![Some(w)],
         outputs: outs,
         desc: desc.get(0).unwrap_or(&String::new()).clone(),
         t: SplitBasicOp,
     }
 }
+crate::impl_instruction_for!(Op<SplitBasicOp>);
 impl BasicOp for Op<SplitBasicOp> {
     fn getOpcode(&self) -> String {
-        return "split";
+        return "split".to_owned();
     }
 
-    fn checkInputs(&self, assignment: Vec<BigInteger>) {
+    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         //super.checkInputs(assignment);
         assert!(
-            self.outputs.len() >= assignment[self.inputs[0].getWireId()].bitLength(),
+            self.outputs.len() >= assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap().bits() as usize,
             "Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t",
-            assignment[self.inputs[0].getWireId()]
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap()
         );
     }
 
-    fn compute(&self, assignment: Vec<BigInteger>) {
-        let mut inVal = assignment[self.inputs[0].getWireId()];
-        if inVal.compareTo(Configs.get().unwrap().field_prime) > 0 {
-            inVal = inVal.modulo(Configs.get().unwrap().field_prime);
+    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+        let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap();
+        if inVal>Configs.get().unwrap().field_prime {
+            inVal = inVal.rem(Configs.get().unwrap().field_prime.clone());
         }
-        for i in 0..self.outputs.length {
-            assignment[self.outputs[i].getWireId()] = if inVal.testBit(i) {
+        for i in 0..self.outputs.len() {
+            assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] = Some(if inVal.bit(i as u64) {
                 Util::one()
             } else {
                 BigInteger::ZERO
-            };
+            });
         }
     }
 
@@ -56,7 +59,7 @@ impl BasicOp for Op<SplitBasicOp> {
         }
 
         let op = rhs;
-        self.inputs[0].equals(op.self.inputs[0]) && self.outputs.length == op.self.outputs.length
+        self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap()) && self.outputs.len() == op.outputs.len()
     }
 
     fn getNumMulGates(&self) -> i32 {

@@ -1,16 +1,16 @@
 use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
 
- use std::hash::Hash;
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct PinocchioGadget {
-    inputWires: Vec<WireType>,
-    proverWitnessWires: Vec<WireType>,
-    outputWires: Vec<WireType>,
+    inputWires: Vec<Option<WireType>>,
+    proverWitnessWires: Vec<Option<WireType>>,
+    outputWires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
-    pub fn new(inputWires: Vec<WireType>, pathToArithFile: String, desc: Vec<String>) -> Self {
+    pub fn new(inputWires: Vec<Option<WireType>>, pathToArithFile: String, desc: Vec<String>) -> Self {
         super(desc);
         self.inputWires = inputWires;
         buildCircuit(pathToArithFile);
@@ -47,7 +47,7 @@ impl Gadget for PinocchioGadget {
                 if wireMapping[wireIndex] != null {
                     throwParsingError(scanner, "WireType assigned twice! " + wireIndex);
                 }
-                if inputCount < inputWires.length {
+                if inputCount < inputWires.len() {
                     wireMapping[wireIndex] = inputWires[inputCount];
                 } else {
                     // the last input wire is assumed to be the one wire
@@ -96,7 +96,7 @@ impl Gadget for PinocchioGadget {
                 } else if line.startsWith("const-mul-neg-") {
                     let constantStr = line.substring("const-mul-neg-".length(), line.indexOf(" "));
                     let constant = BigInteger::new(constantStr, 16);
-                    wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant.negate());
+                    wireMapping[outs.get(0)] = wireMapping[ins.get(0)].mul(constant.neg());
                 } else if line.startsWith("const-mul-") {
                     let constantStr = line.substring("const-mul-".length(), line.indexOf(" "));
                     let constant = BigInteger::new(constantStr, 16);
@@ -137,11 +137,11 @@ impl Gadget for PinocchioGadget {
         return ins;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return outputWires;
     }
 
-    pub fn getProverWitnessWires() -> Vec<WireType> {
+    pub fn getProverWitnessWires() -> Vec<Option<WireType>> {
         return proverWitnessWires;
     }
 

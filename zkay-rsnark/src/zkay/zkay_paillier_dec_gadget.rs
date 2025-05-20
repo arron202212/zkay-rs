@@ -46,7 +46,7 @@ impl Gadget for ZkayPaillierDecGadget {
             LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, "c^lambda")
                 .getResult();
         let lOutput =
-            LongIntegerFloorDivGadget::new(cPowLambda.subtract(1), n, "(c^lambda - 1) / n")
+            LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")
                 .getQuotient();
         let timesMu = lOutput.mul(mu);
         plain = LongIntegerModGadget::new(timesMu, n, nBits, true).getRemainder();
@@ -56,7 +56,7 @@ impl Gadget for ZkayPaillierDecGadget {
         return plain;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return plain.getArray();
     }
 }

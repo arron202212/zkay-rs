@@ -23,7 +23,7 @@ impl Symmetric for ECDHBackend {
     pub fn createEncryptionGadget(
         plain: TypedWire,
         key: String,
-        ivArr: Vec<WireType>,
+        ivArr: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Gadget {
         return ZkayCBCSymmetricEncGadget::new(

@@ -14,7 +14,7 @@ impl LongIntegerFloorDivGadget {
     }
 }
 impl LongIntegerDivision for LongIntegerFloorDivGadget {
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return getQuotient().getArray();
     }
 }

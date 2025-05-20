@@ -11,10 +11,10 @@ use crate::circuit::structure::wire_array;
 pub struct MerkleTreePathGadget {
     treeHeight: i32,
     directionSelectorWire: WireType,
-    directionSelectorBits: Vec<WireType>,
-    leafWires: Vec<WireType>,
-    intermediateHashWires: Vec<WireType>,
-    outRoot: Vec<WireType>,
+    directionSelectorBits: Vec<Option<WireType>>,
+    leafWires: Vec<Option<WireType>>,
+    intermediateHashWires: Vec<Option<WireType>>,
+    outRoot: Vec<Option<WireType>>,
 
     leafWordBitWidth: i32,
 }
@@ -22,8 +22,8 @@ impl MerkleTreePathGadget {
     const digestWidth: i32 = SubsetSumHashGadget.DIMENSION;
     pub fn new(
         directionSelectorWire: WireType,
-        leafWires: Vec<WireType>,
-        intermediateHasheWires: Vec<WireType>,
+        leafWires: Vec<Option<WireType>>,
+        intermediateHasheWires: Vec<Option<WireType>>,
         leafWordBitWidth: i32,
         treeHeight: i32,
         desc: Vec<String>,
@@ -64,7 +64,7 @@ impl Gadget for MerkleTreePathGadget {
             }
 
             let nextInputBits = WireArray::new(inHash)
-                .getBits(Config.LOG2_FIELD_PRIME)
+                .getBits(Config.log2_field_prime)
                 .asArray();
             subsetSumGadget = SubsetSumHashGadget::new(nextInputBits, false);
             currentHash = subsetSumGadget.getOutputWires();
@@ -72,7 +72,7 @@ impl Gadget for MerkleTreePathGadget {
         outRoot = currentHash;
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return outRoot;
     }
 }

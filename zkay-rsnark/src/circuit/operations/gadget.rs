@@ -7,28 +7,30 @@
 #![allow(unused_braces)]
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
- use std::hash::Hash;
+use std::hash::{DefaultHasher, Hash, Hasher};
  use std::fmt::Debug;
-#[derive(Debug,Clone,Hash)]
+#[derive(Debug,Clone,Hash,PartialEq)]
 pub struct Gadget<T> {
-    generator: CircuitGenerator,
-    description: String,
-    t: T,
+pub generator: CircuitGenerator,
+pub description: String,
+pub t: T,
 }
 pub fn newGadget(desc: Vec<String>) -> (CircuitGenerator, String) {
     (
-        CircuitGenerator::getActiveCircuitGenerator(),
-        desc.get(0).unwrap_or(&String::new()),
+        CircuitGenerator::getActiveCircuitGenerator().unwrap(),
+        desc.get(0).unwrap_or(&String::new()).clone(),
     )
 }
 
-pub trait GadgetConfig {
-    fn getOutputWires() -> Vec<WireType>;
+pub trait GadgetConfig:Debug {
+    fn getOutputWires() -> Vec<Option<WireType>>;
 
     fn toString(&self) -> String {
-        "getClass().getSimpleName()".to_owned() + " " + &self.description
+        "getClass().getSimpleName()".to_owned() + " " + &self.description()
     }
-
+    fn description(&self)->String{
+    String::new()
+    }
     fn debugStr(&self, s: String) -> String {
         format!("{self:?}:{s}")
     }

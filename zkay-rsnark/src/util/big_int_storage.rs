@@ -29,7 +29,7 @@ impl BigIntStorage {
     }
 
     pub fn getBigInteger(&mut self,x: BigInteger) -> BigInteger {
-        self.bigIntegerSet.entry(x).or_insert(x);
+        self.bigIntegerSet.entry(x.clone()).or_insert(x.clone());
         self.bigIntegerSet.get(&x).unwrap().clone()
     }
 }

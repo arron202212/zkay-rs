@@ -81,7 +81,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 let mut mat = vec![vec![BigInteger::default()17]; 16];
                 let mut memberValueSet = HashSet::new();
 
-                for k in 0..mat.length {
+                for k in 0..mat.len() {
                     let memberValue = list.get(k + i * 16);
                     memberValueSet.add(memberValue);
                     mat[k][16] = Util::one();
@@ -123,7 +123,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
     fn buildCircuit() {
         output = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
@@ -170,7 +170,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         let product = generator.getOneWire();
         for coeffs in allCoeffSet {
             let accum = generator.getZeroWire();
-            for j in 0..vars.length {
+            for j in 0..vars.len() {
                 accum = accum.add(vars[j].mul(coeffs[j]));
             }
             accum = accum.sub(1);
@@ -179,7 +179,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         generator.addZeroAssertion(product);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![output];
     }
 
@@ -188,7 +188,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         let v = BigInteger::from(k).add(Util::one());
         let product = v;
         if bitCount != 0 {
-            product = product.multiply(v).modulo(Configs.get().unwrap().field_prime);
+            product = product.mul(v).modulo(Configs.get().unwrap().field_prime);
         }
         for j in 0..16 {
             if j < bitCount {
@@ -199,7 +199,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 };
             } else {
                 vars[j] = product;
-                product = product.multiply(v).modulo(Configs.get().unwrap().field_prime);
+                product = product.mul(v).modulo(Configs.get().unwrap().field_prime);
             }
         }
         return vars;
@@ -221,7 +221,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             let variableValues = getVariableValues(k);
             let result = BigInteger::ZERO;
             for i in 0..16 {
-                result = result.add(variableValues[i].multiply(coeffs[i]));
+                result = result.add(variableValues[i].mul(coeffs[i]));
             }
             result = result.modulo(Configs.get().unwrap().field_prime);
             if result.equals(Util::one()) {

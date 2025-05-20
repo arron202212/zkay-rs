@@ -16,18 +16,18 @@ impl RSAUtil {
         let keySize = modulus.bitLength();
         let d = privateKey.getPrivateExponent();
 
-        let cipherTextPadded = vec![byte::default(); cipherText.length + 1];
-        System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.length);
+        let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
+        System.arraycopy(cipherText, 0, cipherTextPadded, 1, cipherText.len());
         cipherTextPadded[0] = 0;
 
         let c = BigInteger::new(cipherText);
         c = BigInteger::new(cipherTextPadded);
         let product = Util::one();
         for i in (0..=keySize - 1).rev() {
-            product = product.multiply(product).modulo(modulus);
+            product = product.mul(product).modulo(modulus);
             let bit = d.testBit(i);
             if bit {
-                product = product.multiply(c).modulo(modulus);
+                product = product.mul(c).modulo(modulus);
             }
         }
 
@@ -35,7 +35,7 @@ impl RSAUtil {
         //				+ product.toString(16));
 
         let paddedPlaintext = product.toByteArray();
-        if paddedPlaintext.length != keySize / 8 - 1 {
+        if paddedPlaintext.len() != keySize / 8 - 1 {
             println!("Error");
             return None;
         }
@@ -100,8 +100,8 @@ impl RSAUtil {
         let keySize = modulus.bitLength();
         let d = privateKey.getPrivateExponent();
 
-        let cipherTextPadded = vec![byte::default(); cipherText.length + 1];
-        cipherTextPadded[1..1 + cipherText.length].clone_from_slice(&cipherText);
+        let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
+        cipherTextPadded[1..1 + cipherText.len()].clone_from_slice(&cipherText);
         cipherTextPadded[0] = 0;
 
         let c = BigInteger::new(cipherText);
@@ -109,10 +109,10 @@ impl RSAUtil {
 
         let product = Util::one();
         for i in (0..=keySize - 1).rev() {
-            product = product.multiply(product).modulo(modulus);
+            product = product.mul(product).modulo(modulus);
             let bit = d.testBit(i);
             if bit {
-                product = product.multiply(c).modulo(modulus);
+                product = product.mul(c).modulo(modulus);
             }
         }
 
@@ -121,10 +121,10 @@ impl RSAUtil {
 
         let encodedMessageBytes = product.toByteArray();
 
-        if encodedMessageBytes.length > keySize / 8 {
+        if encodedMessageBytes.len() > keySize / 8 {
             encodedMessageBytes = encodedMessageBytes[1..].to_vec();
         } else {
-            while (encodedMessageBytes.length < keySize / 8) {
+            while (encodedMessageBytes.len() < keySize / 8) {
                 encodedMessageBytes = concat(vec![0], encodedMessageBytes);
             }
         }
@@ -141,7 +141,7 @@ impl RSAUtil {
         let mut dbMask = mgf(seed, keySize / 8 - hlen - 1, hlen);
         dbMask = dbMask[..keySize / 8 - hlen - 1].to_vec();
 
-        let DB = vec![byte::default(); dbMask.length + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
+        let DB = vec![byte::default(); dbMask.len() + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
         DB[1..1 + maskedDBLength].clone_from_slice(&maskedDb);
         for i in 0..maskedDBLength {
             DB[i + 1] ^= dbMask[i];

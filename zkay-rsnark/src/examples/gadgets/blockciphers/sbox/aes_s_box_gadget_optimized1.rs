@@ -51,24 +51,24 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             // used for sanity checks
             let polyCoeffs = vec![Util::one()];
 
-            for k in 0..mat.length {
+            for k in 0..mat.len() {
                 let value = list.get(k + i * 16);
                 memberValueSet.add(value);
                 let p = BigInteger::from(value);
                 mat[k][0] = Util::one();
                 for j in 1..=16 {
-                    mat[k][j] = p.multiply(mat[k][j - 1]).modulo(Configs.get().unwrap().field_prime);
+                    mat[k][j] = p.mul(mat[k][j - 1]).modulo(Configs.get().unwrap().field_prime);
                 }
                 // negate the last element, just to make things consistent with
                 // the paper notations
-                mat[k][16] = Configs.get().unwrap().field_prime.subtract(mat[k][16]);
+                mat[k][16] = Configs.get().unwrap().field_prime.sub(mat[k][16]);
 
                 // used for a sanity check (verifying that the output solution
                 // is equivalent to coefficients of polynomial that has roots at
                 // memberValueSet. see note above)
                 polyCoeffs = polyMul(
                     polyCoeffs,
-                    vec![Configs.get().unwrap().field_prime.subtract(p), Util::one()],
+                    vec![Configs.get().unwrap().field_prime.sub(p), Util::one()],
                 );
             }
 
@@ -103,7 +103,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         for i in 0..a1.length {
             for j in 0..a2.length {
                 out[i + j] = out[i + j]
-                    .add(a1[i].multiply(a2[j]))
+                    .add(a1[i].mul(a2[j]))
                     .modulo(Configs.get().unwrap().field_prime);
             }
         }
@@ -125,12 +125,12 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             let result = coeffs[0];
             let p = BigInteger::from(k);
             for i in 1..16 {
-                result = result.add(p.multiply(coeffs[i]));
-                p = p.multiply(BigInteger::from(k)).modulo(Configs.get().unwrap().field_prime);
+                result = result.add(p.mul(coeffs[i]));
+                p = p.mul(BigInteger::from(k)).modulo(Configs.get().unwrap().field_prime);
             }
             result = result.modulo(Configs.get().unwrap().field_prime);
 
-            if result.equals(Configs.get().unwrap().field_prime.subtract(p)) {
+            if result.equals(Configs.get().unwrap().field_prime.sub(p)) {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;
@@ -150,7 +150,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
     fn buildCircuit() {
         output = generator.createProverWitnessWire();
         input.restrictBitLength(8);
-        generator.specifyProverWitnessComputation(&{
+        generator.specifyProverWitnessComputation({
             struct Prover;
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
@@ -173,7 +173,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         let product = generator.getOneWire();
         for coeffs in allCoeffSet {
             let accum = generator.getZeroWire();
-            for j in 0..vars.length {
+            for j in 0..vars.len() {
                 accum = accum.add(vars[j].mul(coeffs[j]));
             }
             accum = accum.add(vars[15].mul(p));
@@ -182,7 +182,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         generator.addZeroAssertion(product);
     }
 
-    pub fn getOutputWires() -> Vec<WireType> {
+    pub fn getOutputWires() -> Vec<Option<WireType>> {
         return vec![output];
     }
 }
