@@ -37,22 +37,22 @@ pub struct CachingTest  {
 
 		for i in 0..numIns {
 
-			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(
+			shiftedRightVals[i] = inVals1[i].shiftRight(i).rem(
 					Configs.get().unwrap().field_prime);
 			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask)
-					.modulo(Configs.get().unwrap().field_prime);
+					.rem(Configs.get().unwrap().field_prime.clone());
 			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
 			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
-			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
-			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
+			xoredVals[i] = inVals1[i].xor(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
+			oredVals[i] = inVals1[i].or(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
+			andedVals[i] = inVals1[i].and(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			invertedVals[i] = BigInteger
 					.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
-			multipliedVals[i] = inVals1[i].mul(inVals2[i]).modulo(
-					Configs.get().unwrap().field_prime);
-			addedVals[i] = inVals1[i].add(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
+			multipliedVals[i] = inVals1[i].mul(inVals2[i]).rem(
+					Configs.get().unwrap().field_prime.clone());
+			addedVals[i] = inVals1[i].add(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 
 		}
 

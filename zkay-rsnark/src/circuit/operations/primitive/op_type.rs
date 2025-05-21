@@ -5,8 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
-pub enum OpType{
-}
+#[derive(Debug, Clone, Hash, PartialEq)]
+pub enum OpType {}

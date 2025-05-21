@@ -24,7 +24,7 @@ impl FieldDivisionGadget {
             let aConst = a.getConstant();
             let bInverseConst = b.getConstant().modInverse(Configs.get().unwrap().field_prime);
             c = generator
-                .createConstantWire(aConst.mul(bInverseConst).modulo(Configs.get().unwrap().field_prime));
+                .createConstantWire(aConst.mul(bInverseConst).rem(Configs.get().unwrap().field_prime.clone()));
         } else {
             c = generator.createProverWitnessWire(debugStr("division result"));
             buildCircuit();
@@ -44,7 +44,7 @@ impl Gadget for FieldDivisionGadget {
                     let bValue = evaluator.getWireValue(b);
                     let cValue = aValue
                         .mul(bValue.modInverse(Configs.get().unwrap().field_prime))
-                        .modulo(Configs.get().unwrap().field_prime);
+                        .rem(Configs.get().unwrap().field_prime.clone());
                     evaluator.setWireValue(c, cValue);
                 }
             }

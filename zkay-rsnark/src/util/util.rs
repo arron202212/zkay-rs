@@ -5,22 +5,22 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
- use crate::circuit::structure::wire::WireConfig;
-use std::collections::HashMap;
-use std::ops::{Rem,Add,Shl};
 use rand::Rng;
+use std::collections::HashMap;
+use std::ops::{Add, Rem, Shl};
 // use rand::distr::{Distribution, StandardUniform};
- use rand::distributions::Distribution;
-use num_traits::{sign::Signed,One};
-use num_bigint::{BigInt,RandomBits,ToBigInt, RandBigInt,Sign};
+use num_bigint::{BigInt, RandBigInt, RandomBits, Sign, ToBigInt};
+use num_traits::{One, sign::Signed};
+use rand::distributions::Distribution;
 pub type BigInteger = BigInt;
 // let mut rng = rand::thread_rng();
-pub struct Util{
+pub struct Util {
     // seeded by 1 for testing purposes
     rand: RandomBits,
 }
-impl  Default for Util {
+impl Default for Util {
     fn default() -> Self {
         Self {
             rand: RandomBits::new(256),
@@ -28,11 +28,11 @@ impl  Default for Util {
     }
 }
 impl Util {
-    pub fn one()->BigInteger{
+    pub fn one() -> BigInteger {
         BigInteger::one()
     }
     pub fn split(x: BigInteger, chunkSize: i32) -> Vec<BigInteger> {
-        let numChunks = std::cmp::max(1, (x.bits() + chunkSize as u64 - 1) / chunkSize as u64); // ceil(x.bitLength() / chunkSize)
+        let numChunks = std::cmp::max(1, (x.bits() + chunkSize as u64 - 1) / chunkSize as u64); // ceil(x.bits() / chunkSize)
         return Self::spliti(x, numChunks as i32, chunkSize);
     }
 
@@ -45,10 +45,14 @@ impl Util {
         return chunks;
     }
 
-    pub fn combine(table: Vec<Option<BigInteger>>, blocks: Vec<Option<WireType>>, bitwidth: i32) -> BigInteger {
+    pub fn combine(
+        table: Vec<Option<BigInteger>>,
+        blocks: Vec<Option<WireType>>,
+        bitwidth: i32,
+    ) -> BigInteger {
         let sum = BigInteger::ZERO;
         for i in 0..blocks.len() {
-            if table[blocks[i].getWireId()  as usize] == None {
+            if table[blocks[i].getWireId() as usize] == None {
                 continue;
             }
             sum = sum.add(table[blocks[i].getWireId() as usize].shl(bitwidth as usize * i));
@@ -112,7 +116,7 @@ impl Util {
         return all;
     }
 
-    pub fn randomBigIntegerArray(&self,num: i32, n: BigInteger) -> Vec<BigInteger> {
+    pub fn randomBigIntegerArray(&self, num: i32, n: BigInteger) -> Vec<BigInteger> {
         let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
             result[i as usize] = self.nextRandomBigInteger(n.clone());
@@ -120,16 +124,16 @@ impl Util {
         return result;
     }
 
-    pub fn nextRandomBigInteger(&self,n: BigInteger) -> BigInteger {
-        let rand=RandomBits::new(n.bits());
+    pub fn nextRandomBigInteger(&self, n: BigInteger) -> BigInteger {
+        let rand = RandomBits::new(n.bits());
         let result = rand.sample(&mut rand::thread_rng());
         while result.compareTo(n) >= 0 {
-            result =  rand.sample(&mut rand::thread_rng());
+            result = rand.sample(&mut rand::thread_rng());
         }
         return result;
     }
 
-    pub fn randomBigIntegerArrayi(&self,num: i32, numBits: i32) -> Vec<BigInteger> {
+    pub fn randomBigIntegerArrayi(&self, num: i32, numBits: i32) -> Vec<BigInteger> {
         let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
             result[i as usize] = self.nextRandomBigInteger(BigInteger::from(numBits as u32));
@@ -137,8 +141,8 @@ impl Util {
         return result;
     }
 
-    pub fn nextRandomBigIntegeri(&self,numBits: i32) -> BigInteger {
-        return  RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+    pub fn nextRandomBigIntegeri(&self, numBits: i32) -> BigInteger {
+        return RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
     }
 
     pub fn getDesc(desc: Vec<String>) -> String {
@@ -201,7 +205,7 @@ impl Util {
     }
 
     pub fn isBinary(v: BigInteger) -> bool {
-        return v==BigInteger::ZERO || v==Util::one();
+        return v == BigInteger::ZERO || v == Util::one();
     }
 
     pub fn padZeros(s: String, l: usize) -> String {
@@ -212,15 +216,24 @@ impl Util {
 
     pub fn computeMaxValue(numBits: u64) -> BigInteger {
         let maxValueCache = HashMap::new();
-        return maxValueCache.entry(numBits).or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()));
+        return maxValueCache
+            .entry(numBits)
+            .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()));
     }
 
     pub fn computeBound(numBits: i32) -> BigInteger {
         let boundCache = HashMap::new();
-        return *boundCache.entry(numBits).or_insert_with(|| Util::one().shl(numBits)).clone();
+        return *boundCache
+            .entry(numBits)
+            .or_insert_with(|| Util::one().shl(numBits))
+            .clone();
     }
 
-    pub fn padWireArray(a: Vec<Option<WireType>>, length: usize, p: WireType) -> Vec<Option<WireType>> {
+    pub fn padWireArray(
+        a: Vec<Option<WireType>>,
+        length: usize,
+        p: WireType,
+    ) -> Vec<Option<WireType>> {
         if a.len() == length {
             return a;
         } else if a.len() > length {
@@ -229,13 +242,13 @@ impl Util {
         } else {
             let mut newArray = vec![WireType::default(); length];
             newArray[..a.len()].clone_from_slice(&a);
-            newArray[a.len()..length ].fill( p.clone());
+            newArray[a.len()..length].fill(p.clone());
             return newArray;
         }
     }
 
     pub fn modulo(x: BigInteger, m: BigInteger) -> BigInteger {
-        if x.sign() != Sign::Minus && x<m {
+        if x.sign() != Sign::Minus && x < m {
             return x; // In range, 'mod' is no-op, but creates new BigInteger
         } else {
             return x.rem(m);

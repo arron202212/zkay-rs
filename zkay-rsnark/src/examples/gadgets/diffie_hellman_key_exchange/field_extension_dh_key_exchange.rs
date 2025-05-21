@@ -141,10 +141,10 @@ impl Gadget for FieldExtensionDHKeyExchange {
 
         // verify order of points
 
-        let bitLength = subGroupOrder.bitLength();
+        let bitLength = subGroupOrder.bits();
         let bits = vec![WireType::default(); bitLength];
         for i in 0..bitLength {
-            if subGroupOrder.testBit(i) {
+            if subGroupOrder.bit(i) {
                 bits[i] = generator.getOneWire();
             } else {
                 bits[i] = generator.getZeroWire();

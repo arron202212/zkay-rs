@@ -60,7 +60,7 @@ let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
 let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(exponentBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};
@@ -126,7 +126,7 @@ let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 
 let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(exponentBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};
@@ -198,7 +198,7 @@ let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
 
 let exponent = BigInteger::new("151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(exponentBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(exponentBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};

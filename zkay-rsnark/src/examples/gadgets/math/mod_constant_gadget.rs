@@ -29,7 +29,7 @@ impl ModConstantGadget {
         );
 
         assert!(
-            bitwidth >= b.bitLength(),
+            bitwidth >= b.bits(),
             "a's bitwidth < b's bitwidth -- This gadget is not needed."
         );
 
@@ -49,7 +49,7 @@ impl Gadget for ModConstantGadget {
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
-                    let rValue = aValue.modulo(b);
+                    let rValue = aValue.rem(b);
                     evaluator.setWireValue(r, rValue);
                     let qValue = aValue.divide(b);
                     evaluator.setWireValue(q, qValue);
@@ -58,7 +58,7 @@ impl Gadget for ModConstantGadget {
             Prover
         });
 
-        let bBitwidth = b.bitLength();
+        let bBitwidth = b.bits();
         r.restrictBitLength(bBitwidth);
         q.restrictBitLength(bitwidth - bBitwidth + 1);
         generator.addOneAssertion(r.isLessThan(b, bBitwidth));

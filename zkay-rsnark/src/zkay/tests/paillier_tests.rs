@@ -104,11 +104,11 @@ pub struct PaillierTests {
 
 		
 		  fn buildCircuit() {
-			plainWire = createLongElementInput(max(plain.bitLength(), 1), "plain");
-			randomWire = createLongElementInput(max(random.bitLength(), 1), "random");
-			let nBits = max(n.bitLength(), 1);
+			plainWire = createLongElementInput(max(plain.bits(), 1), "plain");
+			randomWire = createLongElementInput(max(random.bits(), 1), "random");
+			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
-			generatorWire = createLongElementInput(max(generator.bitLength(), 1), "generator");
+			generatorWire = createLongElementInput(max(generator.bits(), 1), "generator");
 			let enc = ZkayPaillierEncGadget::new(nWire, nBits, generatorWire, plainWire, randomWire);
 			makeOutputArray(enc.getOutputWires(), "cipher");
 		}
@@ -158,11 +158,11 @@ pub struct PaillierTests {
 
 		
 		  fn buildCircuit() {
-			cipherWire = createLongElementInput(max(cipher.bitLength(), 1), "cipher");
-			let nBits = max(n.bitLength(), 1);
+			cipherWire = createLongElementInput(max(cipher.bits(), 1), "cipher");
+			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
-			lambdaWire = createLongElementInput(max(lambda.bitLength(), 1), "lambda");
-			muWire = createLongElementInput(max(mu.bitLength(), 1), "mu");
+			lambdaWire = createLongElementInput(max(lambda.bits(), 1), "lambda");
+			muWire = createLongElementInput(max(mu.bits(), 1), "mu");
 			let dec = ZkayPaillierDecGadget::new(nWire, nBits, lambdaWire, muWire, cipherWire);
 			makeOutputArray(dec.getOutputWires(), "plain");
 		}
@@ -208,10 +208,10 @@ pub struct PaillierTests {
 
 		
 		  fn buildCircuit() {
-			let nBits = max(n.bitLength(), 1);
+			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
-			plainWire = createLongElementInput(max(plain.bitLength(), 1), "plain");
-			randomWire = createLongElementInput(max(random.bitLength(), 1), "random");
+			plainWire = createLongElementInput(max(plain.bits(), 1), "plain");
+			randomWire = createLongElementInput(max(random.bits(), 1), "random");
 			let enc = ZkayPaillierFastEncGadget::new(nWire, nBits, plainWire, randomWire);
 			makeOutputArray(enc.getOutputWires(), "cipher");
 		}
@@ -256,10 +256,10 @@ pub struct PaillierTests {
 
 		
 		  fn buildCircuit() {
-			let nBits = max(n.bitLength(), 1);
+			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
-			lambdaWire = createLongElementInput(max(lambda.bitLength(), 1), "lambda");
-			cipherWire = createLongElementInput(max(cipher.bitLength(), 1), "cipher");
+			lambdaWire = createLongElementInput(max(lambda.bits(), 1), "lambda");
+			cipherWire = createLongElementInput(max(cipher.bits(), 1), "cipher");
 			let dec = ZkayPaillierFastDecGadget::new(nWire, nBits, lambdaWire, cipherWire);
 			makeOutputArray(dec.getOutputWires(), "plain");
 		}

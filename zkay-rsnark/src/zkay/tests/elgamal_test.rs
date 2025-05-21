@@ -43,7 +43,7 @@ pub struct ElgamalTest {
         
           fn buildCircuit() {
             let randomness = createConstantWire(random);
-            let randomnessBits = randomness.getBitWires(random.bitLength());
+            let randomnessBits = randomness.getBitWires(random.bits());
             let message = createConstantWire(plain);
             let messageBits = message.getBitWires(32);
 
@@ -73,7 +73,7 @@ pub struct ElgamalTest {
         
           fn buildCircuit() {
             let randomness = createConstantWire(random);
-            let randomnessBits = randomness.getBitWires(random.bitLength());
+            let randomnessBits = randomness.getBitWires(random.bits());
 
             ZkayElgamalRerandGadget gadget = ZkayElgamalRerandGadget::new(
                     c1.asConstJubJub(this),
@@ -106,7 +106,7 @@ pub struct ElgamalTest {
         
           fn buildCircuit() {
             let secretKey = createConstantWire(sk);
-            let skBits = secretKey.getBitWires(sk.bitLength());
+            let skBits = secretKey.getBitWires(sk.bits());
             let msgWire = createConstantWire(msg);
 
             ZkayElgamalDecGadget gadget = ZkayElgamalDecGadget::new(pk.asConstJubJub(this),

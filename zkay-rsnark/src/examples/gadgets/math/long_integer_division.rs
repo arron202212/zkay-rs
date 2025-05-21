@@ -84,8 +84,8 @@ impl LongIntegerDivision {
 }
 impl Gadget for LongIntegerDivision {
     fn buildCircuit() {
-        let aBitwidth = std::cmp::max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
-        let bBitwidth = std::cmp::max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bitLength());
+        let aBitwidth = std::cmp::max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bits());
+        let bBitwidth = std::cmp::max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bits());
 
         let rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
         let qBitwidth = aBitwidth;
@@ -120,8 +120,8 @@ impl Gadget for LongIntegerDivision {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
                     let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
-                    let rValue = aValue.modulo(bValue);
-                    let qValue = aValue.divide(bValue);
+                    let rValue = aValue.rem(bValue);
+                    let qValue = aValue.div(bValue);
 
                     evaluator.setWireValue(
                         r.getArray(),

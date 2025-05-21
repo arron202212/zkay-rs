@@ -40,9 +40,9 @@ impl Gadget for ModGadget {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(a);
                     let bValue = evaluator.getWireValue(b);
-                    let rValue = aValue.modulo(bValue);
+                    let rValue = aValue.rem(bValue);
                     evaluator.setWireValue(r, rValue);
-                    let qValue = aValue.divide(bValue);
+                    let qValue = aValue.div(bValue);
                     evaluator.setWireValue(q, qValue);
                 }
             }

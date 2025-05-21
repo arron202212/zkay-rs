@@ -7,32 +7,36 @@
 #![allow(unused_braces)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::structure::wire::WireConfig;
-use crate::util::util::{Util,BigInteger};
+use crate::util::util::{BigInteger, Util};
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Op<T> {
-pub inputs: Vec<Option<WireType>>,
-  pub   outputs: Vec<Option<WireType>>,
-  pub  desc: String,
-  pub  t: T,
+    pub inputs: Vec<Option<WireType>>,
+    pub outputs: Vec<Option<WireType>>,
+    pub desc: String,
+    pub t: T,
 }
 impl<T> Op<T> {
-    fn new(inputs: Vec<Option<WireType>>, outputs: Vec<Option<WireType>>, desc: Vec<String>,t:T) -> eyre::Result<Self> {
-
-       let desc= if desc.len() > 0 {
+    fn new(
+        inputs: Vec<Option<WireType>>,
+        outputs: Vec<Option<WireType>>,
+        desc: Vec<String>,
+        t: T,
+    ) -> eyre::Result<Self> {
+        let desc = if desc.len() > 0 {
             desc[0].clone()
         } else {
-           String::new()
+            String::new()
         };
 
         for w in &inputs {
             if w.is_none() {
                 println!("One of the input wires is null: {inputs:?}");
                 eyre::bail!("A null wire");
-            } else if w.as_ref().unwrap().getWireId()== -1 {
+            } else if w.as_ref().unwrap().getWireId() == -1 {
                 println!("One of the input wires is not packed: {inputs:?}");
                 eyre::bail!("A wire with a negative id");
             }
@@ -43,10 +47,15 @@ impl<T> Op<T> {
                 eyre::bail!("A null wire");
             }
         }
-        Ok(Self {inputs,outputs,desc,t})
+        Ok(Self {
+            inputs,
+            outputs,
+            desc,
+            t,
+        })
     }
 }
-pub trait BasicOp: Instruction +Debug+PartialEq{
+pub trait BasicOp: Instruction + Debug + PartialEq {
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
@@ -58,7 +67,7 @@ pub trait BasicOp: Instruction +Debug+PartialEq{
 
     fn compute(&self, assignment: Vec<Option<BigInteger>>);
 
-    fn checkOutputs(&self,assignment: Vec<Option<BigInteger>>) {
+    fn checkOutputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getOutputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_some() {
                 println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
@@ -71,11 +80,23 @@ pub trait BasicOp: Instruction +Debug+PartialEq{
     fn getNumMulGates(&self) -> i32;
 
     fn toString(&self) -> String {
-        format!("{} in {} <{}> out  <{}> {} {}",self.getOpcode(),self.getInputs().len(),Util::arrayToString(self.getInputs(), " ".to_owned()),self.getOutputs().len(),Util::arrayToString(self.getOutputs(), " ".to_owned()),if self.desc().len() > 0  { " \t\t# ".to_owned() + &self.desc() }else {String::new()} )
+        format!(
+            "{} in {} <{}> out  <{}> {} {}",
+            self.getOpcode(),
+            self.getInputs().len(),
+            Util::arrayToString(self.getInputs(), " ".to_owned()),
+            self.getOutputs().len(),
+            Util::arrayToString(self.getOutputs(), " ".to_owned()),
+            if self.desc().len() > 0 {
+                " \t\t# ".to_owned() + &self.desc()
+            } else {
+                String::new()
+            }
+        )
     }
 
     fn getInputs(&self) -> Vec<Option<WireType>> {
-         vec![]
+        vec![]
     }
 
     fn getOutputs(&self) -> Vec<Option<WireType>> {
@@ -85,14 +106,14 @@ pub trait BasicOp: Instruction +Debug+PartialEq{
     fn doneWithinCircuit(&self) -> bool {
         true
     }
-    fn desc(&self)->String{
-    String::new()
+    fn desc(&self) -> String {
+        String::new()
     }
     fn hashCode(&self) -> u64 {
         // this method should be overriden when a subclass can have more than one opcode, or have other arguments
-let mut hasher = DefaultHasher::new();
+        let mut hasher = DefaultHasher::new();
         self.getOpcode().hash(&mut hasher);
-        let mut h=hasher.finish();
+        let mut h = hasher.finish();
         for i in self.getInputs() {
             h += i.as_ref().unwrap().hashCode();
         }
@@ -107,8 +128,11 @@ let mut hasher = DefaultHasher::new();
 #[macro_export]
 macro_rules! impl_instruction_for {
     ($impl_type:ty) => {
-       impl $crate::circuit::eval::instruction::Instruction for $impl_type {
-            fn evaluate(&self, evaluator: $crate::circuit::eval::circuit_evaluator::CircuitEvaluator) {
+        impl $crate::circuit::eval::instruction::Instruction for $impl_type {
+            fn evaluate(
+                &self,
+                evaluator: $crate::circuit::eval::circuit_evaluator::CircuitEvaluator,
+            ) {
                 let assignment = evaluator.getAssignment();
                 self.checkInputs(assignment.clone());
                 self.checkOutputs(assignment.clone());
@@ -117,4 +141,3 @@ macro_rules! impl_instruction_for {
         }
     };
 }
-

@@ -283,12 +283,12 @@ impl Gadget for ECDHKeyExchangeGadget {
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.mul(x).modulo(Configs.get().unwrap().field_prime);
-        let xCubed = xSqred.mul(x).modulo(Configs.get().unwrap().field_prime);
+        let xSqred = x.mul(x).rem(Configs.get().unwrap().field_prime.clone());
+        let xCubed = xSqred.mul(x).rem(Configs.get().unwrap().field_prime.clone());
         let ySqred = xCubed
             .add(COEFF_A.mul(xSqred))
             .add(x)
-            .modulo(Configs.get().unwrap().field_prime);
+            .rem(Configs.get().unwrap().field_prime.clone());
         let y = IntegerFunctions.ressol(ySqred, Configs.get().unwrap().field_prime);
         return y;
     }
@@ -305,7 +305,7 @@ impl Gadget for ECDHKeyExchangeGadget {
 
     fn assertPointOrder(p: AffinePoint, table: Vec<AffinePoint>) {
         let o = generator.createConstantWire(SUBGROUP_ORDER);
-        let bits = o.getBitWires(SUBGROUP_ORDER.bitLength()).asArray();
+        let bits = o.getBitWires(SUBGROUP_ORDER.bits()).asArray();
 
         let result = AffinePoint::new(table[bits.len() - 1]);
         for j in (1..=bits.len() - 2).rev() {

@@ -6,19 +6,19 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
- use crate::circuit::operations::primitive::basic_op::BasicOp;
-use crate::circuit::structure::wire::WireConfig;
-use crate::util::util::{Util,BigInteger};
-use std::ops::{Neg,Sub,Add,Mul,Rem};
+use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct ConstMulBasicOp {
-pub constInteger: BigInteger,
-pub inSign: bool,
+    pub constInteger: BigInteger,
+    pub inSign: bool,
 }
 
 pub fn new_const_mul(
@@ -59,7 +59,10 @@ impl BasicOp for Op<ConstMulBasicOp> {
     }
 
     fn compute(&self, assignment: Vec<Option<BigInteger>>) {
-        let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap().mul(self.t.constInteger.clone());
+        let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+            .clone()
+            .unwrap()
+            .mul(self.t.constInteger.clone());
         if result.bits() >= Configs.get().unwrap().log2_field_prime {
             result = result.rem(Configs.get().unwrap().field_prime.clone());
         }
@@ -71,7 +74,11 @@ impl BasicOp for Op<ConstMulBasicOp> {
             return true;
         }
         let op = rhs;
-        self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap()) && self.t.constInteger==op.t.constInteger
+        self.inputs[0]
+            .as_ref()
+            .unwrap()
+            .equals(op.inputs[0].as_ref().unwrap())
+            && self.t.constInteger == op.t.constInteger
     }
 
     fn getNumMulGates(&self) -> i32 {
@@ -80,8 +87,8 @@ impl BasicOp for Op<ConstMulBasicOp> {
 
     fn hashCode(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
-         self.t.constInteger.hash(&mut hasher);
-        let mut h=hasher.finish();
+        self.t.constInteger.hash(&mut hasher);
+        let mut h = hasher.finish();
         for i in self.inputs {
             h += i.as_ref().unwrap().hashCode();
         }

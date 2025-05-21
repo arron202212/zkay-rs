@@ -132,7 +132,7 @@ let val = evaluator.getWireValue(w);
 let cipherTextBytesFromCircuit = t.toByteArray();
 
 			// ignore the sign byte if any was added
-			if t.bitLength() == keySize && cipherTextBytesFromCircuit.len() == keySize/8+1{
+			if t.bits() == keySize && cipherTextBytesFromCircuit.len() == keySize/8+1{
 				cipherTextBytesFromCircuit=Arrays.copyOfRange(cipherTextBytesFromCircuit, 1, cipherTextBytesFromCircuit.len());
 			}
 			

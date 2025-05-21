@@ -6,17 +6,17 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
-use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::operations::primitive::basic_op::Op;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
-use crate::circuit::structure::wire::WireConfig;
- use crate::util::util::{Util,BigInteger};
-use std::ops::{Add,Sub,Mul,Neg,Rem};
+use crate::circuit::operations::primitive::basic_op::Op;
+use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SplitBasicOp;
-pub fn newSplitBasicOp(w: WireType, outs: Vec<Option<WireType>>, desc: Vec<String>) -> Op<SplitBasicOp> {
+pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: Vec<String>) -> Op<SplitBasicOp> {
     Op::<SplitBasicOp> {
         inputs: vec![Some(w)],
         outputs: outs,
@@ -33,23 +33,32 @@ impl BasicOp for Op<SplitBasicOp> {
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         //super.checkInputs(assignment);
         assert!(
-            self.outputs.len() >= assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap().bits() as usize,
+            self.outputs.len()
+                >= assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap()
+                    .bits() as usize,
             "Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t",
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap()
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+                .clone()
+                .unwrap()
         );
     }
 
     fn compute(&self, assignment: Vec<Option<BigInteger>>) {
-        let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize].clone().unwrap();
-        if inVal>Configs.get().unwrap().field_prime {
+        let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+            .clone()
+            .unwrap();
+        if inVal > Configs.get().unwrap().field_prime {
             inVal = inVal.rem(Configs.get().unwrap().field_prime.clone());
         }
         for i in 0..self.outputs.len() {
-            assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] = Some(if inVal.bit(i as u64) {
-                Util::one()
-            } else {
-                BigInteger::ZERO
-            });
+            assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] =
+                Some(if inVal.bit(i as u64) {
+                    Util::one()
+                } else {
+                    BigInteger::ZERO
+                });
         }
     }
 
@@ -59,7 +68,11 @@ impl BasicOp for Op<SplitBasicOp> {
         }
 
         let op = rhs;
-        self.inputs[0].as_ref().unwrap().equals(op.inputs[0].as_ref().unwrap()) && self.outputs.len() == op.outputs.len()
+        self.inputs[0]
+            .as_ref()
+            .unwrap()
+            .equals(op.inputs[0].as_ref().unwrap())
+            && self.outputs.len() == op.outputs.len()
     }
 
     fn getNumMulGates(&self) -> i32 {

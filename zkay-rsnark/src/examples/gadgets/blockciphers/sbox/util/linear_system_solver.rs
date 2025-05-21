@@ -29,7 +29,7 @@ impl LinearSystemSolver {
     fn guassJordan() {
         for colIdx in 0..numCols {
             let pivotRowIdx = rowIdx;
-            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx].equals(BigInteger::ZERO)) {
+            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx]==BigInteger::ZERO) {
                 pivotRowIdx += 1;
             }
             if pivotRowIdx == numRows {
@@ -46,14 +46,14 @@ impl LinearSystemSolver {
             // dividing by pivot
             let invF = inverse(mat[pivotRowIdx][colIdx]);
             for j in 0..numCols {
-                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].mul(invF).modulo(prime);
+                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].mul(invF).rem(.clone());
             }
 
             for k in pivotRowIdx..numRows {
                 let f = negate(mat[k][colIdx]);
                 for j in 0..numCols {
                     mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].mul(f));
-                    mat[k][j] = mat[k][j].modulo(prime);
+                    mat[k][j] = mat[k][j].rem(prime.clone());
                 }
             }
         }
@@ -62,7 +62,7 @@ impl LinearSystemSolver {
     fn rref() {
         for rowIdx in (0..=numRows - 1).rev() {
             let pivotColIdx = 0;
-            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx].equals(BigInteger::ZERO)) {
+            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx]==BigInteger::ZERO) {
                 pivotColIdx += 1;
             }
             if pivotColIdx == numCols {
@@ -72,18 +72,18 @@ impl LinearSystemSolver {
             for k in (0..=rowIdx - 1).rev() {
                 let f = mat[k][pivotColIdx];
                 for j in 0..numCols {
-                    mat[k][j] = mat[k][j].add(negate(mat[rowIdx][j].mul(f)));
-                    mat[k][j] = mat[k][j].modulo(prime);
+                    mat[k][j] = mat[k][j].clone().add(mat[rowIdx][j].mul(f).neg());
+                    mat[k][j] = mat[k][j].clone().rem(prime.clone());
                 }
             }
         }
     }
 
     fn negate(x: BigInteger) -> BigInteger {
-        return (prime.sub(x.modulo(prime))).modulo(prime);
+        return (prime.sub(x.rem(prime.clone()))).rem(prime.clone());
     }
 
     fn inverse(x: BigInteger) -> BigInteger {
-        return (x.modulo(prime)).modInverse(prime);
+        return (x.rem(prime.clone())).mod_inv(prime.clone());
     }
 }

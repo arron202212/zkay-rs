@@ -13,7 +13,7 @@ impl RSAUtil {
         privateKey: RSAPrivateKey,
     ) -> Vec<Vec<byte>> {
         let modulus = privateKey.getModulus();
-        let keySize = modulus.bitLength();
+        let keySize = modulus.bits();
         let d = privateKey.getPrivateExponent();
 
         let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
@@ -24,10 +24,10 @@ impl RSAUtil {
         c = BigInteger::new(cipherTextPadded);
         let product = Util::one();
         for i in (0..=keySize - 1).rev() {
-            product = product.mul(product).modulo(modulus);
-            let bit = d.testBit(i);
+            product = product.mul(product).rem(modulus);
+            let bit = d.bit(i);
             if bit {
-                product = product.mul(c).modulo(modulus);
+                product = product.mul(c).rem(modulus);
             }
         }
 
@@ -97,7 +97,7 @@ impl RSAUtil {
 
     pub fn extractRSAOAEPSeed(cipherText: Vec<byte>, privateKey: RSAPrivateKey) -> Vec<Vec<byte>> {
         let modulus = privateKey.getModulus();
-        let keySize = modulus.bitLength();
+        let keySize = modulus.bits();
         let d = privateKey.getPrivateExponent();
 
         let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
@@ -109,10 +109,10 @@ impl RSAUtil {
 
         let product = Util::one();
         for i in (0..=keySize - 1).rev() {
-            product = product.mul(product).modulo(modulus);
-            let bit = d.testBit(i);
+            product = product.mul(product).rem(modulus);
+            let bit = d.bit(i);
             if bit {
-                product = product.mul(c).modulo(modulus);
+                product = product.mul(c).rem(modulus);
             }
         }
 

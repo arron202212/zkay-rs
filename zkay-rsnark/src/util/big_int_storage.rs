@@ -5,13 +5,13 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
- use crate::util::util::{Util,BigInteger};
+use crate::util::util::{BigInteger, Util};
 
-use std::sync::OnceLock;
 use std::collections::HashMap;
+use std::sync::OnceLock;
 static instance: OnceLock<BigIntStorage> = OnceLock::new();
-pub fn init(){
- instance.get_or_init(|| BigIntStorage::new());
+pub fn init() {
+    instance.get_or_init(|| BigIntStorage::new());
 }
 /**
  * shares big integer constants
@@ -22,13 +22,12 @@ pub struct BigIntStorage {
 }
 impl BigIntStorage {
     pub fn new() -> Self {
-       
         Self {
             bigIntegerSet: HashMap::new(),
         }
     }
 
-    pub fn getBigInteger(&mut self,x: BigInteger) -> BigInteger {
+    pub fn getBigInteger(&mut self, x: BigInteger) -> BigInteger {
         self.bigIntegerSet.entry(x.clone()).or_insert(x.clone());
         self.bigIntegerSet.get(&x).unwrap().clone()
     }

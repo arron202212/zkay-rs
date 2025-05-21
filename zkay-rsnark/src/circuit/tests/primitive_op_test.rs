@@ -19,14 +19,14 @@ let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_p
 let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].add(inVals1[1]).modulo(Configs.get().unwrap().field_prime));
+		result.add(inVals1[0].add(inVals1[1]).rem(Configs.get().unwrap().field_prime.clone()));
 let s = BigInteger::ZERO;
 		for i in 0..numIns {
 			s = s.add(inVals1[i]);
 		}
-		result.add(s.modulo(Configs.get().unwrap().field_prime));
+		result.add(s.rem(Configs.get().unwrap().field_prime.clone()));
 		for i in 0..numIns {
-			result.add(inVals1[i].add(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
+			result.add(inVals1[i].add(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("addition") {
@@ -77,9 +77,9 @@ let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_p
 let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].mul(inVals1[1]).modulo(Configs.get().unwrap().field_prime));
+		result.add(inVals1[0].mul(inVals1[1]).rem(Configs.get().unwrap().field_prime.clone()));
 		for i in 0..numIns {
-			result.add(inVals1[i].mul(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
+			result.add(inVals1[i].mul(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("multiplication") {
@@ -213,13 +213,13 @@ let invertedVals = vec![BigInteger::default();numIns];
 let mask = BigInteger::new("2").pow(Config.log2_field_prime).sub(Util::one());
 		
 		for i in 0..numIns {
-			shiftedRightVals[i] = inVals1[i].shiftRight(i).modulo(Configs.get().unwrap().field_prime);
-			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).modulo(Configs.get().unwrap().field_prime);
+			shiftedRightVals[i] = inVals1[i].shiftRight(i).rem(Configs.get().unwrap().field_prime.clone());
+			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).rem(Configs.get().unwrap().field_prime.clone());
 			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
 			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL );
-			xoredVals[i] = inVals1[i].xor(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
-			oredVals[i] = inVals1[i].or(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
-			andedVals[i] = inVals1[i].and(inVals2[i]).modulo(Configs.get().unwrap().field_prime);
+			xoredVals[i] = inVals1[i].xor(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
+			oredVals[i] = inVals1[i].or(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
+			andedVals[i] = inVals1[i].and(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			invertedVals[i] = BigInteger::from(~inVals3[i].intValue() & 0x00000000ffffffffL);
 		}
 
@@ -323,9 +323,9 @@ let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_p
 		
 		
 let result = new ArrayList<BigInteger>();
-		result.add(inVals1[0].mul(inVals1[0]).modulo(Configs.get().unwrap().field_prime));
+		result.add(inVals1[0].mul(inVals1[0]).rem(Configs.get().unwrap().field_prime.clone()));
 		for i in 0..numIns {
-			result.add(inVals1[i].mul(inVals2[i]).modulo(Configs.get().unwrap().field_prime));
+			result.add(inVals1[i].mul(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
 		CircuitGenerator generator = CircuitGenerator::new("assertions") {

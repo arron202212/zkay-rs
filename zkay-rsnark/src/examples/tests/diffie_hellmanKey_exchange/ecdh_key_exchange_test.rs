@@ -51,7 +51,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 				
 let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(secretBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};
@@ -100,7 +100,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 
 let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(secretBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};
@@ -148,7 +148,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 				
 let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(secretBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};
@@ -196,7 +196,7 @@ let exponentBitlength = ECDHKeyExchangeGadget.SECRET_BITWIDTH;
 				
 let exponent = BigInteger::new("13867691842196510828352345865165018381161315605899394650350519162543016860992");
 				for i in 0..exponentBitlength{
-					evaluator.setWireValue(secretBits[i],if  exponent.testBit(i) {1}else {0});
+					evaluator.setWireValue(secretBits[i],if  exponent.bit(i) {1}else {0});
 				}
 			}
 		};

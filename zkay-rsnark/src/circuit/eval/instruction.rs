@@ -5,15 +5,14 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::wire_label_instruction::WireLabel;
-use dyn_clone::{clone_trait_object, DynClone};
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use dyn_clone::{DynClone, clone_trait_object};
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
-
 
 trait DynHash {
     fn dyn_hash(&self, state: &mut dyn Hasher);
@@ -31,24 +30,29 @@ impl Hash for dyn DynHash + '_ {
     }
 }
 
-pub trait Instruction:DynClone+DynHash +Debug{
-    fn evaluate(&self,evaluator: CircuitEvaluator);
+pub trait Instruction: DynClone + DynHash + Debug {
+    fn evaluate(&self, evaluator: CircuitEvaluator);
 
-    fn emit(&self,evaluator: CircuitEvaluator) {}
+    fn emit(&self, evaluator: CircuitEvaluator) {}
 
     fn doneWithinCircuit(&self) -> bool {
         false
     }
-    fn instance_of(&self,name:&str)->bool{
-        self.name()==name
+    fn getNumMulGates(&self) -> i32 {
+        0
     }
-    fn name(&self)->&str{
+    fn getOutputs(&self) -> Vec<Option<WireType>> {
+        vec![]
+    }
+    fn instance_of(&self, name: &str) -> bool {
+        self.name() == name
+    }
+    fn name(&self) -> &str {
         ""
     }
-    fn wire_label(&self)->Option<Box<dyn WireLabel>>{
+    fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
         None
     }
-
 }
 dyn_clone::clone_trait_object!(Instruction);
 
@@ -70,7 +74,3 @@ impl PartialEq for dyn Instruction {
 }
 
 impl Eq for dyn Instruction {}
-
-
-
-

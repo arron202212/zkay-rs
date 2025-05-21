@@ -8,8 +8,8 @@
 
 // import os
 // import subprocess
-use std::process::{Command, Stdio};
 use crate::circuit::config::config::Configs;
+use std::process::{Command, Stdio};
 // from typing import List, Optional, Tuple
 use std::path::PathBuf;
 pub fn run_command(
@@ -46,8 +46,7 @@ pub fn run_commands(
         String::from(".")
     };
 
-    let (output, error, process) = if allow_verbose
-    {
+    let (output, error, process) = if allow_verbose {
         let process = Command::new(cmd.join(" "))
             .current_dir(cwd.clone())
             .output()

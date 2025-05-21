@@ -105,10 +105,10 @@ let c = generator.computeResult();
 
 		
 		  fn buildCircuit() {
-			bWire = createLongElementInput(max(b.bitLength(), 1), "b");
-			eWire = createLongElementInput(max(e.bitLength(), 1), "e");
-			mWire = createLongElementInput(max(m.bitLength(), 1), "m");
-let modPow = LongIntegerModPowGadget::new(bWire, eWire, mWire, max(m.bitLength(), 1));
+			bWire = createLongElementInput(max(b.bits(), 1), "b");
+			eWire = createLongElementInput(max(e.bits(), 1), "e");
+			mWire = createLongElementInput(max(m.bits(), 1), "m");
+let modPow = LongIntegerModPowGadget::new(bWire, eWire, mWire, max(m.bits(), 1));
 			makeOutputArray(modPow.getOutputWires(), "c");
 		}
 

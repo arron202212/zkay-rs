@@ -6,17 +6,21 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
-use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::operations::primitive::basic_op::Op;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
-use crate::circuit::structure::wire::WireConfig;
-use crate::util::util::{Util,BigInteger};
-use std::ops::{Add,Sub,Mul,Neg,Rem};
+use crate::circuit::operations::primitive::basic_op::Op;
+use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PackBasicOp;
-pub fn newPackBasicOp(inBits: Vec<Option<WireType>>, out: WireType, desc: Vec<String>) -> Op<PackBasicOp> {
+pub fn new_pack(
+    inBits: Vec<Option<WireType>>,
+    out: WireType,
+    desc: Vec<String>,
+) -> Op<PackBasicOp> {
     Op::<PackBasicOp> {
         inputs: inBits,
         outputs: vec![Some(out)],
@@ -34,7 +38,11 @@ impl BasicOp for Op<PackBasicOp> {
         // //super.checkInputs(assignment);
 
         assert!(
-            (0..self.inputs.len()).all(|i| Util::isBinary(assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize].clone().unwrap())),
+            (0..self.inputs.len()).all(|i| Util::isBinary(
+                assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap()
+            )),
             "Error - Input(s) to Pack are not binary.{self:?} During Evaluation "
         );
     }
@@ -42,10 +50,15 @@ impl BasicOp for Op<PackBasicOp> {
     fn compute(&self, assignment: Vec<Option<BigInteger>>) {
         let mut sum = BigInteger::ZERO;
         for i in 0..self.inputs.len() {
-            sum = sum
-                .add(assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize].clone().unwrap().mul(BigInteger::from(2).pow(i as u32)));
+            sum = sum.add(
+                assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap()
+                    .mul(BigInteger::from(2).pow(i as u32)),
+            );
         }
-        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(sum.rem(Configs.get().unwrap().field_prime.clone()));
+        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] =
+            Some(sum.rem(Configs.get().unwrap().field_prime.clone()));
     }
 
     fn equals(&self, rhs: &Self) -> bool {
@@ -60,7 +73,11 @@ impl BasicOp for Op<PackBasicOp> {
 
         let mut check = true;
         for i in 0..self.inputs.len() {
-            check = check && self.inputs[i].as_ref().unwrap().equals(op.inputs[i].as_ref().unwrap());
+            check = check
+                && self.inputs[i]
+                    .as_ref()
+                    .unwrap()
+                    .equals(op.inputs[i].as_ref().unwrap());
         }
         check
     }
