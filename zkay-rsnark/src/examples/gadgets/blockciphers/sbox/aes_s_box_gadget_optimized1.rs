@@ -163,7 +163,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         });
 
         output.restrictBitLength(8);
-        let vars = vec![WireType::default(); 16];
+        let vars = vec![None; 16];
         let p = input.mul(256).add(output);
         vars[0] = generator.getOneWire();
         for i in 1..16 {

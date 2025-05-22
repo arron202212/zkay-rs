@@ -29,11 +29,11 @@ pub fn new_const_mul(
 ) -> Op<ConstMulBasicOp> {
     let inSign = constInteger.sign() == Sign::Minus;
     if !inSign {
-        constInteger = Util::modulo(constInteger, Configs.get().unwrap().field_prime);
+        constInteger = Util::modulo(constInteger, Configs.get().unwrap().field_prime.clone());
     } else {
         let mut _constInteger = constInteger.neg();
-        _constInteger = Util::modulo(_constInteger, Configs.get().unwrap().field_prime);
-        constInteger = Configs.get().unwrap().field_prime.sub(_constInteger);
+        _constInteger = Util::modulo(_constInteger, Configs.get().unwrap().field_prime.clone());
+        constInteger = Configs.get().unwrap().field_prime.clone().sub(_constInteger);
     }
     Op::<ConstMulBasicOp> {
         inputs: vec![Some(w)],
@@ -53,12 +53,12 @@ impl BasicOp for Op<ConstMulBasicOp> {
         } else {
             format!(
                 "const-mul-neg-{:x}",
-                Configs.get().unwrap().field_prime.sub(self.t.constInteger)
+                Configs.get().unwrap().field_prime.clone().sub(self.t.constInteger.clone())
             )
         }
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
@@ -89,7 +89,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         let mut hasher = DefaultHasher::new();
         self.t.constInteger.hash(&mut hasher);
         let mut h = hasher.finish();
-        for i in self.inputs {
+        for i in &self.inputs {
             h += i.as_ref().unwrap().hashCode();
         }
         h

@@ -146,7 +146,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
         let bitsIn = input.getBitWires(8).asArray();
         let bitsOut = output.getBitWires(8).asArray();
-        let vars = vec![WireType::default(); 16];
+        let vars = vec![None; 16];
         let p = input.mul(256).add(output).add(1);
         let currentProduct = p;
         if bitCount != 0 && bitCount != 16 {

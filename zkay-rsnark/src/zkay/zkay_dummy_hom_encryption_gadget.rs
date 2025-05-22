@@ -27,7 +27,7 @@ impl ZkayDummyHomEncryptionGadget {
 
         self.plain = plain;
         self.pk = pk;
-        self.cipher = vec![WireType::default(); 1];
+        self.cipher = vec![None; 1];
         buildCircuit();
     }
 }

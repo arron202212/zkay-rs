@@ -45,7 +45,7 @@ impl BasicOp for Op<SplitBasicOp> {
         );
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap();

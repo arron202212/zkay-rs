@@ -131,11 +131,11 @@ let result = new ArrayList<Integer>();
 			result.add(inVals1[i].compareTo(inVals2[i]));
 		}
 
-let result1 = vec![WireType::default();numIns];
-let result2 = vec![WireType::default();numIns];
-let result3 = vec![WireType::default();numIns];
-let result4 = vec![WireType::default();numIns];
-let result5 = vec![WireType::default();numIns];
+let result1 = vec![None;numIns];
+let result2 = vec![None;numIns];
+let result3 = vec![None;numIns];
+let result4 = vec![None;numIns];
+let result5 = vec![None;numIns];
 
 		CircuitGenerator generator = CircuitGenerator::new("comparison") {
 
@@ -214,7 +214,7 @@ let mask = BigInteger::new("2").pow(Config.log2_field_prime).sub(Util::one());
 		
 		for i in 0..numIns {
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).rem(Configs.get().unwrap().field_prime.clone());
-			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask).rem(Configs.get().unwrap().field_prime.clone());
+			shiftedLeftVals[i] = inVals1[i].shl(i).and(mask).rem(Configs.get().unwrap().field_prime.clone());
 			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
 			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL );
 			xoredVals[i] = inVals1[i].xor(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
@@ -235,18 +235,18 @@ let mask = BigInteger::new("2").pow(Config.log2_field_prime).sub(Util::one());
 				inputs2 = createInputWireArray(numIns);
 				inputs3 = createInputWireArray(numIns);
 
-let shiftedRight = vec![WireType::default();numIns];
-let shiftedLeft = vec![WireType::default();numIns];
-let rotatedRight = vec![WireType::default();numIns];
-let rotatedLeft = vec![WireType::default();numIns];
-let xored = vec![WireType::default();numIns];
-let ored = vec![WireType::default();numIns];
-let anded = vec![WireType::default();numIns];
-let inverted = vec![WireType::default();numIns];
+let shiftedRight = vec![None;numIns];
+let shiftedLeft = vec![None;numIns];
+let rotatedRight = vec![None;numIns];
+let rotatedLeft = vec![None;numIns];
+let xored = vec![None;numIns];
+let ored = vec![None;numIns];
+let anded = vec![None;numIns];
+let inverted = vec![None;numIns];
 
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(Config.log2_field_prime, i);
-					shiftedLeft[i] = inputs1[i].shiftLeft(Config.log2_field_prime, i);
+					shiftedLeft[i] = inputs1[i].shl(Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
 					xored[i] = inputs1[i].xorBitwise(inputs2[i], Config.log2_field_prime);

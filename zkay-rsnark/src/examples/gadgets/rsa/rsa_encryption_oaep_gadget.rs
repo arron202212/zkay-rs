@@ -79,7 +79,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         let keyLen = rsaKeyBitLength / 8; // in bytes
         let mut paddingString = vec![generator.getZeroWire(); keyLen - mLen - 2 * hLen - 2];
 
-        let mut db = vec![WireType::default(); keyLen - hLen - 1];
+        let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
                 db[i] = generator.createConstantWire((lSHA256_HASH[i] + 256) % 256);
@@ -93,13 +93,13 @@ impl Gadget for RSAEncryptionOAEPGadget {
         }
 
         let dbMask = mgf1(seed, keyLen - hLen - 1);
-        let maskedDb = vec![WireType::default(); keyLen - hLen - 1];
+        let maskedDb = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             maskedDb[i] = dbMask[i].xorBitwise(db[i], 8);
         }
 
         let seededMask = mgf1(maskedDb, hLen);
-        let maskedSeed = vec![WireType::default(); hLen];
+        let maskedSeed = vec![None; hLen];
         for i in 0..hLen {
             maskedSeed[i] = seededMask[i].xorBitwise(seed[i], 8);
         }
@@ -112,7 +112,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         for i in 0..paddedByteArray.len() {
             let e = LongElement::new(paddedByteArray[paddedByteArray.len() - i - 1], 8);
             let c = LongElement::new(Util::split(
-                Util::one().shiftLeft(8 * i),
+                Util::one().shl(8 * i),
                 LongElement.CHUNK_BITWIDTH,
             ));
             paddedMsg = paddedMsg.add(e.mul(c));

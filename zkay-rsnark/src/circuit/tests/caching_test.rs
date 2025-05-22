@@ -39,7 +39,7 @@ pub struct CachingTest  {
 
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).rem(
 					Configs.get().unwrap().field_prime);
-			shiftedLeftVals[i] = inVals1[i].shiftLeft(i).and(mask)
+			shiftedLeftVals[i] = inVals1[i].shl(i).and(mask)
 					.rem(Configs.get().unwrap().field_prime.clone());
 			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(
 					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
@@ -68,22 +68,22 @@ pub struct CachingTest  {
 				inputs2 = createInputWireArray(numIns);
 				inputs3 = createInputWireArray(numIns);
 
-				let shiftedRight = vec![WireType::default();numIns];
-				let shiftedLeft = vec![WireType::default();numIns];
-				let rotatedRight = vec![WireType::default();numIns];
-				let rotatedLeft = vec![WireType::default();numIns];
-				let xored = vec![WireType::default();numIns];
-				let ored = vec![WireType::default();numIns];
-				let anded = vec![WireType::default();numIns];
-				let inverted = vec![WireType::default();numIns];
+				let shiftedRight = vec![None;numIns];
+				let shiftedLeft = vec![None;numIns];
+				let rotatedRight = vec![None;numIns];
+				let rotatedLeft = vec![None;numIns];
+				let xored = vec![None;numIns];
+				let ored = vec![None;numIns];
+				let anded = vec![None;numIns];
+				let inverted = vec![None;numIns];
 
-				let multiplied = vec![WireType::default();numIns];
-				let added = vec![WireType::default();numIns];
+				let multiplied = vec![None;numIns];
+				let added = vec![None;numIns];
 				
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
 							Config.log2_field_prime, i);
-					shiftedLeft[i] = inputs1[i].shiftLeft(
+					shiftedLeft[i] = inputs1[i].shl(
 							Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
@@ -105,7 +105,7 @@ pub struct CachingTest  {
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
 							Config.log2_field_prime, i);
-					shiftedLeft[i] = inputs1[i].shiftLeft(
+					shiftedLeft[i] = inputs1[i].shl(
 							Config.log2_field_prime, i);
 					rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
 					rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);

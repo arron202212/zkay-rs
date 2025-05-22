@@ -22,7 +22,7 @@ impl ZkayType {
     pub fn new(bitwidth: i32, signed: bool) -> Self {
         self.bitwidth = bitwidth;
         self.signed = signed;
-        self.minusOne = Util::one().shiftLeft(bitwidth).sub(Util::one());
+        self.minusOne = Util::one().shl(bitwidth).sub(Util::one());
     }
 
     pub fn ZkUint(bitwidth: i32) -> ZkayType {

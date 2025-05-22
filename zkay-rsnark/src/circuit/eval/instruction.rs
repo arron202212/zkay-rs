@@ -8,6 +8,7 @@
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::wire_label_instruction::WireLabel;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_type::WireType;
 use dyn_clone::{DynClone, clone_trait_object};
 use std::cmp::Ordering;
 use std::collections::HashSet;

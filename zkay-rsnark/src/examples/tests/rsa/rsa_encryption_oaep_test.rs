@@ -132,7 +132,7 @@ let t = BigInteger::ZERO;
 let i = 0;
 			for w in cipherTextList {
 let val = evaluator.getWireValue(w);
-				t = t.add(val.shiftLeft(i * 64));
+				t = t.add(val.shl(i * 64));
 				i+=1;
 			}
 

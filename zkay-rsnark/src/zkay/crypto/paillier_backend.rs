@@ -215,7 +215,7 @@ impl Asymmetric for HomomorphicBackend {
         }
 
         // Input is a Paillier ciphertext - front-end must already check that this is the
-        let wires = vec![WireType::default(); cipher.len()];
+        let wires = vec![None; cipher.len()];
         for i in 0..cipher.len() {
             wires[i] = cipher[i].wire;
         }

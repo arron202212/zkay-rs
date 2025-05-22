@@ -12,7 +12,7 @@ use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBit
 use crate::circuit::structure::linear_combination_wire::LinearCombinationWire;
 use crate::circuit::structure::variable_bit_wire::VariableBitWire;
 use crate::circuit::structure::variable_wire::VariableWire;
-use crate::circuit::structure::wire::Base;
+use crate::circuit::structure::wire::{Wire,Base};
 use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::util::util::BigInteger;
@@ -22,7 +22,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub enum WireType {
-    Wire(Base),
+    Wire(Wire<Base>),
     LinearCombinationBit(LinearCombinationBitWire),
     LinearCombination(LinearCombinationWire),
     Variable(VariableWire),
@@ -32,7 +32,7 @@ pub enum WireType {
 }
 impl Default for WireType {
     fn default() -> Self {
-        Self::Wire(Base)
+        Self::Wire(Wire::<Base>::new(-1,Base).unwrap())
     }
 }
 impl WireType {
@@ -42,17 +42,15 @@ impl WireType {
     fn name(&self) -> &str {
         ""
     }
-    pub fn self_instance(&self) -> Option<Self> {
-        None
-    }
+  
     pub fn getConstant(&self) -> BigInteger {
         return BigInteger::ZERO;
     }
     pub fn isBinary(&self) -> bool {
         false
     }
-    pub fn invAsBit(&self, desc: Vec<String>) -> WireType {
-        WireType::default()
+    pub fn invAsBit(&self, desc: Vec<String>) -> Option<WireType> {
+        None
     }
     pub fn getBitWiresIfExistAlready(&self) -> Option<WireArray> {
         return self.getBitWires();
@@ -63,6 +61,7 @@ impl WireType {
     //     // }
     // }
 }
+impl setBitsConfig for WireType {}
 impl WireConfig for WireType {}
 
 impl Add for WireType {

@@ -77,7 +77,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
     }
 
     fn mul(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let c = vec![WireType::default(); mu];
+        let c = vec![None; mu];
 
         for i in 0..mu {
             c[i] = generator.getZeroWire();
@@ -98,7 +98,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
     }
 
     fn preparePowersTable(base: Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
-        let powersTable = vec![vec![WireType::default(); mu]; secretExponentBits.len() + 1];
+        let powersTable = vec![vec![None; mu]; secretExponentBits.len() + 1];
         powersTable[0] = base[..mu].to_vec();
         for j in 1..secretExponentBits.len() + 1 {
             powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
@@ -142,7 +142,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         // verify order of points
 
         let bitLength = subGroupOrder.bits();
-        let bits = vec![WireType::default(); bitLength];
+        let bits = vec![None; bitLength];
         for i in 0..bitLength {
             if subGroupOrder.bit(i) {
                 bits[i] = generator.getOneWire();

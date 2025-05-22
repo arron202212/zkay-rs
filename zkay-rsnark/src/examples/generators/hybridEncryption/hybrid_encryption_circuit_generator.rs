@@ -42,8 +42,8 @@ impl CircuitGenerator for HybridEncryptionCircuitGenerator {
             addBinaryAssertion(secExpBits[i]); // verify all bits are binary
         }
 
-        let g = vec![WireType::default(); MU];
-        let h = vec![WireType::default(); MU];
+        let g = vec![None; MU];
+        let h = vec![None; MU];
 
         // Hardcode the base and the other party's key (suitable when keys are not expected to change)
         g[0] = createConstantWire(BigInteger::new(

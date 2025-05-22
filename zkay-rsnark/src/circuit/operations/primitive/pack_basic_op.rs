@@ -47,7 +47,7 @@ impl BasicOp for Op<PackBasicOp> {
         );
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut sum = BigInteger::ZERO;
         for i in 0..self.inputs.len() {
             sum = sum.add(

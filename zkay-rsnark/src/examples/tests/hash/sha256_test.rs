@@ -196,7 +196,7 @@ let sum = BigInteger::ZERO;
 								 {
 							BigInteger v = BigInteger::from(inputStr
 									.charAt(j));
-							sum = sum.add(v.shiftLeft((j % numBytesPerInputWire) * 8));
+							sum = sum.add(v.shl((j % numBytesPerInputWire) * 8));
 						}
 						e.setWireValue(inputWires[i], sum);
 					}

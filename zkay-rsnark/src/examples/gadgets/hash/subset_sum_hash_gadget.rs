@@ -38,7 +38,7 @@ impl SubsetSumHashGadget {
 
         let rem = numBlocks * INPUT_LENGTH - ins.len();
 
-        let mut pad = vec![WireType::default(); rem];
+        let mut pad = vec![None; rem];
         for i in 0..pad.len() {
             pad[i] = generator.getZeroWire(); // TODO: adjust padding
         }
@@ -60,7 +60,7 @@ impl Gadget for SubsetSumHashGadget {
         if !binaryOutput {
             outWires = outDigest;
         } else {
-            outWires = vec![WireType::default(); DIMENSION * Config.log2_field_prime];
+            outWires = vec![None; DIMENSION * Config.log2_field_prime];
             for i in 0..DIMENSION {
                 let bits = outDigest[i].getBitWires(Config.log2_field_prime).asArray();
                 for j in 0..bits.len() {

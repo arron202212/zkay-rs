@@ -37,7 +37,7 @@ impl Speck128CipherGadget {
 impl Gadget for Speck128CipherGadget {
     fn buildCircuit() {
         let (mut x, mut y) = (plaintext[1], plaintext[0]);
-        let mut ciphertext = vec![WireType::default(); 2];
+        let mut ciphertext = vec![None; 2];
         for i in 0..=31 {
             x = x.rotateRight(64, 8).add(y);
             x = x.trimBits(65, 64);
@@ -56,8 +56,8 @@ impl Gadget for Speck128CipherGadget {
      */
     pub fn expandKey(key: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let generator = CircuitGenerator.getActiveCircuitGenerator();
-        let k = vec![WireType::default(); 32];
-        let l = vec![WireType::default(); 32];
+        let k = vec![None; 32];
+        let l = vec![None; 32];
         k[0] = key[0];
         l[0] = key[1];
         for i in 0..=32 - 2 {

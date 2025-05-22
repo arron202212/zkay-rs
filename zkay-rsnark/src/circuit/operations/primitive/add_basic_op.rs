@@ -30,9 +30,9 @@ impl BasicOp for Op<AddBasicOp> {
         return "add".to_owned();
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut s = BigInteger::ZERO;
-        for w in self.inputs {
+        for w in &self.inputs {
             s = s.add(
                 assignment[w.as_ref().unwrap().getWireId() as usize]
                     .clone()

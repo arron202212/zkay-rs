@@ -47,7 +47,7 @@ impl LongElement {
         let (array, currentMaxValues, currentBitwidth) =
             if Self::CHUNK_BITWIDTH >= bits.size() as i32 {
                 (
-                    vec![Some(bits.packAsBitsi(bits.size() as i32, vec![]))],
+                    vec![Some(bits.packAsBitsi(bits.size(), vec![]))],
                     vec![Util::computeMaxValue(bits.size() as u64)],
                     vec![bits.size() as u64],
                 )
@@ -558,24 +558,24 @@ impl LongElement {
         let mut steps = vec![];
 
         let shift = BigInteger::from(2).pow(Self::CHUNK_BITWIDTH as u32);
-        let i = 0;
+        let mut i = 0;
         while i < limit {
-            let step = 1;
-            let w1 = a1[i].clone().unwrap();
-            let w2 = a2[i].clone().unwrap();
-            let b1 = bounds1[i];
-            let b2 = bounds2[i];
+            let mut step = 1;
+            let mut w1 = a1[i].clone().unwrap();
+            let mut w2 = a2[i].clone().unwrap();
+            let mut b1 = bounds1[i].clone();
+            let mut b2 = bounds2[i].clone();
             while i + step <= limit - 1 {
                 let delta = shift.pow(step as u32);
-                if b1.add(bounds1[i + step].mul(delta)).bits()
+                if b1.clone().add(bounds1[i + step].clone().mul(delta.clone())).bits()
                     < Configs.get().unwrap().log2_field_prime - 2
-                    && b2.add(bounds2[i + step].mul(delta)).bits()
+                    && b2.clone().add(bounds2[i + step].clone().mul(delta.clone())).bits()
                         < Configs.get().unwrap().log2_field_prime - 2
                 {
-                    w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(delta, vec![]));
-                    w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(delta, vec![]));
-                    b1 = b1.add(bounds1[i + step].mul(delta));
-                    b2 = b2.add(bounds2[i + step].mul(delta));
+                    w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(delta.clone(), vec![]));
+                    w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(delta.clone(), vec![]));
+                    b1 = b1.add(bounds1[i + step].clone().mul(delta.clone()));
+                    b2 = b2.add(bounds2[i + step].clone().mul(delta.clone()));
                     step += 1;
                 } else {
                     break;
@@ -600,8 +600,8 @@ impl LongElement {
         // of this auxConstant will be added to the chunks of the first operand
         // before subtraction.
 
-        let auxConstant = BigInteger::ZERO;
-        let auxConstantChunks = vec![BigInteger::ZERO; numOfGroupedChunks];
+        let mut auxConstant = BigInteger::ZERO;
+        let mut auxConstantChunks = vec![BigInteger::ZERO; numOfGroupedChunks];
 
         let mut carries = self
             .generator()
@@ -613,7 +613,7 @@ impl LongElement {
         for j in 0..auxConstantChunks.len() - 1 {
             auxConstantChunks[j] =
                 BigInteger::from(2).pow(group2_bounds.get(j).unwrap().bits() as u32);
-            auxConstant = auxConstant.add(auxConstantChunks[j].mul(shift.pow(accumStep)));
+            auxConstant = auxConstant.add(auxConstantChunks[j].clone().mul(shift.pow(accumStep)));
             accumStep += *steps.get(j).unwrap() as u32;
             carriesBitwidthBounds[j] = std::cmp::max(
                 auxConstantChunks[j].bits(),
@@ -625,7 +625,7 @@ impl LongElement {
 
         // since the two elements should be equal, we should not need any aux
         // chunk in the last step
-        auxConstantChunks[auxConstantChunks.len() - 1] = BigInteger::ZERO;
+        *auxConstantChunks.last_mut().unwrap() = BigInteger::ZERO;
 
         // Note: the previous auxConstantChunks are not aligned. We compute an
         // aligned version as follows.
@@ -641,11 +641,11 @@ impl LongElement {
 
         let mut alignedAuxConstantChunks = vec![BigInteger::ZERO; numOfGroupedChunks];
 
-        let idx = 0;
+        let mut idx = 0;
         'loop1: for j in 0..numOfGroupedChunks {
             for k in 0..*steps.get(j).unwrap() {
-                alignedAuxConstantChunks[j] = alignedAuxConstantChunks[j]
-                    .add(alignedAuxConstantSmallChunks[idx].mul(shift.pow(k as u32)));
+                alignedAuxConstantChunks[j] = alignedAuxConstantChunks[j].clone()
+                    .add(alignedAuxConstantSmallChunks[idx].clone().mul(shift.pow(k as u32)));
                 idx += 1;
                 if idx == alignedAuxConstantSmallChunks.len() {
                     break 'loop1;
@@ -655,8 +655,8 @@ impl LongElement {
         if idx != alignedAuxConstantSmallChunks.len() {
             if idx == alignedAuxConstantSmallChunks.len() - 1 {
                 alignedAuxConstantChunks[numOfGroupedChunks - 1] =
-                    alignedAuxConstantChunks[numOfGroupedChunks - 1].add(
-                        alignedAuxConstantSmallChunks[idx]
+                    alignedAuxConstantChunks[numOfGroupedChunks - 1].clone().add(
+                        alignedAuxConstantSmallChunks[idx].clone()
                             .mul(shift.pow(*steps.get(numOfGroupedChunks - 1).unwrap() as u32)),
                     );
             } else {
@@ -743,7 +743,7 @@ impl LongElement {
             };
 
             // overflow check for safety
-            if auxConstantChunks[j]
+            if auxConstantChunks[j].clone()
                 .add(group1_bounds.get(j).unwrap().clone())
                 .add(BigInteger::from(
                     (prevBound >= Configs.get().unwrap().field_prime) as u8,
@@ -764,7 +764,7 @@ impl LongElement {
                 )
                 .add(prevCarry);
             let w2 = alignedAuxConstantChunkWire.add(
-                currentCarry
+                currentCarry.clone()
                     .unwrap()
                     .mulb(shift.pow(*steps.get(j).unwrap() as u32), vec![]),
             );
@@ -782,7 +782,7 @@ impl LongElement {
                 )],
             );
 
-            prevCarry = currentCarry.unwrap();
+            prevCarry = currentCarry.clone().unwrap();
             if j != carries.len() {
                 prevBound = Util::computeMaxValue(carriesBitwidthBounds[j]);
             }
@@ -849,17 +849,17 @@ impl LongElement {
         });
 
         // verify constraints about helper bits.
-        for w in helperBits {
+        for w in &helperBits {
             self.generator()
                 .addBinaryAssertion(w.clone().unwrap(), vec![]);
         }
         // Only one bit should be set.
         self.generator()
-            .addOneAssertion(WireArray::new(helperBits).sumAllElements(vec![]), vec![]);
+            .addOneAssertion(WireArray::new(helperBits.clone()).sumAllElements(vec![]), vec![]);
 
         // verify "the greater than condition" for the specified chunk
-        let chunk1 = self.generator().getZeroWire().unwrap();
-        let chunk2 = self.generator().getZeroWire().unwrap();
+        let mut chunk1 = self.generator().getZeroWire().unwrap();
+        let mut chunk2 = self.generator().getZeroWire().unwrap();
 
         for i in 0..helperBits.len() {
             chunk1 = chunk1.add(
@@ -929,7 +929,7 @@ impl Add for LongElement {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        if self.addOverflowCheck(rhs) {
+        if self.addOverflowCheck(rhs.clone()) {
             println!("Warning: Addition overflow could happen");
         }
 
@@ -940,8 +940,8 @@ impl Add for LongElement {
         let w2 = WireArray::new(rhs.array.clone())
             .adjustLengthi(length)
             .asArray();
-        let result = vec![None; length];
-        let newMaxValues = vec![BigInteger::ZERO; length];
+        let mut result = vec![None; length];
+        let mut newMaxValues = vec![BigInteger::ZERO; length];
         for i in 0..length {
             result[i] = w1[i].clone().map(|x| x.add(w2[i].clone().unwrap()));
             let max1 = if i < self.array.len() {
@@ -1028,7 +1028,7 @@ impl Sub for LongElement {
         });
 
         result.restrictBitwidth();
-        self.assertEquality(result.add(rhs));
+        self.assertEquality(result.clone().add(rhs));
         result
     }
 }
@@ -1039,7 +1039,7 @@ impl Mul for LongElement {
     fn mul(self, rhs: Self) -> Self::Output {
         // Implements the improved long integer multiplication from xjsnark
 
-        if self.mulOverflowCheck(rhs) {
+        if self.mulOverflowCheck(rhs.clone()) {
             println!("Warning: Mul overflow could happen");
         }
         let length = self.array.len() + rhs.array.len() - 1;
@@ -1097,23 +1097,23 @@ impl Mul for LongElement {
 
             for k in 0..length {
                 let constant = BigInteger::from(k as u64 + 1);
-                let coeff = Util::one();
+                let mut coeff = Util::one();
 
-                let vector1 = vec![None; self.array.len()];
-                let vector2 = vec![None; rhs.array.len()];
-                let vector3 = vec![None; length];
+                let mut vector1 = vec![None; self.array.len()];
+                let mut vector2 = vec![None; rhs.array.len()];
+                let mut vector3 = vec![None; length];
                 for i in 0..length {
                     if i < self.array.len() {
                         vector1[i] = self.array[i]
                             .as_ref()
-                            .map(|x| x.clone().mulb(coeff, vec![]));
+                            .map(|x| x.clone().mulb(coeff.clone(), vec![]));
                     }
                     if i < rhs.array.len() {
-                        vector2[i] = rhs.array[i].as_ref().map(|x| x.clone().mulb(coeff, vec![]));
+                        vector2[i] = rhs.array[i].as_ref().map(|x| x.clone().mulb(coeff.clone(), vec![]));
                     }
-                    vector3[i] = result[i].clone().map(|x| x.mulb(coeff, vec![]));
+                    vector3[i] = result[i].clone().map(|x| x.mulb(coeff.clone(), vec![]));
                     coeff = Util::modulo(
-                        coeff.mul(constant),
+                        coeff.mul(constant.clone()),
                         Configs.get().unwrap().field_prime.clone(),
                     );
                 }
@@ -1129,7 +1129,7 @@ impl Mul for LongElement {
         for i in 0..self.array.len() {
             for j in 0..rhs.array.len() {
                 newMaxValues[i + j] =
-                    newMaxValues[i + j].add(self.currentMaxValues[i].mul(rhs.currentMaxValues[j]));
+                    newMaxValues[i + j].clone().add(self.currentMaxValues[i].clone().mul(rhs.currentMaxValues[j].clone()));
             }
         }
         LongElement::newb(result, newMaxValues)

@@ -26,7 +26,7 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 pub trait setBitsConfig {
-    fn setBits(&self, bits: WireArray) {
+    fn setBits(&self, bits: Option<WireArray>) {
         // method overriden in subclasses
         // default action:
         println!(
@@ -54,12 +54,19 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
 
     pub fn new_array(bits: WireArray, t: T) -> Self {
         let mut _self = Self { wireId: -1, t };
-        _self.t.setBits(bits);
+        _self.t.setBits(Some(bits));
         _self
     }
 }
+impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> setBitsConfig for Wire<T> {}
 impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> WireConfig for Wire<T> {}
-pub trait WireConfig: PartialEq {
+pub trait WireConfig: PartialEq + setBitsConfig{
+ fn instance_of(&self, name: &str) -> bool {
+        self.name() == name
+    }
+    fn name(&self) -> &str {
+        ""
+    }
     fn generator(&self) -> CircuitGenerator {
         CircuitGenerator::getActiveCircuitGenerator()
             .unwrap()
@@ -76,24 +83,26 @@ pub trait WireConfig: PartialEq {
     fn getBitWires(&self) -> Option<WireArray> {
         None
     }
-
+    fn self_clone(&self) -> Option<WireType> {
+        None
+    }
     fn mulb(&self, b: BigInteger, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         if b == Util::one() {
-            return self.self_instance().unwrap();
+            return self.self_clone().unwrap();
         }
         if b == BigInteger::ZERO {
-            return self.generator().zeroWire.clone();
+            return self.generator().zeroWire.borrow().clone().unwrap();
         }
         let out =
-            WireType::LinearCombination(LinearCombinationWire::new(self.generator().currentWireId));
-        self.generator().currentWireId += 1;
-        let op = new_const_mul(WireType::Wire(self.clone()), out, b, desc.clone());
+            WireType::LinearCombination(LinearCombinationWire::new(*self.generator().currentWireId.borrow_mut()));
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let op = new_const_mul(self.self_clone().unwrap(), out.clone(), b, desc.clone());
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 1;
-            return cachedOutputs[0].clone();
+            *self.generator().currentWireId.borrow_mut() -= 1;
+            return cachedOutputs[0].clone().unwrap();
         }
         out
     }
@@ -103,65 +112,65 @@ pub trait WireConfig: PartialEq {
     }
 
     fn mulii(&self, base: i64, exp: i32, desc: Vec<String>) -> WireType {
-        let b = BigInteger::from(base);
+        let mut b = BigInteger::from(base);
         b = b.pow(exp as u32);
         return self.mulb(b, desc.clone());
     }
 
-    fn mul(&self, w: WireType, desc: Vec<String>) -> WireType {
+    fn mulw(&self, w: WireType, desc: Vec<String>) -> WireType {
         if w.instance_of("ConstantWire") {
             return self.mulb(w.getConstant(), desc.clone());
         }
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
-        let output = WireType::Variable(VariableWire::new(self.generator().currentWireId));
-        self.generator().currentWireId += 1;
-        let op = new_mul(WireType::Wire(self.clone()), w, output, desc.clone());
+        let output = WireType::Variable(VariableWire::new(*self.generator().currentWireId.borrow_mut()));
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let op = new_mul(self.self_clone().unwrap(), w, output.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 1;
+            *self.generator().currentWireId.borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         output
     }
 
-    fn add(&self, w: WireType, desc: Vec<String>) -> WireType {
+    fn addw(&self, w: WireType, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
-        return WireArray::new(vec![Some(WireType::Wire(self.clone())), Some(w)])
+        return WireArray::new(vec![Some(self.self_clone().unwrap()), Some(w)])
             .sumAllElements(desc.clone());
     }
 
     fn addi(&self, v: i64, desc: Vec<String>) -> WireType {
-        return self.add(
+        return self.addw(
             self.generator().createConstantWirei(v, desc.clone()),
             desc.clone(),
         );
     }
 
     fn addb(&self, b: BigInteger, desc: Vec<String>) -> WireType {
-        return self.add(
+        return self.addw(
             self.generator().createConstantWire(b, desc.clone()),
             desc.clone(),
         );
     }
 
-    fn sub(&self, w: WireType, desc: Vec<String>) -> WireType {
+    fn subw(&self, w: WireType, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
         let neg = w.muli(-1, desc.clone());
-        return self.add(neg, desc.clone());
+        return self.addw(neg, desc.clone());
     }
 
     fn subi(&self, v: i64, desc: Vec<String>) -> WireType {
-        return self.sub(
+        return self.subw(
             self.generator().createConstantWirei(v, desc.clone()),
             desc.clone(),
         );
     }
 
     fn subb(&self, b: BigInteger, desc: Vec<String>) -> WireType {
-        return self.sub(
+        return self.subw(
             self.generator().createConstantWire(b, desc.clone()),
             desc.clone(),
         );
@@ -172,12 +181,12 @@ pub trait WireConfig: PartialEq {
             .generator()
             .getZeroWire()
             .unwrap()
-            .sub(WireType::Wire(self.clone()), desc.clone());
+            .subw(self.self_clone().unwrap(), desc.clone());
     }
 
     fn mux(&self, trueValue: WireType, falseValue: WireType) -> WireType {
-        return falseValue.clone().add(
-            WireType::Wire(self.clone()).mul(trueValue.sub(falseValue, vec![]), vec![]),
+        return falseValue.clone().addw(
+            self.self_clone().unwrap().mulw(trueValue.subw(falseValue, vec![]), vec![]),
             vec![],
         );
     }
@@ -188,15 +197,15 @@ pub trait WireConfig: PartialEq {
         //  * self wire is not currently used for anything - It's for compatibility
         //  * with earlier experimental versions when the target was Pinocchio
 
-        let out1 = WireType::Wire(Wire::<Base>::new(self.generator().currentWireId, Base));
-        self.generator().currentWireId += 1;
-        let out2 = WireType::VariableBit(VariableBitWire::new(self.generator().currentWireId));
-        self.generator().currentWireId += 1;
-        let op = new_non_zero_check(WireType::Wire(self.clone()), out1, out2, desc.clone());
+        let out1 = WireType::Wire(Wire::<Base>::new(*self.generator().currentWireId.borrow_mut(), Base).unwrap());
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let out2 = WireType::VariableBit(VariableBitWire::new(*self.generator().currentWireId.borrow_mut()));
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let op = new_non_zero_check(self.self_clone().unwrap(), out1, out2.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 2;
+            *self.generator().currentWireId.borrow_mut() -= 2;
             return cachedOutputs[1].clone().unwrap();
         }
         out2
@@ -205,52 +214,52 @@ pub trait WireConfig: PartialEq {
     fn invAsBit(&self, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone()); // just a precaution .. should not be really needed
         let w1 = self.muli(-1, desc.clone());
-        let out = self.generator().oneWire.unwrap().add(w1, desc.clone());
+        let out = self.generator().oneWire.unwrap().addw(w1, desc.clone());
         return out;
     }
 
-    fn or(&self, w: WireType, desc: Vec<String>) -> WireType {
+    fn orw(&self, w: WireType, desc: Vec<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.or(WireType::Wire(self.clone()), desc.clone());
+            return w.orw(self.self_clone().unwrap(), desc.clone());
         }
         self.packIfNeeded(desc.clone()); // just a precaution .. should not be really
         // needed
-        let out = WireType::Variable(VariableWire::new(self.generator().currentWireId));
-        self.generator().currentWireId += 1;
-        let op = new_or(WireType::Wire(self.clone()), w, out, desc.clone());
+        let out = WireType::Variable(VariableWire::new(*self.generator().currentWireId.borrow_mut()));
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let op = new_or(self.self_clone().unwrap(), w, out.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 1;
+            *self.generator().currentWireId.borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
     }
 
-    fn xor(&self, w: WireType, desc: Vec<String>) -> WireType {
+    fn xorw(&self, w: WireType, desc: Vec<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.xor(WireType::Wire(self.clone()), desc.clone());
+            return w.xorw(self.self_clone().unwrap(), desc.clone());
         }
         self.packIfNeeded(desc.clone()); // just a precaution .. should not be really
         // needed
-        let out = WireType::Variable(VariableWire::new(self.generator().currentWireId));
-        self.generator().currentWireId += 1;
-        let op = new_xor(WireType::Wire(self.clone()), w, out, desc.clone());
+        let out = WireType::Variable(VariableWire::new(*self.generator().currentWireId.borrow_mut()));
+        *self.generator().currentWireId.borrow_mut() += 1;
+        let op = new_xor(self.self_clone().unwrap(), w, out.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 1;
+            *self.generator().currentWireId.borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
     }
 
     fn and(&self, w: WireType, desc: Vec<String>) -> WireType {
-        return self.mul(w, desc.clone());
+        return self.mulw(w, desc.clone());
     }
 
     fn getBitWiresi(&self, bitwidth: u64, desc: Vec<String>) -> WireArray {
         let mut bitWires = self.getBitWires();
         if let Some(bitWires) = bitWires {
-            if bitwidth < bitWires.len() && self.ConstantWire().is_none() {
+            if bitwidth < bitWires.size() as u64 && !self.instance_of("ConstantWire"){
                 println!(
                     "Warning: getBitWires() was called with different arguments on the same wire more than once"
                 );
@@ -260,7 +269,7 @@ pub trait WireConfig: PartialEq {
                 println!(
                     "\t If self was called for enforcing a bitwidth constraint, you must use restrictBitLengh(), otherwise you can ignore self."
                 );
-                if Configs.get().unwrap().printStackTraceAtWarnings {
+                if Configs.get().unwrap().print_stack_trace_at_warnings {
                     println!("Thread.dumpStack();");
                 } else {
                     println!(
@@ -268,65 +277,64 @@ pub trait WireConfig: PartialEq {
                     );
                 }
             }
-            return bitWires.adjustLengthi(bitwidth);
+            return bitWires.adjustLengthi(bitwidth as usize);
         }
 
-        bitWires = self.forceSplit(bitwidth, desc.clone());
-        self.setBits(bitWires);
-        return bitWires;
+        bitWires = Some(self.forceSplit(bitwidth as i32, desc.clone()));
+        self.setBits(bitWires.clone());
+        return bitWires.unwrap();
     }
 
     fn getBitWiresIfExistAlready(&self) -> WireArray {
-        return self.getBitWires();
+        return self.getBitWires().unwrap();
     }
 
     fn forceSplit(&self, bitwidth: i32, desc: Vec<String>) -> WireArray {
-        let ws = vec![None; bitwidth as usize];
+        let mut ws = vec![None; bitwidth as usize];
         for i in 0..bitwidth as usize {
             ws[i] = Some(WireType::VariableBit(VariableBitWire::new(
-                self.generator().currentWireId,
+                *self.generator().currentWireId.borrow_mut(),
             )));
-            self.generator().currentWireId += 1;
+            *self.generator().currentWireId.borrow_mut() += 1;
         }
-        let op = new_split(WireType::Wire(self.clone()), ws, desc.clone());
+        let op = new_split(self.self_clone().unwrap(), ws.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= bitwidth;
-            return WireArray::new(cachedOutputs).adjustLengthi(bitwidth);
+            *self.generator().currentWireId.borrow_mut() -= bitwidth;
+            return WireArray::new(cachedOutputs).adjustLengthi(bitwidth as usize);
         }
         WireArray::new(ws)
     }
 
     fn restrictBitLength(&self, bitWidth: u64, desc: Vec<String>) {
         let mut bitWires = self.getBitWires();
-        if let Some(bitWires) = bitWires {
-            if bitWires.size() > bitWidth as usize {
-                bitWires = self.forceSplit(bitWidth, desc.clone());
+        if let Some(_bitWires) = bitWires {
+            if _bitWires.size() > bitWidth as usize {
+                bitWires = Some(self.forceSplit(bitWidth as i32, desc.clone()));
                 self.setBits(bitWires);
             } else {
                 // nothing to be done.
             }
             return;
         }
-        self.getBitWires(bitWidth, desc.clone())
+        self.getBitWiresi(bitWidth, desc.clone());
     }
 
     fn xorBitwise(&self, w: WireType, numBits: i32, desc: Vec<String>) -> WireType {
-        let bits1 = self.getBitWiresi(numBits, desc.clone());
-        let bits2 = w.getBitWiresi(numBits, desc.clone());
+        let bits1 = self.getBitWiresi(numBits  as u64, desc.clone());
+        let bits2 = w.getBitWiresi(numBits as u64, desc.clone());
         let result = bits1
-            .unwrap()
-            .xorWireArray(bits2.unwrap(), numBits, desc.clone());
+            .xorWireArray(bits2, numBits as usize, desc.clone());
         let v = result.checkIfConstantBits(desc.clone());
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
     fn xorBitwisei(&self, v: i64, numBits: i32, desc: Vec<String>) -> WireType {
         return self.xorBitwise(
-            self.generator().createConstantWire(v, desc.clone()),
+            self.generator().createConstantWirei(v, desc.clone()),
             numBits,
             desc.clone(),
         );
@@ -341,21 +349,21 @@ pub trait WireConfig: PartialEq {
     }
 
     fn andBitwise(&self, w: WireType, numBits: i32, desc: Vec<String>) -> WireType {
-        let bits1 = self.getBitWires(numBits, desc.clone());
-        let bits2 = w.getBitWires(numBits, desc.clone());
-        let result = bits1.andWireArray(bits2, numBits, desc.clone());
+        let bits1 = self.getBitWiresi(numBits as u64, desc.clone());
+        let bits2 = w.getBitWiresi(numBits  as u64, desc.clone());
+        let result = bits1.andWireArray(bits2, numBits as usize, desc.clone());
         let v = result.checkIfConstantBits(desc.clone());
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
     fn andBitwisei(&self, v: i64, numBits: i32, desc: Vec<String>) -> WireType {
         return self.andBitwise(
-            self.generator().createConstantWire(v, desc.clone()),
+            self.generator().createConstantWirei(v , desc.clone()),
             numBits,
-            desc.clone(),
+            desc.clone(), 
         );
     }
 
@@ -368,21 +376,20 @@ pub trait WireConfig: PartialEq {
     }
 
     fn orBitwise(&self, w: WireType, numBits: i32, desc: Vec<String>) -> WireType {
-        let bits1 = self.getBitWires(numBits, desc.clone());
-        let bits2 = w.getBitWires(numBits, desc.clone());
+        let bits1 = self.getBitWiresi(numBits  as u64, desc.clone());
+        let bits2 = w.getBitWiresi(numBits  as u64, desc.clone());
         let result = bits1
-            .unwrap()
-            .orWireArray(bits2.unwrap(), numBits, desc.clone());
+            .orWireArray(bits2, numBits as usize, desc.clone());
         let v = result.checkIfConstantBits(desc.clone());
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
     fn orBitwisei(&self, v: i64, numBits: i32, desc: Vec<String>) -> WireType {
         return self.orBitwise(
-            self.generator().createConstantWire(v, desc.clone()),
+            self.generator().createConstantWirei(v, desc.clone()),
             numBits,
             desc.clone(),
         );
@@ -399,8 +406,8 @@ pub trait WireConfig: PartialEq {
     fn isEqualTo(&self, w: WireType, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
-        let s = self.sub(w, desc.clone());
-        return s.checkNonZero(desc.clone()).invAsBit(desc.clone());
+        let s = self.subw(w, desc.clone());
+        return s.checkNonZero(desc.clone()).invAsBit(desc.clone()).unwrap();
     }
 
     fn isEqualTob(&self, b: BigInteger, desc: Vec<String>) -> WireType {
@@ -408,7 +415,7 @@ pub trait WireConfig: PartialEq {
     }
 
     fn isEqualToi(&self, v: i64, desc: Vec<String>) -> WireType {
-        return self.isEqualTo(self.generator().createConstantWire(v, desc.clone()), vec![]);
+        return self.isEqualTo(self.generator().createConstantWirei(v, desc.clone()), vec![]);
     }
 
     fn isLessThanOrEqual(&self, w: WireType, bitwidth: i32, desc: Vec<String>) -> WireType {
@@ -417,15 +424,15 @@ pub trait WireConfig: PartialEq {
         let p = BigInteger::from(2u8).pow(bitwidth as u32);
         let pWire = self.generator().createConstantWire(p, desc.clone());
         let sum = pWire
-            .add(w, desc.clone())
-            .sub(WireType::Wire(self.clone()), desc.clone());
-        let bitWires = sum.getBitWiresi(bitwidth + 1, desc.clone());
-        return bitWires.get(bitwidth);
+            .addw(w, desc.clone())
+            .subw(self.self_clone().unwrap(), desc.clone());
+        let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc.clone());
+        return bitWires.get(bitwidth as usize);
     }
 
     fn isLessThanOrEquali(&self, v: i64, bitwidth: i32, desc: Vec<String>) -> WireType {
         return self.isLessThanOrEqual(
-            self.generator().createConstantWire(v, desc.clone()),
+            self.generator().createConstantWirei(v, desc.clone()),
             bitwidth,
             desc.clone(),
         );
@@ -442,13 +449,13 @@ pub trait WireConfig: PartialEq {
     fn isLessThan(&self, w: WireType, bitwidth: i32, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
-        let p = BigInteger::from(2u8).pow(bitwidth);
+        let p = BigInteger::from(2u8).pow(bitwidth as u32);
         let pWire = self.generator().createConstantWire(p, desc.clone());
         let sum = pWire
-            .add(WireType::Wire(self.clone()), desc.clone())
-            .sub(w, desc.clone());
-        let bitWires = sum.getBitWires(bitwidth + 1, desc.clone());
-        return bitWires.get(bitwidth).invAsBit(desc.clone());
+            .addw(self.self_clone().unwrap(), desc.clone())
+            .subw(w, desc.clone());
+        let bitWires = sum.getBitWiresi(bitwidth  as u64 + 1, desc.clone());
+        return bitWires.get(bitwidth as usize).invAsBit(desc.clone()).unwrap();
     }
 
     fn isLessThani(&self, v: i64, bitwidth: i32, desc: Vec<String>) -> WireType {
@@ -470,13 +477,13 @@ pub trait WireConfig: PartialEq {
     fn isGreaterThanOrEqual(&self, w: WireType, bitwidth: i32, desc: Vec<String>) -> WireType {
         self.packIfNeeded(desc.clone());
         w.packIfNeeded(desc.clone());
-        let p = BigInteger::from(2u8).pow(bitwidth);
+        let p = BigInteger::from(2u8).pow(bitwidth as u32);
         let pWire = self.generator().createConstantWire(p, desc.clone());
         let sum = pWire
-            .add(WireType::Wire(self.clone()), desc.clone())
-            .sub(w, desc.clone());
-        let bitWires = sum.getBitWires(bitwidth + 1, desc.clone()).unwrap();
-        return bitWires.get(bitwidth);
+            .addw(self.self_clone().unwrap(), desc.clone())
+            .subw(w, desc.clone());
+        let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc.clone());
+        return bitWires.get(bitwidth as usize);
     }
 
     fn isGreaterThanOrEquali(&self, v: i64, bitwidth: i32, desc: Vec<String>) -> WireType {
@@ -501,10 +508,10 @@ pub trait WireConfig: PartialEq {
         let p = BigInteger::from(2).pow(bitwidth as u32);
         let pWire = self.generator().createConstantWire(p, desc.clone());
         let sum = pWire
-            .add(w, desc.clone())
-            .sub(WireType::Wire(self.clone()), desc.clone());
-        let bitWires = sum.getBitWiresi(bitwidth + 1, desc.clone()).unwrap();
-        return bitWires.get(bitwidth).invAsBit(desc.clone());
+            .addw(w, desc.clone())
+            .subw(self.self_clone().unwrap(), desc.clone());
+        let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc.clone());
+        return bitWires.get(bitwidth as usize).invAsBit(desc.clone()).unwrap();
     }
 
     fn isGreaterThani(&self, v: i64, bitwidth: i32, desc: Vec<String>) -> WireType {
@@ -523,14 +530,14 @@ pub trait WireConfig: PartialEq {
         );
     }
 
-    fn rotateLeft(&self, numBits: usize, s: i32, desc: Vec<String>) -> WireType {
-        let bits = self.getBitWiresi(numBits, desc.clone());
+    fn rotateLeft(&self, numBits: usize, s: usize, desc: Vec<String>) -> WireType {
+        let bits = self.getBitWiresi(numBits as u64, desc.clone());
         let mut rotatedBits = vec![None; numBits];
         for i in 0..numBits {
             if i < s {
-                rotatedBits[i] = bits.get(i + (numBits - s));
+                rotatedBits[i] = Some(bits.get(i + (numBits - s)));
             } else {
-                rotatedBits[i] = bits.get(i - s);
+                rotatedBits[i] = Some(bits.get(i - s));
             }
         }
         let result = WireArray::new(rotatedBits);
@@ -538,17 +545,17 @@ pub trait WireConfig: PartialEq {
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
-    fn rotateRight(&self, numBits: usize, s: i32, desc: Vec<String>) -> WireType {
-        let bits = getBitWires(numBits, desc.clone());
+    fn rotateRight(&self, numBits: usize, s: usize, desc: Vec<String>) -> WireType {
+        let bits = self.getBitWiresi(numBits as u64, desc.clone());
         let mut rotatedBits = vec![None; numBits];
         for i in 0..numBits {
             if i >= numBits - s {
-                rotatedBits[i] = bits.get(i - (numBits - s));
+                rotatedBits[i] =Some (bits.get(i - (numBits - s)));
             } else {
-                rotatedBits[i] = bits.get(i + s);
+                rotatedBits[i] = Some(bits.get(i + s));
             }
         }
         let result = WireArray::new(rotatedBits);
@@ -556,22 +563,22 @@ pub trait WireConfig: PartialEq {
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
-    fn shiftLeft(&self, numBits: usize, s: i32, desc: Vec<String>) -> WireType {
+    fn shl(&self, numBits: usize, s: usize, desc: Vec<String>) -> WireType {
         if s >= numBits {
             // Will always be zero in that case
-            return self.generator().zeroWire;
+            return self.generator().zeroWire.borrow().clone().unwrap();
         }
 
-        let bits = self.getBitWires(numBits, desc.clone());
+        let bits = self.getBitWiresi(numBits as u64, desc.clone());
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits {
             if i < s {
-                shiftedBits[i] = self.generator().zeroWire;
+                shiftedBits[i] = self.generator().zeroWire.borrow().clone();
             } else {
-                shiftedBits[i] = bits.get(i - s);
+                shiftedBits[i] = Some(bits.get(i - s));
             }
         }
         let result = WireArray::new(shiftedBits);
@@ -579,22 +586,22 @@ pub trait WireConfig: PartialEq {
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
-    fn shiftRight(&self, numBits: i32, s: i32, desc: Vec<String>) -> WireType {
+    fn shiftRight(&self, numBits: usize, s: usize, desc: Vec<String>) -> WireType {
         if s >= numBits {
             // Will always be zero in that case
-            return self.generator().zeroWire;
+            return self.generator().zeroWire.borrow().clone().unwrap();
         }
 
-        let bits = self.getBitWires(numBits, desc.clone());
+        let bits = self.getBitWiresi(numBits as u64, desc.clone());
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits {
             if i >= numBits - s {
-                shiftedBits[i] = self.generator().zeroWire;
+                shiftedBits[i] = self.generator().zeroWire.borrow().clone();
             } else {
-                shiftedBits[i] = bits.get(i + s);
+                shiftedBits[i] = Some(bits.get(i + s));
             }
         }
         let result = WireArray::new(shiftedBits);
@@ -602,18 +609,18 @@ pub trait WireConfig: PartialEq {
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
-    fn shiftArithRight(&self, numBits: i32, s: i32, desc: Vec<String>) -> WireType {
-        let bits = self.getBitWires(numBits, desc.clone());
+    fn shiftArithRight(&self, numBits: usize, s: usize, desc: Vec<String>) -> WireType {
+        let bits = self.getBitWiresi(numBits as u64, desc.clone());
         let mut shiftedBits = vec![None; numBits];
         let sign = bits.get(numBits - 1);
         for i in 0..numBits {
             if i >= numBits - s {
-                shiftedBits[i] = sign;
+                shiftedBits[i] = Some(sign.clone());
             } else {
-                shiftedBits[i] = bits.get(i + s);
+                shiftedBits[i] = Some(bits.get(i + s));
             }
         }
         let result = WireArray::new(shiftedBits);
@@ -621,16 +628,16 @@ pub trait WireConfig: PartialEq {
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
-    fn invBits(&self, bitwidth: i32, desc: Vec<String>) -> WireType {
-        let bits = self.getBitWires(bitwidth, desc.clone()).asArray();
+    fn invBits(&self, bitwidth: u64, desc: Vec<String>) -> WireType {
+        let bits = self.getBitWiresi(bitwidth, desc.clone()).asArray();
         let mut resultBits = vec![None; bits.len()];
         for i in 0..resultBits.len() {
-            resultBits[i] = bits[i].invAsBit(desc.clone());
+            resultBits[i] = bits[i].as_ref().and_then(|x|x.clone().invAsBit(desc.clone()));
         }
-        return WireType::LinearCombination(LinearCombinationWire::new(WireArray::new(resultBits)));
+        return WireType::LinearCombination(LinearCombinationWire::newa(WireArray::new(resultBits)));
     }
 
     fn trimBits(
@@ -639,17 +646,17 @@ pub trait WireConfig: PartialEq {
         desiredNumofBits: i32,
         desc: Vec<String>,
     ) -> WireType {
-        let bitWires = self.getBitWires(currentNumOfBits, desc.clone());
-        let result = bitWires.adjustLengthi(desiredNumofBits);
+        let bitWires = self.getBitWiresi(currentNumOfBits as u64, desc.clone());
+        let result = bitWires.adjustLengthi(desiredNumofBits as usize);
         let v = result.checkIfConstantBits(desc.clone());
         if let Some(v) = v {
             return self.generator().createConstantWire(v, vec![]);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(result))
+        WireType::LinearCombination(LinearCombinationWire::newa(result))
     }
 
     fn packIfNeeded(&self, desc: Vec<String>) {
-        if self.wireId == -1 {
+        if self.getWireId() == -1 {
             self.pack(vec![]);
         }
     }
@@ -663,22 +670,22 @@ pub trait WireConfig: PartialEq {
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
-        let mut wireId = self.generator().currentWireId;
-        self.generator().currentWireId += 1;
+        let mut wireId = *self.generator().currentWireId.borrow_mut();
+        *self.generator().currentWireId.borrow_mut() += 1;
         //			Instruction op = PackBasicOp::new(bits.array, self, desc.clone());
         //			self.generator().addToEvaluationQueue(Box::new(op));
 
-        let op = new_pack(bits.array, self, desc.clone());
+        let op = new_pack(bits.unwrap().array.clone(), self.self_clone().unwrap(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
-            self.generator().currentWireId -= 1;
-            wireId = cachedOutputs[0].getWireId();
+            *self.generator().currentWireId.borrow_mut() -= 1;
+            wireId = cachedOutputs[0].as_ref().unwrap().getWireId();
         }
     }
 
     fn hashCode(&self) -> u64 {
-        self.getWireId()
+        self.getWireId() as u64
     }
 
     fn equals(&self, rhs: &Self) -> bool {

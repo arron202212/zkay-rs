@@ -61,10 +61,10 @@ impl WireLabelInstruction {
             "{} {}{}",
             self.label_type,
             self.w,
-            (if self.desc.len() == 0 {
-                &self.desc
+            &(if self.desc.len() == 0 {
+                self.desc.clone()
             } else {
-                &("\t\t\t # ".to_owned() + &self.desc)
+                "\t\t\t # ".to_owned() + &self.desc
             })
         )
     }
@@ -86,15 +86,15 @@ impl Instruction for WireLabelInstruction {
                 "\t[ {} ] Value of WireType # {} {} :: {}",
                 self.label_type,
                 self.w,
-                if self.desc.len() > 0 {
-                    &(" (".to_owned() + &self.desc + ")")
+                &if self.desc.len() > 0 {
+                    " (".to_owned() + &self.desc + ")"
                 } else {
-                    &self.desc
+                    self.desc.clone()
                 },
                 if Configs.get().unwrap().hex_output_enabled {
-                    format!("{:x}", evaluator.getWireValue(self.w))
+                    format!("{:x}", evaluator.getWireValue(self.w.clone()))
                 } else {
-                    format!("{}", evaluator.getWireValue(self.w))
+                    format!("{}", evaluator.getWireValue(self.w.clone()))
                 }
             );
         }

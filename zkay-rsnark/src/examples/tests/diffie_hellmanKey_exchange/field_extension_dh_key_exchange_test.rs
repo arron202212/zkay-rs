@@ -33,8 +33,8 @@ let exponentBitlength = 397;
 				
 				exponentBits = createInputWireArray(exponentBitlength, "exponent");
 
-let g = vec![WireType::default();mu];
-let h = vec![WireType::default();mu];
+let g = vec![None;mu];
+let h = vec![None;mu];
 
 				// Hardcode the base and the other party's key (suitable when keys are not expected to change)
 				g[0] = createConstantWire(BigInteger::new("16377448892084713529161739182205318095580119111576802375181616547062197291263"));

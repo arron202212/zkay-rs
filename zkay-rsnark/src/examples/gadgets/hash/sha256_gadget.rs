@@ -130,15 +130,15 @@ impl Gadget for SHA256Gadget {
         // pad if needed
         prepare();
 
-        let outDigest = vec![WireType::default(); 8];
-        let hWires = vec![WireType::default(); H.len()];
+        let outDigest = vec![None; 8];
+        let hWires = vec![None; H.len()];
         for i in 0..H.len() {
             hWires[i] = generator.createConstantWire(H[i]);
         }
 
         for blockNum in 0..numBlocks {
             let mut wsSplitted = vec![vec![]; 64];
-            let mut w = vec![WireType::default(); 64];
+            let mut w = vec![None; 64];
 
             for i in 0..64 {
                 if i < 16 {
@@ -240,7 +240,7 @@ impl Gadget for SHA256Gadget {
         if !binaryOutput {
             output = outDigest;
         } else {
-            output = vec![WireType::default(); 8 * 32];
+            output = vec![None; 8 * 32];
             for i in 0..8 {
                 let bits = outDigest[i].getBitWires(32).asArray();
                 for j in 0..32 {
@@ -251,7 +251,7 @@ impl Gadget for SHA256Gadget {
     }
 
     fn computeMaj(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
-        let result = vec![WireType::default(); numBits];
+        let result = vec![None; numBits];
         let aBits = a.getBitWires(numBits).asArray();
         let bBits = b.getBitWires(numBits).asArray();
         let cBits = c.getBitWires(numBits).asArray();
@@ -265,7 +265,7 @@ impl Gadget for SHA256Gadget {
     }
 
     fn computeCh(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
-        let result = vec![WireType::default(); numBits];
+        let result = vec![None; numBits];
 
         let aBits = a.getBitWires(numBits).asArray();
         let bBits = b.getBitWires(numBits).asArray();
@@ -288,9 +288,9 @@ impl Gadget for SHA256Gadget {
         if paddingRequired {
             let mut pad;
             if (64 - tailLength >= 9) {
-                pad = vec![WireType::default(); 64 - tailLength];
+                pad = vec![None; 64 - tailLength];
             } else {
-                pad = vec![WireType::default(); 128 - tailLength];
+                pad = vec![None; 128 - tailLength];
             }
             numBlocks = (totalLengthInBytes + pad.len()) / 64;
             pad[0] = generator.createConstantWire(0x80);
@@ -298,7 +298,7 @@ impl Gadget for SHA256Gadget {
                 pad[i] = generator.getZeroWire();
             }
             let lengthInBits = totalLengthInBytes * 8;
-            let lengthBits = vec![WireType::default(); 64];
+            let lengthBits = vec![None; 64];
             for i in 0..8 {
                 pad[pad.len() - 1 - i] =
                     generator.createConstantWire((lengthInBits >> (8 * i)) & 0xFFL);

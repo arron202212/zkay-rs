@@ -47,7 +47,7 @@ impl BasicOp for Op<XorBasicOp> {
         );
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = assignment
             [self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()

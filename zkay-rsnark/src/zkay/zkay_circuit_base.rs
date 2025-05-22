@@ -77,8 +77,8 @@ impl ZkayCircuitBase {
 
         self.pubInCount = pubInSize;
         self.currentPubOutIdx = pubInSize;
-        self.allPubIOWires = vec![WireType::default(); pubInSize + pubOutSize];
-        self.allPrivInWires = vec![WireType::default(); privSize];
+        self.allPubIOWires = vec![None; pubInSize + pubOutSize];
+        self.allPrivInWires = vec![None; privSize];
 
         self.useInputHashing = useInputHashing;
 
@@ -667,7 +667,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                     } else {
                         getZeroWire()
                     };
-                    let newWs = vec![WireType::default(); toBitWidth];
+                    let newWs = vec![None; toBitWidth];
                     newWs[..fromBitWidth].clone_from_slice(&bitWires.asArray());
                     for i in fromBitWidth..toBitWidth {
                         newWs[i] = extendBit;
@@ -1065,7 +1065,7 @@ impl CircuitGenerator for ZkayCircuitBase {
 
     fn getArr(name: String) -> Vec<Option<WireType>> {
         let w = getTypedArr(name);
-        let wa = vec![WireType::default(); w.len()];
+        let wa = vec![None; w.len()];
         for i in 0..w.len() {
             wa[i] = w[i].wire;
         }

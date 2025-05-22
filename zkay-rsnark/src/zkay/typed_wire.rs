@@ -216,7 +216,7 @@ impl TypedWire {
     pub fn shiftLeftBy(amount: i32) -> TypedWire {
         let resultType = checkType(self.zkay_type, self.zkay_type, false);
         let op = self.name.clone() + " << " + amount;
-        let res = self.wire.shiftLeft(resultType.bitwidth, amount, op);
+        let res = self.wire.shl(resultType.bitwidth, amount, op);
         return TypedWire::new(res, resultType, op);
     }
 

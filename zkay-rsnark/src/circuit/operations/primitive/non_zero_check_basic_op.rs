@@ -15,7 +15,7 @@ use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct NonZeroCheckBasicOp;
-fn new_non_zero_check(
+pub fn new_non_zero_check(
     w: WireType,
     out1: WireType,
     out2: WireType,

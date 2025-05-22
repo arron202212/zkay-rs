@@ -69,7 +69,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
 
     fn buildCircuit() {
         let lengthInBytes = rsaKeyBitLength / 8;
-        let paddedPlainText = vec![WireType::default(); lengthInBytes];
+        let paddedPlainText = vec![None; lengthInBytes];
         for i in 0..plainText.len() {
             paddedPlainText[plainText.len() - i - 1] = plainText[i];
         }
@@ -94,7 +94,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
         for i in 0..paddedPlainText.len() {
             let e = LongElement::new(paddedPlainText[i], 8);
             let c = LongElement::new(Util::split(
-                Util::one().shiftLeft(8 * i),
+                Util::one().shl(8 * i),
                 LongElement.CHUNK_BITWIDTH,
             ));
             paddedMsg = paddedMsg.add(e.mul(c));

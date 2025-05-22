@@ -9,7 +9,7 @@ use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use rand::Rng;
 use std::collections::HashMap;
-use std::ops::{Add, Rem, Shl};
+use std::ops::{Add, Rem, Shl,Sub,Mul,Shr,BitAnd};
 // use rand::distr::{Distribution, StandardUniform};
 use num_bigint::{BigInt, RandBigInt, RandomBits, Sign, ToBigInt};
 use num_traits::{One, sign::Signed};
@@ -37,10 +37,10 @@ impl Util {
     }
 
     pub fn spliti(x: BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
-        let chunks = vec![BigInteger::default(); numChunks as usize];
+        let mut chunks = vec![BigInteger::default(); numChunks as usize];
         let mask = Util::one().shl(chunkSize).sub(Util::one());
         for i in 0..numChunks {
-            chunks[i as usize] = x.shr(chunkSize * i).and(mask);
+            chunks[i as usize] = x.clone().shr(chunkSize * i).bitand(mask.clone());
         }
         return chunks;
     }
@@ -50,12 +50,12 @@ impl Util {
         blocks: Vec<Option<WireType>>,
         bitwidth: i32,
     ) -> BigInteger {
-        let sum = BigInteger::ZERO;
+        let mut sum = BigInteger::ZERO;
         for i in 0..blocks.len() {
-            if table[blocks[i].getWireId() as usize] == None {
+            if table[blocks[i].as_ref().unwrap().getWireId() as usize] == None {
                 continue;
             }
-            sum = sum.add(table[blocks[i].getWireId() as usize].shl(bitwidth as usize * i));
+            sum = sum.add(table[blocks[i].as_ref().unwrap().getWireId() as usize].as_ref().unwrap().shl(bitwidth as usize * i));
         }
         return sum;
     }
@@ -81,7 +81,7 @@ impl Util {
     }
 
     pub fn concat(a1: Vec<Option<WireType>>, a2: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut all = vec![WireType::default(); a1.len() + a2.len()];
+        let mut all = vec![None; a1.len() + a2.len()];
         for i in 0..all.len() {
             all[i] = if i < a1.len() {
                 a1[i].clone()
@@ -93,9 +93,9 @@ impl Util {
     }
 
     pub fn concata(w: WireType, a: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut all = vec![WireType::default(); 1 + a.len()];
+        let mut all = vec![None; 1 + a.len()];
         for i in 0..all.len() {
-            all[i] = if i < 1 { w.clone() } else { a[i - 1].clone() };
+            all[i] = if i < 1 { Some(w.clone()) } else { a[i - 1].clone() };
         }
         return all;
     }
@@ -126,8 +126,8 @@ impl Util {
 
     pub fn nextRandomBigInteger(&self, n: BigInteger) -> BigInteger {
         let rand = RandomBits::new(n.bits());
-        let result = rand.sample(&mut rand::thread_rng());
-        while result.compareTo(n) >= 0 {
+        let mut result = rand.sample(&mut rand::thread_rng());
+        while result>=n {
             result = rand.sample(&mut rand::thread_rng());
         }
         return result;
@@ -197,10 +197,10 @@ impl Util {
     pub fn arrayToString(a: Vec<Option<WireType>>, separator: String) -> String {
         let mut s = String::new();
         for i in 0..a.len() - 1 {
-            s.push_str(&a[i].to_string());
+            s.push_str(&a[i].as_ref().unwrap().to_string());
             s.push_str(&separator);
         }
-        s.push_str(&a[a.len() - 1].to_string());
+        s.push_str(&a[a.len() - 1].as_ref().unwrap().to_string());
         return s;
     }
 
@@ -215,15 +215,15 @@ impl Util {
     // Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
 
     pub fn computeMaxValue(numBits: u64) -> BigInteger {
-        let maxValueCache = HashMap::new();
+        let mut maxValueCache = HashMap::new();
         return maxValueCache
             .entry(numBits)
-            .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()));
+            .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one())).clone();
     }
 
     pub fn computeBound(numBits: i32) -> BigInteger {
-        let boundCache = HashMap::new();
-        return *boundCache
+        let mut boundCache = HashMap::new();
+        return boundCache
             .entry(numBits)
             .or_insert_with(|| Util::one().shl(numBits))
             .clone();
@@ -240,9 +240,9 @@ impl Util {
             println!("No padding needed!");
             return a;
         } else {
-            let mut newArray = vec![WireType::default(); length];
+            let mut newArray = vec![None; length];
             newArray[..a.len()].clone_from_slice(&a);
-            newArray[a.len()..length].fill(p.clone());
+            newArray[a.len()..length].fill(Some(p.clone()));
             return newArray;
         }
     }

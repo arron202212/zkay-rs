@@ -51,7 +51,7 @@ impl Gadget for MerkleTreePathGadget {
 
         // Apply CRH across tree path guided by the direction bits
         for i in 0..treeHeight {
-            let inHash = vec![WireType::default(); 2 * digestWidth];
+            let inHash = vec![None; 2 * digestWidth];
             for j in 0..digestWidth {
                 let temp = currentHash[j].sub(intermediateHashWires[i * digestWidth + j]);
                 let temp2 = directionSelectorBits[i].mul(temp);

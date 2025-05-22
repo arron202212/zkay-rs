@@ -30,7 +30,7 @@ impl Gadget for PinocchioGadget {
         }
         let numWires = scanner.nextInt();
         scanner.nextLine();
-        wireMapping = vec![WireType::default(); numWires];
+        wireMapping = vec![None; numWires];
 
         let inputCount = 0;
         while (scanner.hasNext()) {
@@ -109,9 +109,9 @@ impl Gadget for PinocchioGadget {
 
         scanner.close();
 
-        self.proverWitnessWires = vec![WireType::default(); proverWitnessWires.size()];
+        self.proverWitnessWires = vec![None; proverWitnessWires.size()];
         proverWitnessWires.toArray(self.proverWitnessWires);
-        self.outputWires = vec![WireType::default(); outputWires.size()];
+        self.outputWires = vec![None; outputWires.size()];
         outputWires.toArray(self.outputWires);
     }
 

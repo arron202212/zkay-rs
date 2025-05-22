@@ -66,7 +66,7 @@ impl Gadget for AESSBoxComputeGadget {
             p = p.add(bit.mul(tmp.sub(p)));
 
             let bit2 = a.getBitWires(8).get(7);
-            a = a.shiftLeft(8, 1);
+            a = a.shl(8, 1);
 
             let tmp2 = a.xorBitwise(generator.createConstantWire(0x1bL), 8);
             a = a.add(bit2.mul(tmp2.sub(a)));

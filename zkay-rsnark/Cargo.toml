@@ -17,3 +17,4 @@ num-traits={workspace = true}
 eyre={workspace = true}
 dyn-clone={workspace = true}
 rand={workspace = true}
+rccell={workspace = true}

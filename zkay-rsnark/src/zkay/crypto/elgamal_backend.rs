@@ -80,7 +80,7 @@ impl Asymmetric for ElgamalBackend {
     }
 
     fn fromTypedWireArray(typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
-        let wires = vec![WireType::default(); typedWires.len()];
+        let wires = vec![None; typedWires.len()];
         let uint256 = ZkayType.ZkUint(256);
         for i in 0..typedWires.len() {
             ZkayType.checkType(uint256, typedWires[i].zkay_type);

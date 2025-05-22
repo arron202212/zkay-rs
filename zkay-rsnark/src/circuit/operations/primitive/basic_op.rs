@@ -99,9 +99,9 @@ pub trait BasicOp: Instruction + Debug + PartialEq {
         vec![]
     }
 
-    fn getOutputs(&self) -> Vec<Option<WireType>> {
-        vec![]
-    }
+    // fn getOutputs(&self) -> Vec<Option<WireType>> {
+    //     vec![]
+    // }
 
     fn doneWithinCircuit(&self) -> bool {
         true

@@ -27,7 +27,7 @@ impl ChaskeyLTS128CipherGadget {
 }
 impl Gadget for ChaskeyLTS128CipherGadget {
     fn buildCircuit() {
-        let v = vec![WireType::default(); 4];
+        let v = vec![None; 4];
         for i in 0..4 {
             v[i] = (plaintext[i].xorBitwise(key[i], 32));
         }

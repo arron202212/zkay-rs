@@ -45,7 +45,7 @@ impl SHA256Gadget for ZkaySHA256Gadget {
         if truncated_length < 256 {
             // Keep truncated_length left-most bits as suggested in FIPS 180-4 to shorten the digest
             if truncated_length % 32 == 0 {
-                let shortened_digest = vec![WireType::default(); truncated_length / 32];
+                let shortened_digest = vec![None; truncated_length / 32];
                 System.arraycopy(
                     digest,
                     digest.len() - shortened_digest.len(),

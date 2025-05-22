@@ -24,6 +24,7 @@ use crate::util::{
     run_command::run_command,
     util::{BigInteger, Util},
 };
+use rccell::RcCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -36,22 +37,22 @@ use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitGenerator {
-    pub currentWireId: i32,
-    pub evaluationQueue: HashMap<Box<dyn Instruction>, Box<dyn Instruction>>,
+    pub currentWireId:RcCell<i32>,
+    pub evaluationQueue: RcCell<HashMap<Box<dyn Instruction>, Box<dyn Instruction>>>,
 
-    pub zeroWire: Option<WireType>,
+    pub zeroWire: RcCell<Option<WireType>>,
     pub oneWire: Option<WireType>,
 
-    pub inWires: Vec<Option<WireType>>,
-    pub outWires: Vec<Option<WireType>>,
-    pub proverWitnessWires: Vec<Option<WireType>>,
+    pub inWires: RcCell<Vec<Option<WireType>>>,
+    pub outWires: RcCell<Vec<Option<WireType>>>,
+    pub proverWitnessWires: RcCell<Vec<Option<WireType>>>,
 
     pub circuitName: String,
 
-    pub knownConstantWires: HashMap<BigInteger, WireType>,
+    pub knownConstantWires: RcCell<HashMap<BigInteger, WireType>>,
 
-    pub numOfConstraints: i32,
-    pub circuitEvaluator: Option<CircuitEvaluator>,
+    pub numOfConstraints: RcCell<i32>,
+    pub circuitEvaluator: RcCell<Option<CircuitEvaluator>>,
 }
 pub trait CGConfig {
     fn buildCircuit(&self) {}
@@ -78,16 +79,16 @@ impl CircuitGenerator {
         }
         Self {
             circuitName,
-            inWires: vec![],
-            outWires: vec![],
-            zeroWire: None,
+            inWires: RcCell::new(vec![]),
+            outWires: RcCell::new(vec![]),
+            zeroWire: RcCell::new(None),
             oneWire: None,
-            proverWitnessWires: vec![],
-            evaluationQueue: HashMap::new(),
-            knownConstantWires: HashMap::new(),
-            currentWireId: 0,
-            numOfConstraints: 0,
-            circuitEvaluator: None,
+            proverWitnessWires: RcCell::new(vec![]),
+            evaluationQueue: RcCell::new(HashMap::new()),
+            knownConstantWires: RcCell::new(HashMap::new()),
+            currentWireId: RcCell::new(0),
+            numOfConstraints:RcCell::new( 0),
+            circuitEvaluator: RcCell::new(None),
         }
     }
 
@@ -109,15 +110,15 @@ impl CircuitGenerator {
         return self.circuitName.clone();
     }
 
-    pub fn createInputWire(&mut self, desc: Vec<String>) -> WireType {
-        let newInputWire = WireType::Variable(VariableWire::new(self.currentWireId));
-        self.currentWireId += 1;
+    pub fn createInputWire(&self, desc: Vec<String>) -> WireType {
+        let newInputWire = WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        *self.currentWireId.borrow_mut() += 1;
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::input,
-            newInputWire,
+            newInputWire.clone(),
             desc,
         )));
-        self.inWires.push(Some(newInputWire.clone()));
+        self.inWires.borrow_mut().push(Some(newInputWire.clone()));
         return newInputWire;
     }
 
@@ -135,7 +136,7 @@ impl CircuitGenerator {
         let numWires =
             (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
         let w = self.createInputWireArray(numWires, desc);
-        let bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
@@ -150,22 +151,22 @@ impl CircuitGenerator {
         let numWires =
             (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
         let w = self.createProverWitnessWireArray(numWires, desc);
-        let bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
         return LongElement::new(w, bitwidths);
     }
 
-    pub fn createProverWitnessWire(&mut self, desc: Vec<String>) -> WireType {
-        let wire = WireType::Variable(VariableWire::new(self.currentWireId));
-        self.currentWireId += 1;
+    pub fn createProverWitnessWire(&self, desc: Vec<String>) -> WireType {
+        let wire = WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        *self.currentWireId.borrow_mut() += 1;
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::nizkinput,
-            wire,
+            wire.clone(),
             desc,
         )));
-        self.proverWitnessWires.push(Some(wire.clone()));
+        self.proverWitnessWires.borrow_mut().push(Some(wire.clone()));
         return wire;
     }
 
@@ -184,7 +185,7 @@ impl CircuitGenerator {
     }
 
     pub fn generateZeroWireArray(&self, n: usize) -> Vec<Option<WireType>> {
-        let zeroWires = vec![self.zeroWire.clone(); n];
+        let zeroWires = vec![self.zeroWire.borrow().clone(); n];
         return zeroWires;
     }
 
@@ -194,36 +195,36 @@ impl CircuitGenerator {
     }
 
     pub fn makeOutput(&self, wire: WireType, desc: Vec<String>) -> WireType {
-        let outputWire = wire;
+        let mut outputWire = wire.clone();
         if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire"))
-            || self.inWires.contains(&Some(wire))
+            || self.inWires.borrow().contains(&Some(wire.clone()))
         {
             wire.packIfNeeded(vec![]);
-            outputWire = self.makeVariable(wire, desc);
-        } else if self.inWires.contains(&Some(wire))
-            || self.proverWitnessWires.contains(&Some(wire))
+            outputWire = self.makeVariable(wire.clone(), desc.clone());
+        } else if self.inWires.borrow().contains(&Some(wire.clone()))
+            || self.proverWitnessWires.borrow().contains(&Some(wire.clone()))
         {
-            outputWire = self.makeVariable(wire, desc);
+            outputWire = self.makeVariable(wire.clone(), desc.clone());
         } else {
             wire.packIfNeeded(vec![]);
         }
 
-        self.outWires.push(Some(outputWire.clone()));
+        self.outWires.borrow_mut().push(Some(outputWire.clone()));
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::output,
-            outputWire,
+            outputWire.clone(),
             desc,
         )));
         return outputWire;
     }
 
     fn makeVariable(&self, wire: WireType, desc: Vec<String>) -> WireType {
-        let outputWire = WireType::Variable(VariableWire::new(self.currentWireId));
-        self.currentWireId += 1;
-        let op = new_mul(wire, self.oneWire.clone().unwrap(), outputWire, desc);
+        let mut outputWire = WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        *self.currentWireId.borrow_mut() += 1;
+        let op = new_mul(wire, self.oneWire.clone().unwrap(), outputWire.clone(), desc);
         let cachedOutputs = self.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            self.currentWireId -= 1;
+            *self.currentWireId.borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         outputWire
@@ -234,7 +235,7 @@ impl CircuitGenerator {
         wires: Vec<Option<WireType>>,
         desc: Vec<String>,
     ) -> Vec<Option<WireType>> {
-        let outs = vec![None; wires.len()];
+        let mut outs = vec![None; wires.len()];
         for i in 0..wires.len() {
             outs[i] =
                 wires[i].as_ref().map(|w| {
@@ -265,15 +266,15 @@ impl CircuitGenerator {
             self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
                 LabelType::debug,
                 wires[i].clone().unwrap(),
-                desc,
+                desc.clone(),
             )));
         }
     }
 
     pub fn writeCircuitFile(&self) {
-        let printWriter = File::create(self.getName() + ".arith").unwrap();
-        write!(printWriter, "total {}", self.currentWireId);
-        for e in self.evaluationQueue.keys() {
+        let mut printWriter = File::create(self.getName() + ".arith").unwrap();
+        write!(printWriter, "total {}", *self.currentWireId.borrow_mut());
+        for e in self.evaluationQueue.borrow().keys() {
             if e.doneWithinCircuit() {
                 write!(printWriter, "{e:?} \n");
             }
@@ -281,7 +282,7 @@ impl CircuitGenerator {
     }
 
     pub fn printCircuit(&self) {
-        for e in self.evaluationQueue.keys() {
+        for e in self.evaluationQueue.borrow().keys() {
             if e.doneWithinCircuit() {
                 println!("{e:?}");
             }
@@ -289,16 +290,16 @@ impl CircuitGenerator {
     }
 
     fn initCircuitConstruction(&self) {
-        let oneWire = WireType::Constant(ConstantWire::new(self.currentWireId, Util::one()));
-        self.currentWireId += 1;
-        self.knownConstantWires.insert(Util::one(), oneWire);
+        let oneWire = WireType::Constant(ConstantWire::new(*self.currentWireId.borrow_mut(), Util::one()));
+        *self.currentWireId.borrow_mut() += 1;
+        self.knownConstantWires.borrow_mut().insert(Util::one(), oneWire.clone());
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::input,
-            oneWire,
+            oneWire.clone(),
             vec!["The one-input wire.".to_owned()],
         )));
-        self.inWires.push(Some(oneWire.clone()));
-        self.zeroWire = Some(oneWire.muli(0, vec![]));
+        self.inWires.borrow_mut().push(Some(oneWire.clone()));
+        *self.zeroWire.borrow_mut() = Some(oneWire.muli(0, vec![]));
     }
 
     pub fn createConstantWire(&self, x: BigInteger, desc: Vec<String>) -> WireType {
@@ -312,7 +313,7 @@ impl CircuitGenerator {
     ) -> Vec<Option<WireType>> {
         let mut w = vec![None; a.len()];
         for i in 0..a.len() {
-            w[i] = Some(self.createConstantWire(a[i], desc));
+            w[i] = Some(self.createConstantWire(a[i].clone(), desc.clone()));
         }
         return w;
     }
@@ -328,7 +329,7 @@ impl CircuitGenerator {
     ) -> Vec<Option<WireType>> {
         let mut w = vec![None; a.len()];
         for i in 0..a.len() {
-            w[i] = Some(self.createConstantWirei(a[i], desc));
+            w[i] = Some(self.createConstantWirei(a[i], desc.clone()));
         }
         return w;
     }
@@ -352,7 +353,7 @@ impl CircuitGenerator {
     }
 
     pub fn getZeroWire(&self) -> Option<WireType> {
-        return self.zeroWire.clone();
+        return self.zeroWire.borrow().clone();
     }
 
     pub fn getOneWire(&self) -> Option<WireType> {
@@ -360,25 +361,26 @@ impl CircuitGenerator {
     }
 
     pub fn getEvaluationQueue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
-        return self.evaluationQueue.clone();
+        return self.evaluationQueue.borrow().clone();
     }
 
     pub fn getNumWires(&self) -> i32 {
-        return self.currentWireId;
+        return *self.currentWireId.borrow_mut();
     }
 
     pub fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
-        let existingInstruction = self.evaluationQueue.get(&e);
-        self.evaluationQueue.entry(e).or_insert(e);
+        let evaluationQueue=self.evaluationQueue.borrow().clone();
+        let existingInstruction = evaluationQueue.get(&e);
+        self.evaluationQueue.borrow_mut().entry(e.clone()).or_insert(e.clone());
         if existingInstruction.is_none() {
             if e.instance_of("BasicOp") {
-                self.numOfConstraints += (e).getNumMulGates();
+                *self.numOfConstraints.borrow_mut() += (e).getNumMulGates();
             }
             return None; // returning null means we have not seen this instruction before
         }
 
         if existingInstruction.as_ref().unwrap().instance_of("BasicOp") {
-            return existingInstruction.as_ref().unwrap().getOutputs();
+            return Some(existingInstruction.as_ref().unwrap().getOutputs());
         } else {
             return None; // have seen this instruction before, but can't de-duplicate
         }
@@ -388,24 +390,24 @@ impl CircuitGenerator {
         println!("\nGenerator State @ {message}");
         println!(
             "\tCurrent Number of Multiplication Gates  .  {}\n",
-            self.numOfConstraints
+            *self.numOfConstraints.borrow_mut()
         );
     }
 
     pub fn getNumOfConstraints(&self) -> i32 {
-        return self.numOfConstraints;
+        return *self.numOfConstraints.borrow_mut();
     }
 
     pub fn getInWires(&self) -> Vec<Option<WireType>> {
-        return self.inWires.clone();
+        return self.inWires.borrow().clone();
     }
 
     pub fn getOutWires(&self) -> Vec<Option<WireType>> {
-        return self.outWires.clone();
+        return self.outWires.borrow().clone();
     }
 
     pub fn getProverWitnessWires(&self) -> Vec<Option<WireType>> {
-        return self.proverWitnessWires.clone();
+        return self.proverWitnessWires.borrow().clone();
     }
 
     /**
@@ -440,7 +442,7 @@ impl CircuitGenerator {
         self.addAssertion(
             w,
             self.oneWire.clone().unwrap(),
-            self.zeroWire.clone().unwrap(),
+            self.zeroWire.borrow().clone().unwrap(),
             desc,
         );
     }
@@ -455,8 +457,8 @@ impl CircuitGenerator {
     }
 
     pub fn addBinaryAssertion(&self, w: WireType, desc: Vec<String>) {
-        let inv = w.invAsBit(desc.clone());
-        self.addAssertion(w, inv, self.zeroWire.clone().unwrap(), desc);
+        let inv = w.invAsBit(desc.clone()).unwrap();
+        self.addAssertion(w, inv, self.zeroWire.borrow().clone().unwrap(), desc);
     }
 
     pub fn addEqualityAssertion(&self, w1: WireType, w2: WireType, desc: Vec<String>) {
@@ -469,7 +471,7 @@ impl CircuitGenerator {
         self.addAssertion(
             w1,
             self.oneWire.clone().unwrap(),
-            self.createConstantWire(b, desc),
+            self.createConstantWire(b, desc.clone()),
             desc,
         );
     }
@@ -478,16 +480,16 @@ impl CircuitGenerator {
         let circuitEvaluator = CircuitEvaluator::new(self.clone());
         self.generateSampleInput(circuitEvaluator.clone());
         circuitEvaluator.evaluate();
-        self.circuitEvaluator = Some(circuitEvaluator);
+        *self.circuitEvaluator.borrow_mut() = Some(circuitEvaluator);
     }
 
     pub fn prepFiles(&self) {
         self.writeCircuitFile();
         assert!(
-            self.circuitEvaluator.is_some(),
+            self.circuitEvaluator.borrow().is_some(),
             "evalCircuit() must be called before prepFiles()"
         );
-        self.circuitEvaluator.as_ref().unwrap().writeInputFile();
+        self.circuitEvaluator.borrow().as_ref().unwrap().writeInputFile();
     }
 
     pub fn runLibsnark(&self) {
@@ -503,21 +505,21 @@ impl CircuitGenerator {
         println!(
             "\n-----------------------------------RUNNING LIBSNARK -----------------------------------------"
         );
-        let mut line;
-        let input = p.0.unwrap().split_ascii_whitespace();
-        let buf = String::new();
+        let inp=p.0.clone().unwrap();
+        let input = inp.split_ascii_whitespace();
+        let mut buf = String::new();
         for line in input {
-            buf.push_str(&(line + "\n"));
+            buf.push_str(&(line.to_owned() + "\n"));
         }
         println!("{buf}");
     }
 
     pub fn getCircuitEvaluator(&self) -> CircuitEvaluator {
         assert!(
-            self.circuitEvaluator.is_some(),
+            self.circuitEvaluator.borrow().is_some(),
             "evalCircuit() must be called before getCircuitEvaluator()"
         );
 
-        return self.circuitEvaluator.clone().unwrap();
+        return self.circuitEvaluator.borrow().clone().unwrap();
     }
 }
