@@ -22,7 +22,7 @@ impl ZkayPaillierEncGadget {
         generator: LongElement,
         plain: LongElement,
         random: LongElement,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
         self.n = n;

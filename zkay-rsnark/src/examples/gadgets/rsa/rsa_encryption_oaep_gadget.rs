@@ -46,7 +46,7 @@ impl RSAEncryptionOAEPGadget {
         plainText: Vec<Option<WireType>>,
         seed: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
 
@@ -167,7 +167,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
                 mgfOutputList.add(msgHashBytes[j]);
             }
         }
-        let out = mgfOutputList.toArray(vec![]);
+        let out = mgfOutputList.toArray(&String::new());
         return out[..length].to_vec();
     }
 

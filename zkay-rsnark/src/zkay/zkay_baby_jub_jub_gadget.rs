@@ -23,7 +23,7 @@ impl JubJubPoint {
 
 pub struct ZkayBabyJubJubGadget;
 impl ZkayBabyJubJubGadget {
-    pub fn new(desc: Vec<String>) -> Self {
+    pub fn new(desc: &String) -> Self {
         super(desc);
 
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)

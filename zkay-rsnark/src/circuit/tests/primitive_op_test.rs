@@ -1,5 +1,12 @@
 
 
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 use crate::util::util::{Util,BigInteger};
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
@@ -9,18 +16,21 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 
-pub struct PrimitiveOpTest  {
+pub struct PrimitiveOpTest;
 
-	
-	pub   testAddition() {
+#[cfg(test)]
+mod test  {
 
-		let numIns = 100;
-let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+	#[test]
+	pub fn  testAddition() {
 
-let result = new ArrayList<BigInteger>();
+		let mut  numIns = 100;
+let mut  inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+
+let mut  result = vec![];
 		result.add(inVals1[0].add(inVals1[1]).rem(Configs.get().unwrap().field_prime.clone()));
-let s = BigInteger::ZERO;
+let mut  s = BigInteger::ZERO;
 		for i in 0..numIns {
 			s = s.add(inVals1[i]);
 		}
@@ -29,26 +39,27 @@ let s = BigInteger::ZERO;
 			result.add(inVals1[i].add(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
-		CircuitGenerator generator = CircuitGenerator::new("addition") {
-			WireArray inputs1;
-			WireArray inputs2;
+		let mut  generator = CircuitGenerator::new("addition") ;
+            {
+			let mut  inputs1;
+			let mut  inputs2;
 
 			
 			  fn buildCircuit() {
-				inputs1 = WireArray::new(createInputWireArray(numIns));
-				inputs2 = WireArray::new(createInputWireArray(numIns));
+				inputs1 = WireArray::new(generator.createInputWireArray(numIns));
+				inputs2 = WireArray::new(generator.createInputWireArray(numIns));
 
-let result1 = inputs1.get(0).add(inputs1.get(1), "");
-let result2 = inputs1.sumAllElements();
-let resultArray = inputs1.addWireArray(inputs2, inputs1.size());
+let mut  result1 = inputs1.get(0).add(inputs1.get(1), "");
+let mut  result2 = inputs1.sumAllElements();
+let mut  resultArray = inputs1.addWireArray(inputs2, inputs1.size());
 
-				makeOutput(result1, "");
-				makeOutput(result2, "");
-				makeOutputArray(resultArray.asArray(), "");
+				generator.makeOutput(result1, "");
+				generator.makeOutput(result2, "");
+				generator.generator.makeOutputArray(resultArray.asArray(), "");
 			}
 
 			
-			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
@@ -56,97 +67,102 @@ let resultArray = inputs1.addWireArray(inputs2, inputs1.size());
 		};
 
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
-		generator.generateSampleInput(evaluator);
+let mut  evaluator = CircuitEvaluator::new(generator.clone());
+		generator.generateSampleInput(evaluator.clone());
 		evaluator.evaluate();
 
-let idx = 0;
+let mut  idx = 0;
 		for output in generator.getOutWires() {
-			assertEquals(evaluator.getWireValue(output), result.get(idx));
+			assert_eq!(evaluator.getWireValue(output), result.get(idx));
 idx+=1;
 		}
-		assertEquals(generator.getNumOfConstraints(), numIns + 2);
+		assert_eq!(generator.getNumOfConstraints(), numIns + 2);
 
 	}
 
 	
-	pub   testMultiplication() {
+	#[test]
+pub fn  testMultiplication() {
 
-let numIns = 100;
-let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  numIns = 100;
+let mut  inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 
-let result = new ArrayList<BigInteger>();
+let mut  result = vec![];
 		result.add(inVals1[0].mul(inVals1[1]).rem(Configs.get().unwrap().field_prime.clone()));
 		for i in 0..numIns {
 			result.add(inVals1[i].mul(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
-		CircuitGenerator generator = CircuitGenerator::new("multiplication") {
-			WireArray inputs1;
-			WireArray inputs2;
+		let mut  generator = CircuitGenerator::new("multiplication");
+             {
+			let mut  inputs1;
+			let mut  inputs2;
 
 			
 			  fn buildCircuit() {
-				inputs1 = WireArray::new(createInputWireArray(numIns));
-				inputs2 = WireArray::new(createInputWireArray(numIns));
+				inputs1 = WireArray::new(generator.createInputWireArray(numIns));
+				inputs2 = WireArray::new(generator.createInputWireArray(numIns));
 
-let result1 = inputs1.get(0).mul(inputs1.get(1), "");
-let resultArray = inputs1.mulWireArray(inputs2, numIns);
+let mut  result1 = inputs1.get(0).mul(inputs1.get(1), "");
+let mut  resultArray = inputs1.mulWireArray(inputs2, numIns);
 
-				makeOutput(result1, "");
-				makeOutputArray(resultArray.asArray(), "");
+				generator.makeOutput(result1, "");
+				generator.generator.makeOutputArray(resultArray.asArray(), "");
 			}
 
 			
-			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
-		generator.generateSampleInput(evaluator);
+let mut  evaluator = CircuitEvaluator::new(generator.clone());
+		generator.generateSampleInput(evaluator.clone());
 		evaluator.evaluate();
-let idx = 0;
+let mut  idx = 0;
 		for output in generator.getOutWires() {
-			assertEquals(evaluator.getWireValue(output), result.get(idx));
+			assert_eq!(evaluator.getWireValue(output), result.get(idx));
             idx+=1;
 
 		}
-		assertEquals(generator.getNumOfConstraints(), numIns + 1);
+		assert_eq!(generator.getNumOfConstraints(), numIns + 1);
 	}
 
 	
-	pub   testComparison() {
+	#[test]
+pub fn  testComparison() {
 
-let numIns = 10000;
-let numBits = 10;
-let inVals1 = Util::randomBigIntegerArray(numIns, numBits);
-let inVals2 = Util::randomBigIntegerArray(numIns, numBits);
+let mut  numIns = 10000;
+let mut  numBits = 10;
+let mut  inVals1 = Util::randomBigIntegerArray(numIns, numBits);
+let mut  inVals2 = Util::randomBigIntegerArray(numIns, numBits);
 
-let result = new ArrayList<Integer>();
+let mut  result = vec![];
 		for i in 0..numIns {
-			result.add(inVals1[i].compareTo(inVals2[i]));
+            let b=inVals1[i]-inVals2[i];
+			result.add( if b==0{0}else if b>0{1}else{-1});
 		}
 
-let result1 = vec![None;numIns];
-let result2 = vec![None;numIns];
-let result3 = vec![None;numIns];
-let result4 = vec![None;numIns];
-let result5 = vec![None;numIns];
+let mut  result1 = vec![None;numIns];
+let mut  result2 = vec![None;numIns];
+let mut  result3 = vec![None;numIns];
+let mut  result4 = vec![None;numIns];
+let mut  result5 = vec![None;numIns];
 
-		CircuitGenerator generator = CircuitGenerator::new("comparison") {
+		let mut  generator = CircuitGenerator::new("comparison");
+         {
 
-			Vec<Option<WireType>> inputs1;
-			Vec<Option<WireType>> inputs2;
+			let mut  inputs1;
+			let mut  inputs2;
 
 			
 			  fn buildCircuit() {
 
-				inputs1 = createInputWireArray(numIns);
-				inputs2 = createInputWireArray(numIns);
+				inputs1 = generator.createInputWireArray(numIns);
+				inputs2 = generator.createInputWireArray(numIns);
 
 				for i in 0..numIns {
 					result1[i] = inputs1[i].isLessThan(inputs2[i], numBits);
@@ -158,91 +174,93 @@ let result5 = vec![None;numIns];
 			}
 
 			
-			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
+let mut  evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 //		generator.printCircuit();
 		evaluator.evaluate();
 		for i in 0..numIns {
-let r = result.get(i);
+let mut  r = result.get(i);
 			if r == 0 {
-				assertEquals(evaluator.getWireValue(result1[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result2[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result3[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result4[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result5[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result1[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result2[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result3[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result4[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result5[i]), Util::one());
 			} else if r == 1 {
-				assertEquals(evaluator.getWireValue(result1[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result2[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result3[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result4[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result5[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result1[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result2[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result3[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result4[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result5[i]), BigInteger::ZERO);
 			} else if r == -1 {
-				assertEquals(evaluator.getWireValue(result1[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result2[i]), Util::one());
-				assertEquals(evaluator.getWireValue(result3[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result4[i]), BigInteger::ZERO);
-				assertEquals(evaluator.getWireValue(result5[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result1[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result2[i]), Util::one());
+				assert_eq!(evaluator.getWireValue(result3[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result4[i]), BigInteger::ZERO);
+				assert_eq!(evaluator.getWireValue(result5[i]), BigInteger::ZERO);
 			}
 		}
 	}
 
 	
-	pub   testBooleanOperations() {
+	#[test]
+pub fn  testBooleanOperations() {
 
-let numIns = Config.log2_field_prime;
-let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-let inVals3 = Util::randomBigIntegerArray(numIns, 32);
+let mut  numIns = Config.log2_field_prime;
+let mut  inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  inVals3 = Util::randomBigIntegerArray(numIns, 32);
 
-let shiftedRightVals = vec![BigInteger::default();numIns];
-let shiftedLeftVals = vec![BigInteger::default();numIns];
-let rotatedRightVals = vec![BigInteger::default();numIns];
-let rotatedLeftVals = vec![BigInteger::default();numIns];
-let xoredVals = vec![BigInteger::default();numIns];
-let oredVals = vec![BigInteger::default();numIns];
-let andedVals = vec![BigInteger::default();numIns];
-let invertedVals = vec![BigInteger::default();numIns];
+let mut  shiftedRightVals = vec![BigInteger::default();numIns];
+let mut  shiftedLeftVals = vec![BigInteger::default();numIns];
+let mut  rotatedRightVals = vec![BigInteger::default();numIns];
+let mut  rotatedLeftVals = vec![BigInteger::default();numIns];
+let mut  xoredVals = vec![BigInteger::default();numIns];
+let mut  oredVals = vec![BigInteger::default();numIns];
+let mut  andedVals = vec![BigInteger::default();numIns];
+let mut  invertedVals = vec![BigInteger::default();numIns];
 
-let mask = BigInteger::new("2").pow(Config.log2_field_prime).sub(Util::one());
+let mut  mask = BigInteger::from(2).pow(Config.log2_field_prime as u32).sub(Util::one());
 		
 		for i in 0..numIns {
 			shiftedRightVals[i] = inVals1[i].shiftRight(i).rem(Configs.get().unwrap().field_prime.clone());
 			shiftedLeftVals[i] = inVals1[i].shl(i).and(mask).rem(Configs.get().unwrap().field_prime.clone());
-			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL );
+			rotatedRightVals[i] = BigInteger::from(inVals3[i].to_str_radix(10).parse::<i64>().unwrap().rotateRight( i % 32) & 0x00000000ffffffff);
+			rotatedLeftVals[i] = BigInteger::from(inVals3[i].to_str_radix(10).parse::<i64>().unwrap().rotateLeft( i % 32) & 0x00000000ffffffff );
 			xoredVals[i] = inVals1[i].xor(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			oredVals[i] = inVals1[i].or(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			andedVals[i] = inVals1[i].and(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
-			invertedVals[i] = BigInteger::from(~inVals3[i].intValue() & 0x00000000ffffffffL);
+			invertedVals[i] = BigInteger::from(!inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff);
 		}
 
-		CircuitGenerator generator = CircuitGenerator::new("boolean_operations") {
-			Vec<Option<WireType>> inputs1;
-			Vec<Option<WireType>> inputs2;
-			Vec<Option<WireType>> inputs3;
+		let mut   generator = CircuitGenerator::new("boolean_operations");
+     {
+			let mut  inputs1;
+			let mut  inputs2;
+			let mut  inputs3;
 
 			
 			  fn buildCircuit() {
 
-				inputs1 = createInputWireArray(numIns);
-				inputs2 = createInputWireArray(numIns);
-				inputs3 = createInputWireArray(numIns);
+				inputs1 = generator.createInputWireArray(numIns);
+				inputs2 = generator.createInputWireArray(numIns);
+				inputs3 = generator.createInputWireArray(numIns);
 
-let shiftedRight = vec![None;numIns];
-let shiftedLeft = vec![None;numIns];
-let rotatedRight = vec![None;numIns];
-let rotatedLeft = vec![None;numIns];
-let xored = vec![None;numIns];
-let ored = vec![None;numIns];
-let anded = vec![None;numIns];
-let inverted = vec![None;numIns];
+let mut  shiftedRight = vec![None;numIns];
+let mut  shiftedLeft = vec![None;numIns];
+let mut  rotatedRight = vec![None;numIns];
+let mut  rotatedLeft = vec![None;numIns];
+let mut  xored = vec![None;numIns];
+let mut  ored = vec![None;numIns];
+let mut  anded = vec![None;numIns];
+let mut  inverted = vec![None;numIns];
 
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(Config.log2_field_prime, i);
@@ -256,102 +274,112 @@ let inverted = vec![None;numIns];
 					inverted[i] = inputs3[i].invBits(32);
 				}
 
-				makeOutputArray(shiftedRight);
-				makeOutputArray(shiftedLeft);
-				makeOutputArray(rotatedRight);
-				makeOutputArray(rotatedLeft);
-				makeOutputArray(xored);
-				makeOutputArray(ored);
-				makeOutputArray(anded);
-				makeOutputArray(inverted);
+				generator.makeOutputArray(shiftedRight);
+				generator.makeOutputArray(shiftedLeft);
+				generator.makeOutputArray(rotatedRight);
+				generator.makeOutputArray(rotatedLeft);
+				generator.makeOutputArray(xored);
+				generator.makeOutputArray(ored);
+				generator.makeOutputArray(anded);
+				generator.makeOutputArray(inverted);
 			}
 
 			
-			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
 			}
 		};
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
-		generator.generateSampleInput(evaluator);
+let mut  evaluator = CircuitEvaluator::new(generator.clone());
+		generator.generateSampleInput(evaluator.clone());
 		evaluator.evaluate();
 
-let outWires = generator.getOutWires();
-let i, outputIndex = 0;
+let mut  outWires = generator.getOutWires();
+let (mut  i, mut outputIndex) = (0,0);
 		for i in 0..numIns
-			assertEquals(shiftedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(shiftedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(shiftedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(shiftedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(rotatedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(rotatedRightVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 		
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(rotatedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(rotatedLeftVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(xoredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(xoredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(oredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(oredVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(andedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(andedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(invertedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(invertedVals[i], evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 	}
 	
 	
 	
-	pub   testAssertion() {
+	#[test]
+pub fn  testAssertion() {
 
-let numIns = 100;
-let inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-let inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  numIns = 100;
+let mut  inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
+let mut  inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
 		
 		
-let result = new ArrayList<BigInteger>();
+let mut  result = vec![];
 		result.add(inVals1[0].mul(inVals1[0]).rem(Configs.get().unwrap().field_prime.clone()));
 		for i in 0..numIns {
 			result.add(inVals1[i].mul(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone()));
 		}
 
-		CircuitGenerator generator = CircuitGenerator::new("assertions") {
-			WireArray inputs1;
-			WireArray inputs2;
-			WireArray solutions; // provide solutions as witnesses
+		let mut  generator = CircuitGenerator::new("assertions");
+         {
+			let mut  inputs1;
+			let mut  inputs2;
+			let mut  solutions; // provide solutions as witnesses
 
 			
 			  fn buildCircuit() {
-				inputs1 = WireArray::new(createInputWireArray(numIns));
-				inputs2 = WireArray::new(createInputWireArray(numIns));
-				solutions = WireArray::new(createProverWitnessWireArray(numIns+1));
+				inputs1 = WireArray::new(generator.createInputWireArray(numIns));
+				inputs2 = WireArray::new(generator.createInputWireArray(numIns));
+				solutions = WireArray::new(generator.createProverWitnessWireArray(numIns+1));
 
 				specifyProverWitnessComputation(& {
-            struct Prover;
+             #[derive(Hash, Clone, Debug)]
+            struct Prover{
+                result:Vec<BigInteger>,
+                solutions:WireArray,
+            }
             impl Instruction  for Prover
 			{
 					
 					
-					pub   evaluate(CircuitEvaluator evaluator) {
+					 fn evaluate( evaluator:CircuitEvaluator) {
 						evaluator.setWireValue(solutions.get(0),result.get(0));
 						for i  in 0..numIns{
 							evaluator.setWireValue(solutions.get(i+1),result.get(i+1));
 						}
 					}
-            }Prover
+            }
+                Box::new(Prover{
+                    result:result.clone(),
+                    solutions:solutions.clone(),
+                })
 				});
 				
 				addAssertion(inputs1.get(0), inputs1.get(0), solutions.get(0));
@@ -377,16 +405,16 @@ let result = new ArrayList<BigInteger>();
 			}
 
 			
-			pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1.asArray(), inVals1);
 				evaluator.setWireValue(inputs2.asArray(), inVals2);
 
 			}
 		};
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
-		generator.generateSampleInput(evaluator);
+let mut  evaluator = CircuitEvaluator::new(generator.clone());
+		generator.generateSampleInput(evaluator.clone());
 		evaluator.evaluate(); // no exception will be thrown
-		assertEquals(generator.getNumOfConstraints(), numIns + 2);
+		assert_eq!(generator.getNumOfConstraints(), numIns + 2);
 	}
 }

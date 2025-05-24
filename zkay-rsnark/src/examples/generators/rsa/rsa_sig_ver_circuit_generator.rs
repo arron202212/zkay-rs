@@ -28,20 +28,19 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         sha2Gadget = SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
         let digest = sha2Gadget.getOutputWires();
 
-        /**
-         * Since an RSA modulus take many wires to present, it could increase
-         * the size of verification key if we divide it into very small chunks,
-         * e.g. 32-bits (which happens by default in this version to minimize
-         * the number of gates later in the circuit). In case the verification
-         * key size is important, e.g. going to be stored in a smart contract,
-         * there is a workaround, by first assuming the largest possible
-         * bitwidths for the chunks, and then converting them into smaller
-         * chunks. Even better, let the prover provide the key as a witness to
-         * the circuit, and compute their hash, which will be part of the
-         * statement. This way of doing this increases the number of gates a
-         * bit, but reduces the VK size when needed.
-         *
-         **/
+        
+        //  * Since an RSA modulus take many wires to present, it could increase
+        //  * the size of verification key if we divide it into very small chunks,
+        //  * e.g. 32-bits (which happens by default in this version to minimize
+        //  * the number of gates later in the circuit). In case the verification
+        //  * key size is important, e.g. going to be stored in a smart contract,
+        //  * there is a workaround, by first assuming the largest possible
+        //  * bitwidths for the chunks, and then converting them into smaller
+        //  * chunks. Even better, let the prover provide the key as a witness to
+        //  * the circuit, and compute their hash, which will be part of the
+        //  * statement. This way of doing this increases the number of gates a
+        //  * bit, but reduces the VK size when needed.
+
         rsaModulus = createLongElementInput(rsaKeyLength);
 
         // The modulus can also be hardcoded by changing the statement above to the following

@@ -1,38 +1,48 @@
 
 
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 use crate::util::util::{Util,BigInteger};
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::hash::sha256_gadget;
-use examples::gadgets::math::field_division_gadget;
+use crate::examples::gadgets::hash::sha256_gadget;
+use crate::examples::gadgets::math::field_division_gadget;
 
-pub struct CachingTest  {
+pub struct CachingTest;
+#[cfg(test)] 
+mod test {
 
 	
-	pub   testCaching1() {
+	#[test]
+pub fn  testCaching1() {
 
-		let numIns = Config.log2_field_prime;
-		let inVals1 = Util::randomBigIntegerArray(numIns,
+		let mut numIns = Config.log2_field_prime;
+		let mut inVals1 = Util::randomBigIntegerArray(numIns,
 				Configs.get().unwrap().field_prime);
-		let inVals2 = Util::randomBigIntegerArray(numIns,
+		let mut inVals2 = Util::randomBigIntegerArray(numIns,
 				Configs.get().unwrap().field_prime);
-		let inVals3 = Util::randomBigIntegerArray(numIns, 32);
+		let mut inVals3 = Util::randomBigIntegerArray(numIns, 32);
 
-		let shiftedRightVals = vec![BigInteger::default();numIns];
-		let shiftedLeftVals = vec![BigInteger::default();numIns];
-		let rotatedRightVals = vec![BigInteger::default();numIns];
-		let rotatedLeftVals = vec![BigInteger::default();numIns];
-		let xoredVals = vec![BigInteger::default();numIns];
-		let oredVals = vec![BigInteger::default();numIns];
-		let andedVals = vec![BigInteger::default();numIns];
-		let invertedVals = vec![BigInteger::default();numIns];
-		let multipliedVals = vec![BigInteger::default();numIns];
-		let addedVals = vec![BigInteger::default();numIns];
+		let mut shiftedRightVals = vec![BigInteger::default();numIns];
+		let mut shiftedLeftVals = vec![BigInteger::default();numIns];
+		let mut rotatedRightVals = vec![BigInteger::default();numIns];
+		let mut rotatedLeftVals = vec![BigInteger::default();numIns];
+		let mut xoredVals = vec![BigInteger::default();numIns];
+		let mut oredVals = vec![BigInteger::default();numIns];
+		let mut andedVals = vec![BigInteger::default();numIns];
+		let mut invertedVals = vec![BigInteger::default();numIns];
+		let mut multipliedVals = vec![BigInteger::default();numIns];
+		let mut addedVals = vec![BigInteger::default();numIns];
 
-		let mask = BigInteger::new("2").pow(Config.log2_field_prime)
+		let mut mask = BigInteger::from(2).pow(Config.log2_field_prime as u32)
 				.sub(Util::one());
 
 		for i in 0..numIns {
@@ -41,44 +51,45 @@ pub struct CachingTest  {
 					Configs.get().unwrap().field_prime);
 			shiftedLeftVals[i] = inVals1[i].shl(i).and(mask)
 					.rem(Configs.get().unwrap().field_prime.clone());
-			rotatedRightVals[i] = BigInteger::from(Integer.rotateRight(
-					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
-			rotatedLeftVals[i] = BigInteger::from(Integer.rotateLeft(
-					inVals3[i].intValue(), i % 32) & 0x00000000ffffffffL);
+			rotatedRightVals[i] = BigInteger::from(
+					inVals3[i].to_str_radix(10).parse::<i64>().unwrap().rotateRight(i % 32) & 0x00000000ffffffff);
+			rotatedLeftVals[i] = BigInteger::from(
+					inVals3[i]..to_str_radix(10).parse::<i64>().unwrap().rotateLeft( i % 32) & 0x00000000ffffffff);
 			xoredVals[i] = inVals1[i].xor(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			oredVals[i] = inVals1[i].or(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			andedVals[i] = inVals1[i].and(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 			invertedVals[i] = BigInteger
-					.valueOf(~inVals3[i].intValue() & 0x00000000ffffffffL);
+					.valueOf(!inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff);
 			multipliedVals[i] = inVals1[i].mul(inVals2[i]).rem(
 					Configs.get().unwrap().field_prime.clone());
 			addedVals[i] = inVals1[i].add(inVals2[i]).rem(Configs.get().unwrap().field_prime.clone());
 
 		}
 
-		let generator = CircuitGenerator::new("Caching_Test") {
-			let inputs1;
-			let inputs2;
-			let inputs3; // 32-bit values
+		let mut generator = CircuitGenerator::new("Caching_Test");
+         {
+			let mut inputs1;
+			let mut inputs2;
+			let mut inputs3; // 32-bit values
 
 			
 			  fn buildCircuit() {
+                
+				inputs1 = generator.createInputWireArray(numIns);
+				inputs2 = generator.createInputWireArray(numIns);
+				inputs3 = generator.createInputWireArray(numIns);
 
-				inputs1 = createInputWireArray(numIns);
-				inputs2 = createInputWireArray(numIns);
-				inputs3 = createInputWireArray(numIns);
+				let mut shiftedRight = vec![None;numIns];
+				let mut shiftedLeft = vec![None;numIns];
+				let mut rotatedRight = vec![None;numIns];
+				let mut rotatedLeft = vec![None;numIns];
+				let mut xored = vec![None;numIns];
+				let mut ored = vec![None;numIns];
+				let mut anded = vec![None;numIns];
+				let mut inverted = vec![None;numIns];
 
-				let shiftedRight = vec![None;numIns];
-				let shiftedLeft = vec![None;numIns];
-				let rotatedRight = vec![None;numIns];
-				let rotatedLeft = vec![None;numIns];
-				let xored = vec![None;numIns];
-				let ored = vec![None;numIns];
-				let anded = vec![None;numIns];
-				let inverted = vec![None;numIns];
-
-				let multiplied = vec![None;numIns];
-				let added = vec![None;numIns];
+				let mut multiplied = vec![None;numIns];
+				let mut added = vec![None;numIns];
 				
 				for i in 0..numIns {
 					shiftedRight[i] = inputs1[i].shiftRight(
@@ -98,7 +109,7 @@ pub struct CachingTest  {
 					added[i] = inputs1[i].add(inputs2[i]);
 				}
 
-				let currentCost = getNumOfConstraints();
+				let mut currentCost = generator.getNumOfConstraints();
 
 				// repeat everything again, and verify that the number of
 				// multiplication gates will not be affected
@@ -120,7 +131,7 @@ pub struct CachingTest  {
 					added[i] = inputs1[i].add(inputs2[i]);
 				}
 
-				assertTrue(getNumOfConstraints() == currentCost);
+				assert!(generator.getNumOfConstraints() == currentCost);
 
 				// repeat binary operations again while changing the order of
 				// the operands, and verify that the number of multiplication
@@ -136,154 +147,156 @@ pub struct CachingTest  {
 					added[i] = inputs2[i].add(inputs1[i]);
 				}
 
-				assertTrue(getNumOfConstraints() == currentCost);
+				assert!(generator.getNumOfConstraints() == currentCost);
 
-				makeOutputArray(shiftedRight);
-				makeOutputArray(shiftedLeft);
-				makeOutputArray(rotatedRight);
-				makeOutputArray(rotatedLeft);
-				makeOutputArray(xored);
-				makeOutputArray(ored);
-				makeOutputArray(anded);
-				makeOutputArray(inverted);
-				makeOutputArray(multiplied);
-				makeOutputArray(added);
+				generator.makeOutputArray(shiftedRight);
+				generator.makeOutputArray(shiftedLeft);
+				generator.makeOutputArray(rotatedRight);
+				generator.makeOutputArray(rotatedLeft);
+				generator.makeOutputArray(xored);
+				generator.makeOutputArray(ored);
+				generator.makeOutputArray(anded);
+				generator.makeOutputArray(inverted);
+				generator.makeOutputArray(multiplied);
+				generator.makeOutputArray(added);
 
-				currentCost = getNumOfConstraints();
+				currentCost = generator.getNumOfConstraints();
 
 				// repeat labeling as output (although not really meaningful)
 				// and make sure no more constraints are added
-				makeOutputArray(shiftedRight);
-				makeOutputArray(shiftedLeft);
-				makeOutputArray(rotatedRight);
-				makeOutputArray(rotatedLeft);
-				makeOutputArray(xored);
-				makeOutputArray(ored);
-				makeOutputArray(anded);
-				makeOutputArray(inverted);
-				makeOutputArray(multiplied);
-				makeOutputArray(added);
+				generator.makeOutputArray(shiftedRight);
+				generator.makeOutputArray(shiftedLeft);
+				generator.makeOutputArray(rotatedRight);
+				generator.makeOutputArray(rotatedLeft);
+				generator.makeOutputArray(xored);
+				generator.makeOutputArray(ored);
+				generator.makeOutputArray(anded);
+				generator.makeOutputArray(inverted);
+				generator.makeOutputArray(multiplied);
+				generator.makeOutputArray(added);
 
-				assertTrue(getNumOfConstraints() == currentCost);
+				assert!(generator.getNumOfConstraints() == currentCost);
 			}
 
 			
-			pub  fn generateSampleInput(let evaluator) {
+			pub  fn generateSampleInput( evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(inputs1, inVals1);
 				evaluator.setWireValue(inputs2, inVals2);
 				evaluator.setWireValue(inputs3, inVals3);
 			}
 		};
 		generator.generateCircuit();
-		let evaluator = CircuitEvaluator::new(generator);
+		let mut evaluator = CircuitEvaluator::new(generator);
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 
-		ArrayList<WireType> outWires = generator.getOutWires();
-		let i, outputIndex = 0;
+		let mut  outWires = generator.getOutWires();
+		let (mut i, mut outputIndex) = (0,0);
 		for i in 0..numIns
-			assertEquals(shiftedRightVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(shiftedRightVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(shiftedLeftVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(shiftedLeftVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(rotatedRightVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(rotatedRightVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(rotatedLeftVals[i],
+			{assert_eq!(rotatedLeftVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
+}
+		outputIndex += numIns;
+		for i in 0..numIns
+		{	assert_eq!(xoredVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(xoredVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(oredVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(oredVals[i],
+			{assert_eq!(andedVals[i],
 					evaluator.getWireValue(outWires.get(i + outputIndex)));
+}
+		outputIndex += numIns;
+		for i in 0..numIns
+			{assert_eq!(invertedVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(andedVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(multipliedVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 		outputIndex += numIns;
 		for i in 0..numIns
-			assertEquals(invertedVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
-
-		outputIndex += numIns;
-		for i in 0..numIns
-			assertEquals(multipliedVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
-
-		outputIndex += numIns;
-		for i in 0..numIns
-			assertEquals(addedVals[i],
-					evaluator.getWireValue(outWires.get(i + outputIndex)));
+			{assert_eq!(addedVals[i],
+					evaluator.getWireValue(outWires.get(i + outputIndex)));}
 
 	}
 
 	
-	pub   testAssertionCache() {
+	#[test]
+pub fn  testAssertionCache() {
 
 		// make sure we remove some of the clear duplicate assertions
 		// and most importantly, no assertions are removed
-		let generator = CircuitGenerator::new("assertions") {
+		let mut generator = CircuitGenerator::new("assertions");
+         {
 
-			let in1;
-			let in2;
-			let witness1;
-			let witness2;
+			let mut in1;
+			let mut in2;
+			let mut witness1;
+			let mut witness2;
 
 			
 			  fn buildCircuit() {
 
-				in1 = createInputWire();
-				in2 = createInputWire();
-				witness1 = createProverWitnessWire();
-				witness2 = createProverWitnessWire();
+				in1 = generator.createInputWire();
+				in2 = generator.createInputWire();
+				witness1 = generator.createProverWitnessWire();
+				witness2 = generator.createProverWitnessWire();
 
 				addAssertion(in1, in2, witness1);
-				assertEquals(getNumOfConstraints(), 1);
+				assert_eq!(generator.getNumOfConstraints(), 1);
 				addAssertion(in1, in2, witness1);
-				assertEquals(getNumOfConstraints(), 1);
+				assert_eq!(generator.getNumOfConstraints(), 1);
 				addAssertion(in2, in1, witness1);
-				assertEquals(getNumOfConstraints(), 1);
+				assert_eq!(generator.getNumOfConstraints(), 1);
 
 				// since witness2 is another wire, the constraint should go
 				// through
 				addAssertion(in1, in2, witness2);
-				assertEquals(getNumOfConstraints(), 2);
+				assert_eq!(generator.getNumOfConstraints(), 2);
 				addAssertion(in2, in1, witness2);
-				assertEquals(getNumOfConstraints(), 2);
+				assert_eq!(generator.getNumOfConstraints(), 2);
 
 				addEqualityAssertion(witness1, witness2);
-				assertEquals(getNumOfConstraints(), 3);
+				assert_eq!(generator.getNumOfConstraints(), 3);
 				addEqualityAssertion(witness2, witness1);
-				assertEquals(getNumOfConstraints(), 4); // we don't detect
+				assert_eq!(generator.getNumOfConstraints(), 4); // we don't detect
 														// similarity here yet
 
 				FieldDivisionGadget::new(in1, in2);
-				assertEquals(getNumOfConstraints(), 5);
+				assert_eq!(generator.getNumOfConstraints(), 5);
 				FieldDivisionGadget::new(in1, in2);
 				// since this operation is implemented externally, it's not easy
 				// to filter it, because everytime a witness wire is introduced
 				// by the gadget. To eliminate such similar operations, the
 				// gadget itself needs to take care of it.
-				assertEquals(getNumOfConstraints(), 6);
+				assert_eq!(generator.getNumOfConstraints(), 6);
 			}
 
 			
-			pub  fn generateSampleInput(let evaluator) {
+			pub  fn generateSampleInput(evaluator:CircuitEvaluator) {
 				evaluator.setWireValue(in1, BigInteger::from(5));
 				evaluator.setWireValue(in2, BigInteger::from(6));
 				evaluator.setWireValue(witness1, BigInteger::from(30));
@@ -292,29 +305,30 @@ pub struct CachingTest  {
 			}
 		};
 		generator.generateCircuit();
-		let evaluator = CircuitEvaluator::new(generator);
-		generator.generateSampleInput(evaluator);
+		let mut evaluator = CircuitEvaluator::new(generator.clone());
+		generator.generateSampleInput(evaluator.clone());
 		evaluator.evaluate();
 	}
 
 	
-	pub   testMultiSHA256Calls() {
+	#[test]
+pub fn  testMultiSHA256Calls() {
 
 		// testing multiple unncessary calls to SHA256
 
-		let inputStr = "abc";
-		let expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+		let mut inputStr = "abc";
+		let mut expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
-		let generator = CircuitGenerator::new("SHA2_Test4") {
+		let mut generator = CircuitGenerator::new("SHA2_Test4"); {
 
-			let inputWires;
+			let mut inputWires;
 
 			
 			  fn buildCircuit() {
-				inputWires = createInputWireArray(inputStr.len()());
-				let digest = SHA256Gadget::new(inputWires, 8,
+				inputWires = generator.createInputWireArray(inputStr.len()());
+				let mut digest = SHA256Gadget::new(inputWires, 8,
 						inputStr.len()(), false, true, "").getOutputWires();
-				let numOfConstraintsBefore = getNumOfConstraints();
+				let mut numOfConstraintsBefore = generator.getNumOfConstraints();
 				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
 						false, true, "").getOutputWires();
 				digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(),
@@ -327,20 +341,20 @@ pub struct CachingTest  {
 						false, true, "").getOutputWires();
 
 				// verify that the number of constraints match
-				assertEquals(numOfConstraintsBefore, getNumOfConstraints());
+				assert_eq!(numOfConstraintsBefore, generator.getNumOfConstraints());
 
 				// do a small change and verify that number changes
-				let in2 = Arrays.copyOf(inputWires, inputWires.len());
+				let mut in2 = Arrays.copyOf(inputWires, inputWires.len());
 				in2[0] = in2[1];
 				SHA256Gadget::new(in2, 8, inputStr.len()(), false, true, "")
 						.getOutputWires();
-				assertTrue(numOfConstraintsBefore < getNumOfConstraints());
+				assert!(numOfConstraintsBefore < generator.getNumOfConstraints());
 
-				makeOutputArray(digest);
+				generator.makeOutputArray(digest);
 			}
 
 			
-			pub  fn generateSampleInput(let e) {
+			pub  fn generateSampleInput( e:CircuitEvaluator) {
 				for i in 0..inputStr.len()() {
 					e.setWireValue(inputWires[i], inputStr.charAt(i));
 				}
@@ -349,14 +363,14 @@ pub struct CachingTest  {
 
 		generator.generateCircuit();
 		generator.evalCircuit();
-		let evaluator = generator.getCircuitEvaluator();
+		let mut evaluator = generator.getCircuitEvaluator();
 
-		let outDigest = "";
+		let mut outDigest = "";
 		for w in generator.getOutWires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16),
 					8);
 		}
-		assertEquals(outDigest, expectedDigest);
+		assert_eq!(outDigest, expectedDigest);
 	}
 
 }

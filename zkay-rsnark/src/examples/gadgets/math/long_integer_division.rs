@@ -70,7 +70,7 @@ impl LongIntegerDivision {
         b: LongElement,
         bMinBitwidth: i32,
         restrictRange: bool,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
         buildCircuit();

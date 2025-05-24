@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
 use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
@@ -19,12 +20,12 @@ pub fn new_assert(
     w1: WireType,
     w2: WireType,
     output: WireType,
-    desc: Vec<String>,
+    desc: String,
 ) -> Op<AssertBasicOp> {
     Op::<AssertBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-        desc: desc.get(0).map_or_else(|| String::new(), |d| d.clone()),
+       desc,
         t: AssertBasicOp,
     }
 }

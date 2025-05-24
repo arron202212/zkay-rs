@@ -32,18 +32,19 @@ impl CircuitGenerator for SHA2CircuitGenerator {
         */
     }
 
-    pub fn generateSampleInput(evaluator: CircuitEvaluator) {
+     fn generateSampleInput(evaluator: CircuitEvaluator) {
         let inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
         for i in 0..inputWires.len() {
             evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
         }
     }
 
-    pub fn main(args: Vec<String>) {
+  
+}
+  pub fn main(args: Vec<String>) {
         let generator = SHA2CircuitGenerator::new("sha_256");
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();
         generator.runLibsnark();
     }
-}

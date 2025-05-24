@@ -57,7 +57,7 @@ pub trait CryptoBackendConfig {
         plain: TypedWire,
         key: String,
         random: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Gadget;
 
     fn createDecryptionGadget(
@@ -66,7 +66,7 @@ pub trait CryptoBackendConfig {
         cipher: Vec<Option<WireType>>,
         pkName: String,
         sk: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Gadget;
 }
 
@@ -105,7 +105,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         cipher: Vec<Option<WireType>>,
         pkey: String,
         skey: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
@@ -207,7 +207,7 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
         cipher: Vec<Option<WireType>>,
         pkey: String,
         skey: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }

@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
@@ -18,12 +19,16 @@ impl setBitsConfig for LinearCombinationWire {}
 impl LinearCombinationWire {
     pub fn new(wireId: i32) -> Self {
         // super(wireId);
-        Self { bitWires: RcCell::new(None) }
+        Self {
+            bitWires: RcCell::new(None),
+        }
     }
 
-    pub  fn newa( bits:WireArray) -> Self  {
-    	// super(bits);
-        Self { bitWires: RcCell::new(Some(bits))}
+    pub fn newa(bits: WireArray) -> Self {
+        // super(bits);
+        Self {
+            bitWires: RcCell::new(Some(bits)),
+        }
     }
 
     fn getBitWires(&self) -> Option<WireArray> {

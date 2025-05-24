@@ -64,7 +64,7 @@ impl AES128CipherGadget {
      *            expandKey() to get it
      */
 
-    pub fn new(inputs: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: Vec<String>) -> Self {
+    pub fn new(inputs: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: &String) -> Self {
         super(desc);
         assert!(
             inputs.len() == 4 * nb && expandedKey.len() == 4 * nb * (nr + 1),

@@ -16,11 +16,11 @@ use std::ops::{Add, BitXor, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct XorBasicOp;
 
-pub fn new_xor(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<XorBasicOp> {
+pub fn new_xor(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<XorBasicOp> {
     Op::<XorBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: XorBasicOp,
     }
 }

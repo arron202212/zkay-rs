@@ -7,7 +7,7 @@ pub struct DotProductGadget {
     output: WireType,
 }
 impl DotProductGadget {
-    pub fn new(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>, desc: Vec<String>) -> Self {
+    pub fn new(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>, desc: &String) -> Self {
         super(desc);
         assert!(a.len() == b.len());
         self.a = a;

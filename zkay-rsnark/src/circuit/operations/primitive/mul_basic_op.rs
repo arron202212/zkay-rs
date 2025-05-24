@@ -16,11 +16,11 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct MulBasicOp;
-pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<MulBasicOp> {
+pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<MulBasicOp> {
     Op::<MulBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: MulBasicOp,
     }
 }

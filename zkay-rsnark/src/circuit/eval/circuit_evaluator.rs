@@ -14,8 +14,8 @@ use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
-use rccell::RcCell;
 use num_bigint::Sign;
+use rccell::RcCell;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
@@ -34,7 +34,9 @@ impl CircuitEvaluator {
         let mut valueAssignment = vec![None; circuitGenerator.getNumWires() as usize];
         valueAssignment[circuitGenerator.getOneWire().unwrap().getWireId() as usize] =
             Some(Util::one());
-        Self { valueAssignment:RcCell::new(valueAssignment) }
+        Self {
+            valueAssignment: RcCell::new(valueAssignment),
+        }
     }
 
     pub fn setWireValue(&self, w: WireType, v: BigInteger) {
@@ -74,7 +76,11 @@ impl CircuitEvaluator {
     }
 
     pub fn getWireValuei(&self, e: LongElement, bitwidthPerChunk: i32) -> BigInteger {
-        Util::combine(self.valueAssignment.borrow().clone(), e.getArray(), bitwidthPerChunk)
+        Util::combine(
+            self.valueAssignment.borrow().clone(),
+            e.getArray(),
+            bitwidthPerChunk,
+        )
     }
 
     pub fn setWireValuebi(&self, e: LongElement, value: BigInteger, bitwidthPerChunk: i32) {
@@ -138,7 +144,7 @@ impl CircuitEvaluator {
                     || e.wire_label().as_ref().unwrap().getType() == LabelType::nizkinput)
             {
                 let id = e.wire_label().as_ref().unwrap().getWire().getWireId();
-                write!(
+                let _=write!(
                     printWriter,
                     "{} {:x}",
                     id.to_string(),
@@ -280,8 +286,9 @@ impl CircuitEvaluator {
                     assignment[outs[0] as usize] = Some(sum);
                 } else if line.starts_with("const-mul-neg-") {
                     let constantStr = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
-                    let constant =
-                        prime.clone().sub(BigInteger::parse_bytes(constantStr.as_bytes(), 16).unwrap());
+                    let constant = prime
+                        .clone()
+                        .sub(BigInteger::parse_bytes(constantStr.as_bytes(), 16).unwrap());
                     assignment[outs[0] as usize] = Some(
                         assignment[ins[0] as usize]
                             .clone()
@@ -311,9 +318,9 @@ impl CircuitEvaluator {
             }
         }
 
-        let mut printWriter = File::create(inFilePath.clone()+ ".full.2").unwrap();
+        let mut printWriter = File::create(inFilePath.clone() + ".full.2").unwrap();
         for id in wiresToReport {
-            write!(
+            let _=write!(
                 printWriter,
                 "{id} {:x}",
                 assignment[id as usize].clone().unwrap()

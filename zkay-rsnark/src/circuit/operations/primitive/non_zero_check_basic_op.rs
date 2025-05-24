@@ -19,12 +19,12 @@ pub fn new_non_zero_check(
     w: WireType,
     out1: WireType,
     out2: WireType,
-    desc: Vec<String>,
+    desc: String,
 ) -> Op<NonZeroCheckBasicOp> {
     Op::<NonZeroCheckBasicOp> {
         inputs: vec![Some(w)],
         outputs: vec![Some(out1), Some(out2)],
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: NonZeroCheckBasicOp,
     }
 }

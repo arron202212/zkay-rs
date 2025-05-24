@@ -1,58 +1,78 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-
+ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire_type::WireType;
 
 // see notes in the end of the code.
-
+use std::fmt::Debug;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct FieldDivisionGadget {
     a: WireType,
     b: WireType,
     c: WireType,
 }
 impl FieldDivisionGadget {
-    pub fn new(a: WireType, b: WireType, desc: Vec<String>) -> Self {
-        super(desc);
-        self.a = a;
-        self.b = b;
+    fn  new(a: WireType, b: WireType, desc: &String) -> Self {
+        // super(desc);
+        let mut _self=Self{a,b,c:WireType::default()};
+         let generator=CircuitGenerator::getActiveCircuitGenerator().unwrap();
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
-        if a.instance_of(ConstantWire) && b.instance_of(ConstantWire) {
-            let aConst = a.getConstant();
-            let bInverseConst = b.getConstant().modInverse(Configs.get().unwrap().field_prime);
-            c = generator
-                .createConstantWire(aConst.mul(bInverseConst).rem(Configs.get().unwrap().field_prime.clone()));
+        if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
+            let aConst = _self.a.getConstant();
+            let bInverseConst = _self.b.getConstant().modinv(&Configs.get().unwrap().field_prime.clone()).unwrap();
+            _self.c = generator
+                .createConstantWire(aConst.mul(bInverseConst).rem(Configs.get().unwrap().field_prime.clone()),&String::new());
         } else {
-            c = generator.createProverWitnessWire(debugStr("division result"));
-            buildCircuit();
+            _self.c = generator.createProverWitnessWire(&_self.debugStr("division result".to_owned()));
+            _self.buildCircuit();
         }
+        _self
     }
-}
-impl Gadget for FieldDivisionGadget {
-    fn buildCircuit() {
+
+
+    fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-
+let generator=CircuitGenerator::getActiveCircuitGenerator().unwrap();
         generator.specifyProverWitnessComputation({
-            struct Prover;
+     #[derive(Hash, Clone, Debug)]
+            struct Prover{
+    a: WireType,
+    b: WireType,
+    c: WireType,
+}
             impl Instruction for Prover {
                 fn evaluate(&self,evaluator: CircuitEvaluator) {
-                    let aValue = evaluator.getWireValue(a);
-                    let bValue = evaluator.getWireValue(b);
+                    let aValue = evaluator.getWireValue(self.a.clone());
+                    let bValue = evaluator.getWireValue(self.b.clone());
                     let cValue = aValue
-                        .mul(bValue.modInverse(Configs.get().unwrap().field_prime))
+                        .mul(bValue.modinv(&Configs.get().unwrap().field_prime.clone()).unwrap())
                         .rem(Configs.get().unwrap().field_prime.clone());
-                    evaluator.setWireValue(c, cValue);
+                    evaluator.setWireValue(self.c.clone(), cValue);
                 }
             }
-            Prover
+            Box::new(Prover{
+ a: self.a.clone(),
+    b:  self.b.clone(),
+    c:  self.c.clone(),
+            })
         });
 
         // to handle the case where a or b can be both zero, see below
-        generator.addAssertion(b, c, a, debugStr("Assertion for division result"));
+        generator.addAssertion(self.b.clone(), self.c.clone(), self.a.clone(), &self.debugStr("Assertion for division result".to_owned()));
 
         /*
          * Few notes: 1) The order of the above two statements matters (the
@@ -75,8 +95,9 @@ impl Gadget for FieldDivisionGadget {
          * b*(invB) = 1;
          */
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![c];
+}
+impl GadgetConfig for FieldDivisionGadget {
+    fn  getOutputWires(&self) -> Vec<Option<WireType>> {
+        return vec![Some(self.c.clone())];
     }
 }

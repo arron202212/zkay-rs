@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
@@ -44,11 +45,11 @@ pub trait WireLabel {
     fn getType(&self) -> LabelType;
 }
 impl WireLabelInstruction {
-    pub fn new(label_type: LabelType, w: WireType, desc: Vec<String>) -> Self {
+    pub fn new(label_type: LabelType, w: WireType, desc: String) -> Self {
         Self {
             label_type,
             w,
-            desc: desc.get(0).unwrap_or(&String::new()).clone(),
+            desc,
         }
     }
 
@@ -61,10 +62,10 @@ impl WireLabelInstruction {
             "{} {}{}",
             self.label_type,
             self.w,
-            &(if self.desc.len() == 0 {
+            &(if self.desc.is_empty() {
                 self.desc.clone()
             } else {
-                "\t\t\t # ".to_owned() + &self.desc
+                format!("\t\t\t # {}", self.desc)
             })
         )
     }
@@ -86,10 +87,10 @@ impl Instruction for WireLabelInstruction {
                 "\t[ {} ] Value of WireType # {} {} :: {}",
                 self.label_type,
                 self.w,
-                &if self.desc.len() > 0 {
-                    " (".to_owned() + &self.desc + ")"
-                } else {
+                if self.desc.is_empty() {
                     self.desc.clone()
+                } else {
+                    format!(" ({}) ", self.desc)
                 },
                 if Configs.get().unwrap().hex_output_enabled {
                     format!("{:x}", evaluator.getWireValue(self.w.clone()))

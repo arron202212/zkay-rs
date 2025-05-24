@@ -9,7 +9,7 @@ use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use rand::Rng;
 use std::collections::HashMap;
-use std::ops::{Add, Rem, Shl,Sub,Mul,Shr,BitAnd};
+use std::ops::{Add, BitAnd, Mul, Rem, Shl, Shr, Sub};
 // use rand::distr::{Distribution, StandardUniform};
 use num_bigint::{BigInt, RandBigInt, RandomBits, Sign, ToBigInt};
 use num_traits::{One, sign::Signed};
@@ -55,7 +55,12 @@ impl Util {
             if table[blocks[i].as_ref().unwrap().getWireId() as usize] == None {
                 continue;
             }
-            sum = sum.add(table[blocks[i].as_ref().unwrap().getWireId() as usize].as_ref().unwrap().shl(bitwidth as usize * i));
+            sum = sum.add(
+                table[blocks[i].as_ref().unwrap().getWireId() as usize]
+                    .as_ref()
+                    .unwrap()
+                    .shl(bitwidth as usize * i),
+            );
         }
         return sum;
     }
@@ -95,7 +100,11 @@ impl Util {
     pub fn concata(w: WireType, a: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let mut all = vec![None; 1 + a.len()];
         for i in 0..all.len() {
-            all[i] = if i < 1 { Some(w.clone()) } else { a[i - 1].clone() };
+            all[i] = if i < 1 {
+                Some(w.clone())
+            } else {
+                a[i - 1].clone()
+            };
         }
         return all;
     }
@@ -127,7 +136,7 @@ impl Util {
     pub fn nextRandomBigInteger(&self, n: BigInteger) -> BigInteger {
         let rand = RandomBits::new(n.bits());
         let mut result = rand.sample(&mut rand::thread_rng());
-        while result>=n {
+        while result >= n {
             result = rand.sample(&mut rand::thread_rng());
         }
         return result;
@@ -145,12 +154,8 @@ impl Util {
         return RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
     }
 
-    pub fn getDesc(desc: Vec<String>) -> String {
-        if desc.len() == 0 {
-            return "".to_owned();
-        } else {
-            return desc[0].clone();
-        }
+    pub fn getDesc(desc: &String) -> String {
+        desc.clone()
     }
 
     pub fn parseSequenceLists(s: String) -> Vec<i32> {
@@ -218,7 +223,8 @@ impl Util {
         let mut maxValueCache = HashMap::new();
         return maxValueCache
             .entry(numBits)
-            .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one())).clone();
+            .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()))
+            .clone();
     }
 
     pub fn computeBound(numBits: i32) -> BigInteger {

@@ -15,11 +15,11 @@ use std::ops::BitOr;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct ORBasicOp;
 
-pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: Vec<String>) -> Op<ORBasicOp> {
+pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<ORBasicOp> {
     Op::<ORBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: ORBasicOp,
     }
 }

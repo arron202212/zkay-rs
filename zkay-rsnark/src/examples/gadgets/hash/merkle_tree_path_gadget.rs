@@ -26,7 +26,7 @@ impl MerkleTreePathGadget {
         intermediateHasheWires: Vec<Option<WireType>>,
         leafWordBitWidth: i32,
         treeHeight: i32,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
         self.directionSelectorWire = directionSelectorWire;

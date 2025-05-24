@@ -110,7 +110,7 @@ impl ECDHKeyExchangeGadget {
      *
      */
 
-    pub fn new(baseX: WireType, hX: WireType, secretBits: Vec<Option<WireType>>, desc: Vec<String>) {
+    pub fn new(baseX: WireType, hX: WireType, secretBits: Vec<Option<WireType>>, desc: &String) {
         super(desc);
         self.secretBits = secretBits;
         self.basePoint = AffinePoint::new(baseX);
@@ -129,7 +129,7 @@ impl Gadget for ECDHKeyExchangeGadget {
         hX: WireType,
         hY: WireType,
         secretBits: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
 

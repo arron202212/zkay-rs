@@ -18,7 +18,7 @@ pub struct ModGadget {
     bitwidth: i32, // bitwidth for both a, b
 }
 impl ModGadget {
-    pub fn new(a: WireType, b: WireType, bitwidth: i32, desc: Vec<String>) -> Self {
+    pub fn new(a: WireType, b: WireType, bitwidth: i32, desc: &String) -> Self {
         super(desc);
         self.a = a;
         self.b = b;

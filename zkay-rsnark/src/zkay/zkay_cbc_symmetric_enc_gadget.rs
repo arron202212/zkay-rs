@@ -34,7 +34,7 @@ impl ZkayCBCSymmetricEncGadget {
         key: WireType,
         iv: WireType,
         cipherType: CipherType,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         // super(desc);
         let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());

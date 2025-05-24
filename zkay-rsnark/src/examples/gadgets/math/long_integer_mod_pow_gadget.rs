@@ -21,7 +21,7 @@ impl LongIntegerModPowGadget {
         e: LongElement,
         m: LongElement,
         mMinBitLength: i32,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         this(b, e, -1, m, mMinBitLength, desc);
     }
@@ -32,7 +32,7 @@ impl LongIntegerModPowGadget {
         eMaxBits: i32,
         m: LongElement,
         mMinBits: i32,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
         super(desc);
         self.b = b;

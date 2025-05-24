@@ -16,11 +16,11 @@ use std::ops::{Add, Mul, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct AddBasicOp;
 
-pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: Vec<String>) -> Op<AddBasicOp> {
+pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<AddBasicOp> {
     Op::<AddBasicOp> {
         inputs: ws,
         outputs: vec![Some(output)],
-        desc: desc.get(0).map_or_else(|| String::new(), |d| d.clone()),
+       desc,
         t: AddBasicOp,
     }
 }

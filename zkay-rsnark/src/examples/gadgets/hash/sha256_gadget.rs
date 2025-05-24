@@ -1,15 +1,28 @@
-use crate::circuit::operations::gadget;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_array::WireArray;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire::WireConfig;
 use crate::util::util::{Util,BigInteger};
-
+use std::fmt::Debug;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SHA256Gadget {
     unpaddedInputs: Vec<Option<WireType>>,
 
-    bitwidthPerInputElement: i32,
-    totalLengthInBytes: i32,
+    bitWidthPerInputElement: usize,
+    totalLengthInBytes: usize,
 
-    numBlocks: i32,
+    numBlocks: usize,
     binaryOutput: bool,
     paddingRequired: bool,
 
@@ -17,92 +30,92 @@ pub struct SHA256Gadget {
     output: Vec<Option<WireType>>,
 }
 impl SHA256Gadget {
-    const H: Vec<i64> = vec![
-        0x6a09e667L,
-        0xbb67ae85L,
-        0x3c6ef372L,
-        0xa54ff53aL,
-        0x510e527fL,
-        0x9b05688cL,
-        0x1f83d9abL,
-        0x5be0cd19L,
+    const H: [i64;8]= [
+        0x6a09e667,
+        0xbb67ae85,
+        0x3c6ef372,
+        0xa54ff53a,
+        0x510e527f,
+        0x9b05688c,
+        0x1f83d9ab,
+        0x5be0cd19,
     ];
 
-    const K: Vec<i64> = vec![
-        0x428a2f98L,
-        0x71374491L,
-        0xb5c0fbcfL,
-        0xe9b5dba5L,
-        0x3956c25bL,
-        0x59f111f1L,
-        0x923f82a4L,
-        0xab1c5ed5L,
-        0xd807aa98L,
-        0x12835b01L,
-        0x243185beL,
-        0x550c7dc3L,
-        0x72be5d74L,
-        0x80deb1feL,
-        0x9bdc06a7L,
-        0xc19bf174L,
-        0xe49b69c1L,
-        0xefbe4786L,
-        0x0fc19dc6L,
-        0x240ca1ccL,
-        0x2de92c6fL,
-        0x4a7484aaL,
-        0x5cb0a9dcL,
-        0x76f988daL,
-        0x983e5152L,
-        0xa831c66dL,
-        0xb00327c8L,
-        0xbf597fc7L,
-        0xc6e00bf3L,
-        0xd5a79147L,
-        0x06ca6351L,
-        0x14292967L,
-        0x27b70a85L,
-        0x2e1b2138L,
-        0x4d2c6dfcL,
-        0x53380d13L,
-        0x650a7354L,
-        0x766a0abbL,
-        0x81c2c92eL,
-        0x92722c85L,
-        0xa2bfe8a1L,
-        0xa81a664bL,
-        0xc24b8b70L,
-        0xc76c51a3L,
-        0xd192e819L,
-        0xd6990624L,
-        0xf40e3585L,
-        0x106aa070L,
-        0x19a4c116L,
-        0x1e376c08L,
-        0x2748774cL,
-        0x34b0bcb5L,
-        0x391c0cb3L,
-        0x4ed8aa4aL,
-        0x5b9cca4fL,
-        0x682e6ff3L,
-        0x748f82eeL,
-        0x78a5636fL,
-        0x84c87814L,
-        0x8cc70208L,
-        0x90befffaL,
-        0xa4506cebL,
-        0xbef9a3f7L,
-        0xc67178f2L,
+    const K:[i64;64]  = [
+        0x428a2f98,
+        0x71374491,
+        0xb5c0fbcf,
+        0xe9b5dba5,
+        0x3956c25b,
+        0x59f111f1,
+        0x923f82a4,
+        0xab1c5ed5,
+        0xd807aa98,
+        0x12835b01,
+        0x243185be,
+        0x550c7dc3,
+        0x72be5d74,
+        0x80deb1fe,
+        0x9bdc06a7,
+        0xc19bf174,
+        0xe49b69c1,
+        0xefbe4786,
+        0x0fc19dc6,
+        0x240ca1cc,
+        0x2de92c6f,
+        0x4a7484aa,
+        0x5cb0a9dc,
+        0x76f988da,
+        0x983e5152,
+        0xa831c66d,
+        0xb00327c8,
+        0xbf597fc7,
+        0xc6e00bf3,
+        0xd5a79147,
+        0x06ca6351,
+        0x14292967,
+        0x27b70a85,
+        0x2e1b2138,
+        0x4d2c6dfc,
+        0x53380d13,
+        0x650a7354,
+        0x766a0abb,
+        0x81c2c92e,
+        0x92722c85,
+        0xa2bfe8a1,
+        0xa81a664b,
+        0xc24b8b70,
+        0xc76c51a3,
+        0xd192e819,
+        0xd6990624,
+        0xf40e3585,
+        0x106aa070,
+        0x19a4c116,
+        0x1e376c08,
+        0x2748774c,
+        0x34b0bcb5,
+        0x391c0cb3,
+        0x4ed8aa4a,
+        0x5b9cca4f,
+        0x682e6ff3,
+        0x748f82ee,
+        0x78a5636f,
+        0x84c87814,
+        0x8cc70208,
+        0x90befffa,
+        0xa4506ceb,
+        0xbef9a3f7,
+        0xc67178f2,
     ];
     pub fn new(
         ins: Vec<Option<WireType>>,
-        bitWidthPerInputElement: i32,
-        totalLengthInBytes: i32,
+        bitWidthPerInputElement: usize,
+        totalLengthInBytes: usize,
         binaryOutput: bool,
         paddingRequired: bool,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Self {
-        super(desc);
+        // super(desc);
         assert!(
             totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
                 && totalLengthInBytes * 8 >= (ins.len() - 1) * bitWidthPerInputElement,
@@ -115,211 +128,222 @@ impl SHA256Gadget {
                 || ins.len() * bitWidthPerInputElement == totalLengthInBytes,
             "When padding is not forced, totalLengthInBytes % 64 must be zero."
         );
-
-        self.unpaddedInputs = ins;
-        self.bitwidthPerInputElement = bitWidthPerInputElement;
-        self.totalLengthInBytes = totalLengthInBytes;
-        self.binaryOutput = binaryOutput;
-        self.paddingRequired = paddingRequired;
-
-        buildCircuit();
+       
+      let mut _self= Self{ unpaddedInputs : ins,
+        bitWidthPerInputElement ,
+        totalLengthInBytes ,
+            numBlocks:0,
+        binaryOutput ,
+        paddingRequired,
+            preparedInputBits:vec![],
+            output:vec![],
+        };
+        _self.buildCircuit();
+        _self
     }
-}
-impl Gadget for SHA256Gadget {
-    fn buildCircuit() {
-        // pad if needed
-        prepare();
 
-        let outDigest = vec![None; 8];
-        let hWires = vec![None; H.len()];
-        for i in 0..H.len() {
-            hWires[i] = generator.createConstantWire(H[i]);
+    fn buildCircuit(&mut self) {
+        let generator=CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        // pad if needed
+       self.prepare();
+        
+        let mut outDigest = vec![None; 8];
+        let mut hWires = vec![None; Self::H.len()];
+        for i in 0..Self::H.len() {
+            hWires[i] = Some(generator.createConstantWirei(Self::H[i],&String::new()));
         }
 
-        for blockNum in 0..numBlocks {
+        for blockNum in 0..self.numBlocks {
             let mut wsSplitted = vec![vec![]; 64];
             let mut w = vec![None; 64];
 
             for i in 0..64 {
                 if i < 16 {
-                    wsSplitted[i] = Util::reverseBytes(Arrays.copyOfRange(
-                        preparedInputBits,
-                        blockNum * 512 + i * 32,
-                        blockNum * 512 + (i + 1) * 32,
-                    ));
+                    wsSplitted[i] = Util::reverseBytes(
+                        self.preparedInputBits[
+                        blockNum * 512 + i * 32..
+                        blockNum * 512 + (i + 1) * 32].to_vec()
+                    );
 
-                    w[i] = WireArray::new(wsSplitted[i]).packAsBits(32);
+                    w[i] = Some(WireArray::new(wsSplitted[i].clone()).packAsBitsi(32,&String::new()));
                 } else {
-                    let t1 = w[i - 15].rotateRight(32, 7);
-                    let t2 = w[i - 15].rotateRight(32, 18);
-                    let t3 = w[i - 15].shiftRight(32, 3);
-                    let s0 = t1.xorBitwise(t2, 32);
-                    s0 = s0.xorBitwise(t3, 32);
+                    let t1 = w[i - 15].as_ref().unwrap().rotateRight(32, 7,&String::new());
+                    let t2 = w[i - 15].as_ref().unwrap().rotateRight(32, 18,&String::new());
+                    let t3 = w[i - 15].as_ref().unwrap().shiftRight(32, 3,&String::new());
+                    let mut s0 = t1.xorBitwise(t2, 32,&String::new());
+                    s0 = s0.xorBitwise(t3, 32,&String::new());
 
-                    let t4 = w[i - 2].rotateRight(32, 17);
-                    let t5 = w[i - 2].rotateRight(32, 19);
-                    let t6 = w[i - 2].shiftRight(32, 10);
-                    let s1 = t4.xorBitwise(t5, 32);
-                    s1 = s1.xorBitwise(t6, 32);
+                    let t4 = w[i - 2].as_ref().unwrap().rotateRight(32, 17,&String::new());
+                    let t5 = w[i - 2].as_ref().unwrap().rotateRight(32, 19,&String::new());
+                    let t6 = w[i - 2].as_ref().unwrap().shiftRight(32, 10,&String::new());
+                    let mut s1 = t4.xorBitwise(t5, 32,&String::new());
+                    s1 = s1.xorBitwise(t6, 32,&String::new());
 
-                    w[i] = w[i - 16].add(w[i - 7]);
-                    w[i] = w[i].add(s0).add(s1);
-                    w[i] = w[i].trimBits(34, 32);
+                    w[i] = w[i - 16].as_ref().map(|x|x.clone().add(w[i - 7].clone().unwrap()));
+                    w[i] = w[i].as_ref().map(|x|x.clone().add(s0).add(s1));
+                    w[i] = w[i].as_ref().map(|x|x.clone().trimBits(34, 32,&String::new()));
                 }
             }
 
-            let a = hWires[0];
-            let b = hWires[1];
-            let c = hWires[2];
-            let d = hWires[3];
-            let e = hWires[4];
-            let f = hWires[5];
-            let g = hWires[6];
-            let h = hWires[7];
+            let mut a = hWires[0].clone().unwrap();
+            let mut b = hWires[1].clone().unwrap();
+            let mut c = hWires[2].clone().unwrap();
+            let mut d = hWires[3].clone().unwrap();
+            let mut e = hWires[4].clone().unwrap();
+            let mut f = hWires[5].clone().unwrap();
+            let mut g = hWires[6].clone().unwrap();
+            let mut h = hWires[7].clone().unwrap();
 
             for i in 0..64 {
-                let t1 = e.rotateRight(32, 6);
-                let t2 = e.rotateRight(32, 11);
-                let t3 = e.rotateRight(32, 25);
-                let s1 = t1.xorBitwise(t2, 32);
-                s1 = s1.xorBitwise(t3, 32);
+                let t1 = e.rotateRight(32, 6,&String::new());
+                let t2 = e.rotateRight(32, 11,&String::new());
+                let t3 = e.rotateRight(32, 25,&String::new());
+                let mut s1 = t1.xorBitwise(t2, 32,&String::new());
+                s1 = s1.xorBitwise(t3, 32,&String::new());
 
-                let ch = computeCh(e, f, g, 32);
+                let ch = Self::computeCh(e.clone(), f.clone(), g.clone(), 32);
 
-                let t4 = a.rotateRight(32, 2);
-                let t5 = a.rotateRight(32, 13);
-                let t6 = a.rotateRight(32, 22);
-                let s0 = t4.xorBitwise(t5, 32);
-                s0 = s0.xorBitwise(t6, 32);
+                let t4 = a.rotateRight(32, 2,&String::new());
+                let t5 = a.rotateRight(32, 13,&String::new());
+                let t6 = a.rotateRight(32, 22,&String::new());
+                let mut s0 = t4.xorBitwise(t5, 32,&String::new());
+                s0 = s0.xorBitwise(t6, 32,&String::new());
 
                 let mut maj;
                 // since after each iteration, SHA256 does c = b; and b = a;, we can make use of that to save multiplications in maj computation.
                 // To do this, we make use of the caching feature, by just changing the order of wires sent to maj(). Caching will take care of the rest.
                 if i % 2 == 1 {
-                    maj = computeMaj(c, b, a, 32);
+                    maj = Self::computeMaj(c.clone(), b.clone(), a.clone(), 32);
                 } else {
-                    maj = computeMaj(a, b, c, 32);
+                    maj = Self::computeMaj(a.clone(), b.clone(), c.clone(), 32);
                 }
 
-                let temp1 = w[i].add(K[i]).add(s1).add(h).add(ch);
+                let temp1 = w[i].clone().unwrap().addi(Self::K[i],&String::new()).add(s1).add(h.clone()).add(ch);
 
                 let temp2 = maj.add(s0);
 
                 h = g;
                 g = f;
                 f = e;
-                e = temp1.add(d);
-                e = e.trimBits(35, 32);
+                e = temp1.clone().add(d);
+                e = e.trimBits(35, 32,&String::new());
 
                 d = c;
                 c = b;
                 b = a;
                 a = temp2.add(temp1);
-                a = a.trimBits(35, 32);
+                a = a.trimBits(35, 32,&String::new());
             }
 
-            hWires[0] = hWires[0].add(a).trimBits(33, 32);
-            hWires[1] = hWires[1].add(b).trimBits(33, 32);
-            hWires[2] = hWires[2].add(c).trimBits(33, 32);
-            hWires[3] = hWires[3].add(d).trimBits(33, 32);
-            hWires[4] = hWires[4].add(e).trimBits(33, 32);
-            hWires[5] = hWires[5].add(f).trimBits(33, 32);
-            hWires[6] = hWires[6].add(g).trimBits(33, 32);
-            hWires[7] = hWires[7].add(h).trimBits(33, 32);
+            hWires[0] = hWires[0].clone().map(|x|x.add(a.clone()).trimBits(33, 32,&String::new()));
+            hWires[1] = hWires[1].clone().map(|x|x.add(b.clone()).trimBits(33, 32,&String::new()));
+            hWires[2] = hWires[2].clone().map(|x|x.add(c.clone()).trimBits(33, 32,&String::new()));
+            hWires[3] = hWires[3].clone().map(|x|x.add(d.clone()).trimBits(33, 32,&String::new()));
+            hWires[4] = hWires[4].clone().map(|x|x.add(e.clone()).trimBits(33, 32,&String::new()));
+            hWires[5] = hWires[5].clone().map(|x|x.add(f.clone()).trimBits(33, 32,&String::new()));
+            hWires[6] = hWires[6].clone().map(|x|x.add(g.clone()).trimBits(33, 32,&String::new()));
+            hWires[7] = hWires[7].clone().map(|x|x.add(h.clone()).trimBits(33, 32,&String::new()));
         }
 
-        outDigest[0] = hWires[0];
-        outDigest[1] = hWires[1];
-        outDigest[2] = hWires[2];
-        outDigest[3] = hWires[3];
-        outDigest[4] = hWires[4];
-        outDigest[5] = hWires[5];
-        outDigest[6] = hWires[6];
-        outDigest[7] = hWires[7];
+        outDigest[0] = hWires[0].clone();
+        outDigest[1] = hWires[1].clone();
+        outDigest[2] = hWires[2].clone();
+        outDigest[3] = hWires[3].clone();
+        outDigest[4] = hWires[4].clone();
+        outDigest[5] = hWires[5].clone();
+        outDigest[6] = hWires[6].clone();
+        outDigest[7] = hWires[7].clone();
 
-        if !binaryOutput {
-            output = outDigest;
-        } else {
-            output = vec![None; 8 * 32];
+        if !self.binaryOutput {
+            self.output=outDigest;
+            return
+        } 
+           self.output = vec![None; 8 * 32];
             for i in 0..8 {
-                let bits = outDigest[i].getBitWires(32).asArray();
+                let bits = outDigest[i].as_ref().unwrap().getBitWiresi(32,&String::new()).asArray();
                 for j in 0..32 {
-                    output[j + i * 32] = bits[j];
+                    self.output[j + i * 32] = bits[j].clone();
                 }
             }
-        }
+       
+        
     }
 
-    fn computeMaj(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
-        let result = vec![None; numBits];
-        let aBits = a.getBitWires(numBits).asArray();
-        let bBits = b.getBitWires(numBits).asArray();
-        let cBits = c.getBitWires(numBits).asArray();
+    fn computeMaj(a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
+        let mut result = vec![None; numBits];
+        let aBits = a.getBitWiresi(numBits as u64,&String::new()).asArray();
+        let bBits = b.getBitWiresi(numBits as u64,&String::new()).asArray();
+        let cBits = c.getBitWiresi(numBits as u64,&String::new()).asArray();
 
         for i in 0..numBits {
-            let t1 = aBits[i].mul(bBits[i]);
-            let t2 = aBits[i].add(bBits[i]).add(t1.mul(-2));
-            result[i] = t1.add(cBits[i].mul(t2));
+            let t1 = aBits[i].clone().unwrap().mul(bBits[i].clone().unwrap());
+            let t2 = aBits[i].clone().unwrap().add(bBits[i].clone().unwrap()).add(t1.muli(-2,&String::new()));
+            result[i] = Some(t1.add(cBits[i].clone().unwrap().mul(t2)));
         }
-        return WireArray::new(result).packAsBits();
+        return WireArray::new(result).packAsBits(&String::new());
     }
 
-    fn computeCh(a: WireType, b: WireType, c: WireType, numBits: i32) -> WireType {
-        let result = vec![None; numBits];
+    fn computeCh(a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
+        let mut result = vec![None; numBits];
 
-        let aBits = a.getBitWires(numBits).asArray();
-        let bBits = b.getBitWires(numBits).asArray();
-        let cBits = c.getBitWires(numBits).asArray();
+        let aBits = a.getBitWiresi(numBits as u64,&String::new()).asArray();
+        let bBits = b.getBitWiresi(numBits as u64,&String::new()).asArray();
+        let cBits = c.getBitWiresi(numBits as u64,&String::new()).asArray();
 
         for i in 0..numBits {
-            let t1 = bBits[i].sub(cBits[i]);
-            let t2 = t1.mul(aBits[i]);
-            result[i] = t2.add(cBits[i]);
+            let t1 = bBits[i].clone().unwrap().sub(cBits[i].clone().unwrap());
+            let t2 = t1.mul(aBits[i].clone().unwrap());
+            result[i] = Some(t2.add(cBits[i].clone().unwrap()));
         }
-        return WireArray::new(result).packAsBits();
+        return WireArray::new(result).packAsBits(&String::new());
     }
 
-    fn prepare() {
-        numBlocks = (totalLengthInBytes * 1.0 / 64).ceil() as i32;
-        let bits = WireArray::new(unpaddedInputs)
-            .getBits(bitwidthPerInputElement)
+    fn prepare(&mut self) {
+        let generator=CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        self.numBlocks = (self.totalLengthInBytes as f64* 1.0 / 64.0).ceil() as usize;
+        let bits = WireArray::new(self.unpaddedInputs.clone())
+            .getBits(self.bitWidthPerInputElement,&String::new())
             .asArray();
-        let tailLength = totalLengthInBytes % 64;
-        if paddingRequired {
+        let tailLength = self.totalLengthInBytes % 64;
+        if self.paddingRequired {
             let mut pad;
-            if (64 - tailLength >= 9) {
+            if 64 - tailLength >= 9 {
                 pad = vec![None; 64 - tailLength];
             } else {
                 pad = vec![None; 128 - tailLength];
             }
-            numBlocks = (totalLengthInBytes + pad.len()) / 64;
-            pad[0] = generator.createConstantWire(0x80);
+            self.numBlocks = (self.totalLengthInBytes + pad.len()) / 64;
+            pad[0] = Some(generator.createConstantWirei(0x80,&String::new()));
             for i in 1..pad.len() - 8 {
                 pad[i] = generator.getZeroWire();
             }
-            let lengthInBits = totalLengthInBytes * 8;
-            let lengthBits = vec![None; 64];
+            let lengthInBits = self.totalLengthInBytes * 8;
+            let mut lengthBits = vec![None; 64];
+            let pn=pad.len() ;
             for i in 0..8 {
-                pad[pad.len() - 1 - i] =
-                    generator.createConstantWire((lengthInBits >> (8 * i)) & 0xFFL);
-                let tmp = pad[pad.len() - 1 - i].getBitWires(8).asArray();
+                pad[pn - 1 - i] =
+                    Some(generator.createConstantWirei(((lengthInBits >> (8 * i)) & 0xFF) as i64,&String::new()));
+                let tmp = pad[pn - 1 - i].as_ref().unwrap().getBitWiresi(8,&String::new()).asArray();
                 lengthBits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }
-            let totalNumberOfBits = numBlocks * 512;
-            preparedInputBits = vec![generator.getZeroWire(); totalNumberOfBits];
-            preparedInputBits[..totalLengthInBytes * 8].clone_from_slice(&bits);
-            preparedInputBits[totalLengthInBytes * 8 + 7] = generator.getOneWire();
-            preparedInputBits[preparedInputBits.len() - 64..].clone_from_slice(&lengthBits);
+            let totalNumberOfBits = self.numBlocks * 512;
+            self.preparedInputBits = vec![generator.getZeroWire(); totalNumberOfBits];
+            self.preparedInputBits[..self.totalLengthInBytes * 8].clone_from_slice(&bits);
+            self.preparedInputBits[self.totalLengthInBytes * 8 + 7] = generator.getOneWire();
+            let n=self.preparedInputBits.len();
+            self.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
         } else {
-            preparedInputBits = bits;
+            self.preparedInputBits = bits;
         }
+        
     }
-
+}
+impl GadgetConfig for SHA256Gadget {
     /**
      * outputs digest as 32-bit words
      */
 
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return output;
+     fn getOutputWires(&self) -> Vec<Option<WireType>> {
+        return self.output.clone();
     }
 }

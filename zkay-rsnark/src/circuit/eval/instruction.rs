@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::wire_label_instruction::WireLabel;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;

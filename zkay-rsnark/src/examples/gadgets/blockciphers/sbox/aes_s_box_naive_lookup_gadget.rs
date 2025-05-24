@@ -8,7 +8,7 @@ pub struct AESSBoxNaiveLookupGadget {
 }
 impl AESSBoxNaiveLookupGadget {
     const SBox: Vec<i32> = AES128CipherGadget.SBox;
-    pub fn new(input: WireType, desc: Vec<String>) -> Self {
+    pub fn new(input: WireType, desc: &String) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();

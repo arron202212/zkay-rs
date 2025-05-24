@@ -25,7 +25,7 @@ impl Asymmetric for RSABackend {
         plain: TypedWire,
         key: String,
         random: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
     ) -> Gadget {
         return ZkayRSAEncryptionGadget::new(
             plain,

@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
@@ -42,7 +43,7 @@ impl ConstantWire {
         return self.constant == Util::one() || self.constant == BigInteger::ZERO;
     }
 
-    pub fn mul(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn mul(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
             return self
                 .generator()
@@ -52,7 +53,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn mulb(&self, b: BigInteger, desc: Vec<String>) -> WireType {
+    pub fn mulb(&self, b: BigInteger, desc: &String) -> WireType {
         let sign = b.sign() == Sign::Minus;
         let newConstant = self
             .constant
@@ -60,7 +61,12 @@ impl ConstantWire {
             .mul(b.clone())
             .rem(Configs.get().unwrap().field_prime.clone());
 
-        let mut out:Option<WireType> = self.generator().knownConstantWires.borrow().get(&newConstant).cloned();
+        let mut out: Option<WireType> = self
+            .generator()
+            .knownConstantWires
+            .borrow()
+            .get(&newConstant)
+            .cloned();
         if let Some(out) = out {
             return out.clone();
         }
@@ -70,7 +76,9 @@ impl ConstantWire {
             if !sign {
                 newConstant.clone()
             } else {
-                newConstant.clone().sub(Configs.get().unwrap().field_prime.clone())
+                newConstant
+                    .clone()
+                    .sub(Configs.get().unwrap().field_prime.clone())
             },
         )));
 
@@ -79,7 +87,7 @@ impl ConstantWire {
             WireType::Constant(self.clone()),
             out.clone().unwrap(),
             b.clone(),
-            desc,
+            desc.clone(),
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
@@ -89,12 +97,13 @@ impl ConstantWire {
         }
 
         self.generator()
-            .knownConstantWires.borrow_mut()
+            .knownConstantWires
+            .borrow_mut()
             .insert(newConstant, out.clone().unwrap());
         out.clone().unwrap()
     }
 
-    pub fn checkNonZero(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn checkNonZero(&self, w: WireType, desc: &String) -> WireType {
         if self.constant == BigInteger::ZERO {
             return self.generator().zeroWire.borrow().clone().unwrap();
         } else {
@@ -102,7 +111,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn invAsBit(&self, desc: Vec<String>) -> WireType {
+    pub fn invAsBit(&self, desc: &String) -> WireType {
         assert!(self.isBinary(), "Trying to invert a non-binary constant!");
 
         if self.constant == BigInteger::ZERO {
@@ -112,7 +121,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn or(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn or(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -132,7 +141,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn xor(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn xor(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -152,7 +161,7 @@ impl ConstantWire {
         }
     }
 
-    pub fn getBitWires(&self, bitwidth: u64, desc: Vec<String>) -> WireArray {
+    pub fn getBitWires(&self, bitwidth: u64, desc: &String) -> WireArray {
         assert!(
             self.constant.bits() <= bitwidth,
             "Trying to split a constant of {} bits into  {bitwidth} bits",
@@ -169,9 +178,9 @@ impl ConstantWire {
         return WireArray::new(bits);
     }
 
-    pub fn restrictBitLength(&self, bitwidth: u64, desc: Vec<String>) {
+    pub fn restrictBitLength(&self, bitwidth: u64, desc: &String) {
         self.getBitWires(bitwidth, desc);
     }
 
-    fn pack(&self, desc: Vec<String>) {}
+    fn pack(&self, desc: &String) {}
 }

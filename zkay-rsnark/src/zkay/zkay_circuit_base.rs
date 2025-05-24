@@ -672,7 +672,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                     for i in fromBitWidth..toBitWidth {
                         newWs[i] = extendBit;
                     }
-                    newWire = WireArray::new(newWs).packAsBits(toBitWidth);
+                    newWire = WireArray::new(newWs).packAsBitsi(toBitWidth);
                 }
             }
         } else if fromBitWidth > toBitWidth {
@@ -1033,7 +1033,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: Vec<String>) {
+    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: &String) {
         if currentGuardCondition.isEmpty() {
             addEqualityAssertion(lhs, rhs, desc);
         } else {
@@ -1042,7 +1042,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedOneAssertion(val: WireType, desc: Vec<String>) {
+    fn addGuardedOneAssertion(val: WireType, desc: &String) {
         if currentGuardCondition.isEmpty() {
             addOneAssertion(val, desc);
         } else {

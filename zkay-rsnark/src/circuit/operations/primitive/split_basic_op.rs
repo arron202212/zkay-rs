@@ -16,11 +16,11 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SplitBasicOp;
-pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: Vec<String>) -> Op<SplitBasicOp> {
+pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
     Op::<SplitBasicOp> {
         inputs: vec![Some(w)],
         outputs: outs,
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: SplitBasicOp,
     }
 }

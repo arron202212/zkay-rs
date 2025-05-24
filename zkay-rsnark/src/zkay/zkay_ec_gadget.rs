@@ -27,7 +27,7 @@ pub struct AffinePoint {
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
 pub struct ZkayEcGadget;
 impl ZkayEcGadget {
-    pub fn new(desc: Vec<String>) {
+    pub fn new(desc: &String) {
         super(desc);
     }
 

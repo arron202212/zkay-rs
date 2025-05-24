@@ -25,7 +25,7 @@ pub fn new_const_mul(
     w: WireType,
     out: WireType,
     mut constInteger: BigInteger,
-    desc: Vec<String>,
+    desc: String,
 ) -> Op<ConstMulBasicOp> {
     let inSign = constInteger.sign() == Sign::Minus;
     if !inSign {
@@ -33,12 +33,17 @@ pub fn new_const_mul(
     } else {
         let mut _constInteger = constInteger.neg();
         _constInteger = Util::modulo(_constInteger, Configs.get().unwrap().field_prime.clone());
-        constInteger = Configs.get().unwrap().field_prime.clone().sub(_constInteger);
+        constInteger = Configs
+            .get()
+            .unwrap()
+            .field_prime
+            .clone()
+            .sub(_constInteger);
     }
     Op::<ConstMulBasicOp> {
         inputs: vec![Some(w)],
         outputs: vec![Some(out)],
-        desc: desc[0].clone(),
+       desc,
         t: ConstMulBasicOp {
             constInteger,
             inSign,
@@ -53,7 +58,12 @@ impl BasicOp for Op<ConstMulBasicOp> {
         } else {
             format!(
                 "const-mul-neg-{:x}",
-                Configs.get().unwrap().field_prime.clone().sub(self.t.constInteger.clone())
+                Configs
+                    .get()
+                    .unwrap()
+                    .field_prime
+                    .clone()
+                    .sub(self.t.constInteger.clone())
             )
         }
     }

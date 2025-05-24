@@ -21,7 +21,7 @@ pub struct LongIntegerModInverseGadget {
     inverse: LongElement,
 }
 impl LongIntegerModInverseGadget {
-    pub fn new(a: LongElement, m: LongElement, restrictRange: bool, desc: Vec<String>) -> Self {
+    pub fn new(a: LongElement, m: LongElement, restrictRange: bool, desc: &String) -> Self {
         super(desc);
         self.a = a;
         self.m = m;

@@ -21,7 +21,7 @@ pub struct ZkayECDHGadget {
     hTable: Vec<AffinePoint>,
 }
 impl ZkayECDHGadget {
-    pub fn new(hX: WireType, secretKey: WireType, validateSecret: bool, desc: Vec<String>) -> Self {
+    pub fn new(hX: WireType, secretKey: WireType, validateSecret: bool, desc: &String) -> Self {
         super(desc);
         self.secretBits = secretKey.getBitWires(SECRET_BITWIDTH).asArray();
         self.hPoint = AffinePoint::new(hX);

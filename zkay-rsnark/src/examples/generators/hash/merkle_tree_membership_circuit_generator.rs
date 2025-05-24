@@ -27,14 +27,14 @@ impl MerkleTreeMembershipCircuitGenerator {
 }
 impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
     fn buildCircuit() {
-        /** declare inputs **/
+        //  declare inputs 
         publicRootWires = createInputWireArray(hashDigestDimension, "Input Merkle Tree Root");
         intermediateHasheWires =
             createProverWitnessWireArray(hashDigestDimension * treeHeight, "Intermediate Hashes");
         directionSelector = createProverWitnessWire("Direction selector");
         leafWires = createProverWitnessWireArray(leafNumOfWords, "Secret Leaf");
 
-        /** connect gadget **/
+        // connect gadget
         merkleTreeGadget = MerkleTreePathGadget::new(
             directionSelector,
             leafWires,
@@ -79,6 +79,8 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         }
     }
 
+
+}
     pub fn main(args: Vec<String>) {
         let generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
         generator.generateCircuit();
@@ -86,4 +88,3 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         generator.prepFiles();
         generator.runLibsnark();
     }
-}

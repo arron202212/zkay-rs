@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
@@ -40,17 +41,21 @@ impl BitWire {
             .clone()
     }
 
-    pub fn mul(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn mul(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
             return self.mulb(w.getConstant(), desc);
         }
         let output1 = if w.instance_of("BitWire") {
-            WireType::VariableBit(VariableBitWire::new(*self.generator().currentWireId.borrow_mut()))
+            WireType::VariableBit(VariableBitWire::new(
+                *self.generator().currentWireId.borrow_mut(),
+            ))
         } else {
-            WireType::Variable(VariableWire::new(*self.generator().currentWireId.borrow_mut()))
+            WireType::Variable(VariableWire::new(
+                *self.generator().currentWireId.borrow_mut(),
+            ))
         };
         *self.generator().currentWireId.borrow_mut() += 1;
-        let op = new_mul(WireType::Bit(self.clone()), w, output1.clone(), desc);
+        let op = new_mul(WireType::Bit(self.clone()), w, output1.clone(), desc.clone());
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             *self.generator().currentWireId.borrow_mut() -= 1;
@@ -59,14 +64,15 @@ impl BitWire {
         output1
     }
 
-    pub fn mulb(&self, b: BigInteger, desc: Vec<String>) -> WireType {
+    pub fn mulb(&self, b: BigInteger, desc: &String) -> WireType {
         if b == BigInteger::ZERO {
             return self.generator().zeroWire.borrow().clone().unwrap();
         } else if b == Util::one() {
             return WireType::Bit(self.clone());
         }
-        let out =
-            WireType::LinearCombination(LinearCombinationWire::new(*self.generator().currentWireId.borrow_mut()));
+        let out = WireType::LinearCombination(LinearCombinationWire::new(
+            *self.generator().currentWireId.borrow_mut(),
+        ));
         *self.generator().currentWireId.borrow_mut() += 1;
         let op = new_const_mul(WireType::Bit(self.clone()), out.clone(), b, desc.clone());
         //			self.generator().addToEvaluationQueue(Box::new(op));
@@ -79,16 +85,20 @@ impl BitWire {
         out
     }
 
-    pub fn invAsBit(&self, desc: Vec<String>) -> WireType {
+    pub fn invAsBit(&self, desc: &String) -> WireType {
         //		WireType neg = WireType::new(*self.generator().currentWireId.borrow_mut()+=1);
         //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
         //		self.generator().addToEvaluationQueue(Box::new(op));
-        let neg = self.mulb(Util::one().neg(), desc.clone());
+        let neg = self.mulb(Util::one().neg(), desc);
         let out = WireType::LinearCombinationBit(LinearCombinationBitWire::new(
             *self.generator().currentWireId.borrow_mut(),
         ));
         *self.generator().currentWireId.borrow_mut() += 1;
-        let op = new_add(vec![self.generator().oneWire.clone(), Some(neg)], out.clone(), desc);
+        let op = new_add(
+            vec![self.generator().oneWire.clone(), Some(neg)],
+            out.clone(),
+            desc.clone(),
+        );
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
@@ -98,12 +108,14 @@ impl BitWire {
         out
     }
 
-    pub fn or(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn or(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
             return w.orw(WireType::Bit(self.clone()), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(VariableBitWire::new(*self.generator().currentWireId.borrow_mut()));
+            let out = WireType::VariableBit(VariableBitWire::new(
+                *self.generator().currentWireId.borrow_mut(),
+            ));
             *self.generator().currentWireId.borrow_mut() += 1;
             let op = new_or(WireType::Bit(self.clone()), w, out.clone(), desc.clone());
             let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
@@ -117,12 +129,14 @@ impl BitWire {
         return self.orw(w, desc);
     }
 
-    pub fn xor(&self, w: WireType, desc: Vec<String>) -> WireType {
+    pub fn xor(&self, w: WireType, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.xorw(WireType::Bit(self.clone()), desc.clone());
+            return w.xorw(WireType::Bit(self.clone()), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(VariableBitWire::new(*self.generator().currentWireId.borrow_mut()));
+            let out = WireType::VariableBit(VariableBitWire::new(
+                *self.generator().currentWireId.borrow_mut(),
+            ));
             *self.generator().currentWireId.borrow_mut() += 1;
             let op = new_xor(WireType::Bit(self.clone()), w, out.clone(), desc.clone());
             let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
@@ -133,10 +147,10 @@ impl BitWire {
                 out
             };
         }
-        self.xorw( w, desc)
+        self.xorw(w, desc)
     }
 
-    pub fn getBits(&self, w: WireType, bitwidth: i32, desc: Vec<String>) -> WireArray {
+    pub fn getBits(&self, w: WireType, bitwidth: i32, desc: &String) -> WireArray {
         return WireArray::new(vec![Some(WireType::Bit(self.clone()))])
             .adjustLengthi(bitwidth as usize);
     }

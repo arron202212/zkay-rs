@@ -36,20 +36,19 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
         );
         // constraints on the randomness vector are checked later.
 
-        /**
-         * Since an RSA modulus take many wires to present, it could increase
-         * the size of verification key if we divide it into very small chunks,
-         * e.g. 32-bits (which happens by default in this version to minimize
-         * the number of gates later in the circuit). In case the verification
-         * key size is important, e.g. going to be stored in a smart contract, a
-         * possible workaround could be by either assuming the largest possible
-         * bitwidths for the chunks, and then converting them into smaller
-         * chunks, or let the prover provide the key as a witness to the
-         * circuit, and compute its hash, which will be part of the statement.
-         * This way of doing this increases the number of gates a bit, but
-         * reduces the VK size when crucial.
-         *
-         **/
+    
+        //  * Since an RSA modulus take many wires to present, it could increase
+        //  * the size of verification key if we divide it into very small chunks,
+        //  * e.g. 32-bits (which happens by default in this version to minimize
+        //  * the number of gates later in the circuit). In case the verification
+        //  * key size is important, e.g. going to be stored in a smart contract, a
+        //  * possible workaround could be by either assuming the largest possible
+        //  * bitwidths for the chunks, and then converting them into smaller
+        //  * chunks, or let the prover provide the key as a witness to the
+        //  * circuit, and compute its hash, which will be part of the statement.
+        //  * This way of doing this increases the number of gates a bit, but
+        //  * reduces the VK size when crucial.
+
         rsaModulus = createLongElementInput(rsaKeyLength);
 
         // The modulus can also be hardcoded by changing the statement above to the following

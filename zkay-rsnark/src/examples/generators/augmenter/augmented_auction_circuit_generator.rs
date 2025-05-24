@@ -69,7 +69,7 @@ impl CircuitGenerator for AugmentedAuctionCircuitGenerator {
         // augment the output side
         for i in 0..numParties {
             // adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions)
-            secretOutputValues[i] = secretOutputValues[i].getBitWires(64 * 2).packAsBits(64);
+            secretOutputValues[i] = secretOutputValues[i].getBitWires(64 * 2).packAsBitsi(64);
             let g = SHA256Gadget::new(
                 Util::concat(secretOutputValues[i], secretOutputRandomness[i]),
                 64,

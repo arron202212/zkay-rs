@@ -16,15 +16,11 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PackBasicOp;
-pub fn new_pack(
-    inBits: Vec<Option<WireType>>,
-    out: WireType,
-    desc: Vec<String>,
-) -> Op<PackBasicOp> {
+pub fn new_pack(inBits: Vec<Option<WireType>>, out: WireType, desc: String) -> Op<PackBasicOp> {
     Op::<PackBasicOp> {
         inputs: inBits,
         outputs: vec![Some(out)],
-        desc: desc.get(0).unwrap_or(&String::new()).clone(),
+       desc,
         t: PackBasicOp,
     }
 }

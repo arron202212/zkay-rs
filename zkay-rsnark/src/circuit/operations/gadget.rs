@@ -14,15 +14,12 @@ pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-pub fn newGadget(desc: Vec<String>) -> (CircuitGenerator, String) {
-    (
-        CircuitGenerator::getActiveCircuitGenerator().unwrap(),
-        desc.get(0).unwrap_or(&String::new()).clone(),
-    )
+pub fn newGadget(desc: &String) -> (CircuitGenerator, String) {
+    (CircuitGenerator::getActiveCircuitGenerator().unwrap(), desc.clone())
 }
 
 pub trait GadgetConfig: Debug {
-    fn getOutputWires() -> Vec<Option<WireType>>;
+    fn getOutputWires(&self) -> Vec<Option<WireType>>;
 
     fn toString(&self) -> String {
         "getClass().getSimpleName()".to_owned() + " " + &self.description()

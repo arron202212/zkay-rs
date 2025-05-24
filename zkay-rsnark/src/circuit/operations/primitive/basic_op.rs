@@ -23,14 +23,10 @@ impl<T> Op<T> {
     fn new(
         inputs: Vec<Option<WireType>>,
         outputs: Vec<Option<WireType>>,
-        desc: Vec<String>,
+        desc: &String,
         t: T,
     ) -> eyre::Result<Self> {
-        let desc = if desc.len() > 0 {
-            desc[0].clone()
-        } else {
-            String::new()
-        };
+        let desc = desc.clone();
 
         for w in &inputs {
             if w.is_none() {
