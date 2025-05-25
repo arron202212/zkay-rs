@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -43,7 +43,7 @@ pub fn new_const_mul(
     Op::<ConstMulBasicOp> {
         inputs: vec![Some(w)],
         outputs: vec![Some(out)],
-       desc,
+        desc,
         t: ConstMulBasicOp {
             constInteger,
             inSign,

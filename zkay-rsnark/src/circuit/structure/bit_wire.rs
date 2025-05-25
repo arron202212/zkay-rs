@@ -10,15 +10,19 @@ use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
 use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
-use crate::circuit::operations::primitive::or_basic_op::{ORBasicOp, new_or};
+use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
 use crate::circuit::operations::wire_label_instruction::LabelType::output;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBitWire;
-use crate::circuit::structure::linear_combination_wire::LinearCombinationWire;
-use crate::circuit::structure::variable_bit_wire::VariableBitWire;
-use crate::circuit::structure::variable_wire::VariableWire;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::linear_combination_bit_wire::{
+    LinearCombinationBitWire, new_linear_combination_bit,
+};
+use crate::circuit::structure::linear_combination_wire::{
+    LinearCombinationWire, new_linear_combination,
+};
+use crate::circuit::structure::variable_bit_wire::{VariableBitWire, new_variable_bit};
+use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
@@ -27,14 +31,14 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct BitWire;
-
+pub fn new_bit(wireId: i32) -> Wire<BitWire> {
+    // super(wireId);
+    Wire::<BitWire> { wireId, t: BitWire }
+}
 impl setBitsConfig for BitWire {}
-impl WireConfig for BitWire {}
-impl BitWire {
-    pub fn BitWire(wireId: i32) -> Self {
-        // super(wireId);
-        Self
-    }
+impl setBitsConfig for Wire<BitWire> {}
+impl WireConfig for Wire<BitWire> {}
+impl Wire<BitWire> {
     pub fn generator(&self) -> CircuitGenerator {
         CircuitGenerator::getActiveCircuitGenerator()
             .unwrap()
@@ -46,16 +50,19 @@ impl BitWire {
             return self.mulb(w.getConstant(), desc);
         }
         let output1 = if w.instance_of("BitWire") {
-            WireType::VariableBit(VariableBitWire::new(
+            WireType::VariableBit(new_variable_bit(
                 *self.generator().currentWireId.borrow_mut(),
             ))
         } else {
-            WireType::Variable(VariableWire::new(
-                *self.generator().currentWireId.borrow_mut(),
-            ))
+            WireType::Variable(new_variable(*self.generator().currentWireId.borrow_mut()))
         };
         *self.generator().currentWireId.borrow_mut() += 1;
-        let op = new_mul(WireType::Bit(self.clone()), w, output1.clone(), desc.clone());
+        let op = new_mul(
+            WireType::Bit(self.clone()),
+            w,
+            output1.clone(),
+            desc.clone(),
+        );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             *self.generator().currentWireId.borrow_mut() -= 1;
@@ -70,8 +77,9 @@ impl BitWire {
         } else if b == Util::one() {
             return WireType::Bit(self.clone());
         }
-        let out = WireType::LinearCombination(LinearCombinationWire::new(
+        let out = WireType::LinearCombination(new_linear_combination(
             *self.generator().currentWireId.borrow_mut(),
+            None,
         ));
         *self.generator().currentWireId.borrow_mut() += 1;
         let op = new_const_mul(WireType::Bit(self.clone()), out.clone(), b, desc.clone());
@@ -90,7 +98,7 @@ impl BitWire {
         //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let neg = self.mulb(Util::one().neg(), desc);
-        let out = WireType::LinearCombinationBit(LinearCombinationBitWire::new(
+        let out = WireType::LinearCombinationBit(new_linear_combination_bit(
             *self.generator().currentWireId.borrow_mut(),
         ));
         *self.generator().currentWireId.borrow_mut() += 1;
@@ -113,7 +121,7 @@ impl BitWire {
             return w.orw(WireType::Bit(self.clone()), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(VariableBitWire::new(
+            let out = WireType::VariableBit(new_variable_bit(
                 *self.generator().currentWireId.borrow_mut(),
             ));
             *self.generator().currentWireId.borrow_mut() += 1;
@@ -134,7 +142,7 @@ impl BitWire {
             return w.xorw(WireType::Bit(self.clone()), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(VariableBitWire::new(
+            let out = WireType::VariableBit(new_variable_bit(
                 *self.generator().currentWireId.borrow_mut(),
             ));
             *self.generator().currentWireId.borrow_mut() += 1;
@@ -152,6 +160,6 @@ impl BitWire {
 
     pub fn getBits(&self, w: WireType, bitwidth: i32, desc: &String) -> WireArray {
         return WireArray::new(vec![Some(WireType::Bit(self.clone()))])
-            .adjustLength(None,bitwidth as usize);
+            .adjustLength(None, bitwidth as usize);
     }
 }

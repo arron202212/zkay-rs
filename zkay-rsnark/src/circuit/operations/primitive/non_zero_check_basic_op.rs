@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -24,7 +24,7 @@ pub fn new_non_zero_check(
     Op::<NonZeroCheckBasicOp> {
         inputs: vec![Some(w)],
         outputs: vec![Some(out1), Some(out2)],
-       desc,
+        desc,
         t: NonZeroCheckBasicOp,
     }
 }

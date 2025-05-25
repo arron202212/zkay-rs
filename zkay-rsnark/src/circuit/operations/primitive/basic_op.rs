@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;

@@ -6,26 +6,26 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::BitOr;
 #[derive(Debug, Clone, Hash, PartialEq)]
-pub struct ORBasicOp;
+pub struct OrBasicOp;
 
-pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<ORBasicOp> {
-    Op::<ORBasicOp> {
+pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<OrBasicOp> {
+    Op::<OrBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-       desc,
-        t: ORBasicOp,
+        desc,
+        t: OrBasicOp,
     }
 }
 
-crate::impl_instruction_for!(Op<ORBasicOp>);
-impl BasicOp for Op<ORBasicOp> {
+crate::impl_instruction_for!(Op<OrBasicOp>);
+impl BasicOp for Op<OrBasicOp> {
     fn getOpcode(&self) -> String {
         return "or".to_owned();
     }

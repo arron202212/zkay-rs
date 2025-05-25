@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use rand::Rng;
 use std::collections::HashMap;

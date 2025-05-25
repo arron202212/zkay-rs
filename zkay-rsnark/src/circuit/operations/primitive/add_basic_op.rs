@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -20,7 +20,7 @@ pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<
     Op::<AddBasicOp> {
         inputs: ws,
         outputs: vec![Some(output)],
-       desc,
+        desc,
         t: AddBasicOp,
     }
 }

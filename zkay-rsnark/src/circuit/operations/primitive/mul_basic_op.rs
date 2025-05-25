@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -20,7 +20,7 @@ pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op
     Op::<MulBasicOp> {
         inputs: vec![Some(w1), Some(w2)],
         outputs: vec![Some(output)],
-       desc,
+        desc,
         t: MulBasicOp,
     }
 }

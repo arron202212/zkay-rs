@@ -10,8 +10,10 @@ use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
 use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::linear_combination_wire::LinearCombinationWire;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::linear_combination_wire::{
+    LinearCombinationWire, new_linear_combination,
+};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -56,8 +58,12 @@ impl WireArray {
             .clone()
     }
     pub fn mulWireArray(&self, v: WireArray, desiredLength: usize, desc: &String) -> WireArray {
-        let ws1 = self.adjustLength(Some(self.array.clone()), desiredLength).asArray();
-        let ws2 = self.adjustLength(Some(v.array.clone()), desiredLength).asArray();
+        let ws1 = self
+            .adjustLength(Some(self.array.clone()), desiredLength)
+            .asArray();
+        let ws2 = self
+            .adjustLength(Some(v.array.clone()), desiredLength)
+            .asArray();
         let mut out = vec![None; desiredLength];
         for i in 0..out.len() {
             out[i] = ws1[i]
@@ -79,8 +85,9 @@ impl WireArray {
             }
         }
         if !allConstant {
-            let output = WireType::LinearCombination(LinearCombinationWire::new(
+            let output = WireType::LinearCombination(new_linear_combination(
                 *self.generator().currentWireId.borrow_mut(),
+                None,
             ));
             *self.generator().currentWireId.borrow_mut() += 1;
             let op = new_add(self.array.clone(), output.clone(), desc.clone());
@@ -98,8 +105,12 @@ impl WireArray {
     }
 
     pub fn addWireArray(&self, v: WireArray, desiredLength: usize, desc: &String) -> WireArray {
-        let ws1 = self.adjustLength(Some(self.array.clone()), desiredLength).asArray();
-        let ws2 = self.adjustLength(Some(v.array.clone()), desiredLength).asArray();
+        let ws1 = self
+            .adjustLength(Some(self.array.clone()), desiredLength)
+            .asArray();
+        let ws2 = self
+            .adjustLength(Some(v.array.clone()), desiredLength)
+            .asArray();
         let mut out = vec![None; desiredLength];
         for i in 0..out.len() {
             out[i] = ws1[i]
@@ -110,8 +121,12 @@ impl WireArray {
     }
 
     pub fn xorWireArray(&self, v: WireArray, desiredLength: usize, desc: &String) -> WireArray {
-        let ws1 = self.adjustLength(Some(self.array.clone()), desiredLength).asArray();
-        let ws2 = self.adjustLength(Some(v.array.clone()), desiredLength).asArray();
+        let ws1 = self
+            .adjustLength(Some(self.array.clone()), desiredLength)
+            .asArray();
+        let ws2 = self
+            .adjustLength(Some(v.array.clone()), desiredLength)
+            .asArray();
         let mut out = vec![None; desiredLength];
         for i in 0..out.len() {
             out[i] = ws1[i]
@@ -136,8 +151,12 @@ impl WireArray {
     }
 
     pub fn andWireArray(&self, v: WireArray, desiredLength: usize, desc: &String) -> WireArray {
-        let ws1 = self.adjustLength(Some(self.array.clone()), desiredLength).asArray();
-        let ws2 = self.adjustLength(Some(v.array.clone()), desiredLength).asArray();
+        let ws1 = self
+            .adjustLength(Some(self.array.clone()), desiredLength)
+            .asArray();
+        let ws2 = self
+            .adjustLength(Some(v.array.clone()), desiredLength)
+            .asArray();
         let mut out = vec![None; desiredLength];
         for i in 0..out.len() {
             out[i] = ws1[i]
@@ -148,8 +167,12 @@ impl WireArray {
     }
 
     pub fn orWireArray(&self, v: WireArray, desiredLength: usize, desc: &String) -> WireArray {
-        let ws1 = self.adjustLength(Some(self.array.clone()), desiredLength).asArray();
-        let ws2 = self.adjustLength(Some(v.array.clone()), desiredLength).asArray();
+        let ws1 = self
+            .adjustLength(Some(self.array.clone()), desiredLength)
+            .asArray();
+        let ws2 = self
+            .adjustLength(Some(v.array.clone()), desiredLength)
+            .asArray();
         let mut out = vec![None; desiredLength];
         for i in 0..out.len() {
             out[i] = ws1[i]
@@ -163,9 +186,7 @@ impl WireArray {
         let mut out = vec![None; desiredBitWidth];
         for i in 0..desiredBitWidth {
             if i < self.array.len() {
-                out[i] = self.array[i]
-                    .clone()
-                    .and_then(|x| x.clone().invAsBit(desc));
+                out[i] = self.array[i].clone().and_then(|x| x.clone().invAsBit(desc));
             } else {
                 out[i] = self.generator().oneWire.clone();
             }
@@ -178,9 +199,9 @@ impl WireArray {
         ws: Option<Vec<Option<WireType>>>,
         desiredLength: usize,
     ) -> WireArray {
-        let ws=ws.as_ref().unwrap_or(&self.array);
+        let ws = ws.as_ref().unwrap_or(&self.array);
         if ws.len() == desiredLength {
-            return  WireArray::new(ws.clone());
+            return WireArray::new(ws.clone());
         }
         let mut newWs = vec![self.generator().zeroWire.borrow().clone(); desiredLength];
         newWs[..std::cmp::min(ws.len(), desiredLength)].clone_from_slice(&ws);
@@ -234,7 +255,7 @@ impl WireArray {
     }
 
     pub fn packAsBits(&self, from: Option<usize>, to: Option<usize>, desc: &String) -> WireType {
-        let (from,to)=(from.unwrap_or(0),to.unwrap_or(self.array.len()));
+        let (from, to) = (from.unwrap_or(0), to.unwrap_or(self.array.len()));
         assert!(
             from <= to && to <= self.array.len(),
             "Invalid bounds: from > to"
@@ -262,8 +283,9 @@ impl WireArray {
             }
         }
         if !allConstant {
-            let out = WireType::LinearCombination(LinearCombinationWire::new(
+            let out = WireType::LinearCombination(new_linear_combination(
                 *self.generator().currentWireId.borrow_mut(),
+                None,
             ));
             *self.generator().currentWireId.borrow_mut() += 1;
             out.setBits(Some(WireArray::new(bits.clone())));
@@ -280,7 +302,9 @@ impl WireArray {
     }
 
     pub fn rotateLeft(&self, numBits: usize, s: usize, desc: &String) -> WireArray {
-        let mut bits = self.adjustLength(Some(self.array.clone()), numBits).asArray();
+        let mut bits = self
+            .adjustLength(Some(self.array.clone()), numBits)
+            .asArray();
         let mut rotatedBits = vec![None; numBits];
         for i in 0..numBits {
             if i < s {
@@ -293,7 +317,9 @@ impl WireArray {
     }
 
     pub fn rotateRight(&self, numBits: usize, s: usize, desc: &String) -> WireArray {
-        let bits = self.adjustLength(Some(self.array.clone()), numBits).asArray();
+        let bits = self
+            .adjustLength(Some(self.array.clone()), numBits)
+            .asArray();
         let mut rotatedBits = vec![None; numBits];
         for i in 0..numBits {
             if i >= numBits - s {
@@ -306,7 +332,9 @@ impl WireArray {
     }
 
     pub fn shiftLeft(&self, numBits: usize, s: usize, desc: &String) -> WireArray {
-        let bits = self.adjustLength(Some(self.array.clone()), numBits).asArray();
+        let bits = self
+            .adjustLength(Some(self.array.clone()), numBits)
+            .asArray();
         let mut shiftedBits = vec![None; numBits as usize];
         for i in 0..numBits as usize {
             if i < s as usize {
@@ -319,7 +347,9 @@ impl WireArray {
     }
 
     pub fn shiftRight(&self, numBits: usize, s: usize, desc: &String) -> WireArray {
-        let bits = self.adjustLength(Some(self.array.clone()), numBits).asArray();
+        let bits = self
+            .adjustLength(Some(self.array.clone()), numBits)
+            .asArray();
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits as usize {
             if i >= numBits - s as usize {
@@ -333,12 +363,14 @@ impl WireArray {
 
     pub fn packBitsIntoWords(&self, wordBitwidth: usize, desc: &String) -> Vec<Option<WireType>> {
         let numWords = (self.array.len() as f64 * 1.0 / wordBitwidth as f64).ceil() as usize;
-        let padded = self.adjustLength(Some(self.array.clone()), wordBitwidth * numWords).asArray();
+        let padded = self
+            .adjustLength(Some(self.array.clone()), wordBitwidth * numWords)
+            .asArray();
         let mut result = vec![None; numWords];
         for i in 0..numWords {
             result[i] = Some(
                 WireArray::new(padded[i * wordBitwidth..(i + 1) * wordBitwidth].to_vec())
-                    .packAsBits(None,None,&String::new()),
+                    .packAsBits(None, None, &String::new()),
             );
         }
         return result;
@@ -363,7 +395,7 @@ impl WireArray {
                             BigInteger::from(2).pow(subIndex as u32 * wordBitwidth as u32),
                             &String::new(),
                         ),
-                       &String::new(),
+                        &String::new(),
                     )
                 });
         }

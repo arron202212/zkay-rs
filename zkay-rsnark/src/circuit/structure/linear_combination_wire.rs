@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 use std::fmt::Debug;
@@ -15,27 +15,37 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 pub struct LinearCombinationWire {
     pub bitWires: RcCell<Option<WireArray>>,
 }
+pub fn new_linear_combination(wireId: i32, bits: Option<WireArray>) -> Wire<LinearCombinationWire> {
+    // super(wireId);
+    Wire::<LinearCombinationWire> {
+        wireId,
+        t: LinearCombinationWire {
+            bitWires: RcCell::new(bits),
+        },
+    }
+}
 impl setBitsConfig for LinearCombinationWire {}
-impl LinearCombinationWire {
-    pub fn new(wireId: i32) -> Self {
-        // super(wireId);
-        Self {
-            bitWires: RcCell::new(None),
-        }
-    }
+impl setBitsConfig for Wire<LinearCombinationWire> {}
+impl Wire<LinearCombinationWire> {
+    // pub fn new(wireId: i32) -> Self {
+    //     // super(wireId);
+    //     Self {
+    //         bitWires: RcCell::new(None),
+    //     }
+    // }
 
-    pub fn newa(bits: WireArray) -> Self {
-        // super(bits);
-        Self {
-            bitWires: RcCell::new(Some(bits)),
-        }
-    }
+    // pub fn newa(bits: WireArray) -> Self {
+    //     // super(bits);
+    //     Self {
+    //         bitWires: RcCell::new(Some(bits)),
+    //     }
+    // }
 
     fn getBitWires(&self) -> Option<WireArray> {
-        self.bitWires.borrow().clone()
+        self.t.bitWires.borrow().clone()
     }
 
     fn setBits(&self, bitWires: Option<WireArray>) {
-        *self.bitWires.borrow_mut() = bitWires;
+        *self.t.bitWires.borrow_mut() = bitWires;
     }
 }

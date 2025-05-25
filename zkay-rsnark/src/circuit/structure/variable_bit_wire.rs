@@ -6,19 +6,27 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct VariableBitWire;
-impl setBitsConfig for VariableBitWire {}
-impl VariableBitWire {
-    pub fn new(wireId: i32) -> Self {
-        // super(wireId);
-        Self
+pub fn new_variable_bit(wireId: i32) -> Wire<VariableBitWire> {
+    // super(wireId);
+    Wire::<VariableBitWire> {
+        wireId,
+        t: VariableBitWire,
     }
+}
+impl setBitsConfig for VariableBitWire {}
+impl setBitsConfig for Wire<VariableBitWire> {}
+impl Wire<VariableBitWire> {
+    // pub fn new(wireId: i32) -> Self {
+    //     // super(wireId);
+    //     Self
+    // }
 
     pub fn getBitWires(&self) -> Option<WireArray> {
         Some(WireArray::new(vec![Some(WireType::VariableBit(

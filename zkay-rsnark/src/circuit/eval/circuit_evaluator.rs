@@ -10,7 +10,7 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::operations::wire_label_instruction;
 use crate::circuit::operations::wire_label_instruction::LabelType;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
@@ -144,7 +144,7 @@ impl CircuitEvaluator {
                     || e.wire_label().as_ref().unwrap().getType() == LabelType::nizkinput)
             {
                 let id = e.wire_label().as_ref().unwrap().getWire().getWireId();
-                let _=write!(
+                let _ = write!(
                     printWriter,
                     "{} {:x}",
                     id.to_string(),
@@ -320,7 +320,7 @@ impl CircuitEvaluator {
 
         let mut printWriter = File::create(inFilePath.clone() + ".full.2").unwrap();
         for id in wiresToReport {
-            let _=write!(
+            let _ = write!(
                 printWriter,
                 "{id} {:x}",
                 assignment[id as usize].clone().unwrap()

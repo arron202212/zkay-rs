@@ -12,7 +12,7 @@ use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
 use crate::circuit::operations::primitive::non_zero_check_basic_op::{
     NonZeroCheckBasicOp, new_non_zero_check,
 };
-use crate::circuit::operations::primitive::or_basic_op::{ORBasicOp, new_or};
+use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
 use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};

@@ -15,10 +15,10 @@ use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
 use crate::circuit::operations::wire_label_instruction::LabelType;
 use crate::circuit::operations::wire_label_instruction::WireLabelInstruction;
-use crate::circuit::structure::constant_wire::ConstantWire;
+use crate::circuit::structure::constant_wire::{ConstantWire, new_constant};
 use crate::circuit::structure::variable_bit_wire::VariableBitWire;
-use crate::circuit::structure::variable_wire::VariableWire;
-use crate::circuit::structure::wire::{WireConfig, setBitsConfig};
+use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
+use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 
 use crate::util::{
@@ -112,7 +112,7 @@ impl CircuitGenerator {
     }
 
     pub fn createInputWire(&self, desc: &String) -> WireType {
-        let newInputWire = WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        let newInputWire = WireType::Variable(new_variable(*self.currentWireId.borrow_mut()));
         *self.currentWireId.borrow_mut() += 1;
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::input,
@@ -158,7 +158,7 @@ impl CircuitGenerator {
     }
 
     pub fn createProverWitnessWire(&self, desc: &String) -> WireType {
-        let wire = WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        let wire = WireType::Variable(new_variable(*self.currentWireId.borrow_mut()));
         *self.currentWireId.borrow_mut() += 1;
         self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
             LabelType::nizkinput,
@@ -221,8 +221,7 @@ impl CircuitGenerator {
     }
 
     fn makeVariable(&self, wire: WireType, desc: &String) -> WireType {
-        let mut outputWire =
-            WireType::Variable(VariableWire::new(*self.currentWireId.borrow_mut()));
+        let mut outputWire = WireType::Variable(new_variable(*self.currentWireId.borrow_mut()));
         *self.currentWireId.borrow_mut() += 1;
         let op = new_mul(
             wire,
@@ -284,7 +283,7 @@ impl CircuitGenerator {
         write!(printWriter, "total {}", *self.currentWireId.borrow_mut());
         for e in self.evaluationQueue.borrow().keys() {
             if e.doneWithinCircuit() {
-                let _=write!(printWriter, "{e:?} \n");
+                let _ = write!(printWriter, "{e:?} \n");
             }
         }
     }
@@ -298,10 +297,8 @@ impl CircuitGenerator {
     }
 
     fn initCircuitConstruction(&self) {
-        let oneWire = WireType::Constant(ConstantWire::new(
-            *self.currentWireId.borrow_mut(),
-            Util::one(),
-        ));
+        let oneWire =
+            WireType::Constant(new_constant(*self.currentWireId.borrow_mut(), Util::one()));
         *self.currentWireId.borrow_mut() += 1;
         self.knownConstantWires
             .borrow_mut()

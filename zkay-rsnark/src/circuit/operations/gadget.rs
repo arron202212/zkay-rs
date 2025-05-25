@@ -15,7 +15,10 @@ pub struct Gadget<T> {
     pub t: T,
 }
 pub fn newGadget(desc: &String) -> (CircuitGenerator, String) {
-    (CircuitGenerator::getActiveCircuitGenerator().unwrap(), desc.clone())
+    (
+        CircuitGenerator::getActiveCircuitGenerator().unwrap(),
+        desc.clone(),
+    )
 }
 
 pub trait GadgetConfig: Debug {

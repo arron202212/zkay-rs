@@ -1,4 +1,3 @@
-
 // pub mod dot_product_gadget;
 pub mod field_division_gadget;
 // pub mod long_integer_division;
