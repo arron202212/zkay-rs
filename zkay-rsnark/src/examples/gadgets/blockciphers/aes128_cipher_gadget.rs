@@ -128,26 +128,26 @@ impl Gadget for AES128CipherGadget {
                 .xorWireArray(galoisMulConst(a[1], 3))
                 .xorWireArray(a[2].getBitWires(8))
                 .xorWireArray(a[3].getBitWires(8))
-                .packAsBits();
+                .packAsBits(None,None,);
 
             state[1][c] = a[0]
                 .getBitWires(8)
                 .xorWireArray(galoisMulConst(a[1], 2))
                 .xorWireArray(galoisMulConst(a[2], 3))
                 .xorWireArray(a[3].getBitWires(8))
-                .packAsBits();
+                .packAsBits(None,None,);
 
             state[2][c] = a[0]
                 .getBitWires(8)
                 .xorWireArray(a[1].getBitWires(8))
                 .xorWireArray(galoisMulConst(a[2], 2))
                 .xorWireArray(galoisMulConst(a[3], 3))
-                .packAsBits();
+                .packAsBits(None,None,);
             state[3][c] = galoisMulConst(a[0], 3)
                 .xorWireArray(a[1].getBitWires(8))
                 .xorWireArray(a[2].getBitWires(8))
                 .xorWireArray(galoisMulConst(a[3], 2))
-                .packAsBits();
+                .packAsBits(None,None,);
         }
         return state;
     }

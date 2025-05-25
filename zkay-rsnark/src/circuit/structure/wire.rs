@@ -280,7 +280,7 @@ pub trait WireConfig: PartialEq + setBitsConfig {
                     );
                 }
             }
-            return bitWires.adjustLengthi(bitwidth as usize);
+            return bitWires.adjustLength(None,bitwidth as usize);
         }
 
         bitWires = Some(self.forceSplit(bitwidth as i32, desc));
@@ -304,7 +304,7 @@ pub trait WireConfig: PartialEq + setBitsConfig {
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             *self.generator().currentWireId.borrow_mut() -= bitwidth;
-            return WireArray::new(cachedOutputs).adjustLengthi(bitwidth as usize);
+            return WireArray::new(cachedOutputs).adjustLength(None,bitwidth as usize);
         }
         WireArray::new(ws)
     }
@@ -645,7 +645,7 @@ pub trait WireConfig: PartialEq + setBitsConfig {
 
     fn trimBits(&self, currentNumOfBits: i32, desiredNumofBits: i32, desc: &String) -> WireType {
         let bitWires = self.getBitWiresi(currentNumOfBits as u64, desc);
-        let result = bitWires.adjustLengthi(desiredNumofBits as usize);
+        let result = bitWires.adjustLength(None,desiredNumofBits as usize);
         let v = result.checkIfConstantBits(desc);
         if let Some(v) = v {
             return self.generator().createConstantWire(v, &String::new());

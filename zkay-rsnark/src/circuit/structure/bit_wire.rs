@@ -152,6 +152,6 @@ impl BitWire {
 
     pub fn getBits(&self, w: WireType, bitwidth: i32, desc: &String) -> WireArray {
         return WireArray::new(vec![Some(WireType::Bit(self.clone()))])
-            .adjustLengthi(bitwidth as usize);
+            .adjustLength(None,bitwidth as usize);
     }
 }

@@ -672,7 +672,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                     for i in fromBitWidth..toBitWidth {
                         newWs[i] = extendBit;
                     }
-                    newWire = WireArray::new(newWs).packAsBitsi(toBitWidth);
+                    newWire = WireArray::new(newWs).packAsBits(None,toBitWidth);
                 }
             }
         } else if fromBitWidth > toBitWidth {
@@ -680,7 +680,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             newWire = w
                 .wire
                 .getBitWires(fromBitWidth, "downcast1 " + w.name)
-                .packAsBits(toBitWidth, "downcast2 " + w.name);
+                .packAsBits(None,None,toBitWidth, "downcast2 " + w.name);
         } else {
             // Type stays the same -> no expensive bitwise operations necessary
             newWire = w.wire;

@@ -59,7 +59,7 @@ impl SHA256Gadget for ZkaySHA256Gadget {
                     WireArray::new(digest)
                         .getBits(32)
                         .shiftRight(256, 256 - truncated_length)
-                        .packAsBits(truncated_length),
+                        .packAsBits(None,None,truncated_length),
                 ];
                 return;
             }

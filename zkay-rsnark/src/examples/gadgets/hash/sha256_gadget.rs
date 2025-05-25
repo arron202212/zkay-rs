@@ -165,7 +165,7 @@ impl SHA256Gadget {
                         blockNum * 512 + (i + 1) * 32].to_vec()
                     );
 
-                    w[i] = Some(WireArray::new(wsSplitted[i].clone()).packAsBitsi(32,&String::new()));
+                    w[i] = Some(WireArray::new(wsSplitted[i].clone()).packAsBits(None,Some(32),&String::new()));
                 } else {
                     let t1 = w[i - 15].as_ref().unwrap().rotateRight(32, 7,&String::new());
                     let t2 = w[i - 15].as_ref().unwrap().rotateRight(32, 18,&String::new());
@@ -280,7 +280,7 @@ impl SHA256Gadget {
             let t2 = aBits[i].clone().unwrap().add(bBits[i].clone().unwrap()).add(t1.muli(-2,&String::new()));
             result[i] = Some(t1.add(cBits[i].clone().unwrap().mul(t2)));
         }
-        return WireArray::new(result).packAsBits(&String::new());
+        return WireArray::new(result).packAsBits(None,None,&String::new());
     }
 
     fn computeCh(a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
@@ -295,7 +295,7 @@ impl SHA256Gadget {
             let t2 = t1.mul(aBits[i].clone().unwrap());
             result[i] = Some(t2.add(cBits[i].clone().unwrap()));
         }
-        return WireArray::new(result).packAsBits(&String::new());
+        return WireArray::new(result).packAsBits(None,None,&String::new());
     }
 
     fn prepare(&mut self) {
