@@ -11,7 +11,8 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct VariableBitWire;
 pub fn new_variable_bit(wireId: i32) -> Wire<VariableBitWire> {
     // super(wireId);

@@ -27,6 +27,7 @@ use std::fmt::Debug;
 // pub type BigInteger = String;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Neg, Rem, Shr, Sub};
+use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct LongElement {
     pub array: Vec<Option<WireType>>,
@@ -692,7 +693,7 @@ impl LongElement {
 
         // specify how the values of carries are obtained during runtime
         self.generator().specifyProverWitnessComputation({
-            #[derive(Hash, Clone, Debug)]
+            #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
                 carries: Vec<Option<WireType>>,
                 group1: Vec<Option<WireType>>,
@@ -841,7 +842,7 @@ impl LongElement {
         // set the value of the helperBits outside the circuits
 
         self.generator().specifyProverWitnessComputation({
-            #[derive(Hash, Clone, Debug)]
+            #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
                 pub length: usize,
                 pub paddedA1: Vec<Option<WireType>>,
@@ -1024,7 +1025,7 @@ impl Sub for LongElement {
         );
 
         self.generator().specifyProverWitnessComputation({
-            #[derive(Hash, Clone, Debug)]
+            #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
                 pub long_element: LongElement,
                 pub other: LongElement,
@@ -1102,7 +1103,7 @@ impl Mul for LongElement {
             // for safety
 
             self.generator().specifyProverWitnessComputation({
-                #[derive(Hash, Clone, Debug)]
+                #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
                 struct Prover {
                     pub result: Vec<Option<WireType>>,
                     pub array1: Vec<Option<WireType>>,

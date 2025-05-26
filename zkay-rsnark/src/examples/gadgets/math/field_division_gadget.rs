@@ -13,7 +13,7 @@ use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire_type::WireType;
-
+use zkay_derive::ImplStructNameConfig;
 // see notes in the end of the code.
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -61,7 +61,7 @@ impl FieldDivisionGadget {
         // verifying constraints about it in the circuit. See notes below.
         let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
         generator.specifyProverWitnessComputation({
-            #[derive(Hash, Clone, Debug)]
+            #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
                 a: WireType,
                 b: WireType,

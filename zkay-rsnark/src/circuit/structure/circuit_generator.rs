@@ -383,16 +383,18 @@ impl CircuitGenerator {
             .or_insert(e.clone());
         if existingInstruction.is_none() {
             if e.instance_of("BasicOp") {
-                *self.numOfConstraints.borrow_mut() += (e).getNumMulGates();
+                *self.numOfConstraints.borrow_mut() +=
+                    e.basic_op().as_ref().unwrap().getNumMulGates();
             }
             return None; // returning null means we have not seen this instruction before
         }
-
-        if existingInstruction.as_ref().unwrap().instance_of("BasicOp") {
-            return Some(existingInstruction.as_ref().unwrap().getOutputs());
-        } else {
-            return None; // have seen this instruction before, but can't de-duplicate
-        }
+        // have seen this instruction before, but can't de-duplicate
+        existingInstruction.and_then(|e| e.basic_op().map(|op| op.getOutputs()))
+        // if existingInstruction.unwrap().instance_of("BasicOp") {
+        //     return Some(existingInstruction.unwrap().basic_op().unwrap().getOutputs());
+        // } else {
+        //     return None;
+        // }
     }
 
     pub fn printState(&self, message: String) {

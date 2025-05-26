@@ -14,7 +14,8 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct PackBasicOp;
 pub fn new_pack(inBits: Vec<Option<WireType>>, out: WireType, desc: String) -> Op<PackBasicOp> {
     Op::<PackBasicOp> {
@@ -57,13 +58,18 @@ impl BasicOp for Op<PackBasicOp> {
             Some(sum.rem(Configs.get().unwrap().field_prime.clone()));
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        return 0;
+    }
+}
+impl Eq for Op<PackBasicOp> {}
+impl PartialEq for Op<PackBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
 
-        let op = rhs;
-        if op.inputs.len() != self.inputs.len() {
+        if other.inputs.len() != self.inputs.len() {
             return false;
         }
 
@@ -73,12 +79,8 @@ impl BasicOp for Op<PackBasicOp> {
                 && self.inputs[i]
                     .as_ref()
                     .unwrap()
-                    .equals(op.inputs[i].as_ref().unwrap());
+                    .equals(other.inputs[i].as_ref().unwrap());
         }
         check
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        return 0;
     }
 }

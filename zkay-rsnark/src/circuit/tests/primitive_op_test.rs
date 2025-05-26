@@ -424,7 +424,7 @@ mod test {
                 solutions = WireArray::new(generator.createProverWitnessWireArray(numIns + 1));
 
                 specifyProverWitnessComputation(&{
-                    #[derive(Hash, Clone, Debug)]
+                    #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
                     struct Prover {
                         result: Vec<BigInteger>,
                         solutions: WireArray,

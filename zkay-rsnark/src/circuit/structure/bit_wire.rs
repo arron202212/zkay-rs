@@ -29,7 +29,8 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct BitWire;
 pub fn new_bit(wireId: i32) -> Wire<BitWire> {
     // super(wireId);

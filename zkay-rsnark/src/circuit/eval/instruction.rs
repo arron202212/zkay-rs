@@ -6,7 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::InstanceOf;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
 use crate::circuit::operations::wire_label_instruction::WireLabel;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
@@ -32,7 +34,7 @@ impl Hash for dyn DynHash + '_ {
     }
 }
 
-pub trait Instruction: DynClone + DynHash + Debug {
+pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
     fn evaluate(&self, evaluator: CircuitEvaluator);
 
     fn emit(&self, evaluator: CircuitEvaluator) {}
@@ -40,17 +42,20 @@ pub trait Instruction: DynClone + DynHash + Debug {
     fn doneWithinCircuit(&self) -> bool {
         false
     }
-    fn getNumMulGates(&self) -> i32 {
-        0
-    }
-    fn getOutputs(&self) -> Vec<Option<WireType>> {
-        vec![]
-    }
-    fn instance_of(&self, name: &str) -> bool {
-        self.name() == name
-    }
-    fn name(&self) -> &str {
-        ""
+    // fn getNumMulGates(&self) -> i32 {
+    //     0
+    // }
+    // fn getOutputs(&self) -> Vec<Option<WireType>> {
+    //     vec![]
+    // }
+    // fn instance_of(&self, name: &str) -> bool {
+    //     self.name() == name
+    // }
+    // fn name(&self) -> &str {
+    //     ""
+    // }
+    fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
+        None
     }
     fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
         None

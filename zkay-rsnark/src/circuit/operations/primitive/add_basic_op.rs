@@ -9,11 +9,13 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
 use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
+
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AddBasicOp;
 
 pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<AddBasicOp> {
@@ -26,9 +28,9 @@ pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<
 }
 crate::impl_instruction_for!(Op<AddBasicOp>);
 impl BasicOp for Op<AddBasicOp> {
-    fn getOpcode(&self) -> String {
-        return "add".to_owned();
-    }
+    // fn getOpcode(&self) -> String {
+    //     return "add".to_owned();
+    // }
 
     fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
         let mut s = BigInteger::ZERO;
@@ -43,13 +45,19 @@ impl BasicOp for Op<AddBasicOp> {
             Some(s.rem(Configs.get().unwrap().field_prime.clone()));
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        0
+    }
+}
+
+impl Eq for Op<AddBasicOp> {}
+impl PartialEq for Op<AddBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
 
-        let op = rhs;
-        if op.inputs.len() != self.inputs.len() {
+        if other.inputs.len() != self.inputs.len() {
             return false;
         }
 
@@ -57,29 +65,25 @@ impl BasicOp for Op<AddBasicOp> {
             let check1 = self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[0].as_ref().unwrap())
+                .equals(other.inputs[0].as_ref().unwrap())
                 && self.inputs[1]
                     .as_ref()
                     .unwrap()
-                    .equals(op.inputs[1].as_ref().unwrap());
+                    .equals(other.inputs[1].as_ref().unwrap());
             let check2 = self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[0].as_ref().unwrap())
+                .equals(other.inputs[0].as_ref().unwrap())
                 && self.inputs[0]
                     .as_ref()
                     .unwrap()
-                    .equals(op.inputs[1].as_ref().unwrap());
+                    .equals(other.inputs[1].as_ref().unwrap());
             return check1 || check2;
         }
 
         self.inputs
             .iter()
-            .zip(&op.inputs)
+            .zip(&other.inputs)
             .all(|(a, b)| a.as_ref().unwrap().equals(b.as_ref().unwrap()))
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        0
     }
 }

@@ -11,7 +11,8 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct LinearCombinationBitWire;
 pub fn new_linear_combination_bit(wireId: i32) -> Wire<LinearCombinationBitWire> {
     // super(wireId);

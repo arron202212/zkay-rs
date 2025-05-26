@@ -13,7 +13,8 @@ use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct NonZeroCheckBasicOp;
 pub fn new_non_zero_check(
     w: WireType,
@@ -49,19 +50,20 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(BigInteger::ZERO); // a dummy value
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        return 2;
+    }
+}
+impl Eq for Op<NonZeroCheckBasicOp> {}
+impl PartialEq for Op<NonZeroCheckBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
 
-        let op = rhs;
         self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        return 2;
+            .equals(other.inputs[0].as_ref().unwrap())
     }
 }

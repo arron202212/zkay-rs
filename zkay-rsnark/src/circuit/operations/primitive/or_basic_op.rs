@@ -12,7 +12,8 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::BitOr;
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct OrBasicOp;
 
 pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<OrBasicOp> {
@@ -60,33 +61,33 @@ impl BasicOp for Op<OrBasicOp> {
             });
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        return 1;
+    }
+}
+impl Eq for Op<OrBasicOp> {}
+impl PartialEq for Op<OrBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
-
-        let op = rhs;
 
         let check1 = self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
+            .equals(other.inputs[0].as_ref().unwrap())
             && self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[1].as_ref().unwrap());
+                .equals(other.inputs[1].as_ref().unwrap());
         let check2 = self.inputs[1]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
+            .equals(other.inputs[0].as_ref().unwrap())
             && self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[1].as_ref().unwrap());
+                .equals(other.inputs[1].as_ref().unwrap());
         check1 || check2
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        return 1;
     }
 }

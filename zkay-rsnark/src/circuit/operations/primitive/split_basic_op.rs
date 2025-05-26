@@ -14,7 +14,8 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct SplitBasicOp;
 pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
     Op::<SplitBasicOp> {
@@ -62,20 +63,21 @@ impl BasicOp for Op<SplitBasicOp> {
         }
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        self.outputs.len() as i32 + 1
+    }
+}
+impl Eq for Op<SplitBasicOp> {}
+impl PartialEq for Op<SplitBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
 
-        let op = rhs;
         self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
-            && self.outputs.len() == op.outputs.len()
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        self.outputs.len() as i32 + 1
+            .equals(other.inputs[0].as_ref().unwrap())
+            && self.outputs.len() == other.outputs.len()
     }
 }

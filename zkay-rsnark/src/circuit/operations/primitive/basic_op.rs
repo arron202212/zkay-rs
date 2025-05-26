@@ -9,15 +9,28 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::{InstanceOf, OpCodeConfig, StructNameConfig};
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash)]
 pub struct Op<T> {
     pub inputs: Vec<Option<WireType>>,
     pub outputs: Vec<Option<WireType>>,
     pub desc: String,
     pub t: T,
+}
+impl<T: StructNameConfig> crate::circuit::StructNameConfig for Op<T> {
+    fn name(&self) -> String {
+        self.t.name()
+    }
+}
+impl<T: StructNameConfig> crate::circuit::InstanceOf for Op<T> {}
+impl<T: OpCodeConfig> crate::circuit::OpCodeConfig for Op<T> {
+    fn op_code(&self) -> String {
+        self.t.op_code()
+    }
 }
 impl<T> Op<T> {
     fn new(
@@ -51,7 +64,7 @@ impl<T> Op<T> {
         })
     }
 }
-pub trait BasicOp: Instruction + Debug + PartialEq {
+pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
@@ -72,7 +85,9 @@ pub trait BasicOp: Instruction + Debug + PartialEq {
         }
     }
 
-    fn getOpcode(&self) -> String;
+    fn getOpcode(&self) -> String {
+        self.op_code()
+    }
     fn getNumMulGates(&self) -> i32;
 
     fn toString(&self) -> String {
@@ -95,9 +110,9 @@ pub trait BasicOp: Instruction + Debug + PartialEq {
         vec![]
     }
 
-    // fn getOutputs(&self) -> Vec<Option<WireType>> {
-    //     vec![]
-    // }
+    fn getOutputs(&self) -> Vec<Option<WireType>> {
+        vec![]
+    }
 
     fn doneWithinCircuit(&self) -> bool {
         true
@@ -116,10 +131,11 @@ pub trait BasicOp: Instruction + Debug + PartialEq {
         h
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        self == rhs
-        // logic moved to subclasses
-    }
+    // fn equals(&self, rhs: &Self) -> bool {
+    //     // self == rhs
+    //     // logic moved to subclasses
+    //     false
+    // }
 }
 #[macro_export]
 macro_rules! impl_instruction_for {

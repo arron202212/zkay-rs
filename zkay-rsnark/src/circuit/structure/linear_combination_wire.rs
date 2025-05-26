@@ -11,7 +11,8 @@ use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct LinearCombinationWire {
     pub bitWires: RcCell<Option<WireArray>>,
 }

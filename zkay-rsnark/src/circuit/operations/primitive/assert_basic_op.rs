@@ -14,7 +14,8 @@ use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+#[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AssertBasicOp;
 pub fn new_assert(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<AssertBasicOp> {
     Op::<AssertBasicOp> {
@@ -66,37 +67,38 @@ impl BasicOp for Op<AssertBasicOp> {
         return "assert".to_owned();
     }
 
-    fn equals(&self, rhs: &Self) -> bool {
-        if self == rhs {
+    fn getNumMulGates(&self) -> i32 {
+        return 1;
+    }
+}
+
+impl Eq for Op<AssertBasicOp> {}
+impl PartialEq for Op<AssertBasicOp> {
+    fn eq(&self, other: &Self) -> bool {
+        if self == other {
             return true;
         }
-
-        let op = rhs;
 
         let check1 = self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
+            .equals(other.inputs[0].as_ref().unwrap())
             && self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[1].as_ref().unwrap());
+                .equals(other.inputs[1].as_ref().unwrap());
         let check2 = self.inputs[1]
             .as_ref()
             .unwrap()
-            .equals(op.inputs[0].as_ref().unwrap())
+            .equals(other.inputs[0].as_ref().unwrap())
             && self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(op.inputs[1].as_ref().unwrap());
+                .equals(other.inputs[1].as_ref().unwrap());
         return (check1 || check2)
             && self.outputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(op.outputs[0].as_ref().unwrap());
-    }
-
-    fn getNumMulGates(&self) -> i32 {
-        return 1;
+                .equals(other.outputs[0].as_ref().unwrap());
     }
 }

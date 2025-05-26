@@ -18,7 +18,8 @@ use num_bigint::Sign;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct ConstantWire {
     pub constant: BigInteger,
 }

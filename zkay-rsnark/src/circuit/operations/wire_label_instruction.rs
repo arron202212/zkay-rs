@@ -11,6 +11,7 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire_type::WireType;
+use zkay_derive::ImplStructNameConfig;
 #[derive(Clone, Debug, Hash, PartialEq)]
 pub enum LabelType {
     input,
@@ -33,7 +34,7 @@ impl std::fmt::Display for LabelType {
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct WireLabelInstruction {
     pub label_type: LabelType,
     pub w: WireType,
@@ -44,6 +45,7 @@ pub trait WireLabel {
 
     fn getType(&self) -> LabelType;
 }
+
 impl WireLabelInstruction {
     pub fn new(label_type: LabelType, w: WireType, desc: String) -> Self {
         Self {
@@ -105,7 +107,7 @@ impl Instruction for WireLabelInstruction {
         self.label_type != LabelType::debug
     }
 
-    fn name(&self) -> &str {
-        ""
-    }
+    // fn name(&self) -> &str {
+    //      ""
+    //  }
 }

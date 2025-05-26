@@ -409,6 +409,59 @@ macro_rules! derive_error {
     };
 }
 
+#[proc_macro_derive(ImplStructNameConfig)]
+pub fn derive_impl_struct_name_config(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = &input.ident;
+    // let mut is_variant_func_name =
+    //                 format_ident!("is_{}", variant_name.to_string().to_case(Case::Snake));
+    //             is_variant_func_name.set_span(variant_name.span());
+    // let new_string = format!("{}", name);
+    let new_literal = name.to_string(); // proc_macro::Literal::string(&name.to_string());
+    // TokenTree::Literal(new_literal).into()
+    let mut name_checker_functions = TokenStream2::new();
+
+    name_checker_functions.extend(quote_spanned! {name.span()=>
+            fn name(&self) -> String {
+                #new_literal.to_owned()
+            }
+    });
+
+    let expanded = quote! {
+        impl crate::circuit::StructNameConfig for #name  {
+              #name_checker_functions
+        }
+        impl crate::circuit::InstanceOf for #name  {
+
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
+#[proc_macro_derive(ImplOpCodeConfig)]
+pub fn derive_impl_op_code_config(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+
+    let name = input.ident;
+
+    let new_literal = name.to_string().strip_suffix("BasicOp").unwrap().to_owned(); //proc_macro::Literal::string(&name.to_string().strip_suffix("BasicOp").unwrap().to_owned());
+    let mut name_checker_functions = TokenStream2::new();
+    name_checker_functions.extend(quote_spanned! {name.span()=>
+            fn op_code(&self) -> String {
+                #new_literal.to_owned()
+            }
+    });
+    let expanded = quote! {
+        impl crate::circuit::OpCodeConfig for #name  {
+            #name_checker_functions
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
 #[proc_macro_derive(EnumDispatchWithDeepClone)]
 pub fn derive_enum_dispatch_with_deep_clone(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
