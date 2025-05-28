@@ -17,7 +17,7 @@ pub struct ZkayDummyHomEncryptionGadget {
     cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyHomEncryptionGadget {
-    pub fn new(plain: WireType, pk: WireType, rnd: Vec<Option<WireType>>, keyBits: i32, desc: &String) -> Self {
+    pub fn new(plain: WireType, pk: WireType, rnd: Vec<Option<WireType>>, keyBits: i32, desc: &Option<String>) -> Self {
         super(desc);
 
         Objects.requireNonNull(plain, "plain");

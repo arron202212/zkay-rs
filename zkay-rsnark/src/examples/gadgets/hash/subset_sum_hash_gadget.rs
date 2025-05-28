@@ -21,7 +21,7 @@ impl SubsetSumHashGadget {
      *            Whether the output digest should be splitted into bits or not.
      * @param desc
      */
-    pub fn new(ins: Vec<Option<WireType>>, binaryOutput: bool, desc: &String) -> Self {
+    pub fn new(ins: Vec<Option<WireType>>, binaryOutput: bool, desc: &Option<String>) -> Self {
         COEFFS::get_or_init(|| {
             let mut tmp = vec![vec![BigInteger::default(); INPUT_LENGTH]; DIMENSION];
             for i in 0..DIMENSION {

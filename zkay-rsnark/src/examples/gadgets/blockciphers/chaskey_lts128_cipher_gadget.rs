@@ -15,7 +15,7 @@ pub struct ChaskeyLTS128CipherGadget {
     ciphertext: Vec<Option<WireType>>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
-    pub fn new(inputs: Vec<Option<WireType>>, key: Vec<Option<WireType>>, desc: &String) -> Self {
+    pub fn new(inputs: Vec<Option<WireType>>, key: Vec<Option<WireType>>, desc: &Option<String>) -> Self {
         super(desc);
         assert!(inputs.len() == 4 && key.len() == 4, "Invalid Input");
 

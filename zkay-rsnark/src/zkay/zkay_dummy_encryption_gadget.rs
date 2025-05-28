@@ -15,7 +15,7 @@ impl ZkayDummyEncryptionGadget {
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
         keyBits: i32,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(desc);
         assert!(plain.is_some() && pk.is_some() && rnd.is_some());

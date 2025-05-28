@@ -24,7 +24,7 @@ impl SymmetricEncryptionCBCGadget {
         keyBits: Vec<Option<WireType>>,
         ivBits: Vec<Option<WireType>>,
         cipherName: String,
-        desc: &String,
+        desc: &Option<String>,
     ) {
         super(desc);
         assert!(

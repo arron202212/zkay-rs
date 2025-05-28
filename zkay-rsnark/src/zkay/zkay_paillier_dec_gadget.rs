@@ -22,7 +22,7 @@ impl ZkayPaillierDecGadget {
         lambda: LongElement,
         mu: LongElement,
         cipher: LongElement,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(desc);
         self.n = n;

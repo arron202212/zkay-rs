@@ -18,7 +18,7 @@ pub struct ModConstantGadget {
     bitwidth: i32, // a's bitwidth
 }
 impl ModConstantGadget {
-    pub fn new(a: WireType, bitwidth: i32, b: BigInteger, desc: &String) -> Self {
+    pub fn new(a: WireType, bitwidth: i32, b: BigInteger, desc: &Option<String>) -> Self {
         super(desc);
         self.a = a;
         self.b = b;

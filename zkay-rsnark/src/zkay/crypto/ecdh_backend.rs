@@ -24,7 +24,7 @@ impl Symmetric for ECDHBackend {
         plain: TypedWire,
         key: String,
         ivArr: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         return ZkayCBCSymmetricEncGadget::new(
             plain,

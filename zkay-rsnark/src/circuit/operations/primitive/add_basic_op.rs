@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 
 use crate::util::util::{BigInteger, Util};
@@ -63,28 +63,16 @@ impl PartialEq for Op<AddBasicOp> {
         }
 
         if self.inputs.len() == 2 {
-            let check1 = self.inputs[0]
-                .as_ref()
-                .unwrap()
-                ==other.inputs[0].as_ref().unwrap()
-                && self.inputs[1]
-                    .as_ref()
-                    .unwrap()
-                    ==other.inputs[1].as_ref().unwrap();
-            let check2 = self.inputs[1]
-                .as_ref()
-                .unwrap()
-                ==other.inputs[0].as_ref().unwrap()
-                && self.inputs[0]
-                    .as_ref()
-                    .unwrap()
-                    ==other.inputs[1].as_ref().unwrap();
+            let check1 = self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
+                && self.inputs[1].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
+            let check2 = self.inputs[1].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
+                && self.inputs[0].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
             return check1 || check2;
         }
 
         self.inputs
             .iter()
             .zip(&other.inputs)
-            .all(|(a, b)| a.as_ref().unwrap()==b.as_ref().unwrap())
+            .all(|(a, b)| a.as_ref().unwrap() == b.as_ref().unwrap())
     }
 }

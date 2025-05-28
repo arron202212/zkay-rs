@@ -28,7 +28,7 @@ impl ZkayRSAEncryptionGadget {
         rnd: Vec<Option<WireType>>,
         keyBits: i32,
         paddingType: PaddingType,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(desc);
 

@@ -52,7 +52,7 @@ impl Asymmetric for PaillierBackend {
         plain: TypedWire,
         keyName: String,
         randomWires: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         let key = getKey(keyName);
         let encodedPlain = encodeSignedToModN(plain, key);

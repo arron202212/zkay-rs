@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 use std::fmt::Debug;
@@ -49,9 +49,9 @@ impl Wire<LinearCombinationWire> {
     //     }
     // }
 
-    fn getBitWires(&self) -> Option<WireArray> {
-        self.t.bitWires.borrow().clone()
-    }
+    // fn getBitWires(&self) -> Option<WireArray> {
+    //     self.t.bitWires.borrow().clone()
+    // }
 
     fn setBits(&self, bitWires: Option<WireArray>) {
         *self.t.bitWires.borrow_mut() = bitWires;

@@ -10,7 +10,7 @@ pub struct PinocchioGadget {
     outputWires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
-    pub fn new(inputWires: Vec<Option<WireType>>, pathToArithFile: String, desc: &String) -> Self {
+    pub fn new(inputWires: Vec<Option<WireType>>, pathToArithFile: String, desc: &Option<String>) -> Self {
         super(desc);
         self.inputWires = inputWires;
         buildCircuit(pathToArithFile);

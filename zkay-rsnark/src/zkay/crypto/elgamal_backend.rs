@@ -39,7 +39,7 @@ impl Asymmetric for ElgamalBackend {
         plain: TypedWire,
         keyName: String,
         random: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         let pkArray = getKeyArray(keyName);
         let pk = ZkayBabyJubJubGadget::new().JubJubPoint(pkArray.get(0), pkArray.get(1));
@@ -60,7 +60,7 @@ impl Asymmetric for ElgamalBackend {
         cipher: Vec<Option<WireType>>,
         pkName: String,
         sk: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         let pkArray = getKeyArray(pkName);
         let pk = ZkayBabyJubJubGadget::new().JubJubPoint(pkArray.get(0), pkArray.get(1));

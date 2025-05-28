@@ -35,7 +35,7 @@ impl RSAEncryptionV1_5_Gadget {
         plainText: Vec<Option<WireType>>,
         randomness: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
-        desc: &String,
+        desc: &Option<String>,
     ) {
         super(desc);
 

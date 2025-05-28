@@ -20,7 +20,7 @@ impl ZkayPaillierFastDecGadget {
         nBits: i32,
         lambda: LongElement,
         cipher: LongElement,
-        desc: &String,
+        desc: &Option<String>,
     ) {
         super(desc);
         self.n = n;

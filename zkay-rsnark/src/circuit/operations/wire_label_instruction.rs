@@ -11,9 +11,9 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire_type::WireType;
-use zkay_derive::ImplStructNameConfig;
 use strum::{Display, EnumString};
-#[derive(Clone, Debug, Hash, PartialEq,Display)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Clone, Debug, Hash, PartialEq, Display)]
 pub enum LabelType {
     input,
     output,
@@ -46,13 +46,13 @@ pub trait WireLabel {
 
     fn getType(&self) -> LabelType;
 }
-impl WireLabel for WireLabelInstruction{
-    fn getWire(&self) -> WireType{
-    self.w.clone()
+impl WireLabel for WireLabelInstruction {
+    fn getWire(&self) -> WireType {
+        self.w.clone()
     }
 
-    fn getType(&self) -> LabelType{
-    self.label_type.clone()
+    fn getType(&self) -> LabelType {
+        self.label_type.clone()
     }
 }
 impl WireLabelInstruction {
@@ -119,24 +119,23 @@ impl Instruction for WireLabelInstruction {
     // fn name(&self) -> &str {
     //      ""
     //  }
-   fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
+    fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
         Some(Box::new(self.clone()))
     }
 }
 
-
 impl std::fmt::Display for WireLabelInstruction {
-                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        write!(
-                            f,
-                            "{} {}{}",
-                            self.label_type,
-                            self.w,
-                            &(if self.desc.is_empty() {
-                                self.desc.clone()
-                            } else {
-                                format!("\t\t\t # {}", self.desc)
-                            })
-                        )
-                    }
-                }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}",
+            self.label_type,
+            self.w,
+            &(if self.desc.is_empty() {
+                self.desc.clone()
+            } else {
+                format!("\t\t\t # {}", self.desc)
+            })
+        )
+    }
+}

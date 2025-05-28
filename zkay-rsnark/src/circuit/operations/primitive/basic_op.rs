@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::{InstanceOf, OpCodeConfig, StructNameConfig};
 use crate::util::util::{BigInteger, Util};
@@ -36,10 +36,12 @@ impl<T> Op<T> {
     fn new(
         inputs: Vec<Option<WireType>>,
         outputs: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
         t: T,
     ) -> eyre::Result<Self> {
-        let desc = desc.clone();
+        let desc = desc
+            .as_ref()
+            .map_or_else(|| String::new(), |d| d.to_owned());
 
         for w in &inputs {
             if w.is_none() {
@@ -151,53 +153,48 @@ macro_rules! impl_instruction_for {
                 self.checkOutputs(assignment.clone());
                 self.compute(assignment.clone());
             }
-        fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
+            fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
                 Some(Box::new(self.clone()))
             }
         }
     };
 }
 
-
 #[macro_export]
 macro_rules! impl_hash_code_for {
     ($impl_type:ty) => {
-            impl std::hash::Hash for $impl_type  {
-                fn hash<H: Hasher>(&self, state: &mut H) {
-                        // this method should be overriden when a subclass can have more than one opcode, or have other arguments
-                        self.getOpcode().hash(state);
-                        for i in self.getInputs() {
-                           i.as_ref().unwrap().hash(state);
-                        }
+        impl std::hash::Hash for $impl_type {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                // this method should be overriden when a subclass can have more than one opcode, or have other arguments
+                self.getOpcode().hash(state);
+                for i in self.getInputs() {
+                    i.as_ref().unwrap().hash(state);
                 }
             }
+        }
     };
 }
-
-
 
 #[macro_export]
 macro_rules! impl_display_of_op_for {
     ($impl_type:ty) => {
-           impl std::fmt::Display for $impl_type {
-                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        write!(
-                            f,
-                         "{} in {} <{}> out  <{}> {} {}",
-                            self.getOpcode(),
-                                    self.getInputs().len(),
-                                    Util::arrayToString(self.getInputs(), " ".to_owned()),
-                                    self.getOutputs().len(),
-                                    Util::arrayToString(self.getOutputs(), " ".to_owned()),
-                                    if self.desc().len() > 0 {
-                                        " \t\t# ".to_owned() + &self.desc()
-                                    } else {
-                                        String::new()
-                                    }
-                        )
+        impl std::fmt::Display for $impl_type {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(
+                    f,
+                    "{} in {} <{}> out  <{}> {} {}",
+                    self.getOpcode(),
+                    self.getInputs().len(),
+                    Util::arrayToString(self.getInputs(), " ".to_owned()),
+                    self.getOutputs().len(),
+                    Util::arrayToString(self.getOutputs(), " ".to_owned()),
+                    if self.desc().len() > 0 {
+                        " \t\t# ".to_owned() + &self.desc()
+                    } else {
+                        String::new()
                     }
-                }
+                )
+            }
+        }
     };
 }
-
-

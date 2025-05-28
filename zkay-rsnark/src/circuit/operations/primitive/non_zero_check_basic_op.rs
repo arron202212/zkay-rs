@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -62,9 +62,6 @@ impl PartialEq for Op<NonZeroCheckBasicOp> {
             return true;
         }
 
-        self.inputs[0]
-            .as_ref()
-            .unwrap()
-            ==other.inputs[0].as_ref().unwrap()
+        self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
     }
 }

@@ -22,7 +22,7 @@ impl ZkaySHA256Gadget {
         return input_bytes;
     }
 
-    pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: &String) -> self {
+    pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: &Option<String>) -> self {
         super(
             convert_inputs_to_bytes(uint256_inputs),
             8,

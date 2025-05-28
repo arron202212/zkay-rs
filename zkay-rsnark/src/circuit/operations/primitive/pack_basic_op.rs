@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -76,11 +76,7 @@ impl PartialEq for Op<PackBasicOp> {
 
         let mut check = true;
         for i in 0..self.inputs.len() {
-            check = check
-                && self.inputs[i]
-                    .as_ref()
-                    .unwrap()
-                    ==other.inputs[i].as_ref().unwrap();
+            check = check && self.inputs[i].as_ref().unwrap() == other.inputs[i].as_ref().unwrap();
         }
         check
     }

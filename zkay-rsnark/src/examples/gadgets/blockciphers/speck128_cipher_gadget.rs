@@ -22,7 +22,7 @@ impl Speck128CipherGadget {
      *            : Array of 32 64-bit elements. (Call expandKey(..))
      * @param desc
      */
-    pub fn new(plaintext: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: &String) {
+    pub fn new(plaintext: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: &Option<String>) {
         super(desc);
         assert!(
             plaintext.len() == 2 && expandedKey.len() == 32,

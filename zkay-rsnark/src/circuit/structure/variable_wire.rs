@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 
@@ -31,7 +31,7 @@ pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}
 impl WireConfig for Wire<VariableWire> {
-  fn getBitWires(&self) -> Option<WireArray> {
+    fn getBitWires(&self) -> Option<WireArray> {
         self.t.bitWires.borrow().clone()
     }
 }

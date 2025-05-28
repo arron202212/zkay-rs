@@ -6,15 +6,15 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::InstanceOf;
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire;
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::InstanceOf;
+use crate::circuit::structure::wire_type::WireType;
 use zkay_derive::ImplStructNameConfig;
 // see notes in the end of the code.
 use std::fmt::Debug;
@@ -27,7 +27,7 @@ pub struct FieldDivisionGadget {
     c: WireType,
 }
 impl FieldDivisionGadget {
-    fn new(a: WireType, b: WireType, desc: &String) -> Self {
+    fn new(a: WireType, b: WireType, desc: &Option<String>) -> Self {
         // super(desc);
         let mut _self = Self {
             a,
@@ -41,18 +41,19 @@ impl FieldDivisionGadget {
             let aConst = _self.a.try_as_constant_ref().unwrap().getConstant();
             let bInverseConst = _self
                 .b
-                .try_as_constant_ref().unwrap().getConstant()
+                .try_as_constant_ref()
+                .unwrap()
+                .getConstant()
                 .modinv(&Configs.get().unwrap().field_prime.clone())
                 .unwrap();
             _self.c = generator.createConstantWire(
                 aConst
                     .mul(bInverseConst)
                     .rem(Configs.get().unwrap().field_prime.clone()),
-                &String::new(),
+                &None,
             );
         } else {
-            _self.c =
-                generator.createProverWitnessWire(&_self.debugStr("division result".to_owned()));
+            _self.c = generator.createProverWitnessWire(&_self.debugStr("division result"));
             _self.buildCircuit();
         }
         _self
@@ -95,7 +96,7 @@ impl FieldDivisionGadget {
             self.b.clone(),
             self.c.clone(),
             self.a.clone(),
-            &self.debugStr("Assertion for division result".to_owned()),
+            &self.debugStr("Assertion for division result"),
         );
 
         /*

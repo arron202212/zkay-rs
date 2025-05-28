@@ -1033,7 +1033,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: &String) {
+    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: &Option<String>) {
         if currentGuardCondition.isEmpty() {
             addEqualityAssertion(lhs, rhs, desc);
         } else {
@@ -1042,7 +1042,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
     }
 
-    fn addGuardedOneAssertion(val: WireType, desc: &String) {
+    fn addGuardedOneAssertion(val: WireType, desc: &Option<String>) {
         if currentGuardCondition.isEmpty() {
             addOneAssertion(val, desc);
         } else {

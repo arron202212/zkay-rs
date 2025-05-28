@@ -21,7 +21,7 @@ impl Asymmetric for DummyBackend {
         plain: TypedWire,
         key: String,
         random: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         return ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc);
     }

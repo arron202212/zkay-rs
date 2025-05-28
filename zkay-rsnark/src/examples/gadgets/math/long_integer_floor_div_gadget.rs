@@ -9,7 +9,7 @@ use crate::circuit::structure::wire_type::WireType;
  */
 pub struct LongIntegerFloorDivGadget {}
 impl LongIntegerFloorDivGadget {
-    pub fn new(a: LongElement, b: LongElement, bMinBitwidth: i32, desc: &String) -> Self {
+    pub fn new(a: LongElement, b: LongElement, bMinBitwidth: i32, desc: &Option<String>) -> Self {
         super(a, b, bMinBitwidth, true, desc);
     }
 }

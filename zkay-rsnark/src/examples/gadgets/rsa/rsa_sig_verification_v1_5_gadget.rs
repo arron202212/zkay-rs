@@ -38,7 +38,7 @@ impl RSASigVerificationV1_5_Gadget {
         msgHash: Vec<Option<WireType>>,
         signature: LongElement,
         rsaKeyBitLength: i32,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(desc);
         self.modulus = modulus;

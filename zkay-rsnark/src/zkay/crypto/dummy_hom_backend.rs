@@ -23,7 +23,7 @@ impl Asymmetric for DummyHomBackend {
         plain: TypedWire,
         key: String,
         random: Vec<Option<WireType>>,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Gadget {
         let encodedPlain = encodePlaintextIfSigned(plain);
         return ZkayDummyHomEncryptionGadget::new(

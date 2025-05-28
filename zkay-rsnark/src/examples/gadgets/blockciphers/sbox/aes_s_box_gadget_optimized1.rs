@@ -30,7 +30,7 @@ impl AESSBoxGadgetOptimized1 {
         // preprocessing
         solveLinearSystems();
     }
-    pub fn new(input: WireType, desc: &String) -> Self {
+    pub fn new(input: WireType, desc: &Option<String>) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();

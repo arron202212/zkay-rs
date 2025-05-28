@@ -6,10 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::bit_wire::BitWireConfig;
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::structure::bit_wire::BitWireConfig;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
@@ -26,17 +26,17 @@ pub fn new_variable_bit(wireId: i32) -> Wire<VariableBitWire> {
 }
 impl setBitsConfig for VariableBitWire {}
 impl setBitsConfig for Wire<VariableBitWire> {}
-impl WireConfig for Wire<VariableBitWire> {}
+impl WireConfig for Wire<VariableBitWire> {
+    fn getBitWires(&self) -> Option<WireArray> {
+        Some(WireArray::new(vec![Some(WireType::VariableBit(
+            self.clone(),
+        ))]))
+    }
+}
 impl BitWireConfig for Wire<VariableBitWire> {}
 impl Wire<VariableBitWire> {
     // pub fn new(wireId: i32) -> Self {
     //     // super(wireId);
     //     Self
     // }
-
-    pub fn getBitWires(&self) -> Option<WireArray> {
-        Some(WireArray::new(vec![Some(WireType::VariableBit(
-            self.clone(),
-        ))]))
-    }
 }

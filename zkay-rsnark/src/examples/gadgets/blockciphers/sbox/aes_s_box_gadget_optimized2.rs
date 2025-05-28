@@ -45,7 +45,7 @@ impl AESSBoxGadgetOptimized2 {
         solveLinearSystems();
     }
     const SBox: Vec<i32> = AES128CipherGadget.SBox;
-    pub fn new(input: WireType, desc: &String) -> Self {
+    pub fn new(input: WireType, desc: &Option<String>) -> Self {
         super(desc);
         self.input = input;
         buildCircuit();

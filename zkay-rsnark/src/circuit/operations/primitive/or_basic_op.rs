@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -73,22 +73,10 @@ impl PartialEq for Op<OrBasicOp> {
             return true;
         }
 
-        let check1 = self.inputs[0]
-            .as_ref()
-            .unwrap()
-            ==other.inputs[0].as_ref().unwrap()
-            && self.inputs[1]
-                .as_ref()
-                .unwrap()
-                ==other.inputs[1].as_ref().unwrap();
-        let check2 = self.inputs[1]
-            .as_ref()
-            .unwrap()
-            ==other.inputs[0].as_ref().unwrap()
-            && self.inputs[0]
-                .as_ref()
-                .unwrap()
-                ==other.inputs[1].as_ref().unwrap();
+        let check1 = self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
+            && self.inputs[1].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
+        let check2 = self.inputs[1].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
+            && self.inputs[0].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
         check1 || check2
     }
 }

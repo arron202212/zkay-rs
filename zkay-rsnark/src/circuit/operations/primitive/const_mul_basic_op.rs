@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -101,10 +101,7 @@ impl PartialEq for Op<ConstMulBasicOp> {
         if self == other {
             return true;
         }
-        self.inputs[0]
-            .as_ref()
-            .unwrap()
-            ==other.inputs[0].as_ref().unwrap()
+        self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.t.constInteger == other.t.constInteger
     }
 }
@@ -114,7 +111,7 @@ impl Hash for Op<ConstMulBasicOp> {
         self.t.constInteger.hash(state);
         // let mut h = hasher.finish();
         for i in &self.inputs {
-           i.as_ref().unwrap().hash(state);
+            i.as_ref().unwrap().hash(state);
         }
     }
 }

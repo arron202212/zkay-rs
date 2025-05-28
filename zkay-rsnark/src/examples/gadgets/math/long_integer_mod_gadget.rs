@@ -65,7 +65,7 @@ impl LongIntegerModGadget {
         b: LongElement,
         bMinBitwidth: i32,
         restrictRange: bool,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(a, b, bMinBitwidth, restrictRange, desc);
     }

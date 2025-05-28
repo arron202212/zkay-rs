@@ -5,7 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 
 use rand::Rng;
@@ -155,8 +155,9 @@ impl Util {
         return RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
     }
 
-    pub fn getDesc(desc: &String) -> String {
-        desc.clone()
+    pub fn getDesc(desc: &Option<String>) -> String {
+        desc.as_ref()
+            .map_or_else(|| String::new(), |d| d.to_owned())
     }
 
     pub fn parseSequenceLists(s: String) -> Vec<i32> {

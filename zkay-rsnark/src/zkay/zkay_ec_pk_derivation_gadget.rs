@@ -20,7 +20,7 @@ pub struct ZkayEcPkDerivationGadget {
 }
 
 impl ZkayEcPkDerivationGadget {
-    pub fn new(secretKey: WireType, validateSecret: bool, desc: &String) -> Self {
+    pub fn new(secretKey: WireType, validateSecret: bool, desc: &Option<String>) -> Self {
         super(desc);
         self.secretBits = secretKey.getBitWires(SECRET_BITWIDTH).asArray();
         self.basePoint = AffinePoint::new(generator.createConstantWire(4)); // Hardcode base point

@@ -20,7 +20,7 @@ impl ZkayPaillierFastEncGadget {
         nBits: i32,
         plain: LongElement,
         random: LongElement,
-        desc: &String,
+        desc: &Option<String>,
     ) -> Self {
         super(desc);
         self.n = n;

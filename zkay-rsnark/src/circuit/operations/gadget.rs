@@ -14,10 +14,11 @@ pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-pub fn newGadget(desc: &String) -> (CircuitGenerator, String) {
+pub fn newGadget(desc: &Option<String>) -> (CircuitGenerator, String) {
     (
         CircuitGenerator::getActiveCircuitGenerator().unwrap(),
-        desc.clone(),
+        desc.as_ref()
+            .map_or_else(|| String::new(), |d| d.to_owned()),
     )
 }
 
@@ -30,25 +31,18 @@ pub trait GadgetConfig: Debug {
     fn description(&self) -> String {
         String::new()
     }
-    fn debugStr(&self, s: String) -> String {
-        format!("{self:?}:{s}")
+    fn debugStr(&self, s: &str) -> Option<String> {
+        Some(format!("{self:?}:{s}"))
     }
 }
-
 
 #[macro_export]
 macro_rules! impl_display_of_gadget_for {
     ($impl_type:ty) => {
-           impl std::fmt::Display for $impl_type {
-                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        write!(
-                            f,
-                            "{} {}",
-                            self.getSimpleName(),
-                                    self.description(),
-                        )
-                    }
-                }
+        impl std::fmt::Display for $impl_type {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(f, "{} {}", self.getSimpleName(), self.description(),)
+            }
+        }
     };
 }
-
