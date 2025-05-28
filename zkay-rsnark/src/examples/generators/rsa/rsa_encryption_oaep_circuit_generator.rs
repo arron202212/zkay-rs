@@ -97,7 +97,7 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
         // result[0] contains the plaintext (after decryption)
         // result[1] contains the randomness
 
-        let check = Arrays.equals(result[0], msg.getBytes());
+        let check = Arrays==result[0], msg.getBytes();
         assert!(check, "Randomness Extraction did not decrypt right");
 
         let sampleRandomness = result[1];

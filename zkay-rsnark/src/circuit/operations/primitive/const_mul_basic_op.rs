@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -52,6 +52,7 @@ pub fn new_const_mul(
     }
 }
 crate::impl_instruction_for!(Op<ConstMulBasicOp>);
+// crate::impl_hash_code_for!(Op<ConstMulBasicOp>);
 impl BasicOp for Op<ConstMulBasicOp> {
     fn getOpcode(&self) -> String {
         if !self.t.inSign {
@@ -84,15 +85,15 @@ impl BasicOp for Op<ConstMulBasicOp> {
         return 0;
     }
 
-    fn hashCode(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.t.constInteger.hash(&mut hasher);
-        let mut h = hasher.finish();
-        for i in &self.inputs {
-            h += i.as_ref().unwrap().hashCode();
-        }
-        h
-    }
+    // fn hashCode(&self) -> u64 {
+    //     let mut hasher = DefaultHasher::new();
+    //     self.t.constInteger.hash(&mut hasher);
+    //     let mut h = hasher.finish();
+    //     for i in &self.inputs {
+    //         h += i.as_ref().unwrap().hashCode();
+    //     }
+    //     h
+    // }
 }
 impl Eq for Op<ConstMulBasicOp> {}
 impl PartialEq for Op<ConstMulBasicOp> {
@@ -103,7 +104,17 @@ impl PartialEq for Op<ConstMulBasicOp> {
         self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.t.constInteger == other.t.constInteger
+    }
+}
+
+impl Hash for Op<ConstMulBasicOp> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.t.constInteger.hash(state);
+        // let mut h = hasher.finish();
+        for i in &self.inputs {
+           i.as_ref().unwrap().hash(state);
+        }
     }
 }

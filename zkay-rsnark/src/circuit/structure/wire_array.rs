@@ -13,8 +13,9 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::linear_combination_wire::{
     LinearCombinationWire, new_linear_combination,
 };
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::InstanceOf;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -77,12 +78,12 @@ impl WireArray {
         let mut allConstant = true;
         let mut sum = BigInteger::ZERO;
         for w in &self.array {
-            if !w.as_ref().unwrap().instance_of("ConstantWire") {
+            if w.as_ref().unwrap().instance_of("ConstantWire") {
+                sum = sum.add(w.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant());
+            }else {
                 allConstant = false;
                 break;
-            } else {
-                sum = sum.add(w.as_ref().unwrap().getConstant());
-            }
+            }  
         }
         if !allConstant {
             let output = WireType::LinearCombination(new_linear_combination(
@@ -238,7 +239,7 @@ impl WireArray {
             let w = self.array[i].clone();
             if w.as_ref().unwrap().instance_of("ConstantWire") {
                 let cw = w;
-                let v = cw.as_ref().unwrap().getConstant();
+                let v = cw.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
                 if v == Util::one() {
                     sum = sum.add(v.shl(i));
                 } else if !v == BigInteger::ZERO {
@@ -268,7 +269,7 @@ impl WireArray {
             let w = bits[i].clone();
             if w.as_ref().unwrap().instance_of("ConstantWire") {
                 let cw = w;
-                let v = cw.as_ref().unwrap().getConstant();
+                let v = cw.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
                 if v == Util::one() {
                     sum = sum.add(v.shl(i));
                 } else {

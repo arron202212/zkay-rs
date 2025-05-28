@@ -19,3 +19,6 @@ dyn-clone={workspace = true}
 rand={workspace = true}
 rccell={workspace = true}
 zkay-derive={workspace = true}
+strum={workspace = true}
+strum_macros={workspace = true}
+enum_dispatch={ workspace = true }

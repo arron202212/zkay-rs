@@ -25,14 +25,14 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-pub trait Mul<T = Self> {
-    fn mul(self, b: T, desc: &String) -> WireType;
+pub trait MulWire<T = Self> {
+    fn mul_wire(self, b: T, desc: &String) -> WireType;
 }
-pub trait Add<T = Self> {
-    fn add(self, w: T, desc: &String) -> WireType;
+pub trait AddWire<T = Self> {
+    fn add_wire(self, w: T, desc: &String) -> WireType;
 }
-pub trait Sub<T = Self> {
-    fn sub(self, w: T, desc: &String) -> WireType;
+pub trait SubWire<T = Self> {
+    fn sub_wire(self, w: T, desc: &String) -> WireType;
 }
 
 // pub trait Neg<T=Self>{

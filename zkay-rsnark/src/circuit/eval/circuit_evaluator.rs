@@ -10,9 +10,10 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::operations::wire_label_instruction;
 use crate::circuit::operations::wire_label_instruction::LabelType;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use rccell::RcCell;

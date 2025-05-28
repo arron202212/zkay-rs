@@ -24,9 +24,9 @@ pub fn newGadget(desc: &String) -> (CircuitGenerator, String) {
 pub trait GadgetConfig: Debug {
     fn getOutputWires(&self) -> Vec<Option<WireType>>;
 
-    fn toString(&self) -> String {
-        "getClass().getSimpleName()".to_owned() + " " + &self.description()
-    }
+    // fn toString(&self) -> String {
+    //     "getClass().getSimpleName()".to_owned() + " " + &self.description()
+    // }
     fn description(&self) -> String {
         String::new()
     }
@@ -34,3 +34,21 @@ pub trait GadgetConfig: Debug {
         format!("{self:?}:{s}")
     }
 }
+
+
+#[macro_export]
+macro_rules! impl_display_of_gadget_for {
+    ($impl_type:ty) => {
+           impl std::fmt::Display for $impl_type {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        write!(
+                            f,
+                            "{} {}",
+                            self.getSimpleName(),
+                                    self.description(),
+                        )
+                    }
+                }
+    };
+}
+

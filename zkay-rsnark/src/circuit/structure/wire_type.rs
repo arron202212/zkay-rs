@@ -7,8 +7,8 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use super::wire_ops::{
-    Add as AddWire, AndBitwise, IsEqualTo, IsGreaterThan, IsGreaterThanOrEqual, IsLessThan,
-    IsLessThanOrEqual, Mul as MulWire, OrBitwise, Sub as SubWire, XorBitwise,
+    AddWire, AndBitwise, IsEqualTo, IsGreaterThan, IsGreaterThanOrEqual, IsLessThan,
+    IsLessThanOrEqual,  MulWire, OrBitwise, SubWire, XorBitwise,
 };
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::basic_op::Op;
@@ -30,16 +30,21 @@ use crate::circuit::structure::linear_combination_wire::{
 use crate::circuit::structure::variable_bit_wire::VariableBitWire;
 use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
 use crate::circuit::structure::wire::Base;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
+use crate::circuit::StructNameConfig;
+use crate::circuit::InstanceOf;
 
+use strum_macros::{EnumIs, EnumTryAs};
 use crate::util::util::BigInteger;
 use crate::util::util::Util;
+use enum_dispatch::enum_dispatch;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
-#[derive(Debug, Clone, Hash, PartialEq)]
+use std::ops::{Add, Mul, Sub,BitXor,BitAnd,BitOr};
+#[enum_dispatch(GetWireId, InstanceOf, StructNameConfig)]
+#[derive(Debug, Clone, Hash, PartialEq,EnumIs, EnumTryAs)]
 pub enum WireType {
     Wire(Wire<Base>),
     LinearCombinationBit(Wire<LinearCombinationBitWire>),
@@ -55,25 +60,25 @@ impl Default for WireType {
     }
 }
 impl WireType {
-    pub fn instance_of(&self, name: &str) -> bool {
-        self.name() == name
-    }
-    fn name(&self) -> &str {
-        ""
-    }
+    // pub fn instance_of(&self, name: &str) -> bool {
+    //     self.name() == name
+    // }
+    // fn name(&self) -> &str {
+    //     ""
+    // }
 
-    pub fn getConstant(&self) -> BigInteger {
-        return BigInteger::ZERO;
-    }
-    pub fn isBinary(&self) -> bool {
-        false
-    }
-    pub fn invAsBit(&self, desc: &String) -> Option<WireType> {
-        None
-    }
-    pub fn getBitWiresIfExistAlready(&self) -> Option<WireArray> {
-        return self.getBitWires();
-    }
+    // pub fn getConstant(&self) -> BigInteger {
+    //     return BigInteger::ZERO;
+    // }
+    // pub fn isBinary(&self) -> bool {
+    //     false
+    // }
+    // pub fn invAsBit(&self, desc: &String) -> Option<WireType> {
+    //     None
+    // }
+    // pub fn getBitWiresIfExistAlready(&self) -> Option<WireArray> {
+    //     return self.getBitWires();
+    // }
     // pub fn packIfNeeded(&self, desc: &String) {
     //     // if self.wireId == -1 {
     //     //     self.pack();
@@ -83,7 +88,7 @@ impl WireType {
 impl setBitsConfig for WireType {}
 impl WireConfig for WireType {}
 impl MulWire<BigInteger> for WireType {
-    fn mul(self, b: BigInteger, desc: &String) -> Self {
+    fn mul_wire(self, b: BigInteger, desc: &String) -> Self {
         self.packIfNeeded(desc);
         if b == Util::one() {
             return self.self_clone().unwrap();
@@ -107,21 +112,21 @@ impl MulWire<BigInteger> for WireType {
     }
 }
 impl MulWire<i64> for WireType {
-    fn mul(self, l: i64, desc: &String) -> WireType {
+    fn mul_wire(self, l: i64, desc: &String) -> WireType {
         return self.mulb(BigInteger::from(l), desc);
     }
 }
 impl MulWire<(i64, i32)> for WireType {
-    fn mul(self, (base, exp): (i64, i32), desc: &String) -> WireType {
+    fn mul_wire(self, (base, exp): (i64, i32), desc: &String) -> WireType {
         let mut b = BigInteger::from(base);
         b = b.pow(exp as u32);
         return self.mulb(b, desc);
     }
 }
 impl MulWire for WireType {
-    fn mul(self, w: Self, desc: &String) -> WireType {
+    fn mul_wire(self, w: Self, desc: &String) -> WireType {
         if w.instance_of("ConstantWire") {
-            return self.mulb(w.getConstant(), desc);
+            return self.mulb(w.try_as_constant_ref().unwrap().getConstant(), desc);
         }
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
@@ -138,7 +143,7 @@ impl MulWire for WireType {
 }
 
 impl AddWire for WireType {
-    fn add(self, w: WireType, desc: &String) -> WireType {
+    fn add_wire(self, w: WireType, desc: &String) -> WireType {
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
         return WireArray::new(vec![Some(self.self_clone().unwrap()), Some(w)])
@@ -146,17 +151,17 @@ impl AddWire for WireType {
     }
 }
 impl AddWire<i64> for WireType {
-    fn add(self, v: i64, desc: &String) -> WireType {
+    fn add_wire(self, v: i64, desc: &String) -> WireType {
         return self.addw(self.generator().createConstantWirei(v, desc), desc);
     }
 }
 impl AddWire<BigInteger> for WireType {
-    fn add(self, b: BigInteger, desc: &String) -> WireType {
+    fn add_wire(self, b: BigInteger, desc: &String) -> WireType {
         return self.addw(self.generator().createConstantWire(b, desc), desc);
     }
 }
 impl SubWire for WireType {
-    fn sub(self, w: WireType, desc: &String) -> WireType {
+    fn sub_wire(self, w: WireType, desc: &String) -> WireType {
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
         let neg = w.muli(-1, desc);
@@ -164,12 +169,12 @@ impl SubWire for WireType {
     }
 }
 impl SubWire<i64> for WireType {
-    fn sub(self, v: i64, desc: &String) -> WireType {
-        return self.subw(self.generator().createConstantWirei(v, desc), desc);
+    fn sub_wire(self, v: i64, desc: &String) -> WireType {
+        return self.subw(self.generator().createConstantWirei(v as i64, desc), desc);
     }
 }
 impl SubWire<BigInteger> for WireType {
-    fn sub(self, b: BigInteger, desc: &String) -> WireType {
+    fn sub_wire(self, b: BigInteger, desc: &String) -> WireType {
         return self.subw(self.generator().createConstantWire(b, desc), desc);
     }
 }
@@ -380,15 +385,15 @@ impl Add for WireType {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        self
+        self.add_wire(rhs,&String::new())
     }
 }
 
-impl Add<u64> for WireType {
+impl Add<i64> for WireType {
     type Output = Self;
 
-    fn add(self, rhs: u64) -> Self::Output {
-        self
+    fn add(self, rhs: i64) -> Self::Output {
+        self.add_wire(rhs,&String::new())
     }
 }
 
@@ -396,29 +401,29 @@ impl Add<BigInteger> for WireType {
     type Output = Self;
 
     fn add(self, rhs: BigInteger) -> Self::Output {
-        self
+        self.add_wire(rhs,&String::new())
     }
 }
 impl Sub for WireType {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self
+        self.sub_wire(rhs,&String::new())
     }
 }
 
-impl Sub<u64> for WireType {
+impl Sub<i64> for WireType {
     type Output = Self;
 
-    fn sub(self, rhs: u64) -> Self::Output {
-        self
+    fn sub(self, rhs: i64) -> Self::Output {
+        self.sub_wire(rhs,&String::new())
     }
 }
 impl Sub<BigInteger> for WireType {
     type Output = Self;
 
     fn sub(self, rhs: BigInteger) -> Self::Output {
-        self
+        self.sub_wire(rhs,&String::new())
     }
 }
 
@@ -426,7 +431,80 @@ impl Mul for WireType {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        self
+        self.mul_wire(rhs,&String::new())
+    }
+}
+
+
+
+impl BitAnd for WireType {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        self.and_bitwise(rhs,32,&String::new())
+    }
+}
+
+impl BitAnd<i64> for WireType {
+    type Output = Self;
+
+    fn bitand(self, rhs: i64) -> Self::Output {
+        self.and_bitwise(rhs,32,&String::new())
+    }
+}
+
+impl BitAnd<BigInteger> for WireType {
+    type Output = Self;
+
+    fn bitand(self, rhs: BigInteger) -> Self::Output {
+        self.and_bitwise(rhs,32,&String::new())
+    }
+}
+impl BitOr for WireType {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        self.or_bitwise(rhs,32,&String::new())
+    }
+}
+
+impl BitOr<i64> for WireType {
+    type Output = Self;
+
+    fn bitor(self, rhs: i64) -> Self::Output {
+        self.or_bitwise(rhs,32,&String::new())
+    }
+}
+impl BitOr<BigInteger> for WireType {
+    type Output = Self;
+
+    fn bitor(self, rhs: BigInteger) -> Self::Output {
+        self.or_bitwise(rhs,32,&String::new())
+    }
+}
+
+
+
+impl BitXor for WireType {
+    type Output = Self;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        self.xor_bitwise(rhs,32,&String::new())
+    }
+}
+
+impl BitXor<i64> for WireType {
+    type Output = Self;
+
+    fn bitxor(self, rhs: i64) -> Self::Output {
+        self.xor_bitwise(rhs,32,&String::new())
+    }
+}
+impl BitXor<BigInteger> for WireType {
+    type Output = Self;
+
+    fn bitxor(self, rhs: BigInteger) -> Self::Output {
+        self.xor_bitwise(rhs,32,&String::new())
     }
 }
 
@@ -439,5 +517,17 @@ impl std::fmt::Display for WireType {
                 _ => "",
             }
         )
+    }
+}
+
+ impl StructNameConfig for WireType{
+    fn name(&self) -> String {
+        String::new()
+    }
+}
+
+impl  InstanceOf for WireType {
+    fn instance_of(&self, name: &str) -> bool {
+        self.name() == name
     }
 }

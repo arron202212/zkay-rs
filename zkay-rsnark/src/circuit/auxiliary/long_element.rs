@@ -5,13 +5,15 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire_ops::{AddWire, SubWire,MulWire};
 use crate::circuit::{
     config::config::Configs,
     eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
     structure::{circuit_generator::CircuitGenerator, constant_wire, wire_array::WireArray},
 };
+use crate::circuit::InstanceOf;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use num_traits::Signed;
@@ -26,9 +28,9 @@ use std::fmt::Debug;
  */
 // pub type BigInteger = String;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Div, Mul, Neg, Rem, Shr, Sub};
+use std::ops::{Add , Div , Mul, Neg, Rem, Shr, Sub};
 use zkay_derive::ImplStructNameConfig;
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone, Hash)]
 pub struct LongElement {
     pub array: Vec<Option<WireType>>,
     pub currentBitwidth: Vec<u64>,
@@ -401,7 +403,7 @@ impl LongElement {
             };
             newArray[i] = Some(w1.clone().add(w.clone().mul(w2.clone().sub(w1))));
             if newArray[i].as_ref().unwrap().instance_of("ConstantWire") {
-                newMaxValues[i] = newArray[i].as_ref().unwrap().getConstant();
+                newMaxValues[i] = newArray[i].as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
             }
         }
         LongElement::newb(newArray, newMaxValues)
@@ -441,7 +443,7 @@ impl LongElement {
             if self.array[i].as_ref().unwrap().instance_of("ConstantWire") {
                 return None;
             } else {
-                constants[i] = self.array[i].as_ref().unwrap().getConstant();
+                constants[i] = self.array[i].as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
             }
         }
         Some(Util::group(constants, bitwidth_per_chunk))
@@ -449,24 +451,24 @@ impl LongElement {
 
     // the equals java method to compare objects (this is NOT for circuit
     // equality check)
-    pub fn equals(&self, v: LongElement) -> bool {
-        // if o == null || !(o instance_of LongElement) {
-        // 	return false;
-        // }
-        // LongElement v = (LongElement) o;
-        if v.array.len() != self.array.len() {
-            return false;
-        }
-        // let mut  check = true;
-        // for i in 0.. self.array.len() {
-        // 	if !v.array[i].equals(self.array[i]) {
-        // 		check = false;
-        // 		break;
-        // 	}
-        // }
-        // return check;
-        self.array.iter().zip(&v.array).all(|(a, b)| a == b)
-    }
+    // pub fn equals(&self, v: LongElement) -> bool {
+    //     // if o == null || !(o instance_of LongElement) {
+    //     // 	return false;
+    //     // }
+    //     // LongElement v = (LongElement) o;
+    //     if v.array.len() != self.array.len() {
+    //         return false;
+    //     }
+    //     // let mut  check = true;
+    //     // for i in 0.. self.array.len() {
+    //     // 	if !v.array[i]==self.array[i] {
+    //     // 		check = false;
+    //     // 		break;
+    //     // 	}
+    //     // }
+    //     // return check;
+    //     self.array.iter().zip(&v.array).all(|(a, b)| a == b)
+    // }
 
     // This asserts that the current bitwidth conditions are satisfied
     pub fn restrictBitwidth(&self) {
@@ -1169,5 +1171,28 @@ impl Mul for LongElement {
             }
         }
         LongElement::newb(result, newMaxValues)
+    }
+}
+
+
+impl Eq for LongElement {}
+impl PartialEq for LongElement {
+    fn eq(&self, other: &Self) -> bool {
+        // if o == null || !(o instance_of LongElement) {
+        // 	return false;
+        // }
+        // LongElement v = (LongElement) o;
+        if other.array.len() != self.array.len() {
+            return false;
+        }
+        // let mut  check = true;
+        // for i in 0.. self.array.len() {
+        // 	if !v.array[i]==self.array[i] {
+        // 		check = false;
+        // 		break;
+        // 	}
+        // }
+        // return check;
+        self.array.iter().zip(&other.array).all(|(a, b)| a == b)
     }
 }

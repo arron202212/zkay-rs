@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -26,6 +26,7 @@ pub fn new_xor(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op
     }
 }
 crate::impl_instruction_for!(Op<XorBasicOp>);
+crate::impl_hash_code_for!(Op<XorBasicOp>);
 impl BasicOp for Op<XorBasicOp> {
     fn getOpcode(&self) -> String {
         return "xor".to_owned();
@@ -65,6 +66,7 @@ impl BasicOp for Op<XorBasicOp> {
         return 1;
     }
 }
+
 impl Eq for Op<XorBasicOp> {}
 impl PartialEq for Op<XorBasicOp> {
     fn eq(&self, other: &Self) -> bool {
@@ -75,19 +77,19 @@ impl PartialEq for Op<XorBasicOp> {
         let check1 = self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[1].as_ref().unwrap());
+                ==other.inputs[1].as_ref().unwrap();
         let check2 = self.inputs[1]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[1].as_ref().unwrap());
+                ==other.inputs[1].as_ref().unwrap();
         check1 || check2
     }
 }

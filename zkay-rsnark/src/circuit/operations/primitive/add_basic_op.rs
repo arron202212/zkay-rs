@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 
 use crate::util::util::{BigInteger, Util};
@@ -27,6 +27,7 @@ pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<
     }
 }
 crate::impl_instruction_for!(Op<AddBasicOp>);
+crate::impl_hash_code_for!(Op<AddBasicOp>);
 impl BasicOp for Op<AddBasicOp> {
     // fn getOpcode(&self) -> String {
     //     return "add".to_owned();
@@ -65,25 +66,25 @@ impl PartialEq for Op<AddBasicOp> {
             let check1 = self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[0].as_ref().unwrap())
+                ==other.inputs[0].as_ref().unwrap()
                 && self.inputs[1]
                     .as_ref()
                     .unwrap()
-                    .equals(other.inputs[1].as_ref().unwrap());
+                    ==other.inputs[1].as_ref().unwrap();
             let check2 = self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[0].as_ref().unwrap())
+                ==other.inputs[0].as_ref().unwrap()
                 && self.inputs[0]
                     .as_ref()
                     .unwrap()
-                    .equals(other.inputs[1].as_ref().unwrap());
+                    ==other.inputs[1].as_ref().unwrap();
             return check1 || check2;
         }
 
         self.inputs
             .iter()
             .zip(&other.inputs)
-            .all(|(a, b)| a.as_ref().unwrap().equals(b.as_ref().unwrap()))
+            .all(|(a, b)| a.as_ref().unwrap()==b.as_ref().unwrap())
     }
 }

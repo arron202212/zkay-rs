@@ -157,7 +157,7 @@ let cipherTextBytesFromCircuit = t.toByteArray();
 			cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
 			Vec<byte> cipherTextDecrypted = cipher
 					.doFinal(cipherTextBytesFromCircuit);
-			assertTrue(Arrays.equals(plainText.getBytes(), cipherTextDecrypted));
+			assertTrue(Arrays==plainText.getBytes(), cipherTextDecrypted);
 		}
 
 	}

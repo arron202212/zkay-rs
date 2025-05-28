@@ -7,14 +7,14 @@
 #![allow(unused_braces)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::{InstanceOf, OpCodeConfig, StructNameConfig};
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub struct Op<T> {
     pub inputs: Vec<Option<WireType>>,
     pub outputs: Vec<Option<WireType>>,
@@ -90,21 +90,21 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     }
     fn getNumMulGates(&self) -> i32;
 
-    fn toString(&self) -> String {
-        format!(
-            "{} in {} <{}> out  <{}> {} {}",
-            self.getOpcode(),
-            self.getInputs().len(),
-            Util::arrayToString(self.getInputs(), " ".to_owned()),
-            self.getOutputs().len(),
-            Util::arrayToString(self.getOutputs(), " ".to_owned()),
-            if self.desc().len() > 0 {
-                " \t\t# ".to_owned() + &self.desc()
-            } else {
-                String::new()
-            }
-        )
-    }
+    // fn toString(&self) -> String {
+    //     format!(
+    //         "{} in {} <{}> out  <{}> {} {}",
+    //         self.getOpcode(),
+    //         self.getInputs().len(),
+    //         Util::arrayToString(self.getInputs(), " ".to_owned()),
+    //         self.getOutputs().len(),
+    //         Util::arrayToString(self.getOutputs(), " ".to_owned()),
+    //         if self.desc().len() > 0 {
+    //             " \t\t# ".to_owned() + &self.desc()
+    //         } else {
+    //             String::new()
+    //         }
+    //     )
+    // }
 
     fn getInputs(&self) -> Vec<Option<WireType>> {
         vec![]
@@ -120,16 +120,16 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     fn desc(&self) -> String {
         String::new()
     }
-    fn hashCode(&self) -> u64 {
-        // this method should be overriden when a subclass can have more than one opcode, or have other arguments
-        let mut hasher = DefaultHasher::new();
-        self.getOpcode().hash(&mut hasher);
-        let mut h = hasher.finish();
-        for i in self.getInputs() {
-            h += i.as_ref().unwrap().hashCode();
-        }
-        h
-    }
+    // fn hashCode(&self) -> u64 {
+    //     // this method should be overriden when a subclass can have more than one opcode, or have other arguments
+    //     let mut hasher = DefaultHasher::new();
+    //     self.getOpcode().hash(&mut hasher);
+    //     let mut h = hasher.finish();
+    //     for i in self.getInputs() {
+    //         h += i.as_ref().unwrap().hashCode();
+    //     }
+    //     h
+    // }
 
     // fn equals(&self, rhs: &Self) -> bool {
     //     // self == rhs
@@ -137,6 +137,7 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     //     false
     // }
 }
+
 #[macro_export]
 macro_rules! impl_instruction_for {
     ($impl_type:ty) => {
@@ -150,6 +151,53 @@ macro_rules! impl_instruction_for {
                 self.checkOutputs(assignment.clone());
                 self.compute(assignment.clone());
             }
+        fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
+                Some(Box::new(self.clone()))
+            }
         }
     };
 }
+
+
+#[macro_export]
+macro_rules! impl_hash_code_for {
+    ($impl_type:ty) => {
+            impl std::hash::Hash for $impl_type  {
+                fn hash<H: Hasher>(&self, state: &mut H) {
+                        // this method should be overriden when a subclass can have more than one opcode, or have other arguments
+                        self.getOpcode().hash(state);
+                        for i in self.getInputs() {
+                           i.as_ref().unwrap().hash(state);
+                        }
+                }
+            }
+    };
+}
+
+
+
+#[macro_export]
+macro_rules! impl_display_of_op_for {
+    ($impl_type:ty) => {
+           impl std::fmt::Display for $impl_type {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        write!(
+                            f,
+                         "{} in {} <{}> out  <{}> {} {}",
+                            self.getOpcode(),
+                                    self.getInputs().len(),
+                                    Util::arrayToString(self.getInputs(), " ".to_owned()),
+                                    self.getOutputs().len(),
+                                    Util::arrayToString(self.getOutputs(), " ".to_owned()),
+                                    if self.desc().len() > 0 {
+                                        " \t\t# ".to_owned() + &self.desc()
+                                    } else {
+                                        String::new()
+                                    }
+                        )
+                    }
+                }
+    };
+}
+
+

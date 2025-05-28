@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -30,6 +30,7 @@ pub fn new_non_zero_check(
     }
 }
 crate::impl_instruction_for!(Op<NonZeroCheckBasicOp>);
+crate::impl_hash_code_for!(Op<NonZeroCheckBasicOp>);
 impl BasicOp for Op<NonZeroCheckBasicOp> {
     fn getOpcode(&self) -> String {
         return "zerop".to_owned();
@@ -64,6 +65,6 @@ impl PartialEq for Op<NonZeroCheckBasicOp> {
         self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
     }
 }

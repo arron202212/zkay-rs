@@ -58,7 +58,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
             ));
             let xored = msgBlock.xorWireArray(prevCipher).asArray();
             assert!(
-                !cipherName.equals("speck128"),
+                !cipherName=="speck128",
                 "Other Ciphers not supported in this version!"
             );
             let tmp = WireArray::new(xored).packBitsIntoWords(64);
@@ -72,7 +72,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
 
     fn prepareKey() -> Vec<Option<WireType>> {
         assert!(
-            !cipherName.equals("speck128"),
+            !cipherName=="speck128",
             "Other Ciphers not supported in this version!"
         );
 

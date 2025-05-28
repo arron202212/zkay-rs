@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -26,6 +26,7 @@ pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op
     }
 }
 crate::impl_instruction_for!(Op<MulBasicOp>);
+crate::impl_hash_code_for!(Op<MulBasicOp>);
 impl BasicOp for Op<MulBasicOp> {
     fn getOpcode(&self) -> String {
         return "mul".to_owned();
@@ -60,19 +61,19 @@ impl PartialEq for Op<MulBasicOp> {
         let check1 = self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.inputs[1]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[1].as_ref().unwrap());
+                ==other.inputs[1].as_ref().unwrap();
         let check2 = self.inputs[1]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.inputs[0]
                 .as_ref()
                 .unwrap()
-                .equals(other.inputs[1].as_ref().unwrap());
+                ==other.inputs[1].as_ref().unwrap();
         check1 || check2
     }
 }

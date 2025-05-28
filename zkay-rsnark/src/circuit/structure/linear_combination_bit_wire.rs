@@ -6,14 +6,17 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::bit_wire::BitWireConfig;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct LinearCombinationBitWire;
+crate::impl_hash_code_of_wire_for!(Wire<LinearCombinationBitWire>);
+crate::impl_name_instance_of_wire_for!(Wire<LinearCombinationBitWire>);
 pub fn new_linear_combination_bit(wireId: i32) -> Wire<LinearCombinationBitWire> {
     // super(wireId);
     Wire::<LinearCombinationBitWire> {
@@ -23,6 +26,8 @@ pub fn new_linear_combination_bit(wireId: i32) -> Wire<LinearCombinationBitWire>
 }
 impl setBitsConfig for LinearCombinationBitWire {}
 impl setBitsConfig for Wire<LinearCombinationBitWire> {}
+impl WireConfig for Wire<LinearCombinationBitWire> {}
+impl BitWireConfig for Wire<LinearCombinationBitWire> {}
 impl Wire<LinearCombinationBitWire> {
     // pub fn new(wireId: i32) -> Self {
     //     // super(wireId);

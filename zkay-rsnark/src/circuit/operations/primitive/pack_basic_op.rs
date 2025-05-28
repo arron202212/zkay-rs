@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -26,6 +26,7 @@ pub fn new_pack(inBits: Vec<Option<WireType>>, out: WireType, desc: String) -> O
     }
 }
 crate::impl_instruction_for!(Op<PackBasicOp>);
+crate::impl_hash_code_for!(Op<PackBasicOp>);
 impl BasicOp for Op<PackBasicOp> {
     fn getOpcode(&self) -> String {
         return "pack".to_owned();
@@ -79,7 +80,7 @@ impl PartialEq for Op<PackBasicOp> {
                 && self.inputs[i]
                     .as_ref()
                     .unwrap()
-                    .equals(other.inputs[i].as_ref().unwrap());
+                    ==other.inputs[i].as_ref().unwrap();
         }
         check
     }

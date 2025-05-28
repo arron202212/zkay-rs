@@ -88,7 +88,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             let coeffs = vec![BigInteger::default(); 16];
             for ii in 0..16 {
                 coeffs[ii] = mat[ii][16];
-                if !coeffs[ii].equals(polyCoeffs[ii]) {
+                if !coeffs[ii]==polyCoeffs[ii] {
                     panic!("Inconsistency found.");
                 }
             }
@@ -130,7 +130,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             }
             result = result.rem(Configs.get().unwrap().field_prime.clone());
 
-            if result.equals(Configs.get().unwrap().field_prime.sub(p)) {
+            if result==Configs.get().unwrap().field_prime.sub(p) {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;

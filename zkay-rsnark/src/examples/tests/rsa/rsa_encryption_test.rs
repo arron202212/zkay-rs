@@ -95,7 +95,7 @@ let cipherTextPadded = vec![byte::default();cipherTextBytes.len() + 1];
 						Vec<Vec<byte>> result = RSAUtil.extractRSARandomness1_5(cipherTextBytes,
 								 privKey);
 
-let check = Arrays.equals(result[0], plainText.getBytes());
+let check = Arrays==result[0], plainText.getBytes();
 						if !check {
 							panic!(
 									"Randomness Extraction did not decrypt right");
@@ -144,7 +144,7 @@ let cipherTextBytesFromCircuit = t.toByteArray();
 let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
 let cipherTextDecrypted = cipher.doFinal(cipherTextBytesFromCircuit);
-			assertTrue(Arrays.equals(plainText.getBytes(), cipherTextDecrypted));
+			assertTrue(Arrays==plainText.getBytes(), cipherTextDecrypted);
 		}
 
 	}

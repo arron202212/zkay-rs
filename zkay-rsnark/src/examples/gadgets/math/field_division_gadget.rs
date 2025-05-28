@@ -13,6 +13,8 @@ use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::wire::WireConfig;
+use crate::circuit::InstanceOf;
 use zkay_derive::ImplStructNameConfig;
 // see notes in the end of the code.
 use std::fmt::Debug;
@@ -36,10 +38,10 @@ impl FieldDivisionGadget {
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
-            let aConst = _self.a.getConstant();
+            let aConst = _self.a.try_as_constant_ref().unwrap().getConstant();
             let bInverseConst = _self
                 .b
-                .getConstant()
+                .try_as_constant_ref().unwrap().getConstant()
                 .modinv(&Configs.get().unwrap().field_prime.clone())
                 .unwrap();
             _self.c = generator.createConstantWire(

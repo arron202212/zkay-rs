@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 
@@ -17,6 +17,8 @@ use zkay_derive::ImplStructNameConfig;
 pub struct VariableWire {
     pub bitWires: RcCell<Option<WireArray>>,
 }
+crate::impl_hash_code_of_wire_for!(Wire<VariableWire>);
+crate::impl_name_instance_of_wire_for!(Wire<VariableWire>);
 pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
     // super(wireId);
     Wire::<VariableWire> {
@@ -28,6 +30,11 @@ pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
 }
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}
+impl WireConfig for Wire<VariableWire> {
+  fn getBitWires(&self) -> Option<WireArray> {
+        self.t.bitWires.borrow().clone()
+    }
+}
 impl Wire<VariableWire> {
     // pub fn new(wireId: i32) -> Self {
     //     // super(wireId);
@@ -35,9 +42,9 @@ impl Wire<VariableWire> {
     //         bitWires: RcCell::new(None),
     //     }
     // }
-    fn getBitWires(&self) -> Option<WireArray> {
-        self.t.bitWires.borrow().clone()
-    }
+    // fn getBitWires(&self) -> Option<WireArray> {
+    //     self.t.bitWires.borrow().clone()
+    // }
 
     fn setBits(&self, bitWires: Option<WireArray>) {
         *self.t.bitWires.borrow_mut() = bitWires;

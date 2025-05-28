@@ -18,9 +18,9 @@ use crate::circuit::operations::wire_label_instruction::WireLabelInstruction;
 use crate::circuit::structure::constant_wire::{ConstantWire, new_constant};
 use crate::circuit::structure::variable_bit_wire::VariableBitWire;
 use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::circuit::InstanceOf;
 use crate::util::{
     run_command::run_command,
     util::{BigInteger, Util},
@@ -430,9 +430,9 @@ impl CircuitGenerator {
             && w2.instance_of("ConstantWire")
             && w3.instance_of("ConstantWire")
         {
-            let const1 = (w1).getConstant();
-            let const2 = (w2).getConstant();
-            let const3 = (w3).getConstant();
+            let const1 = w1.try_as_constant_ref().unwrap().getConstant();
+            let const2 = w2.try_as_constant_ref().unwrap().getConstant();
+            let const3 = w3.try_as_constant_ref().unwrap().getConstant();
             assert!(
                 const3
                     == const1

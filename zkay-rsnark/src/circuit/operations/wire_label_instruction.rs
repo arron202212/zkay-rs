@@ -12,7 +12,8 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire_type::WireType;
 use zkay_derive::ImplStructNameConfig;
-#[derive(Clone, Debug, Hash, PartialEq)]
+use strum::{Display, EnumString};
+#[derive(Clone, Debug, Hash, PartialEq,Display)]
 pub enum LabelType {
     input,
     output,
@@ -20,17 +21,17 @@ pub enum LabelType {
     debug,
 }
 
-impl std::fmt::Display for LabelType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                _ => "",
-            }
-        )
-    }
-}
+// impl std::fmt::Display for LabelType {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}",
+//             match self {
+//                 _ => "",
+//             }
+//         )
+//     }
+// }
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -45,7 +46,15 @@ pub trait WireLabel {
 
     fn getType(&self) -> LabelType;
 }
+impl WireLabel for WireLabelInstruction{
+    fn getWire(&self) -> WireType{
+    self.w.clone()
+    }
 
+    fn getType(&self) -> LabelType{
+    self.label_type.clone()
+    }
+}
 impl WireLabelInstruction {
     pub fn new(label_type: LabelType, w: WireType, desc: String) -> Self {
         Self {
@@ -59,18 +68,18 @@ impl WireLabelInstruction {
         self.w.clone()
     }
 
-    pub fn toString(&self) -> String {
-        format!(
-            "{} {}{}",
-            self.label_type,
-            self.w,
-            &(if self.desc.is_empty() {
-                self.desc.clone()
-            } else {
-                format!("\t\t\t # {}", self.desc)
-            })
-        )
-    }
+    // pub fn toString(&self) -> String {
+    //     format!(
+    //         "{} {}{}",
+    //         self.label_type,
+    //         self.w,
+    //         &(if self.desc.is_empty() {
+    //             self.desc.clone()
+    //         } else {
+    //             format!("\t\t\t # {}", self.desc)
+    //         })
+    //     )
+    // }
     pub fn getType(&self) -> LabelType {
         self.label_type.clone()
     }
@@ -110,4 +119,24 @@ impl Instruction for WireLabelInstruction {
     // fn name(&self) -> &str {
     //      ""
     //  }
+   fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
+        Some(Box::new(self.clone()))
+    }
 }
+
+
+impl std::fmt::Display for WireLabelInstruction {
+                    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                        write!(
+                            f,
+                            "{} {}{}",
+                            self.label_type,
+                            self.w,
+                            &(if self.desc.is_empty() {
+                                self.desc.clone()
+                            } else {
+                                format!("\t\t\t # {}", self.desc)
+                            })
+                        )
+                    }
+                }

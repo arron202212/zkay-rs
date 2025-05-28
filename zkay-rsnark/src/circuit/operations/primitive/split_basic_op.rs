@@ -8,7 +8,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use std::fmt::Debug;
@@ -26,6 +26,7 @@ pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<S
     }
 }
 crate::impl_instruction_for!(Op<SplitBasicOp>);
+crate::impl_hash_code_for!(Op<SplitBasicOp>);
 impl BasicOp for Op<SplitBasicOp> {
     fn getOpcode(&self) -> String {
         return "split".to_owned();
@@ -77,7 +78,7 @@ impl PartialEq for Op<SplitBasicOp> {
         self.inputs[0]
             .as_ref()
             .unwrap()
-            .equals(other.inputs[0].as_ref().unwrap())
+            ==other.inputs[0].as_ref().unwrap()
             && self.outputs.len() == other.outputs.len()
     }
 }

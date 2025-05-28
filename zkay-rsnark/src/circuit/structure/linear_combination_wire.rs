@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::wire::{Wire, WireConfig, setBitsConfig};
+use crate::circuit::structure::wire::{Wire,GetWireId, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use rccell::RcCell;
 use std::fmt::Debug;
@@ -16,6 +16,8 @@ use zkay_derive::ImplStructNameConfig;
 pub struct LinearCombinationWire {
     pub bitWires: RcCell<Option<WireArray>>,
 }
+crate::impl_hash_code_of_wire_for!(Wire<LinearCombinationWire>);
+crate::impl_name_instance_of_wire_for!(Wire<LinearCombinationWire>);
 pub fn new_linear_combination(wireId: i32, bits: Option<WireArray>) -> Wire<LinearCombinationWire> {
     // super(wireId);
     Wire::<LinearCombinationWire> {
@@ -27,6 +29,11 @@ pub fn new_linear_combination(wireId: i32, bits: Option<WireArray>) -> Wire<Line
 }
 impl setBitsConfig for LinearCombinationWire {}
 impl setBitsConfig for Wire<LinearCombinationWire> {}
+impl WireConfig for Wire<LinearCombinationWire> {
+    fn getBitWires(&self) -> Option<WireArray> {
+        self.t.bitWires.borrow().clone()
+    }
+}
 impl Wire<LinearCombinationWire> {
     // pub fn new(wireId: i32) -> Self {
     //     // super(wireId);

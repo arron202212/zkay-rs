@@ -24,7 +24,7 @@ impl Gadget for PinocchioGadget {
         let mut wireMapping;
         let scanner = Scanner::new(File::new(path));
 
-        if !scanner.next().equals("total") {
+        if !scanner.next()=="total" {
             scanner.close();
             panic!("Expected total %d in the first line");
         }
@@ -39,7 +39,7 @@ impl Gadget for PinocchioGadget {
             if line.contains("#") {
                 line = line.substring(0, line.indexOf("#"));
             }
-            if line.equals("") {
+            if line=="" {
                 continue;
             } else if line.startsWith("input") {
                 let tokens = line.split("\\s+");
