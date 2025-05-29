@@ -24,6 +24,7 @@ use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
 use crate::circuit::structure::bit_wire::BitWire;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire::ConstantWire;
 use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBitWire;
 use crate::circuit::structure::linear_combination_wire::{
@@ -34,7 +35,6 @@ use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
 use crate::circuit::structure::wire::Base;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
-
 use crate::util::util::BigInteger;
 use crate::util::util::Util;
 use enum_dispatch::enum_dispatch;
@@ -43,7 +43,14 @@ use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Sub};
 use strum_macros::{EnumIs, EnumTryAs};
-#[enum_dispatch(GetWireId, InstanceOf, StructNameConfig)]
+#[enum_dispatch(
+    GetWireId,
+    InstanceOf,
+    StructNameConfig,
+    WireConfig,
+    setBitsConfig,
+    InstanceOf
+)]
 #[derive(Debug, Clone, Hash, PartialEq, EnumIs, EnumTryAs)]
 pub enum WireType {
     Wire(Wire<Base>),
@@ -85,8 +92,8 @@ impl WireType {
     //     // }
     // }
 }
-impl setBitsConfig for WireType {}
-impl WireConfig for WireType {}
+// impl setBitsConfig for WireType {}
+// impl WireConfig for WireType {}
 impl MulWire<BigInteger> for WireType {
     fn mul_wire(self, b: BigInteger, desc: &Option<String>) -> Self {
         self.packIfNeeded(desc);

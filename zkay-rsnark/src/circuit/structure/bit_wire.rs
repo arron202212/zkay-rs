@@ -41,7 +41,11 @@ pub fn new_bit(wireId: i32) -> Wire<BitWire> {
 }
 impl setBitsConfig for BitWire {}
 impl setBitsConfig for Wire<BitWire> {}
-impl WireConfig for Wire<BitWire> {}
+impl WireConfig for Wire<BitWire> {
+    fn self_clone(&self) -> Option<WireType> {
+        Some(WireType::Bit(self.clone()))
+    }
+}
 
 impl BitWireConfig for Wire<BitWire> {}
 pub trait BitWireConfig: WireConfig {

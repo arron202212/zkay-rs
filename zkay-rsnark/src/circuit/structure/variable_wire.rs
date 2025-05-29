@@ -8,6 +8,7 @@
 #![allow(warnings, unused)]
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
+use crate::circuit::structure::wire_type::WireType;
 use rccell::RcCell;
 
 use std::fmt::Debug;
@@ -33,6 +34,9 @@ impl setBitsConfig for Wire<VariableWire> {}
 impl WireConfig for Wire<VariableWire> {
     fn getBitWires(&self) -> Option<WireArray> {
         self.t.bitWires.borrow().clone()
+    }
+    fn self_clone(&self) -> Option<WireType> {
+        Some(WireType::Variable(self.clone()))
     }
 }
 impl Wire<VariableWire> {

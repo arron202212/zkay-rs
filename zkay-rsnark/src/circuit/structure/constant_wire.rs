@@ -59,6 +59,9 @@ impl Wire<ConstantWire> {
     }
 }
 impl WireConfig for Wire<ConstantWire> {
+    fn self_clone(&self) -> Option<WireType> {
+        Some(WireType::Constant(self.clone()))
+    }
     fn mulw(&self, w: WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
             return self.generator().createConstantWire(

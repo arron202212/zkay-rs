@@ -32,6 +32,9 @@ impl WireConfig for Wire<VariableBitWire> {
             self.clone(),
         ))]))
     }
+    fn self_clone(&self) -> Option<WireType> {
+        Some(WireType::VariableBit(self.clone()))
+    }
 }
 impl BitWireConfig for Wire<VariableBitWire> {}
 impl Wire<VariableBitWire> {

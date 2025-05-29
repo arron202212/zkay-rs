@@ -31,6 +31,8 @@ use crate::util::util::{BigInteger, Util};
 use enum_dispatch::enum_dispatch;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use zkay_derive::ImplStructNameConfig;
+#[enum_dispatch]
 pub trait setBitsConfig {
     fn setBits(&self, bits: Option<WireArray>) {
         // method overriden in subclasses
@@ -40,9 +42,12 @@ pub trait setBitsConfig {
         );
     }
 }
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct Base;
 impl setBitsConfig for Base {}
+impl setBitsConfig for Wire<Base> {}
+impl WireConfig for Wire<Base> {}
+crate::impl_name_instance_of_wire_for!(Wire<Base>);
 
 impl Hash for Wire<Base> {
     fn hash<H: Hasher>(&self, state: &mut H) {}
@@ -71,7 +76,7 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
 }
 // impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> setBitsConfig for Wire<T> {}
 // impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> WireConfig for Wire<T> {}
-
+#[enum_dispatch]
 pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
     // fn instance_of(&self, name: &str) -> bool {
     //     self.name() == name

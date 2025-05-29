@@ -26,7 +26,11 @@ pub fn new_linear_combination_bit(wireId: i32) -> Wire<LinearCombinationBitWire>
 }
 impl setBitsConfig for LinearCombinationBitWire {}
 impl setBitsConfig for Wire<LinearCombinationBitWire> {}
-impl WireConfig for Wire<LinearCombinationBitWire> {}
+impl WireConfig for Wire<LinearCombinationBitWire> {
+    fn self_clone(&self) -> Option<WireType> {
+        Some(WireType::LinearCombinationBit(self.clone()))
+    }
+}
 impl BitWireConfig for Wire<LinearCombinationBitWire> {}
 impl Wire<LinearCombinationBitWire> {
     // pub fn new(wireId: i32) -> Self {
