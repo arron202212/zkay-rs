@@ -1,5 +1,5 @@
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 
 /**

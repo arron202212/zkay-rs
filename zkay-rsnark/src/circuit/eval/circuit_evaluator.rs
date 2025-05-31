@@ -9,7 +9,7 @@ use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::wire_label_instruction;
 use crate::circuit::operations::wire_label_instruction::LabelType;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
@@ -22,21 +22,24 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
 use std::ops::{Add, Mul, Rem, Shl, Sub};
 use std::path::Path;
-// circuitGenerator: CircuitGenerator,
+// circuitGenerator:Box<dyn CGConfig+Send+Sync>,
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct CircuitEvaluator {
     pub valueAssignment: RcCell<Vec<Option<BigInteger>>>,
+    pub cg_name: String,
 }
 
 impl CircuitEvaluator {
-    pub fn new(circuitGenerator: CircuitGenerator) -> Self {
+    pub fn new(cg_name: &str) -> Self {
+        let circuitGenerator = getActiveCircuitGenerator(cg_name).unwrap().clone();
         let mut valueAssignment = vec![None; circuitGenerator.getNumWires() as usize];
         valueAssignment[circuitGenerator.getOneWire().unwrap().getWireId() as usize] =
             Some(Util::one());
         Self {
             valueAssignment: RcCell::new(valueAssignment),
+            cg_name: cg_name.to_owned(),
         }
     }
 
@@ -56,7 +59,8 @@ impl CircuitEvaluator {
                 let mut sum = BigInteger::ZERO;
                 for i in 0..bits.size() {
                     sum = sum.add(
-                        self.valueAssignment.borrow()[bits.get(i).getWireId() as usize]
+                        self.valueAssignment.borrow()
+                            [bits.get(i).as_ref().unwrap().getWireId() as usize]
                             .clone()
                             .unwrap()
                             .shl(i),
@@ -107,9 +111,7 @@ impl CircuitEvaluator {
     }
 
     pub fn evaluate(&self) {
-        let circuitGenerator = CircuitGenerator::getActiveCircuitGenerator()
-            .unwrap()
-            .clone();
+        let circuitGenerator = getActiveCircuitGenerator("CGBase").unwrap().clone();
         println!(
             "Running Circuit Evaluator for < {} >",
             circuitGenerator.getName()
@@ -134,9 +136,7 @@ impl CircuitEvaluator {
     }
 
     pub fn writeInputFile(&self) {
-        let circuitGenerator = CircuitGenerator::getActiveCircuitGenerator()
-            .unwrap()
-            .clone();
+        let circuitGenerator = getActiveCircuitGenerator("CGBase").unwrap().clone();
         let evalSequence = circuitGenerator.getEvaluationQueue();
         let mut printWriter = File::create(circuitGenerator.getName() + ".in").unwrap();
         for e in evalSequence.keys() {

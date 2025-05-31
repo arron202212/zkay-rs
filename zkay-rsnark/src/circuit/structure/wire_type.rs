@@ -24,7 +24,8 @@ use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
 use crate::circuit::structure::bit_wire::BitWire;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::constant_wire::ConstantWire;
 use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBitWire;
 use crate::circuit::structure::linear_combination_wire::{
@@ -101,13 +102,13 @@ impl MulWire<BigInteger> for WireType {
             return self.self_clone().unwrap();
         }
         if b == BigInteger::ZERO {
-            return self.generator().zeroWire.borrow().clone().unwrap();
+            return self.generator().zero_wire().borrow().clone().unwrap();
         }
         let out = WireType::LinearCombination(new_linear_combination(
-            *self.generator().currentWireId.borrow_mut(),
+            *self.generator().current_wire_id().borrow_mut(),
             None,
         ));
-        *self.generator().currentWireId.borrow_mut() += 1;
+        *self.generator().current_wire_id().borrow_mut() += 1;
         let op = new_const_mul(
             self.self_clone().unwrap(),
             out.clone(),
@@ -118,7 +119,7 @@ impl MulWire<BigInteger> for WireType {
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().currentWireId.borrow_mut() -= 1;
+            *self.generator().current_wire_id().borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
@@ -143,8 +144,10 @@ impl MulWire for WireType {
         }
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
-        let output = WireType::Variable(new_variable(*self.generator().currentWireId.borrow_mut()));
-        *self.generator().currentWireId.borrow_mut() += 1;
+        let output = WireType::Variable(new_variable(
+            *self.generator().current_wire_id().borrow_mut(),
+        ));
+        *self.generator().current_wire_id().borrow_mut() += 1;
         let op = new_mul(
             self.self_clone().unwrap(),
             w,
@@ -154,7 +157,7 @@ impl MulWire for WireType {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().currentWireId.borrow_mut() -= 1;
+            *self.generator().current_wire_id().borrow_mut() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         output
@@ -199,7 +202,7 @@ impl SubWire<BigInteger> for WireType {
 }
 
 impl XorBitwise for WireType {
-    fn xor_bitwise(self, w: WireType, numBits: i32, desc: &Option<String>) -> WireType {
+    fn xor_bitwise(self, w: WireType, numBits: u64, desc: &Option<String>) -> WireType {
         let bits1 = self.getBitWiresi(numBits as u64, desc);
         let bits2 = w.getBitWiresi(numBits as u64, desc);
         let result = bits1.xorWireArray(bits2, numBits as usize, desc);
@@ -212,19 +215,19 @@ impl XorBitwise for WireType {
 }
 
 impl XorBitwise<i64> for WireType {
-    fn xor_bitwise(self, v: i64, numBits: i32, desc: &Option<String>) -> WireType {
+    fn xor_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> WireType {
         return self.xorBitwise(self.generator().createConstantWirei(v, desc), numBits, desc);
     }
 }
 
 impl XorBitwise<BigInteger> for WireType {
-    fn xor_bitwise(self, b: BigInteger, numBits: i32, desc: &Option<String>) -> WireType {
+    fn xor_bitwise(self, b: BigInteger, numBits: u64, desc: &Option<String>) -> WireType {
         return self.xorBitwise(self.generator().createConstantWire(b, desc), numBits, desc);
     }
 }
 
 impl AndBitwise for WireType {
-    fn and_bitwise(self, w: WireType, numBits: i32, desc: &Option<String>) -> WireType {
+    fn and_bitwise(self, w: WireType, numBits: u64, desc: &Option<String>) -> WireType {
         let bits1 = self.getBitWiresi(numBits as u64, desc);
         let bits2 = w.getBitWiresi(numBits as u64, desc);
         let result = bits1.andWireArray(bits2, numBits as usize, desc);
@@ -237,19 +240,19 @@ impl AndBitwise for WireType {
 }
 
 impl AndBitwise<i64> for WireType {
-    fn and_bitwise(self, v: i64, numBits: i32, desc: &Option<String>) -> WireType {
+    fn and_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> WireType {
         return self.andBitwise(self.generator().createConstantWirei(v, desc), numBits, desc);
     }
 }
 
 impl AndBitwise<BigInteger> for WireType {
-    fn and_bitwise(self, b: BigInteger, numBits: i32, desc: &Option<String>) -> WireType {
+    fn and_bitwise(self, b: BigInteger, numBits: u64, desc: &Option<String>) -> WireType {
         return self.andBitwise(self.generator().createConstantWire(b, desc), numBits, desc);
     }
 }
 
 impl OrBitwise for WireType {
-    fn or_bitwise(self, w: WireType, numBits: i32, desc: &Option<String>) -> WireType {
+    fn or_bitwise(self, w: WireType, numBits: u64, desc: &Option<String>) -> WireType {
         let bits1 = self.getBitWiresi(numBits as u64, desc);
         let bits2 = w.getBitWiresi(numBits as u64, desc);
         let result = bits1.orWireArray(bits2, numBits as usize, desc);
@@ -261,12 +264,12 @@ impl OrBitwise for WireType {
     }
 }
 impl OrBitwise<i64> for WireType {
-    fn or_bitwise(self, v: i64, numBits: i32, desc: &Option<String>) -> WireType {
+    fn or_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> WireType {
         return self.orBitwise(self.generator().createConstantWirei(v, desc), numBits, desc);
     }
 }
 impl OrBitwise<BigInteger> for WireType {
-    fn or_bitwise(self, b: BigInteger, numBits: i32, desc: &Option<String>) -> WireType {
+    fn or_bitwise(self, b: BigInteger, numBits: u64, desc: &Option<String>) -> WireType {
         return self.orBitwise(self.generator().createConstantWire(b, desc), numBits, desc);
     }
 }
@@ -296,7 +299,7 @@ impl IsLessThanOrEqual for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(w, desc).subw(self.self_clone().unwrap(), desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize);
+        return bitWires.get(bitwidth as usize).clone().unwrap();
     }
 }
 impl IsLessThanOrEqual<i64> for WireType {
@@ -330,7 +333,12 @@ impl IsLessThan for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(self.self_clone().unwrap(), desc).subw(w, desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize).invAsBit(desc).unwrap();
+        return bitWires
+            .get(bitwidth as usize)
+            .clone()
+            .unwrap()
+            .invAsBit(desc)
+            .unwrap();
     }
 }
 impl IsLessThan<i64> for WireType {
@@ -360,7 +368,7 @@ impl IsGreaterThanOrEqual for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(self.self_clone().unwrap(), desc).subw(w, desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize);
+        return bitWires.get(bitwidth as usize).clone().unwrap();
     }
 }
 impl IsGreaterThanOrEqual<i64> for WireType {
@@ -394,7 +402,12 @@ impl IsGreaterThan for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(w, desc).subw(self.self_clone().unwrap(), desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize).invAsBit(desc).unwrap();
+        return bitWires
+            .get(bitwidth as usize)
+            .clone()
+            .unwrap()
+            .invAsBit(desc)
+            .unwrap();
     }
 }
 impl IsGreaterThan<i64> for WireType {

@@ -1,6 +1,6 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::aes128_cipher_gadget;
 
@@ -50,7 +50,7 @@ impl CircuitGenerator for AES128CipherCircuitGenerator {
     }
 
     pub fn main(args: Vec<String>) {
-        Config.hexOutputEnabled = true;
+        Configs.hexOutputEnabled = true;
         let generator = AES128CipherCircuitGenerator::new("AES_Circuit");
         generator.generateCircuit();
         generator.evalCircuit();

@@ -2,7 +2,7 @@
 use crate::util::util::{Util,BigInteger};
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 
@@ -170,7 +170,7 @@ let expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419
 		// Testing different settings of the bitWidthPerInputElement parameter
 		// wordSize = # of bytes per input wire
 		
-		for wordSize in 1..=Config.log2_field_prime / 8 - 1{
+		for wordSize in 1..=Configs.get().unwrap().log2_field_prime / 8 - 1{
 			
 let numBytesPerInputWire = wordSize;
 			

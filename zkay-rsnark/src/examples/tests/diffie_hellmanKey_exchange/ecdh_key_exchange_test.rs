@@ -1,6 +1,6 @@
 
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::diffie_hellman_key_exchange::ecdh_key_exchange_gadget;
 

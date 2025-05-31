@@ -5,26 +5,37 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::util::util::{BigInteger, Util};
-
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::hash::sha256_gadget;
+use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
 use crate::examples::gadgets::math::field_division_gadget;
-
+use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
+use crate::util::util::{BigInteger, Util};
+use rccell::RcCell;
+use std::collections::HashMap;
+use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Rem, Shl, Shr, Sub};
+use zkay_derive::ImplStructNameConfig;
 pub struct CachingTest;
 #[cfg(test)]
 mod test {
-
+    use super::*;
     #[test]
     pub fn testCaching1() {
-        let mut numIns = Config.log2_field_prime;
-        let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-        let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime);
-        let mut inVals3 = Util::randomBigIntegerArray(numIns, 32);
-
+        let mut numIns = Configs.get().unwrap().log2_field_prime.clone();
+        let mut inVals1 =
+            Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime.clone());
+        let mut inVals2 =
+            Util::randomBigIntegerArray(numIns, Configs.get().unwrap().field_prime.clone());
+        let mut inVals3 = Util::randomBigIntegerArrayi(numIns, 32);
+        let numIns = numIns as usize;
         let mut shiftedRightVals = vec![BigInteger::default(); numIns];
         let mut shiftedLeftVals = vec![BigInteger::default(); numIns];
         let mut rotatedRightVals = vec![BigInteger::default(); numIns];
@@ -37,59 +48,79 @@ mod test {
         let mut addedVals = vec![BigInteger::default(); numIns];
 
         let mut mask = BigInteger::from(2)
-            .pow(Config.log2_field_prime as u32)
+            .pow(Configs.get().unwrap().log2_field_prime as u32)
             .sub(Util::one());
 
         for i in 0..numIns {
             shiftedRightVals[i] = inVals1[i]
-                .shiftRight(i)
-                .rem(Configs.get().unwrap().field_prime);
+                .clone()
+                .shr(i)
+                .rem(Configs.get().unwrap().field_prime.clone());
             shiftedLeftVals[i] = inVals1[i]
+                .clone()
                 .shl(i)
-                .and(mask)
+                .bitand(mask.clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
             rotatedRightVals[i] = BigInteger::from(
                 inVals3[i]
                     .to_str_radix(10)
                     .parse::<i64>()
                     .unwrap()
-                    .rotateRight(i % 32)
+                    .rotate_right((i % 32) as u32)
                     & 0x00000000ffffffff,
             );
             rotatedLeftVals[i] = BigInteger::from(
                 inVals3[i]
-                    ..to_str_radix(10).parse::<i64>().unwrap().rotateLeft(i % 32)
-                        & 0x00000000ffffffff,
+                    .to_str_radix(10)
+                    .parse::<i64>()
+                    .unwrap()
+                    .rotate_left((i % 32) as u32)
+                    & 0x00000000ffffffff,
             );
             xoredVals[i] = inVals1[i]
-                .xor(inVals2[i])
+                .clone()
+                .bitxor(inVals2[i].clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
             oredVals[i] = inVals1[i]
-                .or(inVals2[i])
+                .clone()
+                .bitor(inVals2[i].clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
             andedVals[i] = inVals1[i]
-                .and(inVals2[i])
+                .clone()
+                .bitand(inVals2[i].clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
-            invertedVals[i] = BigInteger
-                .valueOf(!inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff);
+            invertedVals[i] = BigInteger::from(
+                !inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff,
+            );
             multipliedVals[i] = inVals1[i]
-                .mul(inVals2[i])
+                .clone()
+                .mul(inVals2[i].clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
             addedVals[i] = inVals1[i]
-                .add(inVals2[i])
+                .clone()
+                .add(inVals2[i].clone())
                 .rem(Configs.get().unwrap().field_prime.clone());
         }
+        #[derive(Debug, Clone, ImplStructNameConfig)]
+        struct CGTest {
+            pub inputs1: RcCell<Vec<Option<WireType>>>,
+            pub inputs2: RcCell<Vec<Option<WireType>>>,
+            pub inputs3: RcCell<Vec<Option<WireType>>>,
+            pub inVals1: Vec<BigInteger>,
+            pub inVals2: Vec<BigInteger>,
+            pub inVals3: Vec<BigInteger>,
+            pub numIns: u64,
+        }
 
-        let mut generator = CircuitGenerator::new("Caching_Test");
-        {
-            let mut inputs1;
-            let mut inputs2;
-            let mut inputs3; // 32-bit values
-
-            fn buildCircuit() {
-                inputs1 = generator.createInputWireArray(numIns);
-                inputs2 = generator.createInputWireArray(numIns);
-                inputs3 = generator.createInputWireArray(numIns);
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
+        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
+        impl CGConfig for CircuitGenerator<CGTest> {
+            fn buildCircuit(&self) {
+                let generator = getActiveCircuitGenerator("CGTest").unwrap();
+                let numIns = self.t.numIns as usize;
+                let mut inputs1 = generator.createInputWireArray(numIns, &None);
+                let mut inputs2 = generator.createInputWireArray(numIns, &None);
+                let mut inputs3 = generator.createInputWireArray(numIns, &None);
 
                 let mut shiftedRight = vec![None; numIns];
                 let mut shiftedLeft = vec![None; numIns];
@@ -104,16 +135,42 @@ mod test {
                 let mut added = vec![None; numIns];
 
                 for i in 0..numIns {
-                    shiftedRight[i] = inputs1[i].shiftRight(Config.log2_field_prime, i);
-                    shiftedLeft[i] = inputs1[i].shl(Config.log2_field_prime, i);
-                    rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
-                    rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
-                    xored[i] = inputs1[i].xorBitwise(inputs2[i], Config.log2_field_prime);
-                    ored[i] = inputs1[i].orBitwise(inputs2[i], Config.log2_field_prime);
-                    anded[i] = inputs1[i].andBitwise(inputs2[i], Config.log2_field_prime);
-                    inverted[i] = inputs3[i].invBits(32);
-                    multiplied[i] = inputs1[i].mul(inputs2[i]);
-                    added[i] = inputs1[i].add(inputs2[i]);
+                    shiftedRight[i] = inputs1[i].clone().map(|x| {
+                        x.shiftRight(Configs.get().unwrap().log2_field_prime as usize, i, &None)
+                    });
+                    shiftedLeft[i] = inputs1[i].clone().map(|x| {
+                        x.shiftLeft(Configs.get().unwrap().log2_field_prime as usize, i, &None)
+                    });
+                    rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
+                    rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
+                    xored[i] = inputs1[i].clone().map(|x| {
+                        x.xorBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    ored[i] = inputs1[i].clone().map(|x| {
+                        x.orBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    anded[i] = inputs1[i].clone().map(|x| {
+                        x.andBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
+                    multiplied[i] = inputs1[i]
+                        .clone()
+                        .map(|x| x.mul(inputs2[i].clone().unwrap()));
+                    added[i] = inputs1[i]
+                        .clone()
+                        .map(|x| x.add(inputs2[i].clone().unwrap()));
                 }
 
                 let mut currentCost = generator.getNumOfConstraints();
@@ -121,16 +178,42 @@ mod test {
                 // repeat everything again, and verify that the number of
                 // multiplication gates will not be affected
                 for i in 0..numIns {
-                    shiftedRight[i] = inputs1[i].shiftRight(Config.log2_field_prime, i);
-                    shiftedLeft[i] = inputs1[i].shl(Config.log2_field_prime, i);
-                    rotatedRight[i] = inputs3[i].rotateRight(32, i % 32);
-                    rotatedLeft[i] = inputs3[i].rotateLeft(32, i % 32);
-                    xored[i] = inputs1[i].xorBitwise(inputs2[i], Config.log2_field_prime);
-                    ored[i] = inputs1[i].orBitwise(inputs2[i], Config.log2_field_prime);
-                    anded[i] = inputs1[i].andBitwise(inputs2[i], Config.log2_field_prime);
-                    inverted[i] = inputs3[i].invBits(32);
-                    multiplied[i] = inputs1[i].mul(inputs2[i]);
-                    added[i] = inputs1[i].add(inputs2[i]);
+                    shiftedRight[i] = inputs1[i].clone().map(|x| {
+                        x.shiftRight(Configs.get().unwrap().log2_field_prime as usize, i, &None)
+                    });
+                    shiftedLeft[i] = inputs1[i].clone().map(|x| {
+                        x.shiftLeft(Configs.get().unwrap().log2_field_prime as usize, i, &None)
+                    });
+                    rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
+                    rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
+                    xored[i] = inputs1[i].clone().map(|x| {
+                        x.xorBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    ored[i] = inputs1[i].clone().map(|x| {
+                        x.orBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    anded[i] = inputs1[i].clone().map(|x| {
+                        x.andBitwise(
+                            inputs2[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
+                    multiplied[i] = inputs1[i]
+                        .clone()
+                        .map(|x| x.mul(inputs2[i].clone().unwrap()));
+                    added[i] = inputs1[i]
+                        .clone()
+                        .map(|x| x.add(inputs2[i].clone().unwrap()));
                 }
 
                 assert!(generator.getNumOfConstraints() == currentCost);
@@ -139,53 +222,88 @@ mod test {
                 // the operands, and verify that the number of multiplication
                 // gates will not be affected
                 for i in 0..numIns {
-                    xored[i] = inputs2[i].xorBitwise(inputs1[i], Config.log2_field_prime);
-                    ored[i] = inputs2[i].orBitwise(inputs1[i], Config.log2_field_prime);
-                    anded[i] = inputs2[i].andBitwise(inputs1[i], Config.log2_field_prime);
-                    multiplied[i] = inputs2[i].mul(inputs1[i]);
-                    added[i] = inputs2[i].add(inputs1[i]);
+                    xored[i] = inputs2[i].clone().map(|x| {
+                        x.xorBitwise(
+                            inputs1[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    ored[i] = inputs2[i].clone().map(|x| {
+                        x.orBitwise(
+                            inputs1[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    anded[i] = inputs2[i].clone().map(|x| {
+                        x.andBitwise(
+                            inputs1[i].clone().unwrap(),
+                            Configs.get().unwrap().log2_field_prime,
+                            &None,
+                        )
+                    });
+                    multiplied[i] = inputs2[i]
+                        .clone()
+                        .map(|x| x.mul(inputs1[i].clone().unwrap()));
+                    added[i] = inputs2[i]
+                        .clone()
+                        .map(|x| x.add(inputs1[i].clone().unwrap()));
                 }
 
                 assert!(generator.getNumOfConstraints() == currentCost);
 
-                generator.makeOutputArray(shiftedRight);
-                generator.makeOutputArray(shiftedLeft);
-                generator.makeOutputArray(rotatedRight);
-                generator.makeOutputArray(rotatedLeft);
-                generator.makeOutputArray(xored);
-                generator.makeOutputArray(ored);
-                generator.makeOutputArray(anded);
-                generator.makeOutputArray(inverted);
-                generator.makeOutputArray(multiplied);
-                generator.makeOutputArray(added);
+                generator.makeOutputArray(shiftedRight.clone(), &None);
+                generator.makeOutputArray(shiftedLeft.clone(), &None);
+                generator.makeOutputArray(rotatedRight.clone(), &None);
+                generator.makeOutputArray(rotatedLeft.clone(), &None);
+                generator.makeOutputArray(xored.clone(), &None);
+                generator.makeOutputArray(ored.clone(), &None);
+                generator.makeOutputArray(anded.clone(), &None);
+                generator.makeOutputArray(inverted.clone(), &None);
+                generator.makeOutputArray(multiplied.clone(), &None);
+                generator.makeOutputArray(added.clone(), &None);
 
                 currentCost = generator.getNumOfConstraints();
 
                 // repeat labeling as output (although not really meaningful)
                 // and make sure no more constraints are added
-                generator.makeOutputArray(shiftedRight);
-                generator.makeOutputArray(shiftedLeft);
-                generator.makeOutputArray(rotatedRight);
-                generator.makeOutputArray(rotatedLeft);
-                generator.makeOutputArray(xored);
-                generator.makeOutputArray(ored);
-                generator.makeOutputArray(anded);
-                generator.makeOutputArray(inverted);
-                generator.makeOutputArray(multiplied);
-                generator.makeOutputArray(added);
+                generator.makeOutputArray(shiftedRight, &None);
+                generator.makeOutputArray(shiftedLeft, &None);
+                generator.makeOutputArray(rotatedRight, &None);
+                generator.makeOutputArray(rotatedLeft, &None);
+                generator.makeOutputArray(xored, &None);
+                generator.makeOutputArray(ored, &None);
+                generator.makeOutputArray(anded, &None);
+                generator.makeOutputArray(inverted, &None);
+                generator.makeOutputArray(multiplied, &None);
+                generator.makeOutputArray(added, &None);
 
                 assert!(generator.getNumOfConstraints() == currentCost);
+                *self.t.inputs1.borrow_mut() = inputs1;
+                *self.t.inputs2.borrow_mut() = inputs2;
+                *self.t.inputs3.borrow_mut() = inputs3;
             }
 
-            pub fn generateSampleInput(evaluator: CircuitEvaluator) {
-                evaluator.setWireValue(inputs1, inVals1);
-                evaluator.setWireValue(inputs2, inVals2);
-                evaluator.setWireValue(inputs3, inVals3);
+            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.borrow().clone(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.borrow().clone(), self.t.inVals2.clone());
+                evaluator.setWireValuea(self.t.inputs3.borrow().clone(), self.t.inVals3.clone());
             }
+        }
+        let t = CGTest {
+            inputs1: RcCell::new(vec![]),
+            inputs2: RcCell::new(vec![]),
+            inputs3: RcCell::new(vec![]),
+            inVals1,
+            inVals2,
+            inVals3,
+            numIns: numIns as u64,
         };
+        let mut generator = CircuitGenerator::<CGTest>::new("Caching_Test", t);
         generator.generateCircuit();
-        let mut evaluator = CircuitEvaluator::new(generator);
-        generator.generateSampleInput(evaluator);
+        let mut evaluator = CircuitEvaluator::new("CGTest");
+        generator.generateSampleInput(evaluator.clone());
         evaluator.evaluate();
 
         let mut outWires = generator.getOutWires();
@@ -193,7 +311,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 shiftedRightVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -201,7 +327,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 shiftedLeftVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -209,7 +343,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedRightVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -217,14 +359,30 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedLeftVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
         outputIndex += numIns;
         for i in 0..numIns {
             assert_eq!(
                 xoredVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -232,7 +390,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 oredVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -240,14 +406,30 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 andedVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
         outputIndex += numIns;
         for i in 0..numIns {
             assert_eq!(
                 invertedVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -255,7 +437,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 multipliedVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
 
@@ -263,7 +453,15 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 addedVals[i],
-                evaluator.getWireValue(outWires.get(i + outputIndex))
+                evaluator.getWireValue(
+                    outWires
+                        .get(i + outputIndex)
+                        .clone()
+                        .unwrap()
+                        .clone()
+                        .unwrap()
+                        .clone()
+                )
             );
         }
     }
@@ -272,58 +470,81 @@ mod test {
     pub fn testAssertionCache() {
         // make sure we remove some of the clear duplicate assertions
         // and most importantly, no assertions are removed
-        let mut generator = CircuitGenerator::new("assertions");
-        {
-            let mut in1;
-            let mut in2;
-            let mut witness1;
-            let mut witness2;
 
-            fn buildCircuit() {
-                in1 = generator.createInputWire();
-                in2 = generator.createInputWire();
-                witness1 = generator.createProverWitnessWire();
-                witness2 = generator.createProverWitnessWire();
+        #[derive(Debug, Clone, ImplStructNameConfig)]
+        struct CGTest {
+            pub in1: RcCell<Option<WireType>>,
+            pub in2: RcCell<Option<WireType>>,
+            pub witness1: RcCell<Option<WireType>>,
+            pub witness2: RcCell<Option<WireType>>,
+        }
 
-                addAssertion(in1, in2, witness1);
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
+        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
+        impl CGConfig for CircuitGenerator<CGTest> {
+            fn buildCircuit(&self) {
+                let generator = getActiveCircuitGenerator("CGTest").unwrap();
+                let mut in1 = generator.createInputWire(&None);
+                let mut in2 = generator.createInputWire(&None);
+                let mut witness1 = generator.createProverWitnessWire(&None);
+                let mut witness2 = generator.createProverWitnessWire(&None);
+
+                self.addAssertion(in1.clone(), in2.clone(), witness1.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 1);
-                addAssertion(in1, in2, witness1);
+                self.addAssertion(in1.clone(), in2.clone(), witness1.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 1);
-                addAssertion(in2, in1, witness1);
+                self.addAssertion(in2.clone(), in1.clone(), witness1.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 1);
 
                 // since witness2 is another wire, the constraint should go
                 // through
-                addAssertion(in1, in2, witness2);
+                self.addAssertion(in1.clone(), in2.clone(), witness2.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 2);
-                addAssertion(in2, in1, witness2);
+                self.addAssertion(in2.clone(), in1.clone(), witness2.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 2);
 
-                addEqualityAssertion(witness1, witness2);
+                self.addEqualityAssertion(witness1.clone(), witness2.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 3);
-                addEqualityAssertion(witness2, witness1);
+                self.addEqualityAssertion(witness2.clone(), witness1.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 4); // we don't detect
                 // similarity here yet
 
-                FieldDivisionGadget::new(in1, in2);
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None);
                 assert_eq!(generator.getNumOfConstraints(), 5);
-                FieldDivisionGadget::new(in1, in2);
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None);
                 // since this operation is implemented externally, it's not easy
                 // to filter it, because everytime a witness wire is introduced
                 // by the gadget. To eliminate such similar operations, the
                 // gadget itself needs to take care of it.
                 assert_eq!(generator.getNumOfConstraints(), 6);
+                *self.t.in1.borrow_mut() = Some(in1);
+                *self.t.in2.borrow_mut() = Some(in2);
+                *self.t.witness1.borrow_mut() = Some(witness1);
+                *self.t.witness2.borrow_mut() = Some(witness2);
             }
 
-            pub fn generateSampleInput(evaluator: CircuitEvaluator) {
-                evaluator.setWireValue(in1, BigInteger::from(5));
-                evaluator.setWireValue(in2, BigInteger::from(6));
-                evaluator.setWireValue(witness1, BigInteger::from(30));
-                evaluator.setWireValue(witness2, BigInteger::from(30));
+            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
+                evaluator.setWireValue(self.t.in1.borrow().clone().unwrap(), BigInteger::from(5));
+                evaluator.setWireValue(self.t.in2.borrow().clone().unwrap(), BigInteger::from(6));
+                evaluator.setWireValue(
+                    self.t.witness1.borrow().clone().unwrap(),
+                    BigInteger::from(30),
+                );
+                evaluator.setWireValue(
+                    self.t.witness2.borrow().clone().unwrap(),
+                    BigInteger::from(30),
+                );
             }
+        }
+        let t = CGTest {
+            in1: RcCell::new(None),
+            in2: RcCell::new(None),
+            witness1: RcCell::new(None),
+            witness2: RcCell::new(None),
         };
+        let mut generator = CircuitGenerator::<CGTest>::new("assertions", t);
         generator.generateCircuit();
-        let mut evaluator = CircuitEvaluator::new(generator.clone());
+        let mut evaluator = CircuitEvaluator::new("CGTest");
         generator.generateSampleInput(evaluator.clone());
         evaluator.evaluate();
     }
@@ -335,53 +556,73 @@ mod test {
         let mut inputStr = "abc";
         let mut expectedDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
-        let mut generator = CircuitGenerator::new("SHA2_Test4");
-        {
-            let mut inputWires;
+        #[derive(Debug, Clone, ImplStructNameConfig)]
+        struct CGTest {
+            pub inputWires: RcCell<Vec<Option<WireType>>>,
+            pub inputStr: String,
+        }
 
-            fn buildCircuit() {
-                inputWires = generator.createInputWireArray(inputStr.len()());
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
+        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
+        impl CGConfig for CircuitGenerator<CGTest> {
+            fn buildCircuit(&self) {
+                let generator = getActiveCircuitGenerator("CGTest").unwrap();
+                let inputStr = &self.t.inputStr;
+                let mut inputWires = generator.createInputWireArray(inputStr.len(), &None);
                 let mut digest =
-                    SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
                         .getOutputWires();
                 let mut numOfConstraintsBefore = generator.getNumOfConstraints();
-                digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
-                    .getOutputWires();
-                digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
-                    .getOutputWires();
-                digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
-                    .getOutputWires();
-                digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
-                    .getOutputWires();
-                digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
-                    .getOutputWires();
+                digest =
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
+                        .getOutputWires();
+                digest =
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
+                        .getOutputWires();
+                digest =
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
+                        .getOutputWires();
+                digest =
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
+                        .getOutputWires();
+                digest =
+                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
+                        .getOutputWires();
 
                 // verify that the number of constraints match
                 assert_eq!(numOfConstraintsBefore, generator.getNumOfConstraints());
 
                 // do a small change and verify that number changes
-                let mut in2 = Arrays.copyOf(inputWires, inputWires.len());
-                in2[0] = in2[1];
-                SHA256Gadget::new(in2, 8, inputStr.len()(), false, true, "").getOutputWires();
+                let mut in2 = inputWires.clone();
+                in2[0] = in2[1].clone();
+                SHA256Gadget::new(in2, 8, inputStr.len(), false, true, &None).getOutputWires();
                 assert!(numOfConstraintsBefore < generator.getNumOfConstraints());
 
-                generator.makeOutputArray(digest);
+                generator.makeOutputArray(digest, &None);
+                *self.t.inputWires.borrow_mut() = inputWires;
             }
 
-            pub fn generateSampleInput(e: CircuitEvaluator) {
-                for i in 0..inputStr.len()() {
-                    e.setWireValue(inputWires[i], inputStr.charAt(i));
+            fn generateSampleInput(&self, e: CircuitEvaluator) {
+                for (i, c) in self.t.inputStr.bytes().enumerate() {
+                    e.setWireValuei(self.t.inputWires.borrow()[i].clone().unwrap(), c as i64);
                 }
             }
+        }
+        let t = CGTest {
+            inputWires: RcCell::new(vec![]),
+            inputStr: inputStr.to_owned(),
         };
-
+        let mut generator = CircuitGenerator::<CGTest>::new("SHA2_Test4", t);
         generator.generateCircuit();
         generator.evalCircuit();
         let mut evaluator = generator.getCircuitEvaluator();
 
-        let mut outDigest = "";
+        let mut outDigest = String::new();
         for w in generator.getOutWires() {
-            outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
+            outDigest.push_str(&Util::padZeros(
+                evaluator.getWireValue(w.unwrap()).to_str_radix(16),
+                8,
+            ));
         }
         assert_eq!(outDigest, expectedDigest);
     }

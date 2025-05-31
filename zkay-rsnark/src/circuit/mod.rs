@@ -21,3 +21,14 @@ pub trait InstanceOf: StructNameConfig {
         self.name() == name
     }
 }
+
+#[macro_export]
+macro_rules! impl_struct_name_for {
+    ($impl_type:ty) => {
+        impl crate::circuit::StructNameConfig for $impl_type {
+            fn name(&self) -> String {
+                self.t.name()
+            }
+        }
+    };
+}

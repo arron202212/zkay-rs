@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
@@ -84,7 +84,7 @@ impl SHA256Gadget {
     }
 
     fn buildCircuit(&mut self) {
-        let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        let generator = getActiveCircuitGenerator("CGBase").unwrap();
         // pad if needed
         self.prepare();
 
@@ -274,7 +274,7 @@ impl SHA256Gadget {
     }
 
     fn prepare(&mut self) {
-        let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        let generator = getActiveCircuitGenerator("CGBase").unwrap();
         self.numBlocks = (self.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
         let bits = WireArray::new(self.unpaddedInputs.clone())
             .getBits(self.bitWidthPerInputElement, &None)

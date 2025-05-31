@@ -1,5 +1,5 @@
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 use examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget;
@@ -236,14 +236,14 @@ impl Gadget for AES128CipherGadget {
         return expanded;
     }
 
-    fn subWord(generator: CircuitGenerator, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+    fn subWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         for i in 0..w.len() {
             w[i] = randomAccess(generator, w[i]);
         }
         return w;
     }
 
-    fn rotateWord(generator: CircuitGenerator, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+    fn rotateWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let newW = vec![None; w.len()];
         for j in 0..w.len() {
             newW[j] = w[(j + 1) % w.len()];
@@ -251,7 +251,7 @@ impl Gadget for AES128CipherGadget {
         return newW;
     }
 
-    fn randomAccess(generator: CircuitGenerator, wire: WireType) -> WireType {
+    fn randomAccess(generator:Box<dyn CGConfig+Send+Sync>, wire: WireType) -> WireType {
         let g = None;
         match sBoxOption {
             LINEAR_SCAN => g = AESSBoxNaiveLookupGadget::new(wire),

@@ -126,15 +126,15 @@ impl Util {
         return all;
     }
 
-    pub fn randomBigIntegerArray(&self, num: i32, n: BigInteger) -> Vec<BigInteger> {
+    pub fn randomBigIntegerArray(num: u64, n: BigInteger) -> Vec<BigInteger> {
         let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
-            result[i as usize] = self.nextRandomBigInteger(n.clone());
+            result[i as usize] = Self::nextRandomBigInteger(n.clone());
         }
         return result;
     }
 
-    pub fn nextRandomBigInteger(&self, n: BigInteger) -> BigInteger {
+    pub fn nextRandomBigInteger(n: BigInteger) -> BigInteger {
         let rand = RandomBits::new(n.bits());
         let mut result = rand.sample(&mut rand::thread_rng());
         while result >= n {
@@ -143,15 +143,15 @@ impl Util {
         return result;
     }
 
-    pub fn randomBigIntegerArrayi(&self, num: i32, numBits: i32) -> Vec<BigInteger> {
+    pub fn randomBigIntegerArrayi(num: u64, numBits: i32) -> Vec<BigInteger> {
         let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
-            result[i as usize] = self.nextRandomBigInteger(BigInteger::from(numBits as u32));
+            result[i as usize] = Self::nextRandomBigInteger(BigInteger::from(numBits as u32));
         }
         return result;
     }
 
-    pub fn nextRandomBigIntegeri(&self, numBits: i32) -> BigInteger {
+    pub fn nextRandomBigIntegeri(numBits: i32) -> BigInteger {
         return RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
     }
 

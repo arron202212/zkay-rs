@@ -5,7 +5,8 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -14,9 +15,9 @@ pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-pub fn newGadget(desc: &Option<String>) -> (CircuitGenerator, String) {
+pub fn newGadget(desc: &Option<String>) -> (Box<dyn CGConfig + Send + Sync>, String) {
     (
-        CircuitGenerator::getActiveCircuitGenerator().unwrap(),
+        getActiveCircuitGenerator("CGBase").unwrap(),
         desc.as_ref()
             .map_or_else(|| String::new(), |d| d.to_owned()),
     )

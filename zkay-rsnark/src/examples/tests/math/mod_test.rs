@@ -1,7 +1,7 @@
 
 
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::mod_constant_gadget;
 use examples::gadgets::math::mod_gadget;
@@ -40,7 +40,7 @@ let r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
 		};
 
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
+let evaluator = CircuitEvaluator::new("CGTest");
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 let rWire = generator.getOutWires().get(0);
@@ -72,7 +72,7 @@ let r = ModConstantGadget::new(inputWires[0], 32, BigInteger::from(b)).getOutput
 		};
 
 		generator.generateCircuit();
-let evaluator = CircuitEvaluator::new(generator);
+let evaluator = CircuitEvaluator::new("CGTest");
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
 let rWire = generator.getOutWires().get(0);

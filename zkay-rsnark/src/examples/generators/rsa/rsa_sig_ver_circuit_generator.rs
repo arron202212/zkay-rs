@@ -1,6 +1,6 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
@@ -96,9 +96,9 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         evaluator.setWireValue(self.signature, sig, LongElement.CHUNK_BITWIDTH);
         // } else {
         // evaluator.setWireValue(self.rsaModulusWires,
-        // Util::split(modulus, Config.log2_field_prime - 1));
+        // Util::split(modulus, Configs.get().unwrap().log2_field_prime - 1));
         // evaluator.setWireValue(self.signatureWires,
-        // Util::split(sig, Config.log2_field_prime - 1));
+        // Util::split(sig, Configs.get().unwrap().log2_field_prime - 1));
         // }
 
         // println!("Error while generating sample input for circuit");

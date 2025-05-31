@@ -1,6 +1,6 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::field_division_gadget;
 
@@ -58,7 +58,7 @@ impl ZkayEcGadget {
         "2736030358979909402780800718157159386074658810754251464600343418943805806723",
     );
 
-    pub fn checkSecretBits(generator: CircuitGenerator, secretBits: Vec<Option<WireType>>) {
+    pub fn checkSecretBits(generator:Box<dyn CGConfig+Send+Sync>, secretBits: Vec<Option<WireType>>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit

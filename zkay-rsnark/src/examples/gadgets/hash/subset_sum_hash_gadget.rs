@@ -12,7 +12,7 @@ use std::sync::OnceLock;
 static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 impl SubsetSumHashGadget {
     pub const DIMENSION: i32 = 3; // set to 4 for higher security
-    pub const INPUT_LENGTH: i32 = 2 * DIMENSION * Config.log2_field_prime; // length in bits
+    pub const INPUT_LENGTH: i32 = 2 * DIMENSION * Configs.get().unwrap().log2_field_prime; // length in bits
 
     /**
      * @param ins
@@ -60,11 +60,11 @@ impl Gadget for SubsetSumHashGadget {
         if !binaryOutput {
             outWires = outDigest;
         } else {
-            outWires = vec![None; DIMENSION * Config.log2_field_prime];
+            outWires = vec![None; DIMENSION * Configs.get().unwrap().log2_field_prime];
             for i in 0..DIMENSION {
-                let bits = outDigest[i].getBitWires(Config.log2_field_prime).asArray();
+                let bits = outDigest[i].getBitWires(Configs.get().unwrap().log2_field_prime).asArray();
                 for j in 0..bits.len() {
-                    outWires[j + i * Config.log2_field_prime] = bits[j];
+                    outWires[j + i * Configs.get().unwrap().log2_field_prime] = bits[j];
                 }
             }
         }

@@ -6,13 +6,18 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::InstanceOf;
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_ops::{AddWire, MulWire, SubWire};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::{
     config::config::Configs,
     eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-    structure::{circuit_generator::CircuitGenerator, constant_wire, wire_array::WireArray},
+    structure::{
+        circuit_generator::{CircuitGenerator, getActiveCircuitGenerator},
+        constant_wire,
+        wire_array::WireArray,
+    },
 };
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
@@ -106,10 +111,8 @@ impl LongElement {
             bits: None,
         }
     }
-    pub fn generator(&self) -> CircuitGenerator {
-        CircuitGenerator::getActiveCircuitGenerator()
-            .unwrap()
-            .clone()
+    pub fn generator(&self) -> Box<dyn CGConfig + Send + Sync> {
+        getActiveCircuitGenerator("CGBase").unwrap().clone()
     }
     pub fn makeOutput(&mut self, desc: &Option<String>) {
         for w in self.getArray() {
@@ -125,7 +128,7 @@ impl LongElement {
         for i in 0..chunks.len() {
             currentBitwidth[i] = chunks[i].bits();
         }
-        let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        let generator = getActiveCircuitGenerator("CGBase").unwrap();
         Self {
             array: generator.createConstantWireArray(chunks.clone(), &None),
             currentMaxValues: chunks,

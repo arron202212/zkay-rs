@@ -11,7 +11,7 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
@@ -27,14 +27,14 @@ pub struct FieldDivisionGadget {
     c: WireType,
 }
 impl FieldDivisionGadget {
-    fn new(a: WireType, b: WireType, desc: &Option<String>) -> Self {
+    pub fn new(a: WireType, b: WireType, desc: &Option<String>) -> Self {
         // super(desc);
         let mut _self = Self {
             a,
             b,
             c: WireType::default(),
         };
-        let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        let generator = getActiveCircuitGenerator("CGBase").unwrap();
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
@@ -62,7 +62,7 @@ impl FieldDivisionGadget {
     fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-        let generator = CircuitGenerator::getActiveCircuitGenerator().unwrap();
+        let generator = getActiveCircuitGenerator("CGBase").unwrap();
         generator.specifyProverWitnessComputation({
             #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
