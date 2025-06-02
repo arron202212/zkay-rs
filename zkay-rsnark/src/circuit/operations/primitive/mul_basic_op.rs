@@ -41,8 +41,8 @@ impl BasicOp for Op<MulBasicOp> {
                     .clone()
                     .unwrap(),
             );
-        if result > Configs.get().unwrap().field_prime {
-            result = result.rem(Configs.get().unwrap().field_prime.clone());
+        if result > Configs.field_prime {
+            result = result.rem(Configs.field_prime.clone());
         }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
     }

@@ -56,7 +56,7 @@ impl BasicOp for Op<PackBasicOp> {
             );
         }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] =
-            Some(sum.rem(Configs.get().unwrap().field_prime.clone()));
+            Some(sum.rem(Configs.field_prime.clone()));
     }
 
     fn getNumMulGates(&self) -> i32 {

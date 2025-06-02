@@ -51,8 +51,8 @@ impl BasicOp for Op<SplitBasicOp> {
         let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap();
-        if inVal > Configs.get().unwrap().field_prime {
-            inVal = inVal.rem(Configs.get().unwrap().field_prime.clone());
+        if inVal > Configs.field_prime {
+            inVal = inVal.rem(Configs.field_prime.clone());
         }
         for i in 0..self.outputs.len() {
             assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] =

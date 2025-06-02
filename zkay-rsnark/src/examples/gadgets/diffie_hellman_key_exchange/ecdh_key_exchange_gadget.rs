@@ -69,7 +69,7 @@ pub struct ECDHKeyExchangeGadget {
 }
 impl ECDHKeyExchangeGadget {
     // Note: this parameterization assumes that the underlying field has
-    // Configs.get().unwrap().field_prime =
+    // Configs.field_prime =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
     pub const SECRET_BITWIDTH: i32 = 253; // number of bits in the
@@ -283,13 +283,13 @@ impl Gadget for ECDHKeyExchangeGadget {
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.mul(x).rem(Configs.get().unwrap().field_prime.clone());
-        let xCubed = xSqred.mul(x).rem(Configs.get().unwrap().field_prime.clone());
+        let xSqred = x.mul(x).rem(Configs.field_prime.clone());
+        let xCubed = xSqred.mul(x).rem(Configs.field_prime.clone());
         let ySqred = xCubed
             .add(COEFF_A.mul(xSqred))
             .add(x)
-            .rem(Configs.get().unwrap().field_prime.clone());
-        let y = IntegerFunctions.ressol(ySqred, Configs.get().unwrap().field_prime);
+            .rem(Configs.field_prime.clone());
+        let y = IntegerFunctions.ressol(ySqred, Configs.field_prime);
         return y;
     }
 

@@ -42,7 +42,7 @@ impl BasicOp for Op<AssertBasicOp> {
                     .clone()
                     .unwrap(),
             )
-            .rem(Configs.get().unwrap().field_prime.clone());
+            .rem(Configs.field_prime.clone());
         let rightSide = assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap();

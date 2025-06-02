@@ -91,8 +91,8 @@ impl Instruction for WireLabelInstruction {
     }
 
     fn emit(&self, evaluator: CircuitEvaluator) {
-        if self.label_type == LabelType::output && Configs.get().unwrap().output_verbose
-            || self.label_type == LabelType::debug && Configs.get().unwrap().debug_verbose
+        if self.label_type == LabelType::output && Configs.output_verbose
+            || self.label_type == LabelType::debug && Configs.debug_verbose
         {
             println!(
                 "\t[ {} ] Value of WireType # {} {} :: {}",
@@ -103,7 +103,7 @@ impl Instruction for WireLabelInstruction {
                 } else {
                     format!(" ({}) ", self.desc)
                 },
-                if Configs.get().unwrap().hex_output_enabled {
+                if Configs.hex_output_enabled {
                     format!("{:x}", evaluator.getWireValue(self.w.clone()))
                 } else {
                     format!("{}", evaluator.getWireValue(self.w.clone()))

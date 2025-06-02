@@ -170,7 +170,7 @@ let expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419
 		// Testing different settings of the bitWidthPerInputElement parameter
 		// wordSize = # of bytes per input wire
 		
-		for wordSize in 1..=Configs.get().unwrap().log2_field_prime / 8 - 1{
+		for wordSize in 1..=Configs.log2_field_prime / 8 - 1{
 			
 let numBytesPerInputWire = wordSize;
 			

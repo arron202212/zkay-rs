@@ -86,7 +86,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
     //     ""
     // }
     fn generator(&self) -> Box<dyn CGConfig + Send + Sync> {
-        getActiveCircuitGenerator("CGBase").unwrap().clone()
+        getActiveCircuitGenerator().unwrap().clone()
     }
     // fn toString(&self) -> String {
     //     self.getWireId().to_string()
@@ -105,13 +105,13 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
             return self.self_clone().unwrap();
         }
         if b == BigInteger::ZERO {
-            return self.generator().zero_wire().borrow().clone().unwrap();
+            return self.generator().zero_wire().lock().clone().unwrap();
         }
         let out = WireType::LinearCombination(new_linear_combination(
-            *self.generator().current_wire_id().borrow_mut(),
+            *self.generator().current_wire_id().lock(),
             None,
         ));
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        *self.generator().current_wire_id().lock() += 1;
         let op = new_const_mul(
             self.self_clone().unwrap(),
             out.clone(),
@@ -122,7 +122,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 1;
+            *self.generator().current_wire_id().lock() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
@@ -144,10 +144,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         }
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
-        let output = WireType::Variable(new_variable(
-            *self.generator().current_wire_id().borrow_mut(),
-        ));
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        let output = WireType::Variable(new_variable(*self.generator().current_wire_id().lock()));
+        *self.generator().current_wire_id().lock() += 1;
         let op = new_mul(
             self.self_clone().unwrap(),
             w,
@@ -157,7 +155,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 1;
+            *self.generator().current_wire_id().lock() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         output
@@ -217,13 +215,12 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         //  * with earlier experimental versions when the target was Pinocchio
 
         let out1 = WireType::Wire(
-            Wire::<Base>::new(*self.generator().current_wire_id().borrow_mut(), Base).unwrap(),
+            Wire::<Base>::new(*self.generator().current_wire_id().lock(), Base).unwrap(),
         );
-        *self.generator().current_wire_id().borrow_mut() += 1;
-        let out2 = WireType::VariableBit(new_variable_bit(
-            *self.generator().current_wire_id().borrow_mut(),
-        ));
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        *self.generator().current_wire_id().lock() += 1;
+        let out2 =
+            WireType::VariableBit(new_variable_bit(*self.generator().current_wire_id().lock()));
+        *self.generator().current_wire_id().lock() += 1;
         let op = new_non_zero_check(
             self.self_clone().unwrap(),
             out1,
@@ -234,7 +231,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 2;
+            *self.generator().current_wire_id().lock() -= 2;
             return cachedOutputs[1].clone().unwrap();
         }
         out2
@@ -253,10 +250,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
         // needed
-        let out = WireType::Variable(new_variable(
-            *self.generator().current_wire_id().borrow_mut(),
-        ));
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        let out = WireType::Variable(new_variable(*self.generator().current_wire_id().lock()));
+        *self.generator().current_wire_id().lock() += 1;
         let op = new_or(
             self.self_clone().unwrap(),
             w,
@@ -266,7 +261,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 1;
+            *self.generator().current_wire_id().lock() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
@@ -278,10 +273,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
         // needed
-        let out = WireType::Variable(new_variable(
-            *self.generator().current_wire_id().borrow_mut(),
-        ));
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        let out = WireType::Variable(new_variable(*self.generator().current_wire_id().lock()));
+        *self.generator().current_wire_id().lock() += 1;
         let op = new_xor(
             self.self_clone().unwrap(),
             w,
@@ -291,7 +284,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 1;
+            *self.generator().current_wire_id().lock() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
@@ -314,7 +307,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
                 println!(
                     "\t If self was called for enforcing a bitwidth constraint, you must use restrictBitLengh(), otherwise you can ignore self."
                 );
-                if Configs.get().unwrap().print_stack_trace_at_warnings {
+                if Configs.print_stack_trace_at_warnings {
                     println!("Thread.dumpStack();");
                 } else {
                     println!(
@@ -338,9 +331,9 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         let mut ws = vec![None; bitwidth as usize];
         for i in 0..bitwidth as usize {
             ws[i] = Some(WireType::VariableBit(new_variable_bit(
-                *self.generator().current_wire_id().borrow_mut(),
+                *self.generator().current_wire_id().lock(),
             )));
-            *self.generator().current_wire_id().borrow_mut() += 1;
+            *self.generator().current_wire_id().lock() += 1;
         }
         let op = new_split(
             self.self_clone().unwrap(),
@@ -350,7 +343,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= bitwidth;
+            *self.generator().current_wire_id().lock() -= bitwidth;
             return WireArray::new(cachedOutputs).adjustLength(None, bitwidth as usize);
         }
         WireArray::new(ws)
@@ -592,14 +585,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
     fn shiftLeft(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireType {
         if s >= numBits {
             // Will always be zero in that case
-            return self.generator().zero_wire().borrow().clone().unwrap();
+            return self.generator().zero_wire().lock().clone().unwrap();
         }
 
         let bits = self.getBitWiresi(numBits as u64, desc);
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits {
             if i < s {
-                shiftedBits[i] = self.generator().zero_wire().borrow().clone();
+                shiftedBits[i] = self.generator().zero_wire().lock().clone();
             } else {
                 shiftedBits[i] = bits.get(i - s).clone();
             }
@@ -615,14 +608,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
     fn shiftRight(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireType {
         if s >= numBits {
             // Will always be zero in that case
-            return self.generator().zero_wire().borrow().clone().unwrap();
+            return self.generator().zero_wire().lock().clone().unwrap();
         }
 
         let bits = self.getBitWiresi(numBits as u64, desc);
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits {
             if i >= numBits - s {
-                shiftedBits[i] = self.generator().zero_wire().borrow().clone();
+                shiftedBits[i] = self.generator().zero_wire().lock().clone();
             } else {
                 shiftedBits[i] = bits.get(i + s).clone();
             }
@@ -693,8 +686,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
-        let mut wireId = *self.generator().current_wire_id().borrow_mut();
-        *self.generator().current_wire_id().borrow_mut() += 1;
+        let mut wireId = *self.generator().current_wire_id().lock();
+        *self.generator().current_wire_id().lock() += 1;
         //			Instruction op = PackBasicOp::new(bits.array, self, desc);
         //			self.generator().addToEvaluationQueue(Box::new(op));
 
@@ -707,7 +700,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().borrow_mut() -= 1;
+            *self.generator().current_wire_id().lock() -= 1;
             wireId = cachedOutputs[0].as_ref().unwrap().getWireId();
         }
     }

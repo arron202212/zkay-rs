@@ -57,18 +57,18 @@ impl Gadget for AESSBoxGadgetOptimized1 {
                 let p = BigInteger::from(value);
                 mat[k][0] = Util::one();
                 for j in 1..=16 {
-                    mat[k][j] = p.mul(mat[k][j - 1]).rem(Configs.get().unwrap().field_prime.clone());
+                    mat[k][j] = p.mul(mat[k][j - 1]).rem(Configs.field_prime.clone());
                 }
                 // negate the last element, just to make things consistent with
                 // the paper notations
-                mat[k][16] = Configs.get().unwrap().field_prime.sub(mat[k][16]);
+                mat[k][16] = Configs.field_prime.sub(mat[k][16]);
 
                 // used for a sanity check (verifying that the output solution
                 // is equivalent to coefficients of polynomial that has roots at
                 // memberValueSet. see note above)
                 polyCoeffs = polyMul(
                     polyCoeffs,
-                    vec![Configs.get().unwrap().field_prime.sub(p), Util::one()],
+                    vec![Configs.field_prime.sub(p), Util::one()],
                 );
             }
 
@@ -104,7 +104,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             for j in 0..a2.length {
                 out[i + j] = out[i + j]
                     .add(a1[i].mul(a2[j]))
-                    .rem(Configs.get().unwrap().field_prime.clone());
+                    .rem(Configs.field_prime.clone());
             }
         }
         return out;
@@ -126,11 +126,11 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             let p = BigInteger::from(k);
             for i in 1..16 {
                 result = result.add(p.mul(coeffs[i]));
-                p = p.mul(BigInteger::from(k)).rem(Configs.get().unwrap().field_prime.clone());
+                p = p.mul(BigInteger::from(k)).rem(Configs.field_prime.clone());
             }
-            result = result.rem(Configs.get().unwrap().field_prime.clone());
+            result = result.rem(Configs.field_prime.clone());
 
-            if result==Configs.get().unwrap().field_prime.sub(p) {
+            if result==Configs.field_prime.sub(p) {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;

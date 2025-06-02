@@ -62,7 +62,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         for i in 0..hashDigestDimension {
             circuitEvaluator.setWireValue(
                 publicRootWires[i],
-                Util::nextRandomBigInteger(Configs.get().unwrap().field_prime),
+                Util::nextRandomBigInteger(Configs.field_prime),
             );
         }
 
@@ -70,7 +70,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         for i in 0..hashDigestDimension * treeHeight {
             circuitEvaluator.setWireValue(
                 intermediateHasheWires[i],
-                Util::nextRandomBigInteger(Configs.get().unwrap().field_prime),
+                Util::nextRandomBigInteger(Configs.field_prime),
             );
         }
 

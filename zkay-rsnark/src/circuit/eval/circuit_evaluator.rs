@@ -33,7 +33,7 @@ pub struct CircuitEvaluator {
 
 impl CircuitEvaluator {
     pub fn new(cg_name: &str) -> Self {
-        let circuitGenerator = getActiveCircuitGenerator(cg_name).unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
         let mut valueAssignment = vec![None; circuitGenerator.getNumWires() as usize];
         valueAssignment[circuitGenerator.getOneWire().unwrap().getWireId() as usize] =
             Some(Util::one());
@@ -45,7 +45,7 @@ impl CircuitEvaluator {
 
     pub fn setWireValue(&self, w: WireType, v: BigInteger) {
         assert!(
-            v.sign() != Sign::Minus && v < Configs.get().unwrap().field_prime,
+            v.sign() != Sign::Minus && v < Configs.field_prime,
             "Only positive values that are less than the modulus are allowed for this method."
         );
         self.valueAssignment.borrow_mut()[w.getWireId() as usize] = Some(v);
@@ -111,7 +111,7 @@ impl CircuitEvaluator {
     }
 
     pub fn evaluate(&self) {
-        let circuitGenerator = getActiveCircuitGenerator("CGBase").unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
         println!(
             "Running Circuit Evaluator for < {} >",
             circuitGenerator.getName()
@@ -136,7 +136,7 @@ impl CircuitEvaluator {
     }
 
     pub fn writeInputFile(&self) {
-        let circuitGenerator = getActiveCircuitGenerator("CGBase").unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
         let evalSequence = circuitGenerator.getEvaluationQueue();
         let mut printWriter = File::create(circuitGenerator.getName() + ".in").unwrap();
         for e in evalSequence.keys() {

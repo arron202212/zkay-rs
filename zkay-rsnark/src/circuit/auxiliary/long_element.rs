@@ -112,7 +112,7 @@ impl LongElement {
         }
     }
     pub fn generator(&self) -> Box<dyn CGConfig + Send + Sync> {
-        getActiveCircuitGenerator("CGBase").unwrap().clone()
+        getActiveCircuitGenerator().unwrap().clone()
     }
     pub fn makeOutput(&mut self, desc: &Option<String>) {
         for w in self.getArray() {
@@ -128,7 +128,7 @@ impl LongElement {
         for i in 0..chunks.len() {
             currentBitwidth[i] = chunks[i].bits();
         }
-        let generator = getActiveCircuitGenerator("CGBase").unwrap();
+        let generator = getActiveCircuitGenerator().unwrap();
         Self {
             array: generator.createConstantWireArray(chunks.clone(), &None),
             currentMaxValues: chunks,
@@ -164,7 +164,7 @@ impl LongElement {
             } else {
                 BigInteger::ZERO
             };
-            if max1 + max2 >= Configs.get().unwrap().field_prime {
+            if max1 + max2 >= Configs.field_prime {
                 overflow = true;
                 break;
             }
@@ -186,7 +186,7 @@ impl LongElement {
             }
         }
         for i in 0..length {
-            if newMaxValues[i] >= Configs.get().unwrap().field_prime {
+            if newMaxValues[i] >= Configs.field_prime {
                 overflow = true;
                 break;
             }
@@ -366,7 +366,7 @@ impl LongElement {
                 solution[i + j] = solution[i + j]
                     .clone()
                     .add(aiVals[i].clone().mul(biVals[j].clone()))
-                    .rem(Configs.get().unwrap().field_prime.clone());
+                    .rem(Configs.field_prime.clone());
             }
         }
         solution
@@ -482,7 +482,7 @@ impl LongElement {
             println!(
                 "Warning [restrictBitwidth()]: Might want to align before checking bitwidth constraints"
             );
-            if Configs.get().unwrap().print_stack_trace_at_warnings {
+            if Configs.print_stack_trace_at_warnings {
                 // Thread.dumpStack();
                 println!("Thread.dumpStack()");
             }
@@ -584,12 +584,12 @@ impl LongElement {
                     .clone()
                     .add(bounds1[i + step].clone().mul(delta.clone()))
                     .bits()
-                    < Configs.get().unwrap().log2_field_prime - 2
+                    < Configs.log2_field_prime - 2
                     && b2
                         .clone()
                         .add(bounds2[i + step].clone().mul(delta.clone()))
                         .bits()
-                        < Configs.get().unwrap().log2_field_prime - 2
+                        < Configs.log2_field_prime - 2
                 {
                     w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(delta.clone(), &None));
                     w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(delta.clone(), &None));
@@ -771,9 +771,7 @@ impl LongElement {
             if auxConstantChunks[j]
                 .clone()
                 .add(group1_bounds.get(j).unwrap().clone())
-                .add(BigInteger::from(
-                    (prevBound >= Configs.get().unwrap().field_prime) as u8,
-                ))
+                .add(BigInteger::from((prevBound >= Configs.field_prime) as u8))
                 != BigInteger::ZERO
             {
                 println!("Overflow possibility @ ForceEqual()");
@@ -1139,10 +1137,7 @@ impl Mul for LongElement {
                             .map(|x| x.clone().mulb(coeff.clone(), &None));
                     }
                     vector3[i] = result[i].clone().map(|x| x.mulb(coeff.clone(), &None));
-                    coeff = Util::modulo(
-                        coeff.mul(constant.clone()),
-                        Configs.get().unwrap().field_prime.clone(),
-                    );
+                    coeff = Util::modulo(coeff.mul(constant.clone()), Configs.field_prime.clone());
                 }
 
                 let v1 = WireArray::new(vector1).sumAllElements(&None);

@@ -84,7 +84,7 @@ impl SHA256Gadget {
     }
 
     fn buildCircuit(&mut self) {
-        let generator = getActiveCircuitGenerator("CGBase").unwrap();
+        let generator = getActiveCircuitGenerator().unwrap();
         // pad if needed
         self.prepare();
 
@@ -274,7 +274,7 @@ impl SHA256Gadget {
     }
 
     fn prepare(&mut self) {
-        let generator = getActiveCircuitGenerator("CGBase").unwrap();
+        let generator = getActiveCircuitGenerator().unwrap();
         self.numBlocks = (self.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
         let bits = WireArray::new(self.unpaddedInputs.clone())
             .getBits(self.bitWidthPerInputElement, &None)

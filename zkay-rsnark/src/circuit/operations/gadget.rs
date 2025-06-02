@@ -17,7 +17,7 @@ pub struct Gadget<T> {
 }
 pub fn newGadget(desc: &Option<String>) -> (Box<dyn CGConfig + Send + Sync>, String) {
     (
-        getActiveCircuitGenerator("CGBase").unwrap(),
+        getActiveCircuitGenerator().unwrap(),
         desc.as_ref()
             .map_or_else(|| String::new(), |d| d.to_owned()),
     )

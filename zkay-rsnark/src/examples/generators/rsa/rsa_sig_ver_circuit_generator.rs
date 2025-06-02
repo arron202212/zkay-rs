@@ -96,9 +96,9 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         evaluator.setWireValue(self.signature, sig, LongElement.CHUNK_BITWIDTH);
         // } else {
         // evaluator.setWireValue(self.rsaModulusWires,
-        // Util::split(modulus, Configs.get().unwrap().log2_field_prime - 1));
+        // Util::split(modulus, Configs.log2_field_prime - 1));
         // evaluator.setWireValue(self.signatureWires,
-        // Util::split(sig, Configs.get().unwrap().log2_field_prime - 1));
+        // Util::split(sig, Configs.log2_field_prime - 1));
         // }
 
         // println!("Error while generating sample input for circuit");

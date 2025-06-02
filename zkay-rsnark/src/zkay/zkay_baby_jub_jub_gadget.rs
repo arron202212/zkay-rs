@@ -27,7 +27,7 @@ impl ZkayBabyJubJubGadget {
         super(desc);
 
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)
-        assert!(Configs.get().unwrap().field_prime.toString().equals(
+        assert!(Configs.field_prime.toString().equals(
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"
         ));
     }

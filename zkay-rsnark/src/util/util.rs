@@ -16,6 +16,14 @@ use num_bigint::{BigInt, RandBigInt, RandomBits, Sign, ToBigInt};
 use num_traits::{One, sign::Signed};
 use rand::distributions::Distribution;
 pub type BigInteger = BigInt;
+use parking_lot::Mutex;
+use std::sync::Arc;
+pub type ARcCell<typ> = Arc<Mutex<typ>>;
+#[macro_export]
+macro_rules! arc_cell_new {
+    ($exp:expr) => {{ std::sync::Arc::new(parking_lot::Mutex::new($exp)) }};
+}
+
 // let mut rng = rand::thread_rng();
 pub struct Util {
     // seeded by 1 for testing purposes

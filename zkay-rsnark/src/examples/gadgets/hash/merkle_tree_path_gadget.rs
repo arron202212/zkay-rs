@@ -64,7 +64,7 @@ impl Gadget for MerkleTreePathGadget {
             }
 
             let nextInputBits = WireArray::new(inHash)
-                .getBits(Configs.get().unwrap().log2_field_prime)
+                .getBits(Configs.log2_field_prime)
                 .asArray();
             subsetSumGadget = SubsetSumHashGadget::new(nextInputBits, false);
             currentHash = subsetSumGadget.getOutputWires();

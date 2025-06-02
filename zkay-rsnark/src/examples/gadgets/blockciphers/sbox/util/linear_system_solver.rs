@@ -12,7 +12,7 @@ pub struct LinearSystemSolver {
     numRows: i32,
 }
 impl LinearSystemSolver {
-    const prime: BigInteger = Configs.get().unwrap().field_prime;
+    const prime: BigInteger = Configs.field_prime;
     pub fn new(mat: Vec<Vec<BigInteger>>) -> Self {
         self.mat = mat;
         numRows = mat.len();

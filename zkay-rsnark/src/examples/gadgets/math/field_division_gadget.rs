@@ -34,7 +34,7 @@ impl FieldDivisionGadget {
             b,
             c: WireType::default(),
         };
-        let generator = getActiveCircuitGenerator("CGBase").unwrap();
+        let generator = getActiveCircuitGenerator().unwrap();
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
@@ -44,12 +44,10 @@ impl FieldDivisionGadget {
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant()
-                .modinv(&Configs.get().unwrap().field_prime.clone())
+                .modinv(&Configs.field_prime.clone())
                 .unwrap();
             _self.c = generator.createConstantWire(
-                aConst
-                    .mul(bInverseConst)
-                    .rem(Configs.get().unwrap().field_prime.clone()),
+                aConst.mul(bInverseConst).rem(Configs.field_prime.clone()),
                 &None,
             );
         } else {
@@ -62,7 +60,7 @@ impl FieldDivisionGadget {
     fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-        let generator = getActiveCircuitGenerator("CGBase").unwrap();
+        let generator = getActiveCircuitGenerator().unwrap();
         generator.specifyProverWitnessComputation({
             #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
@@ -75,12 +73,8 @@ impl FieldDivisionGadget {
                     let aValue = evaluator.getWireValue(self.a.clone());
                     let bValue = evaluator.getWireValue(self.b.clone());
                     let cValue = aValue
-                        .mul(
-                            bValue
-                                .modinv(&Configs.get().unwrap().field_prime.clone())
-                                .unwrap(),
-                        )
-                        .rem(Configs.get().unwrap().field_prime.clone());
+                        .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+                        .rem(Configs.field_prime.clone());
                     evaluator.setWireValue(self.c.clone(), cValue);
                 }
             }

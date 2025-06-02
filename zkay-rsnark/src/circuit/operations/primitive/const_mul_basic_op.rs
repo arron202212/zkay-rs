@@ -30,16 +30,11 @@ pub fn new_const_mul(
 ) -> Op<ConstMulBasicOp> {
     let inSign = constInteger.sign() == Sign::Minus;
     if !inSign {
-        constInteger = Util::modulo(constInteger, Configs.get().unwrap().field_prime.clone());
+        constInteger = Util::modulo(constInteger, Configs.field_prime.clone());
     } else {
         let mut _constInteger = constInteger.neg();
-        _constInteger = Util::modulo(_constInteger, Configs.get().unwrap().field_prime.clone());
-        constInteger = Configs
-            .get()
-            .unwrap()
-            .field_prime
-            .clone()
-            .sub(_constInteger);
+        _constInteger = Util::modulo(_constInteger, Configs.field_prime.clone());
+        constInteger = Configs.field_prime.clone().sub(_constInteger);
     }
     Op::<ConstMulBasicOp> {
         inputs: vec![Some(w)],
@@ -60,12 +55,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         } else {
             format!(
                 "const-mul-neg-{:x}",
-                Configs
-                    .get()
-                    .unwrap()
-                    .field_prime
-                    .clone()
-                    .sub(self.t.constInteger.clone())
+                Configs.field_prime.clone().sub(self.t.constInteger.clone())
             )
         }
     }
@@ -75,8 +65,8 @@ impl BasicOp for Op<ConstMulBasicOp> {
             .clone()
             .unwrap()
             .mul(self.t.constInteger.clone());
-        if result.bits() >= Configs.get().unwrap().log2_field_prime {
-            result = result.rem(Configs.get().unwrap().field_prime.clone());
+        if result.bits() >= Configs.log2_field_prime {
+            result = result.rem(Configs.field_prime.clone());
         }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
     }
