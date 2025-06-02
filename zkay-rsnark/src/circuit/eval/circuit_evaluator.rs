@@ -14,6 +14,8 @@ use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 
+use crate::arc_cell_new;
+use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use rccell::RcCell;
@@ -25,9 +27,9 @@ use std::path::Path;
 // circuitGenerator:Box<dyn CGConfig+Send+Sync>,
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-#[derive(Debug, Clone, Hash, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct CircuitEvaluator {
-    pub valueAssignment: RcCell<Vec<Option<BigInteger>>>,
+    pub valueAssignment: ARcCell<Vec<Option<BigInteger>>>,
     pub cg_name: String,
 }
 
@@ -38,7 +40,7 @@ impl CircuitEvaluator {
         valueAssignment[circuitGenerator.getOneWire().unwrap().getWireId() as usize] =
             Some(Util::one());
         Self {
-            valueAssignment: RcCell::new(valueAssignment),
+            valueAssignment: arc_cell_new!(valueAssignment),
             cg_name: cg_name.to_owned(),
         }
     }
@@ -48,18 +50,18 @@ impl CircuitEvaluator {
             v.sign() != Sign::Minus && v < Configs.field_prime,
             "Only positive values that are less than the modulus are allowed for this method."
         );
-        self.valueAssignment.borrow_mut()[w.getWireId() as usize] = Some(v);
+        self.valueAssignment.lock()[w.getWireId() as usize] = Some(v);
     }
 
     pub fn getWireValue(&self, w: WireType) -> BigInteger {
-        let mut v = self.valueAssignment.borrow()[w.getWireId() as usize].clone();
+        let mut v = self.valueAssignment.lock()[w.getWireId() as usize].clone();
         if v.is_none() {
             let bits = w.getBitWiresIfExistAlready();
             if let Some(bits) = bits {
                 let mut sum = BigInteger::ZERO;
                 for i in 0..bits.size() {
                     sum = sum.add(
-                        self.valueAssignment.borrow()
+                        self.valueAssignment.lock()
                             [bits.get(i).as_ref().unwrap().getWireId() as usize]
                             .clone()
                             .unwrap()
@@ -82,7 +84,7 @@ impl CircuitEvaluator {
 
     pub fn getWireValuei(&self, e: LongElement, bitwidthPerChunk: i32) -> BigInteger {
         Util::combine(
-            self.valueAssignment.borrow().clone(),
+            self.valueAssignment.lock().clone(),
             e.getArray(),
             bitwidthPerChunk,
         )
@@ -123,9 +125,9 @@ impl CircuitEvaluator {
             e.emit(self.clone());
         }
         // check that each wire has been assigned a value
-        for i in 0..self.valueAssignment.borrow().len() {
+        for i in 0..self.valueAssignment.lock().len() {
             assert!(
-                self.valueAssignment.borrow()[i].is_some(),
+                self.valueAssignment.lock()[i].is_some(),
                 "WireType# {i}is without value"
             );
         }
@@ -149,7 +151,7 @@ impl CircuitEvaluator {
                     printWriter,
                     "{} {:x}",
                     id.to_string(),
-                    self.valueAssignment.borrow()[id as usize].clone().unwrap()
+                    self.valueAssignment.lock()[id as usize].clone().unwrap()
                 );
             }
         }
@@ -348,6 +350,6 @@ impl CircuitEvaluator {
     }
 
     pub fn getAssignment(&self) -> Vec<Option<BigInteger>> {
-        self.valueAssignment.borrow().clone()
+        self.valueAssignment.lock().clone()
     }
 }

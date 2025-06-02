@@ -6,17 +6,29 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::arc_cell_new;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::ARcCell;
 use rccell::RcCell;
 
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
-#[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct VariableWire {
-    pub bitWires: RcCell<Option<WireArray>>,
+    pub bitWires: ARcCell<Option<WireArray>>,
+}
+impl Hash for VariableWire {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.bitWires.lock().hash(state);
+    }
+}
+impl PartialEq for VariableWire {
+    fn eq(&self, other: &Self) -> bool {
+        *self.bitWires.lock() == *other.bitWires.lock()
+    }
 }
 crate::impl_hash_code_of_wire_for!(Wire<VariableWire>);
 crate::impl_name_instance_of_wire_for!(Wire<VariableWire>);
@@ -25,7 +37,7 @@ pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
     Wire::<VariableWire> {
         wireId,
         t: VariableWire {
-            bitWires: RcCell::new(None),
+            bitWires: arc_cell_new!(None),
         },
     }
 }
@@ -33,7 +45,7 @@ impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}
 impl WireConfig for Wire<VariableWire> {
     fn getBitWires(&self) -> Option<WireArray> {
-        self.t.bitWires.borrow().clone()
+        self.t.bitWires.lock().clone()
     }
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::Variable(self.clone()))
@@ -51,6 +63,6 @@ impl Wire<VariableWire> {
     // }
 
     fn setBits(&self, bitWires: Option<WireArray>) {
-        *self.t.bitWires.borrow_mut() = bitWires;
+        *self.t.bitWires.lock() = bitWires;
     }
 }

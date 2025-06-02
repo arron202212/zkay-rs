@@ -68,16 +68,16 @@ dyn_clone::clone_trait_object!(Instruction);
 //         self.my_fmt(f)
 //     }
 // }
-impl Hash for dyn Instruction {
+impl Hash for dyn Instruction + Send + Sync {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.dyn_hash(state)
     }
 }
 
-impl PartialEq for dyn Instruction {
+impl PartialEq for dyn Instruction + Send + Sync {
     fn eq(&self, other: &Self) -> bool {
         false
     }
 }
 
-impl Eq for dyn Instruction {}
+impl Eq for dyn Instruction + Send + Sync {}

@@ -12,6 +12,7 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::put_active_circuit_generator;
 use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
@@ -262,6 +263,7 @@ mod test {
             numIns: numIns as u64,
         };
         let mut generator = CircuitGenerator::<CGTest>::new("Caching_Test", t);
+        put_active_circuit_generator("CGTest", Box::new(generator.clone()));
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
         generator.generateSampleInput(evaluator.clone());

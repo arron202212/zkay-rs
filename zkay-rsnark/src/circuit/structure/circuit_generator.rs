@@ -53,7 +53,8 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone)]
 pub struct CircuitGenerator<T> {
     pub currentWireId: ARcCell<i32>,
-    pub evaluationQueue: ARcCell<HashMap<Box<dyn Instruction>, Box<dyn Instruction>>>,
+    pub evaluationQueue:
+        ARcCell<HashMap<Box<dyn Instruction + Send + Sync>, Box<dyn Instruction + Send + Sync>>>,
 
     pub zeroWire: ARcCell<Option<WireType>>,
     pub oneWire: Option<WireType>,
@@ -73,7 +74,9 @@ pub struct CircuitGenerator<T> {
 
 pub trait CGConfigFields {
     fn current_wire_id(&self) -> ARcCell<i32>;
-    fn evaluation_queue(&self) -> ARcCell<HashMap<Box<dyn Instruction>, Box<dyn Instruction>>>;
+    fn evaluation_queue(
+        &self,
+    ) -> ARcCell<HashMap<Box<dyn Instruction + Send + Sync>, Box<dyn Instruction + Send + Sync>>>;
     fn zero_wire(&self) -> ARcCell<Option<WireType>>;
     fn one_wire(&self) -> Option<WireType>;
     fn in_wires(&self) -> ARcCell<Vec<Option<WireType>>>;
@@ -127,12 +130,12 @@ pub trait CGConfigFields {
 //     ) -> Vec<Option<WireType>> ;
 // fn   createNegConstantWire(&self, x: BigInteger, desc: &Option<String>) -> WireType ;
 // fn   createNegConstantWirei(&self, x: i64, desc: &Option<String>) -> WireType ;
-// fn   specifyProverWitnessComputation(&self, instruction: Box<dyn Instruction>) ;
+// fn   specifyProverWitnessComputation(&self, instruction: Box<dyn Instruction+Send+Sync>) ;
 // fn   getZeroWire(&self) -> Option<WireType> ;
 // fn   getOneWire(&self) -> Option<WireType> ;
-// fn   getEvaluationQueue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> ;
+// fn   getEvaluationQueue(&self) -> HashMap<Box<dyn Instruction+Send+Sync>, Box<dyn Instruction+Send+Sync>> ;
 // fn   getNumWires(&self) -> i32 ;
-// fn   addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> ;
+// fn   addToEvaluationQueue(&self, e: Box<dyn Instruction+Send+Sync>) -> Option<Vec<Option<WireType>>> ;
 // fn   printState(&self, message: String) ;
 // fn   getNumOfConstraints(&self) -> i32 ;
 // fn   getInWires(&self) -> Vec<Option<WireType>> ;
@@ -174,8 +177,11 @@ pub fn getActiveCircuitGenerator() -> eyre::Result<Box<dyn CGConfig + Send + Syn
             "The current thread does not have any active circuit generators"
         ))
 }
-pub fn put_active_circuit_generator(name: String, cg: Box<dyn CGConfig + Send + Sync>) {
-    active_circuit_generators.lock().unwrap().insert(name, cg);
+pub fn put_active_circuit_generator(name: &str, cg: Box<dyn CGConfig + Send + Sync>) {
+    active_circuit_generators
+        .lock()
+        .unwrap()
+        .insert(name.to_owned(), cg);
 }
 
 impl<T: StructNameConfig> CircuitGenerator<T> {
@@ -469,7 +475,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
      *
      * @param instruction
      */
-    fn specifyProverWitnessComputation(&self, instruction: Box<dyn Instruction>) {
+    fn specifyProverWitnessComputation(&self, instruction: Box<dyn Instruction + Send + Sync>) {
         self.addToEvaluationQueue(instruction);
     }
 
@@ -481,7 +487,9 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         return self.one_wire().clone();
     }
 
-    fn getEvaluationQueue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
+    fn getEvaluationQueue(
+        &self,
+    ) -> HashMap<Box<dyn Instruction + Send + Sync>, Box<dyn Instruction + Send + Sync>> {
         return self.evaluation_queue().lock().clone();
     }
 
@@ -491,7 +499,10 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn getCurrentWireId(&self) -> ARcCell<i32> {
         self.current_wire_id().clone()
     }
-    fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
+    fn addToEvaluationQueue(
+        &self,
+        e: Box<dyn Instruction + Send + Sync>,
+    ) -> Option<Vec<Option<WireType>>> {
         let evaluationQueue = self.evaluation_queue().lock().clone();
         let existingInstruction = evaluationQueue.get(&e);
         self.evaluation_queue()
@@ -668,7 +679,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 //             }
 //             fn evaluation_queue(
 //                 &self,
-//             ) -> ARcCell<HashMap<Box<dyn Instruction>, Box<dyn Instruction>>> {
+//             ) -> ARcCell<HashMap<Box<dyn Instruction+Send+Sync>, Box<dyn Instruction+Send+Sync>>> {
 //                 self.evaluationQueue.clone()
 //             }
 
@@ -708,7 +719,10 @@ impl<T> crate::circuit::structure::circuit_generator::CGConfigFields for Circuit
     fn current_wire_id(&self) -> ARcCell<i32> {
         self.currentWireId.clone()
     }
-    fn evaluation_queue(&self) -> ARcCell<HashMap<Box<dyn Instruction>, Box<dyn Instruction>>> {
+    fn evaluation_queue(
+        &self,
+    ) -> ARcCell<HashMap<Box<dyn Instruction + Send + Sync>, Box<dyn Instruction + Send + Sync>>>
+    {
         self.evaluationQueue.clone()
     }
 
