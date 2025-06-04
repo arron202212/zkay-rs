@@ -86,11 +86,11 @@ impl WireLabelInstruction {
 }
 
 impl Instruction for WireLabelInstruction {
-    fn evaluate(&self, evaluator: CircuitEvaluator) {
+    fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
         // nothing to do.
     }
 
-    fn emit(&self, evaluator: CircuitEvaluator) {
+    fn emit(&self, evaluator: &CircuitEvaluator) {
         if self.label_type == LabelType::output && Configs.output_verbose
             || self.label_type == LabelType::debug && Configs.debug_verbose
         {

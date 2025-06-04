@@ -114,11 +114,11 @@ impl TypedWire {
     pub fn divideBy(rhs: TypedWire) -> TypedWire {
         let resultType = checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " / " + &rhs.name;
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         generator.addOneAssertion(rhs.wire.checkNonZero(), "no div by 0");
 
         // Sign handling...
-        let resultSign = generator.getZeroWire();
+        let resultSign = generator.get_zero_wire();
         let lhsWire = self.wire;
         let rhsWire = rhs.wire;
 
@@ -153,11 +153,11 @@ impl TypedWire {
     pub fn modulo(rhs: TypedWire) -> TypedWire {
         let resultType = checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " % " + &rhs.name;
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         generator.addOneAssertion(rhs.wire.checkNonZero(), "no div by 0");
 
         // Sign handling...
-        let resultSign = generator.getZeroWire();
+        let resultSign = generator.get_zero_wire();
         let lhsWire = self.wire;
         let rhsWire = rhs.wire;
 

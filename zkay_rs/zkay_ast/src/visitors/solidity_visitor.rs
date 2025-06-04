@@ -289,7 +289,7 @@ impl AstVisitor for SolidityVisitor {
 //                 format!(
 //                     "{t}@{p}{}",
 //                     HOMOMORPHISM_STORE
-//                         .lock()
+//
 //                         .unwrap()
 //                         .get(
 //                             &ast.to_ast()
@@ -806,7 +806,7 @@ impl AstVisitor for SolidityVisitor {
 //             .as_ref()
 //             .map_or(String::new(), |ho| {
 //                 HOMOMORPHISM_STORE
-//                     .lock()
+//
 //                     .unwrap()
 //                     .get(ho)
 //                     .map_or(String::new(), |h| h.to_string())
@@ -2070,7 +2070,6 @@ impl CodeVisitor for SolidityVisitor {
                 format!(
                     "{t}@{p}{}",
                     HOMOMORPHISM_STORE
-                        .lock()
                         .unwrap()
                         .get(
                             &ast.to_ast()
@@ -2591,7 +2590,7 @@ impl CodeVisitor for SolidityVisitor {
 //             .as_ref()
 //             .map_or(String::new(), |ho| {
 //                 HOMOMORPHISM_STORE
-//                     .lock()
+//
 //                     .unwrap()
 //                     .get(ho)
 //                     .map_or(String::new(), |h| h.to_string())

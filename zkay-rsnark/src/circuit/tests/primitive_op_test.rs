@@ -60,8 +60,8 @@ mod test {
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            pub inputs1: ARcCell<WireArray>,
-            pub inputs2: ARcCell<WireArray>,
+            pub inputs1: WireArray,
+            pub inputs2: WireArray,
             pub inVals1: Vec<BigInteger>,
             pub inVals2: Vec<BigInteger>,
             pub numIns: u64,
@@ -70,8 +70,8 @@ mod test {
         //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
         crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
         impl CGConfig for CircuitGenerator<CGTest> {
-            fn buildCircuit(&self) {
-                let generator = getActiveCircuitGenerator().unwrap();
+            fn buildCircuit(&mut self) {
+                let mut generator = getActiveCircuitGenerator().unwrap();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
@@ -83,18 +83,18 @@ mod test {
                 generator.makeOutput(result1, &None);
                 generator.makeOutput(result2, &None);
                 generator.makeOutputArray(resultArray.asArray(), &None);
-                *self.t.inputs1.lock() = inputs1;
-                *self.t.inputs2.lock() = inputs2;
+                self.t.inputs1 = inputs1;
+                self.t.inputs2 = inputs2;
             }
 
-            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.lock().asArray(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.lock().asArray(), self.t.inVals2.clone());
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.asArray(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.asArray(), self.t.inVals2.clone());
             }
         }
         let t = CGTest {
-            inputs1: arc_cell_new!(WireArray::newi(0)),
-            inputs2: arc_cell_new!(WireArray::newi(0)),
+            inputs1: WireArray::newi(0),
+            inputs2: WireArray::newi(0),
             inVals1,
             inVals2,
             numIns: numIns as u64,
@@ -102,18 +102,18 @@ mod test {
         let mut generator = CircuitGenerator::<CGTest>::new("addition", t);
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator.clone());
+        generator.generateSampleInput(&mut evaluator);
         evaluator.evaluate();
 
         let mut idx = 0;
-        for output in generator.getOutWires() {
+        for output in generator.get_out_wires() {
             assert_eq!(
-                evaluator.getWireValue(output.unwrap()),
-                result.get(idx).clone().unwrap().clone()
+                evaluator.getWireValue(output.clone().unwrap()),
+                result[idx].clone()
             );
             idx += 1;
         }
-        assert_eq!(generator.getNumOfConstraints(), numIns as i32 + 2);
+        assert_eq!(generator.get_num_of_constraints(), numIns as i32 + 2);
     }
 
     #[test]
@@ -141,8 +141,8 @@ mod test {
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            pub inputs1: ARcCell<Vec<Option<WireType>>>,
-            pub inputs2: ARcCell<Vec<Option<WireType>>>,
+            pub inputs1: Vec<Option<WireType>>,
+            pub inputs2: Vec<Option<WireType>>,
             pub inVals1: Vec<BigInteger>,
             pub inVals2: Vec<BigInteger>,
             pub numIns: u64,
@@ -151,8 +151,8 @@ mod test {
         //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
         crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
         impl CGConfig for CircuitGenerator<CGTest> {
-            fn buildCircuit(&self) {
-                let generator = getActiveCircuitGenerator().unwrap();
+            fn buildCircuit(&mut self) {
+                let mut generator = getActiveCircuitGenerator().unwrap();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
@@ -162,18 +162,18 @@ mod test {
 
                 generator.makeOutput(result1, &None);
                 generator.makeOutputArray(resultArray.asArray(), &None);
-                *self.t.inputs1.lock() = inputs1.asArray();
-                *self.t.inputs2.lock() = inputs2.asArray();
+                self.t.inputs1 = inputs1.asArray();
+                self.t.inputs2 = inputs2.asArray();
             }
 
-            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.lock().clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.lock().clone(), self.t.inVals2.clone());
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
             }
         }
         let t = CGTest {
-            inputs1: arc_cell_new!(vec![]),
-            inputs2: arc_cell_new!(vec![]),
+            inputs1: vec![],
+            inputs2: vec![],
             inVals1,
             inVals2,
             numIns: numIns as u64,
@@ -182,17 +182,17 @@ mod test {
 
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator.clone());
+        generator.generateSampleInput(&mut evaluator);
         evaluator.evaluate();
         let mut idx = 0;
-        for output in generator.getOutWires() {
+        for output in generator.get_out_wires() {
             assert_eq!(
-                evaluator.getWireValue(output.unwrap()),
-                result.get(idx).unwrap().clone()
+                evaluator.getWireValue(output.clone().unwrap()),
+                result[idx].clone()
             );
             idx += 1;
         }
-        assert_eq!(generator.getNumOfConstraints(), numIns as i32 + 1);
+        assert_eq!(generator.get_num_of_constraints(), numIns as i32 + 1);
     }
 
     #[test]
@@ -216,15 +216,15 @@ mod test {
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            pub inputs1: ARcCell<Vec<Option<WireType>>>,
-            pub inputs2: ARcCell<Vec<Option<WireType>>>,
+            pub inputs1: Vec<Option<WireType>>,
+            pub inputs2: Vec<Option<WireType>>,
             pub inVals1: Vec<BigInteger>,
             pub inVals2: Vec<BigInteger>,
-            pub result1: ARcCell<Vec<Option<WireType>>>,
-            pub result2: ARcCell<Vec<Option<WireType>>>,
-            pub result3: ARcCell<Vec<Option<WireType>>>,
-            pub result4: ARcCell<Vec<Option<WireType>>>,
-            pub result5: ARcCell<Vec<Option<WireType>>>,
+            pub result1: Vec<Option<WireType>>,
+            pub result2: Vec<Option<WireType>>,
+            pub result3: Vec<Option<WireType>>,
+            pub result4: Vec<Option<WireType>>,
+            pub result5: Vec<Option<WireType>>,
             pub numIns: u64,
             pub numBits: i32,
         }
@@ -232,8 +232,8 @@ mod test {
         //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
         crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
         impl CGConfig for CircuitGenerator<CGTest> {
-            fn buildCircuit(&self) {
-                let generator = getActiveCircuitGenerator().unwrap();
+            fn buildCircuit(&mut self) {
+                let mut generator = getActiveCircuitGenerator().unwrap();
                 let numIns = self.t.numIns as usize;
                 let numBits = self.t.numBits;
                 let mut result1 = vec![None; numIns];
@@ -261,44 +261,44 @@ mod test {
                         .as_ref()
                         .map(|x| x.isEqualTo(inputs2[i].clone().unwrap(), &None));
                 }
-                *self.t.inputs1.lock() = inputs1;
-                *self.t.inputs2.lock() = inputs2;
-                *self.t.result1.lock() = result1;
-                *self.t.result2.lock() = result2;
-                *self.t.result3.lock() = result3;
-                *self.t.result4.lock() = result4;
-                *self.t.result5.lock() = result5;
+                self.t.inputs1 = inputs1;
+                self.t.inputs2 = inputs2;
+                self.t.result1 = result1;
+                self.t.result2 = result2;
+                self.t.result3 = result3;
+                self.t.result4 = result4;
+                self.t.result5 = result5;
             }
 
-            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.lock().clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.lock().clone(), self.t.inVals2.clone());
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
             }
         }
         let t = CGTest {
-            inputs1: arc_cell_new!(vec![]),
-            inputs2: arc_cell_new!(vec![]),
+            inputs1: vec![],
+            inputs2: vec![],
             inVals1,
             inVals2,
-            result1: arc_cell_new!(vec![None; numIns as usize]),
-            result2: arc_cell_new!(vec![None; numIns as usize]),
-            result3: arc_cell_new!(vec![None; numIns as usize]),
-            result4: arc_cell_new!(vec![None; numIns as usize]),
-            result5: arc_cell_new!(vec![None; numIns as usize]),
+            result1: vec![None; numIns as usize],
+            result2: vec![None; numIns as usize],
+            result3: vec![None; numIns as usize],
+            result4: vec![None; numIns as usize],
+            result5: vec![None; numIns as usize],
             numIns: numIns as u64,
             numBits,
         };
         let mut generator = CircuitGenerator::<CGTest>::new("comparison", t.clone());
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator.clone());
+        generator.generateSampleInput(&mut evaluator);
         //		generator.printCircuit();
         evaluator.evaluate();
-        let mut result1 = t.result1.lock().clone();
-        let mut result2 = t.result2.lock().clone();
-        let mut result3 = t.result3.lock().clone();
-        let mut result4 = t.result4.lock().clone();
-        let mut result5 = t.result5.lock().clone();
+        let mut result1 = t.result1.clone();
+        let mut result2 = t.result2.clone();
+        let mut result3 = t.result3.clone();
+        let mut result4 = t.result4.clone();
+        let mut result5 = t.result5.clone();
         for i in 0..numIns as usize {
             let mut r = result[i];
             if r == 0 {
@@ -430,9 +430,9 @@ mod test {
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            pub inputs1: ARcCell<Vec<Option<WireType>>>,
-            pub inputs2: ARcCell<Vec<Option<WireType>>>,
-            pub inputs3: ARcCell<Vec<Option<WireType>>>,
+            pub inputs1: Vec<Option<WireType>>,
+            pub inputs2: Vec<Option<WireType>>,
+            pub inputs3: Vec<Option<WireType>>,
             pub inVals1: Vec<BigInteger>,
             pub inVals2: Vec<BigInteger>,
             pub inVals3: Vec<BigInteger>,
@@ -442,8 +442,8 @@ mod test {
         //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
         crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
         impl CGConfig for CircuitGenerator<CGTest> {
-            fn buildCircuit(&self) {
-                let generator = getActiveCircuitGenerator().unwrap();
+            fn buildCircuit(&mut self) {
+                let mut generator = getActiveCircuitGenerator().unwrap();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = generator.createInputWireArray(numIns, &None);
                 let mut inputs2 = generator.createInputWireArray(numIns, &None);
@@ -488,21 +488,21 @@ mod test {
                 generator.makeOutputArray(ored, &None);
                 generator.makeOutputArray(anded, &None);
                 generator.makeOutputArray(inverted, &None);
-                *self.t.inputs1.lock() = inputs1;
-                *self.t.inputs2.lock() = inputs2;
-                *self.t.inputs3.lock() = inputs3;
+                self.t.inputs1 = inputs1;
+                self.t.inputs2 = inputs2;
+                self.t.inputs3 = inputs3;
             }
 
-            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.lock().clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.lock().clone(), self.t.inVals2.clone());
-                evaluator.setWireValuea(self.t.inputs3.lock().clone(), self.t.inVals3.clone());
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
+                evaluator.setWireValuea(self.t.inputs3.clone(), self.t.inVals3.clone());
             }
         }
         let t = CGTest {
-            inputs1: arc_cell_new!(vec![]),
-            inputs2: arc_cell_new!(vec![]),
-            inputs3: arc_cell_new!(vec![]),
+            inputs1: vec![],
+            inputs2: vec![],
+            inputs3: vec![],
             inVals1,
             inVals2,
             inVals3,
@@ -511,23 +511,15 @@ mod test {
         let mut generator = CircuitGenerator::<CGTest>::new("boolean_operations", t);
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator.clone());
+        generator.generateSampleInput(&mut evaluator);
         evaluator.evaluate();
         let numIns = numIns as usize;
-        let mut outWires = generator.getOutWires();
+        let mut outWires = generator.get_out_wires();
         let (mut i, mut outputIndex) = (0, 0);
         for i in 0..numIns {
             assert_eq!(
                 shiftedRightVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -535,15 +527,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 shiftedLeftVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -551,15 +535,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedRightVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -567,15 +543,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedLeftVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -583,15 +551,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 xoredVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -599,15 +559,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 oredVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -615,15 +567,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 andedVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
 
@@ -631,15 +575,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 invertedVals[i],
-                evaluator.getWireValue(
-                    outWires
-                        .get(i + outputIndex)
-                        .clone()
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .clone()
-                )
+                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
             );
         }
     }
@@ -668,9 +604,9 @@ mod test {
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            pub inputs1: ARcCell<Vec<Option<WireType>>>,
-            pub inputs2: ARcCell<Vec<Option<WireType>>>,
-            pub solutions: ARcCell<Vec<Option<WireType>>>,
+            pub inputs1: Vec<Option<WireType>>,
+            pub inputs2: Vec<Option<WireType>>,
+            pub solutions: Vec<Option<WireType>>,
             pub inVals1: Vec<BigInteger>,
             pub inVals2: Vec<BigInteger>,
             pub numIns: u64,
@@ -682,8 +618,8 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             // provide solutions as witnesses
 
-            fn buildCircuit(&self) {
-                let generator = getActiveCircuitGenerator().unwrap();
+            fn buildCircuit(&mut self) {
+                let mut generator = getActiveCircuitGenerator().unwrap();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
@@ -699,7 +635,7 @@ mod test {
                         numIns: usize,
                     }
                     impl Instruction for Prover {
-                        fn evaluate(&self, evaluator: CircuitEvaluator) {
+                        fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                             evaluator.setWireValue(
                                 self.solutions[0].clone().unwrap(),
                                 self.result[0].clone(),
@@ -735,22 +671,22 @@ mod test {
                 }
 
                 // constant assertions will not add constraints
-                self.addZeroAssertion(self.zero_wire().lock().clone().unwrap(), &None);
-                self.addOneAssertion(self.one_wire().clone().unwrap(), &None);
+                self.addZeroAssertion(self.get_zero_wire().clone().unwrap(), &None);
+                self.addOneAssertion(self.get_one_wire().clone().unwrap(), &None);
                 self.addAssertion(
-                    self.zero_wire().lock().clone().unwrap(),
-                    self.one_wire().clone().unwrap(),
-                    self.zero_wire().lock().clone().unwrap(),
+                    self.get_zero_wire().clone().unwrap(),
+                    self.get_one_wire().clone().unwrap(),
+                    self.get_zero_wire().clone().unwrap(),
                     &None,
                 );
                 self.addAssertion(
-                    self.one_wire().clone().unwrap(),
-                    self.one_wire().clone().unwrap(),
-                    self.one_wire().clone().unwrap(),
+                    self.get_one_wire().clone().unwrap(),
+                    self.get_one_wire().clone().unwrap(),
+                    self.get_one_wire().clone().unwrap(),
                     &None,
                 );
-                self.addBinaryAssertion(self.zero_wire().lock().clone().unwrap(), &None);
-                self.addBinaryAssertion(self.one_wire().clone().unwrap(), &None);
+                self.addBinaryAssertion(self.get_zero_wire().clone().unwrap(), &None);
+                self.addBinaryAssertion(self.get_one_wire().clone().unwrap(), &None);
 
                 // won't add a constraint
                 self.addEqualityAssertion(
@@ -765,20 +701,20 @@ mod test {
                     self.t.inVals1[0].clone(),
                     &None,
                 );
-                *self.t.inputs1.lock() = inputs1.asArray();
-                *self.t.inputs2.lock() = inputs2.asArray();
-                // *self.t.inputs2.lock()=inputs2;
+                self.t.inputs1 = inputs1.asArray();
+                self.t.inputs2 = inputs2.asArray();
+                // self.t.inputs2=inputs2;
             }
 
-            fn generateSampleInput(&self, evaluator: CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.lock().clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.lock().clone(), self.t.inVals2.clone());
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
+                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
             }
         }
         let t = CGTest {
-            inputs1: arc_cell_new!(vec![]),
-            inputs2: arc_cell_new!(vec![]),
-            solutions: arc_cell_new!(vec![]),
+            inputs1: vec![],
+            inputs2: vec![],
+            solutions: vec![],
             inVals1,
             inVals2,
             numIns: numIns as u64,
@@ -787,8 +723,8 @@ mod test {
         let mut generator = CircuitGenerator::<CGTest>::new("assertions", t);
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator.clone());
+        generator.generateSampleInput(&mut evaluator);
         evaluator.evaluate(); // no exception will be thrown
-        assert_eq!(generator.getNumOfConstraints(), numIns as i32 + 2);
+        assert_eq!(generator.get_num_of_constraints(), numIns as i32 + 2);
     }
 }

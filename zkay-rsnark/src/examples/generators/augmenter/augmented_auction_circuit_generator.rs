@@ -102,7 +102,7 @@ impl CircuitGenerator for AugmentedAuctionCircuitGenerator {
     }
 
     pub fn main(args: Vec<String>) {
-        let generator =
+        let mut generator =
             AugmentedAuctionCircuitGenerator::new("augmented_auction_10", "auction_10.arith", 10);
         generator.generateCircuit();
         generator.evalCircuit();

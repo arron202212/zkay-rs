@@ -70,7 +70,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             assert!(trialCounter < 100
 						"Was not possible to find an adequate solution to the current setting of the AES gadget sbox");
 
-            println!(
+            //println!(
                 "Attempting to solve linear systems for efficient S-Box Access: Attempt#{trialCounter}"
             );
             seed += 1;
@@ -98,10 +98,10 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 LinearSystemSolver::new(mat).solveInPlace();
 
                 if checkIfProverCanCheat(mat, memberValueSet) {
-                    println!("Invalid solution");
+                    //println!("Invalid solution");
                     for ii in 0..16 {
                         if mat[ii][16]==BigInteger::ZERO {
-                            println!("Possibly invalid due to having zero coefficient(s)");
+                            //println!("Possibly invalid due to having zero coefficient(s)");
                             break;
                         }
                     }
@@ -117,7 +117,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             }
             done = true;
             AESSBoxGadgetOptimized2.allCoeffSet = allCoeffSet;
-            println!("Solution found!");
+            //println!("Solution found!");
         }
     }
 
@@ -167,9 +167,9 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             }
         }
 
-        let product = generator.getOneWire();
+        let product = generator.get_one_wire();
         for coeffs in allCoeffSet {
-            let accum = generator.getZeroWire();
+            let accum = generator.get_zero_wire();
             for j in 0..vars.len() {
                 accum = accum.add(vars[j].mul(coeffs[j]));
             }
@@ -232,9 +232,9 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             }
         }
         if validResults != 16 || outsidePermissibleSet != 0 {
-            println!("Prover can cheat with linear system solution");
-            println!("Num of valid values that the prover can use = " + validResults);
-            println!("Num of valid values outside permissible set = " + validResults);
+            //println!("Prover can cheat with linear system solution");
+            //println!("Num of valid values that the prover can use = " + validResults);
+            //println!("Num of valid values outside permissible set = " + validResults);
             return true;
         } else {
             return false;

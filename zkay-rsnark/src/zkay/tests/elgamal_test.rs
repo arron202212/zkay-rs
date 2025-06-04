@@ -131,10 +131,10 @@ pub struct ElgamalTest {
         cgen.generateCircuit();
         let evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let c1x = evaluator.getWireValue(cgen.getOutWires().get(0));
-        let c1y = evaluator.getWireValue(cgen.getOutWires().get(1));
-        let c2x = evaluator.getWireValue(cgen.getOutWires().get(2));
-        let c2y = evaluator.getWireValue(cgen.getOutWires().get(3));
+        let c1x = evaluator.getWireValue(cgen.get_out_wires().get(0));
+        let c1y = evaluator.getWireValue(cgen.get_out_wires().get(1));
+        let c2x = evaluator.getWireValue(cgen.get_out_wires().get(2));
+        let c2y = evaluator.getWireValue(cgen.get_out_wires().get(3));
         Assert.assertEquals(c1Expected.x, c1x);
         Assert.assertEquals(c1Expected.y, c1y);
         Assert.assertEquals(c2Expected.x, c2x);
@@ -144,17 +144,17 @@ pub struct ElgamalTest {
         cgen.generateCircuit();
         evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let one = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let one = evaluator.getWireValue(cgen.get_out_wires().get(0));
         Assert.assertEquals(Util::one(), one);
 
         let rgen = ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
         rgen.generateCircuit();
         evaluator = CircuitEvaluator::new(rgen);
         evaluator.evaluate();
-        let r1x = evaluator.getWireValue(rgen.getOutWires().get(0));
-        let r1y = evaluator.getWireValue(rgen.getOutWires().get(1));
-        let r2x = evaluator.getWireValue(rgen.getOutWires().get(2));
-        let r2y = evaluator.getWireValue(rgen.getOutWires().get(3));
+        let r1x = evaluator.getWireValue(rgen.get_out_wires().get(0));
+        let r1y = evaluator.getWireValue(rgen.get_out_wires().get(1));
+        let r2x = evaluator.getWireValue(rgen.get_out_wires().get(2));
+        let r2y = evaluator.getWireValue(rgen.get_out_wires().get(3));
         Assert.assertEquals(r1Expected.x, r1x);
         Assert.assertEquals(r1Expected.y, r1y);
         Assert.assertEquals(r2Expected.x, r2x);

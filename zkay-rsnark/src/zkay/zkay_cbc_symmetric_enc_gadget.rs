@@ -38,7 +38,7 @@ impl ZkayCBCSymmetricEncGadget {
     ) -> Self {
         // super(desc);
         let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());
-        println!("Plain length [bits]: {}", plaintextBits.len());
+        //println!("Plain length [bits]: {}", plaintextBits.len());
         Self {
             plaintextBits,
             keyBits: Util::reverseBytes(key.getBitWires(KEY_SIZE).asArray()),
@@ -109,7 +109,7 @@ impl ZkayCBCSymmetricEncGadget {
 }
 impl Gadget for ZkayCBCSymmetricEncGadget {
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        println!("Cipher length [bits]: {}", cipherBits.len());
+        //println!("Cipher length [bits]: {}", cipherBits.len());
         return WireArray::new(Util::reverseBytes(Util::concat(ivBits, cipherBits)))
             .packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);
     }

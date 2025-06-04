@@ -37,7 +37,7 @@ impl Asymmetric for DummyHomBackend {
 
     fn getKeyWire(keyName: String) -> WireType {
         let key = getKey(keyName);
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
 
         let keyArr = key.getBits().packBitsIntoWords(256);
         for i in 1..keyArr.len() {

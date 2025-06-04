@@ -31,19 +31,19 @@ impl RSAUtil {
             }
         }
 
-        //		println!("After decryption manually = "
+        //		//println!("After decryption manually = "
         //				+ product.toString(16));
 
         let paddedPlaintext = product.toByteArray();
         if paddedPlaintext.len() != keySize / 8 - 1 {
-            println!("Error");
+            //println!("Error");
             return None;
         }
         let plaintext = None;
         let randomness = None;
 
         if paddedPlaintext[0] != 2 {
-            println!("Error");
+            //println!("Error");
         } else {
             for i in 1..keySize / 8 - 2 {
                 if paddedPlaintext[i] != 0 {

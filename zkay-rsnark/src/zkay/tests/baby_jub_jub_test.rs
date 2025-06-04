@@ -34,8 +34,8 @@ pub struct BabyJubJubTest {
             let gneg = negatePoint(g);
             assertOnCurve(gneg.x, gneg.y);
             let inf = addPoints(g, gneg);
-            generator.addEqualityAssertion(inf.x, generator.getZeroWire());
-            generator.addEqualityAssertion(inf.y, generator.getOneWire());
+            generator.addEqualityAssertion(inf.x, generator.get_zero_wire());
+            generator.addEqualityAssertion(inf.y, generator.get_one_wire());
 
             // check generator + INFINITY = generator
             let g_expected = addPoints(g, getInfinity());
@@ -54,7 +54,7 @@ pub struct BabyJubJubTest {
 
         
         pub  fn getOutputWires()->Vec<Option<WireType>>  {
-            let dummy = generator.getOneWire();
+            let dummy = generator.get_one_wire();
             return vec![None;]{ dummy };
         }
     }

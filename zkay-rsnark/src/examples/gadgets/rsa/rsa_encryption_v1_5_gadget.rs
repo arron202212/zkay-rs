@@ -46,7 +46,7 @@ impl RSAEncryptionV1_5_Gadget {
         if (plainText.len() > rsaKeyBitLength / 8 - 11
             || plainText.len() + randomness.len() != rsaKeyBitLength / 8 - 3)
         {
-            println!("Check Message & Padding length");
+            //println!("Check Message & Padding length");
             assert!("Invalid Argument Dimensions for RSA Encryption");
         }
 
@@ -73,12 +73,12 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
         for i in 0..plainText.len() {
             paddedPlainText[plainText.len() - i - 1] = plainText[i];
         }
-        paddedPlainText[plainText.len()] = generator.getZeroWire();
+        paddedPlainText[plainText.len()] = generator.get_zero_wire();
         for i in 0..randomness.len() {
             paddedPlainText[plainText.len() + 1 + (randomness.len() - 1) - i] = randomness[i];
         }
         paddedPlainText[lengthInBytes - 2] = generator.createConstantWire(2);
-        paddedPlainText[lengthInBytes - 1] = generator.getZeroWire();
+        paddedPlainText[lengthInBytes - 1] = generator.get_zero_wire();
 
         /*
          * To proceed with the RSA operations, we need to convert the
@@ -117,7 +117,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
         for i in 0..randomness.len() {
             randomness[i].restrictBitLength(8);
             // verify that each element has a multiplicative inverse
-            FieldDivisionGadget::new(generator.getOneWire(), randomness[i]);
+            FieldDivisionGadget::new(generator.get_one_wire(), randomness[i]);
         }
     }
 

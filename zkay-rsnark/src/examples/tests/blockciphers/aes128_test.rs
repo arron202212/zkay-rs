@@ -62,7 +62,7 @@ let msgArray = msgV.toByteArray();
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 	
 			BigInteger result = BigInteger::new("f5d3d58503b9699de785895a96fdbaaf",
 					16);
@@ -133,7 +133,7 @@ let msgArray = msgV.toByteArray();
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 	
 			BigInteger result = BigInteger::new("3ad77bb40d7a3660a89ecaf32466ef97",
 					16);
@@ -205,7 +205,7 @@ let msgArray = msgV.toByteArray();
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 	
 			BigInteger result = BigInteger::new("43b1cd7f598ece23881b00e3ed030688",
 					16);
@@ -276,7 +276,7 @@ let msgArray = msgV.toByteArray();
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 	
 			BigInteger result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4",
 					16);
@@ -345,7 +345,7 @@ let msgArray = msgV.toByteArray();
 			generator.generateCircuit();
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 	
 			BigInteger result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4",
 					16);

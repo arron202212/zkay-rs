@@ -42,7 +42,7 @@ impl CircuitGenerator for SHA2CircuitGenerator {
   
 }
   pub fn main(args: Vec<String>) {
-        let generator = SHA2CircuitGenerator::new("sha_256");
+        let mut generator = SHA2CircuitGenerator::new("sha_256");
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();

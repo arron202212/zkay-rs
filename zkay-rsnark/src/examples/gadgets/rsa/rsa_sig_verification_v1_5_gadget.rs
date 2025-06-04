@@ -81,7 +81,7 @@ impl Gadget for RSASigVerificationV1_5_Gadget {
         }
 
         let lengthInBytes = (rsaKeyBitLength * 1.0 / 8).ceil() as i32;
-        let sumChecks = generator.getZeroWire();
+        let sumChecks = generator.get_zero_wire();
         sumChecks = sumChecks.add(sBytes[lengthInBytes - 1].isEqualTo(0));
         sumChecks = sumChecks.add(sBytes[lengthInBytes - 2].isEqualTo(1));
         for i in 3..lengthInBytes - SHA256_DIGEST_LENGTH - SHA256_IDENTIFIER.length {

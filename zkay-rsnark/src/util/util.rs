@@ -253,7 +253,7 @@ impl Util {
         if a.len() == length {
             return a;
         } else if a.len() > length {
-            println!("No padding needed!");
+            //println!("No padding needed!");
             return a;
         } else {
             let mut newArray = vec![None; length];

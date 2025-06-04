@@ -51,7 +51,7 @@ impl Gadget for PinocchioGadget {
                     wireMapping[wireIndex] = inputWires[inputCount];
                 } else {
                     // the last input wire is assumed to be the one wire
-                    wireMapping[wireIndex] = generator.getOneWire();
+                    wireMapping[wireIndex] = generator.get_one_wire();
                 }
                 inputCount += 1;
             } else if line.startsWith("output") {
@@ -141,7 +141,7 @@ impl Gadget for PinocchioGadget {
         return outputWires;
     }
 
-    pub fn getProverWitnessWires() -> Vec<Option<WireType>> {
+    pub fn get_prover_witness_wires() -> Vec<Option<WireType>> {
         return proverWitnessWires;
     }
 

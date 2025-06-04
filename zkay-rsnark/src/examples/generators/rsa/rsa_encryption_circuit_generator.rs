@@ -78,7 +78,7 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
             evaluator.setWireValue(inputMessage[i], (b'a' + i) as i32);
             msg = msg + (b'a' + i) as char;
         }
-        println!("PlainText: {msg}");
+        //println!("PlainText: {msg}");
 
         // to make sure that the implementation is working fine,
         // encrypt with the underlying java implementation for RSA
@@ -87,7 +87,7 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
         // circuit with the extracted randomness
 
         let random = SecureRandom::new();
-        let generator = KeyPairGenerator.getInstance("RSA");
+        let mut generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(rsaKeyLength, random);
         let pair = generator.generateKeyPair();
         let pubKey = pair.getPublic();
@@ -100,7 +100,7 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
 
         cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
         let cipherText = cipher.doFinal(msg.getBytes());
-        //			println!("ciphertext : " + String::new(cipherText));
+        //			//println!("ciphertext : " + String::new(cipherText));
         let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
         cipherTextPadded[1..cipherText.len()].clone_from_slice(&cipherText);
         cipherTextPadded[0] = 0;
@@ -117,13 +117,13 @@ impl CircuitGenerator for RSAEncryptionCircuitGenerator {
             evaluator.setWireValue(randomness[i], (sampleRandomness[i] + 256) % 256);
         }
 
-        // println!("Error while generating sample input for circuit");
+        // //println!("Error while generating sample input for circuit");
     }
 
     pub fn main(args: Vec<String>) {
         let keyLength = 2048;
         let msgLength = 3;
-        let generator = RSAEncryptionCircuitGenerator::new(
+        let mut generator = RSAEncryptionCircuitGenerator::new(
             "rsa" + keyLength + "_encryption",
             keyLength,
             msgLength,

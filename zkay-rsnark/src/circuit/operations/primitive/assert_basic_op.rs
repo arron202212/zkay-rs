@@ -48,7 +48,7 @@ impl BasicOp for Op<AssertBasicOp> {
             .unwrap();
         let check = leftSide == rightSide;
         if !check {
-            println!("Error - Assertion Failed {self:?}");
+            //println!("Error - Assertion Failed {self:?}");
             println!(
                 "{} * {} != {}",
                 assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]

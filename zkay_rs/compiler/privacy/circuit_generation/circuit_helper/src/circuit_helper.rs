@@ -999,7 +999,6 @@ where
             None,
         );
         let pki_contract_name = CFG
-            .lock()
             .unwrap()
             .get_pki_contract_name(&crypto_params.identifier_name());
         let pki = IdentifierExpr::new(

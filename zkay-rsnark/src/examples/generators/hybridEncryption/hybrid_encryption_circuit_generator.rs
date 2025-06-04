@@ -114,7 +114,7 @@ impl CircuitGenerator for HybridEncryptionCircuitGenerator {
     }
 
     pub fn main(args: Vec<String>) {
-        let generator = HybridEncryptionCircuitGenerator::new("enc_example", 16, "speck128");
+        let mut generator = HybridEncryptionCircuitGenerator::new("enc_example", 16, "speck128");
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();

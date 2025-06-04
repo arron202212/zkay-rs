@@ -55,5 +55,5 @@ pub fn main(args: Vec<String>) {
     let output = crypt(enc, key, iv, input);
 
     // Output result
-    println!(unsignedBytesToBigInt(output).toString(16));
+    //println!(unsignedBytesToBigInt(output).toString(16));
 }

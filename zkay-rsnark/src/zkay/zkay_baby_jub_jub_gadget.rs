@@ -58,7 +58,7 @@ impl ZkayBabyJubJubGadget {
     );
 
     fn getInfinity() -> JubJubPoint {
-        return JubJubPoint::new(generator.getZeroWire(), generator.getOneWire());
+        return JubJubPoint::new(generator.get_zero_wire(), generator.get_one_wire());
     }
 
     fn getGenerator() -> JubJubPoint {
@@ -139,7 +139,7 @@ impl Gadget for ZkayBabyJubJubGadget {
 
         // check if a * ainv = 1 (natively)
         let test = a.mul(ainv);
-        generator.addEqualityAssertion(test, generator.getOneWire());
+        generator.addEqualityAssertion(test, generator.get_one_wire());
 
         return ainv;
     }

@@ -44,7 +44,7 @@ impl BasicOp for Op<OrBasicOp> {
                 .unwrap(),
         );
         if !check {
-            println!("Error - Input(s) to OR are not binary.{self:?} ");
+            //println!("Error - Input(s) to OR are not binary.{self:?} ");
             panic!("Error During Evaluation");
         }
     }

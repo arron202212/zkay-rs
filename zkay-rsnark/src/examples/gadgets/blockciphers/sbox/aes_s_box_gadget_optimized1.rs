@@ -138,9 +138,9 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             }
         }
         if validResults != 16 || outsidePermissibleSet != 0 {
-            println!("Prover can cheat with linear system solution");
-            println!("Num of valid values that the prover can use = " + validResults);
-            println!("Num of valid values outside permissible set = " + validResults);
+            //println!("Prover can cheat with linear system solution");
+            //println!("Num of valid values that the prover can use = " + validResults);
+            //println!("Num of valid values outside permissible set = " + validResults);
             return true;
         } else {
             return false;
@@ -165,14 +165,14 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         output.restrictBitLength(8);
         let vars = vec![None; 16];
         let p = input.mul(256).add(output);
-        vars[0] = generator.getOneWire();
+        vars[0] = generator.get_one_wire();
         for i in 1..16 {
             vars[i] = vars[i - 1].mul(p);
         }
 
-        let product = generator.getOneWire();
+        let product = generator.get_one_wire();
         for coeffs in allCoeffSet {
-            let accum = generator.getZeroWire();
+            let accum = generator.get_zero_wire();
             for j in 0..vars.len() {
                 accum = accum.add(vars[j].mul(coeffs[j]));
             }

@@ -17,7 +17,7 @@ impl DotProductGadget {
 }
 impl Gadget for DotProductGadget {
     fn buildCircuit() {
-        output = generator.getZeroWire();
+        output = generator.get_zero_wire();
         for i in 0..a.len() {
             let product = a[i].mul(b[i], format!("Multiply elements # {i}"));
             output = output.add(product);

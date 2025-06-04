@@ -849,7 +849,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
         // else:
         //     raise SyntaxException(f"Unsupported homomorphism {t}", ctx, self.code)
         if let Some(v) = HOMOMORPHISM_STORE
-            .lock()
             .unwrap()
             .values()
             .filter(|h| h.type_annotation == t)
@@ -1203,7 +1202,6 @@ impl<'input> SolidityVisitorCompat<'input> for BuildASTVisitor {
                     .into_ast(),
                 );
             } else if let Some(homomorphism) = REHOM_EXPRESSIONS
-                .lock()
                 .unwrap()
                 .get(&func.idf().as_ref().unwrap().borrow().name())
             {

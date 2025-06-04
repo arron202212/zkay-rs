@@ -20,7 +20,7 @@ pub struct PaillierTests {
 		let plain = BigInteger::new("42");
 		let random = BigInteger::new("25");
 		let n = BigInteger::new("9047");
-		let generator = BigInteger::new("27");
+		let mut generator = BigInteger::new("27");
 		let enc = PaillierEncCircuitGenerator::new("Paillier Enc", plain, random, n, generator);
 		let cipher = enc.computeResult();
 		assertEquals(BigInteger::new("45106492"), cipher);
@@ -42,7 +42,7 @@ pub struct PaillierTests {
 		let plain = BigInteger::new("58620521968995858419238449046464883186412581610038046858008683322252437292505");
 		let random = BigInteger::new("66895129274476067543864711343178574027057505369800972938068894913816799963509");
 		let n = BigInteger::new("71705678335151044143714697909938764102247769560297862447809589632641441407751");
-		let generator = BigInteger::new("27");
+		let mut generator = BigInteger::new("27");
 		let enc = PaillierEncCircuitGenerator::new("Paillier Enc", plain, random, n, generator);
 		let cipher = enc.computeResult();
 		assertEquals(BigInteger::new("3507594166975424775795724429703273237581693482251350761249288990776233360058698524194928568270852256828927631672223419615120374443722184016172266681685963"), cipher);
@@ -130,7 +130,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![None;0]));
+			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -184,7 +184,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![None;0]));
+			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -232,7 +232,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![None;0]));
+			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}
@@ -280,7 +280,7 @@ pub struct PaillierTests {
 			evalCircuit();
 
 			let evaluator = getCircuitEvaluator();
-			let outValues = evaluator.getWiresValues(getOutWires().toArray(vec![None;0]));
+			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
 			return Util::group(outValues, LongElement.CHUNK_BITWIDTH);
 		}
 	}

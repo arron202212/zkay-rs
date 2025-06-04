@@ -29,7 +29,7 @@ pub fn run_command(
 // :param cmd: the command to run (list of command and arguments)
 // :param cwd: if specified, use this path as working directory (otherwise current working directory is used)
 // :param allow_verbose: if true, redirect command output to stdout (WARNING, causes return values to be None)
-// :return: command output and error output (if not (allow_verbose and CFG.lock().unwrap().user_config.verbosity))
+// :return: command output and error output (if not (allow_verbose and CFG.unwrap().user_config.verbosity))
 //cwd=None, allow_verbose: bool = False
 pub fn run_commands(
     cmd: Vec<String>,
@@ -55,7 +55,7 @@ pub fn run_commands(
     } else {
         //run
         //  let process1 = Command::new(cmd[0].clone());
-        // println!("====get_program========={:?}",process1.get_program());
+        // //println!("====get_program========={:?}",process1.get_program());
 
         let process = Command::new(cmd[0].clone())
             .args(&cmd[1..])
@@ -76,7 +76,7 @@ pub fn run_commands(
 
     //check for error
     if !process.status.success() {
-        println!("===cmd======={cmd:?}");
+        //println!("===cmd======={cmd:?}");
         let cmd = get_command(cmd);
         // raise subprocess.SubprocessError(msg)
         panic!(

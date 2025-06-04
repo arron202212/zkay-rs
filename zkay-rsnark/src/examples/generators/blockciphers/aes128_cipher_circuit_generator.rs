@@ -51,7 +51,7 @@ impl CircuitGenerator for AES128CipherCircuitGenerator {
 
     pub fn main(args: Vec<String>) {
         Configs.hexOutputEnabled = true;
-        let generator = AES128CipherCircuitGenerator::new("AES_Circuit");
+        let mut generator = AES128CipherCircuitGenerator::new("AES_Circuit");
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();

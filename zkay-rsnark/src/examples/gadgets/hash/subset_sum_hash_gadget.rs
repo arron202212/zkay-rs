@@ -40,7 +40,7 @@ impl SubsetSumHashGadget {
 
         let mut pad = vec![None; rem];
         for i in 0..pad.len() {
-            pad[i] = generator.getZeroWire(); // TODO: adjust padding
+            pad[i] = generator.get_zero_wire(); // TODO: adjust padding
         }
         inputWires = Util::concat(ins, pad);
         self.binaryOutput = binaryOutput;
@@ -49,7 +49,7 @@ impl SubsetSumHashGadget {
 }
 impl Gadget for SubsetSumHashGadget {
     fn buildCircuit() {
-        let mut outDigest = vec![generator.getZeroWire(); DIMENSION];
+        let mut outDigest = vec![generator.get_zero_wire(); DIMENSION];
 
         for i in 0..DIMENSION {
             for j in 0..INPUT_LENGTH {

@@ -45,7 +45,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
         let actualRoot = merkleTreeGadget.getOutputWires();
 
         /** Now compare the actual root with the pub  known root **/
-        let errorAccumulator = getZeroWire();
+        let errorAccumulator = get_zero_wire();
         for i in 0..hashDigestDimension {
             let diff = actualRoot[i].sub(publicRootWires[i]);
             let check = diff.checkNonZero();
@@ -82,7 +82,7 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
 
 }
     pub fn main(args: Vec<String>) {
-        let generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
+        let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();

@@ -42,9 +42,9 @@ impl Gadget for AESSBoxComputeGadget {
         inverse.restrictBitLength(8);
         let v = gmul(input, inverse);
         generator.addAssertion(
-            v.sub(generator.getOneWire()),
+            v.sub(generator.get_one_wire()),
             input.add(inverse),
-            generator.getZeroWire(),
+            generator.get_zero_wire(),
         );
         let constant = generator.createConstantWire(0x63L);
         output = constant.xorBitwise(inverse, 8);
@@ -59,7 +59,7 @@ impl Gadget for AESSBoxComputeGadget {
     }
 
     fn gmul(a: WireType, b: WireType) -> WireType {
-        let p = generator.getZeroWire();
+        let p = generator.get_zero_wire();
         for counter in 0..8 {
             let tmp = p.xorBitwise(a, 8);
             let bit = b.getBitWires(8).get(0);

@@ -16,7 +16,7 @@ impl AESSBoxNaiveLookupGadget {
 }
 impl Gadget for AESSBoxNaiveLookupGadget {
     fn buildCircuit() {
-        output = generator.getZeroWire();
+        output = generator.get_zero_wire();
         for i in 0..256 {
             output = output.add(input.isEqualTo(i).mul(SBox[i]));
         }

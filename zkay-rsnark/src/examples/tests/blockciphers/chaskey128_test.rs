@@ -52,7 +52,7 @@ pub struct Chaskey128_Test  {
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText = generator.getOutWires();
+let cipherText = generator.get_out_wires();
 
 		Vec<BigInteger> expeectedCiphertext = { BigInteger::from(0x4d8d60d5L),
 				BigInteger::from(0x7b34bfa2L),

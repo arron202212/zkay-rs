@@ -77,7 +77,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
         let mLen = plainText.len();
         let hLen = SHA256_DIGEST_LENGTH;
         let keyLen = rsaKeyBitLength / 8; // in bytes
-        let mut paddingString = vec![generator.getZeroWire(); keyLen - mLen - 2 * hLen - 2];
+        let mut paddingString = vec![generator.get_zero_wire(); keyLen - mLen - 2 * hLen - 2];
 
         let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
@@ -86,7 +86,7 @@ impl Gadget for RSAEncryptionOAEPGadget {
             } else if i < hLen + paddingString.len() {
                 db[i] = paddingString[i - hLen];
             } else if i < hLen + paddingString.len() + 1 {
-                db[i] = generator.getOneWire();
+                db[i] = generator.get_one_wire();
             } else {
                 db[i] = plainText[i - (hLen + paddingString.len() + 1)];
             }

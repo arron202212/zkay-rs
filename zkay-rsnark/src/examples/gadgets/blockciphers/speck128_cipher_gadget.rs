@@ -55,7 +55,7 @@ impl Gadget for Speck128CipherGadget {
      * @return
      */
     pub fn expandKey(key: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         let k = vec![None; 32];
         let l = vec![None; 32];
         k[0] = key[0];

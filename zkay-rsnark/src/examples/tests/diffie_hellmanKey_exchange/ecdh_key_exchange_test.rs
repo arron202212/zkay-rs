@@ -59,7 +59,7 @@ let exponent = BigInteger::new("138676918421965108283523458651650183811613156058
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let output = generator.getOutWires();
+let output = generator.get_out_wires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("13458082339735734368462130456283583571822918321676509705348825437102113182254"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("4167917227796707610764894996898236918915412447839980711033808347811701875717"));	
@@ -108,7 +108,7 @@ let exponent = BigInteger::new("138676918421965108283523458651650183811613156058
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let output = generator.getOutWires();
+let output = generator.get_out_wires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("13458082339735734368462130456283583571822918321676509705348825437102113182254"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("4167917227796707610764894996898236918915412447839980711033808347811701875717"));	
@@ -208,7 +208,7 @@ let exponent = BigInteger::new("138676918421965108283523458651650183811613156058
 			generator.evalCircuit();
 			assertTrue(false);		
 		} catch(Exception e){
-			println!("Exception Expected!");
+			//println!("Exception Expected!");
 			assertTrue(true);
 		}
 		

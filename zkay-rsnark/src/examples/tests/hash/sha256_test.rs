@@ -42,7 +42,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
 let evaluator = generator.getCircuitEvaluator();
 
 let outDigest = "";
-		for w in generator.getOutWires() {
+		for w in generator.get_out_wires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
@@ -79,7 +79,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
 let evaluator = generator.getCircuitEvaluator();
 
 let outDigest = "";
-		for w in generator.getOutWires() {
+		for w in generator.get_out_wires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
@@ -116,7 +116,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
 let evaluator = generator.getCircuitEvaluator();
 
 let outDigest = "";
-		for w in generator.getOutWires() {
+		for w in generator.get_out_wires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
@@ -153,7 +153,7 @@ let digest = SHA256Gadget::new(inputWires, 8, inputStr.len()(), false, true, "")
 let evaluator = generator.getCircuitEvaluator();
 
 let outDigest = "";
-		for w in generator.getOutWires() {
+		for w in generator.get_out_wires() {
 			outDigest += Util::padZeros(evaluator.getWireValue(w).toString(16), 8);
 		}
 		assertEquals(outDigest, expectedDigest);
@@ -208,7 +208,7 @@ let sum = BigInteger::ZERO;
 let evaluator = generator.getCircuitEvaluator();
 
 let outDigest = "";
-			for w in generator.getOutWires() {
+			for w in generator.get_out_wires() {
 				outDigest += Util::padZeros(
 						evaluator.getWireValue(w).toString(16), 8);
 			}

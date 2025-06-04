@@ -41,7 +41,7 @@ let expandedKey = Speck128CipherGadget.expandKey(key);
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let cipherText= generator.getOutWires();
+let cipherText= generator.get_out_wires();
 		assertEquals(evaluator.getWireValue(cipherText.get(0)), BigInteger::new("7860fedf5c570d18", 16));
 		assertEquals(evaluator.getWireValue(cipherText.get(1)), BigInteger::new("a65d985179783265", 16));
 	}

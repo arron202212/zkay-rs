@@ -33,21 +33,22 @@ impl Config {
         let cp = config_dir.join("config.properties");
         //'/Users/lisheng/mygit/arron/zkay-rs/zkay-rsnark/src/circuit/config/config.properties'
         // /Users/lisheng/mygit/arron/zkay-rs/zkay-rsnark/circuit/config/config.properties
-        // println!("==config_dir====={cp:?}====={config_dir:?}===={:?}===={:?}={:?}",cp.try_exists(),file!(),std::fs::canonicalize(".")
+        // //println!("==config_dir====={cp:?}====={config_dir:?}===={:?}===={:?}={:?}",cp.try_exists(),file!(),std::fs::canonicalize(".")
         //     );
-        // println!("{:?}",std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string());
+        // //println!("{:?}",std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string());
 
-        // println!("{:?}",std::fs::canonicalize(std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string()));
+        // //println!("{:?}",std::fs::canonicalize(std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string()));
         let mut c = std::fs::read_to_string(cp).unwrap();
         let mut m = std::collections::HashMap::new();
         for item in c.lines() {
             let v: Vec<_> = item.split("=").collect();
-            m.insert(v[0].to_owned(), v[1].to_owned());
+            m.insert(v[0].trim().to_owned(), v[1].trim().to_owned());
         }
         let field_prime =
             BigInt::parse_bytes(m.get("FIELD_PRIME").map_or("0", |v| v).as_bytes(), 10).unwrap();
         let log2_field_prime = field_prime.bits();
         let libsnark_exec = m.get("PATH_TO_LIBSNARK_EXEC").map_or(".", |v| v);
+        //println!("===libsnark_exec============={libsnark_exec:?}");
         let running_multi_generators =
             m.get("RUNNING_GENERATORS_IN_PARALLEL").map_or("0", |v| v) == "0";
         let hex_output_enabled = m.get("PRINT_HEX").map_or("0", |v| v) == "1";
@@ -77,9 +78,9 @@ macro_rules! file_abs_workspace {
 
 pub fn pop_first_two_path_components(path: &str) -> PathBuf {
     let mut components = std::path::Path::new(path).components();
-    // println!("========={:?}===={:?},{}",std::path::Path::new(env!("CARGO_MANIFEST_DIR")),components,path);
+    // //println!("========={:?}===={:?},{}",std::path::Path::new(env!("CARGO_MANIFEST_DIR")),components,path);
     components.next();
     // components.next();
-    // println!("=======2======{:?},{}",components,path);
+    // //println!("=======2======{:?},{}",components,path);
     components.as_path().to_path_buf()
 }

@@ -34,7 +34,7 @@ impl CircuitGenerator for DotProductCircuitGenerator {
  
 }
    pub fn main(args: Vec<String>) {
-        let generator = DotProductCircuitGenerator::new("dot_product", 3);
+        let mut generator = DotProductCircuitGenerator::new("dot_product", 3);
         generator.generateCircuit();
         generator.evalCircuit();
         generator.prepFiles();

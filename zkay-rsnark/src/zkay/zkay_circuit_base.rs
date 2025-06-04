@@ -93,7 +93,7 @@ impl ZkayCircuitBase {
             "prove" => {
                 compileCircuit();
                 parseInputs(Arrays.asList(args).subList(1, args.len()));
-                println!("Evaluating circuit '" + realCircuitName + "'");
+                //println!("Evaluating circuit '" + realCircuitName + "'");
                 evalCircuit();
             }
 
@@ -121,7 +121,7 @@ impl ZkayCircuitBase {
 }
 impl CircuitGenerator for ZkayCircuitBase {
     fn compileCircuit() {
-        println!("Compiling circuit '{realCircuitName}'");
+        //println!("Compiling circuit '{realCircuitName}'");
         generateCircuit();
         assert!(
             currentPubInIdx == pubInCount && currentPubOutIdx == allPubIOWires.len(),
@@ -137,7 +137,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                 "digest",
             );
         }
-        println!("Done with generateCircuit, preparing dummy files...");
+        //println!("Done with generateCircuit, preparing dummy files...");
     }
 
     fn buildCircuit() {
@@ -177,7 +177,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         restrict: bool,
     ) -> Vec<Option<WireType>> {
         name = getQualifiedName(name);
-        println!(
+        //println!(
             "Adding '{name}' = {typeName}[{startIdx}:{}]",
             startIdx + size
         );
@@ -529,7 +529,7 @@ impl CircuitGenerator for ZkayCircuitBase {
 
     pub fn val(val: bool) -> TypedWire {
         return TypedWire::new(
-            if val { getOneWire() } else { getZeroWire() },
+            if val { get_one_wire() } else { get_zero_wire() },
             ZkBool,
             "const_" + val,
         );
@@ -538,9 +538,9 @@ impl CircuitGenerator for ZkayCircuitBase {
     pub fn val(val: i32, t: ZkayType) -> TypedWire {
         let mut w;
         if val == 0 {
-            w = getZeroWire();
+            w = get_zero_wire();
         } else if val == 1 {
-            w = getOneWire();
+            w = get_one_wire();
         } else {
             return val(String.valueOf(val), t);
         }
@@ -665,7 +665,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                     let extendBit = if wasSigned {
                         bitWires.get(fromBitWidth - 1)
                     } else {
-                        getZeroWire()
+                        get_zero_wire()
                     };
                     let newWs = vec![None; toBitWidth];
                     newWs[..fromBitWidth].clone_from_slice(&bitWires.asArray());
@@ -984,7 +984,7 @@ impl CircuitGenerator for ZkayCircuitBase {
 
     fn isEqual(wires1: Vec<Option<WireType>>, name1: String, wires2: Vec<Option<WireType>>, name2: String) -> WireType {
         assert!(wires1.length == wires2.length, "WireType array size mismatch");
-        let res = getOneWire();
+        let res = get_one_wire();
         for i in 0..wires1.length {
             res = res.and(
                 wires1[i].isEqualTo(wires2[i], format!("%s[%d] == %s[%d]", name1, i, name2, i)),
@@ -1116,7 +1116,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                 }
                 sb.setLength(sb.len()() - 2);
                 sb.append("]");
-                println!(sb);
+                //println!(sb);
             }
         }
 
@@ -1136,13 +1136,13 @@ impl CircuitGenerator for ZkayCircuitBase {
     }
 
     fn writeDummyInputFile() {
-        let printWriter = File::create(getName() + ".in");
+        let printWriter = File::create(get_name() + ".in");
         write!(printWriter, "0 1");
         let allIOWires =
-            vec![0; getInWires().size() + getOutWires().size() + getProverWitnessWires().size()];
-        allIOWires.addAll(getInWires().subList(1, getInWires().size()));
-        allIOWires.addAll(getOutWires());
-        allIOWires.addAll(getProverWitnessWires());
+            vec![0; get_in_wires().size() + get_out_wires().size() + get_prover_witness_wires().size()];
+        allIOWires.addAll(get_in_wires().subList(1, get_in_wires().size()));
+        allIOWires.addAll(get_out_wires());
+        allIOWires.addAll(get_prover_witness_wires());
         for w in allIOWires {
             write!(printWriter, w.getWireId() + " " + "0");
         }

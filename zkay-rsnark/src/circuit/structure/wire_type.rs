@@ -102,13 +102,13 @@ impl MulWire<BigInteger> for WireType {
             return self.self_clone().unwrap();
         }
         if b == BigInteger::ZERO {
-            return self.generator().zero_wire().lock().clone().unwrap();
+            return self.generator().zero_wire().clone().unwrap();
         }
         let out = WireType::LinearCombination(new_linear_combination(
-            *self.generator().current_wire_id().lock(),
+            *self.generator().current_wire_id(),
             None,
         ));
-        *self.generator().current_wire_id().lock() += 1;
+        *self.generator().current_wire_id() += 1;
         let op = new_const_mul(
             self.self_clone().unwrap(),
             out.clone(),
@@ -119,7 +119,7 @@ impl MulWire<BigInteger> for WireType {
         //		self.generator().addToEvaluationQueue(Box::new(op));
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().lock() -= 1;
+            *self.generator().current_wire_id() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
@@ -144,8 +144,8 @@ impl MulWire for WireType {
         }
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
-        let output = WireType::Variable(new_variable(*self.generator().current_wire_id().lock()));
-        *self.generator().current_wire_id().lock() += 1;
+        let output = WireType::Variable(new_variable(*self.generator().current_wire_id()));
+        *self.generator().current_wire_id() += 1;
         let op = new_mul(
             self.self_clone().unwrap(),
             w,
@@ -155,7 +155,7 @@ impl MulWire for WireType {
         );
         let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id().lock() -= 1;
+            *self.generator().current_wire_id() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         output
@@ -297,7 +297,7 @@ impl IsLessThanOrEqual for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(w, desc).subw(self.self_clone().unwrap(), desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize).clone().unwrap();
+        return bitWires[bitwidth as usize].clone().unwrap();
     }
 }
 impl IsLessThanOrEqual<i64> for WireType {
@@ -331,9 +331,8 @@ impl IsLessThan for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(self.self_clone().unwrap(), desc).subw(w, desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires
-            .get(bitwidth as usize)
-            .clone()
+        return bitWires[bitwidth as usize]
+            .as_ref()
             .unwrap()
             .invAsBit(desc)
             .unwrap();
@@ -366,7 +365,7 @@ impl IsGreaterThanOrEqual for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(self.self_clone().unwrap(), desc).subw(w, desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires.get(bitwidth as usize).clone().unwrap();
+        return bitWires[bitwidth as usize].clone().unwrap();
     }
 }
 impl IsGreaterThanOrEqual<i64> for WireType {
@@ -400,8 +399,7 @@ impl IsGreaterThan for WireType {
         let pWire = self.generator().createConstantWire(p, desc);
         let sum = pWire.addw(w, desc).subw(self.self_clone().unwrap(), desc);
         let bitWires = sum.getBitWiresi(bitwidth as u64 + 1, desc);
-        return bitWires
-            .get(bitwidth as usize)
+        return bitWires[bitwidth as usize]
             .clone()
             .unwrap()
             .invAsBit(desc)

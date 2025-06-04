@@ -17,16 +17,16 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LinearCombinationWire {
-    pub bitWires: ARcCell<Option<WireArray>>,
+    pub bitWires: Option<WireArray>,
 }
 impl Hash for LinearCombinationWire {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.bitWires.lock().hash(state);
+        self.bitWires.hash(state);
     }
 }
 impl PartialEq for LinearCombinationWire {
     fn eq(&self, other: &Self) -> bool {
-        *self.bitWires.lock() == *other.bitWires.lock()
+        self.bitWires == other.bitWires
     }
 }
 crate::impl_hash_code_of_wire_for!(Wire<LinearCombinationWire>);
@@ -35,16 +35,14 @@ pub fn new_linear_combination(wireId: i32, bits: Option<WireArray>) -> Wire<Line
     // super(wireId);
     Wire::<LinearCombinationWire> {
         wireId,
-        t: LinearCombinationWire {
-            bitWires: arc_cell_new!(bits),
-        },
+        t: LinearCombinationWire { bitWires: bits },
     }
 }
 impl setBitsConfig for LinearCombinationWire {}
 impl setBitsConfig for Wire<LinearCombinationWire> {}
 impl WireConfig for Wire<LinearCombinationWire> {
     fn getBitWires(&self) -> Option<WireArray> {
-        self.t.bitWires.lock().clone()
+        self.t.bitWires.clone()
     }
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::LinearCombination(self.clone()))
@@ -69,7 +67,7 @@ impl Wire<LinearCombinationWire> {
     //     self.t.bitWires.borrow().clone()
     // }
 
-    fn setBits(&self, bitWires: Option<WireArray>) {
-        *self.t.bitWires.lock() = bitWires;
+    fn setBits(&mut self, bitWires: Option<WireArray>) {
+        self.t.bitWires = bitWires;
     }
 }

@@ -139,7 +139,6 @@ impl<
         if is_cipher {
             let (ret, _) = self
                 .api
-                .lock()
                 .dec(val.unwrap(), constr, &crypto_params.crypto_name);
             return Some(ret);
         }
@@ -213,11 +212,7 @@ impl<
         let (is_cipher, crypto_params, constr) = self.__constructors.lock()[var.as_str()].clone();
         let val = if is_cipher {
             let cipher_len = crypto_params.cipher_len();
-            let v = self
-                .api
-                .lock()
-                ._req_state_var(&var, indices, cipher_len)
-                .await;
+            let v = self.api._req_state_var(&var, indices, cipher_len).await;
             println!("==__get=====_req_state_var=========={v}============");
             let v: Vec<_> = v.split(",").map(|x| x.to_owned()).collect();
             println!("==__get=====_req_state_var====vv======{v:?}============");
@@ -615,9 +610,7 @@ impl<
             println!("====initialize_keys_for====crypto_params===={crypto_params}=====");
             if !self
                 .runtime
-                .lock()
                 .keystore(&CryptoParams::new(crypto_params.clone()))
-                .lock()
                 .has_initialized_keys_for(address)
             {
                 println!(
@@ -625,9 +618,7 @@ impl<
                 );
                 let _ = self
                     .runtime
-                    .lock()
                     .crypto(&CryptoParams::new(crypto_params.clone()))
-                    .lock()
                     .generate_or_load_key_pair(address)
                     .await;
             }
@@ -709,14 +700,14 @@ impl<
         //     __keystore.insert(
         //         crypto_params.clone(),
         //         runtime
-        //             .lock()
+        //
         //             .keystore(&crypto_param)
         //             .clone(),
         //     );
         //     __crypto.insert(
         //         crypto_params.clone(),
         //         runtime
-        //             .lock()
+        //
         //             .crypto(&crypto_param)
         //             .clone(),
         //     );
@@ -803,9 +794,7 @@ impl<
         } else {
             crypto_backend.to_owned()
         };
-        self.__keystore.lock()[&crypto_backend]
-            .lock()
-            .sk(&self.user_address().to_string())
+        self.__keystore.lock()[&crypto_backend].sk(&self.user_address().to_string())
     }
     // = CFG.lock().unwrap().main_crypto_backend
     pub fn get_my_pk(&self, crypto_backend: &str) -> Value<String, PublicKeyValue> {
@@ -814,9 +803,7 @@ impl<
         } else {
             crypto_backend.to_owned()
         };
-        self.__keystore.lock()[&crypto_backend]
-            .lock()
-            .pk(&self.user_address().to_string())
+        self.__keystore.lock()[&crypto_backend].pk(&self.user_address().to_string())
     }
 
     pub async fn call_fct<F: AsyncFn()>(&self, sec_offset: i32, fct: F) {
@@ -852,7 +839,6 @@ impl<
         );
         *self.__contract_handle.lock() = self
             .__conn
-            .lock()
             .deploy(
                 &PathBuf::from(self.__project_dir.lock().clone()),
                 &self.__user_addr.lock(),
@@ -881,7 +867,6 @@ impl<
     ) {
         *self.__contract_handle.lock() = self
             .__conn
-            .lock()
             .connect::<PS>(
                 &PathBuf::from(self.__project_dir.lock().clone()),
                 &self.__contract_name.lock(),
@@ -902,7 +887,6 @@ impl<
         wei_amount: Option<i32>,
     ) -> eyre::Result<String> {
         self.__conn
-            .lock()
             .transact(
                 self.__contract_handle.lock().as_ref().unwrap(),
                 &self.__user_addr.lock(),
@@ -922,7 +906,6 @@ impl<
     ) -> DataType {
         let retvals = self
             .__conn
-            .lock()
             .call(
                 self.__contract_handle.lock().as_ref().unwrap(),
                 &self.__user_addr.lock(),
@@ -991,7 +974,6 @@ impl<
     pub async fn update_special_variables(&self, wei_amount: i32) {
         let (__current_msg, __current_block, __current_tx) = self
             .__conn
-            .lock()
             .get_special_variables(&self.__user_addr.lock().to_string(), wei_amount)
             .await;
         (
@@ -1026,10 +1008,8 @@ impl<
         let target_addr = target_addr.map_or(self.__user_addr.lock().to_string(), |ta| ta);
         println!("===target_addr=========={target_addr}=========");
         self.__crypto
-            .lock()
             .get(crypto_backend)
             .unwrap()
-            .lock()
             .enc(plain, &self.__user_addr.lock().to_string(), &target_addr)
             .await
     }
@@ -1060,10 +1040,8 @@ impl<
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
             .__keystore
-            .lock()
             .get(&params.crypto_name)
             .unwrap()
-            .lock()
             .getPk(&target_addr)
             .await;
         // assert!(
@@ -1098,10 +1076,8 @@ impl<
         let params = CryptoParams::new(crypto_backend.to_owned());
         let pk = self
             .__keystore
-            .lock()
             .get(&params.crypto_name)
             .unwrap()
-            .lock()
             .getPk(&target_addr)
             .await;
         let mut crypto_inst = self.__crypto.lock()[&params.crypto_name].clone();
@@ -1121,7 +1097,6 @@ impl<
         println!("==off===_req_state_var==================={name}===={indices:?}=={count}=");
         if count == 0 {
             self.__conn
-                .lock()
                 .req_state_var(
                     self.__contract_handle.lock().as_ref().unwrap(),
                     name,

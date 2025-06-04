@@ -63,7 +63,7 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
             evaluator.setWireValue(inputMessage[i], (b'a' + i) as i32);
             msg = msg + (b'a' + i) as char;
         }
-        println!("PlainText:{msg}");
+        //println!("PlainText:{msg}");
 
         // to make sure that the implementation is working fine,
         // encrypt with the BouncyCastle RSA OAEP encryption in a sample run,
@@ -76,7 +76,7 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
         let cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 
         let random = SecureRandom::new();
-        let generator = KeyPairGenerator.getInstance("RSA");
+        let mut generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(rsaKeyLength, random);
         let pair = generator.generateKeyPair();
         let pubKey = pair.getPublic();
@@ -88,7 +88,7 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
 
         cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
         let cipherText = cipher.doFinal(msg.getBytes());
-        //			println!("ciphertext : " + String::new(cipherText));
+        //			//println!("ciphertext : " + String::new(cipherText));
         let cipherTextPadded = vec![byte::default(); cipherText.len() + 1];
         cipherTextPadded[1..1 + cipherText.len()].clone_from_slice(&cipherText);
         cipherTextPadded[0] = 0;
@@ -105,13 +105,13 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
             evaluator.setWireValue(seed[i], (sampleRandomness[i] + 256) % 256);
         }
 
-        // println!("Error while generating sample input for circuit");
+        // //println!("Error while generating sample input for circuit");
     }
 
     pub fn main(args: Vec<String>) {
         let keyLength = 2048;
         let msgLength = 3;
-        let generator = RSAEncryptionOAEPCircuitGenerator::new(
+        let mut generator = RSAEncryptionOAEPCircuitGenerator::new(
             "rsa" + keyLength + "_oaep_encryption",
             keyLength,
             msgLength,

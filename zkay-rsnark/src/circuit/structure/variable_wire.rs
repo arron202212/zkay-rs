@@ -18,16 +18,16 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct VariableWire {
-    pub bitWires: ARcCell<Option<WireArray>>,
+    pub bitWires: Option<WireArray>,
 }
 impl Hash for VariableWire {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.bitWires.lock().hash(state);
+        self.bitWires.hash(state);
     }
 }
 impl PartialEq for VariableWire {
     fn eq(&self, other: &Self) -> bool {
-        *self.bitWires.lock() == *other.bitWires.lock()
+        self.bitWires == other.bitWires
     }
 }
 crate::impl_hash_code_of_wire_for!(Wire<VariableWire>);
@@ -36,16 +36,14 @@ pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
     // super(wireId);
     Wire::<VariableWire> {
         wireId,
-        t: VariableWire {
-            bitWires: arc_cell_new!(None),
-        },
+        t: VariableWire { bitWires: None },
     }
 }
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}
 impl WireConfig for Wire<VariableWire> {
     fn getBitWires(&self) -> Option<WireArray> {
-        self.t.bitWires.lock().clone()
+        self.t.bitWires.clone()
     }
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::Variable(self.clone()))
@@ -62,7 +60,7 @@ impl Wire<VariableWire> {
     //     self.t.bitWires.borrow().clone()
     // }
 
-    fn setBits(&self, bitWires: Option<WireArray>) {
-        *self.t.bitWires.lock() = bitWires;
+    fn setBits(&mut self, bitWires: Option<WireArray>) {
+        self.t.bitWires = bitWires;
     }
 }

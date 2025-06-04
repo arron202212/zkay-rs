@@ -128,7 +128,7 @@ impl LongElement {
         for i in 0..chunks.len() {
             currentBitwidth[i] = chunks[i].bits();
         }
-        let generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = getActiveCircuitGenerator().unwrap();
         Self {
             array: generator.createConstantWireArray(chunks.clone(), &None),
             currentMaxValues: chunks,
@@ -212,7 +212,7 @@ impl LongElement {
         let mut newArray = self.array[..totalNumChunks].to_vec();
         for i in 0..newArray.len() {
             if newArray[i].is_none() {
-                newArray[i] = self.generator().getZeroWire();
+                newArray[i] = self.generator().get_zero_wire();
             }
         }
         let mut newMaxValues = vec![BigInteger::ZERO; totalNumChunks];
@@ -392,12 +392,12 @@ impl LongElement {
             let w1 = if i < self.array.len() {
                 self.array[i].clone().unwrap()
             } else {
-                self.generator().getZeroWire().unwrap()
+                self.generator().get_zero_wire().unwrap()
             };
             let w2 = if i < other.array.len() {
                 other.array[i].clone().unwrap()
             } else {
-                self.generator().getZeroWire().unwrap()
+                self.generator().get_zero_wire().unwrap()
             };
             newArray[i] = Some(w1.clone().add(w.clone().mul(w2.clone().sub(w1))));
             if newArray[i].as_ref().unwrap().instance_of("ConstantWire") {
@@ -484,7 +484,7 @@ impl LongElement {
             );
             if Configs.print_stack_trace_at_warnings {
                 // Thread.dumpStack();
-                println!("Thread.dumpStack()");
+                //println!("Thread.dumpStack()");
             }
         }
         for i in 0..self.array.len() {
@@ -630,16 +630,13 @@ impl LongElement {
         // computing the auxConstantChunks, and the total auxConstant
         let mut accumStep = 0;
         for j in 0..auxConstantChunks.len() - 1 {
-            auxConstantChunks[j] =
-                BigInteger::from(2).pow(group2_bounds.get(j).unwrap().bits() as u32);
+            auxConstantChunks[j] = BigInteger::from(2).pow(group2_bounds[j].bits() as u32);
             auxConstant = auxConstant.add(auxConstantChunks[j].clone().mul(shift.pow(accumStep)));
-            accumStep += *steps.get(j).unwrap() as u32;
-            carriesBitwidthBounds[j] = std::cmp::max(
-                auxConstantChunks[j].bits(),
-                group1_bounds.get(j).unwrap().bits(),
-            ) - *steps.get(j).unwrap() as u64
-                * Self::CHUNK_BITWIDTH as u64
-                + 1;
+            accumStep += steps[j] as u32;
+            carriesBitwidthBounds[j] =
+                std::cmp::max(auxConstantChunks[j].bits(), group1_bounds[j].bits())
+                    - steps[j] as u64 * Self::CHUNK_BITWIDTH as u64
+                    + 1;
         }
 
         // since the two elements should be equal, we should not need any aux
@@ -662,7 +659,7 @@ impl LongElement {
 
         let mut idx = 0;
         'loop1: for j in 0..numOfGroupedChunks {
-            for k in 0..*steps.get(j).unwrap() {
+            for k in 0..steps[j] {
                 alignedAuxConstantChunks[j] = alignedAuxConstantChunks[j].clone().add(
                     alignedAuxConstantSmallChunks[idx]
                         .clone()
@@ -682,7 +679,7 @@ impl LongElement {
                     .add(
                         alignedAuxConstantSmallChunks[idx]
                             .clone()
-                            .mul(shift.pow(*steps.get(numOfGroupedChunks - 1).unwrap() as u32)),
+                            .mul(shift.pow(steps[numOfGroupedChunks - 1] as u32)),
                     );
             } else {
                 panic!("Case not expected. Please report.");
@@ -701,21 +698,18 @@ impl LongElement {
                 alignedAuxConstantChunks: Vec<BigInteger>,
             }
             impl Instruction for Prover {
-                fn evaluate(&self, evaluator: CircuitEvaluator) {
+                fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                     let mut prevCarry = BigInteger::ZERO;
                     for i in 0..self.carries.len() {
-                        let a =
-                            evaluator.getWireValue(self.group1.get(i).unwrap().clone().unwrap());
-                        let b =
-                            evaluator.getWireValue(self.group2.get(i).unwrap().clone().unwrap());
+                        let a = evaluator.getWireValue(self.group1[i].clone().unwrap());
+                        let b = evaluator.getWireValue(self.group2[i].clone().unwrap());
                         let mut carryValue = self.auxConstantChunks[i]
                             .clone()
                             .add(a)
                             .sub(b)
                             .sub(self.alignedAuxConstantChunks[i].clone())
                             .add(prevCarry);
-                        carryValue = carryValue
-                            .shr(self.steps.get(i).unwrap() * LongElement::CHUNK_BITWIDTH);
+                        carryValue = carryValue.shr(self.steps[i] * LongElement::CHUNK_BITWIDTH);
                         evaluator
                             .setWireValue(self.carries[i].clone().unwrap(), carryValue.clone());
                         prevCarry = carryValue;
@@ -748,7 +742,7 @@ impl LongElement {
 
         // Now apply the main constraints
 
-        let mut prevCarry = self.generator().getZeroWire().unwrap();
+        let mut prevCarry = self.generator().get_zero_wire().unwrap();
         let mut prevBound = BigInteger::ZERO;
 
         // recall carries.len() = numOfGroupedChunks - 1
@@ -762,7 +756,7 @@ impl LongElement {
 
             // the last carry value must be zero
             let currentCarry = if j == carries.len() {
-                self.generator().getZeroWire()
+                self.generator().get_zero_wire()
             } else {
                 carries[j].clone()
             };
@@ -770,28 +764,21 @@ impl LongElement {
             // overflow check for safety
             if auxConstantChunks[j]
                 .clone()
-                .add(group1_bounds.get(j).unwrap().clone())
+                .add(group1_bounds[j].clone())
                 .add(BigInteger::from((prevBound >= Configs.field_prime) as u8))
                 != BigInteger::ZERO
             {
-                println!("Overflow possibility @ ForceEqual()");
+                //println!("Overflow possibility @ ForceEqual()");
             }
 
             let w1 = auxConstantChunkWire
-                .add(
-                    group1
-                        .get(j)
-                        .unwrap()
-                        .clone()
-                        .unwrap()
-                        .sub(group2.get(j).unwrap().clone().unwrap()),
-                )
+                .add(group1[j].clone().unwrap().sub(group2[j].clone().unwrap()))
                 .add(prevCarry);
             let w2 = alignedAuxConstantChunkWire.add(
                 currentCarry
                     .clone()
                     .unwrap()
-                    .mulb(shift.pow(*steps.get(j).unwrap() as u32), &None),
+                    .mulb(shift.pow(steps[j] as u32), &None),
             );
 
             // enforce w1 = w2
@@ -825,8 +812,8 @@ impl LongElement {
         let a1 = self.getArray();
         let a2 = other.getArray();
         let length = std::cmp::max(a1.len(), a2.len());
-        let paddedA1 = Util::padWireArray(a1, length, self.generator().getZeroWire().unwrap());
-        let paddedA2 = Util::padWireArray(a2, length, self.generator().getZeroWire().unwrap());
+        let paddedA1 = Util::padWireArray(a1, length, self.generator().get_zero_wire().unwrap());
+        let paddedA2 = Util::padWireArray(a2, length, self.generator().get_zero_wire().unwrap());
 
         /*
          * Instead of doing the comparison naively (which will involve all the
@@ -846,7 +833,7 @@ impl LongElement {
                 pub helperBits: Vec<Option<WireType>>,
             }
             impl Instruction for Prover {
-                fn evaluate(&self, evaluator: CircuitEvaluator) {
+                fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                     let mut found = false;
                     for i in (0..self.length).rev() {
                         let v1 = evaluator.getWireValue(self.paddedA1[i].clone().unwrap());
@@ -883,8 +870,8 @@ impl LongElement {
         );
 
         // verify "the greater than condition" for the specified chunk
-        let mut chunk1 = self.generator().getZeroWire().unwrap();
-        let mut chunk2 = self.generator().getZeroWire().unwrap();
+        let mut chunk1 = self.generator().get_zero_wire().unwrap();
+        let mut chunk2 = self.generator().get_zero_wire().unwrap();
 
         for i in 0..helperBits.len() {
             chunk1 = chunk1.add(
@@ -919,7 +906,7 @@ impl LongElement {
                     .clone()
                     .unwrap()
                     .sub(paddedA2[i].clone().unwrap()),
-                self.generator().getZeroWire().unwrap(),
+                self.generator().get_zero_wire().unwrap(),
                 &None,
             );
         }
@@ -955,7 +942,7 @@ impl Add for LongElement {
 
     fn add(self, rhs: Self) -> Self::Output {
         if self.addOverflowCheck(rhs.clone()) {
-            println!("Warning: Addition overflow could happen");
+            //println!("Warning: Addition overflow could happen");
         }
 
         let length = std::cmp::max(self.array.len(), rhs.array.len());
@@ -1028,7 +1015,7 @@ impl Sub for LongElement {
                 pub result: LongElement,
             }
             impl Instruction for Prover {
-                fn evaluate(&self, evaluator: CircuitEvaluator) {
+                fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                     let myValue = evaluator
                         .getWireValuei(self.long_element.clone(), LongElement::CHUNK_BITWIDTH);
                     let otherValue =
@@ -1065,7 +1052,7 @@ impl Mul for LongElement {
         // Implements the improved long integer multiplication from xjsnark
 
         if self.mulOverflowCheck(rhs.clone()) {
-            println!("Warning: Mul overflow could happen");
+            //println!("Warning: Mul overflow could happen");
         }
         let length = self.array.len() + rhs.array.len() - 1;
         let mut result: Vec<Option<WireType>>;
@@ -1104,7 +1091,7 @@ impl Mul for LongElement {
                     pub array2: Vec<Option<WireType>>,
                 }
                 impl Instruction for Prover {
-                    fn evaluate(&self, evaluator: CircuitEvaluator) {
+                    fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                         let a = evaluator.getWiresValues(self.array1.clone());
                         let b = evaluator.getWiresValues(self.array2.clone());
                         let resultVals = LongElement::multiplyPolys(a, b);

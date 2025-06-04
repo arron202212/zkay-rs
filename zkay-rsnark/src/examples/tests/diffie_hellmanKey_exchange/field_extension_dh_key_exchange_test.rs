@@ -68,7 +68,7 @@ let exponent = BigInteger::new("151828783241023778037546088811142494551372361892
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let output = generator.getOutWires();
+let output = generator.get_out_wires();
 
 		assertEquals(evaluator.getWireValue(output.get(0)), BigInteger::new("9327289243415079515318132023689497171271904433099600200400859968177425894580"));
 		assertEquals(evaluator.getWireValue(output.get(1)), BigInteger::new("21312311033900790023937954575527091756377215260488498667283640904465223526236"));
@@ -134,7 +134,7 @@ let exponent = BigInteger::new("151828783241023778037546088811142494551372361892
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let output = generator.getOutWires();
+let output = generator.get_out_wires();
 
 
 		
@@ -206,7 +206,7 @@ let exponent = BigInteger::new("151828783241023778037546088811142494551372361892
 		generator.generateCircuit();
 		generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
-let output = generator.getOutWires();
+let output = generator.get_out_wires();
 
 
 		

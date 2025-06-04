@@ -80,7 +80,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         let c = vec![None; mu];
 
         for i in 0..mu {
-            c[i] = generator.getZeroWire();
+            c[i] = generator.get_zero_wire();
         }
         for i in 0..mu {
             for j in 0..mu {
@@ -107,8 +107,8 @@ impl Gadget for FieldExtensionDHKeyExchange {
     }
 
     fn exp(base: Vec<Option<WireType>>, expBits: Vec<Option<WireType>>, powersTable: Vec<Vec<Option<WireType>>>) -> Vec<Option<WireType>> {
-        let c = vec![generator.getZeroWire(); mu];
-        c[0] = generator.getOneWire();
+        let c = vec![generator.get_zero_wire(); mu];
+        c[0] = generator.get_one_wire();
         for j in 0..expBits.len() {
             let tmp = mul(c, powersTable[j]);
             for i in 0..mu {
@@ -127,8 +127,8 @@ impl Gadget for FieldExtensionDHKeyExchange {
         let zeroOrOne2 = h[0].mul(h[0].sub(1));
 
         // checking the rest
-        let allZero1 = generator.getOneWire();
-        let allZero2 = generator.getOneWire();
+        let allZero1 = generator.get_one_wire();
+        let allZero2 = generator.get_one_wire();
 
         for i in 1..mu {
             allZero1 = allZero1.mul(g[i].checkNonZero().invAsBit());
@@ -145,9 +145,9 @@ impl Gadget for FieldExtensionDHKeyExchange {
         let bits = vec![None; bitLength];
         for i in 0..bitLength {
             if subGroupOrder.bit(i) {
-                bits[i] = generator.getOneWire();
+                bits[i] = generator.get_one_wire();
             } else {
-                bits[i] = generator.getZeroWire();
+                bits[i] = generator.get_zero_wire();
             }
         }
 

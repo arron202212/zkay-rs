@@ -5911,7 +5911,7 @@ impl ASTBase {
 //     pub fn func_name(&self) -> String {
 //         if let Some(homomorphism) = &self.homomorphism {
 //             HOMOMORPHISM_STORE
-//                 .lock()
+//
 //                 .unwrap()
 //                 .get(homomorphism)
 //                 .unwrap()
@@ -6013,7 +6013,7 @@ impl ASTBase {
 //     }
 //     pub fn func_name(&self) -> String {
 //         HOMOMORPHISM_STORE
-//             .lock()
+//
 //             .unwrap()
 //             .get(self.reclassify_expr_base.homomorphism.as_ref().unwrap())
 //             .unwrap()

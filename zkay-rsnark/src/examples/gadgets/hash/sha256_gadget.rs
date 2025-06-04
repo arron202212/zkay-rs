@@ -84,7 +84,7 @@ impl SHA256Gadget {
     }
 
     fn buildCircuit(&mut self) {
-        let generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = getActiveCircuitGenerator().unwrap();
         // pad if needed
         self.prepare();
 
@@ -274,7 +274,7 @@ impl SHA256Gadget {
     }
 
     fn prepare(&mut self) {
-        let generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = getActiveCircuitGenerator().unwrap();
         self.numBlocks = (self.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
         let bits = WireArray::new(self.unpaddedInputs.clone())
             .getBits(self.bitWidthPerInputElement, &None)
@@ -290,7 +290,7 @@ impl SHA256Gadget {
             self.numBlocks = (self.totalLengthInBytes + pad.len()) / 64;
             pad[0] = Some(generator.createConstantWirei(0x80, &None));
             for i in 1..pad.len() - 8 {
-                pad[i] = generator.getZeroWire();
+                pad[i] = generator.get_zero_wire();
             }
             let lengthInBits = self.totalLengthInBytes * 8;
             let mut lengthBits = vec![None; 64];
@@ -307,9 +307,9 @@ impl SHA256Gadget {
                 lengthBits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }
             let totalNumberOfBits = self.numBlocks * 512;
-            self.preparedInputBits = vec![generator.getZeroWire(); totalNumberOfBits];
+            self.preparedInputBits = vec![generator.get_zero_wire(); totalNumberOfBits];
             self.preparedInputBits[..self.totalLengthInBytes * 8].clone_from_slice(&bits);
-            self.preparedInputBits[self.totalLengthInBytes * 8 + 7] = generator.getOneWire();
+            self.preparedInputBits[self.totalLengthInBytes * 8 + 7] = generator.get_one_wire();
             let n = self.preparedInputBits.len();
             self.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
         } else {

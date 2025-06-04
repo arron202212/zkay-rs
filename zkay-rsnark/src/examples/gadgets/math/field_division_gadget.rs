@@ -34,7 +34,7 @@ impl FieldDivisionGadget {
             b,
             c: WireType::default(),
         };
-        let generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = getActiveCircuitGenerator().unwrap();
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
@@ -60,7 +60,7 @@ impl FieldDivisionGadget {
     fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-        let generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = getActiveCircuitGenerator().unwrap();
         generator.specifyProverWitnessComputation({
             #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
             struct Prover {
@@ -69,7 +69,7 @@ impl FieldDivisionGadget {
                 c: WireType,
             }
             impl Instruction for Prover {
-                fn evaluate(&self, evaluator: CircuitEvaluator) {
+                fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                     let aValue = evaluator.getWireValue(self.a.clone());
                     let bValue = evaluator.getWireValue(self.b.clone());
                     let cValue = aValue

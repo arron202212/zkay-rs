@@ -91,7 +91,7 @@ pub struct ChaskeyLtsTest {
         cgen.evalCircuit();
         let evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let outwires = cgen.getOutWires();
+        let outwires = cgen.get_out_wires();
         let outs = vec![BigInteger::default();outwires.size()];
         for i in 0..outs.len() {
             outs[i] = evaluator.getWireValue(outwires.get(i));

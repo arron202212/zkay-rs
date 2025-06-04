@@ -2977,7 +2977,6 @@ impl TypeCheckVisitor {
                     == &Some(Homomorphism::non_homomorphic())),
             r#"Cannot use "{}" on a public value{:?}"#,
             HOMOMORPHISM_STORE
-                .lock()
                 .unwrap()
                 .get(
                     ast.to_ast()

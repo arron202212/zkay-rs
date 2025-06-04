@@ -104,7 +104,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
 			assertEquals(Util::one(),
-					evaluator.getWireValue(generator.getOutWires().get(0)));
+					evaluator.getWireValue(generator.get_out_wires().get(0)));
 		}
 
 	}
@@ -196,7 +196,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
 			assertEquals(BigInteger::ZERO,
-					evaluator.getWireValue(generator.getOutWires().get(0)));
+					evaluator.getWireValue(generator.get_out_wires().get(0)));
 		}
 
 	}
@@ -287,7 +287,7 @@ let sig = BigInteger::new(signaturePadded);
 			generator.evalCircuit();
 let evaluator = generator.getCircuitEvaluator();
 			assertEquals(Util::one(),
-					evaluator.getWireValue(generator.getOutWires().get(0)));
+					evaluator.getWireValue(generator.get_out_wires().get(0)));
 			
 			LongElement.CHUNK_BITWIDTH = defaultBitwidth; // needed for running all tests together
 		}

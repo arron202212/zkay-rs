@@ -119,7 +119,7 @@ let sampleRandomness = result[1];
 let evaluator = generator.getCircuitEvaluator();
 			
 			// retrieve the ciphertext from the circuit, and verify that it matches the expected ciphertext and that it decrypts correctly (using the Java built-in RSA decryptor)
-let cipherTextList = generator.getOutWires();
+let cipherTextList = generator.get_out_wires();
 let t = BigInteger::ZERO;
 let i = 0;
 			for  w in &cipherTextList{

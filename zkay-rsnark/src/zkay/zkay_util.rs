@@ -53,7 +53,7 @@ impl ZkayUtil {
             ".",
             "1",
         ]);
-        println!(
+        //println!(
             "\n-----------------------------------RUNNING LIBSNARK KEYGEN -----------------------------------------"
         );
         let input = BufReader::new(p.getInputStream());
@@ -62,7 +62,7 @@ impl ZkayUtil {
             buf.append(line).append("\n");
         }
 
-        println!(buf.toString());
+        //println!(buf.toString());
 
         let p = runcomand(vec![
             "../libsnark/build/libsnark/zkay_interface/run_snark",
@@ -73,7 +73,7 @@ impl ZkayUtil {
             "1",
             "1",
         ]);
-        println!(
+        //println!(
             "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------"
         );
         let input = BufferedReader::new(InputStreamReader::new(p.getInputStream()));
@@ -82,6 +82,6 @@ impl ZkayUtil {
             buf.append(line).append("\n");
         }
 
-        println!(buf.toString());
+        //println!(buf.toString());
     }
 }

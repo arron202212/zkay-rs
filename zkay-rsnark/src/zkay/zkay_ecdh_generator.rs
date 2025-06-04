@@ -59,12 +59,12 @@ impl CircuitGenerator for ZkayECDHGenerator {
     }
 
     fn computeECKey(pk: BigInteger, sk: BigInteger) -> BigInteger {
-        let generator = ZkayECDHGenerator::new(pk, sk, false);
+        let mut generator = ZkayECDHGenerator::new(pk, sk, false);
         generator.generateCircuit();
         generator.evalCircuit();
         return generator
             .getCircuitEvaluator()
-            .getWireValue(generator.getOutWires().get(0));
+            .getWireValue(generator.get_out_wires().get(0));
     }
 
     pub fn derivePk(secret: BigInteger) -> String {
@@ -88,17 +88,17 @@ impl CircuitGenerator for ZkayECDHGenerator {
 pub fn main(args: Vec<String>) {
     if args.len() == 1 {
         let secret = rnd_to_secret(args[0]);
-        println!("Deriving pub  key from secret key 0x{:x}", secret);
-        println!(derivePk(secret));
-        println!(secret.toString(16));
+        //println!("Deriving pub  key from secret key 0x{:x}", secret);
+        //println!(derivePk(secret));
+        //println!(secret.toString(16));
     } else if args.len() == 2 {
         let secret = BigInteger::new(args[0], 16);
         let pk = BigInteger::new(args[1], 16);
-        println!(
+        //println!(
             "Deriving shared key from pub  key 0x{:x} and secret 0x{:x}",
             pk, secret
         );
-        println!(getSharedSecret(pk, secret));
+        //println!(getSharedSecret(pk, secret));
     } else {
         panic!();
     }

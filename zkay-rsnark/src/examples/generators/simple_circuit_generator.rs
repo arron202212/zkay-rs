@@ -36,7 +36,7 @@ impl CircuitGenerator for SimpleCircuitGenerator {
 }
 
 pub fn main(args: Vec<String>) {
-    let generator = SimpleCircuitGenerator::new("simple_example");
+    let mut generator = SimpleCircuitGenerator::new("simple_example");
     generator.generateCircuit();
     generator.evalCircuit();
     generator.prepFiles();

@@ -153,7 +153,7 @@ impl Gadget for AES128CipherGadget {
     }
 
     fn galoisMulConst(wire: WireType, mut i: i32) -> WireArray {
-        let p = generator.getZeroWire();
+        let p = generator.get_zero_wire();
         let counter;
         let hiBitSet;
 
@@ -208,7 +208,7 @@ impl Gadget for AES128CipherGadget {
             i += 1;
         }
 
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         i = nk;
         while (i < nb * (nr + 1)) {
             temp = w[i - 1];

@@ -88,7 +88,7 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.len());
         signaturePadded[0] = 0;
         let modulus = (keyPair.getPublic()).getModulus();
-        //			println!(modulus.toString(16));
+        //			//println!(modulus.toString(16));
         let sig = BigInteger::new(signaturePadded);
 
         // if !minimizeVerificationKey {
@@ -101,12 +101,12 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         // Util::split(sig, Configs.log2_field_prime - 1));
         // }
 
-        // println!("Error while generating sample input for circuit");
+        // //println!("Error while generating sample input for circuit");
     }
 
     pub fn main(args: Vec<String>) {
         let keyLength = 2048;
-        let generator =
+        let mut generator =
             RSASigVerCircuitGenerator::new("rsa" + keyLength + "_sha256_sig_verify", keyLength);
         generator.generateCircuit();
         generator.evalCircuit();

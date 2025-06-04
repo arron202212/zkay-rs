@@ -35,9 +35,9 @@ impl Hash for dyn DynHash + '_ {
 }
 
 pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
-    fn evaluate(&self, evaluator: CircuitEvaluator);
+    fn evaluate(&self, evaluator: &mut CircuitEvaluator);
 
-    fn emit(&self, evaluator: CircuitEvaluator) {}
+    fn emit(&self, evaluator: &CircuitEvaluator) {}
 
     fn doneWithinCircuit(&self) -> bool {
         false

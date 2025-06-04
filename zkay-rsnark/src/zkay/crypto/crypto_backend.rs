@@ -160,7 +160,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         assert!(self.myPk.is_none(), "Key pair already set");
 
         // Ensure that provided sender keys form a key pair
-        let generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         let pkDerivationGadget = ZkayEcPkDerivationGadget::new(mySk, true, "getPk(mySk)");
         generator.addEqualityAssertion(myPk, pkDerivationGadget.getOutputWires()[0]);
 

@@ -42,7 +42,7 @@ pub struct EcdhTests {
         cgen.evalCircuit();
         let evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let pk1_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let pk1_circ = evaluator.getWireValue(cgen.get_out_wires().get(0));
 
         cgen = CircuitGenerator::new("pkder") {
             
@@ -58,7 +58,7 @@ pub struct EcdhTests {
         cgen.evalCircuit();
         evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let pk2_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let pk2_circ = evaluator.getWireValue(cgen.get_out_wires().get(0));
 
         let pk1 = BigInteger::new(ZkayECDHGenerator.derivePk(sec1), 16);
         let pk2 = BigInteger::new(ZkayECDHGenerator.derivePk(sec2), 16);
@@ -80,7 +80,7 @@ pub struct EcdhTests {
         cgen.evalCircuit();
         evaluator = CircuitEvaluator::new(cgen);
         evaluator.evaluate();
-        let sk_circ = evaluator.getWireValue(cgen.getOutWires().get(0));
+        let sk_circ = evaluator.getWireValue(cgen.get_out_wires().get(0));
 
         let sk_exp = BigInteger::new(ZkayECDHGenerator.getSharedSecret(pk2, sec1), 16);
         Assert.assertEquals(sk_exp, sk_circ);

@@ -45,16 +45,16 @@ impl<T> Op<T> {
 
         for w in &inputs {
             if w.is_none() {
-                println!("One of the input wires is null: {inputs:?}");
+                //println!("One of the input wires is null: {inputs:?}");
                 eyre::bail!("A null wire");
             } else if w.as_ref().unwrap().getWireId() == -1 {
-                println!("One of the input wires is not packed: {inputs:?}");
+                //println!("One of the input wires is not packed: {inputs:?}");
                 eyre::bail!("A wire with a negative id");
             }
         }
         for w in &outputs {
             if w.is_none() {
-                println!("One of the output wires is null {outputs:?}");
+                //println!("One of the output wires is null {outputs:?}");
                 eyre::bail!("A null wire");
             }
         }
@@ -70,7 +70,7 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
-                println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
+                //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
                 panic!("Error During Evaluation");
             }
         }
@@ -81,7 +81,7 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     fn checkOutputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getOutputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_some() {
-                println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
+                //println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
                 panic!("Error During Evaluation");
             }
         }
@@ -146,7 +146,7 @@ macro_rules! impl_instruction_for {
         impl $crate::circuit::eval::instruction::Instruction for $impl_type {
             fn evaluate(
                 &self,
-                evaluator: $crate::circuit::eval::circuit_evaluator::CircuitEvaluator,
+                evaluator: &mut $crate::circuit::eval::circuit_evaluator::CircuitEvaluator,
             ) {
                 let assignment = evaluator.getAssignment();
                 self.checkInputs(assignment.clone());

@@ -43,7 +43,7 @@ let r = ModGadget::new(inputWires[0],  inputWires[1], 32).getOutputWires()[0];
 let evaluator = CircuitEvaluator::new("CGTest");
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
-let rWire = generator.getOutWires().get(0);
+let rWire = generator.get_out_wires().get(0);
 		assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
 	}
 	
@@ -75,7 +75,7 @@ let r = ModConstantGadget::new(inputWires[0], 32, BigInteger::from(b)).getOutput
 let evaluator = CircuitEvaluator::new("CGTest");
 		generator.generateSampleInput(evaluator);
 		evaluator.evaluate();
-let rWire = generator.getOutWires().get(0);
+let rWire = generator.get_out_wires().get(0);
 		assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
 	}
 	
