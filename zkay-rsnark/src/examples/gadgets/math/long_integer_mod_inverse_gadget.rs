@@ -36,10 +36,7 @@ impl Gadget for LongIntegerModInverseGadget {
         let quotientWires = generator.createProverWitnessWireArray(m.getSize());
         let quotient = LongElement::new(quotientWires, m.getCurrentBitwidth());
 
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
                     let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
                     let mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
                     let inverseValue = aValue.modInverse(mValue);
@@ -53,10 +50,28 @@ impl Gadget for LongIntegerModInverseGadget {
                         quotientWires,
                         Util::split(quotientValue, LongElement.CHUNK_BITWIDTH),
                     );
-                }
-            }
-            Prover
-        });
+                });
+        // {
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
+        //             let mValue = evaluator.getWireValue(m, LongElement.CHUNK_BITWIDTH);
+        //             let inverseValue = aValue.modInverse(mValue);
+        //             let quotientValue = aValue.mul(inverseValue).divide(mValue);
+
+        //             evaluator.setWireValue(
+        //                 inverseWires,
+        //                 Util::split(inverseValue, LongElement.CHUNK_BITWIDTH),
+        //             );
+        //             evaluator.setWireValue(
+        //                 quotientWires,
+        //                 Util::split(quotientValue, LongElement.CHUNK_BITWIDTH),
+        //             );
+        //         }
+        //     }
+        //     Prover
+        // });
 
         inverse.restrictBitwidth();
         quotient.restrictBitwidth();

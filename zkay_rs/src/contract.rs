@@ -158,10 +158,14 @@ impl<
             "elgamal",
         );
         contract_simulator
+            .lock()
             .state
+            .lock()
             .decl("min_votes()(uint)", convert_type, false, "");
         contract_simulator
+            .lock()
             .state
+            .lock()
             .decl("vote_count()(uint)", convert_type, false, "");
         contract_simulator.lock().state.lock().decl(
             "packed_results()(uint)",
@@ -188,6 +192,7 @@ impl<
         // = os.path.dirname(os.path.realpath(__file__))
         let mut c = Survey::new(project_dir, user, contract_simulator.clone());
         c.api()
+            .lock()
             .connect::<PS>(address, compile_zkay_file, get_verification_contract_names)
             .await;
         contract_simulator.lock().initialize_keys_for(user).await;

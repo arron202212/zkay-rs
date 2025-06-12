@@ -27,17 +27,22 @@ impl Gadget for AESSBoxComputeGadget {
     fn buildCircuit() {
         inverse = generator.createProverWitnessWire();
 
-        generator.addToEvaluationQueue(&{
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
                     let p = evaluator.getWireValue(input).intValue();
                     let q = findInv(p);
                     evaluator.setWireValue(inverse, q);
-                }
-            }
-            Prover
-        });
+                });
+        // &{
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let p = evaluator.getWireValue(input).intValue();
+        //             let q = findInv(p);
+        //             evaluator.setWireValue(inverse, q);
+        //         }
+        //     }
+        //     Prover
+        // });
 
         inverse.restrictBitLength(8);
         let v = gmul(input, inverse);

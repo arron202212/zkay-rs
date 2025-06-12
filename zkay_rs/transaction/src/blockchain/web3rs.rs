@@ -769,6 +769,7 @@ impl<
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             let pki_contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&CryptoParams::new(crypto_params.clone()).identifier_name());
             let pki_contract_address = self
@@ -790,8 +791,14 @@ impl<
 
         let mut lib_addresses = vec![];
         if !CFG.lock().unwrap().external_crypto_lib_names().is_empty() {
-            if !CFG.unwrap().blockchain_crypto_lib_addresses().is_empty() {
+            if !CFG
+                .lock()
+                .unwrap()
+                .blockchain_crypto_lib_addresses()
+                .is_empty()
+            {
                 lib_addresses = CFG
+                    .lock()
                     .unwrap()
                     .blockchain_crypto_lib_addresses()
                     .split(",")
@@ -822,6 +829,7 @@ impl<
             let crypto_param = CryptoParams::new(crypto_params.clone());
             let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&crypto_param.identifier_name());
             let pki_sol = save_to_file(
@@ -851,6 +859,7 @@ impl<
         );
         // let mut _lib_addresses = BTreeMap::new();
         for (lib, addr) in CFG
+            .lock()
             .unwrap()
             .external_crypto_lib_names()
             .iter()
@@ -867,6 +876,7 @@ impl<
                 )
                 .await?;
             self._lib_addresses
+                .lock()
                 .as_mut()
                 .unwrap()
                 .insert(lib.clone(), Address::from_str(addr).unwrap());
@@ -1552,6 +1562,7 @@ impl<P: ZkayProverInterface + std::marker::Send> Web3BlockchainBase<P, Web3Teste
             let crypto_param = CryptoParams::new(crypto_params.clone());
             let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&crypto_param.identifier_name());
             let pki_sol = save_to_file(

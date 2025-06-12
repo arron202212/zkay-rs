@@ -42,10 +42,10 @@ impl IndexMut<usize> for WireArray {
 
 impl WireArray {
     pub fn newi(n: i32) -> WireArray {
-        Self::newic(n, getActiveCircuitGenerator().unwrap())
+        Self::newic(n)
     }
 
-    pub fn newic(n: i32, generator: Box<dyn CGConfig + Send + Sync>) -> WireArray {
+    pub fn newic(n: i32) -> WireArray {
         WireArray::new(vec![None; n as usize])
     }
 

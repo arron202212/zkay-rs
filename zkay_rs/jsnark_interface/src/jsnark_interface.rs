@@ -167,6 +167,7 @@ pub fn get_jsnark_circuit_class_str<T: CircuitHelperConfig>(
 ) -> String {
     let circuit_class_name = CFG.lock().unwrap().jsnark_circuit_classname();
     let use_input_hashing = CFG
+        .lock()
         .unwrap()
         .should_use_hash(circuit.trans_in_size() + circuit.trans_out_size())
         .to_string()

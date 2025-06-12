@@ -324,7 +324,8 @@ mod test {
         };
         let mut generator = CircuitGenerator::<CGTest>::new("Caching_Test", t);
         println!("{}", line!());
-        put_active_circuit_generator("CGTest", Box::new(generator.clone()));
+        let mut generator = Box::new(generator);
+        put_active_circuit_generator("CGTest", generator.clone());
         println!("{}", line!());
         generator.generateCircuit();
         println!("{},{}", file!(), line!());

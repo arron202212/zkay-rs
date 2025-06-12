@@ -150,6 +150,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
             let _ = self._connect_libraries().await?;
         }
         self._pki_contract()
+            .lock()
             .as_ref()
             .unwrap()
             .get(crypto_backend)
@@ -485,6 +486,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             let contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&CryptoParams::new(crypto_params.clone()).identifier_name());
             let s = self
@@ -521,6 +523,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
             let some_vname = verifier_names[0].clone();
 
             let libraries: BTreeMap<_, _> = CFG
+                .lock()
                 .unwrap()
                 .external_crypto_lib_names()
                 .iter()
@@ -785,15 +788,21 @@ pub trait ZkayKeystoreInterface<
     async fn add_keypair(&mut self, address: &str, key_pair: KeyPair) -> eyre::Result<()> {
         println!("=====add_keypair======");
         self.local_key_pairs()
+            .lock()
             .insert(address.to_owned(), key_pair.clone());
         //         # Announce if not yet in pki
         //         try:
         let crypto_params = self.crypto_params().clone();
-        let res = self.conn().req_public_key(address, &crypto_params).await;
+        let res = self
+            .conn()
+            .lock()
+            .req_public_key(address, &crypto_params)
+            .await;
         println!("=====req_public_key======res==={key_pair:?}===={res:?}");
         // if res.is_err() {   ////TODO uncomment
         let _ = self
             .conn()
+            .lock()
             .announce_public_key(address, &key_pair.pk, &crypto_params)
             .await?;
         // }
@@ -827,10 +836,16 @@ pub trait ZkayKeystoreInterface<
         } else {
             let crypto_params = self.crypto_params().clone();
             println!("===crypto_params===={address}========={crypto_params:?}=====");
-            let pks = self.conn().req_public_key(address, &crypto_params).await;
+            let pks = self
+                .conn()
+                .lock()
+                .req_public_key(address, &crypto_params)
+                .await;
             println!("===pks============={pks:?}=====");
             let pk = pks.unwrap();
-            self.local_pk_store().insert(address.clone(), pk.clone());
+            self.local_pk_store()
+                .lock()
+                .insert(address.clone(), pk.clone());
             pk
         }
     }
@@ -848,7 +863,12 @@ pub trait ZkayKeystoreInterface<
             "===local_key_pairs==================={:?}",
             self.local_key_pairs().lock()
         );
-        self.local_key_pairs().get(address).unwrap().sk.clone()
+        self.local_key_pairs()
+            .lock()
+            .get(address)
+            .unwrap()
+            .sk
+            .clone()
     }
     //         """
     //         Return public key for address from the local key store.
@@ -860,7 +880,12 @@ pub trait ZkayKeystoreInterface<
     //         :return: public key
     //         """
     fn pk(&self, address: &String) -> Value<String, PublicKeyValue> {
-        self.local_key_pairs().get(address).unwrap().pk.clone()
+        self.local_key_pairs()
+            .lock()
+            .get(address)
+            .unwrap()
+            .pk
+            .clone()
     }
 }
 // class ZkayCryptoInterface(metaclass=ABCMeta){
@@ -1224,9 +1249,11 @@ pub trait ZkayProverInterface {
 
         // with time_measure(f"generate_proof", True){
         let verification_contract_name = CFG
+            .lock()
             .unwrap()
             .get_verification_contract_name(contract, function);
         let verify_dir = CFG
+            .lock()
             .unwrap()
             .get_circuit_output_dir_name(verification_contract_name);
         println!("==================_generate_proof=========");

@@ -411,6 +411,7 @@ impl CreateArgs {
             let crypto_param = CryptoParams::new(crypto_params.clone());
             let pki_contract_code = library_contracts::get_pki_contract(&crypto_param);
             let pki_contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&crypto_param.identifier_name());
             let file = save_to_file(
@@ -420,7 +421,9 @@ impl CreateArgs {
             );
             let _ = contract_simulator
                 .runtime
+                .lock()
                 .blockchain()
+                .lock()
                 .deploy_solidity_contract(&file, Some(pki_contract_name), &sender)
                 .await;
         }
@@ -453,7 +456,9 @@ impl CreateArgs {
             for lib in external_crypto_lib_names {
                 let _ = contract_simulator
                     .runtime
+                    .lock()
                     .blockchain()
+                    .lock()
                     .deploy_solidity_contract(&file, Some(lib), &sender)
                     .await;
             }
@@ -764,6 +769,7 @@ impl CreateArgs {
         // let tmpdir = std::env::temp_dir();
         if !self.blockchain_pki_addresses.is_empty() {
             return Ok(CFG
+                .lock()
                 .unwrap()
                 .all_crypto_params()
                 .into_iter()
@@ -779,6 +785,7 @@ impl CreateArgs {
         let all_crypto_params = CFG.lock().unwrap().all_crypto_params();
         for crypto_params in all_crypto_params {
             let contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&CryptoParams::new(crypto_params).identifier_name());
             // let pki_sol = save_to_file(

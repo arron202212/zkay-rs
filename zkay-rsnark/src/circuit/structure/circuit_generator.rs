@@ -6,6 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::arc_cell_new;
 use crate::circuit::InstanceOf;
 use crate::circuit::StructNameConfig;
 use crate::circuit::auxiliary::long_element::LongElement;
@@ -22,8 +23,6 @@ use crate::circuit::structure::variable_bit_wire::VariableBitWire;
 use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
-
-use crate::arc_cell_new;
 use crate::util::util::ARcCell;
 use crate::util::{
     run_command::run_command,
@@ -32,13 +31,16 @@ use crate::util::{
 use dyn_clone::DynClone;
 use lazy_static::lazy_static;
 use rccell::RcCell;
+use serde::{Serialize, de::DeserializeOwned};
+use serde_closure::{Fn, FnMut, FnOnce};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Write;
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 use std::sync::{LazyLock, Mutex};
-
+use std::{fmt::Debug, mem::size_of};
+use zkay_derive::ImplStructNameConfig;
 lazy_static! {
     static ref active_circuit_generators: ARcCell<HashMap<String, Box<dyn CGConfig + Send + Sync>>> =
         arc_cell_new!(HashMap::<String, Box<dyn CGConfig + Send + Sync>>::new());
@@ -49,10 +51,9 @@ lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct CGBase;
-use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone)]
-pub struct CircuitGenerator<T> {
+pub struct CircuitGenerator<T: Debug> {
     pub current_wire_id: i32,
     pub evaluation_queue:
         HashMap<Box<dyn Instruction + Send + Sync>, Box<dyn Instruction + Send + Sync>>,
@@ -73,7 +74,7 @@ pub struct CircuitGenerator<T> {
     pub t: T,
 }
 
-pub trait CGConfigFields {
+pub trait CGConfigFields: Debug {
     fn current_wire_id(&mut self) -> &mut i32;
     fn evaluation_queue(
         &mut self,
@@ -137,7 +138,7 @@ pub fn put_active_circuit_generator(name: &str, cg: Box<dyn CGConfig + Send + Sy
     active_circuit_generators.lock().insert(name.to_owned(), cg);
 }
 
-impl<T: StructNameConfig> CircuitGenerator<T> {
+impl<T: StructNameConfig + Debug> CircuitGenerator<T> {
     pub fn new(circuit_name: &str, t: T) -> CircuitGenerator<T> {
         if Configs.running_multi_generators {
             // activeCircuitGenerators.put(Thread.currentThread().getId(), this);
@@ -158,6 +159,7 @@ impl<T: StructNameConfig> CircuitGenerator<T> {
         }
     }
 }
+
 //+ CreateConstantWire + CreateConstantWireArray + CreateNegConstantWire
 pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn buildCircuit(&mut self) {}
@@ -364,6 +366,11 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         let one_wire = WireType::Constant(new_constant(self.get_current_wire_id(), Util::one()));
         //println!("{},{}",file!(),line!());
         *self.one_wire() = Some(one_wire.clone());
+        println!(
+            "==**********initCircuitConstruction************=={:?}====*self.one_wire() ========{:?}",
+            self.name(),
+            self.get_one_wire()
+        );
         *self.current_wire_id() += 1;
         self.known_constant_wires()
             .insert(Util::one(), one_wire.clone());
@@ -424,11 +431,73 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
      *
      * @param instruction
      */
-    fn specifyProverWitnessComputation(&mut self, instruction: Box<dyn Instruction + Send + Sync>) {
-        self.addToEvaluationQueue(instruction);
+    fn specifyProverWitnessComputation(&mut self, f: &dyn FnOnce(&mut CircuitEvaluator)) {
+        // serde_json::to_string(&f).unwrap()
+        // let f: FnOnce( &mut CircuitEvaluator)
+        // 			+ Serialize
+        // 			+ DeserializeOwned
+        // 			+ PartialEq
+        // 			+ Eq
+        // 			+ Clone
+        // 			+ Debug+Hash = serde_json::from_str(&f).unwrap();
+        //         // let f= Fn!(move &|evaluator: &mut CircuitEvaluator| f(evaluator));
+        //         // let k=format!("{f}");
+        //         // self.addToEvaluationQueues();
+        //     //     let fff=move |evaluator: &mut CircuitEvaluator|{ ff(evaluator)};
+        //     //    let f=FnOnce!(move |evaluator: &mut CircuitEvaluator|{ fff(evaluator)});
+        //          #[derive(Hash, Clone, Debug)]
+        //             struct Prover<F: FnOnce( &mut CircuitEvaluator)
+        // 			+ Serialize
+        // 			+ DeserializeOwned
+        // 			+ PartialEq
+        // 			+ Eq
+        // 			+ Clone
+        // 			+ Debug+Hash> {
+        //                 pub f:F,
+        //             }
+        //              impl<F: FnOnce( &mut CircuitEvaluator)
+        // 			+ Serialize
+        // 			+ DeserializeOwned
+        // 			+ PartialEq
+        // 			+ Eq
+        // 			+ Clone
+        // 			+ Debug+Hash> Instruction for Prover<F>{
+        //                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+        //                     (self.f).clone()(evaluator);
+        //                 }
+        //             }
+        //         impl<F: FnOnce( &mut CircuitEvaluator)
+        // 			+ Serialize
+        // 			+ DeserializeOwned
+        // 			+ PartialEq
+        // 			+ Eq
+        // 			+ Clone
+        // 			+ Debug+Hash> InstanceOf for Prover<F>{
+        //                  fn instance_of(&self, name: &str) -> bool {
+        //                     self.name() == name
+        //                     }
+        //             }
+        //  impl<F: FnOnce( &mut CircuitEvaluator)
+        // 			+ Serialize
+        // 			+ DeserializeOwned
+        // 			+ PartialEq
+        // 			+ Eq
+        // 			+ Clone
+        // 			+ Debug+Hash> StructNameConfig for Prover<F>{
+        //                 fn name(&self) -> String {
+        //                     String::new()
+        //                 }
+        //             }
+        //         self.addToEvaluationQueue(Box::new(Prover{f}));
     }
-
     fn addToEvaluationQueue(
+        &mut self,
+        e: Box<dyn Instruction + Send + Sync>,
+    ) -> Option<Vec<Option<WireType>>> {
+        // self.addToEvaluationQueues(Box<dyn Instruction + Send + Sync>::Trait( e))
+        None
+    }
+    fn addToEvaluationQueues(
         &mut self,
         e: Box<dyn Instruction + Send + Sync>,
     ) -> Option<Vec<Option<WireType>>> {
@@ -577,7 +646,9 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     // }
 }
 
-impl<T> crate::circuit::structure::circuit_generator::CGConfigFields for CircuitGenerator<T> {
+impl<T: Debug> crate::circuit::structure::circuit_generator::CGConfigFields
+    for CircuitGenerator<T>
+{
     fn current_wire_id(&mut self) -> &mut i32 {
         &mut self.current_wire_id
     }
@@ -621,6 +692,7 @@ impl<T> crate::circuit::structure::circuit_generator::CGConfigFields for Circuit
         self.zero_wire.clone()
     }
     fn get_one_wire(&self) -> Option<WireType> {
+        println!("=====get_one_wire============={:?}", self.get_name());
         self.one_wire.clone()
     }
 
@@ -658,12 +730,18 @@ pub trait CreateConstantWire<T = WireType> {
     fn create_constant_wire(&self, x: T, desc: &Option<String>) -> WireType;
 }
 
-impl<T> CreateConstantWire<BigInteger> for CircuitGenerator<T> {
+impl<T: Debug> CreateConstantWire<BigInteger> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_constant_wire(&self, x: BigInteger, desc: &Option<String>) -> WireType {
         return self.get_one_wire().clone().unwrap().mulb(x, desc);
     }
 }
-impl<T> CreateConstantWire<i64> for CircuitGenerator<T> {
+impl<T: Debug> CreateConstantWire<i64> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_constant_wire(&self, x: i64, desc: &Option<String>) -> WireType {
         return self.get_one_wire().clone().unwrap().muli(x, desc);
     }
@@ -671,7 +749,10 @@ impl<T> CreateConstantWire<i64> for CircuitGenerator<T> {
 pub trait CreateConstantWireArray<T = WireType> {
     fn create_constant_wire_array(&self, a: T, desc: &Option<String>) -> Vec<Option<WireType>>;
 }
-impl<T> CreateConstantWireArray<Vec<BigInteger>> for CircuitGenerator<T> {
+impl<T: Debug> CreateConstantWireArray<Vec<BigInteger>> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_constant_wire_array(
         &self,
         a: Vec<BigInteger>,
@@ -684,7 +765,10 @@ impl<T> CreateConstantWireArray<Vec<BigInteger>> for CircuitGenerator<T> {
         return w;
     }
 }
-impl<T> CreateConstantWireArray<Vec<i64>> for CircuitGenerator<T> {
+impl<T: Debug> CreateConstantWireArray<Vec<i64>> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_constant_wire_array(
         &self,
         a: Vec<i64>,
@@ -701,13 +785,49 @@ impl<T> CreateConstantWireArray<Vec<i64>> for CircuitGenerator<T> {
 pub trait CreateNegConstantWire<T = WireType> {
     fn create_neg_constant_wire(&self, x: T, desc: &Option<String>) -> WireType;
 }
-impl<T> CreateNegConstantWire<BigInteger> for CircuitGenerator<T> {
+impl<T: Debug> CreateNegConstantWire<BigInteger> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_neg_constant_wire(&self, x: BigInteger, desc: &Option<String>) -> WireType {
         return self.get_one_wire().clone().unwrap().mulb(x.neg(), desc);
     }
 }
-impl<T> CreateNegConstantWire<i64> for CircuitGenerator<T> {
+impl<T: Debug> CreateNegConstantWire<i64> for CircuitGenerator<T>
+where
+    CircuitGenerator<T>: CGConfig,
+{
     fn create_neg_constant_wire(&self, x: i64, desc: &Option<String>) -> WireType {
         return self.get_one_wire().clone().unwrap().muli(-x, desc);
     }
 }
+
+// #[macro_export]
+// macro_rules! impl_specify_prover_witness_computation_for {
+//     ($impl_type:ty) => {
+//         impl  $impl_type {
+
+//         }
+//     };
+// }
+
+// impl_specify_prover_witness_computation_for!(CircuitGenerator<CGBase>);
+
+#[macro_export]
+macro_rules! to_closure_str {
+    ($expr:expr) => {
+        serde_json::to_string(&$expr).unwrap()
+    };
+}
+
+// #[macro_export]
+// macro_rules! impl_prover {
+//     ($vis:vis fn $name:ident(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+//         $vis fn $name(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+//              match self{
+//                 Self::Web3TesterBlockchain(tester)=>tester.$name($($arg_name),*),
+//                 Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name($($arg_name),*),
+//             }
+//         }
+//     };
+// }

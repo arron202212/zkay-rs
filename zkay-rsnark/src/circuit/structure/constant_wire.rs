@@ -10,6 +10,7 @@ use crate::circuit::InstanceOf;
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
@@ -134,11 +135,11 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
         assert!(self.isBinary(), "Trying to invert a non-binary constant!");
-
+        let generator = self.generator();
         if self.t.constant == BigInteger::ZERO {
-            self.generator().one_wire().clone()
+            generator.get_one_wire()
         } else {
-            self.generator().zero_wire().clone()
+            generator.get_zero_wire()
         }
     }
 
@@ -165,6 +166,7 @@ impl WireConfig for Wire<ConstantWire> {
     }
 
     fn xorw(&self, w: WireType, desc: &Option<String>) -> WireType {
+        let generator = self.generator();
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -172,9 +174,9 @@ impl WireConfig for Wire<ConstantWire> {
                 "Trying to XOR two non-binary constants"
             );
             return if self.t.constant == cw.try_as_constant_ref().unwrap().getConstant() {
-                self.generator().zero_wire().clone().unwrap()
+                generator.get_zero_wire().unwrap()
             } else {
-                self.generator().one_wire().clone().unwrap()
+                generator.get_one_wire().unwrap()
             };
         }
         if self.t.constant == Util::one() {

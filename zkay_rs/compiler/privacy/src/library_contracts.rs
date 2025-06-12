@@ -20,6 +20,7 @@ use zkay_utils::helpers::read_file;
 pub fn get_verify_libs_code() -> String {
     let mut code = String::new();
     if CFG
+        .lock()
         .unwrap()
         .external_crypto_lib_names()
         .contains(&String::from("BN256G2"))
@@ -59,6 +60,7 @@ pub const BN128_SCALAR_FIELD: &str =
 pub fn get_pki_contract(params: &CryptoParams) -> String {
     let expression = CFG.lock().unwrap().zkay_solc_version_compatibility();
     let pki_contract_name = CFG
+        .lock()
         .unwrap()
         .get_pki_contract_name(&params.identifier_name());
     dedent(&format!(

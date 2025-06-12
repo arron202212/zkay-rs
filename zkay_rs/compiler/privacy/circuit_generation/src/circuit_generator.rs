@@ -598,6 +598,7 @@ impl CircuitGenerator for CircuitGeneratorBase {
         let inputs = circuit.borrow().public_arg_arrays().clone();
 
         if CFG
+            .lock()
             .unwrap()
             .should_use_hash(circuit.borrow().trans_in_size + circuit.borrow().trans_out_size)
         {

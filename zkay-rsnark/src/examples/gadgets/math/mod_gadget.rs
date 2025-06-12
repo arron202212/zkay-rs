@@ -34,20 +34,28 @@ impl Gadget for ModGadget {
         q = generator.createProverWitnessWire("division result");
 
         // notes about how to use this code block can be found in FieldDivisionGadget
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
                     let aValue = evaluator.getWireValue(a);
                     let bValue = evaluator.getWireValue(b);
                     let rValue = aValue.rem(bValue);
                     evaluator.setWireValue(r, rValue);
                     let qValue = aValue.div(bValue);
                     evaluator.setWireValue(q, qValue);
-                }
-            }
-            Prover
-        });
+                });
+        //     {
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a);
+        //             let bValue = evaluator.getWireValue(b);
+        //             let rValue = aValue.rem(bValue);
+        //             evaluator.setWireValue(r, rValue);
+        //             let qValue = aValue.div(bValue);
+        //             evaluator.setWireValue(q, qValue);
+        //         }
+        //     }
+        //     Prover
+        // });
 
         r.restrictBitLength(bitwidth);
         q.restrictBitLength(bitwidth);

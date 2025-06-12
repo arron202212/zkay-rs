@@ -238,7 +238,17 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId {
     fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
         self.packIfNeeded(desc); // just a precaution .. should not be really needed
         let w1 = self.muli(-1, desc);
-        let out = self.generator().one_wire().clone().unwrap().addw(w1, desc);
+        let s = self.generator().get_one_wire();
+        println!(
+            "====invAsBit==========={}===={s:?}",
+            self.generator().get_name()
+        );
+        let out = self
+            .generator()
+            .get_one_wire()
+            .clone()
+            .unwrap()
+            .addw(w1, desc);
         Some(out)
     }
 

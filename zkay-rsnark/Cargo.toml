@@ -24,3 +24,7 @@ strum_macros={workspace = true}
 enum_dispatch={ workspace = true }
 lazy_static={workspace = true}
 parking_lot={workspace = true}
+serde_closure={workspace = true}
+serde={workspace = true}
+serde_json={workspace = true}
+bincode={workspace = true}

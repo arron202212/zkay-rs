@@ -16,6 +16,7 @@ use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
 use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::linear_combination_wire::LinearCombinationWire;
 use crate::circuit::structure::variable_bit_wire::VariableBitWire;

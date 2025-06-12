@@ -626,34 +626,43 @@ mod test {
                 let mut solutions =
                     WireArray::new(generator.createProverWitnessWireArray(numIns + 1, &None));
 
-                generator.specifyProverWitnessComputation({
-                    use zkay_derive::ImplStructNameConfig;
-                    #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-                    struct Prover {
-                        result: Vec<BigInteger>,
-                        solutions: WireArray,
-                        numIns: usize,
+                generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+                    evaluator.setWireValue(solutions[0].clone().unwrap(), self.t.result[0].clone());
+                    for i in 0..numIns {
+                        evaluator.setWireValue(
+                            solutions[i + 1].clone().unwrap(),
+                            self.t.result[i + 1].clone(),
+                        );
                     }
-                    impl Instruction for Prover {
-                        fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                            evaluator.setWireValue(
-                                self.solutions[0].clone().unwrap(),
-                                self.result[0].clone(),
-                            );
-                            for i in 0..self.numIns {
-                                evaluator.setWireValue(
-                                    self.solutions[i + 1].clone().unwrap(),
-                                    self.result[i + 1].clone(),
-                                );
-                            }
-                        }
-                    }
-                    Box::new(Prover {
-                        result: self.t.result.clone(),
-                        solutions: solutions.clone(),
-                        numIns,
-                    })
                 });
+                // {
+                //     use zkay_derive::ImplStructNameConfig;
+                //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
+                //     struct Prover {
+                //         result: Vec<BigInteger>,
+                //         solutions: WireArray,
+                //         numIns: usize,
+                //     }
+                //     impl Instruction for Prover {
+                //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                //             evaluator.setWireValue(
+                //                 self.solutions[0].clone().unwrap(),
+                //                 self.result[0].clone(),
+                //             );
+                //             for i in 0..self.numIns {
+                //                 evaluator.setWireValue(
+                //                     self.solutions[i + 1].clone().unwrap(),
+                //                     self.result[i + 1].clone(),
+                //                 );
+                //             }
+                //         }
+                //     }
+                //     Box::new(Prover {
+                //         result: self.t.result.clone(),
+                //         solutions: solutions.clone(),
+                //         numIns,
+                //     })
+                // });
 
                 self.addAssertion(
                     inputs1[0].clone().unwrap(),

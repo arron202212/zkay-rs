@@ -61,29 +61,37 @@ impl FieldDivisionGadget {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
         let mut generator = getActiveCircuitGenerator().unwrap();
-        generator.specifyProverWitnessComputation({
-            #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-            struct Prover {
-                a: WireType,
-                b: WireType,
-                c: WireType,
-            }
-            impl Instruction for Prover {
-                fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                    let aValue = evaluator.getWireValue(self.a.clone());
-                    let bValue = evaluator.getWireValue(self.b.clone());
-                    let cValue = aValue
-                        .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
-                        .rem(Configs.field_prime.clone());
-                    evaluator.setWireValue(self.c.clone(), cValue);
-                }
-            }
-            Box::new(Prover {
-                a: self.a.clone(),
-                b: self.b.clone(),
-                c: self.c.clone(),
-            })
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            let aValue = evaluator.getWireValue(self.a.clone());
+            let bValue = evaluator.getWireValue(self.b.clone());
+            let cValue = aValue
+                .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+                .rem(Configs.field_prime.clone());
+            evaluator.setWireValue(self.c.clone(), cValue);
         });
+        // {
+        //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
+        //     struct Prover {
+        //         a: WireType,
+        //         b: WireType,
+        //         c: WireType,
+        //     }
+        //     impl Instruction for Prover {
+        //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+        //             let aValue = evaluator.getWireValue(self.a.clone());
+        //             let bValue = evaluator.getWireValue(self.b.clone());
+        //             let cValue = aValue
+        //                 .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+        //                 .rem(Configs.field_prime.clone());
+        //             evaluator.setWireValue(self.c.clone(), cValue);
+        //         }
+        //     }
+        //     Box::new(Prover {
+        //         a: self.a.clone(),
+        //         b: self.b.clone(),
+        //         c: self.c.clone(),
+        //     })
+        // });
 
         // to handle the case where a or b can be both zero, see below
         generator.addAssertion(

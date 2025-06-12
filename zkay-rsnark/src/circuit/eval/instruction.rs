@@ -13,11 +13,13 @@ use crate::circuit::operations::wire_label_instruction::WireLabel;
 use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use dyn_clone::{DynClone, clone_trait_object};
+use enum_dispatch::enum_dispatch;
+use serde_closure::{Fn as Fns, traits::Fn as Fns};
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 use std::hash::{Hash, Hasher};
-
+use zkay_derive::ImplStructNameConfig;
 trait DynHash {
     fn dyn_hash(&self, state: &mut dyn Hasher);
 }
@@ -33,7 +35,7 @@ impl Hash for dyn DynHash + '_ {
         self.dyn_hash(state)
     }
 }
-
+#[enum_dispatch]
 pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
     fn evaluate(&self, evaluator: &mut CircuitEvaluator);
 
@@ -81,3 +83,13 @@ impl PartialEq for dyn Instruction + Send + Sync {
 }
 
 impl Eq for dyn Instruction + Send + Sync {}
+
+//dyn Fn<(&mut CircuitEvaluator,), Output = ()>
+// pub type InstructionFunction<'a> =Box<dyn  Fns<(&'a mut CircuitEvaluator,), Output = ()>>;//fn(&mut CircuitEvaluator);
+
+// #[enum_dispatch(Instruction)]
+// #[derive(Clone,Hash,Debug,Eq,PartialEq,ImplStructNameConfig)]
+// pub enum Box<dyn Instruction + Send + Sync><'a>{
+// Trait(Box<dyn Instruction + Send + Sync>),
+// Function(InstructionFunction<'a>),
+// }

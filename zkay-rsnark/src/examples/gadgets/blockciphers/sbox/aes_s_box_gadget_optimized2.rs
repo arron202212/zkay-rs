@@ -123,17 +123,22 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
     fn buildCircuit() {
         output = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation(    &|evaluator: &mut CircuitEvaluator| {
                     // TODO Auto-generated method stub
                     let value = evaluator.getWireValue(input);
                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
-                }
-            }
-            Prover
-        });
+                });
+// {
+//             struct Prover;
+//             impl Instruction for Prover {
+//                 &|evaluator: &mut CircuitEvaluator| {
+//                     // TODO Auto-generated method stub
+//                     let value = evaluator.getWireValue(input);
+//                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+//                 }
+//             }
+//             Prover
+//         });
 
         // Although we are getting the bits below anyway (which implicitly
         // restricts the bitwidth), it's a safer practice to call

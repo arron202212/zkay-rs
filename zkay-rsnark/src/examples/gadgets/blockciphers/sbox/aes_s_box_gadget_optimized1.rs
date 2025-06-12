@@ -150,17 +150,22 @@ impl Gadget for AESSBoxGadgetOptimized1 {
     fn buildCircuit() {
         output = generator.createProverWitnessWire();
         input.restrictBitLength(8);
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
                     // TODO Auto-generated method stub
                     let value = evaluator.getWireValue(input);
                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
-                }
-            }
-            Prover
-        });
+                });
+// {
+//             struct Prover;
+//             impl Instruction for Prover {
+//                 &|evaluator: &mut CircuitEvaluator| {
+//                     // TODO Auto-generated method stub
+//                     let value = evaluator.getWireValue(input);
+//                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+//                 }
+//             }
+//             Prover
+//         });
 
         output.restrictBitLength(8);
         let vars = vec![None; 16];

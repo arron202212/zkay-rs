@@ -125,17 +125,22 @@ impl Gadget for ZkayBabyJubJubGadget {
      */
     fn nativeInverse(a: WireType) -> WireType {
         let ainv = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
                     let aValue = evaluator.getWireValue(a);
                     let inverseValue = aValue.modInverse(BASE_ORDER);
                     evaluator.setWireValue(ainv, inverseValue);
-                }
-            }
-            Prover
-        });
+                });
+        // {
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a);
+        //             let inverseValue = aValue.modInverse(BASE_ORDER);
+        //             evaluator.setWireValue(ainv, inverseValue);
+        //         }
+        //     }
+        //     Prover
+        // });
 
         // check if a * ainv = 1 (natively)
         let test = a.mul(ainv);

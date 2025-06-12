@@ -306,6 +306,7 @@ impl ZkayTransformer {
         let mut contract_var_decls = vec![];
         for crypto_params in c.borrow().used_crypto_backends.clone() {
             let contract_name = CFG
+                .lock()
                 .unwrap()
                 .get_pki_contract_name(&crypto_params.identifier_name());
             // // println!("-=============111=======");

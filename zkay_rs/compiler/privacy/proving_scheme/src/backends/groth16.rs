@@ -68,6 +68,7 @@ impl ProvingScheme for ProvingSchemeGroth16 {
     ) -> String {
         let vk = verification_key;
         let should_hash = CFG
+            .lock()
             .unwrap()
             .should_use_hash(circuit.trans_in_size() + circuit.trans_out_size());
         println!(

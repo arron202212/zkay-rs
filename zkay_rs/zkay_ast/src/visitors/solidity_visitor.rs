@@ -2070,6 +2070,7 @@ impl CodeVisitor for SolidityVisitor {
                 format!(
                     "{t}@{p}{}",
                     HOMOMORPHISM_STORE
+                        .lock()
                         .unwrap()
                         .get(
                             &ast.to_ast()

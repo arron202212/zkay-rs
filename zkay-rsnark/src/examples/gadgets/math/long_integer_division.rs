@@ -114,10 +114,7 @@ impl Gadget for LongIntegerDivision {
         r = LongElement::new(rWires, rChunkBitwidths);
         q = LongElement::new(qWires, qChunkBitwidths);
 
-        generator.specifyProverWitnessComputation({
-            struct Prover;
-            impl Instruction for Prover {
-                fn evaluate(&self,evaluator: CircuitEvaluator) {
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
                     let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
                     let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
                     let rValue = aValue.rem(bValue);
@@ -131,10 +128,28 @@ impl Gadget for LongIntegerDivision {
                         q.getArray(),
                         Util::split(qValue, LongElement.CHUNK_BITWIDTH),
                     );
-                }
-            }
-            Prover
-        });
+                });
+        // {
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
+        //             let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
+        //             let rValue = aValue.rem(bValue);
+        //             let qValue = aValue.div(bValue);
+
+        //             evaluator.setWireValue(
+        //                 r.getArray(),
+        //                 Util::split(rValue, LongElement.CHUNK_BITWIDTH),
+        //             );
+        //             evaluator.setWireValue(
+        //                 q.getArray(),
+        //                 Util::split(qValue, LongElement.CHUNK_BITWIDTH),
+        //             );
+        //         }
+        //     }
+        //     Prover
+        // });
 
         r.restrictBitwidth();
         q.restrictBitwidth();

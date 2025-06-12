@@ -56,16 +56,20 @@ impl ZkayEcGadget for ZkayECDHGadget {
             hPoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
             hPoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation({
-                struct Prover;
-                impl Instruction for Prover {
-                    fn evaluate(&self,evaluator: CircuitEvaluator) {
+            generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
                         let x = evaluator.getWireValue(hPoint.x);
                         evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
-                    }
-                }
-                Prover
-            });
+                    });
+            // {
+            //     struct Prover;
+            //     impl Instruction for Prover {
+            //         &|evaluator: &mut CircuitEvaluator| {
+            //             let x = evaluator.getWireValue(hPoint.x);
+            //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            //         }
+            //     }
+            //     Prover
+            // });
             assertValidPointOnEC(hPoint.x, hPoint.y);
         }
     }

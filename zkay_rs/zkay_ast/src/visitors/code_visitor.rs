@@ -273,6 +273,7 @@ impl CodeVisitor for CodeVisitorBase {
                 format!(
                     "{t}@{p}{}",
                     HOMOMORPHISM_STORE
+                        .lock()
                         .unwrap()
                         .get(
                             &ast.to_ast()
@@ -783,6 +784,7 @@ macro_rules! impl_code_visitor {
                     .as_ref()
                     .map_or(String::new(), |ho| {
                         HOMOMORPHISM_STORE
+                            .lock()
                             .unwrap()
                             .get(ho)
                             .map_or(String::new(), |h| h.to_string())
