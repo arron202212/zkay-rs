@@ -65,7 +65,7 @@ impl WireConfig for Wire<ConstantWire> {
     }
     fn mulw(&self, w: WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return self.generator().createConstantWire(
+            return self.generator().lock().createConstantWire(
                 self.t
                     .constant
                     .clone()
@@ -88,6 +88,7 @@ impl WireConfig for Wire<ConstantWire> {
 
         let mut out: Option<WireType> = self
             .generator()
+            .lock()
             .known_constant_wires()
             .get(&newConstant)
             .cloned();
@@ -96,7 +97,7 @@ impl WireConfig for Wire<ConstantWire> {
         }
 
         out = Some(WireType::Constant(new_constant(
-            *self.generator().current_wire_id(),
+            *self.generator().lock().current_wire_id(),
             if !sign {
                 newConstant.clone()
             } else {
@@ -104,7 +105,7 @@ impl WireConfig for Wire<ConstantWire> {
             },
         )));
 
-        *self.generator().current_wire_id() += 1;
+        *self.generator().lock().current_wire_id() += 1;
         let op = new_const_mul(
             WireType::Constant(self.clone()),
             out.clone().unwrap(),
@@ -112,14 +113,15 @@ impl WireConfig for Wire<ConstantWire> {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
-            *self.generator().current_wire_id() -= 1;
+            *self.generator().lock().current_wire_id() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
 
         self.generator()
+            .lock()
             .known_constant_wires()
             .insert(newConstant, out.clone().unwrap());
         out.clone().unwrap()
@@ -127,15 +129,17 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn checkNonZero(&self, desc: &Option<String>) -> WireType {
         if self.t.constant == BigInteger::ZERO {
-            return self.generator().zero_wire().clone().unwrap();
+            return self.generator().lock().zero_wire().clone().unwrap();
         } else {
-            return self.generator().one_wire().clone().unwrap();
+            return self.generator().lock().one_wire().clone().unwrap();
         }
     }
 
     fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
         assert!(self.isBinary(), "Trying to invert a non-binary constant!");
         let generator = self.generator();
+        let generator = generator.lock();
+
         if self.t.constant == BigInteger::ZERO {
             generator.get_one_wire()
         } else {
@@ -153,13 +157,13 @@ impl WireConfig for Wire<ConstantWire> {
             return if self.t.constant == BigInteger::ZERO
                 && cw.try_as_constant_ref().unwrap().getConstant() == BigInteger::ZERO
             {
-                self.generator().zero_wire().clone().unwrap()
+                self.generator().lock().zero_wire().clone().unwrap()
             } else {
-                self.generator().one_wire().clone().unwrap()
+                self.generator().lock().one_wire().clone().unwrap()
             };
         }
         if self.t.constant == Util::one() {
-            self.generator().one_wire().clone().unwrap()
+            self.generator().lock().one_wire().clone().unwrap()
         } else {
             w
         }
@@ -167,6 +171,7 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn xorw(&self, w: WireType, desc: &Option<String>) -> WireType {
         let generator = self.generator();
+        let generator = generator.lock();
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -195,9 +200,9 @@ impl WireConfig for Wire<ConstantWire> {
         let mut bits = vec![None; bitwidth as usize];
         for i in 0..bitwidth as usize {
             bits[i] = if self.t.constant.bit(i as u64) {
-                self.generator().one_wire().clone()
+                self.generator().lock().one_wire().clone()
             } else {
-                self.generator().zero_wire().clone()
+                self.generator().lock().zero_wire().clone()
             };
         }
         return WireArray::new(bits);

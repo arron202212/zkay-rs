@@ -31,19 +31,25 @@ use crate::util::{
 use dyn_clone::DynClone;
 use lazy_static::lazy_static;
 use rccell::RcCell;
+// use crate::util::util::ARcCell;
+use rccell::WeakCell;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Write;
+use std::marker::PhantomData;
 use std::ops::{Add, Mul, Neg, Rem, Sub};
+use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::{LazyLock, Mutex};
 use std::{fmt::Debug, mem::size_of};
 use zkay_derive::ImplStructNameConfig;
 lazy_static! {
-    static ref active_circuit_generators: ARcCell<HashMap<String, Box<dyn CGConfig + Send + Sync>>> =
-        arc_cell_new!(HashMap::<String, Box<dyn CGConfig + Send + Sync>>::new());
+    static ref active_circuit_generators: ARcCell<HashMap<String, ARcCell<dyn CGConfig + Send + Sync>>> =
+        arc_cell_new!(HashMap::<String, ARcCell<dyn CGConfig + Send + Sync>>::new());
     static ref CG_NAME: ARcCell<String> = arc_cell_new!("CGBase".to_owned());
 }
 //  ConcurrentHashMap<Long, CircuitGenerator> activeCircuitGenerators = new ConcurrentHashMap<>();
@@ -72,6 +78,7 @@ pub struct CircuitGenerator<T: Debug> {
     pub num_of_constraints: i32,
     // pub circuitEvaluator: Option<CircuitEvaluator>,
     pub t: T,
+    me: Option<WeakCell<Self>>,
 }
 
 pub trait CGConfigFields: Debug {
@@ -110,7 +117,7 @@ pub trait CGConfigFields: Debug {
 
 dyn_clone::clone_trait_object!(CGConfig);
 
-pub fn getActiveCircuitGenerator() -> eyre::Result<Box<dyn CGConfig + Send + Sync>> {
+pub fn getActiveCircuitGenerator() -> eyre::Result<ARcCell<dyn CGConfig + Send + Sync>> {
     // if !Configs.runningMultiGenerators {
     //     return Ok(instance);
     // }
@@ -133,30 +140,50 @@ pub fn getActiveCircuitGenerator() -> eyre::Result<Box<dyn CGConfig + Send + Syn
             "The current thread does not have any active circuit generators"
         ))
 }
-pub fn put_active_circuit_generator(name: &str, cg: Box<dyn CGConfig + Send + Sync>) {
+pub fn put_active_circuit_generator(name: &str, cg: ARcCell<dyn CGConfig + Send + Sync>) {
     *CG_NAME.lock() = name.to_owned();
     active_circuit_generators.lock().insert(name.to_owned(), cg);
 }
 
 impl<T: StructNameConfig + Debug> CircuitGenerator<T> {
-    pub fn new(circuit_name: &str, t: T) -> CircuitGenerator<T> {
+    pub fn new(circuit_name: &str, t: T) -> RcCell<CircuitGenerator<T>> {
         if Configs.running_multi_generators {
             // activeCircuitGenerators.put(Thread.currentThread().getId(), this);
         }
-        CircuitGenerator::<T> {
-            circuit_name: circuit_name.to_owned(),
-            in_wires: vec![],
-            out_wires: vec![],
-            zero_wire: None,
-            one_wire: None,
-            prover_witness_wires: vec![],
-            evaluation_queue: HashMap::new(),
-            known_constant_wires: HashMap::new(),
-            current_wire_id: 0,
-            num_of_constraints: 0,
-            // circuitEvaluator: None,
-            t,
-        }
+        // CircuitGenerator::<T> {
+        //     circuit_name: circuit_name.to_owned(),
+        //     in_wires: vec![],
+        //     out_wires: vec![],
+        //     zero_wire: None,
+        //     one_wire: None,
+        //     prover_witness_wires: vec![],
+        //     evaluation_queue: HashMap::new(),
+        //     known_constant_wires: HashMap::new(),
+        //     current_wire_id: 0,
+        //     num_of_constraints: 0,
+        //     // circuitEvaluator: None,
+        //     t,
+        // }
+        let mut selfs = RcCell(Rc::new_cyclic(|_me| {
+            RefCell::new(Self {
+                circuit_name: circuit_name.to_owned(),
+                in_wires: vec![],
+                out_wires: vec![],
+                zero_wire: None,
+                one_wire: None,
+                prover_witness_wires: vec![],
+                evaluation_queue: HashMap::new(),
+                known_constant_wires: HashMap::new(),
+                current_wire_id: 0,
+                num_of_constraints: 0,
+                // circuitEvaluator: None,
+                t,
+                me: None,
+            })
+        }));
+        let weakselfs = selfs.downgrade();
+        selfs.borrow_mut().me = Some(weakselfs.clone());
+        selfs
     }
 }
 
@@ -431,7 +458,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
      *
      * @param instruction
      */
-    fn specifyProverWitnessComputation(&mut self, f: &dyn FnOnce(&mut CircuitEvaluator)) {
+    fn specifyProverWitnessComputation(&mut self, e: Box<dyn Instruction + Send + Sync>) {
         // serde_json::to_string(&f).unwrap()
         // let f: FnOnce( &mut CircuitEvaluator)
         // 			+ Serialize
@@ -488,16 +515,16 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         //                     String::new()
         //                 }
         //             }
-        //         self.addToEvaluationQueue(Box::new(Prover{f}));
+        self.addToEvaluationQueue(e);
     }
+    // fn addToEvaluationQueue(
+    //     &mut self,
+    //     e: Box<dyn Instruction + Send + Sync>,
+    // ) -> Option<Vec<Option<WireType>>> {
+    //     // self.addToEvaluationQueues(Box<dyn Instruction + Send + Sync>::Trait( e))
+    //     None
+    // }
     fn addToEvaluationQueue(
-        &mut self,
-        e: Box<dyn Instruction + Send + Sync>,
-    ) -> Option<Vec<Option<WireType>>> {
-        // self.addToEvaluationQueues(Box<dyn Instruction + Send + Sync>::Trait( e))
-        None
-    }
-    fn addToEvaluationQueues(
         &mut self,
         e: Box<dyn Instruction + Send + Sync>,
     ) -> Option<Vec<Option<WireType>>> {
@@ -820,14 +847,67 @@ macro_rules! to_closure_str {
     };
 }
 
-// #[macro_export]
-// macro_rules! impl_prover {
-//     ($vis:vis fn $name:ident(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
-//         $vis fn $name(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
-//              match self{
-//                 Self::Web3TesterBlockchain(tester)=>tester.$name($($arg_name),*),
-//                 Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name($($arg_name),*),
-//             }
-//         }
-//     };
+// ($vis:vis fn $name:ident(&self $(,)? $($arg_name:ident : $arg_ty:ty),*) $(-> $ret:ty)?) => {
+// $vis fn $name(&self, $($arg_name : $arg_ty),*) $(-> $ret)? {
+//      match self{
+//         Self::Web3TesterBlockchain(tester)=>tester.$name($($arg_name),*),
+//         Self::Web3HttpGanacheBlockchain(ganache)=>ganache.$name($($arg_name),*),
+//     }
 // }
+#[macro_export]
+macro_rules! impl_instruction_for_prover {
+    ( $body:block ) => {
+                    impl  Instruction for Prover {
+                        fn evaluate(&self, evaluator: &mut CircuitEvaluator)
+                            $body
+
+                    }
+
+
+    };
+}
+#[macro_export]
+macro_rules! impl_prover {
+    (  eval($($arg_name:ident : $arg_ty:ty),*  )$body:block ) => {
+                    {#[derive(Hash, Clone, Debug, ImplStructNameConfig)]
+                    struct Prover {
+                        $( pub $arg_name : $arg_ty),*
+                    }
+                    // impl  Instruction for Prover {
+                        // fn evaluate(&self, evaluator: &mut CircuitEvaluator)
+                        $body
+
+                    // }
+                    Box::new(Prover {
+                        $( $arg_name : $arg_name.clone()),*
+                    })}
+
+    };
+}
+
+// struct Test<T>{
+// me: Option<WeakCell<Self>>,
+// _t:PhantomData<T>
+// }
+
+// trait TestConfig:Sized{
+//     fn config(&self)->RcCell<impl TestConfig>;
+// }
+// struct A;
+// impl TestConfig for Test<A>{
+//     fn config(&self)->RcCell<impl TestConfig>{
+//         self.me.clone().unwrap().upgrade().unwrap()
+//     }
+// }
+// impl<T> Test<T>{
+// pub fn new()->RcCell<Test<T>>{
+// let mut selfs = RcCell(Rc::new_cyclic(|_me| {
+//             RefCell::new(Self {
+//                 me: None,
+//                 _t:PhantomData,
+//             })
+//         }));
+//         let weakselfs = selfs.downgrade();
+//         selfs.borrow_mut().me = Some(weakselfs.clone());
+//     selfs
+// }}

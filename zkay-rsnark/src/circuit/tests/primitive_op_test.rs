@@ -21,6 +21,7 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use rccell::RcCell;
+
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Rem, Shl, Shr, Sub};
@@ -72,6 +73,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
@@ -153,6 +155,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
@@ -234,6 +237,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let numIns = self.t.numIns as usize;
                 let numBits = self.t.numBits;
                 let mut result1 = vec![None; numIns];
@@ -444,6 +448,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = generator.createInputWireArray(numIns, &None);
                 let mut inputs2 = generator.createInputWireArray(numIns, &None);
@@ -620,6 +625,7 @@ mod test {
 
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));

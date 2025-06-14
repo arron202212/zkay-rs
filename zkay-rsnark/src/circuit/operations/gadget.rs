@@ -8,14 +8,17 @@
 use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::ARcCell;
+use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::sync::Arc;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-pub fn newGadget(desc: &Option<String>) -> (Box<dyn CGConfig + Send + Sync>, String) {
+pub fn newGadget(desc: &Option<String>) -> (ARcCell<dyn CGConfig + Send + Sync>, String) {
     (
         getActiveCircuitGenerator().unwrap(),
         desc.as_ref()

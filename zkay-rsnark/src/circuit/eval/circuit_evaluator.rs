@@ -20,6 +20,7 @@ use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use rccell::RcCell;
+// use crate::util::util::ARcCell;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Write};
@@ -36,7 +37,8 @@ pub struct CircuitEvaluator {
 
 impl CircuitEvaluator {
     pub fn new(cg_name: &str) -> Self {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap();
+        let circuitGenerator = circuitGenerator.lock();
         let mut valueAssignment = vec![None; circuitGenerator.get_num_wires() as usize];
         valueAssignment[circuitGenerator.get_one_wire().unwrap().getWireId() as usize] =
             Some(Util::one());
@@ -109,7 +111,8 @@ impl CircuitEvaluator {
     }
 
     pub fn evaluate(&mut self) {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap();
+        let mut circuitGenerator = circuitGenerator.lock();
         println!(
             "Running Circuit Evaluator for < {} >",
             circuitGenerator.get_name()
@@ -134,7 +137,8 @@ impl CircuitEvaluator {
     }
 
     pub fn writeInputFile(&self) {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap().clone();
+        let circuitGenerator = getActiveCircuitGenerator().unwrap();
+        let circuitGenerator = circuitGenerator.lock();
         let evalSequence = circuitGenerator.get_evaluation_queue();
         let mut printWriter = File::create(circuitGenerator.get_name() + ".in").unwrap();
         for e in evalSequence.keys() {

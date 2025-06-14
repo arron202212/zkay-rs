@@ -12,6 +12,7 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use rccell::RcCell;
+// use crate::util::util::ARcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;

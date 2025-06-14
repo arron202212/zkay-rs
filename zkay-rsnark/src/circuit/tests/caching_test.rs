@@ -26,6 +26,7 @@ use crate::arc_cell_new;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use rccell::RcCell;
+
 use std::collections::HashMap;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Rem, Shl, Shr, Sub};
 use zkay_derive::ImplStructNameConfig;
@@ -119,6 +120,7 @@ mod test {
             fn buildCircuit(&mut self) {
                 println!("=====buildCircuit================={},{}", file!(), line!());
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = generator.createInputWireArray(numIns, &None);
@@ -431,6 +433,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let mut in1 = generator.createInputWire(&None);
                 let mut in2 = generator.createInputWire(&None);
                 let mut witness1 = generator.createProverWitnessWire(&None);
@@ -508,6 +511,7 @@ mod test {
         impl CGConfig for CircuitGenerator<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = getActiveCircuitGenerator().unwrap();
+                let mut generator = generator.lock();
                 let inputStr = &self.t.inputStr;
                 let mut inputWires = generator.createInputWireArray(inputStr.len(), &None);
                 let mut digest =

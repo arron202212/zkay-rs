@@ -60,11 +60,11 @@ pub trait BitWireConfig: WireConfig {
             return BitWireConfig::mulb(self, w.try_as_constant_ref().unwrap().getConstant(), desc);
         }
         let output1 = if w.instance_of("BitWire") {
-            WireType::VariableBit(new_variable_bit(*self.generator().current_wire_id()))
+            WireType::VariableBit(new_variable_bit(*self.generator().lock().current_wire_id()))
         } else {
-            WireType::Variable(new_variable(*self.generator().current_wire_id()))
+            WireType::Variable(new_variable(*self.generator().lock().current_wire_id()))
         };
-        *self.generator().current_wire_id() += 1;
+        *self.generator().lock().current_wire_id() += 1;
         let op = new_mul(
             self.self_clone().unwrap(),
             w,
@@ -72,9 +72,9 @@ pub trait BitWireConfig: WireConfig {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id() -= 1;
+            *self.generator().lock().current_wire_id() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         output1
@@ -82,15 +82,15 @@ pub trait BitWireConfig: WireConfig {
 
     fn mulb(&self, b: BigInteger, desc: &Option<String>) -> WireType {
         if b == BigInteger::ZERO {
-            return self.generator().zero_wire().clone().unwrap();
+            return self.generator().lock().zero_wire().clone().unwrap();
         } else if b == Util::one() {
             return self.self_clone().unwrap();
         }
         let out = WireType::LinearCombination(new_linear_combination(
-            *self.generator().current_wire_id(),
+            *self.generator().lock().current_wire_id(),
             None,
         ));
-        *self.generator().current_wire_id() += 1;
+        *self.generator().lock().current_wire_id() += 1;
         let op = new_const_mul(
             self.self_clone().unwrap(),
             out.clone(),
@@ -98,35 +98,35 @@ pub trait BitWireConfig: WireConfig {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        //			self.generator().addToEvaluationQueue(Box::new(op));
+        //			self.generator().lock().addToEvaluationQueue(Box::new(op));
         //			return out;
-        let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id() -= 1;
+            *self.generator().lock().current_wire_id() -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
         out
     }
 
     fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
-        //		WireType neg = WireType::new(*self.generator().current_wire_id()+=1);
+        //		WireType neg = WireType::new(*self.generator().lock().current_wire_id()+=1);
         //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
-        //		self.generator().addToEvaluationQueue(Box::new(op));
+        //		self.generator().lock().addToEvaluationQueue(Box::new(op));
         let neg = BitWireConfig::mulb(self, Util::one().neg(), desc);
         let out = WireType::LinearCombinationBit(new_linear_combination_bit(
-            *self.generator().current_wire_id(),
+            *self.generator().lock().current_wire_id(),
         ));
-        *self.generator().current_wire_id() += 1;
+        *self.generator().lock().current_wire_id() += 1;
         let op = new_add(
-            vec![self.generator().one_wire().clone(), Some(neg)],
+            vec![self.generator().lock().one_wire().clone(), Some(neg)],
             out.clone(),
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        //		self.generator().addToEvaluationQueue(Box::new(op));
-        let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+        //		self.generator().lock().addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
-            *self.generator().current_wire_id() -= 1;
+            *self.generator().lock().current_wire_id() -= 1;
             return cachedOutputs[0].clone();
         }
         Some(out)
@@ -137,8 +137,9 @@ pub trait BitWireConfig: WireConfig {
             return w.orw(self.self_clone().unwrap(), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(new_variable_bit(*self.generator().current_wire_id()));
-            *self.generator().current_wire_id() += 1;
+            let out =
+                WireType::VariableBit(new_variable_bit(*self.generator().lock().current_wire_id()));
+            *self.generator().lock().current_wire_id() += 1;
             let op = new_or(
                 self.self_clone().unwrap(),
                 w,
@@ -146,9 +147,9 @@ pub trait BitWireConfig: WireConfig {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().current_wire_id() -= 1;
+                *self.generator().lock().current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 out
@@ -162,8 +163,9 @@ pub trait BitWireConfig: WireConfig {
             return w.xorw(self.self_clone().unwrap(), desc);
         }
         if w.instance_of("BitWire") {
-            let out = WireType::VariableBit(new_variable_bit(*self.generator().current_wire_id()));
-            *self.generator().current_wire_id() += 1;
+            let out =
+                WireType::VariableBit(new_variable_bit(*self.generator().lock().current_wire_id()));
+            *self.generator().lock().current_wire_id() += 1;
             let op = new_xor(
                 self.self_clone().unwrap(),
                 w,
@@ -171,9 +173,9 @@ pub trait BitWireConfig: WireConfig {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().current_wire_id() -= 1;
+                *self.generator().lock().current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 out

@@ -35,6 +35,7 @@ impl FieldDivisionGadget {
             c: WireType::default(),
         };
         let mut generator = getActiveCircuitGenerator().unwrap();
+        let mut generator = generator.lock();
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.a.instance_of("ConstantWire") && _self.b.instance_of("ConstantWire") {
@@ -61,14 +62,33 @@ impl FieldDivisionGadget {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
         let mut generator = getActiveCircuitGenerator().unwrap();
-        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-            let aValue = evaluator.getWireValue(self.a.clone());
-            let bValue = evaluator.getWireValue(self.b.clone());
-            let cValue = aValue
-                .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
-                .rem(Configs.field_prime.clone());
-            evaluator.setWireValue(self.c.clone(), cValue);
-        });
+        let mut generator = generator.lock();
+        let (a, b, c) = (&self.a, &self.b, &self.c);
+        let prover = crate::impl_prover!(
+                        eval (a: WireType,
+                        b: WireType,
+                        c: WireType)  {
+        impl  Instruction for Prover {
+         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                               let aValue = evaluator.getWireValue(self.a.clone());
+                            let bValue = evaluator.getWireValue(self.b.clone());
+                            let cValue = aValue
+                                .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+                                .rem(Configs.field_prime.clone());
+                            evaluator.setWireValue(self.c.clone(), cValue);
+        }
+        }
+                    }
+                );
+        generator.specifyProverWitnessComputation(prover);
+        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        //     let aValue = evaluator.getWireValue(self.a.clone());
+        //     let bValue = evaluator.getWireValue(self.b.clone());
+        //     let cValue = aValue
+        //         .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+        //         .rem(Configs.field_prime.clone());
+        //     evaluator.setWireValue(self.c.clone(), cValue);
+        // });
         // {
         //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
         //     struct Prover {

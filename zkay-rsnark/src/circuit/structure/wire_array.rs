@@ -17,10 +17,13 @@ use crate::circuit::structure::linear_combination_wire::{
 };
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
+use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Index, IndexMut, Mul, Shl, Sub};
+use std::sync::Arc;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct WireArray {
     pub array: Vec<Option<WireType>>,
@@ -68,7 +71,7 @@ impl WireArray {
     pub fn asArray(&self) -> Vec<Option<WireType>> {
         return self.array.clone();
     }
-    pub fn generator(&self) -> Box<dyn CGConfig + Send + Sync> {
+    pub fn generator(&self) -> ARcCell<dyn CGConfig + Send + Sync> {
         getActiveCircuitGenerator().unwrap().clone()
     }
     pub fn mulWireArray(
@@ -111,27 +114,27 @@ impl WireArray {
         }
         if !allConstant {
             let output = WireType::LinearCombination(new_linear_combination(
-                *self.generator().current_wire_id(),
+                *self.generator().lock().current_wire_id(),
                 None,
             ));
-            *self.generator().current_wire_id() += 1;
+            *self.generator().lock().current_wire_id() += 1;
             let op = new_add(
                 self.array.clone(),
                 output.clone(),
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            //			self.generator().addToEvaluationQueue(Box::new(op));
-            let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+            //			self.generator().lock().addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().current_wire_id() -= 1;
+                *self.generator().lock().current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 output
             };
         }
 
-        self.generator().createConstantWire(sum, desc)
+        self.generator().lock().createConstantWire(sum, desc)
     }
 
     pub fn addWireArray(
@@ -238,7 +241,7 @@ impl WireArray {
             if i < self.array.len() {
                 out[i] = self.array[i].clone().and_then(|x| x.clone().invAsBit(desc));
             } else {
-                out[i] = self.generator().one_wire().clone();
+                out[i] = self.generator().lock().one_wire().clone();
             }
         }
         return WireArray::new(out);
@@ -253,7 +256,7 @@ impl WireArray {
         if ws.len() == desiredLength {
             return WireArray::new(ws.clone());
         }
-        let mut newWs = vec![self.generator().zero_wire().clone(); desiredLength];
+        let mut newWs = vec![self.generator().lock().zero_wire().clone(); desiredLength];
         newWs[..std::cmp::min(ws.len(), desiredLength)].clone_from_slice(&ws);
 
         WireArray::new(newWs)
@@ -267,7 +270,7 @@ impl WireArray {
     //     newWs[..std::cmp::min(self.array.len(), desiredLength)].clone_from_slice(&self.array);
     //     if self.array.len() < desiredLength {
     //         for i in self.array.len()..desiredLength {
-    //             newWs[i] = self.generator().zero_wire().clone();
+    //             newWs[i] = self.generator().lock().zero_wire().clone();
     //         }
     //     }
     //     return WireArray::new(newWs);
@@ -349,10 +352,10 @@ impl WireArray {
         }
         if !allConstant {
             let out = WireType::LinearCombination(new_linear_combination(
-                *self.generator().current_wire_id(),
+                *self.generator().lock().current_wire_id(),
                 None,
             ));
-            *self.generator().current_wire_id() += 1;
+            *self.generator().lock().current_wire_id() += 1;
             out.setBits(Some(WireArray::new(bits.clone())));
             let op = new_pack(
                 bits,
@@ -360,15 +363,15 @@ impl WireArray {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = self.generator().addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().current_wire_id() -= 1;
+                *self.generator().lock().current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 out
             };
         }
-        self.generator().createConstantWire(sum, desc)
+        self.generator().lock().createConstantWire(sum, desc)
     }
 
     pub fn rotateLeft(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireArray {
@@ -408,7 +411,7 @@ impl WireArray {
         let mut shiftedBits = vec![None; numBits as usize];
         for i in 0..numBits as usize {
             if i < s as usize {
-                shiftedBits[i] = self.generator().zero_wire().clone();
+                shiftedBits[i] = self.generator().lock().zero_wire().clone();
             } else {
                 shiftedBits[i] = bits[i - s as usize].clone();
             }
@@ -424,7 +427,7 @@ impl WireArray {
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits as usize {
             if i >= numBits - s as usize {
-                shiftedBits[i] = self.generator().zero_wire().clone();
+                shiftedBits[i] = self.generator().lock().zero_wire().clone();
             } else {
                 shiftedBits[i] = bits[i + s as usize].clone();
             }
@@ -459,7 +462,7 @@ impl WireArray {
     ) -> Vec<Option<WireType>> {
         let numLargerWords =
             (self.array.len() as f64 * 1.0 / numWordsPerLargerWord as f64).ceil() as usize;
-        let mut result = vec![self.generator().zero_wire().clone(); numLargerWords];
+        let mut result = vec![self.generator().lock().zero_wire().clone(); numLargerWords];
         for i in 0..self.array.len() {
             let subIndex = i % numWordsPerLargerWord as usize;
             result[i / numWordsPerLargerWord as usize] = result[i / numWordsPerLargerWord as usize]
