@@ -44,6 +44,6 @@ impl ZkayEcGadget for ZkayEcPkDerivationGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![outputPublicValue];
+        vec![outputPublicValue]
     }
 }

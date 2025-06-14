@@ -256,7 +256,7 @@ impl SHA256Gadget {
                 .add(t1.muli(-2, &None));
             result[i] = Some(t1.add(cBits[i].clone().unwrap().mul(t2)));
         }
-        return WireArray::new(result).packAsBits(None, None, &None);
+        WireArray::new(result).packAsBits(None, None, &None)
     }
 
     fn computeCh(a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
@@ -271,7 +271,7 @@ impl SHA256Gadget {
             let t2 = t1.mul(aBits[i].clone().unwrap());
             result[i] = Some(t2.add(cBits[i].clone().unwrap()));
         }
-        return WireArray::new(result).packAsBits(None, None, &None);
+        WireArray::new(result).packAsBits(None, None, &None)
     }
 
     fn prepare(&mut self) {
@@ -325,6 +325,6 @@ impl GadgetConfig for SHA256Gadget {
      */
 
     fn getOutputWires(&self) -> Vec<Option<WireType>> {
-        return self.output.clone();
+        self.output.clone()
     }
 }

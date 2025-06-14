@@ -165,10 +165,10 @@ impl Gadget for LongIntegerDivision {
     }
 
     pub fn getQuotient() -> LongElement {
-        return q;
+        q
     }
 
     pub fn getRemainder() -> LongElement {
-        return r;
+        r
     }
 }

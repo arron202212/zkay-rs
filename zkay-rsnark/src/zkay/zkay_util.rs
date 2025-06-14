@@ -19,7 +19,7 @@ impl ZkayUtil {
                 break;
             }
         }
-        return BigInteger::new(signum, bytes);
+        BigInteger::new(signum, bytes)
     }
 
     pub fn unsignedBigintToBytes(val: BigInteger) -> Vec<byte> {
@@ -31,7 +31,7 @@ impl ZkayUtil {
         } else {
             ret = b;
         }
-        return ret;
+        ret
     }
 
     pub fn unsignedBigintToBytes(val: BigInteger, byteCount: i32) -> Vec<byte> {
@@ -42,7 +42,7 @@ impl ZkayUtil {
         );
         let ret = vec![byte::default(); byteCount];
         ret[byteCount - t.len()..byteCount].clone_from_slice(&t);
-        return ret;
+        ret
     }
 
     pub fn runZkayJsnarkInterface() {

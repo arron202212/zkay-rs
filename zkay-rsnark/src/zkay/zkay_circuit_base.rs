@@ -189,7 +189,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         }
         vars.put(name, tInput);
         nameList.add(name);
-        return input;
+        input
     }
 
     /* CRYPTO BACKENDS */
@@ -226,13 +226,13 @@ impl CircuitGenerator for ZkayCircuitBase {
             backend.is_some(),
             "Unknown crypto backend: " + cryptoBackendId
         );
-        return backend;
+        backend
     }
 
     fn getHomomorphicCryptoBackend(cryptoBackendId: Object) -> HomomorphicBackend {
         let cryptoBackend = getCryptoBackend(cryptoBackendId);
         if cryptoBackend.instance_of(HomomorphicBackend) {
-            return cryptoBackend;
+            cryptoBackend
         } else {
             panic!("Crypto backend {cryptoBackendId} is not homomorphic");
         }
@@ -372,7 +372,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                 val.zkay_type,
                 "~" + val.name,
             );
-            return invBits.plus((getActiveCircuitGenerator()).val(1, val.zkay_type));
+            invBits.plus((getActiveCircuitGenerator()).val(1, val.zkay_type))
         } else {
             return TypedWire::new(
                 val.wire.mul(-1, "-" + val.name),
@@ -385,12 +385,12 @@ impl CircuitGenerator for ZkayCircuitBase {
     pub fn bitInv(val: TypedWire) -> TypedWire {
         let resultType = checkType(val.zkay_type, val.zkay_type, false);
         let res = val.wire.invBits(resultType.bitwidth, "~" + val.name);
-        return TypedWire::new(res, resultType, "~" + val.name);
+        TypedWire::new(res, resultType, "~" + val.name)
     }
 
     pub fn not(val: TypedWire) -> TypedWire {
         checkType(ZkBool, val.zkay_type);
-        return TypedWire::new(val.wire.invAsBit("!" + val.name), ZkBool, "!" + val.name);
+        TypedWire::new(val.wire.invAsBit("!" + val.name), ZkBool, "!" + val.name)
     }
 
     /* String op interface */
@@ -428,7 +428,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         falseVal: TypedWire,
     ) -> TypedWire {
         assert!(condChar == '?' && altChar == ':');
-        return ite(cond, trueVal, falseVal);
+        ite(cond, trueVal, falseVal)
     }
 
     pub fn o_(lhs: TypedWire, op: String, rhs: i32) -> TypedWire {
@@ -460,7 +460,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         arg: HomomorphicInput,
     ) -> Vec<TypedWire> {
         let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        return backend.doHomomorphicOp(op, arg, getQualifiedName(key));
+        backend.doHomomorphicOp(op, arg, getQualifiedName(key))
     }
 
     pub fn o_hom(
@@ -471,7 +471,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         rhs: HomomorphicInput,
     ) -> Vec<TypedWire> {
         let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        return backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key));
+        backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key))
     }
 
     pub fn o_hom(
@@ -485,7 +485,7 @@ impl CircuitGenerator for ZkayCircuitBase {
     ) -> Vec<TypedWire> {
         assert!(condChar == '?' && altChar == ':');
         let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        return backend.doHomomorphicCond(cond, trueVal, falseVal, getQualifiedName(key));
+        backend.doHomomorphicCond(cond, trueVal, falseVal, getQualifiedName(key))
     }
 
     pub fn o_hom(
@@ -496,7 +496,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         rhs: HomomorphicInput,
     ) -> Vec<TypedWire> {
         let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        return backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key));
+        backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key))
     }
 
     pub fn o_rerand(
@@ -506,13 +506,13 @@ impl CircuitGenerator for ZkayCircuitBase {
         randomness: TypedWire,
     ) -> Vec<TypedWire> {
         let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        return backend.doHomomorphicRerand(arg, getQualifiedName(key), randomness);
+        backend.doHomomorphicRerand(arg, getQualifiedName(key), randomness)
     }
 
     /* TYPE CASTING */
 
     fn cast(w: TypedWire, targetType: ZkayType) -> TypedWire {
-        return convertTo(w, targetType);
+        convertTo(w, targetType)
     }
 
     /* SOURCE */
@@ -520,11 +520,11 @@ impl CircuitGenerator for ZkayCircuitBase {
     fn get(name: String) -> TypedWire {
         let w = getTypedArr(name);
         assert!(w.len() == 1, "Tried to treat array as a single wire");
-        return w[0];
+        w[0]
     }
 
     fn getCipher(name: String) -> Vec<TypedWire> {
-        return getTypedArr(name);
+        getTypedArr(name)
     }
 
     pub fn val(val: bool) -> TypedWire {
@@ -542,9 +542,9 @@ impl CircuitGenerator for ZkayCircuitBase {
         } else if val == 1 {
             w = get_one_wire();
         } else {
-            return val(String.valueOf(val), t);
+            val(String.valueOf(val), t)
         }
-        return TypedWire::new(w, t, "const_" + val);
+        TypedWire::new(w, t, "const_" + val)
     }
 
     pub fn val(val: String, t: ZkayType) -> TypedWire {
@@ -559,7 +559,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         } else {
             w = createConstantWire(v, "const_" + v.toString(10));
         }
-        return TypedWire::new(w, t, "const_" + v.toString(10));
+        TypedWire::new(w, t, "const_" + v.toString(10))
     }
 
     /* SINK */
@@ -685,7 +685,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             // Type stays the same -> no expensive bitwise operations necessary
             newWire = w.wire;
         }
-        return TypedWire::new(newWire, targetType, format!("(%s) %s", targetType, w.name));
+        TypedWire::new(newWire, targetType, format!("(%s) %s", targetType, w.name))
     }
 
     fn cryptoEnc(
@@ -717,7 +717,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             getArr(rnd),
             desc,
         );
-        return enc.getOutputWires();
+        enc.getOutputWires()
     }
 
     fn cryptoDec(
@@ -744,7 +744,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             getArr(skey),
             desc,
         );
-        return dec.getOutputWires()[0];
+        dec.getOutputWires()[0]
     }
 
     fn cryptoSymmEnc(
@@ -770,7 +770,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             getArr(ivCipher),
             desc,
         );
-        return enc.getOutputWires();
+        enc.getOutputWires()
     }
 
     fn addGuardedEncryptionAssertion(expectedCipher: String, computedCipher: Vec<Option<WireType>>) {
@@ -975,11 +975,11 @@ impl CircuitGenerator for ZkayCircuitBase {
                 format!("or %s[%d] != 0", name, i),
             );
         }
-        return res.checkNonZero(name + " != 0");
+        res.checkNonZero(name + " != 0")
     }
 
     fn isZero(value: Vec<Option<WireType>>, name: String) -> WireType {
-        return isNonZero(value, name).invAsBit(name + " == 0");
+        isNonZero(value, name).invAsBit(name + " == 0")
     }
 
     fn isEqual(wires1: Vec<Option<WireType>>, name1: String, wires2: Vec<Option<WireType>>, name2: String) -> WireType {
@@ -990,7 +990,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                 wires1[i].isEqualTo(wires2[i], format!("%s[%d] == %s[%d]", name1, i, name2, i)),
             );
         }
-        return res;
+        res
     }
 
     fn clearPrefix(prefix: VecDeque<String>, indices: HashMap<String, Integer>) {
@@ -1027,9 +1027,9 @@ impl CircuitGenerator for ZkayCircuitBase {
 
     fn getQualifiedName(name: String) -> String {
         if name.startsWith("glob_") {
-            return name;
+            name
         } else {
-            return namePrefix.element() + name;
+            namePrefix.element() + name
         }
     }
 
@@ -1060,7 +1060,7 @@ impl CircuitGenerator for ZkayCircuitBase {
             w.is_some(),
             "Variable " + name + " is not associated with a wire"
         );
-        return w;
+        w
     }
 
     fn getArr(name: String) -> Vec<Option<WireType>> {
@@ -1069,7 +1069,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         for i in 0..w.len() {
             wa[i] = w[i].wire;
         }
-        return wa;
+        wa
     }
 
     fn set(name: String, val: TypedWire) {

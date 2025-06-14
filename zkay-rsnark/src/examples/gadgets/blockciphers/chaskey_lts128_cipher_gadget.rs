@@ -56,6 +56,6 @@ impl Gadget for ChaskeyLTS128CipherGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 }

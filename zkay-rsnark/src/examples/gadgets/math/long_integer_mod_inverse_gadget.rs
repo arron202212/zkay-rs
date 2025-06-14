@@ -88,10 +88,10 @@ impl Gadget for LongIntegerModInverseGadget {
     }
 
     pub fn getResult() -> LongElement {
-        return inverse;
+        inverse
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return inverse.getArray();
+        inverse.getArray()
     }
 }

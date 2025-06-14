@@ -80,10 +80,10 @@ impl LinearSystemSolver {
     }
 
     fn negate(x: BigInteger) -> BigInteger {
-        return (prime.sub(x.rem(prime.clone()))).rem(prime.clone());
+        (prime.sub(x.rem(prime.clone()))).rem(prime.clone())
     }
 
     fn inverse(x: BigInteger) -> BigInteger {
-        return (x.rem(prime.clone())).mod_inv(prime.clone());
+        (x.rem(prime.clone())).mod_inv(prime.clone())
     }
 }

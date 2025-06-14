@@ -168,10 +168,10 @@ impl Gadget for RSAEncryptionOAEPGadget {
             }
         }
         let out = mgfOutputList.toArray(&None);
-        return out[..length].to_vec();
+        out[..length].to_vec()
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 }

@@ -77,6 +77,6 @@ impl Gadget for ZkayRSAEncryptionGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return cipher;
+        cipher
     }
 }

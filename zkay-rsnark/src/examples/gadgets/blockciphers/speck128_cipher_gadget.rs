@@ -66,10 +66,10 @@ impl Gadget for Speck128CipherGadget {
             l[i + 1] = l[i + 1].xorBitwise(generator.createConstantWire(i), 64);
             k[i + 1] = k[i].rotateLeft(64, 3).xorBitwise(l[i + 1], 64);
         }
-        return k;
+        k
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 }

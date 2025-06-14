@@ -55,7 +55,7 @@ pub struct BabyJubJubTest {
         
         pub  fn getOutputWires()->Vec<Option<WireType>>  {
             let dummy = generator.get_one_wire();
-            return vec![None;]{ dummy };
+            vec![None;]{ dummy }
         }
     }
 

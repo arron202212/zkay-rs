@@ -25,6 +25,6 @@ impl Gadget for DotProductGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![output];
+        vec![output]
     }
 }

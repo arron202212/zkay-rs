@@ -29,6 +29,6 @@ impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![e1.x, e1.y, e2.x, e2.y];
+        vec![e1.x, e1.y, e2.x, e2.y]
     }
 }

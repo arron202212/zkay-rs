@@ -29,7 +29,7 @@ crate::impl_instruction_for!(Op<XorBasicOp>);
 crate::impl_hash_code_for!(Op<XorBasicOp>);
 impl BasicOp for Op<XorBasicOp> {
     fn getOpcode(&self) -> String {
-        return "xor".to_owned();
+        "xor".to_owned()
     }
 
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
@@ -63,17 +63,13 @@ impl BasicOp for Op<XorBasicOp> {
     }
 
     fn getNumMulGates(&self) -> i32 {
-        return 1;
+        1
     }
 }
 
 impl Eq for Op<XorBasicOp> {}
 impl PartialEq for Op<XorBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-
         let check1 = self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.inputs[1].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
         let check2 = self.inputs[1].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()

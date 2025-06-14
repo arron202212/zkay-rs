@@ -42,7 +42,7 @@ impl Util {
     }
     pub fn split(x: BigInteger, chunkSize: i32) -> Vec<BigInteger> {
         let numChunks = std::cmp::max(1, (x.bits() + chunkSize as u64 - 1) / chunkSize as u64); // ceil(x.bits() / chunkSize)
-        return Self::spliti(x, numChunks as i32, chunkSize);
+        Self::spliti(x, numChunks as i32, chunkSize)
     }
 
     pub fn spliti(x: BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
@@ -51,7 +51,7 @@ impl Util {
         for i in 0..numChunks {
             chunks[i as usize] = x.clone().shr(chunkSize * i).bitand(mask.clone());
         }
-        return chunks;
+        chunks
     }
 
     pub fn combine(
@@ -71,7 +71,7 @@ impl Util {
                     .shl(bitwidth as usize * i),
             );
         }
-        return sum;
+        sum
     }
 
     pub fn group(list: Vec<BigInteger>, width: i32) -> BigInteger {
@@ -79,7 +79,7 @@ impl Util {
         for i in 0..list.len() {
             x = x.add(list[i].clone().shl(width as usize * i));
         }
-        return x;
+        x
     }
 
     pub fn concati(a1: Vec<i32>, a2: Vec<i32>) -> Vec<i32> {
@@ -91,7 +91,7 @@ impl Util {
                 a2[i - a1.len()]
             };
         }
-        return all;
+        all
     }
 
     pub fn concat(a1: Vec<Option<WireType>>, a2: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
@@ -103,7 +103,7 @@ impl Util {
                 a2[i - a1.len()].clone()
             };
         }
-        return all;
+        all
     }
 
     pub fn concata(w: WireType, a: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
@@ -115,7 +115,7 @@ impl Util {
                 a[i - 1].clone()
             };
         }
-        return all;
+        all
     }
 
     pub fn concataa(arrays: Vec<Vec<i32>>) -> Vec<i32> {
@@ -131,7 +131,7 @@ impl Util {
                 idx += 1;
             }
         }
-        return all;
+        all
     }
 
     pub fn randomBigIntegerArray(num: u64, n: BigInteger) -> Vec<BigInteger> {
@@ -139,7 +139,7 @@ impl Util {
         for i in 0..num {
             result[i as usize] = Self::nextRandomBigInteger(n.clone());
         }
-        return result;
+        result
     }
 
     pub fn nextRandomBigInteger(n: BigInteger) -> BigInteger {
@@ -148,7 +148,7 @@ impl Util {
         while result >= n {
             result = rand.sample(&mut rand::thread_rng());
         }
-        return result;
+        result
     }
 
     pub fn randomBigIntegerArrayi(num: u64, numBits: i32) -> Vec<BigInteger> {
@@ -156,11 +156,11 @@ impl Util {
         for i in 0..num {
             result[i as usize] = Self::nextRandomBigInteger(BigInteger::from(numBits as u32));
         }
-        return result;
+        result
     }
 
     pub fn nextRandomBigIntegeri(numBits: i32) -> BigInteger {
-        return RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+        RandomBits::new(numBits as u64).sample(&mut rand::thread_rng())
     }
 
     pub fn getDesc(desc: &Option<String>) -> String {
@@ -182,7 +182,7 @@ impl Util {
                 list.push(i);
             }
         }
-        return list;
+        list
     }
 
     pub fn reverseBytes(inBitWires: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
@@ -196,7 +196,7 @@ impl Util {
                 outs[other * 8 + j] = temp;
             }
         }
-        return outs;
+        outs
     }
 
     pub fn arrayToStringi(a: Vec<i32>, separator: String) -> String {
@@ -206,7 +206,7 @@ impl Util {
             s.push_str(&separator);
         }
         s.push_str(&a[a.len() - 1].to_string());
-        return s;
+        s
     }
 
     pub fn arrayToString(a: Vec<Option<WireType>>, separator: String) -> String {
@@ -216,15 +216,15 @@ impl Util {
             s.push_str(&separator);
         }
         s.push_str(&a[a.len() - 1].as_ref().unwrap().to_string());
-        return s;
+        s
     }
 
     pub fn isBinary(v: BigInteger) -> bool {
-        return v == BigInteger::ZERO || v == Util::one();
+        v == BigInteger::ZERO || v == Util::one()
     }
 
     pub fn padZeros(s: String, l: usize) -> String {
-        return format!("{s:0>l$}");
+        format!("{s:0>l$}")
     }
 
     // Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
@@ -251,23 +251,23 @@ impl Util {
         p: WireType,
     ) -> Vec<Option<WireType>> {
         if a.len() == length {
-            return a;
+            a
         } else if a.len() > length {
             //println!("No padding needed!");
-            return a;
+            a
         } else {
             let mut newArray = vec![None; length];
             newArray[..a.len()].clone_from_slice(&a);
             newArray[a.len()..length].fill(Some(p.clone()));
-            return newArray;
+            newArray
         }
     }
 
     pub fn modulo(x: BigInteger, m: BigInteger) -> BigInteger {
         if x.sign() != Sign::Minus && x < m {
-            return x; // In range, 'mod' is no-op, but creates new BigInteger
+            x // In range, 'mod' is no-op, but creates new BigInteger
         } else {
-            return x.rem(m);
+            x.rem(m)
         }
     }
 }

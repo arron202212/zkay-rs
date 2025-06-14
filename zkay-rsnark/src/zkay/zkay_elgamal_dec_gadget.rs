@@ -58,6 +58,6 @@ impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![self.msgOk];
+        vec![self.msgOk]
     }
 }

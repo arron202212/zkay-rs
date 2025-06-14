@@ -64,7 +64,7 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
             "RSA Key bit length is assumed to be a multiple of 8"
         );
 
-        return rsaKeyBitLength / 8 - 3 - plainTextLength;
+        rsaKeyBitLength / 8 - 3 - plainTextLength
     }
 
     fn buildCircuit() {
@@ -122,6 +122,6 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 }

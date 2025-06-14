@@ -19,7 +19,7 @@ impl ZkaySHA256Gadget {
                     .subList(j * bytes_per_word, (j + 1) * bytes_per_word),
             );
         }
-        return input_bytes;
+        input_bytes
     }
 
     pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: &Option<String>) -> self {
@@ -69,6 +69,6 @@ impl SHA256Gadget for ZkaySHA256Gadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return _uint_output;
+        _uint_output
     }
 }

@@ -76,7 +76,7 @@ impl ZkayEcGadget for ZkayECDHGadget {
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
         let sharedKey = ZkaySHA256Gadget::new(vec![sharedSecret], 128).getOutputWires()[0];
-        return vec![sharedKey];
+        vec![sharedKey]
     }
 
     pub fn validateInputs() {

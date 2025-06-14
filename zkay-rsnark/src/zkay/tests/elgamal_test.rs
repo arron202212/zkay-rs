@@ -24,7 +24,7 @@ pub struct ElgamalTest {
         pub  ZkayBabyJubJubGadget.JubJubPoint asConstJubJub(CircuitGenerator gen) {
             let wx = gen.createConstantWire(x);
             let wy = gen.createConstantWire(y);
-            return new ZkayBabyJubJubGadget.JubJubPoint(wx, wy);
+            new ZkayBabyJubJubGadget.JubJubPoint(wx, wy)
         }
     }
 

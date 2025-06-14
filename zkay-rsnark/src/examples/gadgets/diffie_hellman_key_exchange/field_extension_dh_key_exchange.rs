@@ -94,7 +94,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
                 }
             }
         }
-        return c;
+        c
     }
 
     fn preparePowersTable(base: Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
@@ -103,7 +103,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
         for j in 1..secretExponentBits.len() + 1 {
             powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
         }
-        return powersTable;
+        powersTable
     }
 
     fn exp(base: Vec<Option<WireType>>, expBits: Vec<Option<WireType>>, powersTable: Vec<Vec<Option<WireType>>>) -> Vec<Option<WireType>> {
@@ -115,7 +115,7 @@ impl Gadget for FieldExtensionDHKeyExchange {
                 c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
             }
         }
-        return c;
+        c
     }
 
     // TODO: Test more scenarios
@@ -165,14 +165,14 @@ impl Gadget for FieldExtensionDHKeyExchange {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return Util::concat(outputPublicValue, sharedSecret);
+        Util::concat(outputPublicValue, sharedSecret)
     }
 
     pub fn getOutputPublicValue() -> Vec<Option<WireType>> {
-        return outputPublicValue;
+        outputPublicValue
     }
 
     pub fn getSharedSecret() -> Vec<Option<WireType>> {
-        return sharedSecret;
+        sharedSecret
     }
 }

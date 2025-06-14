@@ -73,10 +73,10 @@ impl Gadget for LongIntegerModPowGadget {
     }
 
     pub fn getResult() -> LongElement {
-        return c;
+        c
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return c.getArray();
+        c.getArray()
     }
 }

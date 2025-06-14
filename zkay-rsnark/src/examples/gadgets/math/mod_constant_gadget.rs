@@ -73,6 +73,6 @@ impl Gadget for ModConstantGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![r];
+        vec![r]
     }
 }

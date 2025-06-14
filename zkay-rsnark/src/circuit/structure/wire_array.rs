@@ -65,11 +65,11 @@ impl WireArray {
     }
 
     pub fn size(&self) -> usize {
-        return self.array.len();
+        self.array.len()
     }
 
     pub fn asArray(&self) -> Vec<Option<WireType>> {
-        return self.array.clone();
+        self.array.clone()
     }
     pub fn generator(&self) -> ARcCell<dyn CGConfig + Send + Sync> {
         getActiveCircuitGenerator().unwrap().clone()
@@ -92,10 +92,12 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.clone().mulw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn sumAllElements(&self, desc: &Option<String>) -> WireType {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let mut allConstant = true;
         let mut sum = BigInteger::ZERO;
         for w in &self.array {
@@ -114,27 +116,27 @@ impl WireArray {
         }
         if !allConstant {
             let output = WireType::LinearCombination(new_linear_combination(
-                *self.generator().lock().current_wire_id(),
+                *generator.current_wire_id(),
                 None,
             ));
-            *self.generator().lock().current_wire_id() += 1;
+            *generator.current_wire_id() += 1;
             let op = new_add(
                 self.array.clone(),
                 output.clone(),
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            //			self.generator().lock().addToEvaluationQueue(Box::new(op));
-            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
+            //			generator.addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().lock().current_wire_id() -= 1;
+                *generator.current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 output
             };
         }
 
-        self.generator().lock().createConstantWire(sum, desc)
+        generator.createConstantWire(sum, desc)
     }
 
     pub fn addWireArray(
@@ -155,7 +157,7 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.clone().addw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn xorWireArray(
@@ -176,7 +178,7 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.clone().xorw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn xorWireArrayi(&self, v: WireArray, desc: &Option<String>) -> WireArray {
@@ -190,7 +192,7 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.xorw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn andWireArray(
@@ -211,7 +213,7 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.clone().mulw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn orWireArray(
@@ -232,19 +234,21 @@ impl WireArray {
                 .as_ref()
                 .map(|x| x.clone().orw(ws2[i].clone().unwrap(), desc));
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn invAsBits(&self, desiredBitWidth: usize, desc: &Option<String>) -> WireArray {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let mut out = vec![None; desiredBitWidth];
         for i in 0..desiredBitWidth {
             if i < self.array.len() {
                 out[i] = self.array[i].clone().and_then(|x| x.clone().invAsBit(desc));
             } else {
-                out[i] = self.generator().lock().one_wire().clone();
+                out[i] = generator.one_wire().clone();
             }
         }
-        return WireArray::new(out);
+        WireArray::new(out)
     }
 
     pub fn adjustLength(
@@ -252,11 +256,13 @@ impl WireArray {
         ws: Option<Vec<Option<WireType>>>,
         desiredLength: usize,
     ) -> WireArray {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let ws = ws.as_ref().unwrap_or(&self.array);
         if ws.len() == desiredLength {
             return WireArray::new(ws.clone());
         }
-        let mut newWs = vec![self.generator().lock().zero_wire().clone(); desiredLength];
+        let mut newWs = vec![generator.zero_wire().clone(); desiredLength];
         newWs[..std::cmp::min(ws.len(), desiredLength)].clone_from_slice(&ws);
 
         WireArray::new(newWs)
@@ -264,24 +270,24 @@ impl WireArray {
 
     // pub fn adjustLengthi(&self, desiredLength: usize) -> WireArray {
     //     if self.array.len() == desiredLength {
-    //         return self.clone();
+    //         self.clone()
     //     }
     //     let mut newWs = vec![None; desiredLength];
     //     newWs[..std::cmp::min(self.array.len(), desiredLength)].clone_from_slice(&self.array);
     //     if self.array.len() < desiredLength {
     //         for i in self.array.len()..desiredLength {
-    //             newWs[i] = self.generator().lock().zero_wire().clone();
+    //             newWs[i] = generator.zero_wire().clone();
     //         }
     //     }
-    //     return WireArray::new(newWs);
+    //     WireArray::new(newWs)
     // }
 
     // pub fn packAsBitsi(&self, n: usize, desc: &Option<String>) -> WireType {
-    //     return self.packAsBitsii(0, n, desc);
+    //     self.packAsBitsii(0, n, desc)
     // }
 
     // pub fn packAsBits(None,None,&self, desc: &Option<String>) -> WireType {
-    //     return self.packAsBitsi(self.array.len(), desc);
+    //     self.packAsBitsi(self.array.len(), desc)
     // }
 
     pub fn checkIfConstantBits(&self, desc: &Option<String>) -> Option<BigInteger> {
@@ -318,6 +324,8 @@ impl WireArray {
         to: Option<usize>,
         desc: &Option<String>,
     ) -> WireType {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let (from, to) = (from.unwrap_or(0), to.unwrap_or(self.array.len()));
         assert!(
             from <= to && to <= self.array.len(),
@@ -352,10 +360,10 @@ impl WireArray {
         }
         if !allConstant {
             let out = WireType::LinearCombination(new_linear_combination(
-                *self.generator().lock().current_wire_id(),
+                *generator.current_wire_id(),
                 None,
             ));
-            *self.generator().lock().current_wire_id() += 1;
+            *generator.current_wire_id() += 1;
             out.setBits(Some(WireArray::new(bits.clone())));
             let op = new_pack(
                 bits,
@@ -363,15 +371,15 @@ impl WireArray {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = self.generator().lock().addToEvaluationQueue(Box::new(op));
+            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
-                *self.generator().lock().current_wire_id() -= 1;
+                *generator.current_wire_id() -= 1;
                 cachedOutputs[0].clone().unwrap()
             } else {
                 out
             };
         }
-        self.generator().lock().createConstantWire(sum, desc)
+        generator.createConstantWire(sum, desc)
     }
 
     pub fn rotateLeft(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireArray {
@@ -386,7 +394,7 @@ impl WireArray {
                 rotatedBits[i] = bits[i - s].clone();
             }
         }
-        return WireArray::new(rotatedBits);
+        WireArray::new(rotatedBits)
     }
 
     pub fn rotateRight(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireArray {
@@ -401,25 +409,29 @@ impl WireArray {
                 rotatedBits[i] = bits[i + s].clone();
             }
         }
-        return WireArray::new(rotatedBits);
+        WireArray::new(rotatedBits)
     }
 
     pub fn shiftLeft(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireArray {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let bits = self
             .adjustLength(Some(self.array.clone()), numBits)
             .asArray();
         let mut shiftedBits = vec![None; numBits as usize];
         for i in 0..numBits as usize {
             if i < s as usize {
-                shiftedBits[i] = self.generator().lock().zero_wire().clone();
+                shiftedBits[i] = generator.zero_wire().clone();
             } else {
                 shiftedBits[i] = bits[i - s as usize].clone();
             }
         }
-        return WireArray::new(shiftedBits);
+        WireArray::new(shiftedBits)
     }
 
     pub fn shiftRight(&self, numBits: usize, s: usize, desc: &Option<String>) -> WireArray {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         //println!("======================{},{}",file!(),line!());
         let bits = self
             .adjustLength(Some(self.array.clone()), numBits)
@@ -427,12 +439,12 @@ impl WireArray {
         let mut shiftedBits = vec![None; numBits];
         for i in 0..numBits as usize {
             if i >= numBits - s as usize {
-                shiftedBits[i] = self.generator().lock().zero_wire().clone();
+                shiftedBits[i] = generator.zero_wire().clone();
             } else {
                 shiftedBits[i] = bits[i + s as usize].clone();
             }
         }
-        return WireArray::new(shiftedBits);
+        WireArray::new(shiftedBits)
     }
 
     pub fn packBitsIntoWords(
@@ -451,7 +463,7 @@ impl WireArray {
                     .packAsBits(None, None, &None),
             );
         }
-        return result;
+        result
     }
 
     pub fn packWordsIntoLargerWords(
@@ -460,9 +472,11 @@ impl WireArray {
         numWordsPerLargerWord: i32,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
+        let generator = self.generator();
+        let mut generator = generator.lock();
         let numLargerWords =
             (self.array.len() as f64 * 1.0 / numWordsPerLargerWord as f64).ceil() as usize;
-        let mut result = vec![self.generator().lock().zero_wire().clone(); numLargerWords];
+        let mut result = vec![generator.zero_wire().clone(); numLargerWords];
         for i in 0..self.array.len() {
             let subIndex = i % numWordsPerLargerWord as usize;
             result[i / numWordsPerLargerWord as usize] = result[i / numWordsPerLargerWord as usize]
@@ -477,7 +491,7 @@ impl WireArray {
                     )
                 });
         }
-        return result;
+        result
     }
 
     pub fn getBits(&self, bitwidth: usize, desc: &Option<String>) -> WireArray {
@@ -494,6 +508,6 @@ impl WireArray {
                 idx += 1;
             }
         }
-        return WireArray::new(bits);
+        WireArray::new(bits)
     }
 }

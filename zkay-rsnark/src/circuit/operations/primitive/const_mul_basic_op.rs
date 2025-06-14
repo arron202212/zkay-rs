@@ -72,7 +72,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
     }
 
     fn getNumMulGates(&self) -> i32 {
-        return 0;
+        0
     }
 
     // fn hashCode(&self) -> u64 {
@@ -88,9 +88,6 @@ impl BasicOp for Op<ConstMulBasicOp> {
 impl Eq for Op<ConstMulBasicOp> {}
 impl PartialEq for Op<ConstMulBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
         self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.t.constInteger == other.t.constInteger
     }

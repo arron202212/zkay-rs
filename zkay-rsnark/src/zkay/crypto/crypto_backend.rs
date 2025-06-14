@@ -92,11 +92,11 @@ pub trait SymmetricConfig: CryptoBackendConfig {
     const CIPHER_CHUNK_SIZE: i32 = 192;
 
     pub fn isSymmetric(&self) -> bool {
-        return true;
+        true
     }
 
     pub fn usesDecryptionGadget(&self) -> bool {
-        return false;
+        false
     }
 
     pub fn createDecryptionGadget(
@@ -124,7 +124,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
             key = computeKey(keyName);
             sharedKeys.put(keyName, key);
         }
-        return key;
+        key
     }
 
     fn computeKey(&self, keyName: String) -> WireType {
@@ -151,7 +151,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         let desc = format!("sha256(ecdh(%s, %s))", keyName, mySk);
         let sharedKeyGadget = ZkayECDHGadget::new(actualOtherPk, mySk, false, desc);
         sharedKeyGadget.validateInputs();
-        return sharedKeyGadget.getOutputWires()[0];
+        sharedKeyGadget.getOutputWires()[0]
     }
 
     pub fn setKeyPair(&self, myPk: WireType, mySk: WireType) {
@@ -179,7 +179,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         if lastBlockCipherLen > 0 {
             iv = iv.shiftRight(CIPHER_CHUNK_SIZE, lastBlockCipherLen);
         }
-        return iv;
+        iv
     }
 }
 
@@ -194,11 +194,11 @@ impl Asymmetric {
 }
 pub trait AsymmetricConfig: CryptoBackendConfig {
     pub fn isSymmetric(&self) -> bool {
-        return false;
+        false
     }
 
     pub fn usesDecryptionGadget(&self) -> bool {
-        return false;
+        false
     }
 
     pub fn createDecryptionGadget(
@@ -222,7 +222,7 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
 
     fn getKey(&self, keyName: String) -> LongElement {
         let keyArr = getKeyArray(keyName);
-        return LongElement::new(keyArr);
+        LongElement::new(keyArr)
     }
 
     fn getKeyArray(&self, keyName: String) -> WireArray {
@@ -231,6 +231,6 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
             keyArr.is_some(),
             "Key variable " + keyName + " is not associated with a WireArray"
         );
-        return keyArr;
+        keyArr
     }
 }

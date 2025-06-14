@@ -16,7 +16,7 @@ impl ECDHBackend {
     }
 
     pub fn getKeyChunkSize() -> i32 {
-        return KEY_CHUNK_SIZE;
+        KEY_CHUNK_SIZE
     }
 }
 impl Symmetric for ECDHBackend {

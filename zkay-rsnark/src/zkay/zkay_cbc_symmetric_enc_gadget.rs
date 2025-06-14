@@ -104,7 +104,7 @@ impl ZkayCBCSymmetricEncGadget {
             }
             _ => panic!("Other Ciphers not supported in this version!"),
         }
-        return preparedKey;
+        preparedKey
     }
 }
 impl Gadget for ZkayCBCSymmetricEncGadget {

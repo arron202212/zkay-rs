@@ -73,6 +73,6 @@ impl Gadget for MerkleTreePathGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return outRoot;
+        outRoot
     }
 }

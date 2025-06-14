@@ -631,16 +631,37 @@ mod test {
                 let mut inputs2 = WireArray::new(generator.createInputWireArray(numIns, &None));
                 let mut solutions =
                     WireArray::new(generator.createProverWitnessWireArray(numIns + 1, &None));
-
-                generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                    evaluator.setWireValue(solutions[0].clone().unwrap(), self.t.result[0].clone());
-                    for i in 0..numIns {
-                        evaluator.setWireValue(
-                            solutions[i + 1].clone().unwrap(),
-                            self.t.result[i + 1].clone(),
+                let result = &self.t.result;
+                let prover = crate::impl_prover!(
+                                eval ( result: Vec<BigInteger>,
+                            solutions: WireArray,
+                            numIns: usize)  {
+                impl  Instruction for Prover {
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                                          evaluator.setWireValue(
+                                    self.solutions[0].clone().unwrap(),
+                                    self.result[0].clone(),
+                                );
+                                for i in 0..self.numIns {
+                                    evaluator.setWireValue(
+                                        self.solutions[i + 1].clone().unwrap(),
+                                        self.result[i + 1].clone(),
+                                    );
+                                }
+                }
+                }
+                            }
                         );
-                    }
-                });
+                generator.specifyProverWitnessComputation(prover);
+                // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+                //     evaluator.setWireValue(solutions[0].clone().unwrap(), self.t.result[0].clone());
+                //     for i in 0..numIns {
+                //         evaluator.setWireValue(
+                //             solutions[i + 1].clone().unwrap(),
+                //             self.t.result[i + 1].clone(),
+                //         );
+                //     }
+                // });
                 // {
                 //     use zkay_derive::ImplStructNameConfig;
                 //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]

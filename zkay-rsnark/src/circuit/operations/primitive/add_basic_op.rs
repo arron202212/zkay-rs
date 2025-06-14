@@ -54,10 +54,6 @@ impl BasicOp for Op<AddBasicOp> {
 impl Eq for Op<AddBasicOp> {}
 impl PartialEq for Op<AddBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-
         if other.inputs.len() != self.inputs.len() {
             return false;
         }

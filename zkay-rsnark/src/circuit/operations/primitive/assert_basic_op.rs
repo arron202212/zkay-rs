@@ -70,21 +70,17 @@ impl BasicOp for Op<AssertBasicOp> {
     }
 
     fn getOpcode(&self) -> String {
-        return "assert".to_owned();
+        "assert".to_owned()
     }
 
     fn getNumMulGates(&self) -> i32 {
-        return 1;
+        1
     }
 }
 
 impl Eq for Op<AssertBasicOp> {}
 impl PartialEq for Op<AssertBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-
         let check1 = self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.inputs[1].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
         let check2 = self.inputs[1].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()

@@ -58,13 +58,13 @@ impl ZkayBabyJubJubGadget {
     );
 
     fn getInfinity() -> JubJubPoint {
-        return JubJubPoint::new(generator.get_zero_wire(), generator.get_one_wire());
+        JubJubPoint::new(generator.get_zero_wire(), generator.get_one_wire())
     }
 
     fn getGenerator() -> JubJubPoint {
         let g_x = generator.createConstantWire(GENERATOR_X);
         let g_y = generator.createConstantWire(GENERATOR_Y);
-        return JubJubPoint::new(g_x, g_y);
+        JubJubPoint::new(g_x, g_y)
     }
 
     fn assertOnCurve(x: WireType, y: WireType) {
@@ -92,12 +92,12 @@ impl ZkayBabyJubJubGadget {
 
         let x = a1.mul(nativeInverse(a2));
         let y = b1.mul(nativeInverse(b2));
-        return JubJubPoint::new(x, y);
+        JubJubPoint::new(x, y)
     }
 
     fn negatePoint(p: JubJubPoint) -> JubJubPoint {
         let new_x = p.x.neg();
-        return JubJubPoint::new(new_x, p.y);
+        JubJubPoint::new(new_x, p.y)
     }
 
     /**
@@ -116,7 +116,7 @@ impl ZkayBabyJubJubGadget {
             doubling = addPoints(doubling, doubling);
         }
 
-        return result;
+        result
     }
 }
 impl Gadget for ZkayBabyJubJubGadget {
@@ -146,6 +146,6 @@ impl Gadget for ZkayBabyJubJubGadget {
         let test = a.mul(ainv);
         generator.addEqualityAssertion(test, generator.get_one_wire());
 
-        return ainv;
+        ainv
     }
 }

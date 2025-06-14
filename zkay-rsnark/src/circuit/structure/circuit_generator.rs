@@ -78,7 +78,7 @@ pub struct CircuitGenerator<T: Debug> {
     pub num_of_constraints: i32,
     // pub circuitEvaluator: Option<CircuitEvaluator>,
     pub t: T,
-    me: Option<WeakCell<Self>>,
+    // me: Option<WeakCell<Self>>,
 }
 
 pub trait CGConfigFields: Debug {
@@ -146,44 +146,44 @@ pub fn put_active_circuit_generator(name: &str, cg: ARcCell<dyn CGConfig + Send 
 }
 
 impl<T: StructNameConfig + Debug> CircuitGenerator<T> {
-    pub fn new(circuit_name: &str, t: T) -> RcCell<CircuitGenerator<T>> {
+    pub fn new(circuit_name: &str, t: T) -> Self {
         if Configs.running_multi_generators {
             // activeCircuitGenerators.put(Thread.currentThread().getId(), this);
         }
-        // CircuitGenerator::<T> {
-        //     circuit_name: circuit_name.to_owned(),
-        //     in_wires: vec![],
-        //     out_wires: vec![],
-        //     zero_wire: None,
-        //     one_wire: None,
-        //     prover_witness_wires: vec![],
-        //     evaluation_queue: HashMap::new(),
-        //     known_constant_wires: HashMap::new(),
-        //     current_wire_id: 0,
-        //     num_of_constraints: 0,
-        //     // circuitEvaluator: None,
-        //     t,
-        // }
-        let mut selfs = RcCell(Rc::new_cyclic(|_me| {
-            RefCell::new(Self {
-                circuit_name: circuit_name.to_owned(),
-                in_wires: vec![],
-                out_wires: vec![],
-                zero_wire: None,
-                one_wire: None,
-                prover_witness_wires: vec![],
-                evaluation_queue: HashMap::new(),
-                known_constant_wires: HashMap::new(),
-                current_wire_id: 0,
-                num_of_constraints: 0,
-                // circuitEvaluator: None,
-                t,
-                me: None,
-            })
-        }));
-        let weakselfs = selfs.downgrade();
-        selfs.borrow_mut().me = Some(weakselfs.clone());
-        selfs
+        CircuitGenerator::<T> {
+            circuit_name: circuit_name.to_owned(),
+            in_wires: vec![],
+            out_wires: vec![],
+            zero_wire: None,
+            one_wire: None,
+            prover_witness_wires: vec![],
+            evaluation_queue: HashMap::new(),
+            known_constant_wires: HashMap::new(),
+            current_wire_id: 0,
+            num_of_constraints: 0,
+            // circuitEvaluator: None,
+            t,
+        }
+        // let mut selfs = RcCell(Rc::new_cyclic(|_me| {
+        //     RefCell::new(Self {
+        //         circuit_name: circuit_name.to_owned(),
+        //         in_wires: vec![],
+        //         out_wires: vec![],
+        //         zero_wire: None,
+        //         one_wire: None,
+        //         prover_witness_wires: vec![],
+        //         evaluation_queue: HashMap::new(),
+        //         known_constant_wires: HashMap::new(),
+        //         current_wire_id: 0,
+        //         num_of_constraints: 0,
+        //         // circuitEvaluator: None,
+        //         t,
+        //         me: None,
+        //     })
+        // }));
+        // let weakselfs = selfs.downgrade();
+        // selfs.borrow_mut().me = Some(weakselfs.clone());
+        // selfs
     }
 }
 
@@ -216,7 +216,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         )));
         self.in_wires().push(Some(newInputWire.clone()));
-        return newInputWire;
+        newInputWire
     }
 
     fn createInputWireArray(&mut self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>> {
@@ -224,7 +224,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         for i in 0..n {
             list[i] = Some(self.createInputWire(&desc.as_ref().map(|d| format!("{} {i}", d))));
         }
-        return list;
+        list
     }
 
     fn createLongElementInput(&mut self, totalBitwidth: i32, desc: &Option<String>) -> LongElement {
@@ -235,7 +235,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
-        return LongElement::new(w, bitwidths);
+        LongElement::new(w, bitwidths)
     }
 
     fn createLongElementProverWitness(
@@ -250,7 +250,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
-        return LongElement::new(w, bitwidths);
+        LongElement::new(w, bitwidths)
     }
 
     fn createProverWitnessWire(&mut self, desc: &Option<String>) -> WireType {
@@ -263,7 +263,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         )));
         self.prover_witness_wires().push(Some(wire.clone()));
-        return wire;
+        wire
     }
 
     fn createProverWitnessWireArray(
@@ -441,7 +441,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         for i in 0..a.len() {
             w[i] = Some(self.createConstantWirei(a[i], desc));
         }
-        return w;
+        w
     }
 
     fn createNegConstantWire(&self, x: BigInteger, desc: &Option<String>) -> WireType {
@@ -762,7 +762,7 @@ where
     CircuitGenerator<T>: CGConfig,
 {
     fn create_constant_wire(&self, x: BigInteger, desc: &Option<String>) -> WireType {
-        return self.get_one_wire().clone().unwrap().mulb(x, desc);
+        self.get_one_wire().clone().unwrap().mulb(x, desc)
     }
 }
 impl<T: Debug> CreateConstantWire<i64> for CircuitGenerator<T>
@@ -770,7 +770,7 @@ where
     CircuitGenerator<T>: CGConfig,
 {
     fn create_constant_wire(&self, x: i64, desc: &Option<String>) -> WireType {
-        return self.get_one_wire().clone().unwrap().muli(x, desc);
+        self.get_one_wire().clone().unwrap().muli(x, desc)
     }
 }
 pub trait CreateConstantWireArray<T = WireType> {
@@ -789,7 +789,7 @@ where
         for i in 0..a.len() {
             w[i] = Some(self.create_constant_wire(a[i].clone(), desc));
         }
-        return w;
+        w
     }
 }
 impl<T: Debug> CreateConstantWireArray<Vec<i64>> for CircuitGenerator<T>
@@ -805,7 +805,7 @@ where
         for i in 0..a.len() {
             w[i] = Some(self.create_constant_wire(a[i], desc));
         }
-        return w;
+        w
     }
 }
 
@@ -817,7 +817,7 @@ where
     CircuitGenerator<T>: CGConfig,
 {
     fn create_neg_constant_wire(&self, x: BigInteger, desc: &Option<String>) -> WireType {
-        return self.get_one_wire().clone().unwrap().mulb(x.neg(), desc);
+        self.get_one_wire().clone().unwrap().mulb(x.neg(), desc)
     }
 }
 impl<T: Debug> CreateNegConstantWire<i64> for CircuitGenerator<T>
@@ -825,7 +825,7 @@ where
     CircuitGenerator<T>: CGConfig,
 {
     fn create_neg_constant_wire(&self, x: i64, desc: &Option<String>) -> WireType {
-        return self.get_one_wire().clone().unwrap().muli(-x, desc);
+        self.get_one_wire().clone().unwrap().muli(-x, desc)
     }
 }
 

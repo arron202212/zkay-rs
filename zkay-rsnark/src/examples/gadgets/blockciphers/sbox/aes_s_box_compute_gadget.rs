@@ -60,7 +60,7 @@ impl Gadget for AESSBoxComputeGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![output];
+        vec![output]
     }
 
     fn gmul(a: WireType, b: WireType) -> WireType {
@@ -77,7 +77,7 @@ impl Gadget for AESSBoxComputeGadget {
             a = a.add(bit2.mul(tmp2.sub(a)));
             b = b.shiftRight(8, 1);
         }
-        return p;
+        p
     }
 
     fn gmul(a: i32, b: i32) -> i32 {
@@ -92,7 +92,7 @@ impl Gadget for AESSBoxComputeGadget {
             }
             b >>= 1;
         }
-        return p;
+        p
     }
 
     fn findInv(a: i32) -> i32 {
@@ -104,6 +104,6 @@ impl Gadget for AESSBoxComputeGadget {
                 return i;
             }
         }
-        return -1;
+        -1
     }
 }

@@ -16,7 +16,7 @@ impl Asymmetric for DummyHomBackend {
     // }
 
     pub fn getKeyChunkSize() -> i32 {
-        return KEY_CHUNK_SIZE;
+        KEY_CHUNK_SIZE
     }
 
     pub fn createEncryptionGadget(
@@ -43,7 +43,7 @@ impl Asymmetric for DummyHomBackend {
         for i in 1..keyArr.len() {
             generator.addZeroAssertion(keyArr[i], "Dummy-hom enc pk valid");
         }
-        return keyArr[0];
+        keyArr[0]
     }
 
     fn getCipherWire(input: HomomorphicInput, name: String) -> WireType {
@@ -54,7 +54,7 @@ impl Asymmetric for DummyHomBackend {
         // Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
         let cipherWire = input.getCipher()[0].wire;
         let isNonZero = cipherWire.checkNonZero();
-        return cipherWire.sub(isNonZero);
+        cipherWire.sub(isNonZero)
     }
 
     fn encodePlaintextIfSigned(plain: TypedWire) -> WireType {
@@ -63,16 +63,16 @@ impl Asymmetric for DummyHomBackend {
             let bits = plain.zkay_type.bitwidth;
             let signBit = plain.wire.getBitWires(bits).get(bits - 1);
             let negValue = plain.wire.invBits(bits).add(1).neg();
-            return signBit.mux(negValue, plain.wire);
+            signBit.mux(negValue, plain.wire)
         } else {
             // Unsigned values get encoded as-is
-            return plain.wire;
+            plain.wire
         }
     }
 
     fn typedAsUint(wire: WireType, name: String) -> Vec<TypedWire> {
         // Always zkay_type cipher wires as ZkUint(256)
-        return vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)];
+        vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)]
     }
 }
 
@@ -83,7 +83,7 @@ impl HomomorphicBackend for DummyHomBackend {
         if op == '-' {
             let p = Enc(-msg, p);
             let minus = cipher.neg();
-            return typedAsUint(minus, "-(" + arg.getName() + ")");
+            typedAsUint(minus, "-(" + arg.getName() + ")")
         } else {
             panic!("Unary operation " + op + " not supported");
         }
@@ -101,14 +101,14 @@ impl HomomorphicBackend for DummyHomBackend {
                 let l = getCipherWire(lhs, "lhs");
                 let r = getCipherWire(rhs, "rhs");
                 let sum = l.add(r);
-                return typedAsUint(sum, "(" + lhs.getName() + ") + (" + rhs.getName() + ")");
+                typedAsUint(sum, "(" + lhs.getName() + ") + (" + rhs.getName() + ")")
             }
             '-' => {
                 // Enc(m1, p) - Enc(m2, p) = (m1 * p) - (m2 * p) = (m1 - m2) * p = Enc(m1 - m2, p)
                 let l = getCipherWire(lhs, "lhs");
                 let r = getCipherWire(rhs, "rhs");
                 let diff = l.sub(r);
-                return typedAsUint(diff, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
+                typedAsUint(diff, "(" + lhs.getName() + ") - (" + rhs.getName() + ")")
             }
             '*' => {
                 // Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
@@ -128,7 +128,7 @@ impl HomomorphicBackend for DummyHomBackend {
 
                 // Enc(m1, p) * m2 = (m1 * p) * m2 = (m1 * m2) * p = Enc(m1 * m2, p)
                 let prod = cipher.mul(plain);
-                return typedAsUint(prod, "(" + lhs.getName() + ") - (" + rhs.getName() + ")");
+                typedAsUint(prod, "(" + lhs.getName() + ") - (" + rhs.getName() + ")")
             }
             _ => panic!("Binary operation {op} not supported"),
         }
@@ -139,6 +139,6 @@ impl HomomorphicBackend for DummyHomBackend {
         keyName: String,
         randomness: TypedWire,
     ) -> Vec<TypedWire> {
-        return arg;
+        arg
     }
 }

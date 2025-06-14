@@ -30,23 +30,23 @@ impl ZkayType {
             utypes.containsKey(bitwidth),
             "No uint type with bitwidth {bitwidth} exists."
         );
-        return utypes.get(bitwidth);
+        utypes.get(bitwidth)
     }
     pub fn ZkInt(bitwidth: i32) -> ZkayType {
         assert!(
             stypes.containsKey(bitwidth),
             "No i32 type with bitwidth {bitwidth} exists."
         );
-        return stypes.get(bitwidth);
+        stypes.get(bitwidth)
     }
 
     pub fn GetNegativeConstant(val: BigInteger, bitwidth: i32) -> BigInteger {
         let m1 = ZkInt(bitwidth).minusOne;
-        return m1.mul(val).and(m1);
+        m1.mul(val).and(m1)
     }
 
     pub fn checkType(expected: ZkayType, actual: ZkayType) -> ZkayType {
-        return checkType(expected, actual, true);
+        checkType(expected, actual, true)
     }
     pub fn checkType(expected: ZkayType, actual: ZkayType, allow_field_type: bool) -> ZkayType {
         assert!(
@@ -66,10 +66,10 @@ impl ZkayType {
             expected
         );
 
-        return expected;
+        expected
     }
 
     pub fn toString() -> String {
-        return (if signed { "s" } else { "u" }) + bitwidth;
+        (if signed { "s" } else { "u" }) + bitwidth
     }
 }

@@ -52,10 +52,10 @@ impl Gadget for ZkayPaillierFastDecGadget {
     }
 
     pub fn getPlaintext() -> LongElement {
-        return plain;
+        plain
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return plain.getArray();
+        plain.getArray()
     }
 }

@@ -185,7 +185,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![output];
+        vec![output]
     }
 
     fn getVariableValues(k: i32) -> Vec<BigInteger> {
@@ -207,7 +207,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 product = product.mul(v).rem(Configs.field_prime.clone());
             }
         }
-        return vars;
+        vars
     }
 
     fn checkIfProverCanCheat(mat: Vec<Vec<BigInteger>>, valueSet: HashSet<Integer>) -> bool {
@@ -240,9 +240,9 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             //println!("Prover can cheat with linear system solution");
             //println!("Num of valid values that the prover can use = " + validResults);
             //println!("Num of valid values outside permissible set = " + validResults);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
 }

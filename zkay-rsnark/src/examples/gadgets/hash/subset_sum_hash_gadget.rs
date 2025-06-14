@@ -71,6 +71,6 @@ impl Gadget for SubsetSumHashGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return outWires;
+        outWires
     }
 }

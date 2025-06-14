@@ -4,7 +4,7 @@ use zkay::zkay_util::unsigned_bytes_to_bigint;
 pub struct ChaskeyLtsCbc;
 impl ChaskeyLtsCbc {
     fn parse(val: String, len: i32) -> Vec<byte> {
-        return unsignedBigintToBytes(BigInteger::new(val, 16), len);
+        unsignedBigintToBytes(BigInteger::new(val, 16), len)
     }
 
     const blocksize: i32 = 16;
@@ -32,7 +32,7 @@ impl ChaskeyLtsCbc {
             "Input not aligned to block size"
         );
 
-        return outbuf;
+        outbuf
     }
 }
 pub fn main(args: Vec<String>) {

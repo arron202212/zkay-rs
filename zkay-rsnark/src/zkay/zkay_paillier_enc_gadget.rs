@@ -57,10 +57,10 @@ impl Gadget for ZkayPaillierEncGadget {
     }
 
     pub fn getCiphertext() -> LongElement {
-        return cipher;
+        cipher
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return cipher.getArray();
+        cipher.getArray()
     }
 }

@@ -79,10 +79,10 @@ impl Gadget for SymmetricEncryptionCBCGadget {
         let packedKey = WireArray::new(keyBits).packBitsIntoWords(64);
         let preparedKey = Speck128CipherGadget.expandKey(packedKey);
 
-        return preparedKey;
+        preparedKey
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 }

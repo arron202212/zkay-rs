@@ -149,7 +149,7 @@ impl Gadget for AES128CipherGadget {
                 .xorWireArray(galoisMulConst(a[3], 2))
                 .packAsBits(None,None,);
         }
-        return state;
+        state
     }
 
     fn galoisMulConst(wire: WireType, mut i: i32) -> WireArray {
@@ -168,7 +168,7 @@ impl Gadget for AES128CipherGadget {
             let tmp = wire.xorBitwise(generator.createConstantWire(0x1bL), 8);
             wire = wire.add(hiBitSet.mul(tmp.sub(wire)));
         }
-        return p.getBitWires(8);
+        p.getBitWires(8)
     }
 
     fn shiftRows(state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
@@ -179,7 +179,7 @@ impl Gadget for AES128CipherGadget {
             newState[2][j] = state[2][(j + 2) % nb];
             newState[3][j] = state[3][(j + 3) % nb];
         }
-        return newState;
+        newState
     }
 
     fn addRoundKey(state: Vec<Vec<Option<WireType>>>, from: i32, to: i32) -> Vec<Vec<Option<WireType>>> {
@@ -191,11 +191,11 @@ impl Gadget for AES128CipherGadget {
                 idx += 1;
             }
         }
-        return newState;
+        newState
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return ciphertext;
+        ciphertext
     }
 
     // key is a 16-byte array. Each wire represents a byte.
@@ -233,14 +233,14 @@ impl Gadget for AES128CipherGadget {
             }
         }
 
-        return expanded;
+        expanded
     }
 
     fn subWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         for i in 0..w.len() {
             w[i] = randomAccess(generator, w[i]);
         }
-        return w;
+        w
     }
 
     fn rotateWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
@@ -248,7 +248,7 @@ impl Gadget for AES128CipherGadget {
         for j in 0..w.len() {
             newW[j] = w[(j + 1) % w.len()];
         }
-        return newW;
+        newW
     }
 
     fn randomAccess(generator:Box<dyn CGConfig+Send+Sync>, wire: WireType) -> WireType {
@@ -264,6 +264,6 @@ impl Gadget for AES128CipherGadget {
             _ => {}
         }
 
-        return g.getOutputWires()[0];
+        g.getOutputWires()[0]
     }
 }

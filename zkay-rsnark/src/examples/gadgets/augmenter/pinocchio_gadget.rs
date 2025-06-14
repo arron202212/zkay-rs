@@ -124,7 +124,7 @@ impl Gadget for PinocchioGadget {
             outs.add(v);
         }
         scanner.close();
-        return outs;
+        outs
     }
 
     fn getInputs(line: String) -> Vec<Integer> {
@@ -134,15 +134,15 @@ impl Gadget for PinocchioGadget {
             ins.add(scanner.nextInt());
         }
         scanner.close();
-        return ins;
+        ins
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return outputWires;
+        outputWires
     }
 
     pub fn get_prover_witness_wires() -> Vec<Option<WireType>> {
-        return proverWitnessWires;
+        proverWitnessWires
     }
 
     fn throwParsingError(s: Scanner, m: String) {

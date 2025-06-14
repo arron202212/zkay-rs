@@ -119,7 +119,8 @@ impl LongElement {
         }
     }
     pub fn generator(&self) -> ARcCell<dyn CGConfig + Send + Sync> {
-        getActiveCircuitGenerator().unwrap().clone()
+        //
+        getActiveCircuitGenerator().unwrap()
     }
     pub fn makeOutput(&mut self, desc: &Option<String>) {
         let generator = self.generator();
@@ -387,6 +388,7 @@ impl LongElement {
         let length = std::cmp::max(self.array.len(), other.array.len());
         let mut newArray = vec![None; length];
         let mut newMaxValues = vec![BigInteger::ZERO; length];
+        let zero_wire = self.generator().lock().get_zero_wire().unwrap();
         for i in 0..length {
             let b1 = if i < self.array.len() {
                 self.currentMaxValues[i].clone()
@@ -403,12 +405,12 @@ impl LongElement {
             let w1 = if i < self.array.len() {
                 self.array[i].clone().unwrap()
             } else {
-                self.generator().lock().get_zero_wire().unwrap()
+                zero_wire.clone()
             };
             let w2 = if i < other.array.len() {
                 other.array[i].clone().unwrap()
             } else {
-                self.generator().lock().get_zero_wire().unwrap()
+                zero_wire.clone()
             };
             newArray[i] = Some(w1.clone().add(w.clone().mul(w2.clone().sub(w1))));
             if newArray[i].as_ref().unwrap().instance_of("ConstantWire") {
@@ -519,8 +521,10 @@ impl LongElement {
         let bits2 = self.getBitsi(self.getMaxVal(Self::CHUNK_BITWIDTH).bits() as i32);
         let v1 = LongElement::newa(bits1);
         let v2 = LongElement::newa(bits2);
+        let mut generator = self.generator();
+        let mut generator = generator.lock();
         for i in 0..v1.array.len() {
-            self.generator().lock().addEqualityAssertion(
+            generator.addEqualityAssertion(
                 v1.array[i].clone().unwrap(),
                 v2.array[i].clone().unwrap(),
                 &None,
@@ -547,10 +551,11 @@ impl LongElement {
             bounds1 = vec![BigInteger::ZERO; limit];
             bounds1[..self.currentMaxValues.len()].clone_from_slice(&self.currentMaxValues);
         }
-
+        let mut generator = self.generator();
+        let mut generator = generator.lock();
         // simpl e equality assertion cases
         if a1.len() == a2.len() && a1.len() == 1 {
-            self.generator().lock().addEqualityAssertion(
+            generator.addEqualityAssertion(
                 a1[0].clone().unwrap(),
                 a2[0].clone().unwrap(),
                 &Some("Equality assertion of long elements | case 1".to_owned()),
@@ -558,7 +563,7 @@ impl LongElement {
             return;
         } else if self.isAligned() && e.isAligned() {
             for i in 0..limit {
-                self.generator().lock().addEqualityAssertion(
+                generator.addEqualityAssertion(
                     a1[i].clone().unwrap(),
                     a2[i].clone().unwrap(),
                     &Some(format! {"Equality assertion of long elements | case 2 | index {i}"}),
@@ -633,10 +638,7 @@ impl LongElement {
         let mut auxConstant = BigInteger::ZERO;
         let mut auxConstantChunks = vec![BigInteger::ZERO; numOfGroupedChunks];
 
-        let mut carries = self
-            .generator()
-            .lock()
-            .createProverWitnessWireArray(numOfGroupedChunks - 1, &None);
+        let mut carries = generator.createProverWitnessWireArray(numOfGroupedChunks - 1, &None);
         let mut carriesBitwidthBounds = vec![0; carries.len()];
 
         // computing the auxConstantChunks, and the total auxConstant
@@ -727,9 +729,7 @@ impl LongElement {
         }
                     }
                 );
-        self.generator()
-            .lock()
-            .specifyProverWitnessComputation(prover);
+        generator.specifyProverWitnessComputation(prover);
         // self.generator().lock()
         //     .specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
         //         let mut prevCarry = BigInteger::ZERO;
@@ -801,24 +801,20 @@ impl LongElement {
         }
 
         // Now apply the main constraints
-
-        let mut prevCarry = self.generator().lock().get_zero_wire().unwrap();
+        let zero_wire = generator.get_zero_wire();
+        let mut prevCarry = zero_wire.clone().unwrap();
         let mut prevBound = BigInteger::ZERO;
 
         // recall carries.len() = numOfGroupedChunks - 1
         for j in 0..carries.len() + 1 {
-            let auxConstantChunkWire = self
-                .generator()
-                .lock()
-                .createConstantWire(auxConstantChunks[j].clone(), &None);
-            let alignedAuxConstantChunkWire = self
-                .generator()
-                .lock()
-                .createConstantWire(alignedAuxConstantChunks[j].clone(), &None);
+            let auxConstantChunkWire =
+                generator.createConstantWire(auxConstantChunks[j].clone(), &None);
+            let alignedAuxConstantChunkWire =
+                generator.createConstantWire(alignedAuxConstantChunks[j].clone(), &None);
 
             // the last carry value must be zero
             let currentCarry = if j == carries.len() {
-                self.generator().lock().get_zero_wire()
+                zero_wire.clone()
             } else {
                 carries[j].clone()
             };
@@ -849,7 +845,7 @@ impl LongElement {
             // currentCarry will be zero,
             // i.e., there will be no more values to be checked.
 
-            self.generator().lock().addEqualityAssertion(
+            generator.addEqualityAssertion(
                 w1,
                 w2,
                 &Some(format!(
@@ -875,10 +871,11 @@ impl LongElement {
         let a1 = self.getArray();
         let a2 = other.getArray();
         let length = std::cmp::max(a1.len(), a2.len());
-        let paddedA1 =
-            Util::padWireArray(a1, length, self.generator().lock().get_zero_wire().unwrap());
-        let paddedA2 =
-            Util::padWireArray(a2, length, self.generator().lock().get_zero_wire().unwrap());
+        let mut generator = self.generator();
+        let mut generator = generator.lock();
+        let zero_wire = generator.get_zero_wire().unwrap();
+        let paddedA1 = Util::padWireArray(a1, length, zero_wire.clone());
+        let paddedA2 = Util::padWireArray(a2, length, zero_wire.clone());
 
         /*
          * Instead of doing the comparison naively (which will involve all the
@@ -886,10 +883,7 @@ impl LongElement {
          * other element that is more than the corresponding chunk in this
          * element.
          */
-        let helperBits = self
-            .generator()
-            .lock()
-            .createProverWitnessWireArray(length, &None);
+        let helperBits = generator.createProverWitnessWireArray(length, &None);
         // set the value of the helperBits outside the circuits
         let prover = crate::impl_prover!(
                 eval (
@@ -917,9 +911,7 @@ impl LongElement {
                         }
             }
         );
-        self.generator()
-            .lock()
-            .specifyProverWitnessComputation(prover);
+        generator.specifyProverWitnessComputation(prover);
         // self.generator().lock()
         //     .specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
         //         let mut found = false;
@@ -973,19 +965,17 @@ impl LongElement {
 
         // verify constraints about helper bits.
         for w in &helperBits {
-            self.generator()
-                .lock()
-                .addBinaryAssertion(w.clone().unwrap(), &None);
+            generator.addBinaryAssertion(w.clone().unwrap(), &None);
         }
         // Only one bit should be set.
-        self.generator().lock().addOneAssertion(
+        generator.addOneAssertion(
             WireArray::new(helperBits.clone()).sumAllElements(&None),
             &None,
         );
 
         // verify "the greater than condition" for the specified chunk
-        let mut chunk1 = self.generator().lock().get_zero_wire().unwrap();
-        let mut chunk2 = self.generator().lock().get_zero_wire().unwrap();
+        let mut chunk1 = zero_wire.clone();
+        let mut chunk2 = zero_wire.clone();
 
         for i in 0..helperBits.len() {
             chunk1 = chunk1.add(
@@ -1001,7 +991,7 @@ impl LongElement {
                     .mul(helperBits[i].clone().unwrap()),
             );
         }
-        self.generator().lock().addOneAssertion(
+        generator.addOneAssertion(
             chunk1.isLessThan(chunk2, Self::CHUNK_BITWIDTH, &None),
             &None,
         );
@@ -1014,13 +1004,13 @@ impl LongElement {
                 .map(|x| x.clone().add(helperBits[i - 1].clone().unwrap()));
             //			self.generator().lock().addZeroAssertion(helperBits2[i].mul(paddedA1[i]
             //					.sub(paddedA2[i])));
-            self.generator().lock().addAssertion(
+            generator.addAssertion(
                 helperBits2[i].clone().unwrap(),
                 paddedA1[i]
                     .clone()
                     .unwrap()
                     .sub(paddedA2[i].clone().unwrap()),
-                self.generator().lock().get_zero_wire().unwrap(),
+                zero_wire.clone(),
                 &None,
             );
         }
@@ -1114,8 +1104,9 @@ impl Sub<LongElement> for LongElement {
             self.isAligned() && rhs.isAligned(),
             "Subtraction arguments must be properly aligned"
         );
-
-        let result = self.generator().lock().createLongElementProverWitness(
+        let mut generator = self.generator();
+        let mut generator = generator.lock();
+        let result = generator.createLongElementProverWitness(
             self.getMaxVal(Self::CHUNK_BITWIDTH).bits() as i32,
             &None,
         );
@@ -1256,9 +1247,7 @@ impl Mul<LongElement> for LongElement {
             }
                         }
                     );
-            self.generator()
-                .lock()
-                .specifyProverWitnessComputation(prover);
+            generator.specifyProverWitnessComputation(prover);
             // self.generator().lock().specifyProverWitnessComputation(
             //     &|evaluator: &mut CircuitEvaluator| {
             //         let a = evaluator.getWiresValues(self.array.clone());

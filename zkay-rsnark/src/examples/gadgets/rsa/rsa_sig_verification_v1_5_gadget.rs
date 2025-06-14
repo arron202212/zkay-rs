@@ -105,6 +105,6 @@ impl Gadget for RSASigVerificationV1_5_Gadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![isValidSignature];
+        vec![isValidSignature]
     }
 }

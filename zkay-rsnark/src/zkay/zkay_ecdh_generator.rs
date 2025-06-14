@@ -68,11 +68,11 @@ impl CircuitGenerator for ZkayECDHGenerator {
     }
 
     pub fn derivePk(secret: BigInteger) -> String {
-        return computeECKey(null, secret).toString(16);
+        computeECKey(null, secret).toString(16)
     }
 
     pub fn getSharedSecret(public_key: BigInteger, secret: BigInteger) -> String {
-        return computeECKey(public_key, secret).toString(16);
+        computeECKey(public_key, secret).toString(16)
     }
 
     pub fn rnd_to_secret(rnd_32: String) -> BigInteger {
@@ -81,7 +81,7 @@ impl CircuitGenerator for ZkayECDHGenerator {
         arr[0] &= 0x0f;
         arr[0] |= 0x10;
         arr[31] &= 0xf8;
-        return unsignedBytesToBigInt(arr);
+        unsignedBytesToBigInt(arr)
     }
 }
 

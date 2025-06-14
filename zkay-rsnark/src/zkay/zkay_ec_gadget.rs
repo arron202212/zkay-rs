@@ -95,7 +95,7 @@ impl ZkayEcGadget {
         for j in 1..SECRET_BITWIDTH {
             precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
         }
-        return precomputedTable;
+        precomputedTable
     }
 
     /**
@@ -114,7 +114,7 @@ impl ZkayEcGadget {
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
             result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
         }
-        return result;
+        result
     }
 
     fn doubleAffinePoint(p: AffinePoint) -> AffinePoint {
@@ -125,7 +125,7 @@ impl ZkayEcGadget {
         let l2 = l1.mul(l1);
         let newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
         let newY = p.x.mul(3).add(COEFF_A).sub(l2).mul(l1).sub(p.y);
-        return AffinePoint::new(newX, newY);
+        AffinePoint::new(newX, newY)
     }
 
     fn addAffinePoints(p1: AffinePoint, p2: AffinePoint) -> AffinePoint {
@@ -136,7 +136,7 @@ impl ZkayEcGadget {
         let q3 = q2.mul(q);
         let newX = q2.sub(COEFF_A).sub(p1.x).sub(p2.x);
         let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
-        return AffinePoint::new(newX, newY);
+        AffinePoint::new(newX, newY)
     }
 }
 impl Gadget for ZkayEcGadget {
@@ -148,7 +148,7 @@ impl Gadget for ZkayEcGadget {
             .add(x)
             .rem(Configs.field_prime.clone());
         let y = IntegerFunctions.ressol(ySqred, Configs.field_prime);
-        return y;
+        y
     }
 
     fn assertPointOrder(p: AffinePoint, table: Vec<AffinePoint>) {

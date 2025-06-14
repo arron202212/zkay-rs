@@ -29,7 +29,7 @@ crate::impl_instruction_for!(Op<SplitBasicOp>);
 crate::impl_hash_code_for!(Op<SplitBasicOp>);
 impl BasicOp for Op<SplitBasicOp> {
     fn getOpcode(&self) -> String {
-        return "split".to_owned();
+        "split".to_owned()
     }
 
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
@@ -71,10 +71,6 @@ impl BasicOp for Op<SplitBasicOp> {
 impl Eq for Op<SplitBasicOp> {}
 impl PartialEq for Op<SplitBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-
         self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.outputs.len() == other.outputs.len()
     }

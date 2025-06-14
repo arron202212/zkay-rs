@@ -23,6 +23,6 @@ impl Gadget for AESSBoxNaiveLookupGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![output];
+        vec![output]
     }
 }

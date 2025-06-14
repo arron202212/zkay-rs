@@ -45,7 +45,7 @@ impl PaillierBackend {
 
 impl Asymmetric for PaillierBackend {
     pub fn getKeyChunkSize() -> i32 {
-        return CHUNK_SIZE;
+        CHUNK_SIZE
     }
 
     pub fn createEncryptionGadget(
@@ -62,7 +62,7 @@ impl Asymmetric for PaillierBackend {
                 .adjustLength(keyBits),
         );
         let random = uninitZeroToOne(randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
-        return ZkayPaillierFastEncGadget::new(key, keyBits, encodedPlain, random, desc);
+        ZkayPaillierFastEncGadget::new(key, keyBits, encodedPlain, random, desc)
     }
 }
 impl Asymmetric for HomomorphicBackend {
@@ -75,7 +75,7 @@ impl Asymmetric for HomomorphicBackend {
         if op == '-' {
             // Enc(m, r)^(-1) = (g^m * r^n)^(-1) = (g^m)^(-1) * (r^n)^(-1) = g^(-m) * (r^(-1))^n = Enc(-m, r^(-1))
             let result = invert(cipherVal, nSquare);
-            return toWireArray(result, "-(" + arg.getName() + ")");
+            toWireArray(result, "-(" + arg.getName() + ")")
         } else {
             panic!("Unary operation {op} not supported");
         }
@@ -96,7 +96,7 @@ impl Asymmetric for HomomorphicBackend {
                 let lhsVal = toLongElement(lhs);
                 let rhsVal = toLongElement(rhs);
                 let result = mulMod(lhsVal, rhsVal, nSquare);
-                return toWireArray(result, outputName);
+                toWireArray(result, outputName)
             }
             '-' => {
                 // Enc(m1, r1) * Enc(m2, r2)^(-1) = Enc(m1 + (-m2), r1 * r2^(-1)) = Enc(m1 - m2, r1 * r2^(-1))
@@ -104,7 +104,7 @@ impl Asymmetric for HomomorphicBackend {
                 let lhsVal = toLongElement(lhs);
                 let rhsVal = toLongElement(rhs);
                 let result = mulMod(lhsVal, invert(rhsVal, nSquare), nSquare);
-                return toWireArray(result, outputName);
+                toWireArray(result, outputName)
             }
             '*' => {
                 // Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
@@ -149,7 +149,7 @@ impl Asymmetric for HomomorphicBackend {
                     result = result.muxBit(negResult, signBit);
                 }
 
-                return toWireArray(result, outputName);
+                toWireArray(result, outputName)
             }
             _ => panic!("Binary operation  {op} not supported"),
         }
@@ -160,7 +160,7 @@ impl Asymmetric for HomomorphicBackend {
         let nSquareMaxBits = 2 * keyBits; // Maximum bit length of n^2
         let maxNumChunks =
             (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
-        return n.mul(n).align(maxNumChunks);
+        n.mul(n).align(maxNumChunks)
     }
 
     fn invert(val: LongElement, nSquare: LongElement) -> LongElement {
@@ -223,7 +223,7 @@ impl Asymmetric for HomomorphicBackend {
         bitWidths[bitWidths.len() - 1] = 2 * keyBits - (bitWidths.len() - 1) * CHUNK_SIZE;
 
         // Cipher could still be uninitialized-zero, which we need to fix
-        return uninitZeroToOne(LongElement::new(wires, bitWidths));
+        uninitZeroToOne(LongElement::new(wires, bitWidths))
     }
 
     fn toWireArray(value: LongElement, name: String) -> Vec<TypedWire> {
@@ -247,7 +247,7 @@ impl Asymmetric for HomomorphicBackend {
         for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
-        return typedWires;
+        typedWires
     }
 
     fn uninitZeroToOne(val: LongElement) -> LongElement {
@@ -255,7 +255,7 @@ impl Asymmetric for HomomorphicBackend {
         // Instead, replace those values with 1 == g^0 * 1^n = Enc(0, 1)
         let valIsZero = val.checkNonZero().invAsBit();
         let oneIfAllZero = LongElement::new(valIsZero, 1 /* bit */);
-        return val.add(oneIfAllZero);
+        val.add(oneIfAllZero)
     }
 
     fn encodeSignedToModN(input: TypedWire, key: LongElement) -> LongElement {
@@ -270,10 +270,10 @@ impl Asymmetric for HomomorphicBackend {
                 LongElement::new(input.wire.invBits(bits).add(1).getBitWires(bits + 1));
             let negValue = key.sub(rawNegValue);
 
-            return posValue.muxBit(negValue, signBit);
+            posValue.muxBit(negValue, signBit)
         } else {
             // Unsigned, encode as-is, just convert the input wire to a LongElement
-            return LongElement::new(input.wire.getBitWires(input.zkay_type.bitwidth));
+            LongElement::new(input.wire.getBitWires(input.zkay_type.bitwidth))
         }
     }
 }

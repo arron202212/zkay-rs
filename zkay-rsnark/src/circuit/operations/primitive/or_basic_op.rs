@@ -29,7 +29,7 @@ crate::impl_instruction_for!(Op<OrBasicOp>);
 crate::impl_hash_code_for!(Op<OrBasicOp>);
 impl BasicOp for Op<OrBasicOp> {
     fn getOpcode(&self) -> String {
-        return "or".to_owned();
+        "or".to_owned()
     }
 
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
@@ -63,16 +63,12 @@ impl BasicOp for Op<OrBasicOp> {
     }
 
     fn getNumMulGates(&self) -> i32 {
-        return 1;
+        1
     }
 }
 impl Eq for Op<OrBasicOp> {}
 impl PartialEq for Op<OrBasicOp> {
     fn eq(&self, other: &Self) -> bool {
-        if self == other {
-            return true;
-        }
-
         let check1 = self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
             && self.inputs[1].as_ref().unwrap() == other.inputs[1].as_ref().unwrap();
         let check2 = self.inputs[1].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()

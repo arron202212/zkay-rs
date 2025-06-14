@@ -145,6 +145,6 @@ impl FieldDivisionGadget {
 }
 impl GadgetConfig for FieldDivisionGadget {
     fn getOutputWires(&self) -> Vec<Option<WireType>> {
-        return vec![Some(self.c.clone())];
+        vec![Some(self.c.clone())]
     }
 }

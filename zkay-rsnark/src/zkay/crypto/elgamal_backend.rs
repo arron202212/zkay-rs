@@ -21,13 +21,13 @@ impl ElgamalBackend {
 }
 impl Asymmetric for ElgamalBackend {
     fn getKeyChunkSize() -> i32 {
-        return KEY_CHUNK_SIZE;
+        KEY_CHUNK_SIZE
     }
 
     fn usesDecryptionGadget() -> bool {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
-        return true;
+        true
     }
 
     fn addKey(keyName: String, keyWires: Vec<Option<WireType>>) {
@@ -67,7 +67,7 @@ impl Asymmetric for ElgamalBackend {
         let c1 = ZkayBabyJubJubGadget::new().JubJubPoint(cipher[0], cipher[1]);
         let c2 = ZkayBabyJubJubGadget::new().JubJubPoint(cipher[2], cipher[3]);
         let skBits = WireArray::new(sk).getBits(RND_CHUNK_SIZE).asArray();
-        return ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire);
+        ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire)
     }
 
     fn toTypedWireArray(wires: Vec<Option<WireType>>, name: String) -> Vec<TypedWire> {
@@ -76,7 +76,7 @@ impl Asymmetric for ElgamalBackend {
         for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
-        return typedWires;
+        typedWires
     }
 
     fn fromTypedWireArray(typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
@@ -86,18 +86,18 @@ impl Asymmetric for ElgamalBackend {
             ZkayType.checkType(uint256, typedWires[i].zkay_type);
             wires[i] = typedWires[i].wire;
         }
-        return wires;
+        wires
     }
 
     fn parseJubJubPoint(wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
-        return ZkayBabyJubJubGadget::new().JubJubPoint(wire[offset], wire[offset + 1]);
+        ZkayBabyJubJubGadget::new().JubJubPoint(wire[offset], wire[offset + 1])
     }
 
     fn uninitZeroToIdentity(p: JubJubPoint) -> JubJubPoint {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
         let oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
-        return ZkayBabyJubJubGadget::new().JubJubPoint(p.x, p.y.add(oneIfBothZero));
+        ZkayBabyJubJubGadget::new().JubJubPoint(p.x, p.y.add(oneIfBothZero))
     }
 }
 impl HomomorphicBackend for ElgamalBackend {
@@ -140,7 +140,7 @@ impl HomomorphicBackend for ElgamalBackend {
             }
 
             let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2);
-            return toTypedWireArray(gadget.getOutputWires(), outputName);
+            toTypedWireArray(gadget.getOutputWires(), outputName)
         } else if op == '*' {
             let outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
 
@@ -165,7 +165,7 @@ impl HomomorphicBackend for ElgamalBackend {
 
             let gadget =
                 ZkayElgamalMulGadget::new(c1, c2, plain_wire.wire.getBitWires(32).asArray());
-            return toTypedWireArray(gadget.getOutputWires(), outputName);
+            toTypedWireArray(gadget.getOutputWires(), outputName)
         } else {
             panic!("Binary operation {op} not supported");
         }
@@ -192,6 +192,6 @@ impl HomomorphicBackend for ElgamalBackend {
 
         // create gadget
         let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray);
-        return toTypedWireArray(gadget.getOutputWires(), outputName);
+        toTypedWireArray(gadget.getOutputWires(), outputName)
     }
 }

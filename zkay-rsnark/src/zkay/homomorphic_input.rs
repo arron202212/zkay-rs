@@ -16,36 +16,36 @@ impl HomomorphicInput {
     }
 
     pub fn of(cipher: Vec<TypedWire>) -> HomomorphicInput {
-        return HomomorphicInput::new(cipher, true);
+        HomomorphicInput::new(cipher, true)
     }
 
     pub fn of(plain: TypedWire) -> HomomorphicInput {
-        return HomomorphicInput::new(vec![plain], false);
+        HomomorphicInput::new(vec![plain], false)
     }
 
     pub fn isCipher() -> bool {
-        return isCipher;
+        isCipher
     }
 
     pub fn isPlain() -> bool {
-        return !isCipher;
+        !isCipher
     }
 
     pub fn getCipher() -> Vec<TypedWire> {
         assert!(self.isCipher(), "Homomorphic input was not a ciphertext");
-        return array;
+        array
     }
 
     pub fn getPlain() -> TypedWire {
         assert!(!self.isCipher(), "Homomorphic input was not a plaintext");
-        return array[0];
+        array[0]
     }
 
     pub fn getLength() -> i32 {
-        return array.len();
+        array.len()
     }
 
     pub fn getName() -> String {
-        return array[0].name;
+        array[0].name
     }
 }

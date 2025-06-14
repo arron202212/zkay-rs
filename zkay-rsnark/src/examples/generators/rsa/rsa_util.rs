@@ -37,7 +37,7 @@ impl RSAUtil {
         let paddedPlaintext = product.toByteArray();
         if paddedPlaintext.len() != keySize / 8 - 1 {
             //println!("Error");
-            return None;
+            None
         }
         let plaintext = None;
         let randomness = None;
@@ -59,7 +59,7 @@ impl RSAUtil {
             }
         }
         let result = vec![vec![plaintext, randomness]];
-        return result;
+        result
     }
 
     fn intToByteArray(value: i32) -> Vec<byte> {
@@ -80,7 +80,7 @@ impl RSAUtil {
             hash.reset();
             v = concat(v, digest);
         }
-        return v;
+        v
     }
 
     fn concat(a1: Vec<byte>, a2: Vec<byte>) -> Vec<byte> {
@@ -92,7 +92,7 @@ impl RSAUtil {
         for i in 0..a2.length {
             result[i + a1.length] = a2[i];
         }
-        return result;
+        result
     }
 
     pub fn extractRSAOAEPSeed(cipherText: Vec<byte>, privateKey: RSAPrivateKey) -> Vec<Vec<byte>> {
@@ -158,6 +158,6 @@ impl RSAUtil {
         }
         let plaintext = DB[idx + 1..].to_vec();
         let result = vec![vec![plaintext, seed]];
-        return result;
+        result
     }
 }

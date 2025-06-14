@@ -18,11 +18,11 @@ impl BlockCipher for ChaskeyLTSEngine {
     }
 
     pub fn getAlgorithmName() -> String {
-        return "chaskey_lts_128";
+        "chaskey_lts_128"
     }
 
     pub fn getBlockSize() -> i32 {
-        return 16;
+        16
     }
 
     pub fn processBlock(ins: Vec<byte>, inOff: i32, out: Vec<byte>, outOff: i32) -> i32 {
@@ -86,7 +86,7 @@ impl BlockCipher for ChaskeyLTSEngine {
             .order(ByteOrder.LITTLE_ENDIAN)
             .asIntBuffer()
             .put(v);
-        return 16;
+        16
     }
 
     pub fn reset() {

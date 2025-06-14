@@ -38,6 +38,6 @@ impl Gadget for ZkayDummyHomEncryptionGadget {
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return cipher;
+        cipher
     }
 }

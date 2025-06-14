@@ -242,7 +242,7 @@ impl Gadget for ECDHKeyExchangeGadget {
         for j in 1..secretBits.len() {
             precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
         }
-        return precomputedTable;
+        precomputedTable
     }
 
     /**
@@ -261,7 +261,7 @@ impl Gadget for ECDHKeyExchangeGadget {
             result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
             result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
         }
-        return result;
+        result
     }
 
     fn doubleAffinePoint(p: AffinePoint) -> AffinePoint {
@@ -272,7 +272,7 @@ impl Gadget for ECDHKeyExchangeGadget {
         let l2 = l1.mul(l1);
         let newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
         let newY = p.x.mul(3).add(COEFF_A).sub(l2).mul(l1).sub(p.y);
-        return AffinePoint::new(newX, newY);
+        AffinePoint::new(newX, newY)
     }
 
     fn addAffinePoints(p1: AffinePoint, p2: AffinePoint) -> AffinePoint {
@@ -283,11 +283,11 @@ impl Gadget for ECDHKeyExchangeGadget {
         let q3 = q2.mul(q);
         let newX = q2.sub(COEFF_A).sub(p1.x).sub(p2.x);
         let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
-        return AffinePoint::new(newX, newY);
+        AffinePoint::new(newX, newY)
     }
 
     pub fn getOutputWires() -> Vec<Option<WireType>> {
-        return vec![outputPublicValue, sharedSecret];
+        vec![outputPublicValue, sharedSecret]
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
@@ -298,7 +298,7 @@ impl Gadget for ECDHKeyExchangeGadget {
             .add(x)
             .rem(Configs.field_prime.clone());
         let y = IntegerFunctions.ressol(ySqred, Configs.field_prime);
-        return y;
+        y
     }
 
     pub fn validateInputs() {
@@ -337,10 +337,10 @@ impl Gadget for ECDHKeyExchangeGadget {
     }
 
     pub fn getOutputPublicValue() -> WireType {
-        return outputPublicValue;
+        outputPublicValue
     }
 
     pub fn getSharedSecret() -> WireType {
-        return sharedSecret;
+        sharedSecret
     }
 }

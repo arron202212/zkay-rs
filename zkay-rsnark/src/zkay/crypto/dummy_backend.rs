@@ -13,7 +13,7 @@ impl DummyBackend {
     // }
 
     pub fn getKeyChunkSize() -> i32 {
-        return KEY_CHUNK_SIZE;
+        KEY_CHUNK_SIZE
     }
 }
 impl Asymmetric for DummyBackend {
@@ -23,6 +23,6 @@ impl Asymmetric for DummyBackend {
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        return ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc);
+        ZkayDummyEncryptionGadget::new(plain, getKey(key), random, keyBits, desc)
     }
 }
