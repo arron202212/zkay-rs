@@ -427,12 +427,13 @@ pub fn derive_impl_struct_name_config(input: TokenStream) -> TokenStream {
                 #new_literal.to_owned()
             }
     });
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let expanded = quote! {
-        impl crate::circuit::StructNameConfig for #name  {
-              #name_checker_functions
+        impl #impl_generics crate::circuit::StructNameConfig for #name #ty_generics #where_clause {
+             #name_checker_functions
         }
-        impl crate::circuit::InstanceOf for #name  {
+        impl #impl_generics crate::circuit::InstanceOf for #name #ty_generics #where_clause {
 
         }
     };

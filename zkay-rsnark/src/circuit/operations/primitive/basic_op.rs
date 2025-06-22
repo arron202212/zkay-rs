@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::{InstanceOf, OpCodeConfig, StructNameConfig};

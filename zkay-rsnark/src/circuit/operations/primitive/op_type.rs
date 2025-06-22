@@ -18,6 +18,7 @@ use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
 use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
+use crate::circuit::structure::circuit_generator::CGConfig;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, Hash, PartialEq)]

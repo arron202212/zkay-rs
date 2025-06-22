@@ -7,20 +7,28 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::structure::bit_wire::BitWireConfig;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorIQ;
+use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct LinearCombinationBitWire;
-crate::impl_hash_code_of_wire_for!(Wire<LinearCombinationBitWire>);
-crate::impl_name_instance_of_wire_for!(Wire<LinearCombinationBitWire>);
-pub fn new_linear_combination_bit(wireId: i32) -> Wire<LinearCombinationBitWire> {
+crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationBitWire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationBitWire>);
+pub fn new_linear_combination_bit(
+    wireId: i32,
+    generator: RcCell<CircuitGeneratorIQ>,
+) -> Wire<LinearCombinationBitWire> {
     // super(wireId);
     Wire::<LinearCombinationBitWire> {
         wireId,
+        generator,
         t: LinearCombinationBitWire,
     }
 }
@@ -39,6 +47,9 @@ impl Wire<LinearCombinationBitWire> {
     // }
 
     pub fn getBitWires(&self) -> WireArray {
-        WireArray::new(vec![Some(WireType::LinearCombinationBit(self.clone()))])
+        WireArray::new(
+            vec![Some(WireType::LinearCombinationBit(self.clone()))],
+            self.generator.clone(),
+        )
     }
 }

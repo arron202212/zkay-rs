@@ -11,12 +11,18 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
 use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+use crate::circuit::structure::circuit_generator::CreateConstantWire;
+use crate::circuit::structure::circuit_generator::{
+    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+};
+use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
+use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
@@ -25,12 +31,17 @@ use zkay_derive::ImplStructNameConfig;
 pub struct ConstantWire {
     pub constant: BigInteger,
 }
-crate::impl_hash_code_of_wire_for!(Wire<ConstantWire>);
-crate::impl_name_instance_of_wire_for!(Wire<ConstantWire>);
-pub fn new_constant(wireId: i32, value: BigInteger) -> Wire<ConstantWire> {
+crate::impl_hash_code_of_wire_g_for!(Wire<ConstantWire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<ConstantWire>);
+pub fn new_constant(
+    wireId: i32,
+    value: BigInteger,
+    generator: RcCell<CircuitGeneratorIQ>,
+) -> Wire<ConstantWire> {
     // super(wireId);
     Wire::<ConstantWire> {
         wireId,
+        generator,
         t: ConstantWire {
             constant: value.rem(Configs.field_prime.clone()),
         },
@@ -46,11 +57,6 @@ impl Wire<ConstantWire> {
     //         constant: value.rem(Configs.field_prime.clone()),
     //     }
     // }
-    // pub fn generator(&self) -> Box<dyn CGConfig+Send+Sync> {
-    //     getActiveCircuitGenerator()
-    //         .unwrap()
-    //         .clone()
-    // }
     pub fn getConstant(&self) -> BigInteger {
         self.t.constant.clone()
     }
@@ -65,9 +71,9 @@ impl WireConfig for Wire<ConstantWire> {
     }
     fn mulw(&self, w: WireType, desc: &Option<String>) -> WireType {
         let generator = self.generator();
-        let mut generator = generator.lock();
+
         if w.instance_of("ConstantWire") {
-            return generator.createConstantWire(
+            return generator.create_constant_wire(
                 self.t
                     .constant
                     .clone()
@@ -80,6 +86,7 @@ impl WireConfig for Wire<ConstantWire> {
     }
 
     fn mulb(&self, b: BigInteger, desc: &Option<String>) -> WireType {
+        println!("End Name Time: ccccccc {} s", line!());
         let sign = b.sign() == Sign::Minus;
         let newConstant = self
             .t
@@ -87,23 +94,30 @@ impl WireConfig for Wire<ConstantWire> {
             .clone()
             .mul(b.clone())
             .rem(Configs.field_prime.clone());
-        let mut generator = self.generator();
-        let mut generator = generator.lock();
-        let mut out: Option<WireType> = generator.known_constant_wires().get(&newConstant).cloned();
+        println!("End Name Time: ccccccc {} s", line!());
+        let mut generator = self.generator().clone();
+        println!("End Name Time: ccccccc {} s", line!());
+
+        println!("End Name Time: ccccccc {} s", line!());
+        let mut out: Option<WireType> = generator
+            .get_known_constant_wires()
+            .get(&newConstant)
+            .cloned();
         if let Some(out) = out {
             return out.clone();
         }
-
+        println!("End Name Time: ccccccc {} s", line!());
         out = Some(WireType::Constant(new_constant(
-            *generator.current_wire_id(),
+            generator.get_current_wire_id(),
             if !sign {
                 newConstant.clone()
             } else {
                 newConstant.clone().sub(Configs.field_prime.clone())
             },
+            generator.clone(),
         )));
-
-        *generator.current_wire_id() += 1;
+        println!("End Name Time: ccccccc {} s", line!());
+        generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
             WireType::Constant(self.clone()),
             out.clone().unwrap(),
@@ -111,27 +125,28 @@ impl WireConfig for Wire<ConstantWire> {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
+        println!("End Name Time: ccccccc {} s", line!());
         let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
-            *generator.current_wire_id() -= 1;
+            generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
-
-        self.generator()
-            .lock()
-            .known_constant_wires()
+        println!("End Name Time: ccccccc {} s", line!());
+        generator
+            .borrow_mut()
+            .known_constant_wires
             .insert(newConstant, out.clone().unwrap());
         out.clone().unwrap()
     }
 
     fn checkNonZero(&self, desc: &Option<String>) -> WireType {
         let generator = self.generator();
-        let mut generator = generator.lock();
+
         if self.t.constant == BigInteger::ZERO {
-            generator.zero_wire().clone().unwrap()
+            generator.get_zero_wire().unwrap()
         } else {
-            generator.one_wire().clone().unwrap()
+            generator.get_one_wire().unwrap()
         }
     }
 
@@ -139,7 +154,6 @@ impl WireConfig for Wire<ConstantWire> {
         assert!(self.isBinary(), "Trying to invert a non-binary constant!");
 
         let generator = self.generator();
-        let generator = generator.lock();
 
         if self.t.constant == BigInteger::ZERO {
             generator.get_one_wire()
@@ -150,7 +164,7 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn orw(&self, w: WireType, desc: &Option<String>) -> WireType {
         let generator = self.generator();
-        let mut generator = generator.lock();
+
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -160,13 +174,13 @@ impl WireConfig for Wire<ConstantWire> {
             return if self.t.constant == BigInteger::ZERO
                 && cw.try_as_constant_ref().unwrap().getConstant() == BigInteger::ZERO
             {
-                generator.zero_wire().clone().unwrap()
+                generator.get_zero_wire().unwrap()
             } else {
-                generator.one_wire().clone().unwrap()
+                generator.get_one_wire().unwrap()
             };
         }
         if self.t.constant == Util::one() {
-            generator.one_wire().clone().unwrap()
+            generator.get_one_wire().unwrap()
         } else {
             w
         }
@@ -174,7 +188,7 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn xorw(&self, w: WireType, desc: &Option<String>) -> WireType {
         let generator = self.generator();
-        let generator = generator.lock();
+
         if w.instance_of("ConstantWire") {
             let cw = w;
             assert!(
@@ -201,16 +215,16 @@ impl WireConfig for Wire<ConstantWire> {
             self.t.constant.bits()
         );
         let generator = self.generator();
-        let mut generator = generator.lock();
+
         let mut bits = vec![None; bitwidth as usize];
         for i in 0..bitwidth as usize {
             bits[i] = if self.t.constant.bit(i as u64) {
-                generator.one_wire().clone()
+                generator.get_one_wire()
             } else {
-                generator.zero_wire().clone()
+                generator.get_zero_wire()
             };
         }
-        WireArray::new(bits)
+        WireArray::new(bits, generator.clone())
     }
 
     fn restrictBitLength(&self, bitwidth: u64, desc: &Option<String>) {

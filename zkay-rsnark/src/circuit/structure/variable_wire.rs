@@ -7,6 +7,9 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::arc_cell_new;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorIQ;
+use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
@@ -30,12 +33,13 @@ impl PartialEq for VariableWire {
         self.bitWires == other.bitWires
     }
 }
-crate::impl_hash_code_of_wire_for!(Wire<VariableWire>);
-crate::impl_name_instance_of_wire_for!(Wire<VariableWire>);
-pub fn new_variable(wireId: i32) -> Wire<VariableWire> {
+crate::impl_hash_code_of_wire_g_for!(Wire<VariableWire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<VariableWire>);
+pub fn new_variable(wireId: i32, generator: RcCell<CircuitGeneratorIQ>) -> Wire<VariableWire> {
     // super(wireId);
     Wire::<VariableWire> {
         wireId,
+        generator,
         t: VariableWire { bitWires: None },
     }
 }

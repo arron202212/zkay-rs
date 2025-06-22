@@ -12,7 +12,12 @@ use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::wire_label_instruction;
 use crate::circuit::operations::wire_label_instruction::LabelType;
 use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+use crate::circuit::structure::circuit_generator::CGInstance;
+use crate::circuit::structure::circuit_generator::{
+    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
@@ -29,6 +34,7 @@ use std::path::Path;
 // circuitGenerator:Box<dyn CGConfig+Send+Sync>,
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::marker::PhantomData;
 #[derive(Debug, Clone)]
 pub struct CircuitEvaluator {
     pub valueAssignment: Vec<Option<BigInteger>>,
@@ -36,12 +42,9 @@ pub struct CircuitEvaluator {
 }
 
 impl CircuitEvaluator {
-    pub fn new(cg_name: &str) -> Self {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap();
-        let circuitGenerator = circuitGenerator.lock();
-        let mut valueAssignment = vec![None; circuitGenerator.get_num_wires() as usize];
-        valueAssignment[circuitGenerator.get_one_wire().unwrap().getWireId() as usize] =
-            Some(Util::one());
+    pub fn new<T: CGConfig>(cg_name: &str, generator: &RcCell<T>) -> Self {
+        let mut valueAssignment = vec![None; generator.get_num_wires() as usize];
+        valueAssignment[generator.get_one_wire().unwrap().getWireId() as usize] = Some(Util::one());
         Self {
             valueAssignment,
             cg_name: cg_name.to_owned(),
@@ -110,14 +113,9 @@ impl CircuitEvaluator {
         }
     }
 
-    pub fn evaluate(&mut self) {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap();
-        let mut circuitGenerator = circuitGenerator.lock();
-        println!(
-            "Running Circuit Evaluator for < {} >",
-            circuitGenerator.get_name()
-        );
-        let evalSequence = circuitGenerator.get_evaluation_queue();
+    pub fn evaluate<T: CGConfig>(&mut self, generator: &RcCell<T>) {
+        println!("Running Circuit Evaluator for < {} >", generator.get_name());
+        let evalSequence = generator.get_evaluation_queue();
 
         for e in evalSequence.keys() {
             e.evaluate(self);
@@ -132,15 +130,13 @@ impl CircuitEvaluator {
         }
         println!(
             "Circuit Evaluation Done for < {} >\n\n",
-            circuitGenerator.get_name()
+            generator.get_name()
         );
     }
 
-    pub fn writeInputFile(&self) {
-        let circuitGenerator = getActiveCircuitGenerator().unwrap();
-        let circuitGenerator = circuitGenerator.lock();
-        let evalSequence = circuitGenerator.get_evaluation_queue();
-        let mut printWriter = File::create(circuitGenerator.get_name() + ".in").unwrap();
+    pub fn writeInputFile<T: CGConfig>(&self, generator: RcCell<T>) {
+        let evalSequence = generator.borrow().get_evaluation_queue();
+        let mut printWriter = File::create(generator.borrow().get_name() + ".in").unwrap();
         for e in evalSequence.keys() {
             if e.wire_label().is_some()
                 && (e.wire_label().as_ref().unwrap().getType() == LabelType::input
@@ -317,7 +313,7 @@ impl CircuitEvaluator {
 
         for i in 0..totalWires {
             if assignment[i as usize].is_none() && !ignoreWires.contains(&i) {
-                //println!("WireType  {i } is Null");
+                //println!("WireType {i } is Null");
             }
         }
 

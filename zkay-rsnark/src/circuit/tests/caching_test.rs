@@ -6,15 +6,17 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
 use crate::circuit::structure::circuit_generator::put_active_circuit_generator;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::hash::sha256_gadget;
@@ -114,13 +116,13 @@ mod test {
             pub numIns: u64,
         }
 
-        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
-        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
-        impl CGConfig for CircuitGenerator<CGTest> {
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGeneratorExtend<CGTest>);
+        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 println!("=====buildCircuit================={},{}", file!(), line!());
-                let mut generator = getActiveCircuitGenerator().unwrap();
-                let mut generator = generator.lock();
+                let mut generator = self.cg.clone();
+
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = generator.createInputWireArray(numIns, &None);
@@ -324,17 +326,17 @@ mod test {
             inVals3,
             numIns: numIns as u64,
         };
-        let mut generator = CircuitGenerator::<CGTest>::new("Caching_Test", t);
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Caching_Test", t);
         println!("{}", line!());
-        let mut generator = arc_cell_new!(generator);
-        put_active_circuit_generator("CGTest", generator.clone());
-        let mut generator = generator.lock();
+        // let mut generator = arc_cell_new!(generator);
+        // put_active_circuit_generator("CGTest", generator.clone());
+
         println!("{}", line!());
         generator.generateCircuit();
         println!("{},{}", file!(), line!());
-        let mut evaluator = CircuitEvaluator::new("CGTest");
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generateSampleInput(&mut evaluator);
-        evaluator.evaluate();
+        evaluator.evaluate(&generator.cg);
 
         let mut outWires = generator.get_out_wires();
         let (mut i, mut outputIndex) = (0, 0);
@@ -429,12 +431,11 @@ mod test {
             pub witness2: Option<WireType>,
         }
 
-        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
-        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
-        impl CGConfig for CircuitGenerator<CGTest> {
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGeneratorExtend<CGTest>);
+        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = getActiveCircuitGenerator().unwrap();
-                let mut generator = generator.lock();
+                let mut generator = self.cg.clone();
                 let mut in1 = generator.createInputWire(&None);
                 let mut in2 = generator.createInputWire(&None);
                 let mut witness1 = generator.createProverWitnessWire(&None);
@@ -460,9 +461,9 @@ mod test {
                 assert_eq!(generator.get_num_of_constraints(), 4); // we don't detect
                 // similarity here yet
 
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None);
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.clone());
                 assert_eq!(generator.get_num_of_constraints(), 5);
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None);
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.clone());
                 // since this operation is implemented externally, it's not easy
                 // to filter it, because everytime a witness wire is introduced
                 // by the gadget. To eliminate such similar operations, the
@@ -487,11 +488,11 @@ mod test {
             witness1: None,
             witness2: None,
         };
-        let mut generator = CircuitGenerator::<CGTest>::new("assertions", t);
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("assertions", t);
         generator.generateCircuit();
-        let mut evaluator = CircuitEvaluator::new("CGTest");
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generateSampleInput(&mut evaluator);
-        evaluator.evaluate();
+        evaluator.evaluate(&generator.cg);
     }
 
     #[test]
@@ -507,33 +508,74 @@ mod test {
             pub inputStr: String,
         }
 
-        //crate::impl_circuit_generator_config_fields_for!(CircuitGenerator<CGTest>);
-        crate::impl_struct_name_for!(CircuitGenerator<CGTest>);
-        impl CGConfig for CircuitGenerator<CGTest> {
+        //crate::impl_circuit_generator_config_fields_for!(CircuitGeneratorExtend<CGTest>);
+        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = getActiveCircuitGenerator().unwrap();
-                let mut generator = generator.lock();
+                let mut generator = self.cg.clone();
                 let inputStr = &self.t.inputStr;
                 let mut inputWires = generator.createInputWireArray(inputStr.len(), &None);
-                let mut digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
+                let mut digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
                 let mut numOfConstraintsBefore = generator.get_num_of_constraints();
-                digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
-                digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
-                digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
-                digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
-                digest =
-                    SHA256Gadget::new(inputWires.clone(), 8, inputStr.len(), false, true, &None)
-                        .getOutputWires();
+                digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
+                digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
+                digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
+                digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
+                digest = SHA256Gadget::new(
+                    inputWires.clone(),
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
 
                 // verify that the number of constraints match
                 assert_eq!(numOfConstraintsBefore, generator.get_num_of_constraints());
@@ -541,7 +583,16 @@ mod test {
                 // do a small change and verify that number changes
                 let mut in2 = inputWires.clone();
                 in2[0] = in2[1].clone();
-                SHA256Gadget::new(in2, 8, inputStr.len(), false, true, &None).getOutputWires();
+                SHA256Gadget::new(
+                    in2,
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.borrow().cgiq.clone(),
+                )
+                .getOutputWires();
                 assert!(numOfConstraintsBefore < generator.get_num_of_constraints());
 
                 generator.makeOutputArray(digest, &None);
@@ -558,7 +609,7 @@ mod test {
             inputWires: vec![],
             inputStr: inputStr.to_owned(),
         };
-        let mut generator = CircuitGenerator::<CGTest>::new("SHA2_Test4", t);
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test4", t);
         generator.generateCircuit();
 
         let mut evaluator = generator.evalCircuit();

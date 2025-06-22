@@ -8,6 +8,7 @@
 #![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CGConfig;
 
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire_type::WireType;
@@ -95,7 +96,7 @@ impl Instruction for WireLabelInstruction {
             || self.label_type == LabelType::debug && Configs.debug_verbose
         {
             println!(
-                "\t[ {} ] Value of WireType # {} {} :: {}",
+                "\t[ {} ] Value of WireType# {} {} :: {}",
                 self.label_type,
                 self.w,
                 if self.desc.is_empty() {

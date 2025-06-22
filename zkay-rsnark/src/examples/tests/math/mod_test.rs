@@ -1,7 +1,7 @@
 
 
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::mod_constant_gadget;
 use examples::gadgets::math::mod_gadget;

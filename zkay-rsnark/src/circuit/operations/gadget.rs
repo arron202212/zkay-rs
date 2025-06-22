@@ -6,7 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator, getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use rccell::RcCell;
@@ -18,13 +20,13 @@ pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-pub fn newGadget(desc: &Option<String>) -> (ARcCell<dyn CGConfig + Send + Sync>, String) {
-    (
-        getActiveCircuitGenerator().unwrap(),
-        desc.as_ref()
-            .map_or_else(|| String::new(), |d| d.to_owned()),
-    )
-}
+// pub fn newGadget(desc: &Option<String>) -> (ARcCell<dyn CGConfig + Send + Sync>, String) {
+//     (
+//         getActiveCircuitGenerator().unwrap(),
+//         desc.as_ref()
+//             .map_or_else(|| String::new(), |d| d.to_owned()),
+//     )
+// }
 
 pub trait GadgetConfig: Debug {
     fn getOutputWires(&self) -> Vec<Option<WireType>>;

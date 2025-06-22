@@ -7,20 +7,28 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::structure::bit_wire::BitWireConfig;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorIQ;
+use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+use rccell::RcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct VariableBitWire;
-crate::impl_hash_code_of_wire_for!(Wire<VariableBitWire>);
-crate::impl_name_instance_of_wire_for!(Wire<VariableBitWire>);
-pub fn new_variable_bit(wireId: i32) -> Wire<VariableBitWire> {
+crate::impl_hash_code_of_wire_g_for!(Wire<VariableBitWire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<VariableBitWire>);
+pub fn new_variable_bit(
+    wireId: i32,
+    generator: RcCell<CircuitGeneratorIQ>,
+) -> Wire<VariableBitWire> {
     // super(wireId);
     Wire::<VariableBitWire> {
         wireId,
+        generator,
         t: VariableBitWire,
     }
 }
@@ -28,9 +36,10 @@ impl setBitsConfig for VariableBitWire {}
 impl setBitsConfig for Wire<VariableBitWire> {}
 impl WireConfig for Wire<VariableBitWire> {
     fn getBitWires(&self) -> Option<WireArray> {
-        Some(WireArray::new(vec![Some(WireType::VariableBit(
-            self.clone(),
-        ))]))
+        Some(WireArray::new(
+            vec![Some(WireType::VariableBit(self.clone()))],
+            self.generator.clone(),
+        ))
     }
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::VariableBit(self.clone()))

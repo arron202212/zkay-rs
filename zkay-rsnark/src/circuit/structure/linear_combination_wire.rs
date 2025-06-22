@@ -7,6 +7,9 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::arc_cell_new;
+use crate::circuit::structure::circuit_generator::CGConfig;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorIQ;
+use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
@@ -30,12 +33,17 @@ impl PartialEq for LinearCombinationWire {
         self.bitWires == other.bitWires
     }
 }
-crate::impl_hash_code_of_wire_for!(Wire<LinearCombinationWire>);
-crate::impl_name_instance_of_wire_for!(Wire<LinearCombinationWire>);
-pub fn new_linear_combination(wireId: i32, bits: Option<WireArray>) -> Wire<LinearCombinationWire> {
+crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
+pub fn new_linear_combination(
+    wireId: i32,
+    bits: Option<WireArray>,
+    generator: RcCell<CircuitGeneratorIQ>,
+) -> Wire<LinearCombinationWire> {
     // super(wireId);
     Wire::<LinearCombinationWire> {
         wireId,
+        generator,
         t: LinearCombinationWire { bitWires: bits },
     }
 }
