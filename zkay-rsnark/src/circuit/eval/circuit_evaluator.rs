@@ -11,12 +11,11 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::wire_label_instruction;
 use crate::circuit::operations::wire_label_instruction::LabelType;
-use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::CGInstance;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
@@ -24,7 +23,7 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 // use crate::util::util::ARcCell;
 use std::collections::HashSet;
 use std::fs::File;
@@ -135,6 +134,7 @@ impl CircuitEvaluator {
     }
 
     pub fn writeInputFile<T: CGConfig>(&self, generator: RcCell<T>) {
+        // let generator=generator.upgrade().unwrap();
         let evalSequence = generator.borrow().get_evaluation_queue();
         let mut printWriter = File::create(generator.borrow().get_name() + ".in").unwrap();
         for e in evalSequence.keys() {

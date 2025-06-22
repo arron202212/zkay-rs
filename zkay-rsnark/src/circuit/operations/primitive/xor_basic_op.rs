@@ -7,7 +7,7 @@
 #![allow(unused_braces)]
 use crate::circuit::operations::primitive::basic_op::BasicOp;
 use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::structure::circuit_generator::CGConfig;
+
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};

@@ -10,9 +10,9 @@ use crate::circuit::InstanceOf;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
 use crate::circuit::operations::wire_label_instruction::WireLabel;
-use crate::circuit::structure::circuit_generator::CGConfig;
+
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
 use dyn_clone::{DynClone, clone_trait_object};

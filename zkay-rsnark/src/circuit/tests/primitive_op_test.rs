@@ -11,19 +11,19 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
+
 use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::put_active_circuit_generator;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -81,11 +81,11 @@ mod test {
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
 
                 let mut result1 = inputs1[0].clone().unwrap().add(inputs1[1].clone().unwrap());
@@ -106,8 +106,8 @@ mod test {
         }
         let cg = CircuitGenerator::new("addition");
         let t = CGTest {
-            inputs1: WireArray::newi(0, cg.borrow().cgiq.clone()),
-            inputs2: WireArray::newi(0, cg.borrow().cgiq.clone()),
+            inputs1: WireArray::newi(0, cg.clone().downgrade()),
+            inputs2: WireArray::newi(0, cg.clone().downgrade()),
             inVals1,
             inVals2,
             numIns: numIns as u64,
@@ -170,11 +170,11 @@ mod test {
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
 
                 let mut result1 = inputs1[0].clone().unwrap().mul(inputs1[1].clone().unwrap());
@@ -646,15 +646,15 @@ mod test {
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
                 let mut solutions = WireArray::new(
                     generator.createProverWitnessWireArray(numIns + 1, &None),
-                    generator.borrow().cgiq.clone(),
+                    generator.clone().downgrade(),
                 );
                 let result = &self.t.result;
                 let prover = crate::impl_prover!(

@@ -7,17 +7,16 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
@@ -34,7 +33,7 @@ pub struct SHA256Gadget {
 
     preparedInputBits: Vec<Option<WireType>>,
     output: Vec<Option<WireType>>,
-    cgiq: RcCell<CircuitGeneratorIQ>,
+    generator: RcCell<CircuitGenerator>,
 }
 impl SHA256Gadget {
     const H: [i64; 8] = [
@@ -61,7 +60,7 @@ impl SHA256Gadget {
         binaryOutput: bool,
         paddingRequired: bool,
         desc: &Option<String>,
-        cgiq: RcCell<CircuitGeneratorIQ>,
+        generator: RcCell<CircuitGenerator>,
     ) -> Self {
         // super(desc);
         assert!(
@@ -86,14 +85,14 @@ impl SHA256Gadget {
             paddingRequired,
             preparedInputBits: vec![],
             output: vec![],
-            cgiq,
+            generator,
         };
         _self.buildCircuit();
         _self
     }
 
     fn buildCircuit(&mut self) {
-        let mut generator = self.cgiq.clone();
+        let mut generator = self.generator.clone();
 
         // pad if needed
         self.prepare();
@@ -117,11 +116,8 @@ impl SHA256Gadget {
                     );
 
                     w[i] = Some(
-                        WireArray::new(wsSplitted[i].clone(), generator.clone()).packAsBits(
-                            None,
-                            Some(32),
-                            &None,
-                        ),
+                        WireArray::new(wsSplitted[i].clone(), generator.clone().downgrade())
+                            .packAsBits(None, Some(32), &None),
                     );
                 } else {
                     let t1 = w[i - 15].as_ref().unwrap().rotateRight(32, 7, &None);
@@ -267,7 +263,7 @@ impl SHA256Gadget {
                 .add(t1.muli(-2, &None));
             result[i] = Some(t1.add(cBits[i].clone().unwrap().mul(t2)));
         }
-        WireArray::new(result, self.cgiq.clone()).packAsBits(None, None, &None)
+        WireArray::new(result, self.generator.clone().downgrade()).packAsBits(None, None, &None)
     }
 
     fn computeCh(&self, a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
@@ -282,16 +278,19 @@ impl SHA256Gadget {
             let t2 = t1.mul(aBits[i].clone().unwrap());
             result[i] = Some(t2.add(cBits[i].clone().unwrap()));
         }
-        WireArray::new(result, self.cgiq.clone()).packAsBits(None, None, &None)
+        WireArray::new(result, self.generator.clone().downgrade()).packAsBits(None, None, &None)
     }
 
     fn prepare(&mut self) {
-        let mut generator = &self.cgiq;
+        let mut generator = &self.generator;
 
         self.numBlocks = (self.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
-        let bits = WireArray::new(self.unpaddedInputs.clone(), self.cgiq.clone())
-            .getBits(self.bitWidthPerInputElement, &None)
-            .asArray();
+        let bits = WireArray::new(
+            self.unpaddedInputs.clone(),
+            self.generator.clone().downgrade(),
+        )
+        .getBits(self.bitWidthPerInputElement, &None)
+        .asArray();
         let tailLength = self.totalLengthInBytes % 64;
         if self.paddingRequired {
             let mut pad;

@@ -24,11 +24,10 @@ use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack
 use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
 use crate::circuit::structure::bit_wire::BitWire;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::constant_wire::ConstantWire;
 use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBitWire;
@@ -45,7 +44,7 @@ use crate::util::util::ARcCell;
 use crate::util::util::BigInteger;
 use crate::util::util::Util;
 use enum_dispatch::enum_dispatch;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -118,7 +117,7 @@ impl MulWire<BigInteger> for WireType {
         let out = WireType::LinearCombination(new_linear_combination(
             generator.get_current_wire_id(),
             None,
-            generator.clone(),
+            generator.clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
@@ -160,7 +159,7 @@ impl MulWire for WireType {
         w.packIfNeeded(desc);
         let output = WireType::Variable(new_variable(
             generator.get_current_wire_id(),
-            generator.clone(),
+            generator.clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_mul(
@@ -186,7 +185,7 @@ impl AddWire for WireType {
         w.packIfNeeded(desc);
         return WireArray::new(
             vec![Some(self.self_clone().unwrap()), Some(w)],
-            self.generator().clone(),
+            self.generator().clone().downgrade(),
         )
         .sumAllElements(desc);
     }
@@ -239,7 +238,11 @@ impl XorBitwise for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(-1, Some(result), generator.clone()))
+            WireType::LinearCombination(new_linear_combination(
+                -1,
+                Some(result),
+                generator.clone().downgrade(),
+            ))
         }
     }
 }
@@ -271,7 +274,11 @@ impl AndBitwise for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(-1, Some(result), generator.clone()))
+            WireType::LinearCombination(new_linear_combination(
+                -1,
+                Some(result),
+                generator.clone().downgrade(),
+            ))
         }
     }
 }
@@ -303,7 +310,11 @@ impl OrBitwise for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(-1, Some(result), generator.clone()))
+            WireType::LinearCombination(new_linear_combination(
+                -1,
+                Some(result),
+                generator.clone().downgrade(),
+            ))
         }
     }
 }

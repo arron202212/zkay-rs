@@ -10,12 +10,12 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
+
 use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::put_active_circuit_generator;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
@@ -27,7 +27,7 @@ use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
 use crate::arc_cell_new;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 
 use std::collections::HashMap;
 use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Rem, Shl, Shr, Sub};
@@ -38,6 +38,7 @@ mod test {
     use super::*;
     #[test]
     pub fn testCaching1() {
+        unsafe { backtrace_on_stack_overflow::enable() };
         let mut numIns = Configs.log2_field_prime.clone();
         let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
         let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
@@ -461,9 +462,19 @@ mod test {
                 assert_eq!(generator.get_num_of_constraints(), 4); // we don't detect
                 // similarity here yet
 
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.clone());
+                FieldDivisionGadget::new(
+                    in1.clone(),
+                    in2.clone(),
+                    &None,
+                    generator.clone().downgrade(),
+                );
                 assert_eq!(generator.get_num_of_constraints(), 5);
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.clone());
+                FieldDivisionGadget::new(
+                    in1.clone(),
+                    in2.clone(),
+                    &None,
+                    generator.clone().downgrade(),
+                );
                 // since this operation is implemented externally, it's not easy
                 // to filter it, because everytime a witness wire is introduced
                 // by the gadget. To eliminate such similar operations, the
@@ -522,7 +533,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 let mut numOfConstraintsBefore = generator.get_num_of_constraints();
@@ -533,7 +544,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 digest = SHA256Gadget::new(
@@ -543,7 +554,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 digest = SHA256Gadget::new(
@@ -553,7 +564,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 digest = SHA256Gadget::new(
@@ -563,7 +574,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 digest = SHA256Gadget::new(
@@ -573,7 +584,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
 
@@ -590,7 +601,7 @@ mod test {
                     false,
                     true,
                     &None,
-                    generator.borrow().cgiq.clone(),
+                    generator.clone(),
                 )
                 .getOutputWires();
                 assert!(numOfConstraintsBefore < generator.get_num_of_constraints());

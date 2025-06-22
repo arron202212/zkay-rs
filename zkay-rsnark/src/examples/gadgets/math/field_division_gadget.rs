@@ -11,15 +11,15 @@ use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
+
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use zkay_derive::ImplStructNameConfig;
 // see notes in the end of the code.
 use std::fmt::Debug;
@@ -30,14 +30,14 @@ pub struct FieldDivisionGadget {
     a: WireType,
     b: WireType,
     c: Option<WireType>,
-    generator: RcCell<CircuitGenerator>,
+    generator: WeakCell<CircuitGenerator>,
 }
 impl FieldDivisionGadget {
     pub fn new(
         a: WireType,
         b: WireType,
         desc: &Option<String>,
-        mut generator: RcCell<CircuitGenerator>,
+        mut generator: WeakCell<CircuitGenerator>,
     ) -> Self {
         // super(desc);
         let mut _self = Self {
@@ -46,6 +46,7 @@ impl FieldDivisionGadget {
             c: None,
             generator: generator.clone(),
         };
+        let mut generator = generator.upgrade().unwrap();
         // let mut generator = self.me.clone().unwrap().upgrade().unwrap();
 
         // if the input values are constant (i.e. known at compilation time), we
@@ -59,7 +60,7 @@ impl FieldDivisionGadget {
                 .getConstant()
                 .modinv(&Configs.field_prime.clone())
                 .unwrap();
-            _self.c = Some(generator.borrow().cgiq.create_constant_wire(
+            _self.c = Some(generator.create_constant_wire(
                 aConst.mul(bInverseConst).rem(Configs.field_prime.clone()),
                 &None,
             ));
@@ -73,7 +74,7 @@ impl FieldDivisionGadget {
     fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-        let mut generator = self.generator.clone();
+        let mut generator = self.generator.clone().upgrade().unwrap();
 
         let (a, b, c) = (&self.a, &self.b, self.c.as_ref().unwrap());
         let prover = crate::impl_prover!(

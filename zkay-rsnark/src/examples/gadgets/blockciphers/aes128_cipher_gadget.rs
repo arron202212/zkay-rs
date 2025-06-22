@@ -1,5 +1,5 @@
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 use examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget;

@@ -8,7 +8,6 @@
 #![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CGConfig;
 
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::structure::wire_type::WireType;

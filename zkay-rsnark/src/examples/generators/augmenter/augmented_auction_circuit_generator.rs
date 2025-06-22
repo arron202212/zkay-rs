@@ -1,5 +1,5 @@
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::augmenter::pinocchio_gadget;
 use examples::gadgets::hash::sha256_gadget;

@@ -7,8 +7,7 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::InstanceOf;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_ops::{AddWire, MulWire, SubWire};
 use crate::circuit::structure::wire_type::WireType;
@@ -16,7 +15,9 @@ use crate::circuit::{
     config::config::Configs,
     eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
     structure::{
-        circuit_generator::{CircuitGenerator, getActiveCircuitGenerator},
+        circuit_generator::{
+            CGConfig, CGConfigFields, CircuitGenerator, getActiveCircuitGenerator,
+        },
         constant_wire,
         wire_array::WireArray,
     },
@@ -25,7 +26,7 @@ use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use num_traits::Signed;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
 use std::fmt::Debug;
@@ -49,7 +50,7 @@ pub struct LongElement {
     pub currentBitwidth: Vec<u64>,
     pub currentMaxValues: Vec<BigInteger>,
     pub bits: Option<WireArray>,
-    pub generator: RcCell<CircuitGenerator>,
+    pub generator: WeakCell<CircuitGenerator>,
 }
 impl LongElement {
     // Should be declared as final, but left non-for testing purposes.
@@ -58,7 +59,8 @@ impl LongElement {
     // elements
     pub const CHUNK_BITWIDTH: i32 = 120;
 
-    pub fn newa(mut bits: WireArray, generator: RcCell<CircuitGenerator>) -> Self {
+    pub fn newa(mut bits: WireArray, generator: WeakCell<CircuitGenerator>) -> Self {
+        let generators = generator.clone().upgrade().unwrap();
         let (array, currentMaxValues, currentBitwidth) =
             if Self::CHUNK_BITWIDTH >= bits.size() as i32 {
                 (
@@ -87,7 +89,7 @@ impl LongElement {
                             bits.asArray()[i * Self::CHUNK_BITWIDTH as usize
                                 ..(i + 1) * Self::CHUNK_BITWIDTH as usize]
                                 .to_vec(),
-                            generator.borrow().cgiq.clone(),
+                            generators.borrow().me.clone().unwrap(),
                         )
                         .packAsBits(None, None, &None),
                     );
@@ -113,7 +115,7 @@ impl LongElement {
     pub fn new(
         w: Vec<Option<WireType>>,
         currentBitwidth: Vec<u64>,
-        generator: RcCell<CircuitGenerator>,
+        generator: WeakCell<CircuitGenerator>,
     ) -> Self {
         let mut currentMaxValues = vec![BigInteger::ZERO; w.len()];
         for i in 0..w.len() {
@@ -127,10 +129,10 @@ impl LongElement {
             generator,
         }
     }
-    pub fn generator(&self) -> &RcCell<CircuitGenerator> {
+    pub fn generator(&self) -> RcCell<CircuitGenerator> {
         // ARcCell<dyn CGConfig + Send + Sync>
         // getActiveCircuitGenerator().unwrap()
-        &self.generator
+        self.generator.clone().upgrade().unwrap()
     }
     pub fn makeOutput(&mut self, desc: &Option<String>) {
         let mut generator = self.generator().clone();
@@ -143,7 +145,7 @@ impl LongElement {
     /**
      * A long element representing a constant.
      */
-    pub fn newc(chunks: Vec<BigInteger>, generator: RcCell<CircuitGenerator>) -> Self {
+    pub fn newc(chunks: Vec<BigInteger>, generator: WeakCell<CircuitGenerator>) -> Self {
         let mut currentBitwidth = vec![0; chunks.len()];
         for i in 0..chunks.len() {
             currentBitwidth[i] = chunks[i].bits();
@@ -151,7 +153,11 @@ impl LongElement {
         // let mut generator = getActiveCircuitGenerator().unwrap();
         //
         Self {
-            array: generator.createConstantWireArray(&chunks, &None),
+            array: generator
+                .clone()
+                .upgrade()
+                .unwrap()
+                .createConstantWireArray(&chunks, &None),
             currentMaxValues: chunks,
             currentBitwidth,
             bits: None,
@@ -162,7 +168,7 @@ impl LongElement {
     pub fn newb(
         w: Vec<Option<WireType>>,
         currentMaxValues: Vec<BigInteger>,
-        generator: RcCell<CircuitGenerator>,
+        generator: WeakCell<CircuitGenerator>,
     ) -> Self {
         let mut currentBitwidth = vec![0; w.len()];
         for i in 0..w.len() {
@@ -236,8 +242,9 @@ impl LongElement {
     }
 
     pub fn align(&self, totalNumChunks: usize) -> Self {
+        let generator = self.generator();
         let mut newArray = self.array[..totalNumChunks].to_vec();
-        let zero_wire = self.generator().get_zero_wire();
+        let zero_wire = generator.get_zero_wire();
         for i in 0..newArray.len() {
             if newArray[i].is_none() {
                 newArray[i] = zero_wire.clone();
@@ -258,14 +265,14 @@ impl LongElement {
                 newArray[i] = Some(
                     WireArray::new(
                         chunkBits[..Self::CHUNK_BITWIDTH as usize].to_vec(),
-                        self.generator.borrow().cgiq.clone(),
+                        self.generator.clone(),
                     )
                     .packAsBits(None, None, &None),
                 );
                 let mut rem = WireArray::new(
                     chunkBits[Self::CHUNK_BITWIDTH as usize..newMaxValues[i].bits() as usize]
                         .to_vec(),
-                    self.generator.borrow().cgiq.clone(),
+                    self.generator.clone(),
                 )
                 .packAsBits(None, None, &None);
                 if i != totalNumChunks - 1 {
@@ -288,6 +295,7 @@ impl LongElement {
     // chunks
 
     pub fn getBitsi(&mut self, totalBitwidth: i32) -> WireArray {
+        let generator = self.generator();
         if let Some(bits) = &self.bits {
             return bits.adjustLength(
                 None,
@@ -356,7 +364,7 @@ impl LongElement {
                     chunkBits
                         [Self::CHUNK_BITWIDTH as usize..newMaxValues[chunkIndex].bits() as usize]
                         .to_vec(),
-                    self.generator.borrow().cgiq.clone(),
+                    self.generator.clone(),
                 )
                 .packAsBits(None, None, &None);
 
@@ -380,7 +388,7 @@ impl LongElement {
             chunkIndex += 1;
             idx += alignedChunkBits.len();
         }
-        let out = WireArray::new(bitWires, self.generator.borrow().cgiq.clone());
+        let out = WireArray::new(bitWires, self.generator.clone());
         if limit >= maxVal.bits() as usize {
             self.bits = Some(out.adjustLength(None, maxVal.bits() as usize));
         }
@@ -451,7 +459,7 @@ impl LongElement {
         for i in 0..self.array.len() {
             wireNonZero[i] = self.array[i].as_ref().map(|x| x.checkNonZero(&None));
         }
-        WireArray::new(wireNonZero, self.generator.borrow().cgiq.clone())
+        WireArray::new(wireNonZero, self.generator.clone())
             .sumAllElements(&None)
             .checkNonZero(&None)
     }
@@ -542,7 +550,7 @@ impl LongElement {
         let bits2 = self.getBitsi(self.getMaxVal(Self::CHUNK_BITWIDTH).bits() as i32);
         let v1 = LongElement::newa(bits1, self.generator.clone());
         let v2 = LongElement::newa(bits2, self.generator.clone());
-        let mut generator = &mut self.generator;
+        let mut generator = self.generator().clone();
 
         for i in 0..v1.array.len() {
             generator.addEqualityAssertion(
@@ -555,6 +563,7 @@ impl LongElement {
 
     // an improved equality assertion algorithm from xjsnark
     pub fn assertEquality(&self, e: Self) {
+        let generator = self.generator();
         let (mut a1, mut a2) = (self.array.clone(), e.array.clone());
         let (mut bounds1, mut bounds2) =
             (self.currentMaxValues.clone(), e.currentMaxValues.clone());
@@ -563,14 +572,14 @@ impl LongElement {
 
         // padding
         if e.array.len() != limit {
-            a2 = WireArray::new(a2, self.generator.borrow().cgiq.clone())
+            a2 = WireArray::new(a2, self.generator.clone())
                 .adjustLength(None, limit)
                 .asArray();
             bounds2 = vec![BigInteger::ZERO; limit];
             bounds2[..e.currentMaxValues.len()].clone_from_slice(&e.currentMaxValues);
         }
         if self.array.len() != limit {
-            a1 = WireArray::new(a1, self.generator.borrow().cgiq.clone())
+            a1 = WireArray::new(a1, self.generator.clone())
                 .adjustLength(None, limit)
                 .asArray();
             bounds1 = vec![BigInteger::ZERO; limit];
@@ -994,8 +1003,7 @@ impl LongElement {
         }
         // Only one bit should be set.
         generator.addOneAssertion(
-            WireArray::new(helperBits.clone(), self.generator.borrow().cgiq.clone())
-                .sumAllElements(&None),
+            WireArray::new(helperBits.clone(), self.generator.clone()).sumAllElements(&None),
             &None,
         );
 
@@ -1075,15 +1083,16 @@ impl Add for LongElement {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
+        let generator = self.generator();
         if self.addOverflowCheck(rhs.clone()) {
             //println!("Warning: Addition overflow could happen");
         }
 
         let length = std::cmp::max(self.array.len(), rhs.array.len());
-        let w1 = WireArray::new(self.array.clone(), self.generator.borrow().cgiq.clone())
+        let w1 = WireArray::new(self.array.clone(), self.generator.clone())
             .adjustLength(None, length)
             .asArray();
-        let w2 = WireArray::new(rhs.array.clone(), self.generator.borrow().cgiq.clone())
+        let w2 = WireArray::new(rhs.array.clone(), self.generator.clone())
             .adjustLength(None, length)
             .asArray();
         let mut result = vec![None; length];
@@ -1330,12 +1339,9 @@ impl Mul for LongElement {
                     coeff = Util::modulo(coeff.mul(constant.clone()), Configs.field_prime.clone());
                 }
 
-                let v1 = WireArray::new(vector1, self.generator.borrow().cgiq.clone())
-                    .sumAllElements(&None);
-                let v2 = WireArray::new(vector2, self.generator.borrow().cgiq.clone())
-                    .sumAllElements(&None);
-                let v3 = WireArray::new(vector3, self.generator.borrow().cgiq.clone())
-                    .sumAllElements(&None);
+                let v1 = WireArray::new(vector1, self.generator.clone()).sumAllElements(&None);
+                let v2 = WireArray::new(vector2, self.generator.clone()).sumAllElements(&None);
+                let v3 = WireArray::new(vector3, self.generator.clone()).sumAllElements(&None);
                 generator.addAssertion(v1, v2, v3, &None);
             }
         }

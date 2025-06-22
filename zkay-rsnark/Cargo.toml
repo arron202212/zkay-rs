@@ -28,3 +28,4 @@ serde_closure={workspace = true}
 serde={workspace = true}
 serde_json={workspace = true}
 bincode={workspace = true}
+backtrace-on-stack-overflow={workspace=true}

@@ -10,11 +10,10 @@ use crate::circuit::InstanceOf;
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
@@ -22,7 +21,7 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
@@ -36,7 +35,7 @@ crate::impl_name_instance_of_wire_g_for!(Wire<ConstantWire>);
 pub fn new_constant(
     wireId: i32,
     value: BigInteger,
-    generator: RcCell<CircuitGeneratorIQ>,
+    generator: WeakCell<CircuitGenerator>,
 ) -> Wire<ConstantWire> {
     // super(wireId);
     Wire::<ConstantWire> {
@@ -114,7 +113,7 @@ impl WireConfig for Wire<ConstantWire> {
             } else {
                 newConstant.clone().sub(Configs.field_prime.clone())
             },
-            generator.clone(),
+            self.generator.clone(),
         )));
         println!("End Name Time: ccccccc {} s", line!());
         generator.borrow_mut().current_wire_id += 1;
@@ -224,7 +223,7 @@ impl WireConfig for Wire<ConstantWire> {
                 generator.get_zero_wire()
             };
         }
-        WireArray::new(bits, generator.clone())
+        WireArray::new(bits, self.generator.clone())
     }
 
     fn restrictBitLength(&self, bitwidth: u64, desc: &Option<String>) {

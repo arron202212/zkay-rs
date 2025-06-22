@@ -1,6 +1,6 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;

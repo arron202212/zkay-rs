@@ -10,11 +10,10 @@ use crate::circuit::InstanceOf;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
 use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::linear_combination_wire::{
     LinearCombinationWire, new_linear_combination,
@@ -24,7 +23,7 @@ use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
 use crate::util::util::{BigInteger, Util};
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Index, IndexMut, Mul, Shl, Sub};
@@ -32,7 +31,7 @@ use std::sync::Arc;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct WireArray {
     pub array: Vec<Option<WireType>>,
-    pub generator: RcCell<CircuitGeneratorIQ>,
+    pub generator: WeakCell<CircuitGenerator>,
 }
 
 impl Index<usize> for WireArray {
@@ -50,15 +49,15 @@ impl IndexMut<usize> for WireArray {
 }
 
 impl WireArray {
-    pub fn newi(n: i32, generator: RcCell<CircuitGeneratorIQ>) -> Self {
+    pub fn newi(n: i32, generator: WeakCell<CircuitGenerator>) -> Self {
         Self::newic(n, generator)
     }
 
-    pub fn newic(n: i32, generator: RcCell<CircuitGeneratorIQ>) -> Self {
+    pub fn newic(n: i32, generator: WeakCell<CircuitGenerator>) -> Self {
         WireArray::new(vec![None; n as usize], generator)
     }
 
-    pub fn new(wireArray: Vec<Option<WireType>>, generator: RcCell<CircuitGeneratorIQ>) -> Self {
+    pub fn new(wireArray: Vec<Option<WireType>>, generator: WeakCell<CircuitGenerator>) -> Self {
         Self {
             array: wireArray,
             generator,
@@ -80,8 +79,8 @@ impl WireArray {
     pub fn asArray(&self) -> Vec<Option<WireType>> {
         self.array.clone()
     }
-    pub fn generator(&self) -> &RcCell<CircuitGeneratorIQ> {
-        &self.generator
+    pub fn generator(&self) -> RcCell<CircuitGenerator> {
+        self.generator.clone().upgrade().unwrap()
     }
     pub fn mulWireArray(&self, v: WireArray, desiredLength: usize, desc: &Option<String>) -> Self {
         let ws1 = self
@@ -122,7 +121,7 @@ impl WireArray {
             let output = WireType::LinearCombination(new_linear_combination(
                 generator.get_current_wire_id(),
                 None,
-                generator.clone(),
+                generator.clone().downgrade(),
             ));
             generator.borrow_mut().current_wire_id += 1;
             let op = new_add(
@@ -343,10 +342,13 @@ impl WireArray {
             let out = WireType::LinearCombination(new_linear_combination(
                 generator.get_current_wire_id(),
                 None,
-                generator.clone(),
+                generator.clone().downgrade(),
             ));
             generator.borrow_mut().current_wire_id += 1;
-            out.setBits(Some(WireArray::new(bits.clone(), generator.clone())));
+            out.setBits(Some(WireArray::new(
+                bits.clone(),
+                generator.clone().downgrade(),
+            )));
             let op = new_pack(
                 bits,
                 out.clone(),

@@ -5,13 +5,12 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;

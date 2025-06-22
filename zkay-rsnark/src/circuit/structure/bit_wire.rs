@@ -14,10 +14,9 @@ use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
 use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
 use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
 use crate::circuit::operations::wire_label_instruction::LabelType::output;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFieldsIQ;
+
 use crate::circuit::structure::circuit_generator::{
-    CircuitGenerator, CircuitGeneratorExtend, CircuitGeneratorIQ, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::linear_combination_bit_wire::{
     LinearCombinationBitWire, new_linear_combination_bit,
@@ -32,7 +31,7 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
 
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
@@ -41,7 +40,7 @@ use zkay_derive::ImplStructNameConfig;
 pub struct BitWire;
 crate::impl_hash_code_of_wire_g_for!(Wire<BitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<BitWire>);
-pub fn new_bit(wireId: i32, generator: RcCell<CircuitGeneratorIQ>) -> Wire<BitWire> {
+pub fn new_bit(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWire> {
     // super(wireId);
     Wire::<BitWire> {
         wireId,
@@ -69,12 +68,12 @@ pub trait BitWireConfig: WireConfig {
         let output1 = if w.instance_of("BitWire") {
             WireType::VariableBit(new_variable_bit(
                 generator.get_current_wire_id(),
-                generator.clone(),
+                self.generator().clone().downgrade(),
             ))
         } else {
             WireType::Variable(new_variable(
                 generator.get_current_wire_id(),
-                generator.clone(),
+                self.generator().clone().downgrade(),
             ))
         };
         generator.borrow_mut().current_wire_id += 1;
@@ -105,7 +104,7 @@ pub trait BitWireConfig: WireConfig {
         let out = WireType::LinearCombination(new_linear_combination(
             generator.get_current_wire_id(),
             None,
-            generator.clone(),
+            self.generator().clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
@@ -134,7 +133,7 @@ pub trait BitWireConfig: WireConfig {
         let neg = BitWireConfig::mulb(self, Util::one().neg(), desc);
         let out = WireType::LinearCombinationBit(new_linear_combination_bit(
             generator.get_current_wire_id(),
-            generator.clone(),
+            self.generator().clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_add(
@@ -161,7 +160,7 @@ pub trait BitWireConfig: WireConfig {
         if w.instance_of("BitWire") {
             let out = WireType::VariableBit(new_variable_bit(
                 generator.get_current_wire_id(),
-                generator.clone(),
+                self.generator().clone().downgrade(),
             ));
             generator.borrow_mut().current_wire_id += 1;
             let op = new_or(
@@ -191,7 +190,7 @@ pub trait BitWireConfig: WireConfig {
         if w.instance_of("BitWire") {
             let out = WireType::VariableBit(new_variable_bit(
                 generator.get_current_wire_id(),
-                generator.clone(),
+                self.generator().clone().downgrade(),
             ));
             generator.borrow_mut().current_wire_id += 1;
             let op = new_xor(
@@ -215,7 +214,7 @@ pub trait BitWireConfig: WireConfig {
     fn getBits(&self, w: WireType, bitwidth: i32, desc: &Option<String>) -> WireArray {
         return WireArray::new(
             vec![Some(self.self_clone().unwrap())],
-            self.generator().clone(),
+            self.generator().clone().downgrade(),
         )
         .adjustLength(None, bitwidth as usize);
     }

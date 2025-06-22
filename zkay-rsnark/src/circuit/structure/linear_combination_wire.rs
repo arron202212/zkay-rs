@@ -7,14 +7,14 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::arc_cell_new;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CircuitGeneratorIQ;
+
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire::GeneratorConfig;
 use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::ARcCell;
-use rccell::RcCell;
+use rccell::{RcCell, WeakCell};
 // use crate::util::util::ARcCell;
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -38,7 +38,7 @@ crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
 pub fn new_linear_combination(
     wireId: i32,
     bits: Option<WireArray>,
-    generator: RcCell<CircuitGeneratorIQ>,
+    generator: WeakCell<CircuitGenerator>,
 ) -> Wire<LinearCombinationWire> {
     // super(wireId);
     Wire::<LinearCombinationWire> {

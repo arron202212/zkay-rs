@@ -1,6 +1,6 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use zkay::homomorphic_input;
 use zkay::typed_wire;

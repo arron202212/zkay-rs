@@ -1,6 +1,6 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{CircuitGenerator,CircuitGeneratorIQ,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 use examples::gadgets::rsa::rsa_encryptionv1_5_gadget;
