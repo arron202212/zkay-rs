@@ -185,46 +185,46 @@ impl<T: CGInstance> CGInstance for RcCell<T> {
     }
 }
 
-impl<T: CGInstance + Debug> CGConfigFields for T {
+impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
     fn get_zero_wire(&self) -> Option<WireType> {
-        self.cg().borrow().zero_wire.clone()
+        self.cg.borrow().zero_wire.clone()
     }
     fn get_one_wire(&self) -> Option<WireType> {
         // println!("=====get_one_wire============={:?}", self.get_name());
-        self.cg().borrow().one_wire.clone()
+        self.cg.borrow().one_wire.clone()
     }
 
     fn get_evaluation_queue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
-        self.cg().borrow().evaluation_queue.clone()
+        self.cg.borrow().evaluation_queue.clone()
     }
 
     fn get_current_wire_id(&self) -> i32 {
-        self.cg().borrow().current_wire_id
+        self.cg.borrow().current_wire_id
     }
     fn get_num_of_constraints(&self) -> i32 {
-        self.cg().borrow().num_of_constraints
+        self.cg.borrow().num_of_constraints
     }
     fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> {
-        self.cg().borrow().known_constant_wires.clone()
+        self.cg.borrow().known_constant_wires.clone()
     }
     fn get_name(&self) -> String {
-        self.cg().borrow().circuit_name.clone()
+        self.cg.borrow().circuit_name.clone()
     }
 
     fn get_num_wires(&self) -> i32 {
-        self.cg().borrow().get_current_wire_id()
+        self.cg.borrow().get_current_wire_id()
     }
 
     fn get_in_wires(&self) -> Vec<Option<WireType>> {
-        self.cg().borrow().in_wires.clone()
+        self.cg.borrow().in_wires.clone()
     }
 
     fn get_out_wires(&self) -> Vec<Option<WireType>> {
-        self.cg().borrow().out_wires.clone()
+        self.cg.borrow().out_wires.clone()
     }
 
     fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> {
-        self.cg().borrow().prover_witness_wires.clone()
+        self.cg.borrow().prover_witness_wires.clone()
     }
 }
 
@@ -854,85 +854,81 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     // }
 }
 
-// impl CGConfigFields
-//     for CircuitGenerator
-// {
-//     // fn current_wire_id(&mut self) -> &mut i32 {
-//     //     &mut self.current_wire_id
-//     // }
-//     // fn evaluation_queue(
-//     //     &mut self,
-//     // ) -> &mut HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
-//     //     &mut self.evaluation_queue
-//     // }
+impl CGConfigFields for CircuitGenerator {
+    // fn current_wire_id(&mut self) -> &mut i32 {
+    //     &mut self.current_wire_id
+    // }
+    // fn evaluation_queue(
+    //     &mut self,
+    // ) -> &mut HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
+    //     &mut self.evaluation_queue
+    // }
 
-//     // fn zero_wire(&mut self) -> &mut Option<WireType> {
-//     //     &mut self.zero_wire
-//     // }
-//     // fn one_wire(&mut self) -> &mut Option<WireType> {
-//     //     &mut self.one_wire
-//     // }
-//     // fn in_wires(&mut self) -> &mut Vec<Option<WireType>> {
-//     //     &mut self.in_wires
-//     // }
-//     // fn out_wires(&mut self) -> &mut Vec<Option<WireType>> {
-//     //     &mut self.out_wires
-//     // }
-//     // fn prover_witness_wires(&mut self) -> &mut Vec<Option<WireType>> {
-//     //     &mut self.prover_witness_wires
-//     // }
-//     // fn circuit_name(&mut self) -> &mut String {
-//     //     &mut self.circuit_name
-//     // }
-//     // fn known_constant_wires(&mut self) -> &mut HashMap<BigInteger, WireType> {
-//     //     &mut self.known_constant_wires
-//     // }
-//     // fn num_of_constraints(&mut self) -> &mut i32 {
-//     //     &mut self.num_of_constraints
-//     // }
-//     // fn circuit_evaluator(&self) -> Option<CircuitEvaluator> {
-//     //     self.circuitEvaluator.clone()
-//     // }
-//     fn get_name(&self) -> String {
-//         self.circuit_name.clone()
-//     }
-//     // fn get_zero_wire(&self) -> Option<WireType> {
-//     //     self.zero_wire.clone()
-//     // }
-//     // fn get_one_wire(&self) -> Option<WireType> {
-//     //     println!("=====get_one_wire============={:?}", self.get_name());
-//     //     self.one_wire.clone()
-//     // }
+    // fn zero_wire(&mut self) -> &mut Option<WireType> {
+    //     &mut self.zero_wire
+    // }
+    // fn one_wire(&mut self) -> &mut Option<WireType> {
+    //     &mut self.one_wire
+    // }
+    // fn in_wires(&mut self) -> &mut Vec<Option<WireType>> {
+    //     &mut self.in_wires
+    // }
+    // fn out_wires(&mut self) -> &mut Vec<Option<WireType>> {
+    //     &mut self.out_wires
+    // }
+    // fn prover_witness_wires(&mut self) -> &mut Vec<Option<WireType>> {
+    //     &mut self.prover_witness_wires
+    // }
+    // fn circuit_name(&mut self) -> &mut String {
+    //     &mut self.circuit_name
+    // }
+    fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> {
+        self.known_constant_wires.clone()
+    }
+    // fn get_num_of_constraints(&self) -> i32 {
+    //     self.num_of_constraints
+    // }
+    // fn circuit_evaluator(&self) -> Option<CircuitEvaluator> {
+    //     self.circuitEvaluator.clone()
+    // }
+    fn get_name(&self) -> String {
+        self.circuit_name.clone()
+    }
+    fn get_zero_wire(&self) -> Option<WireType> {
+        self.zero_wire.clone()
+    }
+    fn get_one_wire(&self) -> Option<WireType> {
+        // println!("=====get_one_wire============={:?}", self.get_name());
+        self.one_wire.clone()
+    }
 
-//     // fn get_evaluation_queue(
-//     //     &self,
-//     // ) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
-//     //     self.evaluation_queue.clone()
-//     // }
+    fn get_evaluation_queue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
+        self.evaluation_queue.clone()
+    }
 
-//     fn get_num_wires(&self) -> i32 {
-//         self.cg.get_current_wire_id()
-//     }
-//     // fn get_current_wire_id(&self) -> i32 {
-//     //     self.current_wire_id
-//     // }
+    fn get_num_wires(&self) -> i32 {
+        self.get_current_wire_id()
+    }
+    fn get_current_wire_id(&self) -> i32 {
+        self.current_wire_id
+    }
 
-//     fn get_num_of_constraints(&self) -> i32 {
-//         self.num_of_constraints
-//     }
+    fn get_num_of_constraints(&self) -> i32 {
+        self.num_of_constraints
+    }
 
-//     fn get_in_wires(&self) -> Vec<Option<WireType>> {
-//         self.in_wires.clone()
-//     }
+    fn get_in_wires(&self) -> Vec<Option<WireType>> {
+        self.in_wires.clone()
+    }
 
-//     fn get_out_wires(&self) -> Vec<Option<WireType>> {
-//         self.out_wires.clone()
-//     }
+    fn get_out_wires(&self) -> Vec<Option<WireType>> {
+        self.out_wires.clone()
+    }
 
-//     fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> {
-//         self.prover_witness_wires.clone()
-//     }
-// }
+    fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> {
+        self.prover_witness_wires.clone()
+    }
+}
 
 pub trait CreateConstantWire<T = WireType> {
     fn create_constant_wire(&self, x: T, desc: &Option<String>) -> WireType;
@@ -1088,21 +1084,29 @@ macro_rules! impl_prover {
 
 // }
 
-// impl<T:CGConfigFields> CGConfigFields for RcCell<T>{
+impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
+    crate::impl_fn_of_trait!(fn get_zero_wire(&self) -> Option<WireType> );
+    crate::impl_fn_of_trait!( fn get_one_wire(&self) -> Option<WireType> );
 
-//    crate::impl_fn_of_trait!( fn get_name(&self) -> String );
+    crate::impl_fn_of_trait!(fn get_evaluation_queue(
+        &self,
+    ) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> );
 
-//    crate::impl_fn_of_trait!( fn get_num_wires(&self) -> i32 );
+    crate::impl_fn_of_trait!(fn get_current_wire_id(&self) -> i32 );
+    crate::impl_fn_of_trait!( fn get_name(&self) -> String );
 
-//    crate::impl_fn_of_trait!( fn get_num_of_constraints(&self) -> i32 );
+    crate::impl_fn_of_trait!( fn get_num_wires(&self) -> i32 );
 
-//     crate::impl_fn_of_trait!(fn get_in_wires(&self) -> Vec<Option<WireType>> );
+    crate::impl_fn_of_trait!( fn get_num_of_constraints(&self) -> i32 );
 
-//    crate::impl_fn_of_trait!( fn get_out_wires(&self) -> Vec<Option<WireType>> );
+    crate::impl_fn_of_trait!(fn get_in_wires(&self) -> Vec<Option<WireType>> );
 
-//     crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
+    crate::impl_fn_of_trait!( fn get_out_wires(&self) -> Vec<Option<WireType>> );
 
-// }
+    crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
+    crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> );
+    crate::impl_fn_of_trait!(fn addToEvaluationQueue(&mut self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
+}
 impl StructNameConfig for CircuitGenerator {
     fn name(&self) -> String {
         "self.t.name()".to_owned()
