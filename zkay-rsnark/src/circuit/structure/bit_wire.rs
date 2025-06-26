@@ -84,7 +84,8 @@ pub trait BitWireConfig: WireConfig {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -116,7 +117,8 @@ pub trait BitWireConfig: WireConfig {
         );
         //			generator.addToEvaluationQueue(Box::new(op));
         //			return out;
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -143,7 +145,8 @@ pub trait BitWireConfig: WireConfig {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //		generator.addToEvaluationQueue(Box::new(op));
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone();
@@ -170,7 +173,8 @@ pub trait BitWireConfig: WireConfig {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+            let g = generator.borrow().clone();
+            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()
@@ -200,7 +204,8 @@ pub trait BitWireConfig: WireConfig {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+            let g = generator.borrow().clone();
+            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()

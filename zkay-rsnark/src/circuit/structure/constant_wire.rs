@@ -125,7 +125,8 @@ impl WireConfig for Wire<ConstantWire> {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         println!("End Name Time: ccccccc {} s", line!());
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;

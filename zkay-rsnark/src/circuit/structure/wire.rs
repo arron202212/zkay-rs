@@ -149,7 +149,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //		generator.addToEvaluationQueue(Box::new(op));
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         println!("End Name Time: 444 {} s", line!());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
@@ -190,7 +191,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -285,7 +287,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 2;
@@ -325,7 +328,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -353,7 +357,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -427,7 +432,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //println!("======================{},{}",file!(),line!());
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= bitwidth;
             //println!("======================{},{}",file!(),line!());
@@ -761,7 +767,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             if i >= numBits - s {
                 shiftedBits[i] = generator.get_zero_wire();
             } else {
-                shiftedBits[i] = bits[i - s].clone();
+                shiftedBits[i] = bits[i + s].clone();
             }
         }
         //println!("======================{},{}",file!(),line!());
@@ -869,7 +875,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+        let g = generator.borrow().clone();
+        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;

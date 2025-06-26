@@ -131,7 +131,8 @@ impl WireArray {
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
             //			generator.addToEvaluationQueue(Box::new(op));
-            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+            let g = generator.borrow().clone();
+            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()
@@ -355,7 +356,8 @@ impl WireArray {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let cachedOutputs = generator.addToEvaluationQueue(Box::new(op));
+            let g = generator.borrow().clone();
+            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()

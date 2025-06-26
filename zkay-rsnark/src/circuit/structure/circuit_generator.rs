@@ -266,7 +266,7 @@ pub trait CGConfigFields: CGInstance + Debug {
     fn get_current_wire_id(&self) -> i32;
     fn get_num_of_constraints(&self) -> i32;
     // fn get_prover_witness_wires(&self) -> Vec<Option<WireType>>;
-    fn addToEvaluationQueue(&mut self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
+    fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
         let evaluation_queue = self.get_evaluation_queue();
         if let Some(existingInstruction) = evaluation_queue.get(&e) {
             return existingInstruction.basic_op().map(|op| op.getOutputs());
@@ -361,7 +361,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn createInputWire(&mut self, desc: &Option<String>) -> WireType {
+    fn createInputWire(&self, desc: &Option<String>) -> WireType {
         let newInputWire = WireType::Variable(new_variable(
             self.get_current_wire_id(),
             self.cg().clone().downgrade(),
@@ -380,7 +380,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         newInputWire
     }
 
-    fn createInputWireArray(&mut self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>> {
+    fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>> {
         (0..n)
             .map(|i| Some(self.createInputWire(&desc.as_ref().map(|d| format!("{} {i}", d)))))
             .collect()
@@ -559,7 +559,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         }
     }
 
-    fn initCircuitConstruction(&mut self) {
+    fn initCircuitConstruction(&self) {
         let s = crate::util::build_circuit_timer::time_measure(&format!("{}", line!()));
         let one_wire = WireType::Constant(new_constant(
             self.get_current_wire_id(),
@@ -590,7 +590,8 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         //println!("{},{}",file!(),line!());
         self.cg().borrow_mut().in_wires.push(Some(one_wire.clone()));
         println!("End Name Time: 23343 {} s", start.elapsed().as_secs());
-        self.cg().borrow_mut().zero_wire = Some(one_wire.muli(0, &None));
+        let v = one_wire.muli(0, &None);
+        self.cg().borrow_mut().zero_wire = Some(v);
         println!("End Name Time: 444 {} s", start.elapsed().as_secs());
     }
 
@@ -1105,7 +1106,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
 
     crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
     crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> );
-    crate::impl_fn_of_trait!(fn addToEvaluationQueue(&mut self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
+    crate::impl_fn_of_trait!(fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
 }
 impl StructNameConfig for CircuitGenerator {
     fn name(&self) -> String {
@@ -1114,14 +1115,15 @@ impl StructNameConfig for CircuitGenerator {
 }
 
 impl CGConfig for CircuitGenerator {}
+
 impl CGConfig for RcCell<CircuitGenerator> {
     fn buildCircuit(&mut self) {}
     crate::impl_fn_of_trait!( fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator));
     crate::impl_fn_of_trait!(fn generateCircuit(&mut self));
 
-    crate::impl_fn_of_trait!(fn createInputWire(&mut self, desc: &Option<String>) -> WireType );
+    crate::impl_fn_of_trait!(fn createInputWire(&self, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn createInputWireArray(&mut self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
+    crate::impl_fn_of_trait!(fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
 
     crate::impl_fn_of_trait!(fn createLongElementInput(&mut self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
 
@@ -1161,7 +1163,7 @@ impl CGConfig for RcCell<CircuitGenerator> {
 
     crate::impl_fn_of_trait!(fn printCircuit(&self) );
 
-    crate::impl_fn_of_trait!(fn initCircuitConstruction(&mut self));
+    crate::impl_fn_of_trait!(fn initCircuitConstruction(&self));
 
     crate::impl_fn_of_trait!(fn createConstantWire(&self, x: BigInteger, desc: &Option<String>) -> WireType );
 

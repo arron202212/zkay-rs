@@ -122,7 +122,7 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 println!("=====buildCircuit================={},{}", file!(), line!());
-                let mut generator = self.cg.clone();
+                let mut generator = self.cg.borrow().clone();
 
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let numIns = self.t.numIns as usize;
