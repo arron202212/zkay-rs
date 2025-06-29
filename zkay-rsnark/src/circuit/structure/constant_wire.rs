@@ -69,23 +69,25 @@ impl WireConfig for Wire<ConstantWire> {
         Some(WireType::Constant(self.clone()))
     }
     fn mulw(&self, w: WireType, desc: &Option<String>) -> WireType {
+        use std::time::Instant;
+        let start = Instant::now();
         let generator = self.generator();
-
+        //  println!("End const mulw Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
-            return generator.create_constant_wire(
+            generator.create_constant_wire(
                 self.t
                     .constant
                     .clone()
                     .mul(w.try_as_constant_ref().unwrap().getConstant().clone()),
                 desc,
-            );
+            )
         } else {
             w.mulb(self.t.constant.clone(), desc)
         }
     }
 
     fn mulb(&self, b: BigInteger, desc: &Option<String>) -> WireType {
-        println!("End Name Time: ccccccc {} s", line!());
+        // println!("End Name Time: ccccccc {} s", line!());
         let sign = b.sign() == Sign::Minus;
         let newConstant = self
             .t
@@ -93,11 +95,11 @@ impl WireConfig for Wire<ConstantWire> {
             .clone()
             .mul(b.clone())
             .rem(Configs.field_prime.clone());
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         let mut generator = self.generator().clone();
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
 
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         let mut out: Option<WireType> = generator
             .get_known_constant_wires()
             .get(&newConstant)
@@ -105,7 +107,7 @@ impl WireConfig for Wire<ConstantWire> {
         if let Some(out) = out {
             return out.clone();
         }
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         out = Some(WireType::Constant(new_constant(
             generator.get_current_wire_id(),
             if !sign {
@@ -115,7 +117,7 @@ impl WireConfig for Wire<ConstantWire> {
             },
             self.generator.clone(),
         )));
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
             WireType::Constant(self.clone()),
@@ -124,7 +126,7 @@ impl WireConfig for Wire<ConstantWire> {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         let g = generator.borrow().clone();
         let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
@@ -132,7 +134,7 @@ impl WireConfig for Wire<ConstantWire> {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
         }
-        println!("End Name Time: ccccccc {} s", line!());
+        //println!"End Name Time: ccccccc {} s", line!());
         generator
             .borrow_mut()
             .known_constant_wires

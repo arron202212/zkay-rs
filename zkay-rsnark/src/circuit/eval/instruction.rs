@@ -6,22 +6,30 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-use crate::circuit::operations::wire_label_instruction::WireLabel;
-
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use crate::circuit::{
+    InstanceOf,
+    eval::circuit_evaluator::CircuitEvaluator,
+    structure::{
+        circuit_generator::{
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+        },
+        wire_type::WireType,
+    },
+    {
+        operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
+        wire_label_instruction::WireLabel,
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
 use dyn_clone::{DynClone, clone_trait_object};
 use enum_dispatch::enum_dispatch;
 use serde_closure::{Fn as Fns, traits::Fn as Fns};
-use std::cmp::Ordering;
-use std::collections::HashSet;
-use std::fmt::{Debug, Formatter};
-use std::hash::{Hash, Hasher};
+use std::{
+    cmp::Ordering,
+    collections::HashSet,
+    fmt::{Debug, Formatter},
+    hash::DefaultHasher,
+    hash::{Hash, Hasher},
+};
 use zkay_derive::ImplStructNameConfig;
 trait DynHash {
     fn dyn_hash(&self, state: &mut dyn Hasher);
@@ -65,6 +73,11 @@ pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
     fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
         None
     }
+    // fn hash_code(&self)->u64{
+    //     let mut s = DefaultHasher::new();
+    //     self.hash(&mut s);
+    //     s.finish()
+    // }
 }
 // dyn_clone::clone_trait_object!(Instruction);
 

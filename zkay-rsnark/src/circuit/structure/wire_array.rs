@@ -191,19 +191,37 @@ impl WireArray {
     }
 
     pub fn andWireArray(&self, v: WireArray, desiredLength: usize, desc: &Option<String>) -> Self {
+        use std::time::Instant;
+        let start = Instant::now();
         let ws1 = self
             .adjustLength(Some(self.array.clone()), desiredLength)
             .asArray();
+        println!("End adjustLength  Time: == {} s", start.elapsed().as_secs());
+
         let ws2 = self
             .adjustLength(Some(v.array.clone()), desiredLength)
             .asArray();
-        let mut out = vec![None; desiredLength];
-        for i in 0..out.len() {
-            out[i] = ws1[i]
-                .as_ref()
-                .map(|x| x.clone().mulw(ws2[i].clone().unwrap(), desc));
-        }
-        WireArray::new(out, self.generator.clone())
+        println!("End adjustLength  Time: == {} s", start.elapsed().as_secs());
+
+        // let mut out = vec![None; desiredLength];
+        // for i in 0..out.len() {
+        //     out[i] = ws1[i]
+        //         .as_ref()
+        //         .map(|x| x.clone().mulw(ws2[i].clone().unwrap(), desc));
+        // }
+        let out: Vec<_> = ws1
+            .into_iter()
+            .zip(ws2)
+            .map(|(w1, w2)| w1.map(|w1v| w1v.mulw(w2.unwrap(), desc)))
+            .collect();
+        println!(
+            "End mulw  {desiredLength} Time: == {} s",
+            start.elapsed().as_secs()
+        );
+
+        let v = WireArray::new(out, self.generator.clone());
+        println!("End WireArray  Time: == {} s", start.elapsed().as_secs());
+        v
     }
 
     pub fn orWireArray(&self, v: WireArray, desiredLength: usize, desc: &Option<String>) -> Self {

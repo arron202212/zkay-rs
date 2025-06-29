@@ -5,35 +5,39 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::arc_cell_new;
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::wire_label_instruction;
-use crate::circuit::operations::wire_label_instruction::LabelType;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use crate::{
+    arc_cell_new,
+    circuit::{
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::instruction::Instruction,
+        operations::{operations::wire_label_instruction::LabelType, wire_label_instruction},
+        structure::{
+            circuit_generator::CGConfigFields,
+            circuit_generator::CGInstance,
+            circuit_generator::{
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+            },
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{ARcCell, BigInteger, Util},
 };
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
-use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use rccell::{RcCell, WeakCell};
 // use crate::util::util::ARcCell;
-use std::collections::HashSet;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Error, Write};
-use std::ops::{Add, Mul, Rem, Shl, Sub};
-use std::path::Path;
-// circuitGenerator:Box<dyn CGConfig+Send+Sync>,
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::marker::PhantomData;
+use std::{
+    collections::HashSet,
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    io::{BufRead, BufReader, Error, Write},
+    marker::PhantomData,
+    ops::{Add, Mul, Rem, Shl, Sub},
+    path::Path,
+};
 #[derive(Debug, Clone)]
 pub struct CircuitEvaluator {
     pub valueAssignment: Vec<Option<BigInteger>>,
@@ -116,7 +120,7 @@ impl CircuitEvaluator {
         println!("Running Circuit Evaluator for < {} >", generator.get_name());
         let evalSequence = generator.get_evaluation_queue();
 
-        for e in evalSequence.keys() {
+        for e in evalSequence.values() {
             e.evaluate(self);
             e.emit(self);
         }
@@ -137,7 +141,7 @@ impl CircuitEvaluator {
         // let generator=generator.upgrade().unwrap();
         let evalSequence = generator.borrow().get_evaluation_queue();
         let mut printWriter = File::create(generator.borrow().get_name() + ".in").unwrap();
-        for e in evalSequence.keys() {
+        for e in evalSequence.values() {
             if e.wire_label().is_some()
                 && (e.wire_label().as_ref().unwrap().getType() == LabelType::input
                     || e.wire_label().as_ref().unwrap().getType() == LabelType::nizkinput)

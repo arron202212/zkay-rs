@@ -5,15 +5,22 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_type::WireType;
-use crate::circuit::{InstanceOf, OpCodeConfig, StructNameConfig};
-use crate::util::util::{BigInteger, Util};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        eval::instruction::Instruction,
+        structure::{
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_type::WireType,
+        },
+        {InstanceOf, OpCodeConfig, StructNameConfig},
+    },
+    util::util::{BigInteger, Util},
+};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone)]
 pub struct Op<T> {
@@ -67,7 +74,25 @@ impl<T> Op<T> {
         })
     }
 }
-pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
+pub trait BasicOpInOut {
+    fn getInputs(&self) -> Vec<Option<WireType>> {
+        vec![]
+    }
+
+    fn getOutputs(&self) -> Vec<Option<WireType>> {
+        vec![]
+    }
+}
+impl<T> BasicOpInOut for Op<T> {
+    fn getInputs(&self) -> Vec<Option<WireType>> {
+        self.inputs.clone()
+    }
+
+    fn getOutputs(&self) -> Vec<Option<WireType>> {
+        self.outputs.clone()
+    }
+}
+pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeConfig {
     fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
@@ -108,14 +133,6 @@ pub trait BasicOp: Instruction + Debug + crate::circuit::OpCodeConfig {
     //         }
     //     )
     // }
-
-    fn getInputs(&self) -> Vec<Option<WireType>> {
-        vec![]
-    }
-
-    fn getOutputs(&self) -> Vec<Option<WireType>> {
-        vec![]
-    }
 
     fn doneWithinCircuit(&self) -> bool {
         true

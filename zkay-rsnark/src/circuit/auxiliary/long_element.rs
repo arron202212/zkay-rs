@@ -6,30 +6,38 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_ops::{AddWire, MulWire, SubWire};
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::{
-    config::config::Configs,
-    eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-    structure::{
-        circuit_generator::{
-            CGConfig, CGConfigFields, CircuitGenerator, getActiveCircuitGenerator,
+    InstanceOf,
+    {
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, getActiveCircuitGenerator,
+            },
+            constant_wire,
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_ops::{AddWire, MulWire, SubWire},
+            wire_type::WireType,
         },
-        constant_wire,
-        wire_array::WireArray,
     },
 };
-use crate::util::util::ARcCell;
-use crate::util::util::{BigInteger, Util};
+use crate::util::util::{
+    ARcCell, {BigInteger, Util},
+};
 use num_bigint::Sign;
 use num_traits::Signed;
 use rccell::{RcCell, WeakCell};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Div, Mul, Neg, Rem, Shr, Sub},
+    sync::Arc,
+};
+use zkay_derive::ImplStructNameConfig;
 /**
  * An auxiliary class that handles the operations of long integers, such as the
  * ones used in RSA operations. It applies some of the long integer
@@ -39,10 +47,6 @@ use std::fmt::Debug;
  * Usage examples exist in the RSA examples gadgets.
  */
 // pub type BigInteger = String;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Div, Mul, Neg, Rem, Shr, Sub};
-use std::sync::Arc;
-use zkay_derive::ImplStructNameConfig;
 
 #[derive(Debug, Clone, Hash)]
 pub struct LongElement {

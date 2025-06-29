@@ -147,58 +147,66 @@ mod test {
                     file!(),
                     line!()
                 );
+                use std::time::Instant;
+                let start = Instant::now();
                 for i in 0..numIns {
-                    println!(
-                        "=====buildCircuit=====i==={i}========={},{}",
-                        file!(),
-                        line!()
-                    );
                     shiftedRight[i] = inputs1[i]
                         .clone()
                         .map(|x| x.shiftRight(Configs.log2_field_prime as usize, i, &None));
-                    //println!("=====buildCircuit================={},{}",file!(),line!());
-
+                    println!(
+                        "End shiftRight  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     shiftedLeft[i] = inputs1[i]
                         .clone()
                         .map(|x| x.shiftLeft(Configs.log2_field_prime as usize, i, &None));
-                    //println!("=====buildCircuit================={},{}",file!(),line!());
-
+                    println!(
+                        "End shiftLeft  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
-                    //println!("=====buildCircuit================={},{}",file!(),line!());
-
+                    println!(
+                        "End rotateRight  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
-                    //println!("=====buildCircuit================={},{}",file!(),line!());
+                    println!(
+                        "End rotateLeft  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
 
                     xored[i] = inputs1[i].clone().map(|x| {
                         x.xorBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
                     });
-                    //println!("=====buildCircuit=====*********************============{},{}",file!(),line!());
-
+                    println!(
+                        "End xorBitwise  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     ored[i] = inputs1[i].clone().map(|x| {
                         x.orBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
                     });
-                    //println!("=====buildCircuit======*************============{},{}",file!(),line!());
-
+                    println!(
+                        "End orBitwise  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     anded[i] = inputs1[i].clone().map(|x| {
                         x.andBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
                     });
-                    //println!("=====buildCircuit======*************============{},{}",file!(),line!());
-
+                    println!(
+                        "End andBitwise  Time: {i}=== {} s",
+                        start.elapsed().as_secs()
+                    );
                     inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
-                    //println!("=====buildCircuit=======*************==========={},{}",file!(),line!());
-
+                    println!("End invBits  Time: {i}=== {} s", start.elapsed().as_secs());
                     multiplied[i] = inputs1[i]
                         .clone()
                         .map(|x| x.mul(inputs2[i].clone().unwrap()));
-                    println!(
-                        "=====buildCircuit======*************============{},{}",
-                        file!(),
-                        line!()
-                    );
+                    println!("End mul  Time: {i}=== {} s", start.elapsed().as_secs());
 
                     added[i] = inputs1[i]
                         .clone()
                         .map(|x| x.add(inputs2[i].clone().unwrap()));
+                    println!("End  add  Time: {i}=== {} s", start.elapsed().as_secs());
                 }
                 println!(
                     "=====buildCircuit=====*************============={},{}",

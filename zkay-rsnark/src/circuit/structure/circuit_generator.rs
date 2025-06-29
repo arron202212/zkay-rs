@@ -38,6 +38,7 @@ use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
 use std::cell::RefCell;
 use std::collections::HashMap;
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Write;
@@ -55,6 +56,10 @@ lazy_static! {
 }
 //  ConcurrentHashMap<Long, CircuitGenerator> activeCircuitGenerators = new ConcurrentHashMap<>();
 // 	  CircuitGenerator instance;
+use nohash_hasher::BuildNoHashHasher;
+// use std::{collections::HashMap, time::Instant};
+
+pub type IntHashMap<K, V> = HashMap<K, V, BuildNoHashHasher<K>>;
 
 #[derive(Debug, Clone)]
 pub struct CGBase;
@@ -63,7 +68,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitGenerator {
     pub current_wire_id: i32,
-    pub evaluation_queue: HashMap<Box<dyn Instruction>, Box<dyn Instruction>>,
+    pub evaluation_queue: IntHashMap<u64, Box<dyn Instruction>>,
 
     pub zero_wire: Option<WireType>,
     pub one_wire: Option<WireType>,
@@ -118,7 +123,7 @@ impl CircuitGenerator {
                 zero_wire: None,
                 one_wire: None,
                 // prover_witness_wires: vec![],
-                evaluation_queue: HashMap::new(),
+                evaluation_queue: IntHashMap::default(),
                 known_constant_wires: HashMap::new(),
                 current_wire_id: 0,
                 num_of_constraints: 0,
@@ -194,7 +199,7 @@ impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
         self.cg.borrow().one_wire.clone()
     }
 
-    fn get_evaluation_queue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
+    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>> {
         self.cg.borrow().evaluation_queue.clone()
     }
 
@@ -261,26 +266,69 @@ pub trait CGConfigFields: CGInstance + Debug {
     fn get_zero_wire(&self) -> Option<WireType>;
     fn get_one_wire(&self) -> Option<WireType>;
 
-    fn get_evaluation_queue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>>;
+    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>>;
 
     fn get_current_wire_id(&self) -> i32;
     fn get_num_of_constraints(&self) -> i32;
     // fn get_prover_witness_wires(&self) -> Vec<Option<WireType>>;
     fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
+        use std::time::Instant;
+        let start = Instant::now();
+        // let mut m=std::collections::HashMap::new();
         let evaluation_queue = self.get_evaluation_queue();
-        if let Some(existingInstruction) = evaluation_queue.get(&e) {
+        println!(
+            "End +++++++++++++addToEvaluationQueue 111 Time: == {} s",
+            start.elapsed().as_micros()
+        );
+        let mut s = DefaultHasher::new();
+        e.hash(&mut s);
+        let hash_code = s.finish();
+        if let Some(existingInstruction) = evaluation_queue.get(&hash_code) {
+            println!(
+                "End ++++++++++addToEvaluationQueue 2 Time: ===hash_code====={hash_code}======== {} s",
+                start.elapsed().as_micros()
+            );
             return existingInstruction.basic_op().map(|op| op.getOutputs());
         }
+        println!(
+            "End +++++++++++++addToEvaluationQueue 33 Time: == {} s",
+            start.elapsed().as_micros()
+        );
+        //    let mut s = DefaultHasher::new();
+        //     e.hash(&mut s);
+        //    let h= s.finish();
+        println!(
+            "End +++++++++++++addToEvaluationQueue 333 Time: == {} s",
+            start.elapsed().as_micros()
+        );
 
-        self.cg()
-            .borrow_mut()
-            .evaluation_queue
-            .entry(e.clone())
-            .or_insert(e.clone());
+        // m.insert(hash_code,e.clone());
+        println!(
+            "End +++++++++++++addToEvaluationQueue 3333 Time: == {} s",
+            start.elapsed().as_micros()
+        );
+
+        println!(
+            "End +++++++++++++addToEvaluationQueue 11 Time: == {} s",
+            start.elapsed().as_micros()
+        );
         if e.instance_of("BasicOp") {
             self.cg().borrow_mut().num_of_constraints +=
                 e.basic_op().as_ref().unwrap().getNumMulGates();
         }
+        println!("==hash_code===={hash_code}====e======{e:?}=========");
+        self.cg().borrow_mut().evaluation_queue.insert(hash_code, e);
+        // .entry(e.clone())
+        // .or_insert(e.clone());
+        println!(
+            "End +++++++++++++addToEvaluationQueue 1 Time: == {} s",
+            start.elapsed().as_micros()
+        );
+
+        println!(
+            "End +++++++++++++addToEvaluationQueue 0 Time: == {} s",
+            start.elapsed().as_micros()
+        );
         None // returning null means we have not seen this instruction before
         // have seen this instruction before, but can't de-duplicate
 
@@ -543,7 +591,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         let mut printWriter = File::create(self.get_name() + ".arith").unwrap();
         write!(printWriter, "total {}", self.cg().get_current_wire_id());
         let evaluation_queue = self.cg().get_evaluation_queue();
-        for e in evaluation_queue.keys() {
+        for e in evaluation_queue.values() {
             if e.doneWithinCircuit() {
                 let _ = write!(printWriter, "{e:?} \n");
             }
@@ -552,7 +600,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
     fn printCircuit(&self) {
         let evaluation_queue = self.cg().get_evaluation_queue();
-        for e in evaluation_queue.keys() {
+        for e in evaluation_queue.values() {
             if e.doneWithinCircuit() {
                 //println!("{e:?}");
             }
@@ -903,7 +951,7 @@ impl CGConfigFields for CircuitGenerator {
         self.one_wire.clone()
     }
 
-    fn get_evaluation_queue(&self) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
+    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>> {
         self.evaluation_queue.clone()
     }
 
@@ -1091,7 +1139,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
 
     crate::impl_fn_of_trait!(fn get_evaluation_queue(
         &self,
-    ) -> HashMap<Box<dyn Instruction>, Box<dyn Instruction>> );
+    ) -> IntHashMap<u64, Box<dyn Instruction>> );
 
     crate::impl_fn_of_trait!(fn get_current_wire_id(&self) -> i32 );
     crate::impl_fn_of_trait!( fn get_name(&self) -> String );

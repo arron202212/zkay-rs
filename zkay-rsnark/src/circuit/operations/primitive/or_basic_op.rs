@@ -5,14 +5,21 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::operations::primitive::basic_op::{BasicOp, Op};
-
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::BitOr;
+use crate::{
+    circuit::{
+        operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
+        structure::{
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::BitOr,
+};
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct OrBasicOp;
