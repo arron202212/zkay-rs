@@ -10,46 +10,47 @@ use super::wire_ops::{
     AddWire, AndBitwise, IsEqualTo, IsGreaterThan, IsGreaterThanOrEqual, IsLessThan,
     IsLessThanOrEqual, MulWire, OrBitwise, SubWire, XorBitwise,
 };
-use crate::circuit::InstanceOf;
-use crate::circuit::StructNameConfig;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::basic_op::Op;
-use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
-use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
-use crate::circuit::operations::primitive::non_zero_check_basic_op::{
-    NonZeroCheckBasicOp, new_non_zero_check,
+use crate::{
+    circuit::{
+        InstanceOf, StructNameConfig,
+        eval::instruction::Instruction,
+        operations::primitive::{
+            basic_op::Op,
+            const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
+            mul_basic_op::{MulBasicOp, new_mul},
+            non_zero_check_basic_op::{NonZeroCheckBasicOp, new_non_zero_check},
+            or_basic_op::{OrBasicOp, new_or},
+            pack_basic_op::{PackBasicOp, new_pack},
+            split_basic_op::{SplitBasicOp, new_split},
+            xor_basic_op::{XorBasicOp, new_xor},
+        },
+        structure::{
+            bit_wire::BitWire,
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
+                CreateConstantWire, getActiveCircuitGenerator,
+            },
+            constant_wire::ConstantWire,
+            linear_combination_bit_wire::LinearCombinationBitWire,
+            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{Base, GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+        },
+    },
+    util::util::{ARcCell, BigInteger, Util},
 };
-use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
-use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
-use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
-use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
-use crate::circuit::structure::bit_wire::BitWire;
 
-use crate::circuit::structure::circuit_generator::CreateConstantWire;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
-};
-use crate::circuit::structure::constant_wire::ConstantWire;
-use crate::circuit::structure::linear_combination_bit_wire::LinearCombinationBitWire;
-use crate::circuit::structure::linear_combination_wire::{
-    LinearCombinationWire, new_linear_combination,
-};
-use crate::circuit::structure::variable_bit_wire::VariableBitWire;
-use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
-use crate::circuit::structure::wire::Base;
-use crate::circuit::structure::wire::GeneratorConfig;
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::util::util::ARcCell;
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
 use enum_dispatch::enum_dispatch;
 use rccell::{RcCell, WeakCell};
-use std::fmt;
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, BitAnd, BitOr, BitXor, Mul, Sub};
-use std::sync::Arc;
+use std::{
+    fmt::{Debug, Self},
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, BitAnd, BitOr, BitXor, Mul, Sub},
+    sync::Arc,
+};
+
 use strum_macros::{EnumIs, EnumTryAs};
 #[enum_dispatch(
     GetWireId,

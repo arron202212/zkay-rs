@@ -6,11 +6,11 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::{
+    config::config::Configs,
+    eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+    structure::wire_type::WireType,
+};
 use strum::{Display, EnumString};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Clone, Debug, Hash, PartialEq, Display)]

@@ -6,29 +6,35 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::arc_cell_new;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::GadgetConfig;
-
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-
-use crate::circuit::structure::circuit_generator::put_active_circuit_generator;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use crate::{
+    arc_cell_new,
+    circuit::{
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::CGConfigFields,
+            circuit_generator::{
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+                put_active_circuit_generator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{ARcCell, BigInteger, Util},
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
-use crate::util::util::{BigInteger, Util};
+
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    fmt::Debug,
+    hash::Hash,
+    ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Rem, Shl, Shr, Sub},
+};
+
 use rccell::{RcCell, WeakCell};
-use std::borrow::Borrow;
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::hash::Hash;
-use std::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Neg, Rem, Shl, Shr, Sub};
 use zkay_derive::ImplStructNameConfig;
 pub struct PrimitiveOpTest;
 

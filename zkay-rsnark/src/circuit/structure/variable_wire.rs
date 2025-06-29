@@ -6,18 +6,21 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::arc_cell_new;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-
-use crate::circuit::structure::wire::GeneratorConfig;
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
+use crate::{
+    arc_cell_new,
+    circuit::structure::{
+        circuit_generator::CircuitGenerator,
+        wire::{GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
+        wire_array::WireArray,
+        wire_type::WireType,
+    },
+    util::util::ARcCell,
+};
 use rccell::{RcCell, WeakCell};
-
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct VariableWire {

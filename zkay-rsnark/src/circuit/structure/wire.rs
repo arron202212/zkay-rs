@@ -6,38 +6,39 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::StructNameConfig;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
-use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
-use crate::circuit::operations::primitive::non_zero_check_basic_op::{
-    NonZeroCheckBasicOp, new_non_zero_check,
+use crate::{
+    circuit::{
+        InstanceOf, StructNameConfig,
+        circuit_generator::{
+            CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, CreateConstantWire,
+            getActiveCircuitGenerator,
+        },
+        config::config::Configs,
+        eval::instruction::Instruction,
+        linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+        operations::primitive::{
+            const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
+            mul_basic_op::{MulBasicOp, new_mul},
+            non_zero_check_basic_op::{NonZeroCheckBasicOp, new_non_zero_check},
+            or_basic_op::{OrBasicOp, new_or},
+            pack_basic_op::{PackBasicOp, new_pack},
+            split_basic_op::{SplitBasicOp, new_split},
+            xor_basic_op::{XorBasicOp, new_xor},
+        },
+        variable_bit_wire::{VariableBitWire, new_variable_bit},
+        variable_wire::{VariableWire, new_variable},
+        wire_array::WireArray,
+        wire_type::WireType,
+    },
+    util::util::{ARcCell, BigInteger, Util},
 };
-use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
-use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
-use crate::circuit::operations::primitive::split_basic_op::{SplitBasicOp, new_split};
-use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
-
-use crate::circuit::structure::circuit_generator::CreateConstantWire;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
-};
-use crate::circuit::structure::linear_combination_wire::{
-    LinearCombinationWire, new_linear_combination,
-};
-use crate::circuit::structure::variable_bit_wire::{VariableBitWire, new_variable_bit};
-use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
-use crate::util::util::{BigInteger, Util};
 use enum_dispatch::enum_dispatch;
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::sync::Arc;
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::Arc,
+};
 use zkay_derive::ImplStructNameConfig;
 #[enum_dispatch]
 pub trait setBitsConfig {

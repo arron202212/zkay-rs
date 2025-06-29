@@ -6,25 +6,35 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
-
-use crate::circuit::structure::circuit_generator::CreateConstantWire;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        InstanceOf,
+        config::config::Configs,
+        eval::instruction::Instruction,
+        operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
+        structure::{
+            circuit_generator::CreateConstantWire,
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
+                getActiveCircuitGenerator,
+            },
+            wire::GeneratorConfig,
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire::GeneratorConfig;
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
+
 use num_bigint::Sign;
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Neg, Rem, Sub};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Neg, Rem, Sub},
+    time::Instant,
+};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct ConstantWire {
@@ -69,7 +79,6 @@ impl WireConfig for Wire<ConstantWire> {
         Some(WireType::Constant(self.clone()))
     }
     fn mulw(&self, w: WireType, desc: &Option<String>) -> WireType {
-        use std::time::Instant;
         let start = Instant::now();
         let generator = self.generator();
         //  println!("End const mulw Time: == {} s", start.elapsed().as_secs());

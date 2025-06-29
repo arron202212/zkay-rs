@@ -6,28 +6,36 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
-use crate::circuit::operations::primitive::pack_basic_op::{PackBasicOp, new_pack};
+use crate::{
+    circuit::{
+        InstanceOf,
+        eval::instruction::Instruction,
+        operations::primitive::{
+            add_basic_op::{AddBasicOp, new_add},
+            pack_basic_op::{PackBasicOp, new_pack},
+        },
+        structure::{
+            circuit_generator::CreateConstantWire,
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
+                getActiveCircuitGenerator,
+            },
+            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+            wire::GeneratorConfig,
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_type::WireType,
+        },
+    },
+    util::util::{ARcCell, BigInteger, Util},
+};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Index, IndexMut, Mul, Shl, Sub},
+    sync::Arc,
+};
 
-use crate::circuit::structure::circuit_generator::CreateConstantWire;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
-};
-use crate::circuit::structure::linear_combination_wire::{
-    LinearCombinationWire, new_linear_combination,
-};
-use crate::circuit::structure::wire::GeneratorConfig;
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
-use crate::util::util::{BigInteger, Util};
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Index, IndexMut, Mul, Shl, Sub};
-use std::sync::Arc;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct WireArray {
     pub array: Vec<Option<WireType>>,

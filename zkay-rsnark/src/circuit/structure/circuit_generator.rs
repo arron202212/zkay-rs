@@ -6,48 +6,58 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::arc_cell_new;
-use crate::circuit::InstanceOf;
-use crate::circuit::StructNameConfig;
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::assert_basic_op::{AssertBasicOp, new_assert};
-use crate::circuit::operations::primitive::basic_op::BasicOp;
-use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
-use crate::circuit::operations::wire_label_instruction::LabelType;
-use crate::circuit::operations::wire_label_instruction::WireLabelInstruction;
-use crate::circuit::structure::constant_wire::{ConstantWire, new_constant};
-use crate::circuit::structure::variable_bit_wire::VariableBitWire;
-use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
-use crate::util::{
-    run_command::run_command,
-    util::{BigInteger, Util},
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
 };
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    io::{BufReader, Write},
+    marker::PhantomData,
+    ops::{Add, Mul, Neg, Rem, Sub},
+    rc::Rc,
+    sync::{Arc, LazyLock, Mutex},
+    time::Instant,
+    {fmt::Debug, mem::size_of},
+};
+
 use dyn_clone::DynClone;
 use lazy_static::lazy_static;
 use rccell::{RcCell, WeakCell};
-use std::time::Instant;
-// use crate::util::util::ARcCell;
 
 use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
-use std::cell::RefCell;
-use std::collections::HashMap;
 
-use std::fs::File;
-use std::io::BufReader;
-use std::io::Write;
-use std::marker::PhantomData;
-use std::ops::{Add, Mul, Neg, Rem, Sub};
-use std::rc::Rc;
-use std::sync::Arc;
-use std::sync::{LazyLock, Mutex};
-use std::{fmt::Debug, mem::size_of};
+use nohash_hasher::BuildNoHashHasher;
 use zkay_derive::ImplStructNameConfig;
 lazy_static! {
     static ref active_circuit_generators: ARcCell<HashMap<String, ARcCell<dyn CGConfig + Send + Sync>>> =
@@ -56,14 +66,13 @@ lazy_static! {
 }
 //  ConcurrentHashMap<Long, CircuitGenerator> activeCircuitGenerators = new ConcurrentHashMap<>();
 // 	  CircuitGenerator instance;
-use nohash_hasher::BuildNoHashHasher;
+
 // use std::{collections::HashMap, time::Instant};
 
 pub type IntHashMap<K, V> = HashMap<K, V, BuildNoHashHasher<K>>;
 
 #[derive(Debug, Clone)]
 pub struct CGBase;
-use std::hash::{DefaultHasher, Hash, Hasher};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitGenerator {

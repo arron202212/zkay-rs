@@ -5,15 +5,21 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use crate::{
+    circuit::structure::{
+        circuit_generator::{
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+        },
+        wire_type::WireType,
+    },
+    util::util::ARcCell,
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::ARcCell;
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::sync::Arc;
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::Arc,
+};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
     pub description: String,

@@ -6,35 +6,44 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::primitive::add_basic_op::{AddBasicOp, new_add};
-use crate::circuit::operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul};
-use crate::circuit::operations::primitive::mul_basic_op::{MulBasicOp, new_mul};
-use crate::circuit::operations::primitive::or_basic_op::{OrBasicOp, new_or};
-use crate::circuit::operations::primitive::xor_basic_op::{XorBasicOp, new_xor};
-use crate::circuit::operations::wire_label_instruction::LabelType::output;
+use crate::{
+    circuit::{
+        InstanceOf,
+        eval::instruction::Instruction,
+        operations::{
+            primitive::{
+                add_basic_op::{AddBasicOp, new_add},
+                const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
+                mul_basic_op::{MulBasicOp, new_mul},
+                or_basic_op::{OrBasicOp, new_or},
+                xor_basic_op::{XorBasicOp, new_xor},
+            },
+            wire_label_instruction::LabelType::output,
+        },
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
+                getActiveCircuitGenerator,
+            },
+            linear_combination_bit_wire::{LinearCombinationBitWire, new_linear_combination_bit},
+            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+            variable_bit_wire::{VariableBitWire, new_variable_bit},
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+};
 
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Neg, Rem, Sub},
 };
-use crate::circuit::structure::linear_combination_bit_wire::{
-    LinearCombinationBitWire, new_linear_combination_bit,
-};
-use crate::circuit::structure::linear_combination_wire::{
-    LinearCombinationWire, new_linear_combination,
-};
-use crate::circuit::structure::variable_bit_wire::{VariableBitWire, new_variable_bit};
-use crate::circuit::structure::variable_wire::{VariableWire, new_variable};
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
 
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Neg, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct BitWire;

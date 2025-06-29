@@ -6,16 +6,19 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::bit_wire::BitWireConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::{
+    bit_wire::BitWireConfig,
+    circuit_generator::CircuitGenerator,
+    wire::{GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
+    wire_array::WireArray,
+    wire_type::WireType,
+};
+use std::{
+    fmt::Debug,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 
-use crate::circuit::structure::wire::GeneratorConfig;
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
 use rccell::{RcCell, WeakCell};
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct VariableBitWire;
