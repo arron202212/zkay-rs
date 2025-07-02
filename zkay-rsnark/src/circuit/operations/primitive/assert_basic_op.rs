@@ -25,10 +25,15 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AssertBasicOp;
-pub fn new_assert(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<AssertBasicOp> {
+pub fn new_assert(
+    w1: &WireType,
+    w2: &WireType,
+    output: &WireType,
+    desc: String,
+) -> Op<AssertBasicOp> {
     Op::<AssertBasicOp> {
-        inputs: vec![Some(w1), Some(w2)],
-        outputs: vec![Some(output)],
+        inputs: vec![Some(w1.clone()), Some(w2.clone())],
+        outputs: vec![Some(output.clone())],
         desc,
         t: AssertBasicOp,
     }
@@ -41,7 +46,7 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 //     }
 // }
 impl BasicOp for Op<AssertBasicOp> {
-    fn compute(&self, assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
         let leftSide = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
@@ -73,7 +78,7 @@ impl BasicOp for Op<AssertBasicOp> {
         }
     }
 
-    fn checkOutputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // do nothing
     }
 

@@ -287,6 +287,8 @@ samotop-async-trait="0.2.1"
 serde_closure = "0.3.3"
 bincode = "1.0"
 tokio-test = "*"
+rustc-hash = "2.1.1"
+ahash="0.8.12"
 [workspace.dependencies.uuid]
 version = "1.6.1"
 features = [

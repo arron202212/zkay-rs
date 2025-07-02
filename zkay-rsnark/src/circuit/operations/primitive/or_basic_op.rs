@@ -24,10 +24,10 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct OrBasicOp;
 
-pub fn new_or(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<OrBasicOp> {
+pub fn new_or(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
     Op::<OrBasicOp> {
-        inputs: vec![Some(w1), Some(w2)],
-        outputs: vec![Some(output)],
+        inputs: vec![Some(w1.clone()), Some(w2.clone())],
+        outputs: vec![Some(output.clone())],
         desc,
         t: OrBasicOp,
     }
@@ -40,15 +40,15 @@ impl BasicOp for Op<OrBasicOp> {
         "or".to_owned()
     }
 
-    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // //super.checkInputs(assignment);
         let check = Util::isBinary(
             assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                .clone()
+                .as_ref()
                 .unwrap(),
         ) && Util::isBinary(
             assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                .clone()
+                .as_ref()
                 .unwrap(),
         );
         if !check {
@@ -57,7 +57,7 @@ impl BasicOp for Op<OrBasicOp> {
         }
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = assignment
             [self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()

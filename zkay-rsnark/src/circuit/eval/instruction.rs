@@ -9,15 +9,15 @@
 use crate::circuit::{
     InstanceOf,
     eval::circuit_evaluator::CircuitEvaluator,
+    operations::{
+        primitive::basic_op::{BasicOp, BasicOpInOut, Op},
+        wire_label_instruction::WireLabel,
+    },
     structure::{
         circuit_generator::{
             CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
         },
         wire_type::WireType,
-    },
-    {
-        operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
-        wire_label_instruction::WireLabel,
     },
 };
 use dyn_clone::{DynClone, clone_trait_object};

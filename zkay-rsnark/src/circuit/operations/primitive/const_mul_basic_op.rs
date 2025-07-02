@@ -31,22 +31,22 @@ pub struct ConstMulBasicOp {
 }
 
 pub fn new_const_mul(
-    w: WireType,
-    out: WireType,
-    mut constInteger: BigInteger,
+    w: &WireType,
+    out: &WireType,
+    constInteger: &BigInteger,
     desc: String,
 ) -> Op<ConstMulBasicOp> {
     let inSign = constInteger.sign() == Sign::Minus;
-    if !inSign {
-        constInteger = Util::modulo(constInteger, Configs.field_prime.clone());
+    let constInteger = if !inSign {
+        Util::modulo(constInteger, &Configs.field_prime)
     } else {
         let mut _constInteger = constInteger.neg();
-        _constInteger = Util::modulo(_constInteger, Configs.field_prime.clone());
-        constInteger = Configs.field_prime.clone().sub(_constInteger);
-    }
+        _constInteger = Util::modulo(&_constInteger, &Configs.field_prime);
+        Configs.field_prime.clone().sub(_constInteger)
+    };
     Op::<ConstMulBasicOp> {
-        inputs: vec![Some(w)],
-        outputs: vec![Some(out)],
+        inputs: vec![Some(w.clone())],
+        outputs: vec![Some(out.clone())],
         desc,
         t: ConstMulBasicOp {
             constInteger,
@@ -68,7 +68,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         }
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()

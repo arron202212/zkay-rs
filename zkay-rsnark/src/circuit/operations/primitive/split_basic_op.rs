@@ -24,9 +24,9 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct SplitBasicOp;
-pub fn new_split(w: WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
+pub fn new_split(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
     Op::<SplitBasicOp> {
-        inputs: vec![Some(w)],
+        inputs: vec![Some(w.clone())],
         outputs: outs,
         desc,
         t: SplitBasicOp,
@@ -39,7 +39,7 @@ impl BasicOp for Op<SplitBasicOp> {
         "split".to_owned()
     }
 
-    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         //super.checkInputs(assignment);
         assert!(
             self.outputs.len()
@@ -54,7 +54,7 @@ impl BasicOp for Op<SplitBasicOp> {
         );
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap();

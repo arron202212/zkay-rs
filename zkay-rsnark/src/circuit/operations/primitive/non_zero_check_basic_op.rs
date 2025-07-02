@@ -24,14 +24,14 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct NonZeroCheckBasicOp;
 pub fn new_non_zero_check(
-    w: WireType,
-    out1: WireType,
-    out2: WireType,
+    w: &WireType,
+    out1: &WireType,
+    out2: &WireType,
     desc: String,
 ) -> Op<NonZeroCheckBasicOp> {
     Op::<NonZeroCheckBasicOp> {
-        inputs: vec![Some(w)],
-        outputs: vec![Some(out1), Some(out2)],
+        inputs: vec![Some(w.clone())],
+        outputs: vec![Some(out1.clone()), Some(out2.clone())],
         desc,
         t: NonZeroCheckBasicOp,
     }
@@ -43,7 +43,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
         "zerop".to_owned()
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         if assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()
             .unwrap()

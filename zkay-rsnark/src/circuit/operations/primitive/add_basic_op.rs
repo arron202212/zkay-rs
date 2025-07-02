@@ -25,10 +25,10 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AddBasicOp;
 
-pub fn new_add(ws: Vec<Option<WireType>>, output: WireType, desc: String) -> Op<AddBasicOp> {
+pub fn new_add(ws: Vec<Option<WireType>>, output: &WireType, desc: String) -> Op<AddBasicOp> {
     Op::<AddBasicOp> {
         inputs: ws,
-        outputs: vec![Some(output)],
+        outputs: vec![Some(output.clone())],
         desc,
         t: AddBasicOp,
     }
@@ -40,7 +40,7 @@ impl BasicOp for Op<AddBasicOp> {
     //     return "add".to_owned();
     // }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         let mut s = BigInteger::ZERO;
         for w in &self.inputs {
             s = s.add(

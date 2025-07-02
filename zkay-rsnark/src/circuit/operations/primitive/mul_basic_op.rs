@@ -24,10 +24,10 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct MulBasicOp;
-pub fn new_mul(w1: WireType, w2: WireType, output: WireType, desc: String) -> Op<MulBasicOp> {
+pub fn new_mul(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<MulBasicOp> {
     Op::<MulBasicOp> {
-        inputs: vec![Some(w1), Some(w2)],
-        outputs: vec![Some(output)],
+        inputs: vec![Some(w1.clone()), Some(w2.clone())],
+        outputs: vec![Some(output.clone())],
         desc,
         t: MulBasicOp,
     }
@@ -39,7 +39,7 @@ impl BasicOp for Op<MulBasicOp> {
         "mul".to_owned()
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()

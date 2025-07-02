@@ -9,7 +9,6 @@ use crate::{
     circuit::{
         config::config::Configs,
         eval::instruction::Instruction,
-        linear_combination_wire::LinearCombinationWire,
         operations::primitive::{
             const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
             mul_basic_op::{MulBasicOp, new_mul},
@@ -19,13 +18,16 @@ use crate::{
             split_basic_op::{SplitBasicOp, new_split},
             xor_basic_op::{XorBasicOp, new_xor},
         },
-        structure::circuit_generator::{
-            CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+        structure::{
+            circuit_generator::{
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+            },
+            linear_combination_wire::LinearCombinationWire,
+            variable_bit_wire::VariableBitWire,
+            variable_wire::VariableWire,
+            wire_array::WireArray,
+            wire_type::WireType,
         },
-        variable_bit_wire::VariableBitWire,
-        variable_wire::VariableWire,
-        wire_array::WireArray,
-        wire_type::WireType,
     },
     util::util::{BigInteger, Util},
 };

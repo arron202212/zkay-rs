@@ -68,11 +68,15 @@ impl WireConfig for Wire<BitWire> {
 
 impl BitWireConfig for Wire<BitWire> {}
 pub trait BitWireConfig: WireConfig {
-    fn mul(&self, w: WireType, desc: &Option<String>) -> WireType {
+    fn mul(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return BitWireConfig::mulb(self, w.try_as_constant_ref().unwrap().getConstant(), desc);
+            return BitWireConfig::mulb(
+                self,
+                &w.try_as_constant_ref().unwrap().getConstant(),
+                desc,
+            );
         }
-        let mut generator = self.generator().clone();
+        let mut generator = self.generator();
 
         let output1 = if w.instance_of("BitWire") {
             WireType::VariableBit(new_variable_bit(
@@ -87,9 +91,9 @@ pub trait BitWireConfig: WireConfig {
         };
         generator.borrow_mut().current_wire_id += 1;
         let op = new_mul(
-            self.self_clone().unwrap(),
+            &self.self_clone().unwrap(),
             w,
-            output1.clone(),
+            &output1,
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
@@ -102,13 +106,13 @@ pub trait BitWireConfig: WireConfig {
         output1
     }
 
-    fn mulb(&self, b: BigInteger, desc: &Option<String>) -> WireType {
-        println!("End Name Time: bbbbb {} s", line!());
-        let mut generator = self.generator().clone();
+    fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
+        // println!("End Name Time: bbbbb {} s", line!());
+        let mut generator = self.generator();
 
-        if b == BigInteger::ZERO {
+        if b == &BigInteger::ZERO {
             return generator.get_zero_wire().unwrap();
-        } else if b == Util::one() {
+        } else if b == &Util::one() {
             return self.self_clone().unwrap();
         }
         let out = WireType::LinearCombination(new_linear_combination(
@@ -118,8 +122,8 @@ pub trait BitWireConfig: WireConfig {
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
-            self.self_clone().unwrap(),
-            out.clone(),
+            &self.self_clone().unwrap(),
+            &out,
             b,
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
@@ -139,9 +143,9 @@ pub trait BitWireConfig: WireConfig {
         //		WireTypeneg = WireType::new(generator.borrow_mut().current_wire_id+=1);
         //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
         //		generator.addToEvaluationQueue(Box::new(op));
-        let mut generator = self.generator().clone();
+        let mut generator = self.generator();
 
-        let neg = BitWireConfig::mulb(self, Util::one().neg(), desc);
+        let neg = BitWireConfig::mulb(self, &Util::one().neg(), desc);
         let out = WireType::LinearCombinationBit(new_linear_combination_bit(
             generator.get_current_wire_id(),
             self.generator().clone().downgrade(),
@@ -149,7 +153,7 @@ pub trait BitWireConfig: WireConfig {
         generator.borrow_mut().current_wire_id += 1;
         let op = new_add(
             vec![generator.get_one_wire(), Some(neg)],
-            out.clone(),
+            &out,
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
@@ -163,11 +167,11 @@ pub trait BitWireConfig: WireConfig {
         Some(out)
     }
 
-    fn or(&self, w: WireType, desc: &Option<String>) -> WireType {
+    fn or(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.orw(self.self_clone().unwrap(), desc);
+            return w.orw(self.self_clone().as_ref().unwrap(), desc);
         }
-        let mut generator = self.generator().clone();
+        let mut generator = self.generator();
 
         if w.instance_of("BitWire") {
             let out = WireType::VariableBit(new_variable_bit(
@@ -176,9 +180,9 @@ pub trait BitWireConfig: WireConfig {
             ));
             generator.borrow_mut().current_wire_id += 1;
             let op = new_or(
-                self.self_clone().unwrap(),
+                &self.self_clone().unwrap(),
                 w,
-                out.clone(),
+                &out,
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
@@ -194,11 +198,11 @@ pub trait BitWireConfig: WireConfig {
         self.orw(w, desc)
     }
 
-    fn xor(&self, w: WireType, desc: &Option<String>) -> WireType {
+    fn xor(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.xorw(self.self_clone().unwrap(), desc);
+            return w.xorw(self.self_clone().as_ref().unwrap(), desc);
         }
-        let mut generator = self.generator().clone();
+        let mut generator = self.generator();
 
         if w.instance_of("BitWire") {
             let out = WireType::VariableBit(new_variable_bit(
@@ -207,9 +211,9 @@ pub trait BitWireConfig: WireConfig {
             ));
             generator.borrow_mut().current_wire_id += 1;
             let op = new_xor(
-                self.self_clone().unwrap(),
+                &self.self_clone().unwrap(),
                 w,
-                out.clone(),
+                &out,
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
@@ -225,7 +229,7 @@ pub trait BitWireConfig: WireConfig {
         self.xorw(w, desc)
     }
 
-    fn getBits(&self, w: WireType, bitwidth: i32, desc: &Option<String>) -> WireArray {
+    fn getBits(&self, w: &WireType, bitwidth: i32, desc: &Option<String>) -> WireArray {
         return WireArray::new(
             vec![Some(self.self_clone().unwrap())],
             self.generator().clone().downgrade(),

@@ -24,10 +24,10 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct PackBasicOp;
-pub fn new_pack(inBits: Vec<Option<WireType>>, out: WireType, desc: String) -> Op<PackBasicOp> {
+pub fn new_pack(inBits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
     Op::<PackBasicOp> {
         inputs: inBits,
-        outputs: vec![Some(out)],
+        outputs: vec![Some(out.clone())],
         desc,
         t: PackBasicOp,
     }
@@ -39,20 +39,20 @@ impl BasicOp for Op<PackBasicOp> {
         "pack".to_owned()
     }
 
-    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // //super.checkInputs(assignment);
 
         assert!(
             (0..self.inputs.len()).all(|i| Util::isBinary(
                 assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize]
-                    .clone()
+                    .as_ref()
                     .unwrap()
             )),
             "Error - Input(s) to Pack are not binary.{self:?} During Evaluation "
         );
     }
 
-    fn compute(&self, mut assignment: Vec<Option<BigInteger>>) {
+    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
         let mut sum = BigInteger::ZERO;
         for i in 0..self.inputs.len() {
             sum = sum.add(

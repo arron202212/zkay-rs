@@ -58,12 +58,13 @@ impl FieldDivisionGadget {
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant()
-                .modinv(&Configs.field_prime.clone())
+                .modinv(&Configs.field_prime)
                 .unwrap();
-            _self.c = Some(generator.create_constant_wire(
-                aConst.mul(bInverseConst).rem(Configs.field_prime.clone()),
-                &None,
-            ));
+            _self.c =
+                Some(generator.create_constant_wire(
+                    &aConst.mul(bInverseConst).rem(&Configs.field_prime),
+                    &None,
+                ));
         } else {
             _self.c = Some(generator.createProverWitnessWire(&_self.debugStr("division result")));
             _self.buildCircuit();
@@ -83,12 +84,12 @@ impl FieldDivisionGadget {
                         c: WireType)  {
         impl Instruction for Prover{
          fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                               let aValue = evaluator.getWireValue(self.a.clone());
-                            let bValue = evaluator.getWireValue(self.b.clone());
+                               let aValue = evaluator.getWireValue(&self.a);
+                            let bValue = evaluator.getWireValue(&self.b);
                             let cValue = aValue
-                                .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
-                                .rem(Configs.field_prime.clone());
-                            evaluator.setWireValue(self.c.clone(), cValue);
+                                .mul(bValue.modinv(&Configs.field_prime).unwrap())
+                                .rem(&Configs.field_prime);
+                            evaluator.setWireValue(&self.c, cValue);
         }
         }
                     }
@@ -128,9 +129,9 @@ impl FieldDivisionGadget {
 
         // to handle the case where a or b can be both zero, see below
         generator.addAssertion(
-            self.b.clone(),
-            self.c.clone().unwrap(),
-            self.a.clone(),
+            &self.b,
+            self.c.as_ref().unwrap(),
+            &self.a,
             &self.debugStr("Assertion for division result"),
         );
 

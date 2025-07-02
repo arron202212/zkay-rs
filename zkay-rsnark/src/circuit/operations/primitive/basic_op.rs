@@ -93,7 +93,7 @@ impl<T> BasicOpInOut for Op<T> {
     }
 }
 pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeConfig {
-    fn checkInputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
                 //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
@@ -102,9 +102,9 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
         }
     }
 
-    fn compute(&self, assignment: Vec<Option<BigInteger>>);
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>);
 
-    fn checkOutputs(&self, assignment: Vec<Option<BigInteger>>) {
+    fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getOutputs() {
             if assignment[w.as_ref().unwrap().getWireId() as usize].is_some() {
                 //println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
@@ -167,9 +167,9 @@ macro_rules! impl_instruction_for {
                 evaluator: &mut $crate::circuit::eval::circuit_evaluator::CircuitEvaluator,
             ) {
                 let assignment = evaluator.getAssignment();
-                self.checkInputs(assignment.clone());
-                self.checkOutputs(assignment.clone());
-                self.compute(assignment.clone());
+                self.checkInputs(assignment);
+                self.checkOutputs(assignment);
+                self.compute(evaluator.get_assignment_mut());
             }
             fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
                 Some(Box::new(self.clone()))

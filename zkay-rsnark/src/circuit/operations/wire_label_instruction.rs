@@ -104,9 +104,9 @@ impl Instruction for WireLabelInstruction {
                     format!(" ({}) ", self.desc)
                 },
                 if Configs.hex_output_enabled {
-                    format!("{:x}", evaluator.getWireValue(self.w.clone()))
+                    format!("{:x}", evaluator.getWireValue(&self.w))
                 } else {
-                    format!("{}", evaluator.getWireValue(self.w.clone()))
+                    format!("{}", evaluator.getWireValue(&self.w))
                 }
             );
         }

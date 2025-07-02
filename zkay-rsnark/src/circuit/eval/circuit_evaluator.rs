@@ -11,7 +11,7 @@ use crate::{
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::instruction::Instruction,
-        operations::{operations::wire_label_instruction::LabelType, wire_label_instruction},
+        operations::{wire_label_instruction, wire_label_instruction::LabelType},
         structure::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
@@ -54,7 +54,7 @@ impl CircuitEvaluator {
         }
     }
 
-    pub fn setWireValue(&mut self, w: WireType, v: BigInteger) {
+    pub fn setWireValue(&mut self, w: &WireType, v: BigInteger) {
         assert!(
             v.sign() != Sign::Minus && v < Configs.field_prime,
             "Only positive values that are less than the modulus are allowed for this method."
@@ -62,44 +62,42 @@ impl CircuitEvaluator {
         self.valueAssignment[w.getWireId() as usize] = Some(v);
     }
 
-    pub fn getWireValue(&self, w: WireType) -> BigInteger {
-        let mut v = self.valueAssignment[w.getWireId() as usize].clone();
-        if v.is_none() {
-            let bits = w.getBitWiresIfExistAlready();
-            if let Some(bits) = bits {
-                let mut sum = BigInteger::ZERO;
-                for i in 0..bits.size() {
-                    sum = sum.add(
-                        self.valueAssignment[bits[i].as_ref().unwrap().getWireId() as usize]
-                            .clone()
-                            .unwrap()
-                            .shl(i),
-                    );
-                }
-                v = Some(sum);
-            }
+    pub fn getWireValue(&self, w: &WireType) -> BigInteger {
+        let mut v = &self.valueAssignment[w.getWireId() as usize];
+        if let Some(v) = v {
+            return v.clone();
         }
-        v.unwrap()
-    }
+        let Some(bits) = w.getBitWiresIfExistAlready() else {
+            return BigInteger::ZERO;
+        };
 
-    pub fn getWiresValues(&self, w: Vec<Option<WireType>>) -> Vec<BigInteger> {
-        let mut values = vec![BigInteger::ZERO; w.len()];
-        for i in 0..w.len() {
-            values[i] = self.getWireValue(w[i].clone().unwrap());
+        let mut sum = BigInteger::ZERO;
+        for i in 0..bits.size() {
+            sum = sum.add(
+                self.valueAssignment[bits[i].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap()
+                    .shl(i),
+            );
         }
-        values
+        sum
     }
 
-    pub fn getWireValuei(&self, e: LongElement, bitwidthPerChunk: i32) -> BigInteger {
-        Util::combine(self.valueAssignment.clone(), e.getArray(), bitwidthPerChunk)
+    pub fn getWiresValues(&self, w: &Vec<Option<WireType>>) -> Vec<BigInteger> {
+        w.iter()
+            .map(|v| self.getWireValue(v.as_ref().unwrap()))
+            .collect()
     }
 
-    pub fn setWireValuebi(&mut self, e: LongElement, value: BigInteger, bitwidthPerChunk: i32) {
-        let array: Vec<_> = e.getArray();
-        self.setWireValuea(array, Util::split(value, bitwidthPerChunk));
+    pub fn getWireValuei(&self, e: &LongElement, bitwidthPerChunk: i32) -> BigInteger {
+        Util::combine(&self.valueAssignment, e.getArray(), bitwidthPerChunk)
     }
 
-    pub fn setWireValuei(&mut self, wire: WireType, v: i64) {
+    pub fn setWireValuebi(&mut self, e: &LongElement, value: &BigInteger, bitwidthPerChunk: i32) {
+        self.setWireValuea(&e.getArray(), &Util::split(value, bitwidthPerChunk));
+    }
+
+    pub fn setWireValuei(&mut self, wire: &WireType, v: i64) {
         assert!(
             v >= 0,
             "Only positive values that are less than the modulus are allowed for this method."
@@ -107,12 +105,12 @@ impl CircuitEvaluator {
         self.setWireValue(wire, BigInteger::from(v));
     }
 
-    pub fn setWireValuea(&mut self, wires: Vec<Option<WireType>>, v: Vec<BigInteger>) {
+    pub fn setWireValuea(&mut self, wires: &Vec<Option<WireType>>, v: &Vec<BigInteger>) {
         for i in 0..v.len() {
-            self.setWireValue(wires[i].clone().unwrap(), v[i].clone());
+            self.setWireValue(wires[i].as_ref().unwrap(), v[i].clone());
         }
         for i in v.len()..wires.len() {
-            self.setWireValue(wires[i].clone().unwrap(), BigInteger::ZERO);
+            self.setWireValue(wires[i].as_ref().unwrap(), BigInteger::ZERO);
         }
     }
 
@@ -151,7 +149,7 @@ impl CircuitEvaluator {
                     printWriter,
                     "{} {:x}",
                     id.to_string(),
-                    self.valueAssignment[id as usize].clone().unwrap()
+                    self.valueAssignment[id as usize].as_ref().unwrap()
                 );
             }
         }
@@ -224,13 +222,13 @@ impl CircuitEvaluator {
                     scanner.next().unwrap().split("\n").next().unwrap()
                 );
             } else {
-                let ins = self.getInputs(line.clone());
+                let ins = self.getInputs(&line);
                 for &i in &ins {
                     if assignment[i as usize].is_none() {
-                        //println!("Undefined value for a wire:used , at line {line}");
+                        println!("Undefined value for a wire:used , at line {line}");
                     }
                 }
-                let outs = self.getOutputs(line.clone());
+                let outs = self.getOutputs(&line);
                 if line.starts_with("mul ") {
                     let mut out = Util::one();
                     for w in ins {
@@ -317,7 +315,7 @@ impl CircuitEvaluator {
 
         for i in 0..totalWires {
             if assignment[i as usize].is_none() && !ignoreWires.contains(&i) {
-                //println!("WireType {i } is Null");
+                println!("WireType {i } is Null");
             }
         }
 
@@ -326,12 +324,12 @@ impl CircuitEvaluator {
             let _ = write!(
                 printWriter,
                 "{id} {:x}",
-                assignment[id as usize].clone().unwrap()
+                assignment[id as usize].as_ref().unwrap()
             );
         }
     }
 
-    fn getOutputs(&self, line: String) -> Vec<i32> {
+    fn getOutputs(&self, line: &String) -> Vec<i32> {
         // //println!(line);
         let scanner = &line[line.rfind("<").unwrap() + 1..line.rfind(">").unwrap()];
         let mut outs = vec![];
@@ -342,14 +340,17 @@ impl CircuitEvaluator {
         outs
     }
 
-    fn getInputs(&self, line: String) -> Vec<i32> {
+    fn getInputs(&self, line: &String) -> Vec<i32> {
         line[line.find("<").unwrap() + 1..line.find(">").unwrap()]
             .split_whitespace()
             .filter_map(|v| v.parse::<i32>().ok())
             .collect()
     }
 
-    pub fn getAssignment(&self) -> Vec<Option<BigInteger>> {
-        self.valueAssignment.clone()
+    pub fn getAssignment(&self) -> &Vec<Option<BigInteger>> {
+        &self.valueAssignment
+    }
+    pub fn get_assignment_mut(&mut self) -> &mut Vec<Option<BigInteger>> {
+        &mut self.valueAssignment
     }
 }

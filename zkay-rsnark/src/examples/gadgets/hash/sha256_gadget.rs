@@ -110,7 +110,7 @@ impl SHA256Gadget {
             for i in 0..64 {
                 if i < 16 {
                     wsSplitted[i] = Util::reverseBytes(
-                        self.preparedInputBits
+                        &self.preparedInputBits
                             [blockNum * 512 + i * 32..blockNum * 512 + (i + 1) * 32]
                             .to_vec(),
                     );
@@ -123,18 +123,18 @@ impl SHA256Gadget {
                     let t1 = w[i - 15].as_ref().unwrap().rotateRight(32, 7, &None);
                     let t2 = w[i - 15].as_ref().unwrap().rotateRight(32, 18, &None);
                     let t3 = w[i - 15].as_ref().unwrap().shiftRight(32, 3, &None);
-                    let mut s0 = t1.xorBitwise(t2, 32, &None);
-                    s0 = s0.xorBitwise(t3, 32, &None);
+                    let mut s0 = t1.xorBitwise(&t2, 32, &None);
+                    s0 = s0.xorBitwise(&t3, 32, &None);
 
                     let t4 = w[i - 2].as_ref().unwrap().rotateRight(32, 17, &None);
                     let t5 = w[i - 2].as_ref().unwrap().rotateRight(32, 19, &None);
                     let t6 = w[i - 2].as_ref().unwrap().shiftRight(32, 10, &None);
-                    let mut s1 = t4.xorBitwise(t5, 32, &None);
-                    s1 = s1.xorBitwise(t6, 32, &None);
+                    let mut s1 = t4.xorBitwise(&t5, 32, &None);
+                    s1 = s1.xorBitwise(&t6, 32, &None);
 
                     w[i] = w[i - 16]
                         .as_ref()
-                        .map(|x| x.clone().add(w[i - 7].clone().unwrap()));
+                        .map(|x| x.clone().add(w[i - 7].as_ref().unwrap()));
                     w[i] = w[i].as_ref().map(|x| x.clone().add(s0).add(s1));
                     w[i] = w[i].as_ref().map(|x| x.clone().trimBits(34, 32, &None));
                 }
@@ -153,32 +153,31 @@ impl SHA256Gadget {
                 let t1 = e.rotateRight(32, 6, &None);
                 let t2 = e.rotateRight(32, 11, &None);
                 let t3 = e.rotateRight(32, 25, &None);
-                let mut s1 = t1.xorBitwise(t2, 32, &None);
-                s1 = s1.xorBitwise(t3, 32, &None);
+                let mut s1 = t1.xorBitwise(&t2, 32, &None);
+                s1 = s1.xorBitwise(&t3, 32, &None);
 
-                let ch = self.computeCh(e.clone(), f.clone(), g.clone(), 32);
+                let ch = self.computeCh(&e, &f, &g, 32);
 
                 let t4 = a.rotateRight(32, 2, &None);
                 let t5 = a.rotateRight(32, 13, &None);
                 let t6 = a.rotateRight(32, 22, &None);
-                let mut s0 = t4.xorBitwise(t5, 32, &None);
-                s0 = s0.xorBitwise(t6, 32, &None);
+                let mut s0 = t4.xorBitwise(&t5, 32, &None);
+                s0 = s0.xorBitwise(&t6, 32, &None);
 
-                let mut maj;
                 // since after each iteration, SHA256 does c = b; and b = a;, we can make use of that to save multiplications in maj computation.
                 // To do this, we make use of the caching feature, by just changing the order of wires sent to maj(). Caching will take care of the rest.
-                if i % 2 == 1 {
-                    maj = self.computeMaj(c.clone(), b.clone(), a.clone(), 32);
+                let maj = if i % 2 == 1 {
+                    self.computeMaj(&c, &b, &a, 32)
                 } else {
-                    maj = self.computeMaj(a.clone(), b.clone(), c.clone(), 32);
-                }
+                    self.computeMaj(&a, &b, &c, 32)
+                };
 
                 let temp1 = w[i]
                     .clone()
                     .unwrap()
                     .addi(Self::K[i], &None)
                     .add(s1)
-                    .add(h.clone())
+                    .add(&h)
                     .add(ch);
 
                 let temp2 = maj.add(s0);
@@ -237,22 +236,22 @@ impl SHA256Gadget {
         }
         self.output = vec![None; 8 * 32];
         for i in 0..8 {
-            let bits = outDigest[i]
-                .as_ref()
-                .unwrap()
-                .getBitWiresi(32, &None)
-                .asArray();
+            let bits = outDigest[i].as_ref().unwrap().getBitWiresi(32, &None);
+            let bits = bits.asArray();
             for j in 0..32 {
                 self.output[j + i * 32] = bits[j].clone();
             }
         }
     }
 
-    fn computeMaj(&self, a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
+    fn computeMaj(&self, a: &WireType, b: &WireType, c: &WireType, numBits: usize) -> WireType {
         let mut result = vec![None; numBits];
-        let aBits = a.getBitWiresi(numBits as u64, &None).asArray();
-        let bBits = b.getBitWiresi(numBits as u64, &None).asArray();
-        let cBits = c.getBitWiresi(numBits as u64, &None).asArray();
+        let (aBits, bBits, cBits) = (
+            a.getBitWiresi(numBits as u64, &None),
+            b.getBitWiresi(numBits as u64, &None),
+            c.getBitWiresi(numBits as u64, &None),
+        );
+        let (aBits, bBits, cBits) = (aBits.asArray(), bBits.asArray(), cBits.asArray());
 
         for i in 0..numBits {
             let t1 = aBits[i].clone().unwrap().mul(bBits[i].clone().unwrap());
@@ -266,17 +265,20 @@ impl SHA256Gadget {
         WireArray::new(result, self.generator.clone().downgrade()).packAsBits(None, None, &None)
     }
 
-    fn computeCh(&self, a: WireType, b: WireType, c: WireType, numBits: usize) -> WireType {
+    fn computeCh(&self, a: &WireType, b: &WireType, c: &WireType, numBits: usize) -> WireType {
         let mut result = vec![None; numBits];
 
-        let aBits = a.getBitWiresi(numBits as u64, &None).asArray();
-        let bBits = b.getBitWiresi(numBits as u64, &None).asArray();
-        let cBits = c.getBitWiresi(numBits as u64, &None).asArray();
+        let (aBits, bBits, cBits) = (
+            a.getBitWiresi(numBits as u64, &None),
+            b.getBitWiresi(numBits as u64, &None),
+            c.getBitWiresi(numBits as u64, &None),
+        );
+        let (aBits, bBits, cBits) = (aBits.asArray(), bBits.asArray(), cBits.asArray());
 
         for i in 0..numBits {
-            let t1 = bBits[i].clone().unwrap().sub(cBits[i].clone().unwrap());
-            let t2 = t1.mul(aBits[i].clone().unwrap());
-            result[i] = Some(t2.add(cBits[i].clone().unwrap()));
+            let t1 = bBits[i].clone().unwrap().sub(cBits[i].as_ref().unwrap());
+            let t2 = t1.mul(aBits[i].as_ref().unwrap());
+            result[i] = Some(t2.add(cBits[i].as_ref().unwrap()));
         }
         WireArray::new(result, self.generator.clone().downgrade()).packAsBits(None, None, &None)
     }
@@ -289,8 +291,8 @@ impl SHA256Gadget {
             self.unpaddedInputs.clone(),
             self.generator.clone().downgrade(),
         )
-        .getBits(self.bitWidthPerInputElement, &None)
-        .asArray();
+        .getBits(self.bitWidthPerInputElement, &None);
+        let bits = bits.asArray();
         let tailLength = self.totalLengthInBytes % 64;
         if self.paddingRequired {
             let mut pad;
@@ -312,11 +314,8 @@ impl SHA256Gadget {
                     generator
                         .create_constant_wire(((lengthInBits >> (8 * i)) & 0xFF) as i64, &None),
                 );
-                let tmp = pad[pn - 1 - i]
-                    .as_ref()
-                    .unwrap()
-                    .getBitWiresi(8, &None)
-                    .asArray();
+                let tmp = pad[pn - 1 - i].as_ref().unwrap().getBitWiresi(8, &None);
+                let tmp = tmp.asArray();
                 lengthBits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }
             let totalNumberOfBits = self.numBlocks * 512;
@@ -326,7 +325,7 @@ impl SHA256Gadget {
             let n = self.preparedInputBits.len();
             self.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
         } else {
-            self.preparedInputBits = bits;
+            self.preparedInputBits = bits.clone();
         }
     }
 }

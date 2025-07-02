@@ -7,18 +7,13 @@ impl ZkayUtil {
     pub const ZKAY_RESTRICT_EVERYTHING: bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
     pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<Option<WireType>> {
-        return WireArray::new(Util::reverseBytes(bitArray.asArray()))
-            .packBitsIntoWords(targetWordBits);
+         WireArray::new(Util::reverseBytes(bitArray.asArray()))
+            .packBitsIntoWords(targetWordBits)
     }
 
     pub fn unsignedBytesToBigInt(bytes: Vec<byte>) -> BigInteger {
-        let signum = 0;
-        for b in bytes {
-            if b != 0 {
-                signum = 1;
-                break;
-            }
-        }
+        let signum = bytes.iter().any(|&b|b!=0) as i32;
+        
         BigInteger::new(signum, bytes)
     }
 

@@ -44,28 +44,28 @@ mod test {
     #[test]
     pub fn testAddition() {
         let mut numIns = 100;
-        let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
-        let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
+        let mut inVals1 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
+        let mut inVals2 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
 
         let mut result = vec![];
         result.push(
             inVals1[0]
                 .clone()
-                .add(inVals1[1].clone())
-                .rem(Configs.field_prime.clone()),
+                .add(&inVals1[1])
+                .rem(&Configs.field_prime),
         );
         let mut s = BigInteger::ZERO;
         let numIns = numIns as usize;
         for i in 0..numIns {
-            s = s.add(inVals1[i].clone());
+            s = s.add(&inVals1[i]);
         }
-        result.push(s.rem(Configs.field_prime.clone()));
+        result.push(s.rem(&Configs.field_prime));
         for i in 0..numIns {
             result.push(
                 inVals1[i]
                     .clone()
-                    .add(inVals2[i].clone())
-                    .rem(Configs.field_prime.clone()),
+                    .add(&inVals2[i])
+                    .rem(&Configs.field_prime),
             );
         }
 
@@ -94,20 +94,23 @@ mod test {
                     generator.clone().downgrade(),
                 );
 
-                let mut result1 = inputs1[0].clone().unwrap().add(inputs1[1].clone().unwrap());
+                let mut result1 = inputs1[0]
+                    .clone()
+                    .unwrap()
+                    .add(inputs1[1].as_ref().unwrap());
                 let mut result2 = inputs1.sumAllElements(&None);
-                let mut resultArray = inputs1.addWireArray(inputs2.clone(), inputs1.size(), &None);
+                let mut resultArray = inputs1.addWireArray(&inputs2, inputs1.size(), &None);
 
-                generator.makeOutput(result1, &None);
-                generator.makeOutput(result2, &None);
+                generator.makeOutput(&result1, &None);
+                generator.makeOutput(&result2, &None);
                 generator.makeOutputArray(resultArray.asArray(), &None);
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.asArray(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.asArray(), self.t.inVals2.clone());
+                evaluator.setWireValuea(self.t.inputs1.asArray(), &self.t.inVals1);
+                evaluator.setWireValuea(self.t.inputs2.asArray(), &self.t.inVals2);
             }
         }
         let cg = CircuitGenerator::new("addition");
@@ -127,7 +130,7 @@ mod test {
         let mut idx = 0;
         for output in generator.get_out_wires() {
             assert_eq!(
-                evaluator.getWireValue(output.clone().unwrap()),
+                evaluator.getWireValue(output.as_ref().unwrap()),
                 result[idx].clone()
             );
             idx += 1;
@@ -138,23 +141,23 @@ mod test {
     #[test]
     pub fn testMultiplication() {
         let mut numIns = 100;
-        let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
-        let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
+        let mut inVals1 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
+        let mut inVals2 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
 
         let mut result = vec![];
         result.push(
             inVals1[0]
                 .clone()
-                .mul(inVals1[1].clone())
-                .rem(Configs.field_prime.clone()),
+                .mul(&inVals1[1])
+                .rem(&Configs.field_prime),
         );
         let numIns = numIns as usize;
         for i in 0..numIns {
             result.push(
                 inVals1[i]
                     .clone()
-                    .mul(inVals2[i].clone())
-                    .rem(Configs.field_prime.clone()),
+                    .mul(&inVals2[i])
+                    .rem(&Configs.field_prime),
             );
         }
 
@@ -183,18 +186,21 @@ mod test {
                     generator.clone().downgrade(),
                 );
 
-                let mut result1 = inputs1[0].clone().unwrap().mul(inputs1[1].clone().unwrap());
-                let mut resultArray = inputs1.mulWireArray(inputs2.clone(), numIns, &None);
+                let mut result1 = inputs1[0]
+                    .clone()
+                    .unwrap()
+                    .mul(inputs1[1].as_ref().unwrap());
+                let mut resultArray = inputs1.mulWireArray(&inputs2, numIns, &None);
 
-                generator.makeOutput(result1, &None);
+                generator.makeOutput(&result1, &None);
                 generator.makeOutputArray(resultArray.asArray(), &None);
-                self.t.inputs1 = inputs1.asArray();
-                self.t.inputs2 = inputs2.asArray();
+                self.t.inputs1 = inputs1.asArray().clone();
+                self.t.inputs2 = inputs2.asArray().clone();
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
+                evaluator.setWireValuea(&self.t.inputs1, &self.t.inVals1);
+                evaluator.setWireValuea(&self.t.inputs2, &self.t.inVals2);
             }
         }
         let t = CGTest {
@@ -213,7 +219,7 @@ mod test {
         let mut idx = 0;
         for output in generator.get_out_wires() {
             assert_eq!(
-                evaluator.getWireValue(output.clone().unwrap()),
+                evaluator.getWireValue(output.as_ref().unwrap()),
                 result[idx].clone()
             );
             idx += 1;
@@ -274,19 +280,19 @@ mod test {
                 for i in 0..numIns {
                     result1[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.isLessThan(inputs2[i].clone().unwrap(), numBits, &None));
+                        .map(|x| x.isLessThan(inputs2[i].as_ref().unwrap(), numBits, &None));
                     result2[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.isLessThanOrEqual(inputs2[i].clone().unwrap(), numBits, &None));
+                        .map(|x| x.isLessThanOrEqual(inputs2[i].as_ref().unwrap(), numBits, &None));
                     result3[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.isGreaterThan(inputs2[i].clone().unwrap(), numBits, &None));
+                        .map(|x| x.isGreaterThan(inputs2[i].as_ref().unwrap(), numBits, &None));
                     result4[i] = inputs1[i].as_ref().map(|x| {
-                        x.isGreaterThanOrEqual(inputs2[i].clone().unwrap(), numBits, &None)
+                        x.isGreaterThanOrEqual(inputs2[i].as_ref().unwrap(), numBits, &None)
                     });
                     result5[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.isEqualTo(inputs2[i].clone().unwrap(), &None));
+                        .map(|x| x.isEqualTo(inputs2[i].as_ref().unwrap(), &None));
                 }
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
@@ -298,8 +304,8 @@ mod test {
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
+                evaluator.setWireValuea(&self.t.inputs1, &self.t.inVals1);
+                evaluator.setWireValuea(&self.t.inputs2, &self.t.inVals2);
             }
         }
         let t = CGTest {
@@ -330,65 +336,65 @@ mod test {
             let mut r = result[i];
             if r == 0 {
                 assert_eq!(
-                    evaluator.getWireValue(result1[i].clone().unwrap()),
+                    evaluator.getWireValue(result1[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result2[i].clone().unwrap()),
+                    evaluator.getWireValue(result2[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result3[i].clone().unwrap()),
+                    evaluator.getWireValue(result3[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result4[i].clone().unwrap()),
+                    evaluator.getWireValue(result4[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result5[i].clone().unwrap()),
+                    evaluator.getWireValue(result5[i].as_ref().unwrap()),
                     Util::one()
                 );
             } else if r == 1 {
                 assert_eq!(
-                    evaluator.getWireValue(result1[i].clone().unwrap()),
+                    evaluator.getWireValue(result1[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result2[i].clone().unwrap()),
+                    evaluator.getWireValue(result2[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result3[i].clone().unwrap()),
+                    evaluator.getWireValue(result3[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result4[i].clone().unwrap()),
+                    evaluator.getWireValue(result4[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result5[i].clone().unwrap()),
+                    evaluator.getWireValue(result5[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
             } else if r == -1 {
                 assert_eq!(
-                    evaluator.getWireValue(result1[i].clone().unwrap()),
+                    evaluator.getWireValue(result1[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result2[i].clone().unwrap()),
+                    evaluator.getWireValue(result2[i].as_ref().unwrap()),
                     Util::one()
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result3[i].clone().unwrap()),
+                    evaluator.getWireValue(result3[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result4[i].clone().unwrap()),
+                    evaluator.getWireValue(result4[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
                 assert_eq!(
-                    evaluator.getWireValue(result5[i].clone().unwrap()),
+                    evaluator.getWireValue(result5[i].as_ref().unwrap()),
                     BigInteger::ZERO
                 );
             }
@@ -398,8 +404,8 @@ mod test {
     #[test]
     pub fn testBooleanOperations() {
         let mut numIns = Configs.log2_field_prime;
-        let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
-        let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
+        let mut inVals1 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
+        let mut inVals2 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
         let mut inVals3 = Util::randomBigIntegerArrayi(numIns, 32);
         let numIns = numIns as usize;
         let mut shiftedRightVals = vec![BigInteger::default(); numIns];
@@ -496,35 +502,47 @@ mod test {
                     rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
                     rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
                     xored[i] = inputs1[i].clone().map(|x| {
-                        x.xorBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
+                        x.xorBitwise(
+                            inputs2[i].as_ref().unwrap(),
+                            Configs.log2_field_prime,
+                            &None,
+                        )
                     });
                     ored[i] = inputs1[i].clone().map(|x| {
-                        x.orBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
+                        x.orBitwise(
+                            inputs2[i].as_ref().unwrap(),
+                            Configs.log2_field_prime,
+                            &None,
+                        )
                     });
                     anded[i] = inputs1[i].clone().map(|x| {
-                        x.andBitwise(inputs2[i].clone().unwrap(), Configs.log2_field_prime, &None)
+                        x.andBitwise(
+                            inputs2[i].as_ref().unwrap(),
+                            Configs.log2_field_prime,
+                            &None,
+                        )
                     });
 
                     inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
                 }
 
-                generator.makeOutputArray(shiftedRight, &None);
-                generator.makeOutputArray(shiftedLeft, &None);
-                generator.makeOutputArray(rotatedRight, &None);
-                generator.makeOutputArray(rotatedLeft, &None);
-                generator.makeOutputArray(xored, &None);
-                generator.makeOutputArray(ored, &None);
-                generator.makeOutputArray(anded, &None);
-                generator.makeOutputArray(inverted, &None);
+                generator.makeOutputArray(&shiftedRight, &None);
+                generator.makeOutputArray(&shiftedLeft, &None);
+                generator.makeOutputArray(&rotatedRight, &None);
+                generator.makeOutputArray(&rotatedLeft, &None);
+                generator.makeOutputArray(&xored, &None);
+                generator.makeOutputArray(&ored, &None);
+                generator.makeOutputArray(&anded, &None);
+                generator.makeOutputArray(&inverted, &None);
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
                 self.t.inputs3 = inputs3;
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
-                evaluator.setWireValuea(self.t.inputs3.clone(), self.t.inVals3.clone());
+                evaluator.setWireValuea(&self.t.inputs1, &self.t.inVals1);
+                evaluator.setWireValuea(&self.t.inputs2, &self.t.inVals2);
+                evaluator.setWireValuea(&self.t.inputs3, &self.t.inVals3);
             }
         }
         let t = CGTest {
@@ -547,7 +565,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 shiftedRightVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -555,7 +573,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 shiftedLeftVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -563,7 +581,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedRightVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -571,7 +589,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 rotatedLeftVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -579,7 +597,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 xoredVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -587,7 +605,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 oredVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -595,7 +613,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 andedVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
 
@@ -603,7 +621,7 @@ mod test {
         for i in 0..numIns {
             assert_eq!(
                 invertedVals[i],
-                evaluator.getWireValue(outWires[i + outputIndex].clone().unwrap())
+                evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
             );
         }
     }
@@ -611,22 +629,22 @@ mod test {
     #[test]
     pub fn testAssertion() {
         let mut numIns = 100;
-        let mut inVals1 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
-        let mut inVals2 = Util::randomBigIntegerArray(numIns, Configs.field_prime.clone());
+        let mut inVals1 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
+        let mut inVals2 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
         let numIns = numIns as usize;
         let mut result = vec![];
         result.push(
             inVals1[0]
                 .clone()
-                .mul(inVals1[0].clone())
-                .rem(Configs.field_prime.clone()),
+                .mul(&inVals1[0])
+                .rem(&Configs.field_prime),
         );
         for i in 0..numIns {
             result.push(
                 inVals1[i]
                     .clone()
-                    .mul(inVals2[i].clone())
-                    .rem(Configs.field_prime.clone()),
+                    .mul(&inVals2[i])
+                    .rem(&Configs.field_prime),
             );
         }
 
@@ -670,12 +688,12 @@ mod test {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                                           evaluator.setWireValue(
-                                    self.solutions[0].clone().unwrap(),
+                                    self.solutions[0].as_ref().unwrap(),
                                     self.result[0].clone(),
                                 );
                                 for i in 0..self.numIns {
                                     evaluator.setWireValue(
-                                        self.solutions[i + 1].clone().unwrap(),
+                                        self.solutions[i + 1].as_ref().unwrap(),
                                         self.result[i + 1].clone(),
                                     );
                                 }
@@ -685,10 +703,10 @@ mod test {
                         );
                 generator.specifyProverWitnessComputation(prover);
                 // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                //     evaluator.setWireValue(solutions[0].clone().unwrap(), self.t.result[0].clone());
+                //     evaluator.setWireValue(solutions[0].as_ref().unwrap(), self.t.result[0].clone());
                 //     for i in 0..numIns {
                 //         evaluator.setWireValue(
-                //             solutions[i + 1].clone().unwrap(),
+                //             solutions[i + 1].as_ref().unwrap(),
                 //             self.t.result[i + 1].clone(),
                 //         );
                 //     }
@@ -704,12 +722,12 @@ mod test {
                 //     impl Instruction for Prover {
                 //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                 //             evaluator.setWireValue(
-                //                 self.solutions[0].clone().unwrap(),
+                //                 self.solutions[0].as_ref().unwrap(),
                 //                 self.result[0].clone(),
                 //             );
                 //             for i in 0..self.numIns {
                 //                 evaluator.setWireValue(
-                //                     self.solutions[i + 1].clone().unwrap(),
+                //                     self.solutions[i + 1].as_ref().unwrap(),
                 //                     self.result[i + 1].clone(),
                 //                 );
                 //             }
@@ -723,59 +741,46 @@ mod test {
                 // });
 
                 self.addAssertion(
-                    inputs1[0].clone().unwrap(),
-                    inputs1[0].clone().unwrap(),
-                    solutions[0].clone().unwrap(),
+                    inputs1[0].as_ref().unwrap(),
+                    inputs1[0].as_ref().unwrap(),
+                    solutions[0].as_ref().unwrap(),
                     &None,
                 );
                 for i in 0..numIns {
                     self.addAssertion(
-                        inputs1[i].clone().unwrap(),
-                        inputs2[i].clone().unwrap(),
-                        solutions[i + 1].clone().unwrap(),
+                        inputs1[i].as_ref().unwrap(),
+                        inputs2[i].as_ref().unwrap(),
+                        solutions[i + 1].as_ref().unwrap(),
                         &None,
                     );
                 }
-
+                let (zero_wire, one_wire) =
+                    (self.get_zero_wire().unwrap(), self.get_one_wire().unwrap());
                 // constant assertions will not add constraints
-                self.addZeroAssertion(self.get_zero_wire().unwrap(), &None);
-                self.addOneAssertion(self.get_one_wire().unwrap(), &None);
-                self.addAssertion(
-                    self.get_zero_wire().unwrap(),
-                    self.get_one_wire().unwrap(),
-                    self.get_zero_wire().unwrap(),
-                    &None,
-                );
-                self.addAssertion(
-                    self.get_one_wire().unwrap(),
-                    self.get_one_wire().unwrap(),
-                    self.get_one_wire().unwrap(),
-                    &None,
-                );
-                self.addBinaryAssertion(self.get_zero_wire().unwrap(), &None);
-                self.addBinaryAssertion(self.get_one_wire().unwrap(), &None);
+                self.addZeroAssertion(&zero_wire, &None);
+                self.addOneAssertion(&one_wire, &None);
+                self.addAssertion(&zero_wire, &one_wire, &zero_wire, &None);
+                self.addAssertion(&one_wire, &one_wire, &one_wire, &None);
+                self.addBinaryAssertion(&zero_wire, &None);
+                self.addBinaryAssertion(&one_wire, &None);
 
                 // won't add a constraint
                 self.addEqualityAssertion(
-                    inputs1[0].clone().unwrap(),
-                    inputs1[0].clone().unwrap(),
+                    inputs1[0].as_ref().unwrap(),
+                    inputs1[0].as_ref().unwrap(),
                     &None,
                 );
 
                 // will add a constraint
-                self.addEqualityAssertionb(
-                    inputs1[0].clone().unwrap(),
-                    self.t.inVals1[0].clone(),
-                    &None,
-                );
-                self.t.inputs1 = inputs1.asArray();
-                self.t.inputs2 = inputs2.asArray();
+                self.addEqualityAssertionb(inputs1[0].as_ref().unwrap(), &self.t.inVals1[0], &None);
+                self.t.inputs1 = inputs1.asArray().clone();
+                self.t.inputs2 = inputs2.asArray().clone();
                 // self.t.inputs2=inputs2;
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValuea(self.t.inputs1.clone(), self.t.inVals1.clone());
-                evaluator.setWireValuea(self.t.inputs2.clone(), self.t.inVals2.clone());
+                evaluator.setWireValuea(&self.t.inputs1, &self.t.inVals1);
+                evaluator.setWireValuea(&self.t.inputs2, &self.t.inVals2);
             }
         }
         let t = CGTest {
