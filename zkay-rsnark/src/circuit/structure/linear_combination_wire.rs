@@ -46,11 +46,13 @@ pub fn new_linear_combination(
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<LinearCombinationWire> {
     // super(wireId);
-    Wire::<LinearCombinationWire> {
-        wireId,
-        generator,
-        t: LinearCombinationWire { bitWires: bits },
-    }
+    // Wire::<LinearCombinationWire> {
+    //     wireId,
+    //     generator,
+    //     t: LinearCombinationWire { bitWires: bits },
+    // }
+    Wire::<LinearCombinationWire> ::new( LinearCombinationWire { bitWires: bits },wireId,
+        generator,).unwrap()
 }
 impl setBitsConfig for LinearCombinationWire {}
 impl setBitsConfig for Wire<LinearCombinationWire> {}

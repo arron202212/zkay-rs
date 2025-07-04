@@ -34,7 +34,9 @@ pub fn new_variable_bit(
     //     generator,
     //     t: VariableBitWire,
     // }
-crate::new_wire!(VariableBitWire,wireId,generator)
+// crate::new_wire!(VariableBitWire,wireId,generator)
+  Wire::<VariableBitWire> ::new( VariableBitWire,wireId,
+        generator,).unwrap()
 }
 impl setBitsConfig for VariableBitWire {}
 impl setBitsConfig for Wire<VariableBitWire> {}

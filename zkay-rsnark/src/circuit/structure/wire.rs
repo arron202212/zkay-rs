@@ -71,7 +71,7 @@ pub struct Wire<T: setBitsConfig + Hash + Clone + Debug + PartialEq> {
 }
 
 impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
-    pub fn new(wireId: i32, t: T, generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
+    pub fn new(t: T,wireId: i32,  generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
         if wireId < 0 {
             eyre::bail!("wire id cannot be negative");
         }
@@ -299,8 +299,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
 
         let out1 = WireType::Wire(
             Wire::<Base>::new(
-                generator.get_current_wire_id(),
                 Base,
+                generator.get_current_wire_id(),
                 generator.clone().downgrade(),
             )
             .unwrap(),

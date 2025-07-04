@@ -40,11 +40,13 @@ crate::impl_hash_code_of_wire_g_for!(Wire<VariableWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableWire>);
 pub fn new_variable(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableWire> {
     // super(wireId);
-    Wire::<VariableWire> {
-        wireId,
-        generator,
-        t: VariableWire { bitWires: None },
-    }
+    // Wire::<VariableWire> {
+    //     wireId,
+    //     generator,
+    //     t: VariableWire { bitWires: None },
+    // }
+  Wire::<VariableWire> ::new( VariableWire { bitWires: None },wireId,
+        generator,).unwrap()
 }
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}

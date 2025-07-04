@@ -48,13 +48,16 @@ pub fn new_constant(
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<ConstantWire> {
     // super(wireId);
-    Wire::<ConstantWire> {
-        wireId,
-        generator,
-        t: ConstantWire {
+    // Wire::<ConstantWire> {
+    //     wireId,
+    //     generator,
+    //     t: ConstantWire {
+    //         constant: value.rem(&Configs.field_prime),
+    //     },
+    // }
+    Wire::<ConstantWire>::new(ConstantWire {
             constant: value.rem(&Configs.field_prime),
-        },
-    }
+        },wireId,generator).unwrap()
 }
 
 impl setBitsConfig for ConstantWire {}

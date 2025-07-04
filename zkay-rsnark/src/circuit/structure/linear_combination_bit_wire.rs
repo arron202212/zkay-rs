@@ -34,7 +34,8 @@ pub fn new_linear_combination_bit(
     //     generator,
     //     t: LinearCombinationBitWire,
     // }
-crate::new_wire!(LinearCombinationBitWire,wireId,generator)
+// crate::new_wire!(LinearCombinationBitWire,wireId,generator)
+Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire,wireId,generator).unwrap()
 }
 impl setBitsConfig for LinearCombinationBitWire {}
 impl setBitsConfig for Wire<LinearCombinationBitWire> {}
