@@ -99,6 +99,9 @@ impl CGInstance for CircuitGenerator {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.me.clone().unwrap().upgrade().unwrap()
     }
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
+         self.me.clone().unwrap()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -188,6 +191,10 @@ impl<T: Debug> CGInstance for CircuitGeneratorExtend<T> {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.cg.clone()
     }
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
+        self.cg.clone().downgrade()
+    }
+
 }
 
 pub fn addToEvaluationQueue(
@@ -278,11 +285,15 @@ pub fn addToEvaluationQueue(
 }
 pub trait CGInstance {
     fn cg(&self) -> RcCell<CircuitGenerator>;
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator>;
 }
 
 impl<T: CGInstance> CGInstance for RcCell<T> {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.borrow().cg()
+    }
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
+        self.borrow().cg_weak()
     }
 }
 
@@ -444,7 +455,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn createInputWire(&self, desc: &Option<String>) -> WireType {
         let newInputWire = WireType::Variable(new_variable(
             self.get_current_wire_id(),
-            self.cg().clone().downgrade(),
+            self.cg_weak(),
         ));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
@@ -477,7 +488,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
-        LongElement::new(w, bitwidths, self.cg().clone().downgrade())
+        LongElement::new(w, bitwidths, self.cg_weak())
     }
 
     fn createLongElementProverWitness(
@@ -492,13 +503,13 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
             bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
-        LongElement::new(w, bitwidths, self.cg().clone().downgrade())
+        LongElement::new(w, bitwidths, self.cg_weak())
     }
 
     fn createProverWitnessWire(&mut self, desc: &Option<String>) -> WireType {
         let wire = WireType::Variable(new_variable(
             self.get_current_wire_id(),
-            self.cg().clone().downgrade(),
+            self.cg_weak(),
         ));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
@@ -572,7 +583,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn makeVariable(&mut self, wire: &WireType, desc: &Option<String>) -> WireType {
         let mut outputWire = WireType::Variable(new_variable(
             self.get_current_wire_id(),
-            self.cg().clone().downgrade(),
+            self.cg_weak(),
         ));
         self.cg().borrow_mut().current_wire_id += 1;
         let op = new_mul(
@@ -658,7 +669,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         let one_wire = WireType::Constant(new_constant(
             self.get_current_wire_id(),
             Util::one(),
-            self.cg().clone().downgrade(),
+            self.cg_weak(),
         ));
         //println!("{},{}",file!(),line!());
         self.cg().borrow_mut().one_wire = Some(one_wire.clone());

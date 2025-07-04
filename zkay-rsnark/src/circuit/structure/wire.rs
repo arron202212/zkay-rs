@@ -1095,10 +1095,10 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GetWireId for Wire<T> 
 
 #[macro_export]
 macro_rules! new_wire {
-    ($impl_type:ty,$wire_id:expr,$generator:ident) => {
+    ($impl_type:ident,$wire_id:expr,$generator:ident) => {
         Wire::<$impl_type> {
             wireId: $wire_id,
-            generator,
+            $generator,
             t: $impl_type,
         }
     };

@@ -29,11 +29,12 @@ pub fn new_variable_bit(
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<VariableBitWire> {
     // super(wireId);
-    Wire::<VariableBitWire> {
-        wireId,
-        generator,
-        t: VariableBitWire,
-    }
+    // Wire::<VariableBitWire> {
+    //     wireId,
+    //     generator,
+    //     t: VariableBitWire,
+    // }
+crate::new_wire!(VariableBitWire,wireId,generator)
 }
 impl setBitsConfig for VariableBitWire {}
 impl setBitsConfig for Wire<VariableBitWire> {}

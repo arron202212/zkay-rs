@@ -51,11 +51,12 @@ crate::impl_hash_code_of_wire_g_for!(Wire<BitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<BitWire>);
 pub fn new_bit(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWire> {
     // super(wireId);
-    Wire::<BitWire> {
-        wireId,
-        generator,
-        t: BitWire,
-    }
+    // Wire::<BitWire> {
+    //     wireId,
+    //     generator,
+    //     t: BitWire,
+    // }
+    crate::new_wire!(BitWire,wireId,generator)
 }
 
 impl setBitsConfig for BitWire {}

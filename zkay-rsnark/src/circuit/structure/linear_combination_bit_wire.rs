@@ -29,11 +29,12 @@ pub fn new_linear_combination_bit(
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<LinearCombinationBitWire> {
     // super(wireId);
-    Wire::<LinearCombinationBitWire> {
-        wireId,
-        generator,
-        t: LinearCombinationBitWire,
-    }
+    // Wire::<LinearCombinationBitWire> {
+    //     wireId,
+    //     generator,
+    //     t: LinearCombinationBitWire,
+    // }
+crate::new_wire!(LinearCombinationBitWire,wireId,generator)
 }
 impl setBitsConfig for LinearCombinationBitWire {}
 impl setBitsConfig for Wire<LinearCombinationBitWire> {}

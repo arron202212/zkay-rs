@@ -26,7 +26,7 @@ pub struct OrBasicOp;
 
 pub fn new_or(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
     use std::time::Instant;
-    let start = Instant::now();
+    let _start = Instant::now();
     let op = Op::<OrBasicOp> {
         inputs: vec![Some(w1.clone()), Some(w2.clone())],
         outputs: vec![Some(output.clone())],
