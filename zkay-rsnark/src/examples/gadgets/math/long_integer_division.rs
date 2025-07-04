@@ -122,11 +122,11 @@ impl Gadget for LongIntegerDivision {
 
                     evaluator.setWireValue(
                         r.getArray(),
-                        Util::split(rValue, LongElement.CHUNK_BITWIDTH),
+                        &Util::split(rValue, LongElement.CHUNK_BITWIDTH),
                     );
                     evaluator.setWireValue(
                         q.getArray(),
-                        Util::split(qValue, LongElement.CHUNK_BITWIDTH),
+                        &Util::split(qValue, LongElement.CHUNK_BITWIDTH),
                     );
                 });
         // {

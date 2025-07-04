@@ -15,7 +15,8 @@ use crate::circuit::{
     },
     structure::{
         circuit_generator::{
-            CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+            getActiveCircuitGenerator,
         },
         wire_type::WireType,
     },

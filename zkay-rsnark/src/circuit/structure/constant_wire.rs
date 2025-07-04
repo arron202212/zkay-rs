@@ -16,7 +16,7 @@ use crate::{
             circuit_generator::CreateConstantWire,
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
-                getActiveCircuitGenerator,
+                addToEvaluationQueue, getActiveCircuitGenerator,
             },
             wire::GeneratorConfig,
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
@@ -133,7 +133,7 @@ impl WireConfig for Wire<ConstantWire> {
         );
         //println!"End Name Time: ccccccc {} s", line!());
         let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;

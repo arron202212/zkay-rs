@@ -38,9 +38,9 @@ impl Gadget for ModGadget {
                     let aValue = evaluator.getWireValue(a);
                     let bValue = evaluator.getWireValue(b);
                     let rValue = aValue.rem(bValue);
-                    evaluator.setWireValue(r, rValue);
+                    evaluator.setWireValue(r, &rValue);
                     let qValue = aValue.div(bValue);
-                    evaluator.setWireValue(q, qValue);
+                    evaluator.setWireValue(q, &qValue);
                 });
         //     {
         //     struct Prover;

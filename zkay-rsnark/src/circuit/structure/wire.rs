@@ -23,7 +23,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
-                CreateConstantWire, getActiveCircuitGenerator,
+                CreateConstantWire, addToEvaluationQueue, getActiveCircuitGenerator,
             },
             linear_combination_wire::{LinearCombinationWire, new_linear_combination},
             variable_bit_wire::{VariableBitWire, new_variable_bit},
@@ -96,10 +96,14 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
 #[enum_dispatch]
 pub trait GeneratorConfig {
     fn generator(&self) -> RcCell<CircuitGenerator>;
+    fn generator_weak(&self) -> WeakCell<CircuitGenerator>;
 }
 impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GeneratorConfig for Wire<T> {
     fn generator(&self) -> RcCell<CircuitGenerator> {
         self.generator.clone().upgrade().unwrap()
+    }
+    fn generator_weak(&self) -> WeakCell<CircuitGenerator> {
+        self.generator.clone()
     }
 }
 
@@ -141,7 +145,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let out = WireType::LinearCombination(new_linear_combination(
             generator.get_current_wire_id(),
             None,
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_const_mul(
@@ -152,8 +156,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //		generator.addToEvaluationQueue(Box::new(op));
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         // println!("End Name Time: 444 {} s", line!());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
@@ -197,7 +201,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // );
         let output = WireType::Variable(new_variable(
             generator.get_current_wire_id(),
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         ));
         // println!(
         //     "End new_variable  Time: == {} s",
@@ -212,8 +216,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         // println!("End new_mul  Time: == {} s", start.elapsed().as_micros());
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         // println!(
         //     "End addToEvaluationQueue  Time: == {} s",
         //     start.elapsed().as_micros()
@@ -231,7 +235,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         w.packIfNeeded(desc);
         WireArray::new(
             vec![Some(self.self_clone().unwrap()), Some(w.clone())],
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         )
         .sumAllElements(desc)
     }
@@ -304,7 +308,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         generator.borrow_mut().current_wire_id += 1;
         let out2 = WireType::VariableBit(new_variable_bit(
             generator.get_current_wire_id(),
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_non_zero_check(
@@ -314,8 +318,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 2;
@@ -336,32 +340,55 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn orw(&self, w: &WireType, desc: &Option<String>) -> WireType {
+        use std::time::Instant;
+        let start = Instant::now();
+
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
             return w.orw(self.self_clone().as_ref().unwrap(), desc);
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
+        //  println!(
+        //             "End orw addToEvaluationQueue 013 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         // needed
         let out = WireType::Variable(new_variable(
             generator.get_current_wire_id(),
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_or(
-            &self.self_clone().unwrap(),
-            w,
-            &out,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
-        );
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+        let sc = self.self_clone().unwrap();
+        let desc = desc
+            .as_ref()
+            .map_or_else(|| String::new(), |d| d.to_owned());
+        //  println!(
+        //             "End orw addToEvaluationQueue 014 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
+        let op = new_or(&sc, w, &out, desc);
+
+        //  println!(
+        //             "End orw addToEvaluationQueue 0153333 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
+
+        //  println!(
+        //             "End orw addToEvaluationQueue 015 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
+        //  println!(
+        //             "End orw addToEvaluationQueue 02 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            return cachedOutputs[0].clone().unwrap();
+            cachedOutputs[0].clone().unwrap()
+        } else {
+            out
         }
-        out
     }
 
     fn xorw(&self, w: &WireType, desc: &Option<String>) -> WireType {
@@ -374,7 +401,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // needed
         let out = WireType::Variable(new_variable(
             generator.get_current_wire_id(),
-            self.generator().clone().downgrade(),
+            self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let op = new_xor(
@@ -384,8 +411,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -445,7 +472,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
 
             ws[i] = Some(WireType::VariableBit(new_variable_bit(
                 generator.get_current_wire_id(),
-                self.generator().clone().downgrade(),
+                self.generator_weak(),
             )));
             //println!("======================{},{}",file!(),line!());
 
@@ -459,8 +486,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //println!("======================{},{}",file!(),line!());
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= bitwidth;
             //println!("======================{},{}",file!(),line!());
@@ -564,15 +591,37 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn orBitwise(&self, w: &WireType, numBits: u64, desc: &Option<String>) -> WireType {
+        use std::time::Instant;
+        let start = Instant::now();
         let mut generator = self.generator();
 
         let bits1 = self.getBitWiresi(numBits as u64, desc);
+        //   println!(
+        //             "End orBitwise getBitWiresi0 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         let bits2 = w.getBitWiresi(numBits as u64, desc);
+        //   println!(
+        //             "End orBitwise getBitWiresi01 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         let result = bits1.orWireArray(bits2, numBits as usize, desc);
+        //   println!(
+        //             "End orBitwise orWireArray0 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         let v = result.checkIfConstantBits(desc);
         if let Some(v) = v {
+            //   println!(
+            //             "End orBitwise checkIfConstantBits0 Time: == {:?} ",
+            //             start.elapsed()
+            //         );
             return generator.create_constant_wire(&v, &None);
         }
+        //   println!(
+        //             "End orBitwise 0 Time: == {:?} ",
+        //             start.elapsed()
+        //         );
         WireType::LinearCombination(new_linear_combination(
             -1,
             Some(result),
@@ -867,11 +916,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         }
         WireType::LinearCombination(new_linear_combination(
             -1,
-            Some(WireArray::new(
-                resultBits,
-                self.generator().clone().downgrade(),
-            )),
-            self.generator().clone().downgrade(),
+            Some(WireArray::new(resultBits, self.generator_weak())),
+            self.generator_weak(),
         ))
     }
 
@@ -924,8 +970,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let g = generator.borrow().clone();
-        let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;

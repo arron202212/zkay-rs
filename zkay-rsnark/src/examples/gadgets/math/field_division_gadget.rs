@@ -14,7 +14,8 @@ use crate::circuit::operations::gadget::GadgetConfig;
 
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
 };
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire::WireConfig;
@@ -89,7 +90,7 @@ impl FieldDivisionGadget {
                             let cValue = aValue
                                 .mul(bValue.modinv(&Configs.field_prime).unwrap())
                                 .rem(&Configs.field_prime);
-                            evaluator.setWireValue(&self.c, cValue);
+                            evaluator.setWireValue(&self.c, &cValue);
         }
         }
                     }

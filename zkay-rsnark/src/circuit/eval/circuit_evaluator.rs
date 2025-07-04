@@ -16,7 +16,8 @@ use crate::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator,
             },
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
             wire_array::WireArray,
@@ -54,12 +55,14 @@ impl CircuitEvaluator {
         }
     }
 
-    pub fn setWireValue(&mut self, w: &WireType, v: BigInteger) {
+    pub fn setWireValue(&mut self, w: &WireType, v: &BigInteger) {
         assert!(
-            v.sign() != Sign::Minus && v < Configs.field_prime,
-            "Only positive values that are less than the modulus are allowed for this method."
+            v.sign() != Sign::Minus && v < &Configs.field_prime,
+            "Only positive values that are less than the modulus are allowed for this method.{},{}",
+            w.getWireId(),
+            v
         );
-        self.valueAssignment[w.getWireId() as usize] = Some(v);
+        self.valueAssignment[w.getWireId() as usize] = Some(v.clone());
     }
 
     pub fn getWireValue(&self, w: &WireType) -> BigInteger {
@@ -102,15 +105,15 @@ impl CircuitEvaluator {
             v >= 0,
             "Only positive values that are less than the modulus are allowed for this method."
         );
-        self.setWireValue(wire, BigInteger::from(v));
+        self.setWireValue(wire, &BigInteger::from(v));
     }
 
     pub fn setWireValuea(&mut self, wires: &Vec<Option<WireType>>, v: &Vec<BigInteger>) {
         for i in 0..v.len() {
-            self.setWireValue(wires[i].as_ref().unwrap(), v[i].clone());
+            self.setWireValue(wires[i].as_ref().unwrap(), &v[i]);
         }
         for i in v.len()..wires.len() {
-            self.setWireValue(wires[i].as_ref().unwrap(), BigInteger::ZERO);
+            self.setWireValue(wires[i].as_ref().unwrap(), &BigInteger::ZERO);
         }
     }
 

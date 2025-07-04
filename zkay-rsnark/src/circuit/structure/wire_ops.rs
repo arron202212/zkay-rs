@@ -20,7 +20,8 @@ use crate::{
         },
         structure::{
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator,
             },
             linear_combination_wire::LinearCombinationWire,
             variable_bit_wire::VariableBitWire,

@@ -10,7 +10,8 @@ use crate::circuit::operations::gadget::GadgetConfig;
 
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;

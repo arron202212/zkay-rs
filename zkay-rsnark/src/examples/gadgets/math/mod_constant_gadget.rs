@@ -47,9 +47,9 @@ impl Gadget for ModConstantGadget {
         generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
                     let aValue = evaluator.getWireValue(a);
                     let rValue = aValue.rem(b);
-                    evaluator.setWireValue(r, rValue);
+                    evaluator.setWireValue(r, &rValue);
                     let qValue = aValue.divide(b);
-                    evaluator.setWireValue(q, qValue);
+                    evaluator.setWireValue(q, &qValue);
                 });
         // {
         //     struct Prover;

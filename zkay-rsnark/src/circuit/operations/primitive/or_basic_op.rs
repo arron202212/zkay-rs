@@ -25,12 +25,19 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct OrBasicOp;
 
 pub fn new_or(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
-    Op::<OrBasicOp> {
+    use std::time::Instant;
+    let start = Instant::now();
+    let op = Op::<OrBasicOp> {
         inputs: vec![Some(w1.clone()), Some(w2.clone())],
         outputs: vec![Some(output.clone())],
         desc,
         t: OrBasicOp,
-    }
+    };
+    // println!(
+    //     "End new_or 0 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+    op
 }
 
 crate::impl_instruction_for!(Op<OrBasicOp>);

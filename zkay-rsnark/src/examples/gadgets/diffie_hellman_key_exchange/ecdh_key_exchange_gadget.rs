@@ -189,7 +189,7 @@ impl Gadget for ECDHKeyExchangeGadget {
             basePoint.y = generator.createProverWitnessWire();
             generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
                         let x = evaluator.getWireValue(basePoint.x);
-                        evaluator.setWireValue(basePoint.y, computeYCoordinate(x));
+                        evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
                     });
             // {
             //     struct Prover;
@@ -211,7 +211,7 @@ impl Gadget for ECDHKeyExchangeGadget {
             hPoint.y = generator.createProverWitnessWire();
             generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
                         let x = evaluator.getWireValue(hPoint.x);
-                        evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+                        evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
                     });
         // {
         //         struct Prover;

@@ -44,11 +44,11 @@ impl Gadget for LongIntegerModInverseGadget {
 
                     evaluator.setWireValue(
                         inverseWires,
-                        Util::split(inverseValue, LongElement.CHUNK_BITWIDTH),
+                        &Util::split(inverseValue, LongElement.CHUNK_BITWIDTH),
                     );
                     evaluator.setWireValue(
                         quotientWires,
-                        Util::split(quotientValue, LongElement.CHUNK_BITWIDTH),
+                        &Util::split(quotientValue, LongElement.CHUNK_BITWIDTH),
                     );
                 });
         // {

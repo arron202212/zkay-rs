@@ -15,8 +15,8 @@ use crate::{
         structure::{
             circuit_generator::CGConfigFields,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
-                put_active_circuit_generator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator, put_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
@@ -689,12 +689,12 @@ mod test {
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
                                           evaluator.setWireValue(
                                     self.solutions[0].as_ref().unwrap(),
-                                    self.result[0].clone(),
+                                    &self.result[0],
                                 );
                                 for i in 0..self.numIns {
                                     evaluator.setWireValue(
                                         self.solutions[i + 1].as_ref().unwrap(),
-                                        self.result[i + 1].clone(),
+                                        &self.result[i + 1],
                                     );
                                 }
                 }

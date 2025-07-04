@@ -18,7 +18,7 @@ use crate::{
             circuit_generator::CreateConstantWire,
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
-                getActiveCircuitGenerator,
+                addToEvaluationQueue, getActiveCircuitGenerator,
             },
             linear_combination_wire::{LinearCombinationWire, new_linear_combination},
             wire::GeneratorConfig,
@@ -138,8 +138,8 @@ impl WireArray {
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
             //			generator.addToEvaluationQueue(Box::new(op));
-            let g = generator.borrow().clone();
-            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+            let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()
@@ -374,8 +374,8 @@ impl WireArray {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            let g = generator.borrow().clone();
-            let cachedOutputs = g.addToEvaluationQueue(Box::new(op));
+
+            let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
             return if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 cachedOutputs[0].clone().unwrap()

@@ -126,7 +126,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         generator.specifyProverWitnessComputation(    &|evaluator: &mut CircuitEvaluator| {
                     // TODO Auto-generated method stub
                     let value = evaluator.getWireValue(input);
-                    evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+                    evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
                 });
 // {
 //             struct Prover;

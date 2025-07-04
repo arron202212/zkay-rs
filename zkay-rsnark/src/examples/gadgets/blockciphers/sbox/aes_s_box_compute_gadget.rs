@@ -30,7 +30,7 @@ impl Gadget for AESSBoxComputeGadget {
         generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
                     let p = evaluator.getWireValue(input).intValue();
                     let q = findInv(p);
-                    evaluator.setWireValue(inverse, q);
+                    evaluator.setWireValue(inverse, &q);
                 });
         // &{
         //     struct Prover;

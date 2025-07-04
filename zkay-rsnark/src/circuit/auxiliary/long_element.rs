@@ -13,7 +13,8 @@ use crate::circuit::{
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         structure::{
             circuit_generator::{
-                CGConfig, CGConfigFields, CircuitGenerator, getActiveCircuitGenerator,
+                CGConfig, CGConfigFields, CircuitGenerator, addToEvaluationQueue,
+                getActiveCircuitGenerator,
             },
             constant_wire,
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
@@ -735,7 +736,7 @@ impl LongElement {
                                     .add(prevCarry);
                                 carryValue = carryValue.shr(self.steps[i] * LongElement::CHUNK_BITWIDTH);
                                 evaluator
-                                    .setWireValue(self.carries[i].as_ref().unwrap(), carryValue.clone());
+                                    .setWireValue(self.carries[i].as_ref().unwrap(), &carryValue);
                                 prevCarry = carryValue;
                             }
         }
@@ -913,7 +914,7 @@ impl LongElement {
                                     let check = v2 > v1 && !found;
                                     evaluator.setWireValue(
                                         self.helperBits[i].as_ref().unwrap(),
-                                        if check { Util::one() } else { BigInteger::ZERO },
+                                        &(if check { Util::one() } else { BigInteger::ZERO }),
                                     );
                                     if check {
                                         found = true;

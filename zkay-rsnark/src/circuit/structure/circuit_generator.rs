@@ -190,6 +190,92 @@ impl<T: Debug> CGInstance for CircuitGeneratorExtend<T> {
     }
 }
 
+pub fn addToEvaluationQueue(
+    cg: RcCell<CircuitGenerator>,
+    e: Box<dyn Instruction>,
+) -> Option<Vec<Option<WireType>>> {
+    use std::time::Instant;
+    let start = Instant::now();
+    // let mut m=std::collections::HashMap::new();
+    // let evaluation_queue = self.get_evaluation_queue();
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+    let mut s = DefaultHasher::new();
+    e.hash(&mut s);
+    let hash_code = s.finish();
+    // let mut s:BuildHasherDefault<NoHashHasher<Box<dyn Instruction>>> = BuildNoHashHasher::new();//:
+    // // let hash_code = <BuildHasherDefault<NoHashHasher<_>> as BuildHasher>::hash_one::<Box<dyn Instruction>>(&s, e);
+    // let hash_code=FxBuildHasher.hash_one(&e);
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 4200 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+    // let hash_builder = RandomState::with_seed(42);
+    // let hash_code = hash_builder.hash_one(&e);
+    //    println!(
+    //         "End +++++++++++++addToEvaluationQueue 42 Time: == {:?} ",
+    //         start.elapsed()
+    //     );
+    if let Some(existingInstruction) = cg.borrow().evaluation_queue.get(&hash_code) {
+        // println!(
+        //     "End ++++++++++addToEvaluationQueue 01 Time: ===hash_code====={hash_code}======== {:?} ",
+        //     start.elapsed()
+        // );
+        return existingInstruction.basic_op().map(|op| op.getOutputs());
+    }
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 33 Time: == {} s",
+    //     start.elapsed().as_micros()
+    // );
+    //    let mut s = DefaultHasher::new();
+    //     e.hash(&mut s);
+    //    let h= s.finish();
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 333 Time: == {} s",
+    //     start.elapsed().as_micros()
+    // );
+
+    // m.insert(hash_code,e.clone());
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 3333 Time: == {} s",
+    //     start.elapsed().as_micros()
+    // );
+
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 1 Time: == {:?} s",
+    //     start.elapsed()
+    // );
+    if e.instance_of("BasicOp") {
+        cg.borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
+    }
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 2 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+    // println!("==hash_code===={hash_code}====e======{e:?}=========");
+    cg.borrow_mut().evaluation_queue.insert(hash_code, e);
+    // .entry(e.clone())
+    // .or_insert(e.clone());
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 3 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+
+    // println!(
+    //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
+    //     start.elapsed()
+    // );
+    None // returning null means we have not seen this instruction before
+    // have seen this instruction before, but can't de-duplicate
+
+    // if existingInstruction.unwrap().instance_of("BasicOp") {
+    //     return Some(existingInstruction.unwrap().basic_op().unwrap().getOutputs());
+    // } else {
+    //     return None;
+    // }
+}
 pub trait CGInstance {
     fn cg(&self) -> RcCell<CircuitGenerator>;
 }
@@ -283,90 +369,7 @@ pub trait CGConfigFields: CGInstance + Debug {
     fn get_current_wire_id(&self) -> i32;
     fn get_num_of_constraints(&self) -> i32;
     // fn get_prover_witness_wires(&self) -> Vec<Option<WireType>>;
-    fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> {
-        use std::time::Instant;
-        let start = Instant::now();
-        // let mut m=std::collections::HashMap::new();
-        // let evaluation_queue = self.get_evaluation_queue();
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
-        //     start.elapsed()
-        // );
-        // let mut s=DefaultHasher::new();
-        // e.hash(&mut s);
-        // let hash_code = s.finish();
-        // let mut s:BuildHasherDefault<NoHashHasher<Box<dyn Instruction>>> = BuildNoHashHasher::new();//:
-        // // let hash_code = <BuildHasherDefault<NoHashHasher<_>> as BuildHasher>::hash_one::<Box<dyn Instruction>>(&s, e);
-        // let hash_code=FxBuildHasher.hash_one(&e);
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 4200 Time: == {:?} ",
-        //     start.elapsed()
-        // );
-        let hash_builder = RandomState::with_seed(42);
-        let hash_code = hash_builder.hash_one(&e);
-        //    println!(
-        //         "End +++++++++++++addToEvaluationQueue 42 Time: == {:?} ",
-        //         start.elapsed()
-        //     );
-        if let Some(existingInstruction) = self.cg().borrow().evaluation_queue.get(&hash_code) {
-            // println!(
-            //     "End ++++++++++addToEvaluationQueue 01 Time: ===hash_code====={hash_code}======== {:?} ",
-            //     start.elapsed()
-            // );
-            return existingInstruction.basic_op().map(|op| op.getOutputs());
-        }
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 33 Time: == {} s",
-        //     start.elapsed().as_micros()
-        // );
-        //    let mut s = DefaultHasher::new();
-        //     e.hash(&mut s);
-        //    let h= s.finish();
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 333 Time: == {} s",
-        //     start.elapsed().as_micros()
-        // );
 
-        // m.insert(hash_code,e.clone());
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 3333 Time: == {} s",
-        //     start.elapsed().as_micros()
-        // );
-
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 1 Time: == {:?} s",
-        //     start.elapsed()
-        // );
-        if e.instance_of("BasicOp") {
-            self.cg().borrow_mut().num_of_constraints +=
-                e.basic_op().as_ref().unwrap().getNumMulGates();
-        }
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 2 Time: == {:?} ",
-        //     start.elapsed()
-        // );
-        // println!("==hash_code===={hash_code}====e======{e:?}=========");
-        self.cg().borrow_mut().evaluation_queue.insert(hash_code, e);
-        // .entry(e.clone())
-        // .or_insert(e.clone());
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 3 Time: == {:?} ",
-        //     start.elapsed()
-        // );
-
-        // println!(
-        //     "End +++++++++++++addToEvaluationQueue 0 Time: == {} s",
-        //     start.elapsed().as_micros()
-        // );
-        None // returning null means we have not seen this instruction before
-        // have seen this instruction before, but can't de-duplicate
-
-        // if existingInstruction.unwrap().instance_of("BasicOp") {
-        //     return Some(existingInstruction.unwrap().basic_op().unwrap().getOutputs());
-        // } else {
-        //     return None;
-        // }
-    }
     // fn in_wires(&mut self) -> &mut Vec<Option<WireType>>;
     // fn out_wires(&mut self) -> &mut Vec<Option<WireType>>;
     // fn prover_witness_wires(&mut self) -> &mut Vec<Option<WireType>>;
@@ -444,12 +447,15 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             self.cg().clone().downgrade(),
         ));
         self.cg().borrow_mut().current_wire_id += 1;
-        self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-            LabelType::input,
-            newInputWire.clone(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
-        )));
+        addToEvaluationQueue(
+            self.cg(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::input,
+                newInputWire.clone(),
+                desc.as_ref()
+                    .map_or_else(|| String::new(), |d| d.to_owned()),
+            )),
+        );
         self.cg()
             .borrow_mut()
             .in_wires
@@ -495,12 +501,15 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             self.cg().clone().downgrade(),
         ));
         self.cg().borrow_mut().current_wire_id += 1;
-        self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-            LabelType::nizkinput,
-            wire.clone(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
-        )));
+        addToEvaluationQueue(
+            self.cg(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::nizkinput,
+                wire.clone(),
+                desc.as_ref()
+                    .map_or_else(|| String::new(), |d| d.to_owned()),
+            )),
+        );
         self.cg()
             .borrow_mut()
             .prover_witness_wires
@@ -548,12 +557,15 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         }
 
         cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
-        self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-            LabelType::output,
-            outputWire.clone(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
-        )));
+        addToEvaluationQueue(
+            self.cg(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::output,
+                outputWire.clone(),
+                desc.as_ref()
+                    .map_or_else(|| String::new(), |d| d.to_owned()),
+            )),
+        );
         outputWire
     }
 
@@ -570,7 +582,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        let cachedOutputs = self.addToEvaluationQueue(Box::new(op));
+        let cachedOutputs = addToEvaluationQueue(self.cg(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             self.cg().borrow_mut().current_wire_id -= 1;
             return cachedOutputs[0].clone().unwrap();
@@ -595,23 +607,29 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
     fn addDebugInstruction(&mut self, w: &WireType, desc: &Option<String>) {
         w.packIfNeeded(&None);
-        self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-            LabelType::debug,
-            w.clone(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
-        )));
+        addToEvaluationQueue(
+            self.cg(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::debug,
+                w.clone(),
+                desc.as_ref()
+                    .map_or_else(|| String::new(), |d| d.to_owned()),
+            )),
+        );
     }
 
     fn addDebugInstructiona(&mut self, wires: &Vec<Option<WireType>>, desc: &Option<String>) {
         for i in 0..wires.len() {
             wires[i].as_ref().unwrap().packIfNeeded(&None);
-            self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-                LabelType::debug,
-                wires[i].clone().unwrap(),
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
-            )));
+            addToEvaluationQueue(
+                self.cg(),
+                Box::new(WireLabelInstruction::new(
+                    LabelType::debug,
+                    wires[i].clone().unwrap(),
+                    desc.as_ref()
+                        .map_or_else(|| String::new(), |d| d.to_owned()),
+                )),
+            );
         }
     }
 
@@ -657,11 +675,14 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             .insert(Util::one(), one_wire.clone());
         println!("{},{}", file!(), line!());
         // println!("End Name  Time: 2222 {} s", start.elapsed().as_secs());
-        self.addToEvaluationQueue(Box::new(WireLabelInstruction::new(
-            LabelType::input,
-            one_wire.clone(),
-            "The one-input wire.".to_owned(),
-        )));
+        addToEvaluationQueue(
+            self.cg(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::input,
+                one_wire.clone(),
+                "The one-input wire.".to_owned(),
+            )),
+        );
         // println!("End Name Time: 333 {} s", start.elapsed().as_secs());
         //println!("{},{}",file!(),line!());
         self.cg().borrow_mut().in_wires.push(Some(one_wire.clone()));
@@ -770,7 +791,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         //                     String::new()
         //                 }
         //             }
-        self.addToEvaluationQueue(e);
+        addToEvaluationQueue(self.cg(), e);
     }
     // fn addToEvaluationQueue(
     //     &mut self,
@@ -837,7 +858,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
                 desc.as_ref()
                     .map_or_else(|| String::new(), |d| d.to_owned()),
             );
-            self.addToEvaluationQueue(Box::new(op));
+            addToEvaluationQueue(self.cg(), Box::new(op));
         }
     }
 
@@ -1177,7 +1198,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
 
     crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
     crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> );
-    crate::impl_fn_of_trait!(fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
+    // crate::impl_fn_of_trait!(fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
 }
 impl StructNameConfig for CircuitGenerator {
     fn name(&self) -> String {

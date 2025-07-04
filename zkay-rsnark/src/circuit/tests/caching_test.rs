@@ -15,8 +15,8 @@ use crate::{
         structure::{
             circuit_generator::CGConfigFields,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, getActiveCircuitGenerator,
-                put_active_circuit_generator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator, put_active_circuit_generator,
             },
             wire::WireConfig,
             wire_type::WireType,
@@ -197,10 +197,10 @@ mod test {
                             &None,
                         )
                     });
-                    println!(
-                        "End orBitwise  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
+                    // println!(
+                    //     "End orBitwise  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
                     anded[i] = inputs1[i].clone().map(|x| {
                         x.andBitwise(
                             inputs2[i].as_ref().unwrap(),
@@ -539,10 +539,10 @@ mod test {
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                evaluator.setWireValue(self.t.in1.as_ref().unwrap(), BigInteger::from(5));
-                evaluator.setWireValue(self.t.in2.as_ref().unwrap(), BigInteger::from(6));
-                evaluator.setWireValue(self.t.witness1.as_ref().unwrap(), BigInteger::from(30));
-                evaluator.setWireValue(self.t.witness2.as_ref().unwrap(), BigInteger::from(30));
+                evaluator.setWireValue(self.t.in1.as_ref().unwrap(), &BigInteger::from(5));
+                evaluator.setWireValue(self.t.in2.as_ref().unwrap(), &BigInteger::from(6));
+                evaluator.setWireValue(self.t.witness1.as_ref().unwrap(), &BigInteger::from(30));
+                evaluator.setWireValue(self.t.witness2.as_ref().unwrap(), &BigInteger::from(30));
             }
         }
         let t = CGTest {
