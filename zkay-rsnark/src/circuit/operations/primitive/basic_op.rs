@@ -95,22 +95,43 @@ impl<T> BasicOpInOut for Op<T> {
 pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeConfig {
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
-            if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
-                //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
-                panic!("Error During Evaluation");
-            }
+            // if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
+            //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
+            assert!(
+                assignment[w.as_ref().unwrap().getWireId() as usize].is_some(),
+                "Error During Evaluation in checkInputs wire id={},{:?}",
+                w.as_ref().unwrap().getWireId(),
+                assignment
+            );
+            // }
         }
+        assert!(
+            self.getInputs()
+                .iter()
+                .all(|w| assignment[w.as_ref().unwrap().getWireId() as usize].is_some()),
+            "Error During Evaluation in checkInputs"
+        );
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>);
 
     fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getOutputs() {
-            if assignment[w.as_ref().unwrap().getWireId() as usize].is_some() {
-                //println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
-                panic!("Error During Evaluation");
-            }
+            // if assignment[w.as_ref().unwrap().getWireId() as usize].is_some() {
+            //println!("Error - The outWire {w:?} has already been assigned {self:?}\n");
+            assert!(
+                assignment[w.as_ref().unwrap().getWireId() as usize].is_none(),
+                "Error During Evaluation in checkOutputswire id={}",
+                w.as_ref().unwrap().getWireId()
+            );
+            // }
         }
+        assert!(
+            self.getOutputs()
+                .iter()
+                .all(|w| assignment[w.as_ref().unwrap().getWireId() as usize].is_none()),
+            "Error During Evaluation in checkOutputs"
+        );
     }
 
     fn getOpcode(&self) -> String {

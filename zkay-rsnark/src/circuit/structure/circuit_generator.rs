@@ -99,8 +99,8 @@ impl CGInstance for CircuitGenerator {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.me.clone().unwrap().upgrade().unwrap()
     }
-    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
-         self.me.clone().unwrap()
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
+        self.me.clone().unwrap()
     }
 }
 
@@ -191,10 +191,9 @@ impl<T: Debug> CGInstance for CircuitGeneratorExtend<T> {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.cg.clone()
     }
-    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
         self.cg.clone().downgrade()
     }
-
 }
 
 pub fn addToEvaluationQueue(
@@ -292,7 +291,7 @@ impl<T: CGInstance> CGInstance for RcCell<T> {
     fn cg(&self) -> RcCell<CircuitGenerator> {
         self.borrow().cg()
     }
-    fn cg_weak(&self) -> WeakCell<CircuitGenerator>{
+    fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
         self.borrow().cg_weak()
     }
 }
@@ -453,10 +452,8 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createInputWire(&self, desc: &Option<String>) -> WireType {
-        let newInputWire = WireType::Variable(new_variable(
-            self.get_current_wire_id(),
-            self.cg_weak(),
-        ));
+        let newInputWire =
+            WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
             self.cg(),
@@ -507,10 +504,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createProverWitnessWire(&mut self, desc: &Option<String>) -> WireType {
-        let wire = WireType::Variable(new_variable(
-            self.get_current_wire_id(),
-            self.cg_weak(),
-        ));
+        let wire = WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
             self.cg(),
@@ -550,7 +544,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         vec![one_wire; n]
     }
 
-    fn makeOutput(&mut self, wire: &WireType, desc: &Option<String>) -> WireType {
+    fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType {
         let mut outputWire = wire.clone();
         let some_wire = Some(wire.clone());
         let cg = self.cg();
@@ -580,11 +574,9 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         outputWire
     }
 
-    fn makeVariable(&mut self, wire: &WireType, desc: &Option<String>) -> WireType {
-        let mut outputWire = WireType::Variable(new_variable(
-            self.get_current_wire_id(),
-            self.cg_weak(),
-        ));
+    fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType {
+        let mut outputWire =
+            WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
         self.cg().borrow_mut().current_wire_id += 1;
         let op = new_mul(
             wire,
@@ -602,7 +594,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn makeOutputArray(
-        &mut self,
+        &self,
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
@@ -1248,12 +1240,12 @@ impl CGConfig for RcCell<CircuitGenerator> {
 
     crate::impl_fn_of_trait!(fn generateOneWireArray(&self, n: usize) -> Vec<Option<WireType>>);
 
-    crate::impl_fn_of_trait!(fn makeOutput(&mut self, wire: &WireType, desc: &Option<String>) -> WireType );
+    crate::impl_fn_of_trait!(fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn makeVariable(&mut self, wire: &WireType, desc: &Option<String>) -> WireType );
+    crate::impl_fn_of_trait!(fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
     crate::impl_fn_of_trait!(fn makeOutputArray(
-        &mut self,
+        &self,
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>
     ) -> Vec<Option<WireType>> );

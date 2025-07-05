@@ -126,7 +126,7 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 println!("=====buildCircuit================={},{}", file!(), line!());
-                let mut generator = self.cg.borrow().clone();
+                let mut generator = &*self;
 
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let numIns = self.t.numIns as usize;
@@ -387,9 +387,10 @@ mod test {
         println!("{}", line!());
         generator.generateCircuit();
         println!("{},{}", file!(), line!());
-        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
-        generator.generateSampleInput(&mut evaluator);
-        evaluator.evaluate(&generator.cg);
+        let generator = RcCell::new(generator);
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator);
+        generator.borrow().generateSampleInput(&mut evaluator);
+        evaluator.evaluate(&generator);
 
         let mut outWires = generator.get_out_wires();
         let (mut i, mut outputIndex) = (0, 0);

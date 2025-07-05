@@ -71,11 +71,10 @@ pub struct Wire<T: setBitsConfig + Hash + Clone + Debug + PartialEq> {
 }
 
 impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
-    pub fn new(t: T,wireId: i32,  generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
-        if wireId < 0 {
-            eyre::bail!("wire id cannot be negative");
-        }
-
+    pub fn new(t: T, wireId: i32, generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
+        // if wireId < 0 {
+        //     eyre::bail!("wire id cannot be negative");
+        // }
         Ok(Self {
             wireId,
             generator,
@@ -959,7 +958,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
-        let mut wireId = generator.borrow_mut().current_wire_id;
+        let mut wireId = generator.borrow().current_wire_id;
         generator.borrow_mut().current_wire_id += 1;
         //			Instruction op = PackBasicOp::new(bits.array, self, desc);
         //			generator.addToEvaluationQueue(Box::new(op));

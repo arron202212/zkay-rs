@@ -146,8 +146,8 @@ impl Util {
 
     pub fn nextRandomBigInteger(n: &BigInteger) -> BigInteger {
         let rand = RandomBits::new(n.bits());
-        let mut result = rand.sample(&mut rand::thread_rng());
-        while &result >= n {
+        let mut result: BigInteger = rand.sample(&mut rand::thread_rng());
+        while result.sign() == Sign::Minus || &result >= n {
             result = rand.sample(&mut rand::thread_rng());
         }
         result
@@ -156,13 +156,18 @@ impl Util {
     pub fn randomBigIntegerArrayi(num: u64, numBits: i32) -> Vec<BigInteger> {
         let mut result = vec![BigInteger::default(); num as usize];
         for i in 0..num {
-            result[i as usize] = Self::nextRandomBigInteger(&BigInteger::from(numBits as u32));
+            result[i as usize] = Self::nextRandomBigIntegeri(numBits);
         }
         result
     }
 
     pub fn nextRandomBigIntegeri(numBits: i32) -> BigInteger {
-        RandomBits::new(numBits as u64).sample(&mut rand::thread_rng())
+        let mut result: BigInteger =
+            RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+        while result.sign() == Sign::Minus {
+            result = RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+        }
+        result
     }
 
     pub fn getDesc(desc: &Option<String>) -> String {

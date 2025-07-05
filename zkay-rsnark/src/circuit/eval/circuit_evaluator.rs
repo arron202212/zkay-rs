@@ -58,7 +58,8 @@ impl CircuitEvaluator {
     pub fn setWireValue(&mut self, w: &WireType, v: &BigInteger) {
         assert!(
             v.sign() != Sign::Minus && v < &Configs.field_prime,
-            "Only positive values that are less than the modulus are allowed for this method.{},{}",
+            "Only positive values that are less than the modulus are allowed for this method.{:?},{},{}",
+            w,
             w.getWireId(),
             v
         );
@@ -215,7 +216,9 @@ impl CircuitEvaluator {
                     assignment[line as usize].as_ref().unwrap()
                 );
                 wiresToReport.push(line);
-            } else if line.starts_with("DEBUG ") {
+                continue;
+            }
+            if line.starts_with("DEBUG ") {
                 line = line.replace("DEBUG ", "");
                 let mut scanner = line.split_whitespace();
                 let id = scanner.next().unwrap().parse::<i32>().unwrap();
@@ -224,28 +227,32 @@ impl CircuitEvaluator {
                     assignment[id as usize].as_ref().unwrap(),
                     scanner.next().unwrap().split("\n").next().unwrap()
                 );
-            } else {
-                let ins = self.getInputs(&line);
-                for &i in &ins {
-                    if assignment[i as usize].is_none() {
-                        println!("Undefined value for a wire:used , at line {line}");
-                    }
+                continue;
+            }
+            let ins = self.getInputs(&line);
+            for &i in &ins {
+                if assignment[i as usize].is_none() {
+                    println!("Undefined value for a wire:used , at line {line}");
                 }
-                let outs = self.getOutputs(&line);
-                if line.starts_with("mul ") {
+            }
+            let outs = self.getOutputs(&line);
+            match line {
+                _ if line.starts_with("mul ") => {
                     let mut out = Util::one();
                     for w in ins {
                         out = out.mul(assignment[w as usize].clone().unwrap());
                     }
                     wiresToReport.push(outs[0]);
                     assignment[outs[0] as usize] = Some(out.rem(prime.clone()));
-                } else if line.starts_with("add ") {
+                }
+                _ if line.starts_with("add ") => {
                     let mut out = BigInteger::ZERO;
                     for w in ins {
                         out = out.add(assignment[w as usize].clone().unwrap());
                     }
                     assignment[outs[0] as usize] = Some(out.rem(prime.clone()));
-                } else if line.starts_with("xor ") {
+                }
+                _ if line.starts_with("xor ") => {
                     let out = if assignment[ins[0] as usize] == assignment[ins[0] as usize] {
                         BigInteger::ZERO
                     } else {
@@ -253,7 +260,8 @@ impl CircuitEvaluator {
                     };
                     assignment[outs[0] as usize] = Some(out);
                     wiresToReport.push(outs[0]);
-                } else if line.starts_with("zerop ") {
+                }
+                _ if line.starts_with("zerop ") => {
                     ignoreWires.insert(outs[0]);
                     if assignment[ins[0] as usize].as_ref().unwrap().sign() == Sign::NoSign {
                         assignment[outs[1] as usize] = Some(BigInteger::ZERO);
@@ -261,7 +269,8 @@ impl CircuitEvaluator {
                         assignment[outs[1] as usize] = Some(Util::one());
                     }
                     wiresToReport.push(outs[1]);
-                } else if line.starts_with("split ") {
+                }
+                _ if line.starts_with("split ") => {
                     if outs.len() < assignment[ins[0] as usize].as_ref().unwrap().bits() as usize {
                         //println!("Error in Split");
                         //println!("{:x}", assignment[ins[0] as usize].as_ref().unwrap());
@@ -276,7 +285,8 @@ impl CircuitEvaluator {
                             };
                         wiresToReport.push(outs[i]);
                     }
-                } else if line.starts_with("pack ") {
+                }
+                _ if line.starts_with("pack ") => {
                     let mut sum = BigInteger::ZERO;
                     for i in 0..ins.len() {
                         sum = sum.add(
@@ -288,7 +298,8 @@ impl CircuitEvaluator {
                     }
                     wiresToReport.push(outs[0]);
                     assignment[outs[0] as usize] = Some(sum);
-                } else if line.starts_with("const-mul-neg-") {
+                }
+                _ if line.starts_with("const-mul-neg-") => {
                     let constantStr = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
                     let constant = prime
                         .clone()
@@ -300,7 +311,8 @@ impl CircuitEvaluator {
                             .mul(constant.clone())
                             .rem(prime.clone()),
                     );
-                } else if line.starts_with("const-mul-") {
+                }
+                _ if line.starts_with("const-mul-") => {
                     let constantStr = &line["const-mul-".len()..line.find(" ").unwrap()];
                     let constant = BigInteger::parse_bytes(constantStr.as_bytes(), 16).unwrap();
                     assignment[outs[0] as usize] = Some(
@@ -310,8 +322,9 @@ impl CircuitEvaluator {
                             .mul(constant)
                             .rem(prime.clone()),
                     );
-                } else {
-                    //println!("Unknown Circuit Statement");
+                }
+                _ => {
+                    println!("Unknown Circuit Statement");
                 }
             }
         }

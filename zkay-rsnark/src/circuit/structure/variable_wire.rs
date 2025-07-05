@@ -45,8 +45,7 @@ pub fn new_variable(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<
     //     generator,
     //     t: VariableWire { bitWires: None },
     // }
-  Wire::<VariableWire> ::new( VariableWire { bitWires: None },wireId,
-        generator,).unwrap()
+    Wire::<VariableWire>::new(VariableWire { bitWires: None }, wireId, generator).unwrap()
 }
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}

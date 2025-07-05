@@ -51,8 +51,8 @@ pub fn new_linear_combination(
     //     generator,
     //     t: LinearCombinationWire { bitWires: bits },
     // }
-    Wire::<LinearCombinationWire> ::new( LinearCombinationWire { bitWires: bits },wireId,
-        generator,).unwrap()
+    Wire::<LinearCombinationWire>::new(LinearCombinationWire { bitWires: bits }, wireId, generator)
+        .unwrap()
 }
 impl setBitsConfig for LinearCombinationWire {}
 impl setBitsConfig for Wire<LinearCombinationWire> {}

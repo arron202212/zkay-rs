@@ -55,9 +55,14 @@ pub fn new_constant(
     //         constant: value.rem(&Configs.field_prime),
     //     },
     // }
-    Wire::<ConstantWire>::new(ConstantWire {
+    Wire::<ConstantWire>::new(
+        ConstantWire {
             constant: value.rem(&Configs.field_prime),
-        },wireId,generator).unwrap()
+        },
+        wireId,
+        generator,
+    )
+    .unwrap()
 }
 
 impl setBitsConfig for ConstantWire {}

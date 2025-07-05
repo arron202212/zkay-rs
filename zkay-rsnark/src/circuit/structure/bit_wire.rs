@@ -57,7 +57,7 @@ pub fn new_bit(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWi
     //     t: BitWire,
     // }
     // crate::new_wire!(BitWire,wireId,generator)
-    Wire::<BitWire>::new(BitWire,wireId,generator).unwrap()
+    Wire::<BitWire>::new(BitWire, wireId, generator).unwrap()
 }
 
 impl setBitsConfig for BitWire {}
