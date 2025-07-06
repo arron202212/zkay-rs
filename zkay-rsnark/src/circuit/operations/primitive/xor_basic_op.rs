@@ -41,6 +41,7 @@ impl BasicOp for Op<XorBasicOp> {
 
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // //super.checkInputs(assignment);
+        self.super_checkInputs(assignment);
         let check = Util::isBinary(
             assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
                 .as_ref()
@@ -56,7 +57,7 @@ impl BasicOp for Op<XorBasicOp> {
         );
     }
 
-    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = assignment
             [self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()

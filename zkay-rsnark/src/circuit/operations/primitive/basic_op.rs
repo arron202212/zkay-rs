@@ -94,6 +94,9 @@ impl<T> BasicOpInOut for Op<T> {
 }
 pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeConfig {
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
+        self.super_checkInputs(assignment);
+    }
+    fn super_checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getInputs() {
             // if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
             //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
