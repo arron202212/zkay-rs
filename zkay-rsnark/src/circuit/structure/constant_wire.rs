@@ -40,13 +40,17 @@ use zkay_derive::ImplStructNameConfig;
 pub struct ConstantWire {
     pub constant: BigInteger,
 }
-crate::impl_hash_code_of_wire_g_for!(Wire<ConstantWire>);
+//crate::impl_hash_code_of_wire_g_for!(Wire<ConstantWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<ConstantWire>);
 pub fn new_constant(
     wireId: i32,
     value: BigInteger,
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<ConstantWire> {
+    // if wireId>0 && wireId<10000
+    // {
+    //     println!("==new_constant======{wireId}==");
+    // }
     // super(wireId);
     // Wire::<ConstantWire> {
     //     wireId,
@@ -91,6 +95,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
         //  println!("End const mulw Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             generator.create_constant_wire(
                 &self
                     .t
@@ -105,7 +114,7 @@ impl WireConfig for Wire<ConstantWire> {
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
-        // println!("End Name Time: ccccccc {} s", line!());
+        // println!("=======================mulb============{}=========== {} ",file!(), line!());
         let sign = b.sign() == Sign::Minus;
         let newConstant = self.t.constant.clone().mul(b).rem(&Configs.field_prime);
         //println!"End Name Time: ccccccc {} s", line!());
@@ -145,14 +154,16 @@ impl WireConfig for Wire<ConstantWire> {
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;
-            return cachedOutputs[0].clone().unwrap();
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            cachedOutputs[0].clone().unwrap()
+        } else {
+            //println!"End Name Time: ccccccc {} s", line!());
+            generator
+                .borrow_mut()
+                .known_constant_wires
+                .insert(newConstant, out.clone().unwrap());
+            out.clone().unwrap()
         }
-        //println!"End Name Time: ccccccc {} s", line!());
-        generator
-            .borrow_mut()
-            .known_constant_wires
-            .insert(newConstant, out.clone().unwrap());
-        out.clone().unwrap()
     }
 
     fn checkNonZero(&self, desc: &Option<String>) -> WireType {
@@ -181,6 +192,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             let cw = w;
             assert!(
                 self.isBinary() && cw.try_as_constant_ref().unwrap().isBinary(),
@@ -205,6 +221,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             let cw = w;
             assert!(
                 self.isBinary() && cw.try_as_constant_ref().unwrap().isBinary(),

@@ -25,6 +25,10 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct XorBasicOp;
 
 pub fn new_xor(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<XorBasicOp> {
+    // if w1.getWireId()==147444 ||  w2.getWireId()==147444
+    // {
+    //     panic!("===new_xor====w1.as_ref().unwrap().getWireId()========================{}",w1.getWireId());
+    // }
     Op::<XorBasicOp> {
         inputs: vec![Some(w1.clone()), Some(w2.clone())],
         outputs: vec![Some(output.clone())],

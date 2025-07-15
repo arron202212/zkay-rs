@@ -49,7 +49,7 @@ impl BasicOp for Op<MulBasicOp> {
                     .unwrap(),
             );
         if result > Configs.field_prime {
-            result = result.rem(Configs.field_prime.clone());
+            result = result.rem(&Configs.field_prime);
         }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
     }

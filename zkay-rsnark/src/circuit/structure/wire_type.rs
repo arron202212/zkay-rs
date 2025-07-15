@@ -58,10 +58,9 @@ use strum_macros::{EnumIs, EnumTryAs};
     StructNameConfig,
     GeneratorConfig,
     WireConfig,
-    setBitsConfig,
-    InstanceOf
+    setBitsConfig
 )]
-#[derive(Debug, Clone, Hash, PartialEq, EnumIs, EnumTryAs)]
+#[derive(Debug, Clone, PartialEq, EnumIs, EnumTryAs)]
 pub enum WireType {
     Wire(Wire<Base>),
     LinearCombinationBit(Wire<LinearCombinationBitWire>),
@@ -105,7 +104,7 @@ impl WireType {
 // impl setBitsConfig for WireType{}
 // impl WireConfig for WireType{}
 impl MulWire<&BigInteger> for WireType {
-    fn mul_wire(self, b: &BigInteger, desc: &Option<String>) -> Self {
+    fn mul_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.packIfNeeded(desc);
@@ -133,6 +132,7 @@ impl MulWire<&BigInteger> for WireType {
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cachedOutputs[0].clone().unwrap()
         } else {
             out
@@ -140,22 +140,23 @@ impl MulWire<&BigInteger> for WireType {
     }
 }
 impl MulWire<i64> for WireType {
-    fn mul_wire(self, l: i64, desc: &Option<String>) -> Self {
+    fn mul_wire(&self, l: i64, desc: &Option<String>) -> Self {
         self.mulb(&BigInteger::from(l), desc)
     }
 }
 impl MulWire<(i64, i32)> for WireType {
-    fn mul_wire(self, (base, exp): (i64, i32), desc: &Option<String>) -> Self {
+    fn mul_wire(&self, (base, exp): (i64, i32), desc: &Option<String>) -> Self {
         let mut b = BigInteger::from(base);
         b = b.pow(exp as u32);
         self.mulb(&b, desc)
     }
 }
 impl MulWire<&WireType> for WireType {
-    fn mul_wire(self, w: &Self, desc: &Option<String>) -> Self {
+    fn mul_wire(&self, w: &Self, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
+            println!("===============================");
             return self.mulb(&w.try_as_constant_ref().unwrap().getConstant(), desc);
         }
         self.packIfNeeded(desc);
@@ -176,6 +177,7 @@ impl MulWire<&WireType> for WireType {
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cachedOutputs[0].clone().unwrap()
         } else {
             output
@@ -184,7 +186,7 @@ impl MulWire<&WireType> for WireType {
 }
 
 impl AddWire<&WireType> for WireType {
-    fn add_wire(self, w: &Self, desc: &Option<String>) -> Self {
+    fn add_wire(&self, w: &Self, desc: &Option<String>) -> Self {
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
         WireArray::new(
@@ -195,21 +197,21 @@ impl AddWire<&WireType> for WireType {
     }
 }
 impl AddWire<i64> for WireType {
-    fn add_wire(self, v: i64, desc: &Option<String>) -> Self {
+    fn add_wire(&self, v: i64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.addw(&generator.create_constant_wire(v, desc), desc)
     }
 }
 impl AddWire<&BigInteger> for WireType {
-    fn add_wire(self, b: &BigInteger, desc: &Option<String>) -> Self {
+    fn add_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.addw(&generator.create_constant_wire(b, desc), desc)
     }
 }
 impl SubWire<&WireType> for WireType {
-    fn sub_wire(self, w: &Self, desc: &Option<String>) -> Self {
+    fn sub_wire(&self, w: &Self, desc: &Option<String>) -> Self {
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
         let neg = w.muli(-1, desc);
@@ -217,14 +219,14 @@ impl SubWire<&WireType> for WireType {
     }
 }
 impl SubWire<i64> for WireType {
-    fn sub_wire(self, v: i64, desc: &Option<String>) -> Self {
+    fn sub_wire(&self, v: i64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.subw(&generator.create_constant_wire(v as i64, desc), desc)
     }
 }
 impl SubWire<&BigInteger> for WireType {
-    fn sub_wire(self, b: &BigInteger, desc: &Option<String>) -> Self {
+    fn sub_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.subw(&generator.create_constant_wire(b, desc), desc)
@@ -232,7 +234,7 @@ impl SubWire<&BigInteger> for WireType {
 }
 
 impl XorBitwise<&WireType> for WireType {
-    fn xor_bitwise(self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
+    fn xor_bitwise(&self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         let bits1 = self.getBitWiresi(numBits as u64, desc);
@@ -252,7 +254,7 @@ impl XorBitwise<&WireType> for WireType {
 }
 
 impl XorBitwise<i64> for WireType {
-    fn xor_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
+    fn xor_bitwise(&self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.xorBitwise(&generator.create_constant_wire(v, desc), numBits, desc)
@@ -260,7 +262,7 @@ impl XorBitwise<i64> for WireType {
 }
 
 impl XorBitwise<&BigInteger> for WireType {
-    fn xor_bitwise(self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
+    fn xor_bitwise(&self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.xorBitwise(&generator.create_constant_wire(b, desc), numBits, desc)
@@ -268,7 +270,7 @@ impl XorBitwise<&BigInteger> for WireType {
 }
 
 impl AndBitwise<&WireType> for WireType {
-    fn and_bitwise(self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
+    fn and_bitwise(&self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         let bits1 = self.getBitWiresi(numBits as u64, desc);
@@ -288,7 +290,7 @@ impl AndBitwise<&WireType> for WireType {
 }
 
 impl AndBitwise<i64> for WireType {
-    fn and_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
+    fn and_bitwise(&self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.andBitwise(&generator.create_constant_wire(v, desc), numBits, desc)
@@ -296,7 +298,7 @@ impl AndBitwise<i64> for WireType {
 }
 
 impl AndBitwise<&BigInteger> for WireType {
-    fn and_bitwise(self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
+    fn and_bitwise(&self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.andBitwise(&generator.create_constant_wire(b, desc), numBits, desc)
@@ -304,7 +306,7 @@ impl AndBitwise<&BigInteger> for WireType {
 }
 
 impl OrBitwise<&WireType> for WireType {
-    fn or_bitwise(self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
+    fn or_bitwise(&self, w: &Self, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         let bits1 = self.getBitWiresi(numBits as u64, desc);
@@ -323,14 +325,14 @@ impl OrBitwise<&WireType> for WireType {
     }
 }
 impl OrBitwise<i64> for WireType {
-    fn or_bitwise(self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
+    fn or_bitwise(&self, v: i64, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.orBitwise(&generator.create_constant_wire(v, desc), numBits, desc)
     }
 }
 impl OrBitwise<&BigInteger> for WireType {
-    fn or_bitwise(self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
+    fn or_bitwise(&self, b: &BigInteger, numBits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         self.orBitwise(&generator.create_constant_wire(b, desc), numBits, desc)
@@ -637,20 +639,28 @@ impl std::fmt::Display for WireType {
             f,
             "{}",
             match self {
-                _ => "",
+                Self::Wire(w) => w.to_string(),
+                Self::LinearCombinationBit(w) => w.to_string(),
+                Self::LinearCombination(w) => w.to_string(),
+                Self::Variable(w) => w.to_string(),
+                Self::VariableBit(w) => w.to_string(),
+                Self::Constant(w) => w.to_string(),
+                Self::Bit(w) => w.to_string(),
             }
         )
     }
 }
 
-impl StructNameConfig for WireType {
-    fn name(&self) -> String {
-        String::new()
-    }
-}
-
-impl InstanceOf for WireType {
-    fn instance_of(&self, name: &str) -> bool {
-        self.name() == name
+impl Hash for WireType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::Wire(w) => w.hash(state),
+            Self::LinearCombinationBit(w) => w.hash(state),
+            Self::LinearCombination(w) => w.hash(state),
+            Self::Variable(w) => w.hash(state),
+            Self::VariableBit(w) => w.hash(state),
+            Self::Constant(w) => w.hash(state),
+            Self::Bit(w) => w.hash(state),
+        }
     }
 }

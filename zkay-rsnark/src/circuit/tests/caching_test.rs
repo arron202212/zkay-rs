@@ -88,27 +88,27 @@ mod test {
             );
             xoredVals[i] = inVals1[i]
                 .clone()
-                .bitxor(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .bitxor(&inVals2[i])
+                .rem(&Configs.field_prime);
             oredVals[i] = inVals1[i]
                 .clone()
-                .bitor(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .bitor(&inVals2[i])
+                .rem(&Configs.field_prime);
             andedVals[i] = inVals1[i]
                 .clone()
-                .bitand(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .bitand(&inVals2[i])
+                .rem(&Configs.field_prime);
             invertedVals[i] = BigInteger::from(
                 !inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff,
             );
             multipliedVals[i] = inVals1[i]
                 .clone()
-                .mul(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .mul(&inVals2[i])
+                .rem(&Configs.field_prime);
             addedVals[i] = inVals1[i]
                 .clone()
-                .add(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .add(&inVals2[i])
+                .rem(&Configs.field_prime);
         }
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
@@ -125,7 +125,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                println!("=====buildCircuit================={},{}", file!(), line!());
+                // println!("=====buildCircuit================={},{}", file!(), line!());
                 let mut generator = &*self;
 
                 //println!("=====buildCircuit================={},{}",file!(),line!());
@@ -146,51 +146,53 @@ mod test {
 
                 let mut multiplied = vec![None; numIns];
                 let mut added = vec![None; numIns];
-                println!(
-                    "=====buildCircuit=========={numIns}======={},{}",
-                    file!(),
-                    line!()
-                );
+                // println!(
+                //     "=====buildCircuit=========={numIns}======={},{}",
+                //     file!(),
+                //     line!()
+                // );
                 use std::time::Instant;
                 let start = Instant::now();
                 for i in 0..numIns {
                     shiftedRight[i] = inputs1[i]
-                        .clone()
+                        .as_ref()
                         .map(|x| x.shiftRight(Configs.log2_field_prime as usize, i, &None));
-                    println!(
-                        "End shiftRight  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
+                    // println!(
+                    //     "End shiftRight  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
                     shiftedLeft[i] = inputs1[i]
-                        .clone()
+                        .as_ref()
                         .map(|x| x.shiftLeft(Configs.log2_field_prime as usize, i, &None));
-                    println!(
-                        "End shiftLeft  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
-                    rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
-                    println!(
-                        "End rotateRight  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
-                    rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
-                    println!(
-                        "End rotateLeft  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
+                    // println!(
+                    //     "End shiftLeft  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
+                    rotatedRight[i] = inputs3[i]
+                        .as_ref()
+                        .map(|x| x.rotateRight(32, i % 32, &None));
+                    // println!(
+                    //     "End rotateRight  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
+                    rotatedLeft[i] = inputs3[i].as_ref().map(|x| x.rotateLeft(32, i % 32, &None));
+                    // println!(
+                    //     "End rotateLeft  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
 
-                    xored[i] = inputs1[i].clone().map(|x| {
+                    xored[i] = inputs1[i].as_ref().map(|x| {
                         x.xorBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    println!(
-                        "End xorBitwise  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
-                    ored[i] = inputs1[i].clone().map(|x| {
+                    // println!(
+                    //     "End xorBitwise  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
+                    ored[i] = inputs1[i].as_ref().map(|x| {
                         x.orBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
@@ -201,74 +203,76 @@ mod test {
                     //     "End orBitwise  Time: {i}=== {} s",
                     //     start.elapsed().as_secs()
                     // );
-                    anded[i] = inputs1[i].clone().map(|x| {
+                    anded[i] = inputs1[i].as_ref().map(|x| {
                         x.andBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    println!(
-                        "End andBitwise  Time: {i}=== {} s",
-                        start.elapsed().as_secs()
-                    );
-                    inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
-                    println!("End invBits  Time: {i}=== {} s", start.elapsed().as_secs());
+                    // println!(
+                    //     "End andBitwise  Time: {i}=== {} s",
+                    //     start.elapsed().as_secs()
+                    // );
+                    inverted[i] = inputs3[i].as_ref().map(|x| x.invBits(32, &None));
+                    // println!("End invBits  Time: {i}=== {} s", start.elapsed().as_secs());
                     multiplied[i] = inputs1[i]
                         .clone()
                         .map(|x| x.mul(inputs2[i].as_ref().unwrap()));
-                    println!("End mul  Time: {i}=== {} s", start.elapsed().as_secs());
+                    // println!("End mul  Time: {i}=== {} s", start.elapsed().as_secs());
 
                     added[i] = inputs1[i]
                         .clone()
                         .map(|x| x.add(inputs2[i].as_ref().unwrap()));
-                    println!("End  add  Time: {i}=== {} s", start.elapsed().as_secs());
+                    // println!("End  add  Time: {i}=== {} s", start.elapsed().as_secs());
                 }
-                println!(
-                    "=====buildCircuit=====*************============={},{}",
-                    file!(),
-                    line!()
-                );
+                // println!(
+                //     "=====buildCircuit=====*************============={},{}",
+                //     file!(),
+                //     line!()
+                // );
 
                 let mut currentCost = generator.get_num_of_constraints();
-                println!(
-                    "=====buildCircuit========188==********======={},{}",
-                    file!(),
-                    line!()
-                );
+                // println!(
+                //     "=====buildCircuit========188==********======={},{}",
+                //     file!(),
+                //     line!()
+                // );
                 // repeat everything again, and verify that the number of
                 // multiplication gates will not be affected
                 for i in 0..numIns {
                     shiftedRight[i] = inputs1[i]
-                        .clone()
+                        .as_ref()
                         .map(|x| x.shiftRight(Configs.log2_field_prime as usize, i, &None));
                     shiftedLeft[i] = inputs1[i]
-                        .clone()
+                        .as_ref()
                         .map(|x| x.shiftLeft(Configs.log2_field_prime as usize, i, &None));
-                    rotatedRight[i] = inputs3[i].clone().map(|x| x.rotateRight(32, i % 32, &None));
-                    rotatedLeft[i] = inputs3[i].clone().map(|x| x.rotateLeft(32, i % 32, &None));
-                    xored[i] = inputs1[i].clone().map(|x| {
+                    rotatedRight[i] = inputs3[i]
+                        .as_ref()
+                        .map(|x| x.rotateRight(32, i % 32, &None));
+                    rotatedLeft[i] = inputs3[i].as_ref().map(|x| x.rotateLeft(32, i % 32, &None));
+                    xored[i] = inputs1[i].as_ref().map(|x| {
                         x.xorBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    ored[i] = inputs1[i].clone().map(|x| {
+                    ored[i] = inputs1[i].as_ref().map(|x| {
                         x.orBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    anded[i] = inputs1[i].clone().map(|x| {
+                    anded[i] = inputs1[i].as_ref().map(|x| {
                         x.andBitwise(
                             inputs2[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
+                    inverted[i] = inputs3[i].as_ref().map(|x| x.invBits(32, &None));
                     multiplied[i] = inputs1[i]
                         .clone()
                         .map(|x| x.mul(inputs2[i].as_ref().unwrap()));
@@ -277,9 +281,9 @@ mod test {
                         .map(|x| x.add(inputs2[i].as_ref().unwrap()));
                 }
 
-                assert!(generator.get_num_of_constraints() == currentCost);
+                assert_eq!(generator.get_num_of_constraints(), currentCost);
                 println!(
-                    "=====buildCircuit=========219*************========{},{}",
+                    "=====buildCircuit=====__________*****___________________________________________====*************========{},{}",
                     file!(),
                     line!()
                 );
@@ -287,21 +291,22 @@ mod test {
                 // the operands, and verify that the number of multiplication
                 // gates will not be affected
                 for i in 0..numIns {
-                    xored[i] = inputs2[i].clone().map(|x| {
+                    xored[i] = inputs2[i].as_ref().map(|x| {
                         x.xorBitwise(
                             inputs1[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    ored[i] = inputs2[i].clone().map(|x| {
+                    assert_eq!(generator.get_num_of_constraints(), currentCost);
+                    ored[i] = inputs2[i].as_ref().map(|x| {
                         x.orBitwise(
                             inputs1[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
                             &None,
                         )
                     });
-                    anded[i] = inputs2[i].clone().map(|x| {
+                    anded[i] = inputs2[i].as_ref().map(|x| {
                         x.andBitwise(
                             inputs1[i].as_ref().unwrap(),
                             Configs.log2_field_prime,
@@ -315,13 +320,17 @@ mod test {
                         .clone()
                         .map(|x| x.add(inputs1[i].as_ref().unwrap()));
                 }
-
-                assert!(generator.get_num_of_constraints() == currentCost);
                 println!(
                     "=====buildCircuit========*************=========={},{}",
                     file!(),
                     line!()
                 );
+                assert_eq!(generator.get_num_of_constraints(), currentCost);
+                // println!(
+                //     "=====buildCircuit========*************=========={},{}",
+                //     file!(),
+                //     line!()
+                // );
                 generator.makeOutputArray(&shiftedRight, &None);
                 generator.makeOutputArray(&shiftedLeft, &None);
                 generator.makeOutputArray(&rotatedRight, &None);
@@ -334,11 +343,11 @@ mod test {
                 generator.makeOutputArray(&added, &None);
 
                 currentCost = generator.get_num_of_constraints();
-                println!(
-                    "=====buildCircuit=========*************========={},{}",
-                    file!(),
-                    line!()
-                );
+                // println!(
+                //     "=====buildCircuit=========*************========={},{}",
+                //     file!(),
+                //     line!()
+                // );
                 // repeat labeling as output (although not really meaningful)
                 // and make sure no more constraints are added
                 generator.makeOutputArray(&shiftedRight, &None);
@@ -352,18 +361,22 @@ mod test {
                 generator.makeOutputArray(&multiplied, &None);
                 generator.makeOutputArray(&added, &None);
 
-                assert!(generator.get_num_of_constraints() == currentCost);
-                println!(
-                    "=====buildCircuit========*************=========={},{}",
-                    file!(),
-                    line!()
-                );
+                assert_eq!(generator.get_num_of_constraints(), currentCost);
+                // println!(
+                //     "=====buildCircuit========*************=========={},{}",
+                //     file!(),
+                //     line!()
+                // );
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
                 self.t.inputs3 = inputs3;
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                // println!("=====evaluator.getAssignment().len()============{}",evaluator.getAssignment().len());
+                // println!("=====1======{}===={}===",&self.t.inputs1.len(), &self.t.inVals1.len());
+                // println!("=====2======{}===={}===",&self.t.inputs2.len(), &self.t.inVals2.len());
+                // println!("======3====={}===={}===",&self.t.inputs3.len(), &self.t.inVals3.len());
                 evaluator.setWireValuea(&self.t.inputs1, &self.t.inVals1);
                 evaluator.setWireValuea(&self.t.inputs2, &self.t.inVals2);
                 evaluator.setWireValuea(&self.t.inputs3, &self.t.inVals3);
@@ -380,17 +393,17 @@ mod test {
             numIns: numIns as u64,
         };
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("Caching_Test", t);
-        println!("{}", line!());
+        // println!("==================={}", line!());
         // let mut generator = arc_cell_new!(generator);
         // put_active_circuit_generator("CGTest", generator.clone());
 
-        println!("{}", line!());
+        // println!("================{}", line!());
         generator.generateCircuit();
-        println!("{},{}", file!(), line!());
-        let generator = RcCell::new(generator);
-        let mut evaluator = CircuitEvaluator::new("CGTest", &generator);
-        generator.borrow().generateSampleInput(&mut evaluator);
-        evaluator.evaluate(&generator);
+        // println!("================={},{}", file!(), line!());
+        // let generator = RcCell::new(generator);
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
+        generator.generateSampleInput(&mut evaluator);
+        evaluator.evaluate(&generator.cg);
 
         let mut outWires = generator.get_out_wires();
         let (mut i, mut outputIndex) = (0, 0);

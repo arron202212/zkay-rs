@@ -32,3 +32,4 @@ backtrace-on-stack-overflow={workspace=true}
 nohash-hasher={workspace = true}
 rustc-hash ={workspace = true}
 ahash={workspace = true}
+linked-hash-map={workspace = true}

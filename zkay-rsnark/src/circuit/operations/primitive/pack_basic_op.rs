@@ -41,7 +41,7 @@ impl BasicOp for Op<PackBasicOp> {
 
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // //super.checkInputs(assignment);
-self.super_checkInputs(assignment);
+        self.super_checkInputs(assignment);
         assert!(
             (0..self.inputs.len()).all(|i| Util::isBinary(
                 assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize]

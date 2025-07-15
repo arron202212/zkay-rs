@@ -140,15 +140,16 @@ impl WireArray {
             //			generator.addToEvaluationQueue(Box::new(op));
 
             let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-            return if let Some(cachedOutputs) = cachedOutputs {
+            if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
+                //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
                 cachedOutputs[0].clone().unwrap()
             } else {
                 output
-            };
+            }
+        } else {
+            generator.create_constant_wire(&sum, desc)
         }
-
-        generator.create_constant_wire(&sum, desc)
     }
 
     pub fn addWireArray(&self, v: &WireArray, desiredLength: usize, desc: &Option<String>) -> Self {
@@ -172,26 +173,25 @@ impl WireArray {
             self.adjustLength(Some(&v.array), desiredLength),
         );
         let (ws1, ws2) = (ws1.asArray(), ws2.asArray());
-        let mut out = vec![None; desiredLength];
-        for i in 0..out.len() {
-            out[i] = ws1[i]
-                .as_ref()
-                .map(|x| x.clone().xorw(ws2[i].as_ref().unwrap(), desc));
-        }
+        let out: Vec<_> = ws1
+            .iter()
+            .zip(ws2)
+            .map(|(w1, w2)| w1.as_ref().map(|x| x.xorw(w2.as_ref().unwrap(), desc)))
+            .collect();
+
         WireArray::new(out, self.generator.clone())
     }
 
     pub fn xorWireArrayi(&self, v: &WireArray, desc: &Option<String>) -> Self {
         assert!(self.size() == v.size());
-        let ws1 = self.array.clone();
-        let ws2 = v.array.clone();
+        let (ws1, ws2) = (&self.array, &v.array);
 
-        let mut out = vec![None; self.size()];
-        for i in 0..out.len() {
-            out[i] = ws1[i]
-                .as_ref()
-                .map(|x| x.xorw(ws2[i].as_ref().unwrap(), desc));
-        }
+        let out: Vec<_> = ws1
+            .iter()
+            .zip(ws2)
+            .map(|(w1, w2)| w1.as_ref().map(|x| x.xorw(w2.as_ref().unwrap(), desc)))
+            .collect();
+
         WireArray::new(out, self.generator.clone())
     }
 
@@ -376,14 +376,16 @@ impl WireArray {
             );
 
             let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-            return if let Some(cachedOutputs) = cachedOutputs {
+            if let Some(cachedOutputs) = cachedOutputs {
                 generator.borrow_mut().current_wire_id -= 1;
+                //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
                 cachedOutputs[0].clone().unwrap()
             } else {
                 out
-            };
+            }
+        } else {
+            generator.create_constant_wire(&sum, desc)
         }
-        generator.create_constant_wire(&sum, desc)
     }
 
     pub fn rotateLeft(&self, numBits: usize, s: usize, desc: &Option<String>) -> Self {

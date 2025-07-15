@@ -40,6 +40,16 @@ impl<T: OpCodeConfig> crate::circuit::OpCodeConfig for Op<T> {
         self.t.op_code()
     }
 }
+
+// impl<T:OpCodeConfig> Hash for Op<T> {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         self.t.op_code().hash(state);
+//         for i in &self.inputs {
+//             i.as_ref().unwrap().hash(state);
+//         }
+//     }
+// }
+
 impl<T> Op<T> {
     fn new(
         inputs: Vec<Option<WireType>>,
@@ -97,14 +107,21 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
         self.super_checkInputs(assignment);
     }
     fn super_checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        for w in self.getInputs() {
+        let inputs = self.getInputs();
+        let n = inputs.len();
+        for (i, w) in inputs.iter().enumerate() {
+            // println!(
+            //     "===w.as_ref().unwrap().getWireId()==={i}===={}==",
+            //     w.as_ref().unwrap().getWireId()
+            // );
             // if assignment[w.as_ref().unwrap().getWireId() as usize].is_none() {
             //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
             assert!(
                 assignment[w.as_ref().unwrap().getWireId() as usize].is_some(),
-                "Error During Evaluation in checkInputs wire id={},{:?}",
+                "Error During Evaluation in checkInputs wire id={},{:?},{}",
                 w.as_ref().unwrap().getWireId(),
-                assignment
+                assignment.len(),
+                n
             );
             // }
         }
@@ -209,9 +226,11 @@ macro_rules! impl_hash_code_for {
             fn hash<H: Hasher>(&self, state: &mut H) {
                 // this method should be overriden when a subclass can have more than one opcode, or have other arguments
                 self.getOpcode().hash(state);
+                let mut h = 0;
                 for i in self.getInputs() {
-                    i.as_ref().unwrap().hash(state);
+                    h += i.as_ref().unwrap().getWireId() as u64;
                 }
+                h.hash(state);
             }
         }
     };

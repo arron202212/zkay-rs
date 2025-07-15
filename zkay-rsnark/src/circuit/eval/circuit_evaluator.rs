@@ -63,6 +63,7 @@ impl CircuitEvaluator {
             w.getWireId(),
             v
         );
+        // println!("==wireid============={}============",w.getWireId());
         self.valueAssignment[w.getWireId() as usize] = Some(v.clone());
     }
 
@@ -119,6 +120,10 @@ impl CircuitEvaluator {
     }
 
     pub fn evaluate<T: CGConfig>(&mut self, generator: &RcCell<T>) {
+        println!(
+            "==evaluate===evaluator.getAssignment().len()============{}",
+            self.getAssignment().len()
+        );
         println!("Running Circuit Evaluator for < {} >", generator.get_name());
         let evalSequence = generator.get_evaluation_queue();
 

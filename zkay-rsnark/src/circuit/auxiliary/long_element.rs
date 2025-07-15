@@ -216,13 +216,9 @@ impl LongElement {
     }
 
     fn isConstant(&self) -> bool {
-        let mut isConstant = true;
-        if !self.array.is_empty() {
-            for i in 0..self.array.len() {
-                isConstant &= self.array[i].as_ref().unwrap().instance_of("ConstantWire");
-            }
-        }
-        isConstant
+        self.array
+            .iter()
+            .all(|v| v.as_ref().unwrap().instance_of("ConstantWire"))
     }
 
     pub fn getSize(&self) -> usize {
@@ -465,19 +461,24 @@ impl LongElement {
     }
 
     pub fn getConstant(&self, bitwidth_per_chunk: i32) -> Option<BigInteger> {
-        let mut constants = vec![BigInteger::ZERO; self.array.len()];
-        for i in 0..self.array.len() {
-            if self.array[i].as_ref().unwrap().instance_of("ConstantWire") {
-                return None;
-            } else {
-                constants[i] = self.array[i]
-                    .as_ref()
+        if self
+            .array
+            .iter()
+            .any(|v| v.as_ref().unwrap().instance_of("ConstantWire"))
+        {
+            return None;
+        }
+        let constants: Vec<_> = self
+            .array
+            .iter()
+            .map(|v| {
+                v.as_ref()
                     .unwrap()
                     .try_as_constant_ref()
                     .unwrap()
-                    .getConstant();
-            }
-        }
+                    .getConstant()
+            })
+            .collect();
         Some(Util::group(&constants, bitwidth_per_chunk))
     }
 
@@ -716,33 +717,34 @@ impl LongElement {
         let steps: Vec<_> = steps.iter().map(|&i| i as i32).collect();
         // specify how the values of carries are obtained during runtime
         let prover = crate::impl_prover!(
-                        eval( carries: Vec<Option<WireType>>,
-                        group1: Vec<Option<WireType>>,
-                        group2: Vec<Option<WireType>>,
-                        steps: Vec<i32>,
-                        auxConstantChunks: Vec<BigInteger>,
-                        alignedAuxConstantChunks: Vec<BigInteger>)  {
-        impl Instruction for Prover{
-         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                            let mut prevCarry = BigInteger::ZERO;
-                            for i in 0..self.carries.len() {
-                                let a = evaluator.getWireValue(self.group1[i].as_ref().unwrap());
-                                let b = evaluator.getWireValue(self.group2[i].as_ref().unwrap());
-                                let mut carryValue = self.auxConstantChunks[i]
-                                    .clone()
-                                    .add(a)
-                                    .sub(b)
-                                    .sub(&self.alignedAuxConstantChunks[i])
-                                    .add(prevCarry);
-                                carryValue = carryValue.shr(self.steps[i] * LongElement::CHUNK_BITWIDTH);
-                                evaluator
-                                    .setWireValue(self.carries[i].as_ref().unwrap(), &carryValue);
-                                prevCarry = carryValue;
+                                eval( carries: Vec<Option<WireType>>,
+                                group1: Vec<Option<WireType>>,
+                                group2: Vec<Option<WireType>>,
+                                steps: Vec<i32>,
+                                auxConstantChunks: Vec<BigInteger>,
+                                alignedAuxConstantChunks: Vec<BigInteger>)  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+        println!("=============={}==========",evaluator.getAssignment().len());
+                                    let mut prevCarry = BigInteger::ZERO;
+                                    for i in 0..self.carries.len() {
+                                        let a = evaluator.getWireValue(self.group1[i].as_ref().unwrap());
+                                        let b = evaluator.getWireValue(self.group2[i].as_ref().unwrap());
+                                        let mut carryValue = self.auxConstantChunks[i]
+                                            .clone()
+                                            .add(a)
+                                            .sub(b)
+                                            .sub(&self.alignedAuxConstantChunks[i])
+                                            .add(prevCarry);
+                                        carryValue = carryValue.shr(self.steps[i] * LongElement::CHUNK_BITWIDTH);
+                                        evaluator
+                                            .setWireValue(self.carries[i].as_ref().unwrap(), &carryValue);
+                                        prevCarry = carryValue;
+                                    }
+                }
+                }
                             }
-        }
-        }
-                    }
-                );
+                        );
         generator.specifyProverWitnessComputation(prover);
         // self.generator()
         //     .specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
@@ -906,6 +908,8 @@ impl LongElement {
                         helperBits: Vec<Option<WireType>>)  {
                         impl Instruction for Prover{
                             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+
+                                println!("===assertLessThan===getAssignment========{}==========",evaluator.getAssignment().len());
                                 let mut found = false;
                                 for i in (0..self.length).rev() {
                                     let v1 = evaluator.getWireValue(self.paddedA1[i].as_ref().unwrap());
@@ -1135,29 +1139,30 @@ impl Sub for LongElement {
         let other = &rhs;
         let long_element = &self;
         let prover = crate::impl_prover!(
-                eval( long_element:LongElement,
-                        other:LongElement,
-                        result:LongElement)  {
-                        impl Instruction for Prover{
-                            fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                               let myValue = evaluator
-                                .getWireValuei(&self.long_element, LongElement::CHUNK_BITWIDTH);
-                            let otherValue =
-                                evaluator.getWireValuei(&self.other, LongElement::CHUNK_BITWIDTH);
-                            let resultValue = myValue.sub(otherValue);
-                            assert!(
-                                resultValue.sign() != Sign::Minus,
-                                "Result of subtraction is negative!"
-                            );
-                            evaluator.setWireValuebi(
-                                &self.result,
-                                &resultValue,
-                                LongElement::CHUNK_BITWIDTH,
-                            );
-                            }
-                        }
-            }
-        );
+                        eval( long_element:LongElement,
+                                other:LongElement,
+                                result:LongElement)  {
+                                impl Instruction for Prover{
+                                    fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+        println!("=====getAssignment====sub====={}==========",evaluator.getAssignment().len());
+                                       let myValue = evaluator
+                                        .getWireValuei(&self.long_element, LongElement::CHUNK_BITWIDTH);
+                                    let otherValue =
+                                        evaluator.getWireValuei(&self.other, LongElement::CHUNK_BITWIDTH);
+                                    let resultValue = myValue.sub(otherValue);
+                                    assert!(
+                                        resultValue.sign() != Sign::Minus,
+                                        "Result of subtraction is negative!"
+                                    );
+                                    evaluator.setWireValuebi(
+                                        &self.result,
+                                        &resultValue,
+                                        LongElement::CHUNK_BITWIDTH,
+                                    );
+                                    }
+                                }
+                    }
+                );
         generator.specifyProverWitnessComputation(prover);
         // self.generator()
         //     .specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
@@ -1252,19 +1257,20 @@ impl Mul for LongElement {
             // for safety
             let (array1, array2) = (&self.array, &rhs.array);
             let prover = crate::impl_prover!(
-                            eval(result: Vec<Option<WireType>>,
-            array1: Vec<Option<WireType>>,
-            array2: Vec<Option<WireType>>)  {
-            impl Instruction for Prover{
-             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                                       let a = evaluator.getWiresValues(&self.array1);
-                                    let b = evaluator.getWiresValues(&self.array2);
-                                    let resultVals = LongElement::multiplyPolys(a, b);
-                                    evaluator.setWireValuea(&self.result, &resultVals);
-            }
-            }
+                                        eval(result: Vec<Option<WireType>>,
+                        array1: Vec<Option<WireType>>,
+                        array2: Vec<Option<WireType>>)  {
+                        impl Instruction for Prover{
+                         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+            println!("=====getAssignment===mul======{}==========",evaluator.getAssignment().len());
+                                                   let a = evaluator.getWiresValues(&self.array1);
+                                                let b = evaluator.getWiresValues(&self.array2);
+                                                let resultVals = LongElement::multiplyPolys(a, b);
+                                                evaluator.setWireValuea(&self.result, &resultVals);
                         }
-                    );
+                        }
+                                    }
+                                );
             generator.specifyProverWitnessComputation(prover);
             // self.generator().specifyProverWitnessComputation(
             //     &|evaluator: &mut CircuitEvaluator| {

@@ -37,7 +37,7 @@ use crate::{
 use enum_dispatch::enum_dispatch;
 use rccell::{RcCell, WeakCell};
 use std::{
-    fmt::Debug,
+    fmt::{self, Debug},
     hash::{DefaultHasher, Hash, Hasher},
     sync::Arc,
 };
@@ -59,32 +59,50 @@ impl setBitsConfig for Wire<Base> {}
 impl WireConfig for Wire<Base> {}
 crate::impl_name_instance_of_wire_g_for!(Wire<Base>);
 
-impl Hash for Wire<Base> {
-    fn hash<H: Hasher>(&self, state: &mut H) {}
+impl<T: setBitsConfig + Clone + Debug + PartialEq> Hash for Wire<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let id = *self.wire_id.borrow();
+        id.hash(state);
+    }
 }
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct Wire<T: setBitsConfig + Hash + Clone + Debug + PartialEq> {
-    pub wireId: i32,
+impl<T: setBitsConfig + Clone + Debug + PartialEq> std::fmt::Display for Wire<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.wire_id.borrow())
+    }
+}
+impl<T: setBitsConfig + Clone + Debug + PartialEq> Eq for Wire<T> {}
+impl<T: setBitsConfig + Clone + Debug + PartialEq> PartialEq for Wire<T> {
+    fn eq(&self, other: &Self) -> bool {
+        other.getWireId() == self.getWireId() && other.generator() == self.generator()
+    }
+}
+#[derive(Debug, Clone)]
+pub struct Wire<T: setBitsConfig + Clone + Debug + PartialEq> {
+    pub wire_id: RcCell<i32>,
     pub generator: WeakCell<CircuitGenerator>,
     pub t: T,
 }
 
-impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> Wire<T> {
-    pub fn new(t: T, wireId: i32, generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
-        // if wireId < 0 {
+impl<T: setBitsConfig + Clone + Debug + PartialEq> Wire<T> {
+    pub fn new(t: T, wire_id: i32, generator: WeakCell<CircuitGenerator>) -> eyre::Result<Self> {
+        // assert!(wire_id!=20056,"===wire_id====={wire_id}==");
+        // if wire_id < 0 {
         //     eyre::bail!("wire id cannot be negative");
         // }
+        // if t.name()=="ConstantWire"{
+        // println!("==new wire={t:?}========{wire_id}===");
+        // }
         Ok(Self {
-            wireId,
+            wire_id: RcCell::new(wire_id),
             generator,
             t,
         })
     }
 
     pub fn new_array(bits: WireArray, t: T, generator: WeakCell<CircuitGenerator>) -> Self {
+        // println!("==newarray============={t:?}========{bits:?}===");
         let mut _self = Self {
-            wireId: -1,
+            wire_id: RcCell::new(-1),
             generator,
             t,
         };
@@ -97,7 +115,7 @@ pub trait GeneratorConfig {
     fn generator(&self) -> RcCell<CircuitGenerator>;
     fn generator_weak(&self) -> WeakCell<CircuitGenerator>;
 }
-impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GeneratorConfig for Wire<T> {
+impl<T: setBitsConfig + Clone + Debug + PartialEq> GeneratorConfig for Wire<T> {
     fn generator(&self) -> RcCell<CircuitGenerator> {
         self.generator.clone().upgrade().unwrap()
     }
@@ -106,8 +124,8 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GeneratorConfig for Wi
     }
 }
 
-// impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> setBitsConfig for Wire<T> {}
-// impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> WireConfig for Wire<T> {}
+// impl<T: setBitsConfig + Clone + Debug + PartialEq> setBitsConfig for Wire<T> {}
+// impl<T: setBitsConfig + Clone + Debug + PartialEq> WireConfig for Wire<T> {}
 #[enum_dispatch]
 pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + GeneratorConfig {
     // fn instance_of(&self, name: &str) -> bool {
@@ -129,7 +147,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
-        // println!("End Name Time: 33333333333 {} s", line!());
+        // println!("=======================mulb============{}=========== {} ",file!(), line!());
         let mut generator = self.generator();
 
         self.packIfNeeded(desc);
@@ -160,6 +178,8 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // println!("End Name Time: 444 {} s", line!());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+
             cachedOutputs[0].clone().unwrap()
         } else {
             out
@@ -183,6 +203,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
         //  println!("End adjustLength  Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             let v = self.mulb(&w.try_as_constant_ref().unwrap().getConstant(), desc);
             //  println!("End mulb  Time: == {} s", start.elapsed().as_micros());
             return v;
@@ -223,6 +248,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // );
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cachedOutputs[0].clone().unwrap()
         } else {
             output
@@ -322,9 +348,10 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 2;
-            return cachedOutputs[1].clone().unwrap();
+            cachedOutputs[1].clone().unwrap()
+        } else {
+            out2
         }
-        out2
     }
 
     fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
@@ -345,6 +372,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             return w.orw(self.self_clone().as_ref().unwrap(), desc);
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
@@ -384,6 +416,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //         );
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cachedOutputs[0].clone().unwrap()
         } else {
             out
@@ -394,6 +427,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
+            println!(
+                "===w.instance_of(ConstantWire)================={}===={}=======",
+                line!(),
+                file!()
+            );
             return w.xorw(&self.self_clone().unwrap(), desc);
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
@@ -414,9 +452,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            return cachedOutputs[0].clone().unwrap();
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            cachedOutputs[0].clone().unwrap()
+        } else {
+            out
         }
-        out
     }
 
     fn and(&self, w: &WireType, desc: &Option<String>) -> WireType {
@@ -490,10 +530,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= bitwidth;
             //println!("======================{},{}",file!(),line!());
-            return WireArray::new(cachedOutputs, generator.clone().downgrade())
-                .adjustLength(None, bitwidth as usize);
+            WireArray::new(cachedOutputs, generator.clone().downgrade())
+                .adjustLength(None, bitwidth as usize)
+        } else {
+            WireArray::new(ws, generator.clone().downgrade())
         }
-        WireArray::new(ws, generator.clone().downgrade())
     }
 
     fn restrictBitLength(&self, bitWidth: u64, desc: &Option<String>) {
@@ -958,7 +999,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
-        let mut wireId = generator.borrow().current_wire_id;
+        *self.get_wire_id_mut().borrow_mut() = generator.borrow().current_wire_id;
         generator.borrow_mut().current_wire_id += 1;
         //			Instruction op = PackBasicOp::new(bits.array, self, desc);
         //			generator.addToEvaluationQueue(Box::new(op));
@@ -974,7 +1015,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            wireId = cachedOutputs[0].as_ref().unwrap().getWireId();
+            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            *self.get_wire_id_mut().borrow_mut() = cachedOutputs[0].as_ref().unwrap().getWireId();
+        }
+        if self.getWireId() == -1 {
+            println!("========self.getWireId() == -1 =============================");
         }
     }
 
@@ -992,38 +1037,38 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     // }
 }
 
-#[macro_export]
-macro_rules! impl_hash_code_of_wire_for {
-    ($impl_type:ty) => {
-        impl std::hash::Hash for $impl_type {
-            fn hash<H: Hasher>(&self, state: &mut H) {
-                self.getWireId().hash(state);
-            }
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! impl_hash_code_of_wire_for {
+//     ($impl_type:ty) => {
+//         impl std::hash::Hash for $impl_type {
+//             fn hash<H: Hasher>(&self, state: &mut H) {
+//                 self.getWireId().hash(state);
+//             }
+//         }
+//     };
+// }
 
-#[macro_export]
-macro_rules! impl_display_of_wire_for {
-    ($impl_type:ty) => {
-        impl std::fmt::Display for $impl_type {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{}", self.getWireId())
-            }
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! impl_display_of_wire_for {
+//     ($impl_type:ty) => {
+//         impl std::fmt::Display for $impl_type {
+//             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//                 write!(f, "{}", self.getWireId())
+//             }
+//         }
+//     };
+// }
 
-#[macro_export]
-macro_rules! impl_hash_code_of_wire_g_for {
-    ($impl_type:ty) => {
-        impl std::hash::Hash for $impl_type {
-            fn hash<H: Hasher>(&self, state: &mut H) {
-                self.getWireId().hash(state);
-            }
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! impl_hash_code_of_wire_g_for {
+//     ($impl_type:ty) => {
+//         impl std::hash::Hash for $impl_type {
+//             fn hash<H: Hasher>(&self, state: &mut H) {
+//                 self.getWireId().hash(state);
+//             }
+//         }
+//     };
+// }
 
 #[macro_export]
 macro_rules! impl_name_instance_of_wire_g_for {
@@ -1057,27 +1102,32 @@ macro_rules! impl_name_instance_of_wire_for {
     };
 }
 
-#[macro_export]
-macro_rules! impl_eq_of_wire_for {
-    ($impl_type:ty) => {
-        impl Eq for $impl_type {}
-        impl PartialEq for $impl_type {
-            fn eq(&self, other: &Self) -> bool {
-                other.getWireId() == self.getWireId()
-                    && other.generator() == self.generator().lock()
-            }
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! impl_eq_of_wire_for {
+//     ($impl_type:ty) => {
+//         impl Eq for $impl_type {}
+//         impl PartialEq for $impl_type {
+//             fn eq(&self, other: &Self) -> bool {
+//                 other.getWireId() == self.getWireId()
+//                     && other.generator() == self.generator().lock()
+//             }
+//         }
+//     };
+// }
 
 #[enum_dispatch]
 pub trait GetWireId {
     fn getWireId(&self) -> i32;
+    fn get_wire_id_mut(&self) -> RcCell<i32>;
 }
 
-impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GetWireId for Wire<T> {
+impl<T: setBitsConfig + Clone + Debug + PartialEq> GetWireId for Wire<T> {
     fn getWireId(&self) -> i32 {
-        self.wireId
+        let id = *self.wire_id.borrow();
+        id
+    }
+    fn get_wire_id_mut(&self) -> RcCell<i32> {
+        self.wire_id.clone()
     }
 }
 
@@ -1086,7 +1136,7 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GetWireId for Wire<T> 
 //     ($impl_type:ty) => {
 // impl GetWireId for $impl_type {
 //      fn getWireId(&self) -> i32 {
-//         self.wireId
+//         self.wire_id
 //     }
 // }
 //     };
@@ -1096,7 +1146,7 @@ impl<T: setBitsConfig + Hash + Clone + Debug + PartialEq> GetWireId for Wire<T> 
 macro_rules! new_wire {
     ($impl_type:ident,$wire_id:expr,$generator:ident) => {
         Wire::<$impl_type> {
-            wireId: $wire_id,
+            wire_id: $wire_id,
             $generator,
             t: $impl_type,
         }

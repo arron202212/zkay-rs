@@ -28,23 +28,27 @@ use zkay_derive::ImplStructNameConfig;
 pub struct LinearCombinationWire {
     pub bitWires: Option<WireArray>,
 }
-impl Hash for LinearCombinationWire {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.bitWires.hash(state);
-    }
-}
+// impl Hash for LinearCombinationWire {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         // self.bitWires.hash(state);
+//     }
+// }
 impl PartialEq for LinearCombinationWire {
     fn eq(&self, other: &Self) -> bool {
         self.bitWires == other.bitWires
     }
 }
-crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
+//crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
 pub fn new_linear_combination(
     wireId: i32,
     bits: Option<WireArray>,
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<LinearCombinationWire> {
+    //   if  wireId>0 && wireId<10000
+    //     {
+    //         println!("===new_linear_combination====={wireId}==");
+    //     }
     // super(wireId);
     // Wire::<LinearCombinationWire> {
     //     wireId,

@@ -41,7 +41,7 @@ impl BasicOp for Op<SplitBasicOp> {
 
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         //super.checkInputs(assignment);
-self.super_checkInputs(assignment);
+        self.super_checkInputs(assignment);
         assert!(
             self.outputs.len()
                 >= assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]

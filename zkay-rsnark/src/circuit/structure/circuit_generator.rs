@@ -50,12 +50,12 @@ use std::{
     {fmt::Debug, mem::size_of},
 };
 
+use ahash::RandomState;
 use dyn_clone::DynClone;
 use lazy_static::lazy_static;
-use rccell::{RcCell, WeakCell};
-
-use ahash::RandomState;
+use linked_hash_map::LinkedHashMap;
 use nohash_hasher::{BuildNoHashHasher, NoHashHasher};
+use rccell::{RcCell, WeakCell};
 use rustc_hash::FxBuildHasher;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_closure::{Fn, FnMut, FnOnce};
@@ -70,7 +70,7 @@ lazy_static! {
 
 // use std::{collections::HashMap, time::Instant};
 
-pub type IntHashMap<K, V> = HashMap<K, V, BuildNoHashHasher<K>>;
+// pub type LinkedHashMap<K, V> = HashMap<K, V, BuildNoHashHasher<K>>;
 
 #[derive(Debug, Clone)]
 pub struct CGBase;
@@ -78,7 +78,7 @@ pub struct CGBase;
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircuitGenerator {
     pub current_wire_id: i32,
-    pub evaluation_queue: IntHashMap<u64, Box<dyn Instruction>>,
+    pub evaluation_queue: LinkedHashMap<u64, Box<dyn Instruction>>,
 
     pub zero_wire: Option<WireType>,
     pub one_wire: Option<WireType>,
@@ -136,7 +136,7 @@ impl CircuitGenerator {
                 zero_wire: None,
                 one_wire: None,
                 // prover_witness_wires: vec![],
-                evaluation_queue: IntHashMap::default(),
+                evaluation_queue: LinkedHashMap::default(),
                 known_constant_wires: HashMap::new(),
                 current_wire_id: 0,
                 num_of_constraints: 0,
@@ -208,6 +208,17 @@ pub fn addToEvaluationQueue(
     //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
     //     start.elapsed()
     // );
+    // let mut ss = DefaultHasher::new();
+    // 1i32.hash(&mut ss);
+    // 2i32.hash(&mut ss);
+    // let hash_codes = ss.finish();
+    // println!("===hash_codes========{hash_codes}======");
+    // let mut sss = DefaultHasher::new();
+    // 2i32.hash(&mut sss);
+    // 1i32.hash(&mut sss);
+    // let hash_codess = sss.finish();
+    // println!("===hash_codess========{hash_codess}======");
+
     let mut s = DefaultHasher::new();
     e.hash(&mut s);
     let hash_code = s.finish();
@@ -253,7 +264,9 @@ pub fn addToEvaluationQueue(
     //     "End +++++++++++++addToEvaluationQueue 1 Time: == {:?} s",
     //     start.elapsed()
     // );
-    if e.instance_of("BasicOp") {
+    if e.name().ends_with("Op") {
+        //BasicOp
+        // print!("====e===={}===",e.name());
         cg.borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
     }
     // println!(
@@ -305,7 +318,7 @@ impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
         self.cg.borrow().one_wire.clone()
     }
 
-    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>> {
+    fn get_evaluation_queue(&self) -> LinkedHashMap<u64, Box<dyn Instruction>> {
         self.cg.borrow().evaluation_queue.clone()
     }
     fn get(&self, hash_code: u64) -> Option<Box<dyn Instruction>> {
@@ -374,7 +387,7 @@ pub trait CGConfigFields: CGInstance + Debug {
     fn get_zero_wire(&self) -> Option<WireType>;
     fn get_one_wire(&self) -> Option<WireType>;
 
-    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>>;
+    fn get_evaluation_queue(&self) -> LinkedHashMap<u64, Box<dyn Instruction>>;
     fn get(&self, hash_code: u64) -> Option<Box<dyn Instruction>>;
     fn get_current_wire_id(&self) -> i32;
     fn get_num_of_constraints(&self) -> i32;
@@ -445,15 +458,16 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
         println!(
             "Circuit Generation Done for < {} > \n \t Total Number of Constraints : {} \n \t Total Number of Wires : {}",
-            self.cg().get_name(),
-            self.cg().get_num_of_constraints(),
-            self.cg().get_num_wires()
+            self.get_name(),
+            self.get_num_of_constraints(),
+            self.get_num_wires()
         );
     }
 
     fn createInputWire(&self, desc: &Option<String>) -> WireType {
         let newInputWire =
             WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
+        // println!("==get_current_wire_id===={}==={}===",self.get_current_wire_id(),self.cg().borrow().current_wire_id );
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
             self.cg(),
@@ -477,7 +491,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             .collect()
     }
 
-    fn createLongElementInput(&mut self, totalBitwidth: i32, desc: &Option<String>) -> LongElement {
+    fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement {
         let numWires =
             (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
         let w = self.createInputWireArray(numWires, desc);
@@ -489,7 +503,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createLongElementProverWitness(
-        &mut self,
+        &self,
         totalBitwidth: i32,
         desc: &Option<String>,
     ) -> LongElement {
@@ -503,7 +517,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         LongElement::new(w, bitwidths, self.cg_weak())
     }
 
-    fn createProverWitnessWire(&mut self, desc: &Option<String>) -> WireType {
+    fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType {
         let wire = WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
@@ -523,7 +537,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createProverWitnessWireArray(
-        &mut self,
+        &self,
         n: usize,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
@@ -588,9 +602,10 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         let cachedOutputs = addToEvaluationQueue(self.cg(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             self.cg().borrow_mut().current_wire_id -= 1;
-            return cachedOutputs[0].clone().unwrap();
+            cachedOutputs[0].clone().unwrap()
+        } else {
+            outputWire
         }
-        outputWire
     }
 
     fn makeOutputArray(
@@ -608,7 +623,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             .collect()
     }
 
-    fn addDebugInstruction(&mut self, w: &WireType, desc: &Option<String>) {
+    fn addDebugInstruction(&self, w: &WireType, desc: &Option<String>) {
         w.packIfNeeded(&None);
         addToEvaluationQueue(
             self.cg(),
@@ -621,7 +636,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn addDebugInstructiona(&mut self, wires: &Vec<Option<WireType>>, desc: &Option<String>) {
+    fn addDebugInstructiona(&self, wires: &Vec<Option<WireType>>, desc: &Option<String>) {
         for i in 0..wires.len() {
             wires[i].as_ref().unwrap().packIfNeeded(&None);
             addToEvaluationQueue(
@@ -666,17 +681,17 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         //println!("{},{}",file!(),line!());
         self.cg().borrow_mut().one_wire = Some(one_wire.clone());
         let start = Instant::now();
-        println!(
-            "==**********initCircuitConstruction************=={:?}====*self.one_wire() ========{:?}",
-            self.name(),
-            self.cg().get_one_wire()
-        );
+        // println!(
+        //     "==**********initCircuitConstruction************=={:?}====*self.one_wire() ========{:?}",
+        //     self.name(),
+        //     self.cg().get_one_wire()
+        // );
         self.cg().borrow_mut().current_wire_id += 1;
         self.cg()
             .borrow_mut()
             .known_constant_wires
             .insert(Util::one(), one_wire.clone());
-        println!("{},{}", file!(), line!());
+        // println!("{},{}", file!(), line!());
         // println!("End Name  Time: 2222 {} s", start.elapsed().as_secs());
         addToEvaluationQueue(
             self.cg(),
@@ -696,7 +711,18 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createConstantWire(&self, x: &BigInteger, desc: &Option<String>) -> WireType {
-        self.cg().get_one_wire().unwrap().mulb(x, desc)
+        println!(
+            "========before===============createConstantWire============{}=========== {} ",
+            file!(),
+            line!()
+        );
+        let v = self.cg().get_one_wire().unwrap().mulb(x, desc);
+        println!(
+            "=========after==============createConstantWire============{}=========== {} ",
+            file!(),
+            line!()
+        );
+        v
     }
 
     fn createConstantWireArray(
@@ -737,7 +763,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
      *
      * @param instruction
      */
-    fn specifyProverWitnessComputation(&mut self, e: Box<dyn Instruction>) {
+    fn specifyProverWitnessComputation(&self, e: Box<dyn Instruction>) {
         // serde_json::to_string(&f).unwrap()
         // let f: FnOnce( &mut CircuitEvaluator)
         // 			+ Serialize
@@ -797,14 +823,14 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         addToEvaluationQueue(self.cg(), e);
     }
     // fn addToEvaluationQueue(
-    //     &mut self,
+    //     &self,
     //     e: Box<dyn Instruction>,
     // ) -> Option<Vec<Option<WireType>>> {
     //     // self.addToEvaluationQueues(Box<dyn Instruction>::Trait( e))
     //     None
     // }
     // fn addToEvaluationQueue(
-    //     &mut self,
+    //     &self,
     //     e: Box<dyn Instruction>,
     // ) -> Option<Vec<Option<WireType>>> {
     //     let evaluation_queue = self.cg().evaluation_queue();
@@ -938,7 +964,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
         let inp = p.0.clone().unwrap();
         let buf = inp.replace(" ", "\n");
-        println!("{buf}");
+        println!("===={buf}");
     }
 
     // fn getCircuitEvaluator(&self) -> CircuitEvaluator {
@@ -956,7 +982,7 @@ impl CGConfigFields for CircuitGenerator {
     //     &mut self.current_wire_id
     // }
     // fn evaluation_queue(
-    //     &mut self,
+    //     &self,
     // ) -> &mut HashMap<Box<dyn Instruction>, Box<dyn Instruction>> {
     //     &mut self.evaluation_queue
     // }
@@ -999,7 +1025,7 @@ impl CGConfigFields for CircuitGenerator {
         self.one_wire.clone()
     }
 
-    fn get_evaluation_queue(&self) -> IntHashMap<u64, Box<dyn Instruction>> {
+    fn get_evaluation_queue(&self) -> LinkedHashMap<u64, Box<dyn Instruction>> {
         self.evaluation_queue.clone()
     }
     fn get(&self, hash_code: u64) -> Option<Box<dyn Instruction>> {
@@ -1185,7 +1211,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
 
     crate::impl_fn_of_trait!(fn get_evaluation_queue(
         &self,
-    ) -> IntHashMap<u64, Box<dyn Instruction>> );
+    ) -> LinkedHashMap<u64, Box<dyn Instruction>> );
 
     crate::impl_fn_of_trait!(fn get(&self,hash_code:u64) -> Option<Box<dyn Instruction>> );
     crate::impl_fn_of_trait!(fn get_current_wire_id(&self) -> i32 );
@@ -1220,18 +1246,18 @@ impl CGConfig for RcCell<CircuitGenerator> {
 
     crate::impl_fn_of_trait!(fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
 
-    crate::impl_fn_of_trait!(fn createLongElementInput(&mut self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
+    crate::impl_fn_of_trait!(fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
 
     crate::impl_fn_of_trait! (fn createLongElementProverWitness(
-        &mut self,
+        &self,
         totalBitwidth: i32,
         desc: &Option<String>
     ) -> LongElement );
 
-    crate::impl_fn_of_trait!(fn createProverWitnessWire(&mut self, desc: &Option<String>) -> WireType );
+    crate::impl_fn_of_trait!(fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType );
 
     crate::impl_fn_of_trait!(fn createProverWitnessWireArray(
-        &mut self,
+        &self,
         n: usize,
         desc: &Option<String>
     ) -> Vec<Option<WireType>> );
@@ -1250,9 +1276,9 @@ impl CGConfig for RcCell<CircuitGenerator> {
         desc: &Option<String>
     ) -> Vec<Option<WireType>> );
 
-    crate::impl_fn_of_trait!(fn addDebugInstruction(&mut self, w: &WireType, desc: &Option<String>));
+    crate::impl_fn_of_trait!(fn addDebugInstruction(&self, w: &WireType, desc: &Option<String>));
 
-    crate::impl_fn_of_trait!(fn addDebugInstructiona(&mut self, wires: &Vec<Option<WireType>>, desc: &Option<String>));
+    crate::impl_fn_of_trait!(fn addDebugInstructiona(&self, wires: &Vec<Option<WireType>>, desc: &Option<String>));
 
     crate::impl_fn_of_trait!(fn writeCircuitFile(&self));
 
@@ -1286,10 +1312,10 @@ impl CGConfig for RcCell<CircuitGenerator> {
      *
      * @param instruction
      */
-    crate::impl_fn_of_trait!(fn specifyProverWitnessComputation(&mut self, e: Box<dyn Instruction>));
+    crate::impl_fn_of_trait!(fn specifyProverWitnessComputation(&self, e: Box<dyn Instruction>));
 
     // crate::impl_fn_of_trait!(fn addToEvaluationQueue(
-    //     &mut self,
+    //     &self,
     //     e: Box<dyn Instruction>
     // ) -> Option<Vec<Option<WireType>>>);
 

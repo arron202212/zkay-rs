@@ -22,12 +22,16 @@ use rccell::{RcCell, WeakCell};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct VariableBitWire;
-crate::impl_hash_code_of_wire_g_for!(Wire<VariableBitWire>);
+//crate::impl_hash_code_of_wire_g_for!(Wire<VariableBitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableBitWire>);
 pub fn new_variable_bit(
     wireId: i32,
     generator: WeakCell<CircuitGenerator>,
 ) -> Wire<VariableBitWire> {
+    //   if wireId>0 && wireId<10000
+    //     {
+    //         println!("==new_variable_bit======{wireId}==");
+    //     }
     // super(wireId);
     // Wire::<VariableBitWire> {
     //     wireId,
