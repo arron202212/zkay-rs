@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
@@ -60,9 +61,16 @@ impl BasicOp for Op<SplitBasicOp> {
             .clone()
             .unwrap();
         if inVal > Configs.field_prime {
-            inVal = inVal.rem(Configs.field_prime.clone());
+            inVal = inVal.rem(&Configs.field_prime);
         }
         for i in 0..self.outputs.len() {
+            if self.outputs[i].as_ref().unwrap().getWireId() == 349251 {
+                println!(
+                    "==compute=====outputs=========={}===={}====",
+                    file!(),
+                    self.outputs[i].as_ref().unwrap().name()
+                );
+            }
             assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] =
                 Some(if inVal.bit(i as u64) {
                     Util::one()

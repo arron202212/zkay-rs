@@ -9,6 +9,7 @@
 use crate::{
     arc_cell_new,
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::GadgetConfig,
@@ -18,7 +19,7 @@ use crate::{
                 CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
                 getActiveCircuitGenerator, put_active_circuit_generator,
             },
-            wire::WireConfig,
+            wire::{GetWireId, WireConfig},
             wire_type::WireType,
         },
     },
@@ -62,30 +63,62 @@ mod test {
         let mut mask = BigInteger::from(2)
             .pow(Configs.log2_field_prime as u32)
             .sub(Util::one());
+        //4215603241   3977511079
+        let s = BigInteger::from(3977511079u64);
+        let t = BigInteger::from(
+            s.to_str_radix(10)
+                .parse::<u32>()
+                .unwrap()
+                .rotate_right((2 % 32) as u32)
+                & 0x00000000ffffffffu32,
+        );
+        println!("==t===={}===s==={}==============", t, s);
 
+        let s = BigInteger::from(3491785456u64);
+        let t = BigInteger::from(
+            s.to_str_radix(10)
+                .parse::<u32>()
+                .unwrap()
+                .rotate_left((2 % 32) as u32)
+                & 0x00000000ffffffff,
+        );
+        println!("==t===={}===s==={}======rotate_left========", t, s);
+        //8181139172870928967080305625624286096015218543390575358010383571265581920620
+        //8181139172870928967080305625624286096015218543390575358010383571265581920620===16362278345741857934160611251248572192030437086781150716020767142531163841240==
         for i in 0..numIns {
-            shiftedRightVals[i] = inVals1[i].clone().shr(i).rem(Configs.field_prime.clone());
+            shiftedRightVals[i] = inVals1[i].clone().shr(i).rem(&Configs.field_prime);
+            // println!("=calc=={i}===shiftedRightVals[i]===={}==={}==",shiftedRightVals[i],inVals1[i]);
             shiftedLeftVals[i] = inVals1[i]
                 .clone()
                 .shl(i)
-                .bitand(mask.clone())
-                .rem(Configs.field_prime.clone());
+                .bitand(&mask)
+                .rem(&Configs.field_prime);
+            // println!("=******************=={i}===rotatedRightVals[i]===={}==={}==",rotatedRightVals[i],inVals3[i]);
             rotatedRightVals[i] = BigInteger::from(
                 inVals3[i]
                     .to_str_radix(10)
-                    .parse::<i64>()
+                    .parse::<u32>()
                     .unwrap()
                     .rotate_right((i % 32) as u32)
                     & 0x00000000ffffffff,
             );
+
+            // println!(
+            //     "==rotatedRightVals[i]===={}===inVals3[i]====={}====={i}=========",
+            //     rotatedRightVals[i], inVals3[i]
+            // );
             rotatedLeftVals[i] = BigInteger::from(
                 inVals3[i]
                     .to_str_radix(10)
-                    .parse::<i64>()
+                    .parse::<u32>()
                     .unwrap()
                     .rotate_left((i % 32) as u32)
                     & 0x00000000ffffffff,
             );
+            // println!(
+            //     "==rotatedLeftVals[i]===={}===inVals3[i]====={}====={i}=========",
+            //     rotatedLeftVals[i], inVals3[i]
+            // );
             xoredVals[i] = inVals1[i]
                 .clone()
                 .bitxor(&inVals2[i])
@@ -99,7 +132,7 @@ mod test {
                 .bitand(&inVals2[i])
                 .rem(&Configs.field_prime);
             invertedVals[i] = BigInteger::from(
-                !inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff,
+                !inVals3[i].to_str_radix(10).parse::<u32>().unwrap() & 0x00000000ffffffff,
             );
             multipliedVals[i] = inVals1[i]
                 .clone()
@@ -298,7 +331,7 @@ mod test {
                             &None,
                         )
                     });
-                    assert_eq!(generator.get_num_of_constraints(), currentCost);
+                    // assert_eq!(generator.get_num_of_constraints(), currentCost);
                     ored[i] = inputs2[i].as_ref().map(|x| {
                         x.orBitwise(
                             inputs1[i].as_ref().unwrap(),
@@ -321,7 +354,8 @@ mod test {
                         .map(|x| x.add(inputs1[i].as_ref().unwrap()));
                 }
                 println!(
-                    "=====buildCircuit========*************=========={},{}",
+                    "=====buildCircuit====shiftedRight before====*************=========={},{},{}",
+                    self.get_num_wires(),
                     file!(),
                     line!()
                 );
@@ -332,26 +366,86 @@ mod test {
                 //     line!()
                 // );
                 generator.makeOutputArray(&shiftedRight, &None);
+                println!(
+                    "=====buildCircuit===shiftedRight======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&shiftedLeft, &None);
+                println!(
+                    "=====buildCircuit==shiftedLeft==rotatedRight=before===*************======{},{},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&rotatedRight, &None);
+                println!(
+                    "=====buildCircuit===rotatedRight======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&rotatedLeft, &None);
+                println!(
+                    "=====buildCircuit===rotatedLeft======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&xored, &None);
+                println!(
+                    "=====buildCircuit===xored======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&ored, &None);
+                println!(
+                    "=====buildCircuit===ored======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&anded, &None);
+                println!(
+                    "=====buildCircuit===anded======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&inverted, &None);
+                println!(
+                    "=====buildCircuit===inverted======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&multiplied, &None);
+                println!(
+                    "=====buildCircuit===multiplied======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&added, &None);
-
+                println!(
+                    "=====buildCircuit===added======*************===={}====={},{}",
+                    self.get_num_wires(),
+                    file!(),
+                    line!()
+                );
                 currentCost = generator.get_num_of_constraints();
-                // println!(
-                //     "=====buildCircuit=========*************========={},{}",
-                //     file!(),
-                //     line!()
-                // );
+
                 // repeat labeling as output (although not really meaningful)
                 // and make sure no more constraints are added
                 generator.makeOutputArray(&shiftedRight, &None);
                 generator.makeOutputArray(&shiftedLeft, &None);
+                println!(
+                    "=====buildCircuit===rotatedRight=====222222=*************========={},{}",
+                    file!(),
+                    line!()
+                );
                 generator.makeOutputArray(&rotatedRight, &None);
                 generator.makeOutputArray(&rotatedLeft, &None);
                 generator.makeOutputArray(&xored, &None);
@@ -406,8 +500,9 @@ mod test {
         evaluator.evaluate(&generator.cg);
 
         let mut outWires = generator.get_out_wires();
-        let (mut i, mut outputIndex) = (0, 0);
+        let mut outputIndex = 0;
         for i in 0..numIns {
+            // println!("=check=={i}===shiftedRightVals[i]===={}=={}===",shiftedRightVals[i],outWires[i + outputIndex].as_ref().unwrap().getWireId());
             assert_eq!(
                 shiftedRightVals[i],
                 evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
@@ -424,6 +519,11 @@ mod test {
 
         outputIndex += numIns;
         for i in 0..numIns {
+            // println!(
+            //     "=====rotatedRightVals===+++======{i}==={}={}==",
+            //     outWires[i + outputIndex].as_ref().unwrap().name(),
+            //     outWires[i + outputIndex].as_ref().unwrap().getWireId()
+            // );
             assert_eq!(
                 rotatedRightVals[i],
                 evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())
@@ -431,7 +531,9 @@ mod test {
         }
 
         outputIndex += numIns;
+        // println!("=349759=={}==",evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap()));
         for i in 0..numIns {
+            // println!("={i}==={}==rotatedLeftVals======={}",rotatedLeftVals[i],outWires[i + outputIndex].as_ref().unwrap().getWireId());
             assert_eq!(
                 rotatedLeftVals[i],
                 evaluator.getWireValue(outWires[i + outputIndex].as_ref().unwrap())

@@ -8,6 +8,7 @@
 #![allow(warnings, unused)]
 use crate::{
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
@@ -47,35 +48,40 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 // }
 impl BasicOp for Op<AssertBasicOp> {
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
+            );
+        }
         let leftSide = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
             .mul(
-                assignment[self.inputs[1].clone().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap(),
-            )
-            .rem(Configs.field_prime.clone());
-        let rightSide = assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
-            .clone()
-            .unwrap();
-        let check = leftSide == rightSide;
-        if !check {
-            //println!("Error - Assertion Failed {self:?}");
-            println!(
-                "{} * {} != {}",
                 assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
                     .as_ref()
                     .unwrap(),
-                assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap(),
-                assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap()
-            );
-            panic!("Error During Evaluation");
-        }
+            )
+            .rem(&Configs.field_prime);
+        let rightSide = assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
+            .clone()
+            .unwrap();
+
+        assert_eq!(
+            leftSide,
+            rightSide,
+            "Error During Evaluation    {} * {} != {}",
+            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+                .as_ref()
+                .unwrap(),
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+                .as_ref()
+                .unwrap(),
+            assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
+                .as_ref()
+                .unwrap()
+        );
     }
 
     fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {

@@ -291,12 +291,12 @@ impl Gadget for ECDHKeyExchangeGadget {
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.mul(x).rem(Configs.field_prime.clone());
-        let xCubed = xSqred.mul(x).rem(Configs.field_prime.clone());
+        let xSqred = x.mul(x).rem(&Configs.field_prime);
+        let xCubed = xSqred.mul(x).rem(&Configs.field_prime);
         let ySqred = xCubed
             .add(COEFF_A.mul(xSqred))
             .add(x)
-            .rem(Configs.field_prime.clone());
+            .rem(&Configs.field_prime);
         let y = IntegerFunctions.ressol(ySqred, Configs.field_prime);
         y
     }

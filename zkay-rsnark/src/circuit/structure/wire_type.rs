@@ -60,7 +60,7 @@ use strum_macros::{EnumIs, EnumTryAs};
     WireConfig,
     setBitsConfig
 )]
-#[derive(Debug, Clone, PartialEq, EnumIs, EnumTryAs)]
+#[derive(Debug, EnumIs, EnumTryAs)]
 pub enum WireType {
     Wire(Wire<Base>),
     LinearCombinationBit(Wire<LinearCombinationBitWire>),
@@ -661,6 +661,35 @@ impl Hash for WireType {
             Self::VariableBit(w) => w.hash(state),
             Self::Constant(w) => w.hash(state),
             Self::Bit(w) => w.hash(state),
+        }
+    }
+}
+impl Eq for WireType {}
+impl PartialEq for WireType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Wire(w), Self::Wire(o)) => w.eq(o),
+            (Self::LinearCombinationBit(w), Self::LinearCombinationBit(o)) => w.eq(o),
+            (Self::LinearCombination(w), Self::LinearCombination(o)) => w.eq(o),
+            (Self::Variable(w), Self::Variable(o)) => w.eq(o),
+            (Self::VariableBit(w), Self::VariableBit(o)) => w.eq(o),
+            (Self::Constant(w), Self::Constant(o)) => w.eq(o),
+            (Self::Bit(w), Self::Bit(o)) => w.eq(o),
+            _ => false,
+        }
+    }
+}
+
+impl Clone for WireType {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Wire(w) => Self::Wire(w.clone()),
+            Self::LinearCombinationBit(w) => Self::LinearCombinationBit(w.clone()),
+            Self::LinearCombination(w) => Self::LinearCombination(w.clone()),
+            Self::Variable(w) => Self::Variable(w.clone()),
+            Self::VariableBit(w) => Self::VariableBit(w.clone()),
+            Self::Constant(w) => Self::Constant(w.clone()),
+            Self::Bit(w) => Self::Bit(w.clone()),
         }
     }
 }

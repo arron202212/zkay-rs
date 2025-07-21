@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
@@ -66,13 +67,20 @@ impl BasicOp for Op<OrBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
+            );
+        }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = assignment
             [self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()
             .map(|x| {
                 x.clone().bitor(
                     assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                        .clone()
+                        .as_ref()
                         .unwrap(),
                 )
             });

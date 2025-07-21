@@ -222,6 +222,8 @@ pub fn addToEvaluationQueue(
     let mut s = DefaultHasher::new();
     e.hash(&mut s);
     let hash_code = s.finish();
+    assert!(3899388557723912248 != hash_code, "===e===e========{e:?}");
+    ///TEST
     // let mut s:BuildHasherDefault<NoHashHasher<Box<dyn Instruction>>> = BuildNoHashHasher::new();//:
     // // let hash_code = <BuildHasherDefault<NoHashHasher<_>> as BuildHasher>::hash_one::<Box<dyn Instruction>>(&s, e);
     // let hash_code=FxBuildHasher.hash_one(&e);
@@ -325,6 +327,7 @@ impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
         self.cg.borrow().evaluation_queue.get(&hash_code).cloned()
     }
     fn get_current_wire_id(&self) -> i32 {
+        // assert! (175548!=self.cg.borrow().current_wire_id);///TEST
         self.cg.borrow().current_wire_id
     }
     fn get_num_of_constraints(&self) -> i32 {
@@ -562,18 +565,33 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         let mut outputWire = wire.clone();
         let some_wire = Some(wire.clone());
         let cg = self.cg();
-        if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire"))
-            || cg.borrow().in_wires.contains(&some_wire)
-        {
+
+        let outputWire = if cg.borrow().prover_witness_wires.contains(&some_wire) {
+            // The first case is allowed for usability. In some cases, gadgets provide their witness wires as intermediate outputs, e.g., division gadgets,
+            // and the programmer could choose any of these intermediate outputs to be circuit outputs later.
+            // The drawback of this method is that this will add one constraint for every witness wire that is transformed to be a circuit output.
+            // As the statement size is usually small, this will not lead to issues in practice.
+            // The constraint is just added for separation. Note: prover witness wires are actually variable wires. The following method is used
+            // in order to introduce a different variable.
+            self.makeVariable(&wire, desc)
+            // If this causes overhead, the programmer can create the wires that are causing the bottleneck
+            // as input wires instead of prover witness wires and avoid calling makeOutput().
+        } else if cg.borrow().in_wires.contains(&some_wire) {
+            eprintln!(
+                "Warning: An input wire is redeclared as an output. This leads to an additional unnecessary constraint."
+            );
+            eprintln!(
+                "\t->This situation could happen by calling makeOutput() on input wires or in some cases involving multiplication of an input wire by 1 then declaring the result as an output wire."
+            );
+            self.makeVariable(&wire, desc)
+        } else if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire")) {
             wire.packIfNeeded(&None);
-            outputWire = self.makeVariable(&wire, desc);
-        } else if cg.borrow().in_wires.contains(&some_wire)
-            || cg.borrow().prover_witness_wires.contains(&some_wire)
-        {
-            outputWire = self.makeVariable(&wire, desc);
+            self.makeVariable(&wire, desc)
         } else {
             wire.packIfNeeded(&None);
-        }
+
+            wire.clone()
+        };
 
         cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
         addToEvaluationQueue(
@@ -591,6 +609,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType {
         let mut outputWire =
             WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
+
         self.cg().borrow_mut().current_wire_id += 1;
         let op = new_mul(
             wire,
@@ -613,12 +632,17 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
-        (0..wires.len())
-            .map(|i| {
-                Some(self.makeOutput(
-                    wires[i].as_ref().unwrap(),
+        wires
+            .iter()
+            .enumerate()
+            .map(|(i, w)| {
+                // println!("{i}=i==w={}",w.as_ref().unwrap().getWireId());
+                let out = self.makeOutput(
+                    w.as_ref().unwrap(),
                     &desc.as_ref().map(|d| format!("{}[{i}]", d)),
-                ))
+                );
+                // println!("{i}=i==out={}",out.getWireId());
+                Some(out)
             })
             .collect()
     }
@@ -873,7 +897,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             let const2 = w2.try_as_constant_ref().unwrap().getConstant();
             let const3 = w3.try_as_constant_ref().unwrap().getConstant();
             assert!(
-                const3 == const1.mul(const2).rem(Configs.field_prime.clone()),
+                const3 == const1.mul(const2).rem(&Configs.field_prime),
                 "Assertion failed on the provided constant wires .. "
             );
         } else {
@@ -1035,6 +1059,7 @@ impl CGConfigFields for CircuitGenerator {
         self.get_current_wire_id()
     }
     fn get_current_wire_id(&self) -> i32 {
+        // assert! (175548!=self.current_wire_id);///TEST
         self.current_wire_id
     }
 

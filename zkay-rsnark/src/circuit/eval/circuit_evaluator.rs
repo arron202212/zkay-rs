@@ -70,22 +70,26 @@ impl CircuitEvaluator {
     pub fn getWireValue(&self, w: &WireType) -> BigInteger {
         let mut v = &self.valueAssignment[w.getWireId() as usize];
         if let Some(v) = v {
+            // println!("==wireid==getWireValue==some========={}============",w.getWireId());
             return v.clone();
         }
         let Some(bits) = w.getBitWiresIfExistAlready() else {
+            // println!("==wireid==getWireValue==getBitWiresIfExistAlready==none======={}============",w.getWireId());
             return BigInteger::ZERO;
         };
+        // println!("==wireid==getWireValue==getBitWiresIfExistAlready==some======={}============",w.getWireId());
 
-        let mut sum = BigInteger::ZERO;
-        for i in 0..bits.size() {
-            sum = sum.add(
-                self.valueAssignment[bits[i].as_ref().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap()
-                    .shl(i),
-            );
-        }
-        sum
+        bits.array
+            .iter()
+            .enumerate()
+            .fold(BigInteger::ZERO, |sum, (i, b)| {
+                sum.add(
+                    self.valueAssignment[b.as_ref().unwrap().getWireId() as usize]
+                        .clone()
+                        .unwrap()
+                        .shl(i),
+                )
+            })
     }
 
     pub fn getWiresValues(&self, w: &Vec<Option<WireType>>) -> Vec<BigInteger> {

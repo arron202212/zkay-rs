@@ -75,7 +75,7 @@ impl Wire<ConstantWire> {
     // pub fn new(wireId: i32, value: BigInteger) -> Self {
     //     // super(wireId);
     //     Self {
-    //         constant: value.rem(Configs.field_prime.clone()),
+    //         constant: value.rem(&Configs.field_prime),
     //     }
     // }
     pub fn getConstant(&self) -> BigInteger {
@@ -135,7 +135,7 @@ impl WireConfig for Wire<ConstantWire> {
             if !sign {
                 newConstant.clone()
             } else {
-                newConstant.clone().sub(Configs.field_prime.clone())
+                newConstant.clone().sub(&Configs.field_prime)
             },
             self.generator.clone(),
         )));

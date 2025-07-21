@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
@@ -16,6 +17,7 @@ use crate::{
     },
     util::util::{BigInteger, Util},
 };
+use num_bigint::Sign;
 use std::{
     fmt::Debug,
     hash::{DefaultHasher, Hash, Hasher},
@@ -40,14 +42,24 @@ impl BasicOp for Op<MulBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
+            );
+        }
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
             .mul(
                 assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                    .clone()
+                    .as_ref()
                     .unwrap(),
             );
+        if result.sign() == Sign::Minus {
+            result = result.add(&Configs.field_prime).rem(&Configs.field_prime);
+        }
         if result > Configs.field_prime {
             result = result.rem(&Configs.field_prime);
         }

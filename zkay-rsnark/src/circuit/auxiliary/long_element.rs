@@ -387,7 +387,7 @@ impl LongElement {
                 solution[i + j] = solution[i + j]
                     .clone()
                     .add(aiVals[i].clone().mul(biVals[j].clone()))
-                    .rem(Configs.field_prime.clone());
+                    .rem(&Configs.field_prime);
             }
         }
         solution

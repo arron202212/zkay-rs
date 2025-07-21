@@ -193,7 +193,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
         let v = BigInteger::from(k).add(Util::one());
         let product = v;
         if bitCount != 0 {
-            product = product.mul(v).rem(Configs.field_prime.clone());
+            product = product.mul(v).rem(&Configs.field_prime);
         }
         for j in 0..16 {
             if j < bitCount {
@@ -204,7 +204,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 };
             } else {
                 vars[j] = product;
-                product = product.mul(v).rem(Configs.field_prime.clone());
+                product = product.mul(v).rem(&Configs.field_prime);
             }
         }
         vars
@@ -228,7 +228,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             for i in 0..16 {
                 result = result.add(variableValues[i].mul(coeffs[i]));
             }
-            result = result.rem(Configs.field_prime.clone());
+            result = result.rem(&Configs.field_prime);
             if result==Util::one() {
                 validResults += 1;
                 if !valueSet.contains(k) {

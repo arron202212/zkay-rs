@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
@@ -41,16 +42,22 @@ impl BasicOp for Op<AddBasicOp> {
     // }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        let mut s = BigInteger::ZERO;
-        for w in &self.inputs {
-            s = s.add(
-                assignment[w.as_ref().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap(),
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
             );
         }
+        let s = self.inputs.iter().fold(BigInteger::ZERO, |s, w| {
+            s.add(
+                assignment[w.as_ref().unwrap().getWireId() as usize]
+                    .as_ref()
+                    .unwrap(),
+            )
+        });
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] =
-            Some(s.rem(Configs.field_prime.clone()));
+            Some(s.rem(&Configs.field_prime));
     }
 
     fn getNumMulGates(&self) -> i32 {

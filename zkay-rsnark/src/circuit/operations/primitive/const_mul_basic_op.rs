@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
@@ -69,12 +70,19 @@ impl BasicOp for Op<ConstMulBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
+            );
+        }
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
-            .mul(self.t.constInteger.clone());
+            .mul(&self.t.constInteger);
         if result.bits() >= Configs.log2_field_prime {
-            result = result.rem(Configs.field_prime.clone());
+            result = result.rem(&Configs.field_prime);
         }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
     }
@@ -104,10 +112,10 @@ impl PartialEq for Op<ConstMulBasicOp> {
 impl Hash for Op<ConstMulBasicOp> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.t.constInteger.hash(state);
-        let mut h = 0;
+        // let mut inputs=self.getInputs();
+        // inputs.sort_unstable_by_key(|x|x.as_ref().unwrap().getWireId());
         for i in self.getInputs() {
-            h += i.as_ref().unwrap().getWireId() as u64;
+            i.as_ref().unwrap().getWireId().hash(state);
         }
-        h.hash(state);
     }
 }

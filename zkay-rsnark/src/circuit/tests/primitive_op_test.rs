@@ -422,16 +422,16 @@ mod test {
             .sub(Util::one());
 
         for i in 0..numIns {
-            shiftedRightVals[i] = inVals1[i].clone().shr(i).rem(Configs.field_prime.clone());
+            shiftedRightVals[i] = inVals1[i].clone().shr(i).rem(&Configs.field_prime);
             shiftedLeftVals[i] = inVals1[i]
                 .clone()
                 .shl(i)
                 .bitand(mask.clone())
-                .rem(Configs.field_prime.clone());
+                .rem(&Configs.field_prime);
             rotatedRightVals[i] = BigInteger::from(
                 inVals3[i]
                     .to_str_radix(10)
-                    .parse::<i64>()
+                    .parse::<u32>()
                     .unwrap()
                     .rotate_right((i % 32) as u32)
                     & 0x00000000ffffffff,
@@ -439,7 +439,7 @@ mod test {
             rotatedLeftVals[i] = BigInteger::from(
                 inVals3[i]
                     .to_str_radix(10)
-                    .parse::<i64>()
+                    .parse::<u32>()
                     .unwrap()
                     .rotate_left((i % 32) as u32)
                     & 0x00000000ffffffff,
@@ -447,17 +447,17 @@ mod test {
             xoredVals[i] = inVals1[i]
                 .clone()
                 .bitxor(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .rem(&Configs.field_prime);
             oredVals[i] = inVals1[i]
                 .clone()
                 .bitor(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .rem(&Configs.field_prime);
             andedVals[i] = inVals1[i]
                 .clone()
                 .bitand(inVals2[i].clone())
-                .rem(Configs.field_prime.clone());
+                .rem(&Configs.field_prime);
             invertedVals[i] = BigInteger::from(
-                !inVals3[i].to_str_radix(10).parse::<i64>().unwrap() & 0x00000000ffffffff,
+                !inVals3[i].to_str_radix(10).parse::<u32>().unwrap() & 0x00000000ffffffff,
             );
         }
 

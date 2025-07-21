@@ -101,7 +101,7 @@ impl FieldDivisionGadget {
         //     let bValue = evaluator.getWireValue(self.b.clone());
         //     let cValue = aValue
         //         .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
-        //         .rem(Configs.field_prime.clone());
+        //         .rem(&Configs.field_prime);
         //     evaluator.setWireValue(self.c.clone(), cValue);
         // });
         // {
@@ -117,7 +117,7 @@ impl FieldDivisionGadget {
         //             let bValue = evaluator.getWireValue(self.b.clone());
         //             let cValue = aValue
         //                 .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
-        //                 .rem(Configs.field_prime.clone());
+        //                 .rem(&Configs.field_prime);
         //             evaluator.setWireValue(self.c.clone(), cValue);
         //         }
         //     }

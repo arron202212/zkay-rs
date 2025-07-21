@@ -73,11 +73,21 @@ impl<T: setBitsConfig + Clone + Debug + PartialEq> std::fmt::Display for Wire<T>
 impl<T: setBitsConfig + Clone + Debug + PartialEq> Eq for Wire<T> {}
 impl<T: setBitsConfig + Clone + Debug + PartialEq> PartialEq for Wire<T> {
     fn eq(&self, other: &Self) -> bool {
-        other.getWireId() == self.getWireId() && other.generator() == self.generator()
+        other.wire_id == self.wire_id && other.generator == self.generator
     }
 }
-#[derive(Debug, Clone)]
-pub struct Wire<T: setBitsConfig + Clone + Debug + PartialEq> {
+impl<T: setBitsConfig + Clone + Debug + PartialEq> Clone for Wire<T> {
+    fn clone(&self) -> Self {
+        Self {
+            wire_id: RcCell::new(*self.wire_id.borrow()),
+            generator: self.generator.clone(),
+            t: self.t.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Wire<T: setBitsConfig + Clone + Debug> {
     pub wire_id: RcCell<i32>,
     pub generator: WeakCell<CircuitGenerator>,
     pub t: T,
@@ -239,13 +249,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             desc.as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
-        // println!("End new_mul  Time: == {} s", start.elapsed().as_micros());
+        // println!(" ============new_mul==self.getWireId==={}========  w.getWireId: == {} ",self.self_clone().unwrap().getWireId(), w.getWireId());
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         // println!(
         //     "End addToEvaluationQueue  Time: == {} s",
         //     start.elapsed().as_micros()
         // );
+        // assert!( output.getWireId()!=175548);
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
@@ -538,17 +549,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn restrictBitLength(&self, bitWidth: u64, desc: &Option<String>) {
-        let mut bitWires = self.getBitWires();
-        if let Some(_bitWires) = bitWires {
-            if _bitWires.size() > bitWidth as usize {
-                bitWires = Some(self.forceSplit(bitWidth as i32, desc));
-                self.setBits(bitWires);
-            } else {
-                // nothing to be done.
-            }
+        let Some(mut bitWires) = self.getBitWires() else {
+            self.getBitWiresi(bitWidth, desc);
             return;
+        };
+        if bitWires.size() > bitWidth as usize {
+            let bitWires = Some(self.forceSplit(bitWidth as i32, desc));
+            self.setBits(bitWires);
         }
-        self.getBitWiresi(bitWidth, desc);
     }
 
     fn xorBitwise(&self, w: &WireType, numBits: u64, desc: &Option<String>) -> WireType {
@@ -1015,12 +1023,18 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
 
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            if cachedOutputs[0].as_ref().unwrap().getWireId() == 349252 {
+                println!(
+                    "=***********=pack==current_wire_id===={}=={}====={}{}",
+                    cachedOutputs[0].as_ref().unwrap().getWireId(),
+                    generator.borrow_mut().current_wire_id,
+                    file!(),
+                    line!()
+                );
+            }
             *self.get_wire_id_mut().borrow_mut() = cachedOutputs[0].as_ref().unwrap().getWireId();
         }
-        if self.getWireId() == -1 {
-            println!("========self.getWireId() == -1 =============================");
-        }
+        //  println!("=***********=pack=====getWireId=========={}",self.getWireId());
     }
 
     // fn hashCode(&self) -> u64 {

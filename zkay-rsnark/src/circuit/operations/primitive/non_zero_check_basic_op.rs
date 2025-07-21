@@ -7,6 +7,7 @@
 #![allow(unused_braces)]
 use crate::{
     circuit::{
+        StructNameConfig,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
@@ -44,6 +45,13 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+            println!(
+                "==compute=====outputs=========={}===={}====",
+                file!(),
+                self.outputs[0].as_ref().unwrap().name()
+            );
+        }
         if assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .as_ref()
             .unwrap()

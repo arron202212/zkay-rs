@@ -109,7 +109,7 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
     fn super_checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         let inputs = self.getInputs();
         let n = inputs.len();
-        for (i, w) in inputs.iter().enumerate() {
+        for (_i, w) in inputs.iter().enumerate() {
             // println!(
             //     "===w.as_ref().unwrap().getWireId()==={i}===={}==",
             //     w.as_ref().unwrap().getWireId()
@@ -226,11 +226,13 @@ macro_rules! impl_hash_code_for {
             fn hash<H: Hasher>(&self, state: &mut H) {
                 // this method should be overriden when a subclass can have more than one opcode, or have other arguments
                 self.getOpcode().hash(state);
-                let mut h = 0;
-                for i in self.getInputs() {
-                    h += i.as_ref().unwrap().getWireId() as u64;
+                let mut inputs = self.getInputs();
+                if self.getOpcode() != "pack".to_owned() {
+                    inputs.sort_unstable_by_key(|x| x.as_ref().unwrap().getWireId());
                 }
-                h.hash(state);
+                for i in inputs {
+                    i.as_ref().unwrap().getWireId().hash(state);
+                }
             }
         }
     };

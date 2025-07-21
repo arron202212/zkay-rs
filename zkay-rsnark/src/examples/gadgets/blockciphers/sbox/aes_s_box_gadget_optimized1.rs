@@ -57,7 +57,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
                 let p = BigInteger::from(value);
                 mat[k][0] = Util::one();
                 for j in 1..=16 {
-                    mat[k][j] = p.mul(mat[k][j - 1]).rem(Configs.field_prime.clone());
+                    mat[k][j] = p.mul(mat[k][j - 1]).rem(&Configs.field_prime);
                 }
                 // negate the last element, just to make things consistent with
                 // the paper notations
@@ -104,7 +104,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             for j in 0..a2.length {
                 out[i + j] = out[i + j]
                     .add(a1[i].mul(a2[j]))
-                    .rem(Configs.field_prime.clone());
+                    .rem(&Configs.field_prime);
             }
         }
         out
@@ -126,9 +126,9 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             let p = BigInteger::from(k);
             for i in 1..16 {
                 result = result.add(p.mul(coeffs[i]));
-                p = p.mul(BigInteger::from(k)).rem(Configs.field_prime.clone());
+                p = p.mul(BigInteger::from(k)).rem(&Configs.field_prime);
             }
-            result = result.rem(Configs.field_prime.clone());
+            result = result.rem(&Configs.field_prime);
 
             if result==Configs.field_prime.sub(p) {
                 validResults += 1;

@@ -48,12 +48,10 @@ impl Util {
     }
 
     pub fn spliti(x: &BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
-        let mut chunks = vec![BigInteger::default(); numChunks as usize];
         let mask = Util::one().shl(chunkSize).sub(Util::one());
-        for i in 0..numChunks {
-            chunks[i as usize] = x.clone().shr(chunkSize * i).bitand(mask.clone());
-        }
-        chunks
+        (0..numChunks)
+            .map(|i| x.clone().shr(chunkSize * i).bitand(&mask))
+            .collect()
     }
 
     pub fn combine(
@@ -62,6 +60,7 @@ impl Util {
         bitwidth: i32,
     ) -> BigInteger {
         let mut sum = BigInteger::ZERO;
+
         for i in 0..blocks.len() {
             if table[blocks[i].as_ref().unwrap().getWireId() as usize].is_none() {
                 continue;
@@ -77,71 +76,34 @@ impl Util {
     }
 
     pub fn group(list: &Vec<BigInteger>, width: i32) -> BigInteger {
-        let mut x = BigInteger::ZERO;
-        for i in 0..list.len() {
-            x = x.add(list[i].clone().shl(width as usize * i));
-        }
-        x
+        let w = width as usize;
+        list.iter()
+            .enumerate()
+            .fold(BigInteger::ZERO, |s, (i, x)| s.add(x.clone().shl(w * i)))
     }
 
     pub fn concati(a1: &Vec<i32>, a2: &Vec<i32>) -> Vec<i32> {
-        let mut all = vec![i32::default(); a1.len() + a2.len()];
-        for i in 0..all.len() {
-            all[i] = if i < a1.len() {
-                a1[i]
-            } else {
-                a2[i - a1.len()]
-            };
-        }
-        all
+        a1.iter().chain(a2).cloned().collect()
     }
 
     pub fn concat(a1: &Vec<Option<WireType>>, a2: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut all = vec![None; a1.len() + a2.len()];
-        for i in 0..all.len() {
-            all[i] = if i < a1.len() {
-                a1[i].clone()
-            } else {
-                a2[i - a1.len()].clone()
-            };
-        }
-        all
+        a1.iter().chain(a2).cloned().collect()
     }
 
     pub fn concata(w: &WireType, a: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut all = vec![None; 1 + a.len()];
-        for i in 0..all.len() {
-            all[i] = if i < 1 {
-                Some(w.clone())
-            } else {
-                a[i - 1].clone()
-            };
-        }
+        let mut all = a.clone();
+        all.insert(0, Some(w.clone()));
         all
     }
 
     pub fn concataa(arrays: &Vec<Vec<i32>>) -> Vec<i32> {
-        let mut sum = 0;
-        for array in arrays {
-            sum += array.len();
-        }
-        let mut all = vec![i32::default(); sum];
-        let mut idx = 0;
-        for array in arrays {
-            for &a in array {
-                all[idx] = a;
-                idx += 1;
-            }
-        }
-        all
+        arrays.iter().cloned().flatten().collect()
     }
 
     pub fn randomBigIntegerArray(num: u64, n: &BigInteger) -> Vec<BigInteger> {
-        let mut result = vec![BigInteger::default(); num as usize];
-        for i in 0..num {
-            result[i as usize] = Self::nextRandomBigInteger(n);
-        }
-        result
+        (0..num as usize)
+            .map(|_| Self::nextRandomBigInteger(n))
+            .collect()
     }
 
     pub fn nextRandomBigInteger(n: &BigInteger) -> BigInteger {
@@ -154,18 +116,16 @@ impl Util {
     }
 
     pub fn randomBigIntegerArrayi(num: u64, numBits: i32) -> Vec<BigInteger> {
-        let mut result = vec![BigInteger::default(); num as usize];
-        for i in 0..num {
-            result[i as usize] = Self::nextRandomBigIntegeri(numBits);
-        }
-        result
+        (0..num as usize)
+            .map(|_| Self::nextRandomBigIntegeri(numBits as u64))
+            .collect()
     }
 
-    pub fn nextRandomBigIntegeri(numBits: i32) -> BigInteger {
-        let mut result: BigInteger =
-            RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+    pub fn nextRandomBigIntegeri(numBits: u64) -> BigInteger {
+        let rand = RandomBits::new(numBits);
+        let mut result: BigInteger = rand.sample(&mut rand::thread_rng());
         while result.sign() == Sign::Minus {
-            result = RandomBits::new(numBits as u64).sample(&mut rand::thread_rng());
+            result = rand.sample(&mut rand::thread_rng());
         }
         result
     }
