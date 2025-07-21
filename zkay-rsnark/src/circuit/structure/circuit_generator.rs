@@ -1084,6 +1084,17 @@ pub trait CreateConstantWire<T = WireType> {
     fn create_constant_wire(&self, x: T, desc: &Option<String>) -> WireType;
 }
 
+impl CreateConstantWire<&BigInteger> for CircuitGenerator {
+    fn create_constant_wire(&self, x: &BigInteger, desc: &Option<String>) -> WireType {
+        self.get_one_wire().unwrap().mulb(x, desc)
+    }
+}
+impl CreateConstantWire<i64> for CircuitGenerator {
+    fn create_constant_wire(&self, x: i64, desc: &Option<String>) -> WireType {
+        self.get_one_wire().unwrap().muli(x, desc)
+    }
+}
+
 impl CreateConstantWire<&BigInteger> for RcCell<CircuitGenerator> {
     fn create_constant_wire(&self, x: &BigInteger, desc: &Option<String>) -> WireType {
         self.get_one_wire().unwrap().mulb(x, desc)

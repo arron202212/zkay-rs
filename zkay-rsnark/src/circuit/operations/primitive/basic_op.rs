@@ -233,6 +233,9 @@ macro_rules! impl_hash_code_for {
                 for i in inputs {
                     i.as_ref().unwrap().getWireId().hash(state);
                 }
+                if self.getOpcode() == "assert".to_owned() && !self.outputs.is_empty() {
+                    self.outputs[0].as_ref().unwrap().getWireId().hash(state);
+                }
             }
         }
     };

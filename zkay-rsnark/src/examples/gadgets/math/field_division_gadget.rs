@@ -47,7 +47,7 @@ impl FieldDivisionGadget {
             c: None,
             generator: generator.clone(),
         };
-        let mut generator = generator.upgrade().unwrap();
+        let mut generator = generator.upgrade().unwrap().borrow().clone();
         // let mut generator = self.me.clone().unwrap().upgrade().unwrap();
 
         // if the input values are constant (i.e. known at compilation time), we
@@ -76,7 +76,7 @@ impl FieldDivisionGadget {
     fn buildCircuit(&mut self) {
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
-        let mut generator = self.generator.clone().upgrade().unwrap();
+        let mut generator = self.generator.clone().upgrade().unwrap().borrow().clone();
 
         let (a, b, c) = (&self.a, &self.b, self.c.as_ref().unwrap());
         let prover = crate::impl_prover!(

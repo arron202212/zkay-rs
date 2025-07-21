@@ -13,11 +13,11 @@ use crate::{
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::GadgetConfig,
         structure::{
-            circuit_generator::CGConfigFields,
             circuit_generator::{
                 CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
                 getActiveCircuitGenerator, put_active_circuit_generator,
             },
+            circuit_generator::{CGConfigFields, CGInstance},
             wire::WireConfig,
             wire_array::WireArray,
             wire_type::WireType,
@@ -82,16 +82,16 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = self.cg.clone();
+                let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
 
                 let mut result1 = inputs1[0]
@@ -115,8 +115,8 @@ mod test {
         }
         let cg = CircuitGenerator::new("addition");
         let t = CGTest {
-            inputs1: WireArray::newi(0, cg.clone().downgrade()),
-            inputs2: WireArray::newi(0, cg.clone().downgrade()),
+            inputs1: WireArray::newi(0, cg.cg_weak()),
+            inputs2: WireArray::newi(0, cg.cg_weak()),
             inVals1,
             inVals2,
             numIns: numIns as u64,
@@ -174,16 +174,16 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = self.cg.clone();
+                let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
 
                 let mut result1 = inputs1[0]
@@ -265,7 +265,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = self.cg.clone();
+                let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
                 let numBits = self.t.numBits;
@@ -281,6 +281,7 @@ mod test {
                     result1[i] = inputs1[i]
                         .as_ref()
                         .map(|x| x.isLessThan(inputs2[i].as_ref().unwrap(), numBits, &None));
+
                     result2[i] = inputs1[i]
                         .as_ref()
                         .map(|x| x.isLessThanOrEqual(inputs2[i].as_ref().unwrap(), numBits, &None));
@@ -321,17 +322,17 @@ mod test {
             numIns: numIns as u64,
             numBits,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("comparison", t.clone());
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("comparison", t);
         generator.generateCircuit();
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generateSampleInput(&mut evaluator);
         //		generator.printCircuit();
         evaluator.evaluate(&generator.cg);
-        let mut result1 = t.result1.clone();
-        let mut result2 = t.result2.clone();
-        let mut result3 = t.result3.clone();
-        let mut result4 = t.result4.clone();
-        let mut result5 = t.result5.clone();
+        let mut result1 = generator.t.result1.clone();
+        let mut result2 = generator.t.result2.clone();
+        let mut result3 = generator.t.result3.clone();
+        let mut result4 = generator.t.result4.clone();
+        let mut result5 = generator.t.result5.clone();
         for i in 0..numIns as usize {
             let mut r = result[i];
             if r == 0 {
@@ -476,7 +477,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let mut generator = self.cg.clone();
+                let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = generator.createInputWireArray(numIns, &None);
@@ -627,7 +628,7 @@ mod test {
     }
 
     #[test]
-    pub fn testAssertion() {
+    pub fn testAssertions() {
         let mut numIns = 100;
         let mut inVals1 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
         let mut inVals2 = Util::randomBigIntegerArray(numIns, &Configs.field_prime);
@@ -665,20 +666,20 @@ mod test {
             // provide solutions as witnesses
 
             fn buildCircuit(&mut self) {
-                let mut generator = self.cg.clone();
+                let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
                     generator.createInputWireArray(numIns, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
                 let mut solutions = WireArray::new(
                     generator.createProverWitnessWireArray(numIns + 1, &None),
-                    generator.clone().downgrade(),
+                    generator.cg_weak(),
                 );
                 let result = &self.t.result;
                 let prover = crate::impl_prover!(
