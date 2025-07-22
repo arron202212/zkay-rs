@@ -1,7 +1,15 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use crate::util::util::{Util,BigInteger};
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 
 /**
  * Performs symmetric encryption in the CBC mode.
@@ -58,7 +66,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
             ));
             let xored = msgBlock.xorWireArray(prevCipher).asArray();
             assert!(
-                !cipherName=="speck128",
+                !cipherName == "speck128",
                 "Other Ciphers not supported in this version!"
             );
             let tmp = WireArray::new(xored).packBitsIntoWords(64);
@@ -72,7 +80,7 @@ impl Gadget for SymmetricEncryptionCBCGadget {
 
     fn prepareKey() -> Vec<Option<WireType>> {
         assert!(
-            !cipherName=="speck128",
+            !cipherName == "speck128",
             "Other Ciphers not supported in this version!"
         );
 

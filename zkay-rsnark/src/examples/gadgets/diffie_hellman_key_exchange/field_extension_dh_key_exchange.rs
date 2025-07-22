@@ -1,6 +1,14 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{Util,BigInteger};
+use crate::util::util::{BigInteger, Util};
 
 /**
  * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
@@ -106,7 +114,11 @@ impl Gadget for FieldExtensionDHKeyExchange {
         powersTable
     }
 
-    fn exp(base: Vec<Option<WireType>>, expBits: Vec<Option<WireType>>, powersTable: Vec<Vec<Option<WireType>>>) -> Vec<Option<WireType>> {
+    fn exp(
+        base: Vec<Option<WireType>>,
+        expBits: Vec<Option<WireType>>,
+        powersTable: Vec<Vec<Option<WireType>>>,
+    ) -> Vec<Option<WireType>> {
         let c = vec![generator.get_zero_wire(); mu];
         c[0] = generator.get_one_wire();
         for j in 0..expBits.len() {

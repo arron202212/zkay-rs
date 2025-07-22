@@ -1,6 +1,17 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
@@ -28,7 +39,6 @@ impl CircuitGenerator for RSASigVerCircuitGenerator {
         sha2Gadget = SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
         let digest = sha2Gadget.getOutputWires();
 
-        
         //  * Since an RSA modulus take many wires to present, it could increase
         //  * the size of verification key if we divide it into very small chunks,
         //  * e.g. 32-bits (which happens by default in this version to minimize

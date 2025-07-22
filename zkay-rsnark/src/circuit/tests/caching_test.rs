@@ -37,7 +37,7 @@ use std::{
 
 use rccell::{RcCell, WeakCell};
 use zkay_derive::ImplStructNameConfig;
-pub struct CachingTest;
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -154,7 +154,6 @@ mod test {
             pub numIns: u64,
         }
 
-        //crate::impl_circuit_generator_config_fields_for!(CircuitGeneratorExtend<CGTest>);
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {

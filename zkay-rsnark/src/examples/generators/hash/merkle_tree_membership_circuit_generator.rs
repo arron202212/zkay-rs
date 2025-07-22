@@ -1,10 +1,21 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 use examples::gadgets::hash::merkle_tree_path_gadget;
 use examples::gadgets::hash::subset_sum_hash_gadget;
-use crate::util::util::{Util,BigInteger};
 
 pub struct MerkleTreeMembershipCircuitGenerator {
     publicRootWires: Vec<Option<WireType>>,
@@ -27,7 +38,7 @@ impl MerkleTreeMembershipCircuitGenerator {
 }
 impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
     fn buildCircuit() {
-        //  declare inputs 
+        //  declare inputs
         publicRootWires = createInputWireArray(hashDigestDimension, "Input Merkle Tree Root");
         intermediateHasheWires =
             createProverWitnessWireArray(hashDigestDimension * treeHeight, "Intermediate Hashes");
@@ -78,13 +89,11 @@ impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
             circuitEvaluator.setWireValue(leafWires[i], Integer.MAX_VALUE);
         }
     }
-
-
 }
-    pub fn main(args: Vec<String>) {
-        let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
-        generator.generateCircuit();
-        generator.evalCircuit();
-        generator.prepFiles();
-        generator.runLibsnark();
-    }
+pub fn main(args: Vec<String>) {
+    let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
+    generator.generateCircuit();
+    generator.evalCircuit();
+    generator.prepFiles();
+    generator.runLibsnark();
+}

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
@@ -110,7 +118,12 @@ impl ECDHKeyExchangeGadget {
      *
      */
 
-    pub fn new(baseX: WireType, hX: WireType, secretBits: Vec<Option<WireType>>, desc: &Option<String>) {
+    pub fn new(
+        baseX: WireType,
+        hX: WireType,
+        secretBits: Vec<Option<WireType>>,
+        desc: &Option<String>,
+    ) {
         super(desc);
         self.secretBits = secretBits;
         self.basePoint = AffinePoint::new(baseX);
@@ -187,10 +200,10 @@ impl Gadget for ECDHKeyExchangeGadget {
             basePoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
             basePoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
-                        let x = evaluator.getWireValue(basePoint.x);
-                        evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
-                    });
+            generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+                let x = evaluator.getWireValue(basePoint.x);
+                evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
+            });
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -209,20 +222,20 @@ impl Gadget for ECDHKeyExchangeGadget {
             hPoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
             hPoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
-                        let x = evaluator.getWireValue(hPoint.x);
-                        evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
-                    });
-        // {
-        //         struct Prover;
-        //         impl Instruction for Prover {
-        //             &|evaluator: &mut CircuitEvaluator| {
-        //                 let x = evaluator.getWireValue(hPoint.x);
-        //                 evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
-        //             }
-        //         }
-        //         Prover
-        //     });
+            generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+                let x = evaluator.getWireValue(hPoint.x);
+                evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
+            });
+            // {
+            //         struct Prover;
+            //         impl Instruction for Prover {
+            //             &|evaluator: &mut CircuitEvaluator| {
+            //                 let x = evaluator.getWireValue(hPoint.x);
+            //                 evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            //             }
+            //         }
+            //         Prover
+            //     });
             assertValidPointOnEC(hPoint.x, hPoint.y);
         }
     }

@@ -1,16 +1,28 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
 
+use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
- use std::fmt::Debug;
-#[derive(Debug,Clone,Hash,PartialEq)]
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PinocchioGadget {
     inputWires: Vec<Option<WireType>>,
     proverWitnessWires: Vec<Option<WireType>>,
     outputWires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
-    pub fn new(inputWires: Vec<Option<WireType>>, pathToArithFile: String, desc: &Option<String>) -> Self {
+    pub fn new(
+        inputWires: Vec<Option<WireType>>,
+        pathToArithFile: String,
+        desc: &Option<String>,
+    ) -> Self {
         super(desc);
         self.inputWires = inputWires;
         buildCircuit(pathToArithFile);
@@ -24,7 +36,7 @@ impl Gadget for PinocchioGadget {
         let mut wireMapping;
         let scanner = Scanner::new(File::new(path));
 
-        if !scanner.next()=="total" {
+        if !scanner.next() == "total" {
             scanner.close();
             panic!("Expected total %d in the first line");
         }
@@ -39,7 +51,7 @@ impl Gadget for PinocchioGadget {
             if line.contains("#") {
                 line = line.substring(0, line.indexOf("#"));
             }
-            if line=="" {
+            if line == "" {
                 continue;
             } else if line.startsWith("input") {
                 let tokens = line.split("\\s+");

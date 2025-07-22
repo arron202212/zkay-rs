@@ -1,5 +1,16 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::math::dot_product_gadget;
 
@@ -30,13 +41,11 @@ impl CircuitGenerator for DotProductCircuitGenerator {
             circuitEvaluator.setWireValue(b[i], 20 + i);
         }
     }
-
- 
 }
-   pub fn main(args: Vec<String>) {
-        let mut generator = DotProductCircuitGenerator::new("dot_product", 3);
-        generator.generateCircuit();
-        generator.evalCircuit();
-        generator.prepFiles();
-        generator.runLibsnark();
-    }
+pub fn main(args: Vec<String>) {
+    let mut generator = DotProductCircuitGenerator::new("dot_product", 3);
+    generator.generateCircuit();
+    generator.evalCircuit();
+    generator.prepFiles();
+    generator.runLibsnark();
+}

@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
@@ -66,10 +74,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
                 // used for a sanity check (verifying that the output solution
                 // is equivalent to coefficients of polynomial that has roots at
                 // memberValueSet. see note above)
-                polyCoeffs = polyMul(
-                    polyCoeffs,
-                    vec![Configs.field_prime.sub(p), Util::one()],
-                );
+                polyCoeffs = polyMul(polyCoeffs, vec![Configs.field_prime.sub(p), Util::one()]);
             }
 
             LinearSystemSolver::new(mat).solveInPlace();
@@ -88,7 +93,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             let coeffs = vec![BigInteger::default(); 16];
             for ii in 0..16 {
                 coeffs[ii] = mat[ii][16];
-                if !coeffs[ii]==polyCoeffs[ii] {
+                if !coeffs[ii] == polyCoeffs[ii] {
                     panic!("Inconsistency found.");
                 }
             }
@@ -102,9 +107,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         Arrays.fill(out, BigInteger::ZERO);
         for i in 0..a1.length {
             for j in 0..a2.length {
-                out[i + j] = out[i + j]
-                    .add(a1[i].mul(a2[j]))
-                    .rem(&Configs.field_prime);
+                out[i + j] = out[i + j].add(a1[i].mul(a2[j])).rem(&Configs.field_prime);
             }
         }
         out
@@ -130,7 +133,7 @@ impl Gadget for AESSBoxGadgetOptimized1 {
             }
             result = result.rem(&Configs.field_prime);
 
-            if result==Configs.field_prime.sub(p) {
+            if result == Configs.field_prime.sub(p) {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;
@@ -151,21 +154,21 @@ impl Gadget for AESSBoxGadgetOptimized1 {
         output = generator.createProverWitnessWire();
         input.restrictBitLength(8);
         generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                    // TODO Auto-generated method stub
-                    let value = evaluator.getWireValue(input);
-                    evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
-                });
-// {
-//             struct Prover;
-//             impl Instruction for Prover {
-//                 &|evaluator: &mut CircuitEvaluator| {
-//                     // TODO Auto-generated method stub
-//                     let value = evaluator.getWireValue(input);
-//                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
-//                 }
-//             }
-//             Prover
-//         });
+            // TODO Auto-generated method stub
+            let value = evaluator.getWireValue(input);
+            evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
+        });
+        // {
+        //             struct Prover;
+        //             impl Instruction for Prover {
+        //                 &|evaluator: &mut CircuitEvaluator| {
+        //                     // TODO Auto-generated method stub
+        //                     let value = evaluator.getWireValue(input);
+        //                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+        //                 }
+        //             }
+        //             Prover
+        //         });
 
         output.restrictBitLength(8);
         let vars = vec![None; 16];

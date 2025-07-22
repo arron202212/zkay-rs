@@ -1,7 +1,18 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget;
 use examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized1;
 use examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2;
@@ -64,7 +75,11 @@ impl AES128CipherGadget {
      *            expandKey() to get it
      */
 
-    pub fn new(inputs: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: &Option<String>) -> Self {
+    pub fn new(
+        inputs: Vec<Option<WireType>>,
+        expandedKey: Vec<Option<WireType>>,
+        desc: &Option<String>,
+    ) -> Self {
         super(desc);
         assert!(
             inputs.len() == 4 * nb && expandedKey.len() == 4 * nb * (nr + 1),
@@ -128,26 +143,26 @@ impl Gadget for AES128CipherGadget {
                 .xorWireArray(galoisMulConst(a[1], 3))
                 .xorWireArray(a[2].getBitWires(8))
                 .xorWireArray(a[3].getBitWires(8))
-                .packAsBits(None,None,);
+                .packAsBits(None, None);
 
             state[1][c] = a[0]
                 .getBitWires(8)
                 .xorWireArray(galoisMulConst(a[1], 2))
                 .xorWireArray(galoisMulConst(a[2], 3))
                 .xorWireArray(a[3].getBitWires(8))
-                .packAsBits(None,None,);
+                .packAsBits(None, None);
 
             state[2][c] = a[0]
                 .getBitWires(8)
                 .xorWireArray(a[1].getBitWires(8))
                 .xorWireArray(galoisMulConst(a[2], 2))
                 .xorWireArray(galoisMulConst(a[3], 3))
-                .packAsBits(None,None,);
+                .packAsBits(None, None);
             state[3][c] = galoisMulConst(a[0], 3)
                 .xorWireArray(a[1].getBitWires(8))
                 .xorWireArray(a[2].getBitWires(8))
                 .xorWireArray(galoisMulConst(a[3], 2))
-                .packAsBits(None,None,);
+                .packAsBits(None, None);
         }
         state
     }
@@ -182,7 +197,11 @@ impl Gadget for AES128CipherGadget {
         newState
     }
 
-    fn addRoundKey(state: Vec<Vec<Option<WireType>>>, from: i32, to: i32) -> Vec<Vec<Option<WireType>>> {
+    fn addRoundKey(
+        state: Vec<Vec<Option<WireType>>>,
+        from: i32,
+        to: i32,
+    ) -> Vec<Vec<Option<WireType>>> {
         let newState = vec![vec![None; nb]; 4];
         let idx = 0;
         for j in 0..nb {
@@ -236,14 +255,20 @@ impl Gadget for AES128CipherGadget {
         expanded
     }
 
-    fn subWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+    fn subWord(
+        generator: Box<dyn CGConfig + Send + Sync>,
+        w: Vec<Option<WireType>>,
+    ) -> Vec<Option<WireType>> {
         for i in 0..w.len() {
             w[i] = randomAccess(generator, w[i]);
         }
         w
     }
 
-    fn rotateWord(generator:Box<dyn CGConfig+Send+Sync>, w: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+    fn rotateWord(
+        generator: Box<dyn CGConfig + Send + Sync>,
+        w: Vec<Option<WireType>>,
+    ) -> Vec<Option<WireType>> {
         let newW = vec![None; w.len()];
         for j in 0..w.len() {
             newW[j] = w[(j + 1) % w.len()];
@@ -251,7 +276,7 @@ impl Gadget for AES128CipherGadget {
         newW
     }
 
-    fn randomAccess(generator:Box<dyn CGConfig+Send+Sync>, wire: WireType) -> WireType {
+    fn randomAccess(generator: Box<dyn CGConfig + Send + Sync>, wire: WireType) -> WireType {
         let g = None;
         match sBoxOption {
             LINEAR_SCAN => g = AESSBoxNaiveLookupGadget::new(wire),

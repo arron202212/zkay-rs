@@ -83,7 +83,7 @@ pub struct ChaskeyLtsTest {
             }
 
             
-            pub  fn generateSampleInput(CircuitEvaluator evaluator) {
+            pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {
 
             }
         };

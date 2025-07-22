@@ -69,7 +69,7 @@ pub struct BabyJubJubTest {
             }
 
             
-            pub  fn generateSampleInput(CircuitEvaluator evaluator) {}
+            pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {}
         };
 
         cgen.generateCircuit();

@@ -1,8 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 
 pub struct RSAEncryptionOAEPCircuitGenerator {
@@ -97,8 +108,11 @@ impl CircuitGenerator for RSAEncryptionOAEPCircuitGenerator {
         // result[0] contains the plaintext (after decryption)
         // result[1] contains the randomness
 
-        let check = Arrays==result[0], msg.getBytes();
-        assert!(check, "Randomness Extraction did not decrypt right");
+        assert_eq!(
+            result[0],
+            msg.getBytes(),
+            "Randomness Extraction did not decrypt right"
+        );
 
         let sampleRandomness = result[1];
         for i in 0..sampleRandomness.len() {

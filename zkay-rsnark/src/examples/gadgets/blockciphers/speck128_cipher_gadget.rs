@@ -1,5 +1,16 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 
 /**
@@ -22,7 +33,11 @@ impl Speck128CipherGadget {
      *            : Array of 32 64-bit elements. (Call expandKey(..))
      * @param desc
      */
-    pub fn new(plaintext: Vec<Option<WireType>>, expandedKey: Vec<Option<WireType>>, desc: &Option<String>) {
+    pub fn new(
+        plaintext: Vec<Option<WireType>>,
+        expandedKey: Vec<Option<WireType>>,
+        desc: &Option<String>,
+    ) {
         super(desc);
         assert!(
             plaintext.len() == 2 && expandedKey.len() == 32,

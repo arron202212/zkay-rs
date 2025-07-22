@@ -1,9 +1,20 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 use examples::gadgets::augmenter::pinocchio_gadget;
 use examples::gadgets::hash::sha256_gadget;
-use crate::util::util::{Util,BigInteger};
 
 /**
  * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
@@ -69,7 +80,9 @@ impl CircuitGenerator for AugmentedAuctionCircuitGenerator {
         // augment the output side
         for i in 0..numParties {
             // adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions)
-            secretOutputValues[i] = secretOutputValues[i].getBitWires(64 * 2).packAsBits(None,64);
+            secretOutputValues[i] = secretOutputValues[i]
+                .getBitWires(64 * 2)
+                .packAsBits(None, 64);
             let g = SHA256Gadget::new(
                 Util::concat(secretOutputValues[i], secretOutputRandomness[i]),
                 64,

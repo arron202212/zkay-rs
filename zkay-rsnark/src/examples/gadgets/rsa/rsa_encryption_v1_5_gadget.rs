@@ -1,9 +1,17 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 use examples::gadgets::math::field_division_gadget;
 use examples::gadgets::math::long_integer_mod_gadget;
-use crate::util::util::{Util,BigInteger};
 
 /**
  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will

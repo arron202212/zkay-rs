@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::operations::gadget;
 use crate::circuit::structure::wire_type::WireType;
 
@@ -15,7 +23,11 @@ pub struct ChaskeyLTS128CipherGadget {
     ciphertext: Vec<Option<WireType>>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
-    pub fn new(inputs: Vec<Option<WireType>>, key: Vec<Option<WireType>>, desc: &Option<String>) -> Self {
+    pub fn new(
+        inputs: Vec<Option<WireType>>,
+        key: Vec<Option<WireType>>,
+        desc: &Option<String>,
+    ) -> Self {
         super(desc);
         assert!(inputs.len() == 4 && key.len() == 4, "Invalid Input");
 

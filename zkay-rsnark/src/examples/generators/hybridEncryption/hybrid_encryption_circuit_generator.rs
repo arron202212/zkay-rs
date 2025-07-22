@@ -1,18 +1,29 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 use examples::gadgets::blockciphers::symmetric_encryptioncbc_gadget;
 use examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange;
 use examples::gadgets::hash::sha256_gadget;
-use crate::util::util::{Util,BigInteger};
 
 // This gadget shows a simple example of hybrid encryption for illustration purposes
 // It currently uses the field extension key exchange gadget with the speck cipher
 
 pub struct HybridEncryptionCircuitGenerator {
     plaintext: Vec<Option<WireType>>,  // as 64-bit words
-    plaintextSize: i32,    // number of 64-bit words
+    plaintextSize: i32,                // number of 64-bit words
     ciphertext: Vec<Option<WireType>>, // as 64-bit words
 
     ciphername: String,

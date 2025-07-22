@@ -1,5 +1,16 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use examples::gadgets::hash::sha256_gadget;
 
@@ -32,19 +43,17 @@ impl CircuitGenerator for SHA2CircuitGenerator {
         */
     }
 
-     fn generateSampleInput(evaluator: CircuitEvaluator) {
+    fn generateSampleInput(evaluator: CircuitEvaluator) {
         let inputStr = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
         for i in 0..inputWires.len() {
             evaluator.setWireValue(inputWires[i], inputStr.charAt(i));
         }
     }
-
-  
 }
-  pub fn main(args: Vec<String>) {
-        let mut generator = SHA2CircuitGenerator::new("sha_256");
-        generator.generateCircuit();
-        generator.evalCircuit();
-        generator.prepFiles();
-        generator.runLibsnark();
-    }
+pub fn main(args: Vec<String>) {
+    let mut generator = SHA2CircuitGenerator::new("sha_256");
+    generator.generateCircuit();
+    generator.evalCircuit();
+    generator.prepFiles();
+    generator.runLibsnark();
+}

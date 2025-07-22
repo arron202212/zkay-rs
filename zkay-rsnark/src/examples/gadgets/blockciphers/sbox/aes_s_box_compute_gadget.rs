@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
 use crate::circuit::operations::gadget;
@@ -27,11 +35,11 @@ impl Gadget for AESSBoxComputeGadget {
     fn buildCircuit() {
         inverse = generator.createProverWitnessWire();
 
-        generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
-                    let p = evaluator.getWireValue(input).intValue();
-                    let q = findInv(p);
-                    evaluator.setWireValue(inverse, &q);
-                });
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            let p = evaluator.getWireValue(input).intValue();
+            let q = findInv(p);
+            evaluator.setWireValue(inverse, &q);
+        });
         // &{
         //     struct Prover;
         //     impl Instruction for Prover {

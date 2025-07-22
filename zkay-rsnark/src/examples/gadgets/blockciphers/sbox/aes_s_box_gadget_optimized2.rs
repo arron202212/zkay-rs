@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
@@ -70,7 +78,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
             assert!(trialCounter < 100
 						"Was not possible to find an adequate solution to the current setting of the AES gadget sbox");
 
-            //println!(
+            println!(
                 "Attempting to solve linear systems for efficient S-Box Access: Attempt#{trialCounter}"
             );
             seed += 1;
@@ -100,7 +108,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 if checkIfProverCanCheat(mat, memberValueSet) {
                     //println!("Invalid solution");
                     for ii in 0..16 {
-                        if mat[ii][16]==BigInteger::ZERO {
+                        if mat[ii][16] == BigInteger::ZERO {
                             //println!("Possibly invalid due to having zero coefficient(s)");
                             break;
                         }
@@ -123,22 +131,22 @@ impl Gadget for AESSBoxGadgetOptimized2 {
 
     fn buildCircuit() {
         output = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation(    &|evaluator: &mut CircuitEvaluator| {
-                    // TODO Auto-generated method stub
-                    let value = evaluator.getWireValue(input);
-                    evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
-                });
-// {
-//             struct Prover;
-//             impl Instruction for Prover {
-//                 &|evaluator: &mut CircuitEvaluator| {
-//                     // TODO Auto-generated method stub
-//                     let value = evaluator.getWireValue(input);
-//                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
-//                 }
-//             }
-//             Prover
-//         });
+        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            // TODO Auto-generated method stub
+            let value = evaluator.getWireValue(input);
+            evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
+        });
+        // {
+        //             struct Prover;
+        //             impl Instruction for Prover {
+        //                 &|evaluator: &mut CircuitEvaluator| {
+        //                     // TODO Auto-generated method stub
+        //                     let value = evaluator.getWireValue(input);
+        //                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+        //                 }
+        //             }
+        //             Prover
+        //         });
 
         // Although we are getting the bits below anyway (which implicitly
         // restricts the bitwidth), it's a safer practice to call
@@ -229,7 +237,7 @@ impl Gadget for AESSBoxGadgetOptimized2 {
                 result = result.add(variableValues[i].mul(coeffs[i]));
             }
             result = result.rem(&Configs.field_prime);
-            if result==Util::one() {
+            if result == Util::one() {
                 validResults += 1;
                 if !valueSet.contains(k) {
                     outsidePermissibleSet += 1;

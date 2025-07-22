@@ -252,14 +252,14 @@ impl CircuitEvaluator {
                         out = out.mul(assignment[w as usize].clone().unwrap());
                     }
                     wiresToReport.push(outs[0]);
-                    assignment[outs[0] as usize] = Some(out.rem(prime.clone()));
+                    assignment[outs[0] as usize] = Some(out.rem(&prime));
                 }
                 _ if line.starts_with("add ") => {
                     let mut out = BigInteger::ZERO;
                     for w in ins {
                         out = out.add(assignment[w as usize].clone().unwrap());
                     }
-                    assignment[outs[0] as usize] = Some(out.rem(prime.clone()));
+                    assignment[outs[0] as usize] = Some(out.rem(&prime));
                 }
                 _ if line.starts_with("xor ") => {
                     let out = if assignment[ins[0] as usize] == assignment[ins[0] as usize] {
@@ -317,8 +317,8 @@ impl CircuitEvaluator {
                         assignment[ins[0] as usize]
                             .clone()
                             .unwrap()
-                            .mul(constant.clone())
-                            .rem(prime.clone()),
+                            .mul(&constant)
+                            .rem(&prime),
                     );
                 }
                 _ if line.starts_with("const-mul-") => {
@@ -329,7 +329,7 @@ impl CircuitEvaluator {
                             .clone()
                             .unwrap()
                             .mul(constant)
-                            .rem(prime.clone()),
+                            .rem(&prime),
                     );
                 }
                 _ => {

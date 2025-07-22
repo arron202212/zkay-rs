@@ -36,7 +36,7 @@ pub struct EcdhTests {
             }
 
             
-            pub  fn generateSampleInput(CircuitEvaluator evaluator) {}
+            pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
@@ -52,7 +52,7 @@ pub struct EcdhTests {
             }
 
             
-            pub  fn generateSampleInput(CircuitEvaluator evaluator) {}
+            pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
@@ -74,7 +74,7 @@ pub struct EcdhTests {
             }
 
             
-            pub  fn generateSampleInput(CircuitEvaluator evaluator) {}
+            pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {}
         };
         cgen.generateCircuit();
         cgen.evalCircuit();

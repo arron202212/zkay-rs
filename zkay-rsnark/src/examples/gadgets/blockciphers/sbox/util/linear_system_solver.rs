@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 
 /**
@@ -29,7 +37,7 @@ impl LinearSystemSolver {
     fn guassJordan() {
         for colIdx in 0..numCols {
             let pivotRowIdx = rowIdx;
-            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx]==BigInteger::ZERO) {
+            while (pivotRowIdx < numRows && mat[pivotRowIdx][colIdx] == BigInteger::ZERO) {
                 pivotRowIdx += 1;
             }
             if pivotRowIdx == numRows {
@@ -46,14 +54,14 @@ impl LinearSystemSolver {
             // dividing by pivot
             let invF = inverse(mat[pivotRowIdx][colIdx]);
             for j in 0..numCols {
-                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].mul(invF).rem(.clone());
+                mat[pivotRowIdx][j] = mat[pivotRowIdx][j].mul(invF).rem(&configs.field_prime);
             }
 
             for k in pivotRowIdx..numRows {
                 let f = negate(mat[k][colIdx]);
                 for j in 0..numCols {
                     mat[k][j] = mat[k][j].add(mat[pivotRowIdx][j].mul(f));
-                    mat[k][j] = mat[k][j].rem(prime.clone());
+                    mat[k][j] = mat[k][j].rem(&configs.field_prime);
                 }
             }
         }
@@ -62,7 +70,7 @@ impl LinearSystemSolver {
     fn rref() {
         for rowIdx in (0..=numRows - 1).rev() {
             let pivotColIdx = 0;
-            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx]==BigInteger::ZERO) {
+            while (pivotColIdx < numCols && mat[rowIdx][pivotColIdx] == BigInteger::ZERO) {
                 pivotColIdx += 1;
             }
             if pivotColIdx == numCols {
@@ -73,17 +81,17 @@ impl LinearSystemSolver {
                 let f = mat[k][pivotColIdx];
                 for j in 0..numCols {
                     mat[k][j] = mat[k][j].clone().add(mat[rowIdx][j].mul(f).neg());
-                    mat[k][j] = mat[k][j].clone().rem(prime.clone());
+                    mat[k][j] = mat[k][j].clone().rem(&configs.field_prime);
                 }
             }
         }
     }
 
     fn negate(x: BigInteger) -> BigInteger {
-        (prime.sub(x.rem(prime.clone()))).rem(prime.clone())
+        (prime.sub(x.rem(&configs.field_prime))).rem(&configs.field_prime)
     }
 
     fn inverse(x: BigInteger) -> BigInteger {
-        (x.rem(prime.clone())).mod_inv(prime.clone())
+        (x.rem(&configs.field_prime)).mod_inv(&configs.field_prime)
     }
 }
